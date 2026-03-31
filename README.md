@@ -10,8 +10,10 @@ Functionele productfeatures worden pas toegevoegd nadat de projectfundering loka
 npm install
 npm run dev
 npm run dev:stop
+npm run test:reflection-helpers
 npm run verify:local-flow
 npm run verify:local-audio-flow
+npm run verify:local-reflection-flow
 npm run ios
 npm run android
 npm run web
@@ -19,8 +21,8 @@ npm run lint
 npm run typecheck
 ```
 
-`npm run dev` start Expo + `process-entry` samen. Bij herstart wordt een oude `process-entry` eerst opgeruimd, en bij `Ctrl+C` wordt hij automatisch gestopt.
-Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/process-entry.log`.
+`npm run dev` start Expo + lokale Supabase Functions runtime samen. Bij herstart wordt de oude runtime eerst opgeruimd, en bij `Ctrl+C` wordt hij automatisch gestopt.
+Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-functions.log`.
 
 ## Env-overzicht
 - `.env.example`: template met verwachte variabelen en geen secrets.
@@ -69,7 +71,7 @@ npx supabase gen types typescript --linked --schema public > src/lib/supabase/da
 npm run dev
 
 # Edge Function (laadt OPENAI_* en EXPO_PUBLIC_* uit .env.local)
-npx supabase functions serve process-entry --env-file .env.local
+npx supabase functions serve --env-file .env.local
 ```
 
 Voorbeeld lokale testcall:
@@ -88,6 +90,15 @@ curl -i http://127.0.0.1:54321/functions/v1/process-entry \
   -H "apikey: <EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"audioBase64":"<BASE64_AUDIO>","audioMimeType":"audio/webm"}'
+```
+
+Voorbeeld reflectie testcall:
+```bash
+curl -i http://127.0.0.1:54321/functions/v1/generate-reflection \
+  -H "Authorization: Bearer <USER_ACCESS_TOKEN>" \
+  -H "apikey: <EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"periodType":"week","anchorDate":"2026-03-31","forceRegenerate":true}'
 ```
 
 ## Fase 1: Auth + schema bootstrap
@@ -114,17 +125,30 @@ Gebruik `npm run verify:local-audio-flow` om het audio pad automatisch te verifi
 - check op `entries_raw.source_type='audio'` + transcript
 - check op records in `entries_normalized` en `day_journals`
 
+Gebruik `npm run verify:local-reflection-flow` om week/maandreflecties automatisch te verifiëren:
+- signup
+- seed van `day_journals`
+- generate voor `week` en `month`
+- check op records in `period_reflections`
+- check op periodegrenzen en non-empty samenvatting
+
 ## Fase 1: intake edge function
 - Functiepad: `supabase/functions/process-entry`.
 - Input text: `{ "rawText": "..." , "capturedAt"?: "ISO-8601" }`.
 - Input audio: `{ "audioBase64": "...", "audioMimeType": "audio/webm|audio/m4a|...", "capturedAt"?: "ISO-8601" }`.
 - Output: `rawEntryId`, `normalizedEntryId`, `journalDate`, `dayJournalId`, `status`, `sourceType`.
 
+## Fase 1: reflectie edge function
+- Functiepad: `supabase/functions/generate-reflection`.
+- Input: `{ "periodType": "week|month", "anchorDate"?: "YYYY-MM-DD", "forceRegenerate"?: boolean }`.
+- Output: `reflectionId`, `periodType`, `periodStart`, `periodEnd`, `generatedAt`, `modelVersion`, `status`.
+
 ## Fase 1 routes
 - `Vandaag`: dagsamenvatting voor UTC-vandaag.
 - `Vastleggen`: text + audio ingest naar `process-entry`.
 - `Dagen`: recente `day_journals`, recent eerst.
 - `Dagdetail`: `/day/[date]` met summary, sections en entries van die dag.
+- `Reflecties`: handmatige generatie en overzicht van week/maandreflecties.
 
 ## Server-side AI scaffold
 - Locatie: `src/server/ai`

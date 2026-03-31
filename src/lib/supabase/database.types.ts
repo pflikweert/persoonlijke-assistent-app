@@ -106,6 +106,45 @@ export type Database = {
         }
         Relationships: []
       }
+      period_reflections: {
+        Row: {
+          generated_at: string
+          highlights_json: Json
+          id: string
+          model_version: string
+          period_end: string
+          period_start: string
+          period_type: string
+          reflection_points_json: Json
+          summary_text: string
+          user_id: string
+        }
+        Insert: {
+          generated_at?: string
+          highlights_json?: Json
+          id?: string
+          model_version?: string
+          period_end: string
+          period_start: string
+          period_type: string
+          reflection_points_json?: Json
+          summary_text?: string
+          user_id: string
+        }
+        Update: {
+          generated_at?: string
+          highlights_json?: Json
+          id?: string
+          model_version?: string
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          reflection_points_json?: Json
+          summary_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

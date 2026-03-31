@@ -10,3 +10,9 @@ export {
   parseJournalSections,
 } from './day-journals';
 export { submitAudioEntry, submitTextEntry } from './entries';
+export {
+  fetchLatestReflection,
+  fetchRecentReflections,
+  generateReflection,
+  parseJsonStringArray,
+} from './reflections';
