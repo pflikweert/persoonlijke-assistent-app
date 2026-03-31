@@ -3,6 +3,7 @@ export type FunctionRuntimeEnv = {
   supabaseAnonKey: string;
   openAiApiKey: string;
   openAiModel: string;
+  openAiTranscriptionModel: string;
 };
 
 function readEnv(name: string): string {
@@ -43,6 +44,8 @@ export function getFunctionRuntimeEnv(): FunctionRuntimeEnv {
   const supabaseAnonKey = readEnv('SUPABASE_ANON_KEY') || selectedPublic.publishableKey;
   const openAiApiKey = readEnv('OPENAI_API_KEY');
   const openAiModel = readEnv('OPENAI_MODEL') || 'gpt-4o-mini';
+  const openAiTranscriptionModel =
+    readEnv('OPENAI_TRANSCRIPTION_MODEL') || 'gpt-4o-mini-transcribe';
 
   return {
     supabaseUrl: requireValue(
@@ -55,5 +58,6 @@ export function getFunctionRuntimeEnv(): FunctionRuntimeEnv {
     ),
     openAiApiKey: requireValue('OPENAI_API_KEY', openAiApiKey),
     openAiModel,
+    openAiTranscriptionModel,
   };
 }

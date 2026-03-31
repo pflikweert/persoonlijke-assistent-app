@@ -3,8 +3,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getFunctionRuntimeEnv } from '../_shared/env.ts';
 
 type ProcessEntryRequest = {
-  rawText: string;
-  capturedAt?: string;
+  rawText?: unknown;
+  audioBase64?: unknown;
+  audioMimeType?: unknown;
+  capturedAt?: unknown;
 };
 
 type ProcessEntryResponse = {
@@ -13,6 +15,7 @@ type ProcessEntryResponse = {
   normalizedEntryId: string;
   journalDate: string;
   dayJournalId: string;
+  sourceType: 'text' | 'audio';
 };
 
 type NormalizedEntry = {
@@ -27,6 +30,17 @@ type DayJournalDraft = {
 
 type OpenAiJson = Record<string, unknown>;
 
+type ParsedSourceInput =
+  | {
+      sourceType: 'text';
+      rawText: string;
+    }
+  | {
+      sourceType: 'audio';
+      audioBase64: string;
+      audioMimeType: string;
+    };
+
 const CORS_BASE_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -35,6 +49,7 @@ const CORS_BASE_HEADERS = {
 
 const NORMALIZATION_PROMPT_VERSION = 'entry-normalization.v1.phase1';
 const DAY_COMPOSITION_PROMPT_VERSION = 'day-composition.v1.phase1';
+const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') ?? '*';
@@ -125,6 +140,155 @@ function parseSections(value: unknown): string[] {
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
     .filter((item) => item.length > 0)
     .slice(0, 8);
+}
+
+function parseSourceInput(body: ProcessEntryRequest): { value?: ParsedSourceInput; error?: string } {
+  const rawText = parseString(body.rawText);
+  const audioBase64 = parseString(body.audioBase64);
+  const audioMimeType = parseString(body.audioMimeType);
+
+  const hasText = Boolean(rawText);
+  const hasAudio = Boolean(audioBase64);
+
+  if (hasText === hasAudio) {
+    return {
+      error: 'Provide exactly one input path: rawText or audioBase64.',
+    };
+  }
+
+  if (hasText && rawText) {
+    return {
+      value: {
+        sourceType: 'text',
+        rawText,
+      },
+    };
+  }
+
+  if (!audioMimeType) {
+    return {
+      error: 'audioMimeType is required when audioBase64 is provided.',
+    };
+  }
+
+  return {
+    value: {
+      sourceType: 'audio',
+      audioBase64: audioBase64 as string,
+      audioMimeType,
+    },
+  };
+}
+
+function sanitizeBase64(input: string): string {
+  const trimmed = input.trim();
+
+  if (trimmed.startsWith('data:')) {
+    const commaIndex = trimmed.indexOf(',');
+    if (commaIndex > -1) {
+      return trimmed.slice(commaIndex + 1).replace(/\s+/g, '');
+    }
+  }
+
+  return trimmed.replace(/\s+/g, '');
+}
+
+function decodeBase64ToBytes(input: string): Uint8Array | null {
+  const sanitized = sanitizeBase64(input);
+
+  try {
+    const binary = atob(sanitized);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return bytes;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function normalizeAudioMimeType(value: string): string {
+  return value.split(';')[0]?.trim().toLowerCase() || 'application/octet-stream';
+}
+
+function audioFileExtensionFromMimeType(mimeType: string): string {
+  switch (mimeType) {
+    case 'audio/webm':
+      return 'webm';
+    case 'audio/wav':
+    case 'audio/x-wav':
+      return 'wav';
+    case 'audio/m4a':
+      return 'm4a';
+    case 'audio/mp4':
+      return 'mp4';
+    case 'audio/mpeg':
+    case 'audio/mp3':
+      return 'mp3';
+    case 'audio/ogg':
+      return 'ogg';
+    default:
+      return 'bin';
+  }
+}
+
+async function transcribeAudio(args: {
+  apiKey: string;
+  model: string;
+  requestId: string;
+  audioBytes: Uint8Array;
+  audioMimeType: string;
+}): Promise<string | null> {
+  const normalizedMimeType = normalizeAudioMimeType(args.audioMimeType);
+  const extension = audioFileExtensionFromMimeType(normalizedMimeType);
+  const blobBytes = Uint8Array.from(args.audioBytes);
+
+  const formData = new FormData();
+  formData.append(
+    'file',
+    new Blob([blobBytes], { type: normalizedMimeType }),
+    `capture.${extension}`
+  );
+  formData.append('model', args.model);
+
+  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${args.apiKey}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('[process-entry] openai_transcription_failed', {
+      requestId: args.requestId,
+      status: response.status,
+      body: errorBody,
+    });
+    return null;
+  }
+
+  try {
+    const data = (await response.json()) as { text?: unknown };
+    const transcript = typeof data.text === 'string' ? data.text.trim() : '';
+
+    if (transcript.length === 0) {
+      console.warn('[process-entry] openai_transcription_empty', {
+        requestId: args.requestId,
+      });
+    }
+
+    return transcript;
+  } catch (_error) {
+    console.error('[process-entry] openai_transcription_parse_failed', {
+      requestId: args.requestId,
+    });
+    return null;
+  }
 }
 
 async function callOpenAiJson(args: {
@@ -286,30 +450,96 @@ Deno.serve(async (request: Request) => {
       return jsonResponse(request, 401, { error: 'Unauthorized' });
     }
 
-    const body = (await request.json()) as Partial<ProcessEntryRequest>;
-    const rawText = typeof body.rawText === 'string' ? body.rawText.trim() : '';
+    let body: ProcessEntryRequest;
 
-    if (!rawText) {
-      return jsonResponse(request, 400, { error: 'rawText is required' });
+    try {
+      const parsedBody = await request.json();
+      if (!parsedBody || typeof parsedBody !== 'object') {
+        return jsonResponse(request, 400, { error: 'Invalid JSON body' });
+      }
+
+      body = parsedBody as ProcessEntryRequest;
+    } catch (_error) {
+      return jsonResponse(request, 400, { error: 'Invalid JSON body' });
     }
 
-    const capturedAt = parseCapturedAt(body.capturedAt);
+    const parsedSource = parseSourceInput(body);
+
+    if (!parsedSource.value) {
+      return jsonResponse(request, 400, {
+        error: parsedSource.error ?? 'Invalid input payload',
+      });
+    }
+
+    const capturedAt = parseCapturedAt(parseString(body.capturedAt) ?? undefined);
     const journalDate = toJournalDate(capturedAt);
 
     console.info('[process-entry] start', {
       requestId,
       userId: authData.user.id,
       journalDate,
-      sourceType: 'text',
+      sourceType: parsedSource.value.sourceType,
     });
+
+    let sourceTextForNormalization = '';
+    let rawTextForPersist: string | null = null;
+    let transcriptTextForPersist: string | null = null;
+
+    if (parsedSource.value.sourceType === 'text') {
+      sourceTextForNormalization = parsedSource.value.rawText;
+      rawTextForPersist = parsedSource.value.rawText;
+    } else {
+      const audioBytes = decodeBase64ToBytes(parsedSource.value.audioBase64);
+
+      if (!audioBytes) {
+        return jsonResponse(request, 400, { error: 'Invalid audioBase64 payload' });
+      }
+
+      if (audioBytes.byteLength > MAX_AUDIO_BYTES) {
+        return jsonResponse(request, 413, {
+          error: 'Audio payload too large. Keep raw audio below 5MB.',
+        });
+      }
+
+      console.info('[process-entry] transcription_start', {
+        requestId,
+        sourceType: parsedSource.value.sourceType,
+        audioBytes: audioBytes.byteLength,
+        audioMimeType: normalizeAudioMimeType(parsedSource.value.audioMimeType),
+      });
+
+      const transcript = await transcribeAudio({
+        apiKey: runtimeEnv.openAiApiKey,
+        model: runtimeEnv.openAiTranscriptionModel,
+        requestId,
+        audioBytes,
+        audioMimeType: parsedSource.value.audioMimeType,
+      });
+
+      if (transcript === null) {
+        return jsonResponse(request, 502, { error: 'Failed to transcribe audio' });
+      }
+
+      const transcriptText =
+        transcript.length > 0 ? transcript : 'Geen spraak herkend in audio-opname.';
+
+      console.info('[process-entry] transcription_success', {
+        requestId,
+        sourceType: parsedSource.value.sourceType,
+        transcriptLength: transcriptText.length,
+      });
+
+      sourceTextForNormalization = transcriptText;
+      transcriptTextForPersist = transcriptText;
+    }
 
     const { data: rawEntry, error: rawError } = await supabase
       .from('entries_raw')
       .insert({
         user_id: authData.user.id,
-        source_type: 'text',
-        raw_text: rawText,
-        transcript_text: null,
+        source_type: parsedSource.value.sourceType,
+        raw_text: rawTextForPersist,
+        transcript_text: transcriptTextForPersist,
         captured_at: capturedAt,
       })
       .select('id')
@@ -324,7 +554,7 @@ Deno.serve(async (request: Request) => {
       apiKey: runtimeEnv.openAiApiKey,
       model: runtimeEnv.openAiModel,
       requestId,
-      rawText,
+      rawText: sourceTextForNormalization,
     });
 
     const { data: normalizedEntry, error: normalizedError } = await supabase
@@ -425,6 +655,7 @@ Deno.serve(async (request: Request) => {
       normalizedEntryId: normalizedEntry.id,
       journalDate,
       dayJournalId: dayJournal.id,
+      sourceType: parsedSource.value.sourceType,
     };
 
     console.info('[process-entry] success', {
@@ -433,6 +664,7 @@ Deno.serve(async (request: Request) => {
       normalizedEntryId: response.normalizedEntryId,
       dayJournalId: response.dayJournalId,
       journalDate: response.journalDate,
+      sourceType: response.sourceType,
     });
 
     return jsonResponse(request, 200, response);

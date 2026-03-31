@@ -30,6 +30,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="square.and.pencil" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="days"
+        options={{
+          title: 'Dagen',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
