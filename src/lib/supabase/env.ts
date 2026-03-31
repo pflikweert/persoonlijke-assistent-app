@@ -26,16 +26,54 @@ function formatMissingMessage(scope: 'public' | 'server', missingKeys: string[])
   ].join(' ');
 }
 
+type SupabaseTarget = 'local' | 'cloud';
+
+function getSupabaseTarget(): SupabaseTarget {
+  const rawTarget = process.env.EXPO_PUBLIC_SUPABASE_TARGET?.trim().toLowerCase() ?? 'cloud';
+  return rawTarget === 'local' ? 'local' : 'cloud';
+}
+
+function getTargetedPublicValues(target: SupabaseTarget): {
+  url: string;
+  publishableKey: string;
+  expectedNames: string[];
+} {
+  if (target === 'local') {
+    return {
+      url: process.env.EXPO_PUBLIC_SUPABASE_LOCAL_URL?.trim() ?? '',
+      publishableKey: process.env.EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY?.trim() ?? '',
+      expectedNames: [
+        'EXPO_PUBLIC_SUPABASE_LOCAL_URL',
+        'EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY',
+      ],
+    };
+  }
+
+  return {
+    url: process.env.EXPO_PUBLIC_SUPABASE_CLOUD_URL?.trim() ?? '',
+    publishableKey: process.env.EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY?.trim() ?? '',
+    expectedNames: [
+      'EXPO_PUBLIC_SUPABASE_CLOUD_URL',
+      'EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY',
+    ],
+  };
+}
+
 export function getSupabasePublicEnv(): PublicSupabaseEnv | null {
-  const url = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? '';
-  const publishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? '';
+  const target = getSupabaseTarget();
+  const targeted = getTargetedPublicValues(target);
+  const legacyUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? '';
+  const legacyKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? '';
+
+  const url = targeted.url || legacyUrl;
+  const publishableKey = targeted.publishableKey || legacyKey;
 
   const missing: string[] = [];
   if (!url) {
-    missing.push('EXPO_PUBLIC_SUPABASE_URL');
+    missing.push(...targeted.expectedNames);
   }
   if (!publishableKey) {
-    missing.push('EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+    missing.push(...targeted.expectedNames.slice(1));
   }
 
   if (missing.length > 0) {
@@ -51,20 +89,24 @@ export function getSupabasePublicEnv(): PublicSupabaseEnv | null {
 
 export function getSupabaseServerEnv(): ServerSupabaseEnv | null {
   const publicEnv = getSupabasePublicEnv();
-  const secretKey = process.env.SUPABASE_SECRET_KEY?.trim() ?? '';
+  const secretKey = process.env.APP_SUPABASE_SERVICE_ROLE_KEY?.trim() ?? '';
+  const target = getSupabaseTarget();
+  const targeted = getTargetedPublicValues(target);
+  const legacyUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? '';
+  const legacyKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? '';
 
   if (!publicEnv || !secretKey) {
     const missing: string[] = [];
     if (!publicEnv) {
-      if (!process.env.EXPO_PUBLIC_SUPABASE_URL?.trim()) {
-        missing.push('EXPO_PUBLIC_SUPABASE_URL');
+      if (!(targeted.url || legacyUrl)) {
+        missing.push(targeted.expectedNames[0]);
       }
-      if (!process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()) {
-        missing.push('EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+      if (!(targeted.publishableKey || legacyKey)) {
+        missing.push(targeted.expectedNames[1]);
       }
     }
     if (!secretKey) {
-      missing.push('SUPABASE_SECRET_KEY');
+      missing.push('APP_SUPABASE_SERVICE_ROLE_KEY');
     }
 
     warnOnce(formatMissingMessage('server', missing));

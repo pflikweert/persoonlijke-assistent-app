@@ -14,7 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      day_journals: {
+        Row: {
+          id: string
+          journal_date: string
+          sections: Json
+          summary: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          journal_date: string
+          sections?: Json
+          summary?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          journal_date?: string
+          sections?: Json
+          summary?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      entries_normalized: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          raw_entry_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          raw_entry_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          raw_entry_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entries_normalized_raw_entry_id_fkey"
+            columns: ["raw_entry_id"]
+            isOneToOne: true
+            referencedRelation: "entries_raw"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entries_raw: {
+        Row: {
+          captured_at: string
+          created_at: string
+          id: string
+          raw_text: string | null
+          source_type: string
+          transcript_text: string | null
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          created_at?: string
+          id?: string
+          raw_text?: string | null
+          source_type: string
+          transcript_text?: string | null
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          created_at?: string
+          id?: string
+          raw_text?: string | null
+          source_type?: string
+          transcript_text?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
