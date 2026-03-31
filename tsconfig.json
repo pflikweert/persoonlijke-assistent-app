@@ -1,10 +1,44 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "baseUrl": ".",
     "strict": true,
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@app/*": [
+        "app/*"
+      ],
+      "@components/*": [
+        "components/*"
+      ],
+      "@lib/*": [
+        "lib/*"
+      ],
+      "@services/*": [
+        "services/*"
+      ],
+      "@hooks/*": [
+        "hooks/*"
+      ],
+      "@app-types/*": [
+        "types/*"
+      ],
+      "@constants/*": [
+        "constants/*"
+      ],
+      "@theme/*": [
+        "theme/*"
+      ],
+      "@server-contracts/*": [
+        "server-contracts/*"
+      ],
+      "@server/*": [
+        "src/server/*"
+      ],
+      "@supabase/*": [
+        "supabase/*"
       ]
     }
   },

@@ -1,50 +1,46 @@
-# Welcome to your Expo app 👋
+# Persoonlijke Assistent App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Projectdoel
+Deze repository is de lokale basis voor een React Native / Expo app met Expo Router.  
+De focus ligt op een stabiele ontwikkelomgeving met duidelijke scripts, configuratie en structuur.  
+Functionele productfeatures worden pas toegevoegd nadat de projectfundering lokaal op orde is.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## Lokale startcommando's
 ```bash
-npm run reset-project
+npm install
+npm run dev
+npm run ios
+npm run android
+npm run web
+npm run lint
+npm run typecheck
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Env-overzicht
+- `.env.example`: template met verwachte variabelen en geen secrets.
+- `.env.local`: lokale waarden voor jouw machine, niet committen.
+- `.env`: optioneel gedeeld lokaal bestand, niet committen.
+- Public client vars: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_APP_ENV`.
+- Server-only vars: `SUPABASE_SECRET_KEY`, `SUPABASE_PROJECT_REF`, `OPENAI_API_KEY`.
+- `OPENAI_API_KEY` blijft strikt server-side en mag nooit in Expo clientcode of `EXPO_PUBLIC_*` variabelen terechtkomen.
 
-## Learn more
+## Stap-0 checklist
+- [ ] Node `24` actief (via `.nvmrc`)
+- [ ] `npm install` uitgevoerd
+- [ ] `.env.local` gevuld op basis van `.env.example`
+- [ ] `npm run lint` is groen
+- [ ] `npm run typecheck` is groen
 
-To learn more about developing your project with Expo, look at the following resources:
+## Supabase lokale workflow
+```bash
+npx supabase login
+npx supabase init
+npx supabase link --project-ref <jouw-project-ref>
+npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Server-side AI scaffold
+- Locatie: `src/server/ai`
+- Flows met stubs: transcriptie, entry normalization, day composition, period reflection.
+- Alleen contracten + structuur; nog geen productprompts of businessflows.
+- Geen Realtime API en geen vector store logica in deze fase.
