@@ -18,6 +18,9 @@ Gebruik projectdocs als enige bron voor scope en beslissingen:
 - Houd taken klein en scherp afgebakend.
 - Gebruik bestaande patronen in de repo vóór nieuwe patronen.
 
+## Skill-selectie (designdoorvoer)
+- Gebruik `.agents/skills/stitch-redesign-execution/SKILL.md` voor scherm-redesigns op basis van Stitch exports in `design_refs/...`.
+
 ## Codex-regels
 - Gebruik minimale context per prompt.
 - Herhaal geen projectcontext uit docs.
