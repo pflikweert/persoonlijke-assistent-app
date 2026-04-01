@@ -276,6 +276,15 @@ function reviewReflection(rows, label) {
   }
 
   const heavyHit = [summary, ...highlights, ...points].some(hasHeavy);
+  const markerLeak =
+    audioMarker &&
+    [summary, ...highlights, ...points].some((value) => value.includes(audioMarker));
+
+  if (markerLeak) {
+    add('FAIL', label, 'No-speech/fallbackmarker lekt door in reflectie-output.');
+    return;
+  }
+
   if (heavyHit) {
     add('FAIL', label, 'Zware/therapeutische formulering gevonden.');
   } else if (looksGeneric(summary)) {

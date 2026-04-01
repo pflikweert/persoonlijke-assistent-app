@@ -226,10 +226,6 @@ export default function ReflectionsScreen() {
                 </ThemedText>
               </ThemedView>
 
-              <ThemedText type="body" style={[styles.narrativeText, { color: palette.text }]}>
-                {activeReflection.summary_text}
-              </ThemedText>
-
               {cleanHighlights.length > 0 ? (
                 <ThemedView style={styles.highlightList}>
                   <MetaText>Belangrijkste gebeurtenissen</MetaText>

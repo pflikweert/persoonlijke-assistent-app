@@ -46,8 +46,7 @@ const LOW_CONTENT_TITLE = 'Audio-opname zonder spraak';
 const GENERIC_DAY_PHRASES = [
   'belangrijkste momenten',
   'samengevoegd',
-  'de dag',
-  'notitie(s) vastgelegd',
+  'notities vastgelegd',
   'algemene samenvatting',
 ];
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -113,6 +112,32 @@ function sanitizeShortLine(value: string, maxLength: number): string {
   return normalizeWhitespace(value).slice(0, maxLength);
 }
 
+function sanitizeSummaryLine(value: string, maxLength: number): string {
+  const normalized = normalizeWhitespace(value);
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  const sliced = normalized.slice(0, maxLength);
+  const boundary = Math.max(
+    sliced.lastIndexOf('. '),
+    sliced.lastIndexOf('; '),
+    sliced.lastIndexOf(', '),
+    sliced.lastIndexOf(' ')
+  );
+  let candidate = boundary > maxLength * 0.55 ? sliced.slice(0, boundary).trim() : sliced.trim();
+
+  while (/\b(en|of|maar|met|voor|daarna|waarna|ook|omdat|een|de|het)$/i.test(candidate)) {
+    candidate = candidate.replace(/\s+\S+$/u, '').trim();
+  }
+
+  if (candidate && !/[.!?]$/.test(candidate)) {
+    candidate = `${candidate}.`;
+  }
+
+  return candidate;
+}
+
 function normalizeForCompare(value: string): string {
   return normalizeWhitespace(value).toLowerCase();
 }
@@ -175,17 +200,25 @@ function fallbackDayJournal(entries: NormalizedEntry[]): DayJournalDraft {
     .filter((entry) => entry.length > 0)
     .slice(0, 4);
 
+  const firstSentence = narrativeText.split(/[.!?]/)[0]?.trim() ?? '';
+  const fallbackSummary =
+    firstSentence.length >= 24
+      ? sanitizeShortLine(/[.!?]$/.test(firstSentence) ? firstSentence : `${firstSentence}.`, 220)
+      : entries.length === 1
+        ? 'Kern van vandaag: 1 concrete notitie.'
+        : `Kern van vandaag: ${entries.length} concrete notities.`;
+
   return {
-    summary: entries.length === 1 ? '1 concrete notitie vastgelegd.' : `${entries.length} concrete notities vastgelegd.`,
+    summary: fallbackSummary,
     narrativeText,
     sections,
   };
 }
 
 function cleanDaySummary(value: string, fallback: string): string {
-  const summary = sanitizeShortLine(value, 220);
+  const summary = sanitizeSummaryLine(value, 220);
   if (!summary || looksGenericDayText(summary) || containsNoSpeechMarker(summary)) {
-    return sanitizeShortLine(fallback, 220);
+    return sanitizeSummaryLine(fallback, 220);
   }
 
   return summary;
@@ -358,7 +391,7 @@ async function composeDayJournal(args: {
     promptVersion: DAY_COMPOSITION_PROMPT_VERSION,
     userPrompt: JSON.stringify({
       instruction:
-        'Vat de dag samen in 1-2 concrete zinnen (summary), schrijf daarna een natuurlijk verhalende dagtekst dicht bij de bron (narrativeText), en geef 2-5 unieke sections met korte kernpunten. Geen herhaling, geen nieuwe informatie, geen fallbackmarkers.',
+        'Vat de dag samen in 1-2 concrete zinnen (summary), schrijf daarna een natuurlijk verhalende dagtekst dicht bij de bron (narrativeText), en geef 2-5 unieke sections met korte kernpunten. Geen herhaling, geen nieuwe informatie, geen fallbackmarkers en geen meta-zinnen over aantallen notities.',
       journalDate: args.journalDate,
       entries: contentEntries,
     }),

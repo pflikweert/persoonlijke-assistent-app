@@ -61,6 +61,8 @@ const HEAVY_LANGUAGE_PATTERNS = [
   /\bdiepgeworteld\b/i,
 ];
 const GENERIC_REFLECTION_PATTERNS = [
+  /in deze periode is/i,
+  /dagjournal/i,
   /belangrijkste momenten/i,
   /samengevoegd/i,
   /algemene/i,
@@ -131,6 +133,41 @@ function sanitizeLine(value: string, maxLength: number): string {
   return normalizeWhitespace(value).slice(0, maxLength);
 }
 
+function sanitizeSummaryLine(value: string, maxLength: number): string {
+  const normalized = normalizeWhitespace(value);
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  const sliced = normalized.slice(0, maxLength);
+  const boundary = Math.max(
+    sliced.lastIndexOf('. '),
+    sliced.lastIndexOf('; '),
+    sliced.lastIndexOf(', '),
+    sliced.lastIndexOf(' ')
+  );
+
+  if (boundary > maxLength * 0.55) {
+    let candidate = sliced.slice(0, boundary).trim();
+    while (/\b(en|of|maar|met|voor|daarna|waarna|ook|omdat|een|de|het)$/i.test(candidate)) {
+      candidate = candidate.replace(/\s+\S+$/u, '').trim();
+    }
+    if (candidate && !/[.!?]$/.test(candidate)) {
+      candidate = `${candidate}.`;
+    }
+    return candidate;
+  }
+
+  let fallbackCandidate = sliced.trim();
+  while (/\b(en|of|maar|met|voor|daarna|waarna|ook|omdat|een|de|het)$/i.test(fallbackCandidate)) {
+    fallbackCandidate = fallbackCandidate.replace(/\s+\S+$/u, '').trim();
+  }
+  if (fallbackCandidate && !/[.!?]$/.test(fallbackCandidate)) {
+    fallbackCandidate = `${fallbackCandidate}.`;
+  }
+  return fallbackCandidate;
+}
+
 function normalizeForCompare(value: string): string {
   return normalizeWhitespace(value).toLowerCase();
 }
@@ -169,9 +206,9 @@ function containsNoSpeechMarker(value: string): boolean {
 }
 
 function cleanReflectionSummary(summary: string, fallback: string): string {
-  const cleaned = sanitizeLine(summary, MAX_SUMMARY_LENGTH);
+  const cleaned = sanitizeSummaryLine(summary, MAX_SUMMARY_LENGTH);
   if (!cleaned || looksGenericReflectionText(cleaned) || containsHeavyLanguage(cleaned)) {
-    return sanitizeLine(fallback, MAX_SUMMARY_LENGTH);
+    return sanitizeSummaryLine(fallback, MAX_SUMMARY_LENGTH);
   }
 
   return cleaned;
@@ -182,6 +219,7 @@ function cleanReflectionList(values: string[], fallback: string[], maxItems: num
   const cleaned = preferred
     .map((value) => sanitizeLine(value, MAX_LIST_ITEM_LENGTH))
     .filter((value) => value.length > 0)
+    .filter((value) => !value.includes('?'))
     .filter((value) => !containsNoSpeechMarker(value))
     .filter((value) => !containsHeavyLanguage(value))
     .filter((value) => !looksGenericReflectionText(value));
@@ -275,7 +313,8 @@ function computePeriodBounds(periodType: 'week' | 'month', anchorDate: string): 
   };
 }
 
-function fallbackReflection(periodType: 'week' | 'month', journalCount: number): ReflectionDraft {
+function fallbackReflection(periodType: 'week' | 'month', dayJournals: DayJournalRow[]): ReflectionDraft {
+  const journalCount = dayJournals.length;
   if (journalCount === 0) {
     return {
       summaryText:
@@ -287,10 +326,27 @@ function fallbackReflection(periodType: 'week' | 'month', journalCount: number):
     };
   }
 
+  const firstSummary = dayJournals
+    .map((row) => sanitizeSummaryLine(parseString(row.summary) ?? '', MAX_SUMMARY_LENGTH))
+    .find((value) => value.length > 0);
+  const highlightPool = dedupeLines(
+    dayJournals
+      .flatMap((row) => (Array.isArray(row.sections) ? row.sections : []))
+      .map((item) => sanitizeLine(parseString(item) ?? '', MAX_LIST_ITEM_LENGTH))
+      .filter((value) => value.length > 0)
+  ).slice(0, 3);
+
+  const points =
+    highlightPool.length > 0
+      ? highlightPool.slice(0, 2).map((item) => `Blijf praktisch op: ${item}.`)
+      : ['Houd de komende periode je notities concreet met wat je deed en wat werkte.'];
+
   return {
-    summaryText: `${journalCount} dag(en) met concrete notities samengevat voor deze ${periodType === 'week' ? 'week' : 'maand'}.`,
-    highlights: ['Belangrijke concrete punten uit je dagjournals op een rij.'],
-    reflectionPoints: ['Kies 1 klein, praktisch aandachtspunt voor de volgende periode.'],
+    summaryText:
+      firstSummary ||
+      `Overzicht voor deze ${periodType === 'week' ? 'week' : 'maand'} op basis van ${journalCount} concrete dagjournals.`,
+    highlights: highlightPool,
+    reflectionPoints: points,
   };
 }
 
@@ -317,7 +373,7 @@ async function callOpenAiJson(args: {
           {
             role: 'system',
             content:
-              'Maak een rustige periodereflectie op basis van dagjournals. Blijf feitelijk, compact, praktisch en brongetrouw. Geen therapietaal, diagnose-taal of zware psychologische interpretaties. Geef alleen JSON terug met summaryText, highlights, reflectionPoints.',
+              'Maak een rustige periodereflectie op basis van dagjournals. Blijf feitelijk, compact, praktisch en brongetrouw. Geen therapietaal, diagnose-taal of zware psychologische interpretaties. Stel geen vragen in de output. Geef alleen JSON terug met summaryText, highlights, reflectionPoints.',
           },
           {
             role: 'user',
@@ -389,7 +445,7 @@ async function composeReflection(args: {
   periodEnd: string;
   dayJournals: DayJournalRow[];
 }): Promise<ReflectionDraft> {
-  const fallback = fallbackReflection(args.periodType, args.dayJournals.length);
+  const fallback = fallbackReflection(args.periodType, args.dayJournals);
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
     model: args.model,
@@ -398,7 +454,7 @@ async function composeReflection(args: {
     step: 'reflection_upserted',
     userPrompt: JSON.stringify({
       instruction:
-        'Gebruik alleen de meegegeven day journals (summary, narrative_text, sections). Vat de periode samen in concrete taal, noem korte unieke highlights en praktische reflectiepunten. Geen aannames buiten de input, geen therapie/diepte-duiding.',
+        'Gebruik alleen de meegegeven day journals (summary, narrative_text, sections). Vat de periode samen in concrete taal, noem korte unieke highlights en praktische reflectiepunten. Geen aannames buiten de input, geen therapie/diepte-duiding, geen meta-zinnen over aantallen dagjournals en geen vragen.',
       periodType: args.periodType,
       periodStart: args.periodStart,
       periodEnd: args.periodEnd,

@@ -16,6 +16,7 @@ npm run test:reflection-helpers
 npm run verify:local-flow
 npm run verify:local-audio-flow
 npm run verify:local-reflection-flow
+npm run verify:local-output-quality
 npm run ios
 npm run android
 npm run web
@@ -36,7 +37,7 @@ Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-f
   - `EXPO_PUBLIC_SUPABASE_CLOUD_URL`, `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY`
   - `EXPO_PUBLIC_APP_ENV`
 - Server-only app var: `APP_SUPABASE_SERVICE_ROLE_KEY` (alleen voor server utilities, nooit in clientcode).
-- Edge Function vars: `OPENAI_API_KEY` (vereist), `OPENAI_MODEL` (optioneel), `OPENAI_TRANSCRIPTION_MODEL` (optioneel, default `gpt-4o-mini-transcribe`).
+- Edge Function vars: `OPENAI_API_KEY` (vereist), `OPENAI_MODEL` (optioneel, default `gpt-5.4-mini`), `OPENAI_TRANSCRIPTION_MODEL` (optioneel, default `gpt-4o-mini-transcribe`).
 - `OPENAI_API_KEY` blijft strikt server-side en mag nooit in Expo clientcode of `EXPO_PUBLIC_*` variabelen terechtkomen.
 - Voor Edge Functions lokaal geldt: `supabase functions serve --env-file ...` kan custom variabelen met prefix `SUPABASE_` overslaan. Gebruik daarom geen custom `SUPABASE_*` namen in `.env.local`.
 - Zet `EXPO_PUBLIC_SUPABASE_TARGET=local` voor lokaal testen en `cloud` voor remote Supabase.

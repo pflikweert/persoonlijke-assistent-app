@@ -184,6 +184,77 @@ MONTH_COUNT="$(jq '[.[] | select(.period_type == "month")] | length' "$REFLECTIO
 SUMMARY_COUNT="$(jq '[.[] | select((.summary_text // "") | length > 0)] | length' "$REFLECTIONS_FILE")"
 HIGHLIGHTS_COUNT="$(jq '[.[] | select((.highlights_json // []) | length > 0)] | length' "$REFLECTIONS_FILE")"
 POINTS_COUNT="$(jq '[.[] | select((.reflection_points_json // []) | length > 0)] | length' "$REFLECTIONS_FILE")"
+WEEK_ROW_JSON="$(jq -c --arg id "$WEEK_REFLECTION_ID" '.[] | select(.id == $id)' "$REFLECTIONS_FILE")"
+MONTH_ROW_JSON="$(jq -c --arg id "$MONTH_REFLECTION_ID" '.[] | select(.id == $id)' "$REFLECTIONS_FILE")"
+
+if [ -z "$WEEK_ROW_JSON" ] || [ -z "$MONTH_ROW_JSON" ]; then
+  echo "FAIL reflection-flow: reflection rows voor week/month niet gevonden"
+  cat "$REFLECTIONS_FILE"
+  exit 1
+fi
+
+WEEK_MARKER_LEAK_COUNT="$(printf '%s' "$WEEK_ROW_JSON" | jq '[.summary_text, ((.highlights_json // [])[]?), ((.reflection_points_json // [])[]?)] | map((. // "") | ascii_downcase) | map(select(contains("geen spraak herkend in audio-opname"))) | length')"
+MONTH_MARKER_LEAK_COUNT="$(printf '%s' "$MONTH_ROW_JSON" | jq '[.summary_text, ((.highlights_json // [])[]?), ((.reflection_points_json // [])[]?)] | map((. // "") | ascii_downcase) | map(select(contains("geen spraak herkend in audio-opname"))) | length')"
+
+if [ "$WEEK_MARKER_LEAK_COUNT" -ne 0 ] || [ "$MONTH_MARKER_LEAK_COUNT" -ne 0 ]; then
+  echo "FAIL reflection-flow: no-speech/fallbackmarker lekt door in reflectie-output"
+  echo "week_marker_hits=$WEEK_MARKER_LEAK_COUNT month_marker_hits=$MONTH_MARKER_LEAK_COUNT"
+  exit 1
+fi
+
+SOURCE_TEXT="$(printf '%s' "$SEED_PAYLOAD" | jq -r '[.[].summary, .[].narrative_text, (.[].sections[]?)] | join(" ") | ascii_downcase')"
+SOURCE_OVERLAP_RESULT="$(
+  SOURCE_TEXT="$SOURCE_TEXT" WEEK_ROW_JSON="$WEEK_ROW_JSON" MONTH_ROW_JSON="$MONTH_ROW_JSON" node <<'NODE'
+function parseRow(raw) {
+  try {
+    return JSON.parse(raw || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function reflectionText(row) {
+  const highlights = Array.isArray(row.highlights_json) ? row.highlights_json : [];
+  const points = Array.isArray(row.reflection_points_json) ? row.reflection_points_json : [];
+  const parts = [row.summary_text, ...highlights, ...points]
+    .map((value) => String(value ?? '').toLowerCase())
+    .filter((value) => value.length > 0);
+  return parts.join(' ');
+}
+
+const source = String(process.env.SOURCE_TEXT || '').toLowerCase();
+const week = parseRow(process.env.WEEK_ROW_JSON);
+const month = parseRow(process.env.MONTH_ROW_JSON);
+const sourceTokens = Array.from(
+  new Set(
+    source
+      .split(/[^a-z0-9à-ÿ]+/i)
+      .map((token) => token.trim())
+      .filter((token) => token.length >= 8 && !/^\d+$/.test(token))
+  )
+);
+
+function hasSourceOverlap(text) {
+  return sourceTokens.some((token) => text.includes(token));
+}
+
+process.stdout.write(
+  JSON.stringify({
+    week: hasSourceOverlap(reflectionText(week)),
+    month: hasSourceOverlap(reflectionText(month)),
+  })
+);
+NODE
+)"
+
+WEEK_SOURCE_OVERLAP="$(printf '%s' "$SOURCE_OVERLAP_RESULT" | jq -r '.week')"
+MONTH_SOURCE_OVERLAP="$(printf '%s' "$SOURCE_OVERLAP_RESULT" | jq -r '.month')"
+
+if [ "$WEEK_SOURCE_OVERLAP" != "true" ] || [ "$MONTH_SOURCE_OVERLAP" != "true" ]; then
+  echo "FAIL reflection-flow: reflection content lijkt onvoldoende brongebonden"
+  echo "week_source_overlap=$WEEK_SOURCE_OVERLAP month_source_overlap=$MONTH_SOURCE_OVERLAP"
+  exit 1
+fi
 
 node <<'NODE' >"$EXPECTED_FILE"
 const anchorDate = process.env.ANCHOR_DATE;
