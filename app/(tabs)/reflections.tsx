@@ -4,6 +4,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ContentSection, StateNotice } from '@/components/ui/screen-primitives';
 import {
   classifyUnknownError,
   fetchLatestReflection,
@@ -96,27 +97,33 @@ export default function ReflectionsScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title">Reflecties</ThemedText>
-      <ThemedText>Genereer en bekijk je week- en maandreflecties op basis van dagjournals.</ThemedText>
+      <ThemedText>Week- en maandreflecties op basis van je dagjournals.</ThemedText>
 
-      {loading ? <ThemedText>Laden...</ThemedText> : null}
-      {!loading && error ? (
-        <ThemedView style={styles.feedbackBlock}>
-          <ThemedText>{error.message}</ThemedText>
-          <ThemedText>
-            {error.retryable
-              ? 'Tijdelijke fout. Probeer opnieuw.'
-              : 'Niet-retryable fout. Controleer input of login en probeer daarna opnieuw.'}
-          </ThemedText>
-          {error.requestId ? <ThemedText>Request-ID: {error.requestId}</ThemedText> : null}
-        </ThemedView>
+      {loading ? (
+        <StateNotice
+          tone="loading"
+          message="Reflecties laden..."
+          detail="We halen je laatste week- en maandreflecties op."
+        />
       ) : null}
-      {status ? <ThemedText>{status}</ThemedText> : null}
+      {!loading && error ? (
+        <StateNotice
+          tone="error"
+          message={error.message}
+          detail={
+            error.retryable
+              ? 'Tijdelijke fout. Probeer het zo opnieuw.'
+              : 'Controleer je invoer of login en probeer daarna opnieuw.'
+          }
+          meta={error.requestId ? `Referentie: ${error.requestId}` : null}
+        />
+      ) : null}
+      {status ? <StateNotice tone="success" message={status} /> : null}
 
       {!loading ? (
-        <ThemedView style={styles.section}>
-          <ThemedText type="defaultSemiBold">Laatste weekreflectie</ThemedText>
+        <ContentSection title="Laatste weekreflectie">
           {latestWeek ? (
-            <ThemedView style={styles.card}>
+            <ThemedView style={styles.cardBody}>
               <ThemedText>
                 Periode: {latestWeek.period_start} t/m {latestWeek.period_end}
               </ThemedText>
@@ -133,14 +140,13 @@ export default function ReflectionsScreen() {
               {generating === 'week' ? 'Genereren...' : 'Genereer weekreflectie'}
             </ThemedText>
           </Pressable>
-        </ThemedView>
+        </ContentSection>
       ) : null}
 
       {!loading ? (
-        <ThemedView style={styles.section}>
-          <ThemedText type="defaultSemiBold">Laatste maandreflectie</ThemedText>
+        <ContentSection title="Laatste maandreflectie">
           {latestMonth ? (
-            <ThemedView style={styles.card}>
+            <ThemedView style={styles.cardBody}>
               <ThemedText>
                 Periode: {latestMonth.period_start} t/m {latestMonth.period_end}
               </ThemedText>
@@ -157,12 +163,11 @@ export default function ReflectionsScreen() {
               {generating === 'month' ? 'Genereren...' : 'Genereer maandreflectie'}
             </ThemedText>
           </Pressable>
-        </ThemedView>
+        </ContentSection>
       ) : null}
 
       {!loading ? (
-        <ThemedView style={styles.section}>
-          <ThemedText type="defaultSemiBold">Eerdere reflecties</ThemedText>
+        <ContentSection title="Eerdere reflecties">
           {earlierReflections.length === 0 ? (
             <ThemedText>Geen eerdere reflecties beschikbaar.</ThemedText>
           ) : (
@@ -187,7 +192,7 @@ export default function ReflectionsScreen() {
               })}
             </ThemedView>
           )}
-        </ThemedView>
+        </ContentSection>
       ) : null}
     </ThemedView>
   );
@@ -200,11 +205,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
     gap: spacing.lg,
   },
-  section: {
-    gap: spacing.sm,
-  },
   list: {
     gap: spacing.sm,
+  },
+  cardBody: {
+    gap: spacing.xs,
   },
   card: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -222,8 +227,5 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
-  },
-  feedbackBlock: {
-    gap: spacing.xs,
   },
 });

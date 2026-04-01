@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#ffffff",
+              "tertiary-fixed": "#a3f69c",
+              "background": "#faf9f6",
+              "inverse-on-surface": "#f2f1ee",
+              "tertiary-fixed-dim": "#88d982",
+              "secondary": "#395f94",
+              "on-tertiary": "#ffffff",
+              "primary-fixed": "#ffe08a",
+              "secondary-fixed": "#d5e3ff",
+              "on-primary": "#ffffff",
+              "surface-container-low": "#f4f3f0",
+              "on-surface-variant": "#4e4633",
+              "surface": "#faf9f6",
+              "on-tertiary-fixed-variant": "#005312",
+              "on-secondary-fixed-variant": "#1e477b",
+              "on-background": "#1b1c1a",
+              "surface-bright": "#faf9f6",
+              "primary": "#745b00",
+              "outline": "#807660",
+              "on-primary-fixed": "#241a00",
+              "on-primary-container": "#5e4a00",
+              "inverse-primary": "#f0c115",
+              "tertiary-container": "#7fd07a",
+              "surface-variant": "#e3e2df",
+              "on-tertiary-container": "#005914",
+              "surface-tint": "#745b00",
+              "on-tertiary-fixed": "#002204",
+              "surface-container-high": "#e9e8e5",
+              "on-error": "#ffffff",
+              "tertiary": "#1b6d24",
+              "outline-variant": "#d1c5ac",
+              "on-secondary-container": "#284f83",
+              "surface-container-highest": "#e3e2df",
+              "on-primary-fixed-variant": "#574400",
+              "primary-fixed-dim": "#f0c115",
+              "on-secondary-fixed": "#001c3b",
+              "error": "#ba1a1a",
+              "surface-container-lowest": "#ffffff",
+              "inverse-surface": "#2f312f",
+              "surface-dim": "#dbdad7",
+              "secondary-container": "#9ec2fe",
+              "primary-container": "#e6b800",
+              "secondary-fixed-dim": "#a7c8ff",
+              "on-surface": "#1b1c1a",
+              "on-error-container": "#93000a",
+              "error-container": "#ffdad6",
+              "surface-container": "#efeeeb",
+              "secondary-text": "#5E646B",
+              "accent-gold": "#E6B800"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            animation: {
+              'blink': 'blink 1s step-end infinite',
+            },
+            keyframes: {
+              'blink': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0 },
+              }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f7f6f3;
+            font-family: 'Inter', sans-serif;
+            min-height: 100dvh;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+        .canvas-bg {
+            background-color: #f7f6f3;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(230, 184, 0, 0.02) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(116, 91, 0, 0.01) 0px, transparent 50%);
+        }
+        ::selection {
+            background-color: #e6b800;
+            color: #241a00;
+        }
+        textarea::-webkit-scrollbar {
+            display: none;
+        }
+        .mic-shadow {
+            box-shadow: 0 4px 20px rgba(230, 184, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="canvas-bg min-h-screen flex flex-col overflow-hidden text-on-surface">
+<!-- TopAppBar -->
+<nav class="flex items-center w-full px-6 py-4 fixed top-0 z-50">
+<button class="hover:opacity-70 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[#745b00] text-2xl font-light">arrow_back</span>
+</button>
+</nav>
+<!-- Main Capture Canvas (Writing Surface) -->
+<main class="flex-grow flex flex-col items-center justify-center px-8 sm:px-12 md:px-24">
+<div class="w-full max-w-2xl text-center flex flex-col items-center">
+<!-- Text Input Area -->
+<div class="relative w-full">
+<textarea autofocus="" class="w-full bg-transparent border-none focus:ring-0 resize-none text-center text-3xl md:text-4xl font-light leading-relaxed tracking-tight text-on-surface placeholder:text-secondary-text placeholder:opacity-60 h-auto min-h-[120px]" placeholder="Wat houdt je bezig?"></textarea>
+<!-- Elegant Blinking Cursor Hint -->
+<div class="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[110px] w-px h-10 bg-primary opacity-40 animate-blink pointer-events-none hidden sm:block"></div>
+</div>
+<!-- Secondary Guidance Line -->
+<p class="mt-4 text-sm md:text-base font-light text-secondary-text opacity-40 tracking-wide">
+                Spreek of begin met typen
+            </p>
+</div>
+</main>
+<!-- Bottom Action Area -->
+<div class="fixed bottom-12 left-0 right-0 flex justify-center items-center pointer-events-none">
+<button class="pointer-events-auto w-16 h-16 bg-accent-gold rounded-full flex items-center justify-center mic-shadow active:scale-95 transition-transform duration-200 group">
+<span class="material-symbols-outlined text-white text-3xl font-light" style="font-variation-settings: 'FILL' 1, 'wght' 300;">mic</span>
+</button>
+</div>
+<!-- Decorative Elements (Kept subtle as per tone) -->
+<div class="fixed -top-24 -right-24 w-64 h-64 bg-surface-container rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+<div class="fixed -bottom-24 -left-24 w-80 h-80 bg-surface-container-high rounded-full blur-[120px] opacity-15 pointer-events-none"></div>
+</body></html>

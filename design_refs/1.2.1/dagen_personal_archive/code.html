@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-dim": "#dbdad7",
+              "on-tertiary-fixed-variant": "#005312",
+              "on-surface-variant": "#4e4633",
+              "inverse-primary": "#f0c115",
+              "error-container": "#ffdad6",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed-dim": "#88d982",
+              "secondary": "#395f94",
+              "on-tertiary": "#ffffff",
+              "surface-variant": "#e3e2df",
+              "outline-variant": "#d1c5ac",
+              "on-error-container": "#93000a",
+              "on-tertiary-fixed": "#002204",
+              "primary-fixed": "#ffe08a",
+              "on-error": "#ffffff",
+              "on-primary-fixed-variant": "#574400",
+              "on-primary-fixed": "#241a00",
+              "outline": "#807660",
+              "on-primary": "#ffffff",
+              "on-primary-container": "#5e4a00",
+              "on-background": "#1b1c1a",
+              "surface-bright": "#faf9f6",
+              "secondary-fixed-dim": "#a7c8ff",
+              "tertiary": "#1b6d24",
+              "inverse-surface": "#2f312f",
+              "inverse-on-surface": "#f2f1ee",
+              "background": "#faf9f6",
+              "secondary-container": "#9ec2fe",
+              "surface-container": "#efeeeb",
+              "primary": "#745b00",
+              "tertiary-container": "#7fd07a",
+              "surface-tint": "#745b00",
+              "surface-container-high": "#e9e8e5",
+              "surface": "#faf9f6",
+              "on-surface": "#1b1c1a",
+              "primary-container": "#e6b800",
+              "on-secondary-fixed": "#001c3b",
+              "on-secondary-container": "#284f83",
+              "tertiary-fixed": "#a3f69c",
+              "secondary-fixed": "#d5e3ff",
+              "primary-fixed-dim": "#f0c115",
+              "surface-container-low": "#f4f3f0",
+              "surface-container-highest": "#e3e2df",
+              "on-tertiary-container": "#005914",
+              "on-secondary-fixed-variant": "#1e477b",
+              "on-secondary": "#ffffff",
+              "error": "#ba1a1a"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-40 bg-[#faf9f6] dark:bg-stone-950 flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors p-2 rounded-full active:opacity-70">
+<span class="material-symbols-outlined text-[#745b00] dark:text-[#e6b800]" data-icon="menu">menu</span>
+</button>
+<h1 class="font-sans tracking-tight font-semibold text-lg text-stone-900 dark:text-stone-50">Dagen</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors p-2 rounded-full active:opacity-70">
+<span class="material-symbols-outlined text-stone-500" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<main class="max-w-screen-md mx-auto px-6 pb-32">
+<!-- Month Group: April -->
+<section class="mt-8">
+<h2 class="text-xs tracking-[0.1em] uppercase font-bold text-primary mb-6">April</h2>
+<div class="space-y-1">
+<!-- List Item -->
+<div class="group flex items-center gap-6 py-4 px-2 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl">
+<div class="flex flex-col items-center justify-center min-w-[3rem]">
+<span class="text-[10px] uppercase tracking-widest text-stone-400 font-medium">Di</span>
+<span class="text-xl font-headline font-semibold text-stone-900">02</span>
+</div>
+<div class="flex-1 border-l border-stone-200/60 pl-6">
+<p class="text-on-surface-variant leading-relaxed text-sm">Ochtendwandeling in de mist, voelde een diepe rust bij de vijver.</p>
+</div>
+<div class="flex items-center pr-2">
+<span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors" data-icon="auto_awesome" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<!-- List Item -->
+<div class="group flex items-center gap-6 py-4 px-2 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl">
+<div class="flex flex-col items-center justify-center min-w-[3rem]">
+<span class="text-[10px] uppercase tracking-widest text-stone-400 font-medium">Ma</span>
+<span class="text-xl font-headline font-semibold text-stone-900">01</span>
+</div>
+<div class="flex-1 border-l border-stone-200/60 pl-6">
+<p class="text-on-surface-variant leading-relaxed text-sm">Eerste dag van het kwartaal, focus op intentionaliteit in werk.</p>
+</div>
+<div class="flex items-center pr-2">
+<span class="material-symbols-outlined text-stone-200" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Month Group: Maart -->
+<section class="mt-12">
+<h2 class="text-xs tracking-[0.1em] uppercase font-bold text-primary mb-6">Maart</h2>
+<div class="space-y-1">
+<!-- List Item -->
+<div class="group flex items-center gap-6 py-4 px-2 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl">
+<div class="flex flex-col items-center justify-center min-w-[3rem]">
+<span class="text-[10px] uppercase tracking-widest text-stone-400 font-medium">Zo</span>
+<span class="text-xl font-headline font-semibold text-stone-900">31</span>
+</div>
+<div class="flex-1 border-l border-stone-200/60 pl-6">
+<p class="text-on-surface-variant leading-relaxed text-sm">Afsluiting van een drukke week met een goed boek en zwarte koffie.</p>
+</div>
+<div class="flex items-center pr-2">
+<span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors" data-icon="auto_awesome" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<!-- List Item -->
+<div class="group flex items-center gap-6 py-4 px-2 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl">
+<div class="flex flex-col items-center justify-center min-w-[3rem]">
+<span class="text-[10px] uppercase tracking-widest text-stone-400 font-medium">Za</span>
+<span class="text-xl font-headline font-semibold text-stone-900">30</span>
+</div>
+<div class="flex-1 border-l border-stone-200/60 pl-6">
+<p class="text-on-surface-variant leading-relaxed text-sm">Geluisterd naar de stilte van de stad in de vroege uren.</p>
+</div>
+<div class="flex items-center pr-2">
+<span class="material-symbols-outlined text-stone-200" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- List Item -->
+<div class="group flex items-center gap-6 py-4 px-2 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl">
+<div class="flex flex-col items-center justify-center min-w-[3rem]">
+<span class="text-[10px] uppercase tracking-widest text-stone-400 font-medium">Vr</span>
+<span class="text-xl font-headline font-semibold text-stone-900">29</span>
+</div>
+<div class="flex-1 border-l border-stone-200/60 pl-6">
+<p class="text-on-surface-variant leading-relaxed text-sm">Reflectie over groei en geduld na het gesprek met Thomas.</p>
+</div>
+<div class="flex items-center pr-2">
+<span class="material-symbols-outlined text-primary/40 group-hover:text-primary transition-colors" data-icon="auto_awesome" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<!-- List Item -->
+<div class="group flex items-center gap-6 py-4 px-2 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl">
+<div class="flex flex-col items-center justify-center min-w-[3rem]">
+<span class="text-[10px] uppercase tracking-widest text-stone-400 font-medium">Do</span>
+<span class="text-xl font-headline font-semibold text-stone-900">28</span>
+</div>
+<div class="flex-1 border-l border-stone-200/60 pl-6">
+<p class="text-on-surface-variant leading-relaxed text-sm">De textuur van oud papier bracht herinneringen naar boven.</p>
+</div>
+<div class="flex items-center pr-2">
+<span class="material-symbols-outlined text-stone-200" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Empty Spacer for Bottom Nav -->
+<div class="h-24"></div>
+</main>
+<!-- Floating Action Button - Only for core context -->
+<button class="fixed right-6 bottom-24 z-50 bg-gradient-to-br from-[#745b00] to-[#e6b800] text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-8 bg-[#faf9f6]/90 dark:bg-stone-950/90 backdrop-blur-md rounded-t-3xl border-t border-stone-200/50 dark:border-stone-800/50 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-600 hover:text-stone-600 dark:hover:text-stone-300 transition-all duration-200 ease-out active:scale-95" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="today">today</span>
+<span class="font-sans text-[11px] tracking-wide uppercase font-medium">Vandaag</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#745b00] dark:text-[#e6b800] font-bold scale-110 transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="calendar_view_day">calendar_view_day</span>
+<span class="font-sans text-[11px] tracking-wide uppercase font-medium">Dagen</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-600 hover:text-stone-600 dark:hover:text-stone-300 transition-all duration-200 ease-out active:scale-95" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-sans text-[11px] tracking-wide uppercase font-medium">Reflecties</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-600 hover:text-stone-600 dark:hover:text-stone-300 transition-all duration-200 ease-out active:scale-95" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="settings">settings</span>
+<span class="font-sans text-[11px] tracking-wide uppercase font-medium">Instellingen</span>
+</a>
+</nav>
+</body></html>

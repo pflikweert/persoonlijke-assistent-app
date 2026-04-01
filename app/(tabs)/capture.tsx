@@ -12,6 +12,7 @@ import { Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ContentSection, StateNotice } from '@/components/ui/screen-primitives';
 import { classifyUnknownError, submitAudioEntry, submitTextEntry } from '@/services';
 import { spacing } from '@/theme';
 
@@ -116,16 +117,16 @@ export default function CaptureScreen() {
         setAudioUri(uri);
         setStatus(
           source === 'auto'
-            ? 'Opname automatisch gestopt na 90 seconden. Verwerk opname om op te slaan.'
-            : 'Opname klaar. Verwerk opname om op te slaan.'
+            ? 'Opname is automatisch gestopt na 90 seconden.'
+            : 'Opname is klaar om te verwerken.'
         );
-    } catch (nextError) {
-      const parsed = classifyUnknownError(nextError);
-      setError({
-        message: parsed.message,
-        retryable: parsed.retryable,
-        requestId: parsed.requestId,
-      });
+      } catch (nextError) {
+        const parsed = classifyUnknownError(nextError);
+        setError({
+          message: parsed.message,
+          retryable: parsed.retryable,
+          requestId: parsed.requestId,
+        });
       } finally {
         setRecordingActionBusy(false);
       }
@@ -197,7 +198,7 @@ export default function CaptureScreen() {
       });
 
       setRawText('');
-      setStatus('Notitie verwerkt. Terug naar Vandaag...');
+      setStatus('Notitie verwerkt.');
       router.replace('/');
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -239,7 +240,7 @@ export default function CaptureScreen() {
       });
 
       setAudioUri(null);
-      setStatus('Audio verwerkt. Terug naar Vandaag...');
+      setStatus('Audio-opname verwerkt.');
       router.replace('/');
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -256,10 +257,24 @@ export default function CaptureScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title">Vastleggen</ThemedText>
-      <ThemedText>Typ een notitie of neem kort audio op. Verwerking gebeurt server-side.</ThemedText>
+      <ThemedText>Kies tekst of audio. Verwerking gebeurt automatisch op de achtergrond.</ThemedText>
 
-      <ThemedView style={styles.block}>
-        <ThemedText type="defaultSemiBold">Tekst</ThemedText>
+      {error ? (
+        <StateNotice
+          tone="error"
+          message={error.message}
+          detail={
+            error.retryable
+              ? 'Tijdelijke fout. Probeer het zo opnieuw.'
+              : 'Controleer je invoer of login en probeer daarna opnieuw.'
+          }
+          meta={error.requestId ? `Referentie: ${error.requestId}` : null}
+        />
+      ) : null}
+      {status ? <StateNotice tone="success" message={status} /> : null}
+
+      <ContentSection title="Tekstnotitie">
+        <ThemedText style={styles.helperText}>Schrijf kort wat je wilt vastleggen.</ThemedText>
         <TextInput
           multiline
           onChangeText={setRawText}
@@ -273,15 +288,15 @@ export default function CaptureScreen() {
           onPress={handleSubmitText}
           style={[styles.button, (submitting || isRecording) && styles.buttonDisabled]}>
           <ThemedText lightColor="#FFFFFF" darkColor="#FFFFFF" type="defaultSemiBold">
-            {submitting ? 'Verwerken...' : 'Verwerk notitie'}
+            {submitting ? 'Notitie verwerken...' : 'Notitie opslaan'}
           </ThemedText>
         </Pressable>
-      </ThemedView>
+      </ContentSection>
 
-      <ThemedView style={styles.block}>
-        <ThemedText type="defaultSemiBold">Audio</ThemedText>
+      <ContentSection title="Audio-opname">
+        <ThemedText style={styles.helperText}>Neem kort op en verwerk wanneer je klaar bent.</ThemedText>
         {isRecording ? <ThemedText>Opname loopt: {recordingSeconds}s / 90s</ThemedText> : null}
-        {!isRecording && audioUri ? <ThemedText>Opname klaar. Verwerk opname om op te slaan.</ThemedText> : null}
+        {!isRecording && audioUri ? <ThemedText>Opname staat klaar voor verwerking.</ThemedText> : null}
 
         <ThemedView style={styles.audioButtons}>
           <Pressable
@@ -315,23 +330,10 @@ export default function CaptureScreen() {
             (submitting || recordingActionBusy || isRecording || !audioUri) && styles.buttonDisabled,
           ]}>
           <ThemedText lightColor="#FFFFFF" darkColor="#FFFFFF" type="defaultSemiBold">
-            {submitting ? 'Verwerken...' : 'Verwerk opname'}
+            {submitting ? 'Opname verwerken...' : 'Opname opslaan'}
           </ThemedText>
         </Pressable>
-      </ThemedView>
-
-      {error ? (
-        <ThemedView style={styles.feedbackBlock}>
-          <ThemedText>{error.message}</ThemedText>
-          <ThemedText>
-            {error.retryable
-              ? 'Tijdelijke fout. Probeer opnieuw.'
-              : 'Niet-retryable fout. Controleer input of login en probeer daarna opnieuw.'}
-          </ThemedText>
-          {error.requestId ? <ThemedText>Request-ID: {error.requestId}</ThemedText> : null}
-        </ThemedView>
-      ) : null}
-      {status ? <ThemedText>{status}</ThemedText> : null}
+      </ContentSection>
     </ThemedView>
   );
 }
@@ -345,6 +347,9 @@ const styles = StyleSheet.create({
   },
   block: {
     gap: spacing.md,
+  },
+  helperText: {
+    opacity: 0.8,
   },
   input: {
     minHeight: 140,
@@ -369,9 +374,6 @@ const styles = StyleSheet.create({
   audioButtons: {
     flexDirection: 'row',
     gap: spacing.sm,
-  },
-  feedbackBlock: {
-    gap: spacing.xs,
   },
   buttonDisabled: {
     opacity: 0.6,

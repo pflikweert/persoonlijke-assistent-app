@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ContentSection, StateNotice } from '@/components/ui/screen-primitives';
 import {
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
@@ -75,34 +76,39 @@ export default function DayDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <ThemedText type="title">Dagdetail</ThemedText>
-        <ThemedText type="defaultSemiBold">Datum (UTC): {journalDate || '-'}</ThemedText>
+        <ThemedText style={styles.metaText}>Datum (UTC): {journalDate || '-'}</ThemedText>
 
-        {loading ? <ThemedText>Laden...</ThemedText> : null}
-        {!loading && error ? <ThemedText>{error}</ThemedText> : null}
+        {loading ? (
+          <StateNotice tone="loading" message="Dagdetail laden..." detail="Even geduld, we halen de dag op." />
+        ) : null}
+        {!loading && error ? (
+          <StateNotice tone="error" message="Dagdetail kon niet geladen worden." detail={error} />
+        ) : null}
 
         {!loading && !error && !summary && entries.length === 0 ? (
-          <ThemedText>Geen data voor deze dag gevonden.</ThemedText>
+          <StateNotice
+            tone="empty"
+            message="Geen inhoud gevonden voor deze dag."
+            detail="Leg een notitie vast om deze dag te vullen."
+          />
         ) : null}
 
         {!loading && !error && summary ? (
-          <ThemedView style={styles.block}>
-            <ThemedText type="defaultSemiBold">Samenvatting</ThemedText>
+          <ContentSection title="Samenvatting">
             <ThemedText>{summary}</ThemedText>
-          </ThemedView>
+          </ContentSection>
         ) : null}
 
         {!loading && !error && sections.length > 0 ? (
-          <ThemedView style={styles.block}>
-            <ThemedText type="defaultSemiBold">Secties</ThemedText>
+          <ContentSection title="Kernpunten">
             {sections.map((section, index) => (
               <ThemedText key={`${section}-${index}`}>• {section}</ThemedText>
             ))}
-          </ThemedView>
+          </ContentSection>
         ) : null}
 
         {!loading && !error && entries.length > 0 ? (
-          <ThemedView style={styles.block}>
-            <ThemedText type="defaultSemiBold">Entries</ThemedText>
+          <ContentSection title="Notities">
             <ThemedView style={styles.entriesList}>
               {entries.map((entry) => (
                 <ThemedView key={entry.id} style={styles.entryItem}>
@@ -111,7 +117,7 @@ export default function DayDetailScreen() {
                 </ThemedView>
               ))}
             </ThemedView>
-          </ThemedView>
+          </ContentSection>
         ) : null}
 
         <Link href="/capture" asChild>
@@ -137,6 +143,9 @@ const styles = StyleSheet.create({
   },
   block: {
     gap: spacing.sm,
+  },
+  metaText: {
+    opacity: 0.7,
   },
   entriesList: {
     gap: spacing.md,

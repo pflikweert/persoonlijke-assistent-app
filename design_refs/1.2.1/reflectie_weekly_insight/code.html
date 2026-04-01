@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "tertiary-fixed-dim": "#88d982",
+            "on-error": "#ffffff",
+            "on-background": "#1b1c1a",
+            "primary-fixed": "#ffe08a",
+            "on-error-container": "#93000a",
+            "error-container": "#ffdad6",
+            "on-tertiary-fixed": "#002204",
+            "surface-container-low": "#f4f3f0",
+            "surface-container": "#efeeeb",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-high": "#e9e8e5",
+            "inverse-surface": "#2f312f",
+            "on-primary-fixed": "#241a00",
+            "primary-fixed-dim": "#f0c115",
+            "surface-bright": "#faf9f6",
+            "secondary-container": "#9ec2fe",
+            "tertiary": "#1b6d24",
+            "surface-dim": "#dbdad7",
+            "error": "#ba1a1a",
+            "inverse-on-surface": "#f2f1ee",
+            "secondary-fixed-dim": "#a7c8ff",
+            "tertiary-fixed": "#a3f69c",
+            "surface-variant": "#e3e2df",
+            "outline-variant": "#d1c5ac",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed-variant": "#574400",
+            "on-primary": "#ffffff",
+            "primary": "#745b00",
+            "outline": "#807660",
+            "on-primary-container": "#5e4a00",
+            "background": "#faf9f6",
+            "on-tertiary-fixed-variant": "#005312",
+            "on-surface-variant": "#4e4633",
+            "on-secondary": "#ffffff",
+            "secondary-fixed": "#d5e3ff",
+            "tertiary-container": "#7fd07a",
+            "primary-container": "#e6b800",
+            "inverse-primary": "#f0c115",
+            "on-tertiary-container": "#005914",
+            "surface": "#faf9f6",
+            "on-surface": "#1b1c1a",
+            "on-secondary-fixed": "#001c3b",
+            "surface-tint": "#745b00",
+            "surface-container-highest": "#e3e2df",
+            "secondary": "#395f94",
+            "on-secondary-fixed-variant": "#1e477b",
+            "on-secondary-container": "#284f83"
+          },
+          fontFamily: {
+            "headline": ["Inter"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      background-color: #faf9f6;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .editorial-gradient {
+      background: linear-gradient(180deg, rgba(250, 249, 246, 0) 0%, rgba(250, 249, 246, 1) 100%);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface mb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full flex items-center justify-between px-6 h-16 w-full bg-[#faf9f6] dark:bg-stone-950 z-50">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity scale-95 duration-200">
+<span class="material-symbols-outlined text-[#745b00] dark:text-[#e6b800]">arrow_back</span>
+</button>
+<span class="text-lg font-semibold tracking-tighter text-stone-900 dark:text-stone-50">Reflectie</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-stone-500">share</span>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto">
+<!-- Header Section -->
+<header class="mb-12">
+<h1 class="text-4xl font-headline font-bold tracking-tight text-on-background mb-2">Deze week</h1>
+<p class="text-sm font-label tracking-widest uppercase text-outline">16 – 22 FEBRUARI 2026</p>
+</header>
+<!-- Visual Anchor / Mood Image -->
+<div class="w-full h-64 rounded-3xl overflow-hidden mb-12 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Soft morning sunlight streaming through a linen curtain onto a wooden desk with a ceramic cup and a small notebook" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqavd7rzLaytlfWTHr1b4oAhZZ26j89nBnTuJqCFODPpjppvqFQ5NTjRMTfIqNLYWDImxqgDao5Z4AaNUhSPQtkd3uCbTGXS364OXbBtTcvhPSFmjPD6uUUcdXVqHkVvAK-WEW5AM-8uhxeMaMPPFHsllp0cblaKTqFfoxstFipwTa2mznOxATQQU5tZrcw-R7ZKo2QDry0eiEXhJ2bubDyIkU_24NsETV4N3JjwqT-VgUW4IamDLdw6agf1RfpY-zuWVWHt69FTW8"/>
+</div>
+<!-- Human Summary -->
+<section class="mb-12">
+<p class="text-xl md:text-2xl font-light leading-relaxed text-on-surface italic border-l-2 border-primary-container pl-6">
+        Deze week was een periode van diepe creativiteit en rust. Je vond de ruimte om te vertragen in de ochtenden, wat leidde tot een meer gefocuste werkweek.
+      </p>
+</section>
+<!-- Main Narrative Reflection -->
+<article class="prose prose-stone prose-lg mb-16">
+<div class="space-y-8 text-on-surface/90 leading-[1.8] font-body text-lg">
+<p>
+          Terwijl de dagen korter werden, leek je innerlijke wereld juist groter te worden. Er was een opvallende verschuiving merkbaar in hoe je omging met de kleine uitdagingen van de dag. Waar je normaal gesproken direct in de actie-modus zou schieten, koos je ditmaal vaker voor een moment van observatie.
+        </p>
+<p>
+          Dit 'pauzemoment' bleek de sleutel te zijn tot de creatieve doorbraken die je woensdag en donderdag ervaarde. Je schreef vaker dan gemiddeld over het gevoel van 'voldoening', niet door wat je <em>deed</em>, maar door hoe je aanwezig was in de momenten tussen de taken door.
+        </p>
+<p>
+          Het lijkt erop dat de wandelingen in de middag — hoewel kort — een noodzakelijke reset boden voor je mentale energie. Je reflecties suggereerden een gevoel van harmonie tussen je ambities en je behoefte aan stilte.
+        </p>
+</div>
+</article>
+<!-- Subtle Insights -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16">
+<div class="bg-surface-container-low p-6 rounded-2xl flex flex-col gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="lightbulb" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<h3 class="font-semibold text-sm text-on-surface">Creatieve Focus</h3>
+<p class="text-sm text-on-surface-variant">Je had veel focus op werk en projecten, vooral in de vroege uren.</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-2xl flex flex-col gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<h3 class="font-semibold text-sm text-on-surface">Energiepatroon</h3>
+<p class="text-sm text-on-surface-variant">Je energie was merkbaar hoger aan het begin van de week dan in het weekend.</p>
+</div>
+</section>
+<!-- Closing Quote -->
+<footer class="text-center py-12 border-t border-outline-variant/30">
+<p class="text-stone-400 font-serif italic text-lg">"Heldere gedachten ontstaan in een rustige geest."</p>
+</footer>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-8 bg-[#faf9f6]/90 dark:bg-stone-950/90 backdrop-blur-md rounded-t-3xl shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
+<!-- Vandaag -->
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-600 hover:text-stone-900 dark:hover:text-stone-200 tap-highlight-none transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1">event</span>
+<span class="font-sans text-[11px] font-medium tracking-wide uppercase">Vandaag</span>
+</a>
+<!-- Dagen -->
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-600 hover:text-stone-900 dark:hover:text-stone-200 tap-highlight-none transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1">book_2</span>
+<span class="font-sans text-[11px] font-medium tracking-wide uppercase">Dagen</span>
+</a>
+<!-- Reflecties (Active) -->
+<a class="flex flex-col items-center justify-center text-[#745b00] dark:text-[#e6b800] scale-110 transition-transform tap-highlight-none duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-sans text-[11px] font-medium tracking-wide uppercase">Reflecties</span>
+</a>
+<!-- Instellingen -->
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-600 hover:text-stone-900 dark:hover:text-stone-200 tap-highlight-none transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1">settings</span>
+<span class="font-sans text-[11px] font-medium tracking-wide uppercase">Instellingen</span>
+</a>
+</nav>
+</body></html>

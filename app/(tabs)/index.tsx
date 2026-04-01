@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ContentSection, StateNotice } from '@/components/ui/screen-primitives';
 import { fetchTodayJournal, getUtcTodayDate, parseJournalSections } from '@/services';
 import { spacing } from '@/theme';
 
@@ -42,24 +43,42 @@ export default function TodayScreen() {
     <ThemedView style={styles.container}>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Vandaag</ThemedText>
+        <ThemedText>Overzicht van je dag in rustige, korte punten.</ThemedText>
+        <ThemedText style={styles.metaText}>Datum (UTC): {todayDate}</ThemedText>
       </ThemedView>
 
-      <ThemedText type="defaultSemiBold">Datum (UTC): {todayDate}</ThemedText>
-
-      {loading ? <ThemedText>Laden...</ThemedText> : null}
-      {!loading && error ? <ThemedText>{error}</ThemedText> : null}
+      {loading ? (
+        <StateNotice tone="loading" message="Vandaag laden..." detail="Even geduld, we halen je dagjournal op." />
+      ) : null}
+      {!loading && error ? (
+        <StateNotice
+          tone="error"
+          message="Vandaag kon niet geladen worden."
+          detail={error}
+        />
+      ) : null}
       {!loading && !error && !summary ? (
-        <ThemedText>Nog geen dagjournal voor vandaag. Leg een eerste notitie vast.</ThemedText>
+        <StateNotice
+          tone="empty"
+          message="Er is nog geen dagjournal voor vandaag."
+          detail="Leg je eerste notitie vast om je dag op te bouwen."
+        />
       ) : null}
 
-      {!loading && !error && summary ? <ThemedText>{summary}</ThemedText> : null}
+      {!loading && !error && summary ? (
+        <ContentSection title="Dagsamenvatting">
+          <ThemedText>{summary}</ThemedText>
+        </ContentSection>
+      ) : null}
 
       {!loading && !error && sections.length > 0 ? (
-        <ThemedView style={styles.sectionsContainer}>
-          {sections.map((section, index) => (
-            <ThemedText key={`${section}-${index}`}>• {section}</ThemedText>
-          ))}
-        </ThemedView>
+        <ContentSection title="Kernpunten">
+          <ThemedView style={styles.sectionsContainer}>
+            {sections.map((section, index) => (
+              <ThemedText key={`${section}-${index}`}>• {section}</ThemedText>
+            ))}
+          </ThemedView>
+        </ContentSection>
       ) : null}
 
       <Link href="/capture" asChild>
@@ -81,7 +100,10 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   titleContainer: {
-    gap: spacing.xs,
+    gap: spacing.sm,
+  },
+  metaText: {
+    opacity: 0.7,
   },
   sectionsContainer: {
     gap: spacing.sm,
