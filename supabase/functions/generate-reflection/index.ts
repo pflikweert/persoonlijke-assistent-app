@@ -1,6 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { getFunctionRuntimeEnv } from '../_shared/env.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { logFlow } from '../_shared/flow-logger.ts';
 
 type GenerateReflectionRequest = {
   periodType?: unknown;
@@ -10,6 +14,9 @@ type GenerateReflectionRequest = {
 
 type GenerateReflectionResponse = {
   status: 'ok';
+  flow: 'generate-reflection';
+  requestId: string;
+  flowId: string;
   reflectionId: string;
   periodType: 'week' | 'month';
   periodStart: string;
@@ -33,13 +40,32 @@ type ReflectionDraft = {
 type OpenAiJson = Record<string, unknown>;
 
 const CORS_BASE_HEADERS = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-flow-id',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
 };
 
+const FLOW = 'generate-reflection' as const;
 const REFLECTION_PROMPT_VERSION = 'period-reflection.v1.phase1';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_SUMMARY_LENGTH = 280;
+const MAX_LIST_ITEM_LENGTH = 140;
+const HEAVY_LANGUAGE_PATTERNS = [
+  /\btrauma\b/i,
+  /\bdepress/i,
+  /\bstoornis\b/i,
+  /\bdiagnose\b/i,
+  /\bheling\b/i,
+  /\btherapie\b/i,
+  /\bdiepgeworteld\b/i,
+];
+const GENERIC_REFLECTION_PATTERNS = [
+  /belangrijkste momenten/i,
+  /samengevoegd/i,
+  /algemene/i,
+  /inzicht/i,
+  /reflectie/i,
+];
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') ?? '*';
@@ -61,8 +87,99 @@ function jsonResponse(request: Request, status: number, payload: unknown) {
   });
 }
 
+function errorResponse(input: {
+  request: Request;
+  httpStatus: number;
+  requestId: string;
+  flowId: string;
+  step: string;
+  code: FlowErrorCode;
+  message: string;
+  details?: Record<string, unknown>;
+}) {
+  return jsonResponse(
+    input.request,
+    input.httpStatus,
+    createFlowError({
+      flow: FLOW,
+      requestId: input.requestId,
+      flowId: input.flowId,
+      step: input.step,
+      code: input.code,
+      message: input.message,
+      ...(input.details ? { details: input.details } : {}),
+    })
+  );
+}
+
+function parseFlowId(request: Request, requestId: string): string {
+  const flowId = request.headers.get('x-flow-id')?.trim() ?? '';
+  return flowId.length > 0 ? flowId : requestId;
+}
+
 function parseString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function normalizeWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function sanitizeLine(value: string, maxLength: number): string {
+  return normalizeWhitespace(value).slice(0, maxLength);
+}
+
+function normalizeForCompare(value: string): string {
+  return normalizeWhitespace(value).toLowerCase();
+}
+
+function dedupeLines(values: string[]): string[] {
+  const seen = new Set<string>();
+  const output: string[] = [];
+
+  for (const value of values) {
+    const key = normalizeForCompare(value);
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    output.push(value);
+  }
+
+  return output;
+}
+
+function containsHeavyLanguage(value: string): boolean {
+  return HEAVY_LANGUAGE_PATTERNS.some((pattern) => pattern.test(value));
+}
+
+function looksGenericReflectionText(value: string): boolean {
+  const normalized = normalizeWhitespace(value);
+  if (normalized.length < 16) {
+    return true;
+  }
+
+  return GENERIC_REFLECTION_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
+function cleanReflectionSummary(summary: string, fallback: string): string {
+  const cleaned = sanitizeLine(summary, MAX_SUMMARY_LENGTH);
+  if (!cleaned || looksGenericReflectionText(cleaned) || containsHeavyLanguage(cleaned)) {
+    return sanitizeLine(fallback, MAX_SUMMARY_LENGTH);
+  }
+
+  return cleaned;
+}
+
+function cleanReflectionList(values: string[], fallback: string[], maxItems: number): string[] {
+  const preferred = values.length > 0 ? values : fallback;
+  const cleaned = preferred
+    .map((value) => sanitizeLine(value, MAX_LIST_ITEM_LENGTH))
+    .filter((value) => value.length > 0)
+    .filter((value) => !containsHeavyLanguage(value))
+    .filter((value) => !looksGenericReflectionText(value));
+
+  return dedupeLines(cleaned).slice(0, maxItems);
 }
 
 function parseStringArray(value: unknown): string[] {
@@ -156,17 +273,17 @@ function fallbackReflection(periodType: 'week' | 'month', journalCount: number):
     return {
       summaryText:
         periodType === 'week'
-          ? 'Geen dagjournals gevonden voor deze week.'
-          : 'Geen dagjournals gevonden voor deze maand.',
+          ? 'Geen dagjournals gevonden voor deze week. Leg eerst een notitie vast.'
+          : 'Geen dagjournals gevonden voor deze maand. Leg eerst een notitie vast.',
       highlights: [],
       reflectionPoints: [],
     };
   }
 
   return {
-    summaryText: `${journalCount} dag(en) samengevat voor deze ${periodType === 'week' ? 'week' : 'maand'}.`,
-    highlights: ['Belangrijkste momenten zijn samengevoegd uit je dagjournals.'],
-    reflectionPoints: ['Kies 1 klein concreet verbeterpunt voor de volgende periode.'],
+    summaryText: `${journalCount} dag(en) met concrete notities samengevat voor deze ${periodType === 'week' ? 'week' : 'maand'}.`,
+    highlights: ['Belangrijke concrete punten uit je dagjournals op een rij.'],
+    reflectionPoints: ['Kies 1 klein, praktisch aandachtspunt voor de volgende periode.'],
   };
 }
 
@@ -174,63 +291,89 @@ async function callOpenAiJson(args: {
   apiKey: string;
   model: string;
   requestId: string;
+  flowId: string;
+  step: string;
   userPrompt: string;
 }): Promise<OpenAiJson | null> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${args.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: args.model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Maak een nuchtere periodereflectie op basis van dagjournals. Blijf feitelijk, compact en brongetrouw. Geen therapietaal. Geef alleen JSON terug met summaryText, highlights, reflectionPoints.',
-        },
-        {
-          role: 'user',
-          content: `${args.userPrompt}\nPromptVersion: ${REFLECTION_PROMPT_VERSION}\nRequestId: ${args.requestId}`,
-        },
-      ],
-    }),
-  });
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${args.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: args.model,
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Maak een rustige periodereflectie op basis van dagjournals. Blijf feitelijk, compact, praktisch en brongetrouw. Geen therapietaal, diagnose-taal of zware psychologische interpretaties. Geef alleen JSON terug met summaryText, highlights, reflectionPoints.',
+          },
+          {
+            role: 'user',
+            content: `${args.userPrompt}\nPromptVersion: ${REFLECTION_PROMPT_VERSION}\nRequestId: ${args.requestId}`,
+          },
+        ],
+      }),
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error('[generate-reflection] openai_call_failed', {
+    if (!response.ok) {
+      const errorBody = await response.text();
+      logFlow('error', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: args.step,
+        event: 'openai_call_failed',
+        details: {
+          status: response.status,
+          body: errorBody,
+        },
+      });
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      return null;
+    }
+
+    return JSON.parse(content) as OpenAiJson;
+  } catch (error) {
+    logFlow('error', {
+      flow: FLOW,
       requestId: args.requestId,
-      status: response.status,
-      body: errorBody,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'openai_response_parse_failed',
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+      },
     });
     return null;
   }
+}
 
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string | null } }>;
-  };
-
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(content) as OpenAiJson;
-  } catch (_error) {
-    console.error('[generate-reflection] openai_json_parse_failed', { requestId: args.requestId });
-    return null;
-  }
+function sanitizeDayJournalRows(rows: DayJournalRow[]): DayJournalRow[] {
+  return rows.map((row) => ({
+    journal_date: row.journal_date,
+    summary: parseString(row.summary) ?? '',
+    sections: Array.isArray(row.sections) ? row.sections : [],
+  }));
 }
 
 async function composeReflection(args: {
   apiKey: string;
   model: string;
   requestId: string;
+  flowId: string;
   periodType: 'week' | 'month';
   periodStart: string;
   periodEnd: string;
@@ -241,9 +384,11 @@ async function composeReflection(args: {
     apiKey: args.apiKey,
     model: args.model,
     requestId: args.requestId,
+    flowId: args.flowId,
+    step: 'reflection_upserted',
     userPrompt: JSON.stringify({
       instruction:
-        'Vat de periode samen, noem korte highlights en praktische reflectiepunten. Geen diagnoses, geen aannames buiten de input.',
+        'Vat de periode samen in concrete taal, noem korte unieke highlights en praktische reflectiepunten. Geen aannames buiten de input, geen therapie/diepte-duiding.',
       periodType: args.periodType,
       periodStart: args.periodStart,
       periodEnd: args.periodEnd,
@@ -255,14 +400,21 @@ async function composeReflection(args: {
     return fallback;
   }
 
-  const summaryText = parseString(aiResult.summaryText) ?? fallback.summaryText;
-  const highlights = parseStringArray(aiResult.highlights);
-  const reflectionPoints = parseStringArray(aiResult.reflectionPoints);
+  const summaryText = cleanReflectionSummary(
+    parseString(aiResult.summaryText) ?? fallback.summaryText,
+    fallback.summaryText
+  );
+  const highlights = cleanReflectionList(parseStringArray(aiResult.highlights), fallback.highlights, 3);
+  const reflectionPoints = cleanReflectionList(
+    parseStringArray(aiResult.reflectionPoints),
+    fallback.reflectionPoints,
+    3
+  );
 
   return {
     summaryText,
-    highlights: highlights.length > 0 ? highlights : fallback.highlights,
-    reflectionPoints: reflectionPoints.length > 0 ? reflectionPoints : fallback.reflectionPoints,
+    highlights,
+    reflectionPoints,
   };
 }
 
@@ -274,20 +426,49 @@ Deno.serve(async (request: Request) => {
     });
   }
 
+  const requestId = crypto.randomUUID();
+  const flowId = parseFlowId(request, requestId);
+
   if (request.method !== 'POST') {
-    return jsonResponse(request, 405, { error: 'Method not allowed' });
+    return errorResponse({
+      request,
+      httpStatus: 405,
+      requestId,
+      flowId,
+      step: 'received',
+      code: 'INPUT_INVALID',
+      message: 'Method not allowed',
+      details: { method: request.method },
+    });
   }
 
-  const requestId = crypto.randomUUID();
+  let step = 'received';
 
   try {
+    logFlow('info', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'start',
+    });
+
     const runtimeEnv = getFunctionRuntimeEnv();
     const authHeader = request.headers.get('Authorization');
 
     if (!authHeader) {
-      return jsonResponse(request, 401, { error: 'Missing Authorization header' });
+      return errorResponse({
+        request,
+        httpStatus: 401,
+        requestId,
+        flowId,
+        step: 'authenticated',
+        code: 'AUTH_MISSING',
+        message: 'Missing Authorization header',
+      });
     }
 
+    step = 'authenticated';
     const supabase = createClient(runtimeEnv.supabaseUrl, runtimeEnv.supabaseAnonKey, {
       global: {
         headers: {
@@ -298,7 +479,25 @@ Deno.serve(async (request: Request) => {
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
-      return jsonResponse(request, 401, { error: 'Unauthorized' });
+      logFlow('warn', {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: 'auth_failed',
+        details: {
+          error: authError ? String(authError.message ?? authError) : 'missing user',
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 401,
+        requestId,
+        flowId,
+        step,
+        code: 'AUTH_UNAUTHORIZED',
+        message: 'Unauthorized',
+      });
     }
 
     let body: GenerateReflectionRequest;
@@ -306,39 +505,77 @@ Deno.serve(async (request: Request) => {
     try {
       const parsedBody = await request.json();
       if (!parsedBody || typeof parsedBody !== 'object') {
-        return jsonResponse(request, 400, { error: 'Invalid JSON body' });
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step: 'validated',
+          code: 'INPUT_INVALID',
+          message: 'Invalid JSON body',
+        });
       }
 
       body = parsedBody as GenerateReflectionRequest;
     } catch (_error) {
-      return jsonResponse(request, 400, { error: 'Invalid JSON body' });
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step: 'validated',
+        code: 'INPUT_INVALID',
+        message: 'Invalid JSON body',
+      });
     }
 
+    step = 'validated';
     const periodType = parsePeriodType(body.periodType);
     if (!periodType) {
-      return jsonResponse(request, 400, { error: 'periodType must be week or month' });
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step,
+        code: 'INPUT_INVALID',
+        message: 'periodType must be week or month',
+      });
     }
 
     let anchorDate: string;
     try {
       anchorDate = parseAnchorDate(body.anchorDate) ?? getUtcTodayDate();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Invalid anchorDate. Use YYYY-MM-DD.';
-      return jsonResponse(request, 400, { error: message });
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step,
+        code: 'INPUT_INVALID',
+        message: error instanceof Error ? error.message : 'Invalid anchorDate. Use YYYY-MM-DD.',
+      });
     }
     const forceRegenerate = parseForceRegenerate(body.forceRegenerate);
     const bounds = computePeriodBounds(periodType, anchorDate);
 
-    console.info('[generate-reflection] start', {
+    logFlow('info', {
+      flow: FLOW,
       requestId,
-      userId: authData.user.id,
-      periodType,
-      periodStart: bounds.periodStart,
-      periodEnd: bounds.periodEnd,
-      forceRegenerate,
+      flowId,
+      step,
+      event: 'validated',
+      details: {
+        userId: authData.user.id,
+        periodType,
+        periodStart: bounds.periodStart,
+        periodEnd: bounds.periodEnd,
+        forceRegenerate,
+      },
     });
 
+    step = 'existing_checked';
     const { data: existingReflection, error: existingError } = await supabase
       .from('period_reflections')
       .select('id, generated_at, model_version')
@@ -349,16 +586,44 @@ Deno.serve(async (request: Request) => {
       .maybeSingle();
 
     if (existingError) {
-      console.error('[generate-reflection] select_existing_failed', {
+      logFlow('error', {
+        flow: FLOW,
         requestId,
-        error: existingError,
+        flowId,
+        step,
+        event: 'select_existing_failed',
+        details: {
+          error: String(existingError.message ?? existingError),
+        },
       });
-      return jsonResponse(request, 500, { error: 'Failed to read existing reflection' });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_READ_FAILED',
+        message: 'Failed to read existing reflection',
+      });
     }
 
     if (existingReflection && !forceRegenerate) {
+      logFlow('info', {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: 'existing_reflection_reused',
+        details: {
+          reflectionId: existingReflection.id,
+        },
+      });
+
       const response: GenerateReflectionResponse = {
         status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
         reflectionId: existingReflection.id,
         periodType,
         periodStart: bounds.periodStart,
@@ -370,6 +635,7 @@ Deno.serve(async (request: Request) => {
       return jsonResponse(request, 200, response);
     }
 
+    step = 'day_journals_loaded';
     const { data: dayJournals, error: dayJournalsError } = await supabase
       .from('day_journals')
       .select('journal_date, summary, sections')
@@ -379,21 +645,39 @@ Deno.serve(async (request: Request) => {
       .order('journal_date', { ascending: true });
 
     if (dayJournalsError) {
-      console.error('[generate-reflection] select_day_journals_failed', {
+      logFlow('error', {
+        flow: FLOW,
         requestId,
-        error: dayJournalsError,
+        flowId,
+        step,
+        event: 'select_day_journals_failed',
+        details: {
+          error: String(dayJournalsError.message ?? dayJournalsError),
+        },
       });
-      return jsonResponse(request, 500, { error: 'Failed to load day journals' });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_READ_FAILED',
+        message: 'Failed to load day journals',
+      });
     }
 
+    const safeDayJournals = sanitizeDayJournalRows((dayJournals ?? []) as DayJournalRow[]);
+
+    step = 'reflection_upserted';
     const reflection = await composeReflection({
       apiKey: runtimeEnv.openAiApiKey,
       model: runtimeEnv.openAiModel,
       requestId,
+      flowId,
       periodType,
       periodStart: bounds.periodStart,
       periodEnd: bounds.periodEnd,
-      dayJournals: (dayJournals ?? []) as DayJournalRow[],
+      dayJournals: safeDayJournals,
     });
 
     const generatedAt = new Date().toISOString();
@@ -419,24 +703,48 @@ Deno.serve(async (request: Request) => {
       .single();
 
     if (upsertError || !upsertedReflection) {
-      console.error('[generate-reflection] upsert_failed', {
+      logFlow('error', {
+        flow: FLOW,
         requestId,
-        error: upsertError,
+        flowId,
+        step,
+        event: 'upsert_failed',
+        details: {
+          error: upsertError ? String(upsertError.message ?? upsertError) : 'missing row',
+        },
       });
-      return jsonResponse(request, 500, { error: 'Failed to store reflection' });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_WRITE_FAILED',
+        message: 'Failed to store reflection',
+      });
     }
 
-    console.info('[generate-reflection] success', {
+    step = 'completed';
+    logFlow('info', {
+      flow: FLOW,
       requestId,
-      periodType,
-      periodStart: bounds.periodStart,
-      periodEnd: bounds.periodEnd,
-      dayJournalCount: (dayJournals ?? []).length,
-      reflectionId: upsertedReflection.id,
+      flowId,
+      step,
+      event: 'success',
+      details: {
+        periodType,
+        periodStart: bounds.periodStart,
+        periodEnd: bounds.periodEnd,
+        dayJournalCount: safeDayJournals.length,
+        reflectionId: upsertedReflection.id,
+      },
     });
 
     const response: GenerateReflectionResponse = {
       status: 'ok',
+      flow: FLOW,
+      requestId,
+      flowId,
       reflectionId: upsertedReflection.id,
       periodType,
       periodStart: bounds.periodStart,
@@ -447,10 +755,24 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
-    console.error('[generate-reflection] fatal', {
+    logFlow('error', {
+      flow: FLOW,
       requestId,
-      error: error instanceof Error ? error.message : String(error),
+      flowId,
+      step,
+      event: 'fatal',
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+      },
     });
-    return jsonResponse(request, 500, { error: 'Internal error' });
+    return errorResponse({
+      request,
+      httpStatus: 500,
+      requestId,
+      flowId,
+      step,
+      code: 'INTERNAL_UNEXPECTED',
+      message: 'Internal error',
+    });
   }
 });

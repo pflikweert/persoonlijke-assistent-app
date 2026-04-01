@@ -5,6 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
+  classifyUnknownError,
   fetchLatestReflection,
   fetchRecentReflections,
   generateReflection,
@@ -19,7 +20,11 @@ function periodTypeLabel(periodType: PeriodType): string {
 
 export default function ReflectionsScreen() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    message: string;
+    retryable: boolean;
+    requestId: string | null;
+  } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [generating, setGenerating] = useState<PeriodType | null>(null);
   const [latestWeek, setLatestWeek] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
@@ -41,9 +46,12 @@ export default function ReflectionsScreen() {
       setLatestMonth(monthRow);
       setRecent(recentRows);
     } catch (nextError) {
-      const message =
-        nextError instanceof Error ? nextError.message : 'Kon reflecties niet laden.';
-      setError(message);
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
       setLatestWeek(null);
       setLatestMonth(null);
       setRecent([]);
@@ -71,9 +79,12 @@ export default function ReflectionsScreen() {
       setStatus(`${periodTypeLabel(periodType)}reflectie gegenereerd.`);
       await loadReflections();
     } catch (nextError) {
-      const message =
-        nextError instanceof Error ? nextError.message : 'Genereren van reflectie is mislukt.';
-      setError(message);
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
     } finally {
       setGenerating(null);
     }
@@ -88,7 +99,17 @@ export default function ReflectionsScreen() {
       <ThemedText>Genereer en bekijk je week- en maandreflecties op basis van dagjournals.</ThemedText>
 
       {loading ? <ThemedText>Laden...</ThemedText> : null}
-      {!loading && error ? <ThemedText>{error}</ThemedText> : null}
+      {!loading && error ? (
+        <ThemedView style={styles.feedbackBlock}>
+          <ThemedText>{error.message}</ThemedText>
+          <ThemedText>
+            {error.retryable
+              ? 'Tijdelijke fout. Probeer opnieuw.'
+              : 'Niet-retryable fout. Controleer input of login en probeer daarna opnieuw.'}
+          </ThemedText>
+          {error.requestId ? <ThemedText>Request-ID: {error.requestId}</ThemedText> : null}
+        </ThemedView>
+      ) : null}
       {status ? <ThemedText>{status}</ThemedText> : null}
 
       {!loading ? (
@@ -201,5 +222,8 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  feedbackBlock: {
+    gap: spacing.xs,
   },
 });

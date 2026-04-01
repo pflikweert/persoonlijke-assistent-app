@@ -1,6 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { getFunctionRuntimeEnv } from '../_shared/env.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { logFlow } from '../_shared/flow-logger.ts';
 
 type ProcessEntryRequest = {
   rawText?: unknown;
@@ -11,6 +15,9 @@ type ProcessEntryRequest = {
 
 type ProcessEntryResponse = {
   status: 'ok';
+  flow: 'process-entry';
+  requestId: string;
+  flowId: string;
   rawEntryId: string;
   normalizedEntryId: string;
   journalDate: string;
@@ -42,14 +49,26 @@ type ParsedSourceInput =
     };
 
 const CORS_BASE_HEADERS = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-flow-id',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
 };
 
+const FLOW = 'process-entry' as const;
 const NORMALIZATION_PROMPT_VERSION = 'entry-normalization.v1.phase1';
 const DAY_COMPOSITION_PROMPT_VERSION = 'day-composition.v1.phase1';
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+const NO_SPEECH_TRANSCRIPT = 'Geen spraak herkend in audio-opname.';
+const LOW_CONTENT_TITLE = 'Audio-opname zonder spraak';
+const LOW_CONTENT_BODY = 'Geen bruikbare spraakinhoud gevonden in de opname.';
+const GENERIC_TITLES = new Set(['notitie', 'update', 'gedachte', 'dagboek', 'memo']);
+const GENERIC_DAY_PHRASES = [
+  'belangrijkste momenten',
+  'samengevoegd',
+  'de dag',
+  'notitie(s) vastgelegd',
+  'algemene samenvatting',
+];
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') ?? '*';
@@ -69,6 +88,36 @@ function jsonResponse(request: Request, status: number, payload: unknown) {
       'Content-Type': 'application/json',
     },
   });
+}
+
+function errorResponse(input: {
+  request: Request;
+  httpStatus: number;
+  requestId: string;
+  flowId: string;
+  step: string;
+  code: FlowErrorCode;
+  message: string;
+  details?: Record<string, unknown>;
+}) {
+  return jsonResponse(
+    input.request,
+    input.httpStatus,
+    createFlowError({
+      flow: FLOW,
+      requestId: input.requestId,
+      flowId: input.flowId,
+      step: input.step,
+      code: input.code,
+      message: input.message,
+      ...(input.details ? { details: input.details } : {}),
+    })
+  );
+}
+
+function parseFlowId(request: Request, requestId: string): string {
+  const flowId = request.headers.get('x-flow-id')?.trim() ?? '';
+  return flowId.length > 0 ? flowId : requestId;
 }
 
 function parseCapturedAt(capturedAt?: string): string {
@@ -114,15 +163,18 @@ function fallbackNormalization(rawText: string): NormalizedEntry {
 function fallbackDayJournal(entries: NormalizedEntry[]): DayJournalDraft {
   if (entries.length === 0) {
     return {
-      summary: 'Nog geen notities voor deze dag.',
+      summary: 'Nog geen bruikbare notities voor deze dag.',
       sections: [],
     };
   }
 
-  const sections = entries.slice(0, 5).map((entry) => entry.title);
+  const sections = entries
+    .map((entry) => sanitizeShortLine(entry.title, 80))
+    .filter((entry) => entry.length > 0)
+    .slice(0, 4);
 
   return {
-    summary: `${entries.length} notitie(s) vastgelegd.`,
+    summary: entries.length === 1 ? '1 concrete notitie vastgelegd.' : `${entries.length} concrete notities vastgelegd.`,
     sections,
   };
 }
@@ -131,15 +183,117 @@ function parseString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
 
+function normalizeWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function sanitizeShortLine(value: string, maxLength: number): string {
+  return normalizeWhitespace(value).slice(0, maxLength);
+}
+
+function normalizeForCompare(value: string): string {
+  return normalizeWhitespace(value).toLowerCase();
+}
+
+function dedupeByNormalizedValue(items: string[]): string[] {
+  const seen = new Set<string>();
+  const output: string[] = [];
+
+  for (const item of items) {
+    const key = normalizeForCompare(item);
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    output.push(item);
+  }
+
+  return output;
+}
+
+function looksGenericTitle(value: string): boolean {
+  const normalized = normalizeForCompare(value);
+  return normalized.length < 4 || GENERIC_TITLES.has(normalized);
+}
+
+function looksGenericDayText(value: string): boolean {
+  const normalized = normalizeForCompare(value);
+  if (normalized.length < 12) {
+    return true;
+  }
+
+  return GENERIC_DAY_PHRASES.some((phrase) => normalized.includes(phrase));
+}
+
+function containsNoSpeechMarker(value: string): boolean {
+  return normalizeForCompare(value).includes(normalizeForCompare(NO_SPEECH_TRANSCRIPT));
+}
+
+function isLowContentEntry(entry: NormalizedEntry): boolean {
+  return (
+    containsNoSpeechMarker(entry.title) ||
+    containsNoSpeechMarker(entry.body) ||
+    normalizeForCompare(entry.title) === normalizeForCompare(LOW_CONTENT_TITLE)
+  );
+}
+
+function cleanNormalizedTitle(value: string, fallback: string): string {
+  const candidate = sanitizeShortLine(value, 80);
+  if (!candidate || looksGenericTitle(candidate)) {
+    return sanitizeShortLine(fallback, 80) || 'Notitie';
+  }
+
+  return candidate;
+}
+
+function cleanNormalizedBody(value: string, fallback: string): string {
+  const candidate = sanitizeShortLine(value, 600);
+  if (!candidate || candidate.length < 12) {
+    return sanitizeShortLine(fallback, 600);
+  }
+
+  return candidate;
+}
+
+function cleanDaySummary(value: string, fallback: string): string {
+  const summary = sanitizeShortLine(value, 220);
+  if (!summary || looksGenericDayText(summary)) {
+    return sanitizeShortLine(fallback, 220);
+  }
+
+  return summary;
+}
+
+function cleanDaySections(input: {
+  candidateSections: string[];
+  summary: string;
+  fallbackSections: string[];
+}): string[] {
+  const summaryKey = normalizeForCompare(input.summary);
+  const preferred = input.candidateSections.length > 0 ? input.candidateSections : input.fallbackSections;
+  const cleaned = preferred
+    .map((item) => sanitizeShortLine(item, 90))
+    .filter((item) => item.length > 0)
+    .filter((item) => !looksGenericDayText(item))
+    .filter((item) => {
+      const key = normalizeForCompare(item);
+      return !summaryKey || key !== summaryKey;
+    });
+
+  return dedupeByNormalizedValue(cleaned).slice(0, 5);
+}
+
 function parseSections(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return value
+  const parsed = value
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
-    .filter((item) => item.length > 0)
-    .slice(0, 8);
+    .map((item) => sanitizeShortLine(item, 90))
+    .filter((item) => item.length > 0);
+
+  return dedupeByNormalizedValue(parsed).slice(0, 5);
 }
 
 function parseSourceInput(body: ProcessEntryRequest): { value?: ParsedSourceInput; error?: string } {
@@ -239,53 +393,71 @@ async function transcribeAudio(args: {
   apiKey: string;
   model: string;
   requestId: string;
+  flowId: string;
   audioBytes: Uint8Array;
   audioMimeType: string;
 }): Promise<string | null> {
-  const normalizedMimeType = normalizeAudioMimeType(args.audioMimeType);
-  const extension = audioFileExtensionFromMimeType(normalizedMimeType);
-  const blobBytes = Uint8Array.from(args.audioBytes);
-
-  const formData = new FormData();
-  formData.append(
-    'file',
-    new Blob([blobBytes], { type: normalizedMimeType }),
-    `capture.${extension}`
-  );
-  formData.append('model', args.model);
-
-  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${args.apiKey}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error('[process-entry] openai_transcription_failed', {
-      requestId: args.requestId,
-      status: response.status,
-      body: errorBody,
-    });
-    return null;
-  }
-
   try {
+    const normalizedMimeType = normalizeAudioMimeType(args.audioMimeType);
+    const extension = audioFileExtensionFromMimeType(normalizedMimeType);
+    const blobBytes = Uint8Array.from(args.audioBytes);
+
+    const formData = new FormData();
+    formData.append(
+      'file',
+      new Blob([blobBytes], { type: normalizedMimeType }),
+      `capture.${extension}`
+    );
+    formData.append('model', args.model);
+
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${args.apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      logFlow('error', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: 'transcribed',
+        event: 'openai_transcription_failed',
+        details: {
+          status: response.status,
+          body: errorBody,
+        },
+      });
+      return null;
+    }
+
     const data = (await response.json()) as { text?: unknown };
     const transcript = typeof data.text === 'string' ? data.text.trim() : '';
 
     if (transcript.length === 0) {
-      console.warn('[process-entry] openai_transcription_empty', {
+      logFlow('warn', {
+        flow: FLOW,
         requestId: args.requestId,
+        flowId: args.flowId,
+        step: 'transcribed',
+        event: 'openai_transcription_empty',
       });
     }
 
     return transcript;
-  } catch (_error) {
-    console.error('[process-entry] openai_transcription_parse_failed', {
+  } catch (error) {
+    logFlow('error', {
+      flow: FLOW,
       requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'transcribed',
+      event: 'openai_transcription_exception',
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+      },
     });
     return null;
   }
@@ -295,54 +467,71 @@ async function callOpenAiJson(args: {
   apiKey: string;
   model: string;
   requestId: string;
+  flowId: string;
+  step: string;
   promptVersion: string;
   systemPrompt: string;
   userPrompt: string;
 }): Promise<OpenAiJson | null> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${args.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: args.model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `${args.systemPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
-        },
-        { role: 'user', content: args.userPrompt },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error('[process-entry] openai_call_failed', {
-      requestId: args.requestId,
-      status: response.status,
-      body: errorBody,
-    });
-    return null;
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string | null } }>;
-  };
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    return null;
-  }
-
   try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${args.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: args.model,
+        temperature: 0.2,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content: `${args.systemPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
+          },
+          { role: 'user', content: args.userPrompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      logFlow('error', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: args.step,
+        event: 'openai_call_failed',
+        details: {
+          status: response.status,
+          body: errorBody,
+        },
+      });
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      return null;
+    }
+
     const parsed = JSON.parse(content) as OpenAiJson;
     return parsed;
-  } catch (_error) {
-    console.error('[process-entry] openai_json_parse_failed', { requestId: args.requestId });
+  } catch (error) {
+    logFlow('error', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'openai_response_parse_failed',
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
     return null;
   }
 }
@@ -351,18 +540,28 @@ async function normalizeEntry(args: {
   apiKey: string;
   model: string;
   requestId: string;
+  flowId: string;
   rawText: string;
 }): Promise<NormalizedEntry> {
+  if (containsNoSpeechMarker(args.rawText)) {
+    return {
+      title: LOW_CONTENT_TITLE,
+      body: LOW_CONTENT_BODY,
+    };
+  }
+
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
     model: args.model,
     requestId: args.requestId,
+    flowId: args.flowId,
+    step: 'normalized_persisted',
     promptVersion: NORMALIZATION_PROMPT_VERSION,
     systemPrompt:
-      'Normaliseer een persoonlijke notitie. Blijf brongetrouw, nuchter en compact. Geef alleen title en body terug als JSON.',
+      'Normaliseer een persoonlijke notitie. Blijf strikt brongetrouw, feitelijk en compact. Geen therapietaal, geen diagnoses, geen interpretaties. Geef alleen JSON terug met title en body.',
     userPrompt: JSON.stringify({
       instruction:
-        'Maak een korte titel en een opgeschoonde body. Voeg geen interpretaties, advies, tags of personen toe.',
+        'Maak 1 concrete titel en 1 opgeschoonde body op basis van de bron. Gebruik rustige, praktische taal. Vermijd clichés en herhaling.',
       rawText: args.rawText,
     }),
   });
@@ -373,9 +572,12 @@ async function normalizeEntry(args: {
     return fallback;
   }
 
+  const nextTitle = cleanNormalizedTitle(parseString(aiResult.title) ?? fallback.title, fallback.title);
+  const nextBody = cleanNormalizedBody(parseString(aiResult.body) ?? fallback.body, fallback.body);
+
   return {
-    title: parseString(aiResult.title) ?? fallback.title,
-    body: parseString(aiResult.body) ?? fallback.body,
+    title: nextTitle,
+    body: nextBody,
   };
 }
 
@@ -383,35 +585,49 @@ async function composeDayJournal(args: {
   apiKey: string;
   model: string;
   requestId: string;
+  flowId: string;
   journalDate: string;
   normalizedEntries: NormalizedEntry[];
 }): Promise<DayJournalDraft> {
+  const contentEntries = args.normalizedEntries.filter((entry) => !isLowContentEntry(entry));
+  const fallback = fallbackDayJournal(contentEntries);
+
+  if (contentEntries.length === 0) {
+    return fallback;
+  }
+
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
     model: args.model,
     requestId: args.requestId,
+    flowId: args.flowId,
+    step: 'day_journal_upserted',
     promptVersion: DAY_COMPOSITION_PROMPT_VERSION,
     systemPrompt:
-      'Maak een eenvoudige dagjournal-samenvatting op basis van notities. Wees feitelijk en kort. Geef alleen summary en sections terug als JSON.',
+      'Maak een rustige, feitelijke dagsamenvatting op basis van notities. Blijf dicht bij de bron, compact en praktisch. Geen therapietaal of interpretatie. Geef alleen JSON terug met summary en sections.',
     userPrompt: JSON.stringify({
       instruction:
-        'Vat de dag compact samen in 1-2 zinnen. Gebruik sections als korte bullets. Geen psychologische analyse.',
+        'Vat de dag samen in 1-2 concrete zinnen. Geef 2-5 unieke sections met korte, specifieke bullets. Vermijd herhaling en opvulzinnen.',
       journalDate: args.journalDate,
-      entries: args.normalizedEntries,
+      entries: contentEntries,
     }),
   });
-
-  const fallback = fallbackDayJournal(args.normalizedEntries);
 
   if (!aiResult) {
     return fallback;
   }
 
+  const summary = cleanDaySummary(parseString(aiResult.summary) ?? fallback.summary, fallback.summary);
   const parsedSections = parseSections(aiResult.sections);
+  const sections = cleanDaySections({
+    candidateSections: parsedSections,
+    summary,
+    fallbackSections: fallback.sections,
+  });
 
   return {
-    summary: parseString(aiResult.summary) ?? fallback.summary,
-    sections: parsedSections.length > 0 ? parsedSections : fallback.sections,
+    summary,
+    sections,
   };
 }
 
@@ -423,20 +639,50 @@ Deno.serve(async (request: Request) => {
     });
   }
 
+  const requestId = crypto.randomUUID();
+  const flowId = parseFlowId(request, requestId);
+
   if (request.method !== 'POST') {
-    return jsonResponse(request, 405, { error: 'Method not allowed' });
+    return errorResponse({
+      request,
+      httpStatus: 405,
+      requestId,
+      flowId,
+      step: 'received',
+      code: 'INPUT_INVALID',
+      message: 'Method not allowed',
+      details: { method: request.method },
+    });
   }
 
-  const requestId = crypto.randomUUID();
+  let step = 'received';
+  let rawEntryId: string | null = null;
 
   try {
+    logFlow('info', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'start',
+    });
+
     const runtimeEnv = getFunctionRuntimeEnv();
     const authHeader = request.headers.get('Authorization');
 
     if (!authHeader) {
-      return jsonResponse(request, 401, { error: 'Missing Authorization header' });
+      return errorResponse({
+        request,
+        httpStatus: 401,
+        requestId,
+        flowId,
+        step: 'authenticated',
+        code: 'AUTH_MISSING',
+        message: 'Missing Authorization header',
+      });
     }
 
+    step = 'authenticated';
     const supabase = createClient(runtimeEnv.supabaseUrl, runtimeEnv.supabaseAnonKey, {
       global: {
         headers: {
@@ -447,7 +693,25 @@ Deno.serve(async (request: Request) => {
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
-      return jsonResponse(request, 401, { error: 'Unauthorized' });
+      logFlow('warn', {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: 'auth_failed',
+        details: {
+          error: authError ? String(authError.message ?? authError) : 'missing user',
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 401,
+        requestId,
+        flowId,
+        step,
+        code: 'AUTH_UNAUTHORIZED',
+        message: 'Unauthorized',
+      });
     }
 
     let body: ProcessEntryRequest;
@@ -455,30 +719,73 @@ Deno.serve(async (request: Request) => {
     try {
       const parsedBody = await request.json();
       if (!parsedBody || typeof parsedBody !== 'object') {
-        return jsonResponse(request, 400, { error: 'Invalid JSON body' });
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step: 'validated',
+          code: 'INPUT_INVALID',
+          message: 'Invalid JSON body',
+        });
       }
 
       body = parsedBody as ProcessEntryRequest;
     } catch (_error) {
-      return jsonResponse(request, 400, { error: 'Invalid JSON body' });
-    }
-
-    const parsedSource = parseSourceInput(body);
-
-    if (!parsedSource.value) {
-      return jsonResponse(request, 400, {
-        error: parsedSource.error ?? 'Invalid input payload',
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step: 'validated',
+        code: 'INPUT_INVALID',
+        message: 'Invalid JSON body',
       });
     }
 
-    const capturedAt = parseCapturedAt(parseString(body.capturedAt) ?? undefined);
+    step = 'validated';
+    const parsedSource = parseSourceInput(body);
+
+    if (!parsedSource.value) {
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step,
+        code: 'INPUT_INVALID',
+        message: parsedSource.error ?? 'Invalid input payload',
+      });
+    }
+
+    let capturedAt: string;
+    try {
+      capturedAt = parseCapturedAt(parseString(body.capturedAt) ?? undefined);
+    } catch (error) {
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step,
+        code: 'INPUT_INVALID',
+        message: error instanceof Error ? error.message : 'Invalid capturedAt.',
+      });
+    }
+
     const journalDate = toJournalDate(capturedAt);
 
-    console.info('[process-entry] start', {
+    logFlow('info', {
+      flow: FLOW,
       requestId,
-      userId: authData.user.id,
-      journalDate,
-      sourceType: parsedSource.value.sourceType,
+      flowId,
+      step,
+      event: 'validated',
+      details: {
+        userId: authData.user.id,
+        journalDate,
+        sourceType: parsedSource.value.sourceType,
+      },
     });
 
     let sourceTextForNormalization = '';
@@ -492,47 +799,82 @@ Deno.serve(async (request: Request) => {
       const audioBytes = decodeBase64ToBytes(parsedSource.value.audioBase64);
 
       if (!audioBytes) {
-        return jsonResponse(request, 400, { error: 'Invalid audioBase64 payload' });
-      }
-
-      if (audioBytes.byteLength > MAX_AUDIO_BYTES) {
-        return jsonResponse(request, 413, {
-          error: 'Audio payload too large. Keep raw audio below 5MB.',
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'Invalid audioBase64 payload',
         });
       }
 
-      console.info('[process-entry] transcription_start', {
+      if (audioBytes.byteLength > MAX_AUDIO_BYTES) {
+        return errorResponse({
+          request,
+          httpStatus: 413,
+          requestId,
+          flowId,
+          step,
+          code: 'PAYLOAD_TOO_LARGE',
+          message: 'Audio payload too large. Keep raw audio below 5MB.',
+        });
+      }
+
+      step = 'transcribed';
+      logFlow('info', {
+        flow: FLOW,
         requestId,
-        sourceType: parsedSource.value.sourceType,
-        audioBytes: audioBytes.byteLength,
-        audioMimeType: normalizeAudioMimeType(parsedSource.value.audioMimeType),
+        flowId,
+        step,
+        event: 'transcription_start',
+        details: {
+          audioBytes: audioBytes.byteLength,
+          audioMimeType: normalizeAudioMimeType(parsedSource.value.audioMimeType),
+        },
       });
 
       const transcript = await transcribeAudio({
         apiKey: runtimeEnv.openAiApiKey,
         model: runtimeEnv.openAiTranscriptionModel,
         requestId,
+        flowId,
         audioBytes,
         audioMimeType: parsedSource.value.audioMimeType,
       });
 
       if (transcript === null) {
-        return jsonResponse(request, 502, { error: 'Failed to transcribe audio' });
+        return errorResponse({
+          request,
+          httpStatus: 502,
+          requestId,
+          flowId,
+          step,
+          code: 'UPSTREAM_UNAVAILABLE',
+          message: 'Failed to transcribe audio',
+        });
       }
 
       const transcriptText =
-        transcript.length > 0 ? transcript : 'Geen spraak herkend in audio-opname.';
+        transcript.length > 0 ? transcript : NO_SPEECH_TRANSCRIPT;
 
-      console.info('[process-entry] transcription_success', {
+      logFlow('info', {
+        flow: FLOW,
         requestId,
-        sourceType: parsedSource.value.sourceType,
-        transcriptLength: transcriptText.length,
+        flowId,
+        step,
+        event: 'transcription_success',
+        details: {
+          transcriptLength: transcriptText.length,
+        },
       });
 
       sourceTextForNormalization = transcriptText;
       transcriptTextForPersist = transcriptText;
     }
 
+    step = 'raw_persisted';
     const { data: rawEntry, error: rawError } = await supabase
       .from('entries_raw')
       .insert({
@@ -546,17 +888,37 @@ Deno.serve(async (request: Request) => {
       .single();
 
     if (rawError || !rawEntry) {
-      console.error('[process-entry] insert_entries_raw_failed', { requestId, error: rawError });
-      return jsonResponse(request, 500, { error: 'Failed to persist raw entry' });
+      logFlow('error', {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: 'insert_entries_raw_failed',
+        details: {
+          error: rawError ? String(rawError.message ?? rawError) : 'missing row',
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_WRITE_FAILED',
+        message: 'Failed to persist raw entry',
+      });
     }
+    rawEntryId = rawEntry.id;
 
     const normalized = await normalizeEntry({
       apiKey: runtimeEnv.openAiApiKey,
       model: runtimeEnv.openAiModel,
       requestId,
+      flowId,
       rawText: sourceTextForNormalization,
     });
 
+    step = 'normalized_persisted';
     const { data: normalizedEntry, error: normalizedError } = await supabase
       .from('entries_normalized')
       .insert({
@@ -569,13 +931,30 @@ Deno.serve(async (request: Request) => {
       .single();
 
     if (normalizedError || !normalizedEntry) {
-      console.error('[process-entry] insert_entries_normalized_failed', {
+      logFlow('error', {
+        flow: FLOW,
         requestId,
-        error: normalizedError,
+        flowId,
+        step,
+        event: 'insert_entries_normalized_failed',
+        details: {
+          error: normalizedError ? String(normalizedError.message ?? normalizedError) : 'missing row',
+          rawEntryId,
+        },
       });
-      return jsonResponse(request, 500, { error: 'Failed to persist normalized entry' });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_WRITE_FAILED',
+        message: 'Failed to persist normalized entry',
+        details: rawEntryId ? { rawEntryId } : undefined,
+      });
     }
 
+    step = 'day_journal_upserted';
     const bounds = dateBoundsUtc(journalDate);
     const { data: rawEntriesForDay, error: dayRawError } = await supabase
       .from('entries_raw')
@@ -585,11 +964,27 @@ Deno.serve(async (request: Request) => {
       .lt('captured_at', bounds.end);
 
     if (dayRawError) {
-      console.error('[process-entry] select_entries_raw_for_day_failed', {
+      logFlow('error', {
+        flow: FLOW,
         requestId,
-        error: dayRawError,
+        flowId,
+        step,
+        event: 'select_entries_raw_for_day_failed',
+        details: {
+          error: String(dayRawError.message ?? dayRawError),
+          rawEntryId,
+        },
       });
-      return jsonResponse(request, 500, { error: 'Failed to load entries for day journal' });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_READ_FAILED',
+        message: 'Failed to load entries for day journal',
+        details: rawEntryId ? { rawEntryId } : undefined,
+      });
     }
 
     const rawIds = (rawEntriesForDay ?? []).map((entry: { id: string }) => entry.id);
@@ -603,11 +998,27 @@ Deno.serve(async (request: Request) => {
         .in('raw_entry_id', rawIds);
 
       if (dayNormalizedError) {
-        console.error('[process-entry] select_entries_normalized_for_day_failed', {
+        logFlow('error', {
+          flow: FLOW,
           requestId,
-          error: dayNormalizedError,
+          flowId,
+          step,
+          event: 'select_entries_normalized_for_day_failed',
+          details: {
+            error: String(dayNormalizedError.message ?? dayNormalizedError),
+            rawEntryId,
+          },
         });
-        return jsonResponse(request, 500, { error: 'Failed to compose day journal' });
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: 'DB_READ_FAILED',
+          message: 'Failed to compose day journal',
+          details: rawEntryId ? { rawEntryId } : undefined,
+        });
       }
 
       for (const row of dayNormalizedRows ?? []) {
@@ -622,6 +1033,7 @@ Deno.serve(async (request: Request) => {
       apiKey: runtimeEnv.openAiApiKey,
       model: runtimeEnv.openAiModel,
       requestId,
+      flowId,
       journalDate,
       normalizedEntries: normalizedEntriesForDay,
     });
@@ -642,15 +1054,34 @@ Deno.serve(async (request: Request) => {
       .single();
 
     if (dayJournalError || !dayJournal) {
-      console.error('[process-entry] upsert_day_journal_failed', {
+      logFlow('error', {
+        flow: FLOW,
         requestId,
-        error: dayJournalError,
+        flowId,
+        step,
+        event: 'upsert_day_journal_failed',
+        details: {
+          error: dayJournalError ? String(dayJournalError.message ?? dayJournalError) : 'missing row',
+          rawEntryId,
+        },
       });
-      return jsonResponse(request, 500, { error: 'Failed to upsert day journal' });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_WRITE_FAILED',
+        message: 'Failed to upsert day journal',
+        details: rawEntryId ? { rawEntryId } : undefined,
+      });
     }
 
     const response: ProcessEntryResponse = {
       status: 'ok',
+      flow: FLOW,
+      requestId,
+      flowId,
       rawEntryId: rawEntry.id,
       normalizedEntryId: normalizedEntry.id,
       journalDate,
@@ -658,21 +1089,44 @@ Deno.serve(async (request: Request) => {
       sourceType: parsedSource.value.sourceType,
     };
 
-    console.info('[process-entry] success', {
+    step = 'completed';
+    logFlow('info', {
+      flow: FLOW,
       requestId,
-      rawEntryId: response.rawEntryId,
-      normalizedEntryId: response.normalizedEntryId,
-      dayJournalId: response.dayJournalId,
-      journalDate: response.journalDate,
-      sourceType: response.sourceType,
+      flowId,
+      step,
+      event: 'success',
+      details: {
+        rawEntryId: response.rawEntryId,
+        normalizedEntryId: response.normalizedEntryId,
+        dayJournalId: response.dayJournalId,
+        journalDate: response.journalDate,
+        sourceType: response.sourceType,
+      },
     });
 
     return jsonResponse(request, 200, response);
   } catch (error) {
-    console.error('[process-entry] fatal', {
+    logFlow('error', {
+      flow: FLOW,
       requestId,
-      error: error instanceof Error ? error.message : String(error),
+      flowId,
+      step,
+      event: 'fatal',
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+        ...(rawEntryId ? { rawEntryId } : {}),
+      },
     });
-    return jsonResponse(request, 500, { error: 'Internal error' });
+    return errorResponse({
+      request,
+      httpStatus: 500,
+      requestId,
+      flowId,
+      step,
+      code: 'INTERNAL_UNEXPECTED',
+      message: 'Internal error',
+      details: rawEntryId ? { rawEntryId } : undefined,
+    });
   }
 });

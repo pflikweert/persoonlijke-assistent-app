@@ -10,6 +10,7 @@ export {
   parseJournalSections,
 } from './day-journals';
 export { submitAudioEntry, submitTextEntry } from './entries';
+export { classifyUnknownError, FunctionFlowError } from './function-error';
 export {
   fetchLatestReflection,
   fetchRecentReflections,

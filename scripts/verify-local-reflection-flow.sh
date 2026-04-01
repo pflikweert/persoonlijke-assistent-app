@@ -29,9 +29,10 @@ WEEK_FILE="$(mktemp)"
 MONTH_FILE="$(mktemp)"
 REFLECTIONS_FILE="$(mktemp)"
 EXPECTED_FILE="$(mktemp)"
+WEEK_REUSE_FILE="$(mktemp)"
 
 cleanup() {
-  rm -f "$SIGNUP_FILE" "$WEEK_FILE" "$MONTH_FILE" "$REFLECTIONS_FILE" "$EXPECTED_FILE"
+  rm -f "$SIGNUP_FILE" "$WEEK_FILE" "$MONTH_FILE" "$REFLECTIONS_FILE" "$EXPECTED_FILE" "$WEEK_REUSE_FILE"
 }
 
 trap cleanup EXIT
@@ -112,7 +113,18 @@ WEEK_STATUS="$(curl -sS -o "$WEEK_FILE" -w "%{http_code}" "$API_URL/functions/v1
   -d "{\"periodType\":\"week\",\"anchorDate\":\"$ANCHOR_DATE\",\"forceRegenerate\":true}")"
 
 if [ "$WEEK_STATUS" != "200" ]; then
-  echo "generate-reflection (week) failed with HTTP $WEEK_STATUS"
+  echo "FAIL reflection-flow: generate-reflection week failed with HTTP $WEEK_STATUS"
+  cat "$WEEK_FILE"
+  exit 1
+fi
+
+WEEK_STATUS_VALUE="$(jq -r '.status // empty' "$WEEK_FILE")"
+WEEK_FLOW_VALUE="$(jq -r '.flow // empty' "$WEEK_FILE")"
+WEEK_REQUEST_ID="$(jq -r '.requestId // empty' "$WEEK_FILE")"
+WEEK_FLOW_ID="$(jq -r '.flowId // empty' "$WEEK_FILE")"
+WEEK_REFLECTION_ID="$(jq -r '.reflectionId // empty' "$WEEK_FILE")"
+if [ "$WEEK_STATUS_VALUE" != "ok" ] || [ "$WEEK_FLOW_VALUE" != "generate-reflection" ] || [ -z "$WEEK_REQUEST_ID" ] || [ -z "$WEEK_FLOW_ID" ] || [ -z "$WEEK_REFLECTION_ID" ]; then
+  echo "FAIL reflection-flow: week response mist status/flow/requestId/flowId/reflectionId"
   cat "$WEEK_FILE"
   exit 1
 fi
@@ -124,18 +136,53 @@ MONTH_STATUS="$(curl -sS -o "$MONTH_FILE" -w "%{http_code}" "$API_URL/functions/
   -d "{\"periodType\":\"month\",\"anchorDate\":\"$ANCHOR_DATE\",\"forceRegenerate\":true}")"
 
 if [ "$MONTH_STATUS" != "200" ]; then
-  echo "generate-reflection (month) failed with HTTP $MONTH_STATUS"
+  echo "FAIL reflection-flow: generate-reflection month failed with HTTP $MONTH_STATUS"
   cat "$MONTH_FILE"
   exit 1
 fi
 
-curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,period_start,period_end,summary_text&user_id=eq.$USER_ID" \
+MONTH_STATUS_VALUE="$(jq -r '.status // empty' "$MONTH_FILE")"
+MONTH_FLOW_VALUE="$(jq -r '.flow // empty' "$MONTH_FILE")"
+MONTH_REQUEST_ID="$(jq -r '.requestId // empty' "$MONTH_FILE")"
+MONTH_FLOW_ID="$(jq -r '.flowId // empty' "$MONTH_FILE")"
+MONTH_REFLECTION_ID="$(jq -r '.reflectionId // empty' "$MONTH_FILE")"
+if [ "$MONTH_STATUS_VALUE" != "ok" ] || [ "$MONTH_FLOW_VALUE" != "generate-reflection" ] || [ -z "$MONTH_REQUEST_ID" ] || [ -z "$MONTH_FLOW_ID" ] || [ -z "$MONTH_REFLECTION_ID" ]; then
+  echo "FAIL reflection-flow: month response mist status/flow/requestId/flowId/reflectionId"
+  cat "$MONTH_FILE"
+  exit 1
+fi
+
+WEEK_REUSE_STATUS="$(curl -sS -o "$WEEK_REUSE_FILE" -w "%{http_code}" "$API_URL/functions/v1/generate-reflection" \
+  -H "apikey: $API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"periodType\":\"week\",\"anchorDate\":\"$ANCHOR_DATE\",\"forceRegenerate\":false}")"
+
+if [ "$WEEK_REUSE_STATUS" != "200" ]; then
+  echo "FAIL reflection-flow: generate-reflection week reuse failed with HTTP $WEEK_REUSE_STATUS"
+  cat "$WEEK_REUSE_FILE"
+  exit 1
+fi
+
+REUSE_REFLECTION_ID="$(jq -r '.reflectionId // empty' "$WEEK_REUSE_FILE")"
+REUSE_STATUS_VALUE="$(jq -r '.status // empty' "$WEEK_REUSE_FILE")"
+REUSE_FLOW_VALUE="$(jq -r '.flow // empty' "$WEEK_REUSE_FILE")"
+if [ "$REUSE_STATUS_VALUE" != "ok" ] || [ "$REUSE_FLOW_VALUE" != "generate-reflection" ] || [ "$REUSE_REFLECTION_ID" != "$WEEK_REFLECTION_ID" ]; then
+  echo "FAIL reflection-flow: week reuse contract mismatch"
+  echo "expected_reflection_id=$WEEK_REFLECTION_ID actual_reflection_id=$REUSE_REFLECTION_ID"
+  cat "$WEEK_REUSE_FILE"
+  exit 1
+fi
+
+curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,period_start,period_end,summary_text,highlights_json,reflection_points_json&user_id=eq.$USER_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$REFLECTIONS_FILE"
 
 WEEK_COUNT="$(jq '[.[] | select(.period_type == "week")] | length' "$REFLECTIONS_FILE")"
 MONTH_COUNT="$(jq '[.[] | select(.period_type == "month")] | length' "$REFLECTIONS_FILE")"
 SUMMARY_COUNT="$(jq '[.[] | select((.summary_text // "") | length > 0)] | length' "$REFLECTIONS_FILE")"
+HIGHLIGHTS_COUNT="$(jq '[.[] | select((.highlights_json // []) | length > 0)] | length' "$REFLECTIONS_FILE")"
+POINTS_COUNT="$(jq '[.[] | select((.reflection_points_json // []) | length > 0)] | length' "$REFLECTIONS_FILE")"
 
 node <<'NODE' >"$EXPECTED_FILE"
 const anchorDate = process.env.ANCHOR_DATE;
@@ -178,11 +225,13 @@ ACTUAL_WEEK_END="$(jq -r '.periodEnd // empty' "$WEEK_FILE")"
 ACTUAL_MONTH_START="$(jq -r '.periodStart // empty' "$MONTH_FILE")"
 ACTUAL_MONTH_END="$(jq -r '.periodEnd // empty' "$MONTH_FILE")"
 
-if [ "$WEEK_COUNT" -lt 1 ] || [ "$MONTH_COUNT" -lt 1 ] || [ "$SUMMARY_COUNT" -lt 2 ]; then
-  echo "Reflection verification failed."
+if [ "$WEEK_COUNT" -lt 1 ] || [ "$MONTH_COUNT" -lt 1 ] || [ "$SUMMARY_COUNT" -lt 2 ] || [ "$HIGHLIGHTS_COUNT" -lt 2 ] || [ "$POINTS_COUNT" -lt 2 ]; then
+  echo "FAIL reflection-flow: reflection counts mismatch"
   echo "week reflections: $WEEK_COUNT"
   echo "month reflections: $MONTH_COUNT"
   echo "non-empty summaries: $SUMMARY_COUNT"
+  echo "rows with highlights: $HIGHLIGHTS_COUNT"
+  echo "rows with reflection points: $POINTS_COUNT"
   echo "week response:"
   cat "$WEEK_FILE"
   echo "month response:"
@@ -191,22 +240,19 @@ if [ "$WEEK_COUNT" -lt 1 ] || [ "$MONTH_COUNT" -lt 1 ] || [ "$SUMMARY_COUNT" -lt
 fi
 
 if [ "$ACTUAL_WEEK_START" != "$EXPECTED_WEEK_START" ] || [ "$ACTUAL_WEEK_END" != "$EXPECTED_WEEK_END" ]; then
-  echo "Week period bounds mismatch."
+  echo "FAIL reflection-flow: week period bounds mismatch"
   echo "expected: $EXPECTED_WEEK_START -> $EXPECTED_WEEK_END"
   echo "actual: $ACTUAL_WEEK_START -> $ACTUAL_WEEK_END"
   exit 1
 fi
 
 if [ "$ACTUAL_MONTH_START" != "$EXPECTED_MONTH_START" ] || [ "$ACTUAL_MONTH_END" != "$EXPECTED_MONTH_END" ]; then
-  echo "Month period bounds mismatch."
+  echo "FAIL reflection-flow: month period bounds mismatch"
   echo "expected: $EXPECTED_MONTH_START -> $EXPECTED_MONTH_END"
   echo "actual: $ACTUAL_MONTH_START -> $ACTUAL_MONTH_END"
   exit 1
 fi
 
-echo "Local reflection verify flow succeeded for target=$TARGET"
-echo "week reflections=$WEEK_COUNT month reflections=$MONTH_COUNT summaries=$SUMMARY_COUNT"
-echo "Week response:"
-cat "$WEEK_FILE"
-echo "Month response:"
-cat "$MONTH_FILE"
+echo "PASS reflection-flow target=$TARGET weekRequestId=$WEEK_REQUEST_ID monthRequestId=$MONTH_REQUEST_ID"
+echo "week reflections=$WEEK_COUNT month reflections=$MONTH_COUNT summaries=$SUMMARY_COUNT highlights=$HIGHLIGHTS_COUNT points=$POINTS_COUNT"
+echo "week_reuse_reflection_id=$REUSE_REFLECTION_ID"

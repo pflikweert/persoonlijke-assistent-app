@@ -29,9 +29,12 @@ FUNCTION_FILE="$(mktemp)"
 RAW_FILE="$(mktemp)"
 NORMALIZED_FILE="$(mktemp)"
 DAY_FILE="$(mktemp)"
+OVERSIZE_FILE="$(mktemp)"
+OVERSIZE_BASE64_FILE="$(mktemp)"
+OVERSIZE_PAYLOAD_FILE="$(mktemp)"
 
 cleanup() {
-  rm -f "$SIGNUP_FILE" "$FUNCTION_FILE" "$RAW_FILE" "$NORMALIZED_FILE" "$DAY_FILE"
+  rm -f "$SIGNUP_FILE" "$FUNCTION_FILE" "$RAW_FILE" "$NORMALIZED_FILE" "$DAY_FILE" "$OVERSIZE_FILE" "$OVERSIZE_BASE64_FILE" "$OVERSIZE_PAYLOAD_FILE"
 }
 
 trap cleanup EXIT
@@ -95,20 +98,41 @@ FUNCTION_STATUS="$(curl -sS -o "$FUNCTION_FILE" -w "%{http_code}" "$API_URL/func
   -d "$PAYLOAD")"
 
 if [ "$FUNCTION_STATUS" != "200" ]; then
-  echo "process-entry failed with HTTP $FUNCTION_STATUS"
+  echo "FAIL audio-flow: process-entry returned non-200 ($FUNCTION_STATUS)"
   cat "$FUNCTION_FILE"
   exit 1
 fi
 
-curl -sS "$API_URL/rest/v1/entries_raw?select=id,source_type,transcript_text&user_id=eq.$USER_ID&source_type=eq.audio" \
+STATUS_VALUE="$(jq -r '.status // empty' "$FUNCTION_FILE")"
+FLOW_VALUE="$(jq -r '.flow // empty' "$FUNCTION_FILE")"
+REQUEST_ID="$(jq -r '.requestId // empty' "$FUNCTION_FILE")"
+FLOW_ID="$(jq -r '.flowId // empty' "$FUNCTION_FILE")"
+SOURCE_TYPE="$(jq -r '.sourceType // empty' "$FUNCTION_FILE")"
+RAW_ENTRY_ID="$(jq -r '.rawEntryId // empty' "$FUNCTION_FILE")"
+NORMALIZED_ENTRY_ID="$(jq -r '.normalizedEntryId // empty' "$FUNCTION_FILE")"
+DAY_JOURNAL_ID="$(jq -r '.dayJournalId // empty' "$FUNCTION_FILE")"
+
+if [ "$STATUS_VALUE" != "ok" ] || [ "$FLOW_VALUE" != "process-entry" ] || [ -z "$REQUEST_ID" ] || [ -z "$FLOW_ID" ]; then
+  echo "FAIL audio-flow: response mist status/flow/requestId/flowId"
+  cat "$FUNCTION_FILE"
+  exit 1
+fi
+
+if [ "$SOURCE_TYPE" != "audio" ] || [ -z "$RAW_ENTRY_ID" ] || [ -z "$NORMALIZED_ENTRY_ID" ] || [ -z "$DAY_JOURNAL_ID" ]; then
+  echo "FAIL audio-flow: response mist kernvelden voor audio flow"
+  cat "$FUNCTION_FILE"
+  exit 1
+fi
+
+curl -sS "$API_URL/rest/v1/entries_raw?select=id,source_type,transcript_text&user_id=eq.$USER_ID&id=eq.$RAW_ENTRY_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$RAW_FILE"
 
-curl -sS "$API_URL/rest/v1/entries_normalized?select=id&user_id=eq.$USER_ID" \
+curl -sS "$API_URL/rest/v1/entries_normalized?select=id,raw_entry_id&user_id=eq.$USER_ID&id=eq.$NORMALIZED_ENTRY_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$NORMALIZED_FILE"
 
-curl -sS "$API_URL/rest/v1/day_journals?select=id,summary&user_id=eq.$USER_ID" \
+curl -sS "$API_URL/rest/v1/day_journals?select=id,summary&user_id=eq.$USER_ID&id=eq.$DAY_JOURNAL_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$DAY_FILE"
 
@@ -116,19 +140,42 @@ RAW_COUNT="$(jq 'length' "$RAW_FILE")"
 TRANSCRIPT_COUNT="$(jq '[.[] | select((.transcript_text // "") | length > 0)] | length' "$RAW_FILE")"
 NORMALIZED_COUNT="$(jq 'length' "$NORMALIZED_FILE")"
 DAY_COUNT="$(jq 'length' "$DAY_FILE")"
+MATCHED_NORMALIZED_COUNT="$(jq --arg rawId "$RAW_ENTRY_ID" '[.[] | select(.raw_entry_id == $rawId)] | length' "$NORMALIZED_FILE")"
 
-if [ "$RAW_COUNT" -lt 1 ] || [ "$TRANSCRIPT_COUNT" -lt 1 ] || [ "$NORMALIZED_COUNT" -lt 1 ] || [ "$DAY_COUNT" -lt 1 ]; then
-  echo "Audio verification failed."
+if [ "$RAW_COUNT" -lt 1 ] || [ "$TRANSCRIPT_COUNT" -lt 1 ] || [ "$NORMALIZED_COUNT" -lt 1 ] || [ "$MATCHED_NORMALIZED_COUNT" -lt 1 ] || [ "$DAY_COUNT" -lt 1 ]; then
+  echo "FAIL audio-flow: database invariant mismatch"
   echo "entries_raw(audio): $RAW_COUNT"
   echo "entries_raw(audio with transcript): $TRANSCRIPT_COUNT"
   echo "entries_normalized: $NORMALIZED_COUNT"
+  echo "entries_normalized(matched raw): $MATCHED_NORMALIZED_COUNT"
   echo "day_journals: $DAY_COUNT"
+  echo "requestId=$REQUEST_ID flowId=$FLOW_ID"
   echo "Function response:"
   cat "$FUNCTION_FILE"
   exit 1
 fi
 
-echo "Local audio verify flow succeeded for target=$TARGET"
+head -c 6990508 /dev/zero | tr '\000' 'A' >"$OVERSIZE_BASE64_FILE"
+printf '{"audioBase64":"' >"$OVERSIZE_PAYLOAD_FILE"
+cat "$OVERSIZE_BASE64_FILE" >>"$OVERSIZE_PAYLOAD_FILE"
+printf '","audioMimeType":"audio/wav","capturedAt":"%s"}' "$CAPTURED_AT" >>"$OVERSIZE_PAYLOAD_FILE"
+
+OVERSIZE_STATUS="$(curl -sS -o "$OVERSIZE_FILE" -w "%{http_code}" "$API_URL/functions/v1/process-entry" \
+  -H "apikey: $API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data-binary "@$OVERSIZE_PAYLOAD_FILE")"
+
+OVERSIZE_CODE="$(jq -r '.code // empty' "$OVERSIZE_FILE")"
+OVERSIZE_RETRYABLE="$(jq -r '.retryable | tostring' "$OVERSIZE_FILE")"
+
+if [ "$OVERSIZE_STATUS" != "413" ] || [ "$OVERSIZE_CODE" != "PAYLOAD_TOO_LARGE" ] || [ "$OVERSIZE_RETRYABLE" != "false" ]; then
+  echo "FAIL audio-flow: oversize negative check mismatch"
+  echo "http=$OVERSIZE_STATUS code=$OVERSIZE_CODE retryable=$OVERSIZE_RETRYABLE"
+  cat "$OVERSIZE_FILE"
+  exit 1
+fi
+
+echo "PASS audio-flow target=$TARGET requestId=$REQUEST_ID flowId=$FLOW_ID"
 echo "entries_raw(audio)=$RAW_COUNT transcript_rows=$TRANSCRIPT_COUNT entries_normalized=$NORMALIZED_COUNT day_journals=$DAY_COUNT"
-echo "Function response:"
-cat "$FUNCTION_FILE"
+echo "negative_check=oversize http=$OVERSIZE_STATUS code=$OVERSIZE_CODE retryable=$OVERSIZE_RETRYABLE"

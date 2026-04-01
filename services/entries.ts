@@ -1,8 +1,16 @@
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
 import { getCurrentSession } from './auth';
+import {
+  createClientFlowId,
+  FunctionFlowError,
+  isFunctionErrorPayload,
+} from './function-error';
 
 export interface ProcessEntryResult {
   status: 'ok';
+  flow: 'process-entry';
+  requestId: string;
+  flowId: string;
   rawEntryId: string;
   normalizedEntryId: string;
   journalDate: string;
@@ -10,33 +18,51 @@ export interface ProcessEntryResult {
   sourceType?: 'text' | 'audio';
 }
 
-async function formatFunctionInvokeError(error: unknown): Promise<string> {
+async function parseFunctionInvokeError(error: unknown): Promise<never> {
   const fallback =
     error instanceof Error ? error.message : 'Verwerken van notitie mislukt door onbekende fout.';
 
   if (!error || typeof error !== 'object') {
-    return fallback;
+    throw new Error(fallback);
   }
 
   const maybeContext = (error as { context?: unknown }).context;
   if (!(maybeContext instanceof Response)) {
-    return fallback;
+    throw new Error(fallback);
   }
 
   try {
     const text = await maybeContext.text();
     if (!text) {
-      return fallback;
+      throw new Error(fallback);
     }
 
     try {
-      const parsed = JSON.parse(text) as { error?: string; message?: string };
-      return parsed.error ?? parsed.message ?? text;
-    } catch {
-      return text;
+      const parsed = JSON.parse(text) as unknown;
+      if (isFunctionErrorPayload(parsed)) {
+        throw new FunctionFlowError(parsed);
+      }
+
+      if (parsed && typeof parsed === 'object') {
+        const message = (parsed as { error?: unknown; message?: unknown }).error;
+        if (typeof message === 'string' && message.length > 0) {
+          throw new Error(message);
+        }
+      }
+
+      throw new Error(text);
+    } catch (jsonError) {
+      if (jsonError instanceof FunctionFlowError || jsonError instanceof Error) {
+        throw jsonError;
+      }
+      throw new Error(text);
     }
-  } catch {
-    return fallback;
+  } catch (nextError) {
+    if (nextError instanceof FunctionFlowError || nextError instanceof Error) {
+      throw nextError;
+    }
+
+    throw new Error(fallback);
   }
 }
 
@@ -63,9 +89,12 @@ export async function submitTextEntry(input: {
     throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
   }
 
+  const flowId = createClientFlowId('capture-text');
+
   const { data, error } = await supabase.functions.invoke<ProcessEntryResult>('process-entry', {
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      'x-flow-id': flowId,
     },
     body: {
       rawText,
@@ -74,12 +103,15 @@ export async function submitTextEntry(input: {
   });
 
   if (error) {
-    const detailedError = await formatFunctionInvokeError(error);
-    throw new Error(detailedError);
+    await parseFunctionInvokeError(error);
   }
 
   if (!data) {
     throw new Error('Lege response van process-entry.');
+  }
+
+  if (data.status !== 'ok' || data.flow !== 'process-entry' || !data.requestId) {
+    throw new Error('Ongeldige response van process-entry.');
   }
 
   return data;
@@ -121,9 +153,12 @@ export async function submitAudioEntry(input: {
     throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
   }
 
+  const flowId = createClientFlowId('capture-audio');
+
   const { data, error } = await supabase.functions.invoke<ProcessEntryResult>('process-entry', {
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      'x-flow-id': flowId,
     },
     body: {
       audioBase64,
@@ -133,12 +168,15 @@ export async function submitAudioEntry(input: {
   });
 
   if (error) {
-    const detailedError = await formatFunctionInvokeError(error);
-    throw new Error(detailedError);
+    await parseFunctionInvokeError(error);
   }
 
   if (!data) {
     throw new Error('Lege response van process-entry.');
+  }
+
+  if (data.status !== 'ok' || data.flow !== 'process-entry' || !data.requestId) {
+    throw new Error('Ongeldige response van process-entry.');
   }
 
   return data;

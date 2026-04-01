@@ -12,7 +12,7 @@ import { Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { submitAudioEntry, submitTextEntry } from '@/services';
+import { classifyUnknownError, submitAudioEntry, submitTextEntry } from '@/services';
 import { spacing } from '@/theme';
 
 const MAX_RECORDING_MS = 90_000;
@@ -89,7 +89,11 @@ export default function CaptureScreen() {
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [recordingActionBusy, setRecordingActionBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    message: string;
+    retryable: boolean;
+    requestId: string | null;
+  } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   const autoStopTriggeredRef = useRef(false);
@@ -115,9 +119,13 @@ export default function CaptureScreen() {
             ? 'Opname automatisch gestopt na 90 seconden. Verwerk opname om op te slaan.'
             : 'Opname klaar. Verwerk opname om op te slaan.'
         );
-      } catch (nextError) {
-        const message = nextError instanceof Error ? nextError.message : 'Stoppen van opname mislukt.';
-        setError(message);
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
       } finally {
         setRecordingActionBusy(false);
       }
@@ -166,9 +174,12 @@ export default function CaptureScreen() {
       recorder.record();
       setStatus('Opname gestart. Stop wanneer je klaar bent.');
     } catch (nextError) {
-      const message =
-        nextError instanceof Error ? nextError.message : 'Starten van opname is mislukt.';
-      setError(message);
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
     } finally {
       setRecordingActionBusy(false);
     }
@@ -189,8 +200,12 @@ export default function CaptureScreen() {
       setStatus('Notitie verwerkt. Terug naar Vandaag...');
       router.replace('/');
     } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : 'Verwerken van notitie mislukt.';
-      setError(message);
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -198,7 +213,11 @@ export default function CaptureScreen() {
 
   async function handleSubmitAudio() {
     if (!audioUri) {
-      setError('Neem eerst een opname op.');
+      setError({
+        message: 'Neem eerst een opname op.',
+        retryable: false,
+        requestId: null,
+      });
       return;
     }
 
@@ -223,8 +242,12 @@ export default function CaptureScreen() {
       setStatus('Audio verwerkt. Terug naar Vandaag...');
       router.replace('/');
     } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : 'Verwerken van audio mislukt.';
-      setError(message);
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -297,7 +320,17 @@ export default function CaptureScreen() {
         </Pressable>
       </ThemedView>
 
-      {error ? <ThemedText>{error}</ThemedText> : null}
+      {error ? (
+        <ThemedView style={styles.feedbackBlock}>
+          <ThemedText>{error.message}</ThemedText>
+          <ThemedText>
+            {error.retryable
+              ? 'Tijdelijke fout. Probeer opnieuw.'
+              : 'Niet-retryable fout. Controleer input of login en probeer daarna opnieuw.'}
+          </ThemedText>
+          {error.requestId ? <ThemedText>Request-ID: {error.requestId}</ThemedText> : null}
+        </ThemedView>
+      ) : null}
       {status ? <ThemedText>{status}</ThemedText> : null}
     </ThemedView>
   );
@@ -336,6 +369,9 @@ const styles = StyleSheet.create({
   audioButtons: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  feedbackBlock: {
+    gap: spacing.xs,
   },
   buttonDisabled: {
     opacity: 0.6,

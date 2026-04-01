@@ -2,6 +2,11 @@ import type { Json, Tables } from '@/src/lib/supabase/database.types';
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
 
 import { getCurrentSession } from './auth';
+import {
+  createClientFlowId,
+  FunctionFlowError,
+  isFunctionErrorPayload,
+} from './function-error';
 
 export type PeriodType = 'week' | 'month';
 
@@ -25,6 +30,9 @@ export type ReflectionRow = Omit<
 
 export interface GenerateReflectionResult {
   status: 'ok';
+  flow: 'generate-reflection';
+  requestId: string;
+  flowId: string;
   reflectionId: string;
   periodType: PeriodType;
   periodStart: string;
@@ -55,32 +63,50 @@ function ensurePeriodType(periodType: string): PeriodType {
   throw new Error('Onbekend periodType. Gebruik week of month.');
 }
 
-async function formatFunctionInvokeError(error: unknown): Promise<string> {
+async function parseFunctionInvokeError(error: unknown): Promise<never> {
   const fallback = error instanceof Error ? error.message : 'Genereren van reflectie mislukt.';
 
   if (!error || typeof error !== 'object') {
-    return fallback;
+    throw new Error(fallback);
   }
 
   const maybeContext = (error as { context?: unknown }).context;
   if (!(maybeContext instanceof Response)) {
-    return fallback;
+    throw new Error(fallback);
   }
 
   try {
     const text = await maybeContext.text();
     if (!text) {
-      return fallback;
+      throw new Error(fallback);
     }
 
     try {
-      const parsed = JSON.parse(text) as { error?: string; message?: string };
-      return parsed.error ?? parsed.message ?? text;
-    } catch {
-      return text;
+      const parsed = JSON.parse(text) as unknown;
+      if (isFunctionErrorPayload(parsed)) {
+        throw new FunctionFlowError(parsed);
+      }
+
+      if (parsed && typeof parsed === 'object') {
+        const message = (parsed as { error?: unknown; message?: unknown }).error;
+        if (typeof message === 'string' && message.length > 0) {
+          throw new Error(message);
+        }
+      }
+
+      throw new Error(text);
+    } catch (jsonError) {
+      if (jsonError instanceof FunctionFlowError || jsonError instanceof Error) {
+        throw jsonError;
+      }
+      throw new Error(text);
     }
-  } catch {
-    return fallback;
+  } catch (nextError) {
+    if (nextError instanceof FunctionFlowError || nextError instanceof Error) {
+      throw nextError;
+    }
+
+    throw new Error(fallback);
   }
 }
 
@@ -102,11 +128,14 @@ export async function generateReflection(input: {
     throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
   }
 
+  const flowId = createClientFlowId('reflection');
+
   const { data, error } = await supabase.functions.invoke<GenerateReflectionResult>(
     'generate-reflection',
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        'x-flow-id': flowId,
       },
       body: {
         periodType: input.periodType,
@@ -117,12 +146,15 @@ export async function generateReflection(input: {
   );
 
   if (error) {
-    const detailed = await formatFunctionInvokeError(error);
-    throw new Error(detailed);
+    await parseFunctionInvokeError(error);
   }
 
   if (!data) {
     throw new Error('Lege response van generate-reflection.');
+  }
+
+  if (data.status !== 'ok' || data.flow !== 'generate-reflection' || !data.requestId) {
+    throw new Error('Ongeldige response van generate-reflection.');
   }
 
   return data;
