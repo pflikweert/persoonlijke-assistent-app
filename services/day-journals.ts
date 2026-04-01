@@ -290,10 +290,30 @@ export async function deleteNormalizedEntryById(id: string): Promise<void> {
     throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
   }
 
-  const { error } = await supabase.from('entries_normalized').delete().eq('id', id);
+  const { data, error: selectError } = await supabase
+    .from('entries_normalized')
+    .select('raw_entry_id')
+    .eq('id', id)
+    .maybeSingle();
 
-  if (error) {
-    throw error;
+  if (selectError) {
+    throw selectError;
+  }
+
+  const rawEntryId = data?.raw_entry_id ?? null;
+
+  if (!rawEntryId) {
+    const { error: fallbackDeleteError } = await supabase.from('entries_normalized').delete().eq('id', id);
+    if (fallbackDeleteError) {
+      throw fallbackDeleteError;
+    }
+    return;
+  }
+
+  const { error: rawDeleteError } = await supabase.from('entries_raw').delete().eq('id', rawEntryId);
+
+  if (rawDeleteError) {
+    throw rawDeleteError;
   }
 }
 

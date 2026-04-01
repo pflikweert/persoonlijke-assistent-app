@@ -1,10 +1,11 @@
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Alert, Modal, Pressable, StyleSheet, TextInput } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
   ScreenContainer,
@@ -14,6 +15,7 @@ import {
   deleteNormalizedEntryById,
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
+  generateReflection,
   getUtcTodayDate,
   isValidJournalDate,
   parseJournalSections,
@@ -104,6 +106,8 @@ function buildInsight(summary: string | null, sections: string[]): string | null
 }
 
 export default function DayDetailScreen() {
+  const scheme = useColorScheme() ?? 'light';
+  const palette = colorTokens[scheme];
   const { date, processed } = useLocalSearchParams<RouteParams>();
   const journalDate = useMemo(() => resolveRouteDate(date), [date]);
   const showProcessedBanner = useMemo(() => {
@@ -111,14 +115,16 @@ export default function DayDetailScreen() {
     return value === '1' || value.toLowerCase() === 'true';
   }, [processed]);
 
+  type DayEntry = Awaited<ReturnType<typeof fetchNormalizedEntriesByDate>>[number];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [sections, setSections] = useState<string[]>([]);
-  const [entries, setEntries] = useState<Awaited<ReturnType<typeof fetchNormalizedEntriesByDate>>>([]);
-  const [editingEntry, setEditingEntry] = useState<Awaited<ReturnType<typeof fetchNormalizedEntriesByDate>>[number] | null>(null);
+  const [entries, setEntries] = useState<DayEntry[]>([]);
+  const [readingEntry, setReadingEntry] = useState<DayEntry | null>(null);
+  const [editingEntry, setEditingEntry] = useState<DayEntry | null>(null);
   const [editBody, setEditBody] = useState('');
-  const [editBusy, setEditBusy] = useState(false);
+  const [mutationBusy, setMutationBusy] = useState(false);
 
   const loadDay = useCallback(async () => {
     if (!isValidJournalDate(journalDate)) {
@@ -183,25 +189,71 @@ export default function DayDetailScreen() {
     return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
   }
 
-  function openEditModal(entry: Awaited<ReturnType<typeof fetchNormalizedEntriesByDate>>[number]) {
+  function openReadModal(entry: DayEntry) {
+    if (mutationBusy) {
+      return;
+    }
+    setEditingEntry(null);
+    setEditBody('');
+    setReadingEntry(entry);
+  }
+
+  function closeReadModal() {
+    if (mutationBusy) {
+      return;
+    }
+    setReadingEntry(null);
+  }
+
+  function openEditModal(entry: DayEntry) {
+    if (mutationBusy) {
+      return;
+    }
+    setReadingEntry(null);
     setEditingEntry(entry);
     setEditBody(entry.body ?? '');
   }
 
   function closeEditModal() {
-    if (editBusy) {
+    if (mutationBusy) {
       return;
     }
     setEditingEntry(null);
     setEditBody('');
   }
 
-  async function regenerateDayAfterMutation() {
+  function forceCloseEditModal() {
+    setEditingEntry(null);
+    setEditBody('');
+  }
+
+  async function refreshDerivedContentAfterEntryMutation(): Promise<string | null> {
     if (!isValidJournalDate(journalDate)) {
-      return;
+      return null;
     }
 
     await regenerateDayJournalByDate(journalDate);
+    let reflectionRefreshError: string | null = null;
+
+    // Keep daydetail consistent even when reflection refresh fails.
+    try {
+      await generateReflection({
+        periodType: 'week',
+        anchorDate: journalDate,
+        forceRegenerate: true,
+      });
+      await generateReflection({
+        periodType: 'month',
+        anchorDate: journalDate,
+        forceRegenerate: true,
+      });
+    } catch (nextError) {
+      reflectionRefreshError =
+        nextError instanceof Error ? nextError.message : 'Reflecties konden niet direct worden bijgewerkt.';
+    }
+
+    await loadDay();
+    return reflectionRefreshError;
   }
 
   async function handleSaveEdit() {
@@ -209,25 +261,34 @@ export default function DayDetailScreen() {
       return;
     }
 
-    setEditBusy(true);
+    setMutationBusy(true);
     try {
       await updateNormalizedEntryById({
         id: editingEntry.id,
         title: editingEntry.title ?? '',
         body: editBody,
       });
-      await regenerateDayAfterMutation();
-      closeEditModal();
-      await loadDay();
+      const reflectionRefreshError = await refreshDerivedContentAfterEntryMutation();
+      forceCloseEditModal();
+      if (reflectionRefreshError) {
+        Alert.alert(
+          'Wijziging opgeslagen',
+          `Dagdetail is bijgewerkt, maar reflecties konden niet direct worden vernieuwd.\n\n${reflectionRefreshError}`
+        );
+      }
     } catch (nextError) {
       const message = nextError instanceof Error ? nextError.message : 'Kon entry niet bijwerken.';
       Alert.alert('Bewerken mislukt', message);
     } finally {
-      setEditBusy(false);
+      setMutationBusy(false);
     }
   }
 
   function handleDeleteEntry(id: string) {
+    if (mutationBusy) {
+      return;
+    }
+
     Alert.alert('Moment verwijderen?', 'Weet je zeker dat je dit individuele moment wilt verwijderen?', [
       { text: 'Annuleer', style: 'cancel' },
       {
@@ -235,14 +296,23 @@ export default function DayDetailScreen() {
         style: 'destructive',
         onPress: () => {
           void (async () => {
+            setMutationBusy(true);
+            setReadingEntry((current) => (current?.id === id ? null : current));
             try {
               await deleteNormalizedEntryById(id);
-              await regenerateDayAfterMutation();
-              await loadDay();
+              const reflectionRefreshError = await refreshDerivedContentAfterEntryMutation();
+              if (reflectionRefreshError) {
+                Alert.alert(
+                  'Moment verwijderd',
+                  `Dagdetail is bijgewerkt, maar reflecties konden niet direct worden vernieuwd.\n\n${reflectionRefreshError}`
+                );
+              }
             } catch (nextError) {
               const message =
                 nextError instanceof Error ? nextError.message : 'Kon entry niet verwijderen.';
               Alert.alert('Verwijderen mislukt', message);
+            } finally {
+              setMutationBusy(false);
             }
           })();
         },
@@ -255,12 +325,12 @@ export default function DayDetailScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ThemedView style={styles.topBar}>
-        <Pressable onPress={() => router.back()} style={styles.topBarIconButton}>
-          <MaterialIcons name="arrow-back" size={18} color={colorTokens.light.mutedSoft} />
+        <Pressable onPress={() => router.back()} style={[styles.topBarIconButton, { backgroundColor: palette.surfaceLow }]}>
+          <MaterialIcons name="arrow-back" size={18} color={palette.mutedSoft} />
         </Pressable>
 
         <ThemedView style={styles.topBarContext}>
-          <ThemedText type="sectionTitle" style={styles.topBarTitle}>
+          <ThemedText type="sectionTitle" style={[styles.topBarTitle, { color: palette.text }]}>
             {dayHeading}
           </ThemedText>
           <MetaText>{readableDate}</MetaText>
@@ -274,7 +344,7 @@ export default function DayDetailScreen() {
           }}
           disabled={visibleEntries.length === 0}
           style={styles.topBarEditButton}>
-          <ThemedText type="caption" style={styles.topBarEditLabel}>
+          <ThemedText type="caption" style={[styles.topBarEditLabel, { color: palette.primary }]}>
             Bewerken
           </ThemedText>
         </Pressable>
@@ -282,8 +352,8 @@ export default function DayDetailScreen() {
 
       {showProcessedBanner ? (
         <ThemedView style={styles.processedRow}>
-          <ThemedView style={styles.processedDot} />
-          <ThemedText type="caption" style={styles.processedText}>
+          <ThemedView style={[styles.processedDot, { backgroundColor: palette.success }]} />
+          <ThemedText type="caption" style={[styles.processedText, { color: palette.mutedSoft }]}>
             Entry verwerkt
           </ThemedText>
         </ThemedView>
@@ -305,13 +375,16 @@ export default function DayDetailScreen() {
       ) : null}
 
       {!loading && !error && summary ? (
-        <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.heroVisual}>
-          <MaterialIcons name="auto-awesome" size={20} color={colorTokens.light.primary} />
+        <ThemedView
+          lightColor={colorTokens.light.surfaceLow}
+          darkColor={colorTokens.dark.surfaceLow}
+          style={[styles.heroVisual, { borderColor: palette.separator }]}>
+          <MaterialIcons name="auto-awesome" size={20} color={palette.primary} />
         </ThemedView>
       ) : null}
 
       {!loading && !error && summary ? (
-        <ThemedText type="body" style={styles.editorialBody}>
+        <ThemedText type="body" style={[styles.editorialBody, { color: palette.text }]}>
           {summary}
         </ThemedText>
       ) : null}
@@ -320,14 +393,14 @@ export default function DayDetailScreen() {
         <ThemedView
           lightColor="transparent"
           darkColor="transparent"
-          style={styles.insightBlock}>
+          style={[styles.insightBlock, { borderLeftColor: palette.primary }]}>
           <ThemedView style={styles.insightHeader}>
-            <MaterialIcons name="auto-awesome" size={14} color={colorTokens.light.primary} />
-            <ThemedText type="caption" style={styles.insightLabel}>
+            <MaterialIcons name="auto-awesome" size={14} color={palette.primary} />
+            <ThemedText type="caption" style={[styles.insightLabel, { color: palette.primary }]}>
               INZICHT
             </ThemedText>
           </ThemedView>
-          <ThemedText type="bodySecondary" style={styles.insightText}>
+          <ThemedText type="bodySecondary" style={[styles.insightText, { color: palette.muted }]}>
             {insightText}
           </ThemedText>
         </ThemedView>
@@ -338,13 +411,13 @@ export default function DayDetailScreen() {
           lightColor="transparent"
           darkColor="transparent"
           style={styles.keyPointsBlock}>
-          <ThemedText type="meta" style={styles.blockLabel}>
+          <ThemedText type="meta" style={[styles.blockLabel, { color: palette.primary }]}>
             Kernpunten
           </ThemedText>
           <ThemedView style={styles.keyPointsList}>
             {previewSections.map((section, index) => (
               <ThemedView key={`${section}-${index}`} style={styles.keyPointRow}>
-                <ThemedView style={styles.dot} />
+                <ThemedView style={[styles.dot, { backgroundColor: palette.primaryStrong }]} />
                 <ThemedText type="bodySecondary" style={styles.keyPointText}>
                   {section}
                 </ThemedText>
@@ -356,7 +429,7 @@ export default function DayDetailScreen() {
 
       {!loading && !error && visibleEntries.length > 0 ? (
         <ThemedView style={styles.momentsBlock}>
-          <ThemedText type="meta" style={styles.blockLabelMuted}>
+          <ThemedText type="meta" style={[styles.blockLabelMuted, { color: palette.mutedSoft }]}>
             Individuele momenten
           </ThemedText>
           <ThemedView style={styles.entriesList}>
@@ -365,59 +438,104 @@ export default function DayDetailScreen() {
                 key={entry.id}
                 lightColor="transparent"
                 darkColor="transparent"
-                style={styles.entryItem}>
+                style={[styles.entryItem, { borderBottomColor: palette.separator }]}>
                 <ThemedView style={styles.entryHead}>
-                  <ThemedView style={styles.entryTitleWrap}>
-                    <ThemedText type="defaultSemiBold" numberOfLines={1} style={styles.entryTitle}>
+                  <Pressable
+                    onPress={() => openReadModal(entry)}
+                    disabled={mutationBusy}
+                    style={styles.entryContentTap}>
+                    <ThemedText type="defaultSemiBold" numberOfLines={1} style={[styles.entryTitle, { color: palette.text }]}>
                       {entry.title?.trim() || 'Moment zonder titel'}
                     </ThemedText>
                     <ThemedView style={styles.entryMeta}>
                       <MaterialIcons
                         name={entry.source_type === 'audio' ? 'mic' : 'edit-note'}
                         size={14}
-                        color={colorTokens.light.primary}
+                        color={palette.primary}
                       />
-                      <ThemedText type="caption" style={styles.entryType}>
+                      <ThemedText type="caption" style={[styles.entryType, { color: palette.mutedSoft }]}>
                         {entry.source_type === 'audio' ? 'Audio' : 'Tekst'}
                       </ThemedText>
-                      <ThemedText type="caption" style={styles.entryTime}>
+                      <ThemedText type="caption" style={[styles.entryTime, { color: palette.mutedSoft }]}>
                         • {formatTime(entry.captured_at)}
                       </ThemedText>
                     </ThemedView>
-                  </ThemedView>
+                    <ThemedText type="bodySecondary" numberOfLines={3} style={[styles.entryPreview, { color: palette.muted }]}>
+                      {entry.body}
+                    </ThemedText>
+                  </Pressable>
 
                   <ThemedView style={styles.entryActions}>
-                    <Pressable onPress={() => openEditModal(entry)} style={styles.iconAction}>
-                      <MaterialIcons name="edit" size={15} color={colorTokens.light.mutedSoft} />
+                    <Pressable onPress={() => openEditModal(entry)} disabled={mutationBusy} style={styles.iconAction}>
+                      <MaterialIcons name="edit" size={15} color={palette.mutedSoft} />
                     </Pressable>
-                    <Pressable onPress={() => handleDeleteEntry(entry.id)} style={styles.iconAction}>
-                      <MaterialIcons name="delete-outline" size={15} color={colorTokens.light.mutedSoft} />
+                    <Pressable onPress={() => handleDeleteEntry(entry.id)} disabled={mutationBusy} style={styles.iconAction}>
+                      <MaterialIcons name="delete-outline" size={15} color={palette.mutedSoft} />
                     </Pressable>
                   </ThemedView>
                 </ThemedView>
-
-                <ThemedText type="bodySecondary" numberOfLines={3} style={styles.entryPreview}>
-                  {entry.body}
-                </ThemedText>
               </ThemedView>
             ))}
           </ThemedView>
         </ThemedView>
       ) : null}
 
+      <Modal visible={Boolean(readingEntry)} animationType="slide" onRequestClose={closeReadModal}>
+        <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.modalScreen}>
+          <ThemedView style={styles.modalTopBar}>
+            <Pressable onPress={closeReadModal} disabled={mutationBusy} style={styles.modalTopAction}>
+              <ThemedText type="bodySecondary">Sluiten</ThemedText>
+            </Pressable>
+            <ThemedText type="sectionTitle">Moment</ThemedText>
+            <Pressable
+              onPress={() => {
+                if (readingEntry) {
+                  openEditModal(readingEntry);
+                }
+              }}
+              disabled={!readingEntry || mutationBusy}
+              style={[styles.modalTopAction, styles.modalTopActionPrimary, { backgroundColor: palette.surfaceLow }]}>
+              <ThemedText type="defaultSemiBold">Bewerken</ThemedText>
+            </Pressable>
+          </ThemedView>
+
+          <ScrollView contentContainerStyle={styles.readModalContent}>
+            <ThemedText type="sectionTitle" style={[styles.readEntryTitle, { color: palette.text }]}>
+              {readingEntry?.title?.trim() || 'Moment zonder titel'}
+            </ThemedText>
+            <ThemedView style={styles.readEntryMeta}>
+              <MaterialIcons
+                name={readingEntry?.source_type === 'audio' ? 'mic' : 'edit-note'}
+                size={14}
+                color={palette.primary}
+              />
+              <ThemedText type="caption" style={[styles.readEntryMetaText, { color: palette.mutedSoft }]}>
+                {readingEntry?.source_type === 'audio' ? 'Audio' : 'Tekst'}
+              </ThemedText>
+              <ThemedText type="caption" style={[styles.readEntryMetaText, { color: palette.mutedSoft }]}>
+                • {readingEntry ? formatTime(readingEntry.captured_at) : '--:--'}
+              </ThemedText>
+            </ThemedView>
+            <ThemedText type="body" style={[styles.readEntryBody, { color: palette.text }]}>
+              {readingEntry?.body?.trim() || 'Geen inhoud beschikbaar.'}
+            </ThemedText>
+          </ScrollView>
+        </ThemedView>
+      </Modal>
+
       <Modal visible={Boolean(editingEntry)} animationType="slide" onRequestClose={closeEditModal}>
         <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.modalScreen}>
           <ThemedView style={styles.modalTopBar}>
-            <Pressable onPress={closeEditModal} disabled={editBusy} style={styles.modalTopAction}>
+            <Pressable onPress={closeEditModal} disabled={mutationBusy} style={styles.modalTopAction}>
               <ThemedText type="bodySecondary">Annuleer</ThemedText>
             </Pressable>
             <ThemedText type="sectionTitle">Moment bewerken</ThemedText>
             <Pressable
               onPress={() => void handleSaveEdit()}
-              disabled={editBusy}
-              style={[styles.modalTopAction, styles.modalTopActionPrimary]}>
+              disabled={mutationBusy}
+              style={[styles.modalTopAction, styles.modalTopActionPrimary, { backgroundColor: palette.primaryStrong }]}>
               <ThemedText type="defaultSemiBold" lightColor={colorTokens.light.primaryOn} darkColor={colorTokens.dark.primaryOn}>
-                {editBusy ? 'Opslaan...' : 'Opslaan'}
+                {mutationBusy ? 'Opslaan...' : 'Opslaan'}
               </ThemedText>
             </Pressable>
           </ThemedView>
@@ -428,16 +546,23 @@ export default function DayDetailScreen() {
             value={editBody}
             onChangeText={setEditBody}
             textAlignVertical="top"
-            style={styles.modalInputFull}
+            style={[
+              styles.modalInputFull,
+              {
+                color: palette.text,
+                backgroundColor: `${palette.surfaceLowest}D6`,
+                borderColor: `${palette.separator}CC`,
+              },
+            ]}
             placeholder="Typ de inhoud van dit moment..."
-            placeholderTextColor={colorTokens.light.mutedSoft}
+            placeholderTextColor={palette.mutedSoft}
           />
         </ThemedView>
       </Modal>
 
       <ThemedView style={styles.bottomActionWrap}>
         <Pressable onPress={() => router.push('/capture')} style={styles.bottomAction}>
-          <ThemedText type="caption" style={styles.bottomActionText}>
+          <ThemedText type="caption" style={[styles.bottomActionText, { color: palette.mutedSoft }]}>
             Nieuwe entry vastleggen
           </ThemedText>
         </Pressable>
@@ -460,7 +585,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colorTokens.light.surfaceLow,
   },
   topBarContext: {
     flex: 1,
@@ -469,7 +593,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   topBarTitle: {
-    color: colorTokens.light.text,
   },
   topBarEditButton: {
     minWidth: 58,
@@ -478,7 +601,6 @@ const styles = StyleSheet.create({
   topBarEditLabel: {
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: colorTokens.light.primary,
   },
   processedRow: {
     flexDirection: 'row',
@@ -490,10 +612,8 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: radius.pill,
-    backgroundColor: colorTokens.light.success,
   },
   processedText: {
-    color: colorTokens.light.mutedSoft,
   },
   heroVisual: {
     borderRadius: 32,
@@ -502,12 +622,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colorTokens.light.separator,
   },
   editorialBody: {
     fontSize: 20,
     lineHeight: 34,
-    color: colorTokens.light.text,
     marginBottom: spacing.xl,
     letterSpacing: -0.2,
   },
@@ -517,7 +635,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     marginBottom: spacing.xl,
     borderLeftWidth: 2,
-    borderLeftColor: colorTokens.light.primary,
     gap: spacing.xs,
   },
   insightHeader: {
@@ -528,11 +645,9 @@ const styles = StyleSheet.create({
   insightLabel: {
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: colorTokens.light.primary,
   },
   insightText: {
     fontStyle: 'italic',
-    color: colorTokens.light.muted,
   },
   keyPointsBlock: {
     borderRadius: 24,
@@ -542,10 +657,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   blockLabel: {
-    color: colorTokens.light.primary,
   },
   blockLabelMuted: {
-    color: colorTokens.light.mutedSoft,
     marginLeft: spacing.xs,
   },
   keyPointsList: {
@@ -560,7 +673,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: radius.pill,
-    backgroundColor: colorTokens.light.primaryStrong,
     marginTop: 9,
   },
   keyPointText: {
@@ -579,7 +691,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     gap: spacing.inline,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colorTokens.light.separator,
   },
   entryHead: {
     flexDirection: 'row',
@@ -587,12 +698,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
   },
-  entryTitleWrap: {
+  entryContentTap: {
     flex: 1,
-    gap: spacing.xxs,
+    gap: spacing.xs,
   },
   entryTitle: {
-    color: colorTokens.light.text,
   },
   entryMeta: {
     flexDirection: 'row',
@@ -600,10 +710,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   entryType: {
-    color: colorTokens.light.mutedSoft,
   },
   entryTime: {
-    color: colorTokens.light.mutedSoft,
   },
   entryActions: {
     flexDirection: 'row',
@@ -620,7 +728,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   entryPreview: {
-    color: colorTokens.light.muted,
     lineHeight: 23,
   },
   modalScreen: {
@@ -644,18 +751,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   modalTopActionPrimary: {
-    backgroundColor: colorTokens.light.primaryStrong,
     alignItems: 'center',
+  },
+  readModalContent: {
+    gap: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  readEntryTitle: {
+    marginTop: spacing.xs,
+  },
+  readEntryMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  readEntryMetaText: {
+  },
+  readEntryBody: {
+    lineHeight: 30,
   },
   modalInputFull: {
     flex: 1,
     minHeight: 340,
     fontSize: 24,
     lineHeight: 34,
-    color: colorTokens.light.text,
-    backgroundColor: `${colorTokens.light.surfaceLowest}D6`,
     borderWidth: 1,
-    borderColor: `${colorTokens.light.separator}CC`,
     borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
@@ -671,7 +791,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   bottomActionText: {
-    color: colorTokens.light.mutedSoft,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
