@@ -27,9 +27,20 @@ export function ScreenContainer({
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
 }) {
   if (scrollable) {
+    const flattenedContentStyle = StyleSheet.flatten([styles.scrollContent, contentContainerStyle]);
+    const nextPaddingBottom =
+      (typeof flattenedContentStyle?.paddingBottom === 'number' ? flattenedContentStyle.paddingBottom : 0) +
+      styles.scrollContent.paddingBottom;
+
     return (
       <ThemedView style={[styles.screenContainer, style]}>
-        <ScrollView contentContainerStyle={[styles.scrollContent, contentContainerStyle]}>
+        <ScrollView
+          contentContainerStyle={[
+            flattenedContentStyle,
+            {
+              paddingBottom: nextPaddingBottom,
+            },
+          ]}>
           {children}
         </ScrollView>
       </ThemedView>
@@ -209,7 +220,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: spacing.section,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xxxl + spacing.xxl + spacing.xxl,
   },
   section: {
     borderRadius: radius.lg,
