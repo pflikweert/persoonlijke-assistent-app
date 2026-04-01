@@ -57,7 +57,10 @@ export default function TodayScreen() {
         : 'Klaar voor je eerste entry';
 
   return (
-    <ScreenContainer style={styles.screen}>
+    <ScreenContainer
+      scrollable
+      style={styles.screen}
+      contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.topBar}>
         <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.avatar}>
           <ThemedText type="caption" style={styles.avatarText}>
@@ -162,8 +165,11 @@ function formatDayLabel(utcDate: string): string {
 
 const styles = StyleSheet.create({
   screen: {
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     gap: spacing.xl,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xxxl,
   },
   topBar: {
     flexDirection: 'row',
@@ -195,9 +201,10 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
   },
   heroTitle: {
-    fontSize: 52,
-    lineHeight: 54,
-    letterSpacing: -1.4,
+    fontSize: 44,
+    lineHeight: 48,
+    letterSpacing: -1.1,
+    textAlign: 'center',
   },
   statusRow: {
     flexDirection: 'row',

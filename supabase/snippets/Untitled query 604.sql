@@ -1,1 +1,1 @@
-select * from entries_raw;
+select * from entries_normalized

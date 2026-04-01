@@ -9,6 +9,7 @@ export {
   getUtcTodayDate,
   isValidJournalDate,
   parseJournalSections,
+  regenerateDayJournalByDate,
   updateNormalizedEntryById,
 } from './day-journals';
 export { submitAudioEntry, submitTextEntry } from './entries';

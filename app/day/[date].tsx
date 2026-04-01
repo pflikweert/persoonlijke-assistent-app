@@ -14,8 +14,10 @@ import {
   deleteNormalizedEntryById,
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
+  getUtcTodayDate,
   isValidJournalDate,
   parseJournalSections,
+  regenerateDayJournalByDate,
   updateNormalizedEntryById,
 } from '@/services';
 import { colorTokens, radius, spacing } from '@/theme';
@@ -47,21 +49,58 @@ function cleanMomentPreview(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
-function shouldSuppressMoment(value: string): boolean {
-  const normalized = cleanMomentPreview(value).toLowerCase();
-  if (!normalized) {
-    return true;
+function capitalizeFirst(value: string): string {
+  if (!value) {
+    return value;
+  }
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function toUtcMiddayMillis(journalDate: string): number | null {
+  const parsed = new Date(`${journalDate}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.getTime();
+}
+
+function getDayHeadingLabel(journalDate: string): string {
+  const target = toUtcMiddayMillis(journalDate);
+  const today = toUtcMiddayMillis(getUtcTodayDate());
+
+  if (!target || !today) {
+    return 'Dag';
   }
 
-  const suppressedFragments = [
-    'geen bruikbare spraakinhoud gevonden',
-    'test',
-    'lorem ipsum',
-    '[noise]',
-    '[silence]',
-  ];
+  const diffDays = Math.round((today - target) / (24 * 60 * 60 * 1000));
 
-  return suppressedFragments.some((fragment) => normalized.includes(fragment));
+  if (diffDays === 0) {
+    return 'Vandaag';
+  }
+  if (diffDays === 1) {
+    return 'Gisteren';
+  }
+
+  const weekday = new Date(target).toLocaleDateString('nl-NL', {
+    weekday: 'long',
+    timeZone: 'UTC',
+  });
+  return capitalizeFirst(weekday);
+}
+
+function buildInsight(summary: string | null, sections: string[]): string | null {
+  const firstSection = sections.find((section) => section.trim().length > 0)?.trim() ?? '';
+  const firstSentence = (summary ?? '').split(/[.!?]/)[0]?.trim() ?? '';
+
+  if (firstSection.length >= 10) {
+    return `Opvallend vandaag: ${firstSection}.`;
+  }
+
+  if (firstSentence.length >= 36) {
+    return firstSentence.endsWith('.') ? firstSentence : `${firstSentence}.`;
+  }
+
+  return null;
 }
 
 export default function DayDetailScreen() {
@@ -122,11 +161,17 @@ export default function DayDetailScreen() {
 
   const previewSections = sections.slice(0, 4);
   const readableDate = useMemo(() => formatLongDate(journalDate), [journalDate]);
+  const dayHeading = useMemo(() => getDayHeadingLabel(journalDate), [journalDate]);
+  const insightText = useMemo(() => buildInsight(summary, sections), [sections, summary]);
   const visibleEntries = useMemo(
     () =>
       entries
         .map((entry) => ({ ...entry, body: cleanMomentPreview(entry.body ?? '') }))
-        .filter((entry) => !shouldSuppressMoment(entry.body)),
+        .sort((left, right) => {
+          const leftTime = new Date(left.captured_at).getTime();
+          const rightTime = new Date(right.captured_at).getTime();
+          return rightTime - leftTime;
+        }),
     [entries]
   );
 
@@ -151,6 +196,14 @@ export default function DayDetailScreen() {
     setEditBody('');
   }
 
+  async function regenerateDayAfterMutation() {
+    if (!isValidJournalDate(journalDate)) {
+      return;
+    }
+
+    await regenerateDayJournalByDate(journalDate);
+  }
+
   async function handleSaveEdit() {
     if (!editingEntry) {
       return;
@@ -163,6 +216,7 @@ export default function DayDetailScreen() {
         title: editingEntry.title ?? '',
         body: editBody,
       });
+      await regenerateDayAfterMutation();
       closeEditModal();
       await loadDay();
     } catch (nextError) {
@@ -183,6 +237,7 @@ export default function DayDetailScreen() {
           void (async () => {
             try {
               await deleteNormalizedEntryById(id);
+              await regenerateDayAfterMutation();
               await loadDay();
             } catch (nextError) {
               const message =
@@ -206,7 +261,7 @@ export default function DayDetailScreen() {
 
         <ThemedView style={styles.topBarContext}>
           <ThemedText type="sectionTitle" style={styles.topBarTitle}>
-            Vandaag
+            {dayHeading}
           </ThemedText>
           <MetaText>{readableDate}</MetaText>
         </ThemedView>
@@ -261,8 +316,11 @@ export default function DayDetailScreen() {
         </ThemedText>
       ) : null}
 
-      {!loading && !error ? (
-        <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.insightBlock}>
+      {!loading && !error && insightText ? (
+        <ThemedView
+          lightColor="transparent"
+          darkColor="transparent"
+          style={styles.insightBlock}>
           <ThemedView style={styles.insightHeader}>
             <MaterialIcons name="auto-awesome" size={14} color={colorTokens.light.primary} />
             <ThemedText type="caption" style={styles.insightLabel}>
@@ -270,13 +328,16 @@ export default function DayDetailScreen() {
             </ThemedText>
           </ThemedView>
           <ThemedText type="bodySecondary" style={styles.insightText}>
-            Rustig teruglezen helpt om patronen te zien. Dit blok blijft bewust als placeholder.
+            {insightText}
           </ThemedText>
         </ThemedView>
       ) : null}
 
       {!loading && !error && previewSections.length > 0 ? (
-        <ThemedView lightColor={colorTokens.light.surface} darkColor={colorTokens.dark.surface} style={styles.keyPointsBlock}>
+        <ThemedView
+          lightColor="transparent"
+          darkColor="transparent"
+          style={styles.keyPointsBlock}>
           <ThemedText type="meta" style={styles.blockLabel}>
             Kernpunten
           </ThemedText>
@@ -302,22 +363,27 @@ export default function DayDetailScreen() {
             {visibleEntries.map((entry) => (
               <ThemedView
                 key={entry.id}
-                lightColor={colorTokens.light.surfaceLow}
-                darkColor={colorTokens.dark.surfaceLow}
+                lightColor="transparent"
+                darkColor="transparent"
                 style={styles.entryItem}>
                 <ThemedView style={styles.entryHead}>
-                  <ThemedView style={styles.entryMeta}>
-                    <MaterialIcons
-                      name={entry.source_type === 'audio' ? 'mic' : 'edit-note'}
-                      size={16}
-                      color={colorTokens.light.primary}
-                    />
-                    <ThemedText type="meta" style={styles.entryType}>
-                      {entry.source_type === 'audio' ? 'Audio' : 'Tekst'}
+                  <ThemedView style={styles.entryTitleWrap}>
+                    <ThemedText type="defaultSemiBold" numberOfLines={1} style={styles.entryTitle}>
+                      {entry.title?.trim() || 'Moment zonder titel'}
                     </ThemedText>
-                    <ThemedText type="caption" style={styles.entryTime}>
-                      • {formatTime(entry.captured_at)}
-                    </ThemedText>
+                    <ThemedView style={styles.entryMeta}>
+                      <MaterialIcons
+                        name={entry.source_type === 'audio' ? 'mic' : 'edit-note'}
+                        size={14}
+                        color={colorTokens.light.primary}
+                      />
+                      <ThemedText type="caption" style={styles.entryType}>
+                        {entry.source_type === 'audio' ? 'Audio' : 'Tekst'}
+                      </ThemedText>
+                      <ThemedText type="caption" style={styles.entryTime}>
+                        • {formatTime(entry.captured_at)}
+                      </ThemedText>
+                    </ThemedView>
                   </ThemedView>
 
                   <ThemedView style={styles.entryActions}>
@@ -339,39 +405,33 @@ export default function DayDetailScreen() {
         </ThemedView>
       ) : null}
 
-      <Modal visible={Boolean(editingEntry)} transparent animationType="fade" onRequestClose={closeEditModal}>
-        <ThemedView style={styles.modalBackdrop}>
-          <ThemedView lightColor={colorTokens.light.surfaceLowest} darkColor={colorTokens.dark.surface} style={styles.modalCard}>
+      <Modal visible={Boolean(editingEntry)} animationType="slide" onRequestClose={closeEditModal}>
+        <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.modalScreen}>
+          <ThemedView style={styles.modalTopBar}>
+            <Pressable onPress={closeEditModal} disabled={editBusy} style={styles.modalTopAction}>
+              <ThemedText type="bodySecondary">Annuleer</ThemedText>
+            </Pressable>
             <ThemedText type="sectionTitle">Moment bewerken</ThemedText>
-            <ThemedText type="bodySecondary" style={styles.modalHint}>
-              Pas de tekst van dit moment aan.
-            </ThemedText>
-            <ThemedView style={styles.modalEditor}>
-              <ThemedText type="caption" style={styles.modalEditorLabel}>
-                Inhoud
+            <Pressable
+              onPress={() => void handleSaveEdit()}
+              disabled={editBusy}
+              style={[styles.modalTopAction, styles.modalTopActionPrimary]}>
+              <ThemedText type="defaultSemiBold" lightColor={colorTokens.light.primaryOn} darkColor={colorTokens.dark.primaryOn}>
+                {editBusy ? 'Opslaan...' : 'Opslaan'}
               </ThemedText>
-              <TextInput
-                multiline
-                autoFocus
-                value={editBody}
-                onChangeText={setEditBody}
-                textAlignVertical="top"
-                style={styles.modalInput}
-                placeholder="Typ de inhoud van dit moment..."
-                placeholderTextColor={colorTokens.light.mutedSoft}
-              />
-            </ThemedView>
-            <ThemedView style={styles.modalActions}>
-              <Pressable onPress={closeEditModal} disabled={editBusy} style={styles.modalActionSecondary}>
-                <ThemedText type="defaultSemiBold">Annuleer</ThemedText>
-              </Pressable>
-              <Pressable onPress={() => void handleSaveEdit()} disabled={editBusy} style={styles.modalActionPrimary}>
-                <ThemedText type="defaultSemiBold" lightColor={colorTokens.light.primaryOn} darkColor={colorTokens.dark.primaryOn}>
-                  {editBusy ? 'Opslaan...' : 'Opslaan'}
-                </ThemedText>
-              </Pressable>
-            </ThemedView>
+            </Pressable>
           </ThemedView>
+
+          <TextInput
+            multiline
+            autoFocus
+            value={editBody}
+            onChangeText={setEditBody}
+            textAlignVertical="top"
+            style={styles.modalInputFull}
+            placeholder="Typ de inhoud van dit moment..."
+            placeholderTextColor={colorTokens.light.mutedSoft}
+          />
         </ThemedView>
       </Modal>
 
@@ -406,6 +466,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 2,
+    paddingHorizontal: spacing.xs,
   },
   topBarTitle: {
     color: colorTokens.light.text,
@@ -436,7 +497,7 @@ const styles = StyleSheet.create({
   },
   heroVisual: {
     borderRadius: 32,
-    minHeight: 184,
+    minHeight: 152,
     marginBottom: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
@@ -444,16 +505,16 @@ const styles = StyleSheet.create({
     borderColor: colorTokens.light.separator,
   },
   editorialBody: {
-    fontSize: 24,
-    lineHeight: 43,
+    fontSize: 20,
+    lineHeight: 34,
     color: colorTokens.light.text,
     marginBottom: spacing.xl,
     letterSpacing: -0.2,
   },
   insightBlock: {
     borderRadius: 24,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
     marginBottom: spacing.xl,
     borderLeftWidth: 2,
     borderLeftColor: colorTokens.light.primary,
@@ -475,8 +536,8 @@ const styles = StyleSheet.create({
   },
   keyPointsBlock: {
     borderRadius: 24,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
     gap: spacing.lg,
     marginBottom: spacing.xl,
   },
@@ -510,19 +571,28 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   entriesList: {
-    gap: spacing.inline,
+    gap: spacing.xs,
   },
   entryItem: {
-    borderRadius: 24,
+    borderRadius: 16,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.xs,
     gap: spacing.inline,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colorTokens.light.separator,
   },
   entryHead: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.sm,
+  },
+  entryTitleWrap: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  entryTitle: {
+    color: colorTokens.light.text,
   },
   entryMeta: {
     flexDirection: 'row',
@@ -530,7 +600,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   entryType: {
-    color: colorTokens.light.primary,
+    color: colorTokens.light.mutedSoft,
   },
   entryTime: {
     color: colorTokens.light.mutedSoft,
@@ -539,6 +609,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    marginTop: 1,
   },
   iconAction: {
     width: 28,
@@ -546,63 +617,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.pill,
-    backgroundColor: colorTokens.light.surface,
+    backgroundColor: 'transparent',
   },
   entryPreview: {
     color: colorTokens.light.muted,
-    lineHeight: 22,
+    lineHeight: 23,
   },
-  modalBackdrop: {
+  modalScreen: {
     flex: 1,
-    backgroundColor: '#00000055',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  modalCard: {
-    borderRadius: 20,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.page,
+    paddingBottom: spacing.page,
     gap: spacing.md,
   },
-  modalHint: {
-    color: colorTokens.light.mutedSoft,
-  },
-  modalEditor: {
-    gap: spacing.xs,
-  },
-  modalEditorLabel: {
-    color: colorTokens.light.mutedSoft,
-  },
-  modalInput: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: colorTokens.light.text,
-    backgroundColor: colorTokens.light.surfaceLow,
-    borderWidth: 1,
-    borderColor: colorTokens.light.separator,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    minHeight: 110,
-  },
-  modalActions: {
+  modalTopBar: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.xs,
+    minHeight: 40,
   },
-  modalActionSecondary: {
-    borderWidth: 1,
-    borderColor: colorTokens.light.separator,
+  modalTopAction: {
+    minWidth: 84,
     borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
-  modalActionPrimary: {
+  modalTopActionPrimary: {
     backgroundColor: colorTokens.light.primaryStrong,
-    borderRadius: radius.pill,
+    alignItems: 'center',
+  },
+  modalInputFull: {
+    flex: 1,
+    minHeight: 340,
+    fontSize: 24,
+    lineHeight: 34,
+    color: colorTokens.light.text,
+    backgroundColor: `${colorTokens.light.surfaceLowest}D6`,
+    borderWidth: 1,
+    borderColor: `${colorTokens.light.separator}CC`,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.lg,
+    textAlign: 'left',
   },
   bottomActionWrap: {
     alignItems: 'center',

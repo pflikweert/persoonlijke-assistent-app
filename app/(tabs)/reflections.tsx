@@ -101,7 +101,9 @@ export default function ReflectionsScreen() {
   const earlierReflections = recent.filter((row) => !latestIds.has(row.id));
 
   return (
-    <ScreenContainer>
+    <ScreenContainer
+      scrollable
+      contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.header}>
         <ThemedText type="screenTitle">Reflecties</ThemedText>
         <ThemedText type="bodySecondary">Week- en maandreflecties op basis van je dagjournals.</ThemedText>
@@ -201,8 +203,11 @@ export default function ReflectionsScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: spacing.xxxl,
+  },
   header: {
-    gap: spacing.inline,
+    gap: spacing.xs,
   },
   list: {
     gap: spacing.inline,

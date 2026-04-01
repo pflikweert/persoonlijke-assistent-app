@@ -1,5 +1,6 @@
 import type { Json, Tables } from '@/src/lib/supabase/database.types';
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
+import { getCurrentSession } from './auth';
 
 export type DayJournalSummary = Pick<
   Tables<'day_journals'>,
@@ -15,6 +16,72 @@ export type NormalizedDayEntry = Pick<
 };
 
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+function normalizeLine(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function dedupeLines(values: string[]): string[] {
+  const seen = new Set<string>();
+  const output: string[] = [];
+
+  for (const value of values) {
+    const clean = normalizeLine(value);
+    if (!clean) {
+      continue;
+    }
+
+    const key = clean.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    output.push(clean);
+  }
+
+  return output;
+}
+
+function composeDayJournalDraft(entries: NormalizedDayEntry[]): { summary: string; sections: string[] } {
+  const normalized = entries
+    .map((entry) => ({
+      title: normalizeLine(entry.title || ''),
+      body: normalizeLine(entry.body || ''),
+    }))
+    .filter((entry) => entry.title.length > 0 || entry.body.length > 0);
+
+  if (normalized.length === 0) {
+    return {
+      summary: 'Nog geen bruikbare notities voor deze dag.',
+      sections: [],
+    };
+  }
+
+  const narrativeParts = normalized
+    .map((entry) => entry.body)
+    .filter((body) => body.length > 0)
+    .slice(0, 3)
+    .map((body) => (/[.!?]$/.test(body) ? body : `${body}.`));
+
+  const summary =
+    narrativeParts.length > 0
+      ? narrativeParts.join(' ')
+      : normalized.length === 1
+        ? `${normalized[0]?.title || 'Moment'} vastgelegd.`
+        : `${normalized.length} momenten vastgelegd in je dag.`;
+
+  const sections = dedupeLines(
+    normalized
+      .map((entry) => entry.title)
+      .filter((title) => title.length > 0)
+  ).slice(0, 4);
+
+  return {
+    summary,
+    sections,
+  };
+}
 
 export function getUtcTodayDate(): string {
   return new Date().toISOString().slice(0, 10);
@@ -228,4 +295,47 @@ export async function deleteNormalizedEntryById(id: string): Promise<void> {
   if (error) {
     throw error;
   }
+}
+
+export async function regenerateDayJournalByDate(journalDate: string): Promise<DayJournalSummary> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  if (!isValidJournalDate(journalDate)) {
+    throw new Error('Ongeldige datum. Gebruik formaat YYYY-MM-DD.');
+  }
+
+  const session = await getCurrentSession();
+  const userId = session?.user.id;
+
+  if (!userId) {
+    throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
+  }
+
+  const entries = await fetchNormalizedEntriesByDate(journalDate);
+  const draft = composeDayJournalDraft(entries);
+
+  const { data, error } = await supabase
+    .from('day_journals')
+    .upsert(
+      {
+        user_id: userId,
+        journal_date: journalDate,
+        summary: draft.summary,
+        sections: draft.sections,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,journal_date' }
+    )
+    .select('id, journal_date, summary, sections, updated_at')
+    .single();
+
+  if (error || !data) {
+    throw error ?? new Error('Kon dagjournal niet opnieuw opbouwen.');
+  }
+
+  return data;
 }
