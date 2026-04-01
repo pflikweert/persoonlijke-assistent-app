@@ -8,11 +8,19 @@ import {
 import { router } from 'expo-router';
 import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, TextInput } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { ContentSection, StateNotice } from '@/components/ui/screen-primitives';
+import {
+  MetaText,
+  PrimaryButton,
+  ScreenContainer,
+  SecondaryButton,
+  StateBlock,
+  SurfaceSection,
+  TextAreaField,
+} from '@/components/ui/screen-primitives';
 import { classifyUnknownError, submitAudioEntry, submitTextEntry } from '@/services';
 import { spacing } from '@/theme';
 
@@ -255,12 +263,16 @@ export default function CaptureScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Vastleggen</ThemedText>
-      <ThemedText>Kies tekst of audio. Verwerking gebeurt automatisch op de achtergrond.</ThemedText>
+    <ScreenContainer scrollable>
+      <ThemedView style={styles.header}>
+        <ThemedText type="screenTitle">Vastleggen</ThemedText>
+        <ThemedText type="bodySecondary">
+          Kies tekst of audio. Verwerking gebeurt automatisch op de achtergrond.
+        </ThemedText>
+      </ThemedView>
 
       {error ? (
-        <StateNotice
+        <StateBlock
           tone="error"
           message={error.message}
           detail={
@@ -271,111 +283,56 @@ export default function CaptureScreen() {
           meta={error.requestId ? `Referentie: ${error.requestId}` : null}
         />
       ) : null}
-      {status ? <StateNotice tone="success" message={status} /> : null}
+      {status ? <StateBlock tone="success" message={status} /> : null}
 
-      <ContentSection title="Tekstnotitie">
-        <ThemedText style={styles.helperText}>Schrijf kort wat je wilt vastleggen.</ThemedText>
-        <TextInput
-          multiline
+      <SurfaceSection title="Tekstnotitie" subtitle="Schrijf kort wat je wilt vastleggen.">
+        <TextAreaField
           onChangeText={setRawText}
           placeholder="Wat wil je vastleggen?"
-          style={styles.input}
-          textAlignVertical="top"
           value={rawText}
         />
-        <Pressable
+        <PrimaryButton
           disabled={submitting || isRecording}
-          onPress={handleSubmitText}
-          style={[styles.button, (submitting || isRecording) && styles.buttonDisabled]}>
-          <ThemedText lightColor="#FFFFFF" darkColor="#FFFFFF" type="defaultSemiBold">
-            {submitting ? 'Notitie verwerken...' : 'Notitie opslaan'}
-          </ThemedText>
-        </Pressable>
-      </ContentSection>
+          onPress={() => void handleSubmitText()}
+          label={submitting ? 'Notitie verwerken...' : 'Notitie opslaan'}
+        />
+      </SurfaceSection>
 
-      <ContentSection title="Audio-opname">
-        <ThemedText style={styles.helperText}>Neem kort op en verwerk wanneer je klaar bent.</ThemedText>
-        {isRecording ? <ThemedText>Opname loopt: {recordingSeconds}s / 90s</ThemedText> : null}
-        {!isRecording && audioUri ? <ThemedText>Opname staat klaar voor verwerking.</ThemedText> : null}
+      <SurfaceSection title="Audio-opname" subtitle="Neem kort op en verwerk wanneer je klaar bent.">
+        {isRecording ? <MetaText>Opname loopt: {recordingSeconds}s / 90s</MetaText> : null}
+        {!isRecording && audioUri ? <MetaText>Opname staat klaar voor verwerking.</MetaText> : null}
 
         <ThemedView style={styles.audioButtons}>
-          <Pressable
+          <SecondaryButton
             disabled={submitting || recordingActionBusy || isRecording}
-            onPress={handleStartRecording}
-            style={[
-              styles.button,
-              styles.secondaryButton,
-              (submitting || recordingActionBusy || isRecording) && styles.buttonDisabled,
-            ]}>
-            <ThemedText type="defaultSemiBold">Start opname</ThemedText>
-          </Pressable>
+            onPress={() => void handleStartRecording()}
+            label="Start opname"
+          />
 
-          <Pressable
+          <SecondaryButton
             disabled={submitting || recordingActionBusy || !isRecording}
             onPress={() => void handleStopRecording('manual')}
-            style={[
-              styles.button,
-              styles.secondaryButton,
-              (submitting || recordingActionBusy || !isRecording) && styles.buttonDisabled,
-            ]}>
-            <ThemedText type="defaultSemiBold">Stop opname</ThemedText>
-          </Pressable>
+            label="Stop opname"
+          />
         </ThemedView>
 
-        <Pressable
+        <PrimaryButton
           disabled={submitting || recordingActionBusy || isRecording || !audioUri}
-          onPress={handleSubmitAudio}
-          style={[
-            styles.button,
-            (submitting || recordingActionBusy || isRecording || !audioUri) && styles.buttonDisabled,
-          ]}>
-          <ThemedText lightColor="#FFFFFF" darkColor="#FFFFFF" type="defaultSemiBold">
-            {submitting ? 'Opname verwerken...' : 'Opname opslaan'}
-          </ThemedText>
-        </Pressable>
-      </ContentSection>
-    </ThemedView>
+          onPress={() => void handleSubmitAudio()}
+          label={submitting ? 'Opname verwerken...' : 'Opname opslaan'}
+        />
+      </SurfaceSection>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-    gap: spacing.lg,
-  },
-  block: {
-    gap: spacing.md,
-  },
-  helperText: {
-    opacity: 0.8,
-  },
-  input: {
-    minHeight: 140,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#888888',
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#0A7EA4',
-    borderRadius: 8,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#888888',
+  header: {
+    gap: spacing.inline,
   },
   audioButtons: {
     flexDirection: 'row',
     gap: spacing.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
+    flexWrap: 'wrap',
   },
 });

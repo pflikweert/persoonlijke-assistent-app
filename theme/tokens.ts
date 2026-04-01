@@ -1,21 +1,51 @@
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 export const colorTokens = {
   light: {
-    text: '#11181C',
-    background: '#FFFFFF',
-    surface: '#F5F7FA',
-    primary: '#0A7EA4',
-    muted: '#687076',
-    border: '#DDE3EA',
+    text: '#1B1C1A',
+    background: '#FAF9F6',
+    surface: '#EFEEEB',
+    surfaceLow: '#F4F3F0',
+    surfaceLowest: '#FFFFFF',
+    surfaceHigh: '#E9E8E5',
+    primary: '#745B00',
+    primaryStrong: '#E6B800',
+    primaryOn: '#241A00',
+    ctaGradientStart: '#F0C115',
+    ctaGradientEnd: '#E6B800',
+    muted: '#4E4633',
+    mutedSoft: '#736A56',
+    border: '#D1C5AC',
+    separator: '#DED6C4',
+    tabBarBackground: '#FAF9F6EE',
+    tabActive: '#745B00',
+    tabInactive: '#736A56',
+    info: '#395F94',
+    success: '#1B6D24',
+    error: '#BA1A1A',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    surface: '#1D2125',
-    primary: '#FFFFFF',
-    muted: '#9BA1A6',
-    border: '#2E353C',
+    text: '#F2F1EE',
+    background: '#21201D',
+    surface: '#2A2925',
+    surfaceLow: '#302F2B',
+    surfaceLowest: '#383733',
+    surfaceHigh: '#252420',
+    primary: '#F0C115',
+    primaryStrong: '#E6B800',
+    primaryOn: '#241A00',
+    ctaGradientStart: '#F0C115',
+    ctaGradientEnd: '#CDA100',
+    muted: '#C5BDAA',
+    mutedSoft: '#AAA391',
+    border: '#5A5346',
+    separator: '#4A4439',
+    tabBarBackground: '#21201DEE',
+    tabActive: '#F0C115',
+    tabInactive: '#AAA391',
+    info: '#A7C8FF',
+    success: '#A3F69C',
+    error: '#FFB4AB',
   },
 } as const;
 
@@ -27,14 +57,82 @@ export const spacing = {
   lg: 16,
   xl: 24,
   xxl: 32,
+  xxxl: 40,
+  page: 24,
+  section: 20,
+  cluster: 12,
+  inline: 8,
+} as const;
+
+export const radius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  pill: 999,
+} as const;
+
+export const borders = {
+  hairline: StyleSheet.hairlineWidth,
+  subtle: 1,
+} as const;
+
+export const shadows = {
+  surface: Platform.select({
+    ios: {
+      shadowColor: '#1B1C1A',
+      shadowOpacity: 0.06,
+      shadowOffset: { width: 0, height: 6 },
+      shadowRadius: 16,
+    },
+    android: {
+      elevation: 2,
+    },
+    default: {},
+    web: {
+      shadowColor: '#1B1C1A',
+      shadowOpacity: 0.06,
+      shadowOffset: { width: 0, height: 6 },
+      shadowRadius: 16,
+    },
+  }),
+  cta: Platform.select({
+    ios: {
+      shadowColor: '#E6B800',
+      shadowOpacity: 0.28,
+      shadowOffset: { width: 0, height: 8 },
+      shadowRadius: 20,
+    },
+    android: {
+      elevation: 4,
+    },
+    default: {},
+    web: {
+      shadowColor: '#E6B800',
+      shadowOpacity: 0.28,
+      shadowOffset: { width: 0, height: 8 },
+      shadowRadius: 20,
+    },
+  }),
+} as const;
+
+export const sizing = {
+  ctaHeight: 56,
+  ctaCompactHeight: 44,
+  inputMinHeight: 48,
+  textAreaMinHeight: 140,
+  iconSm: 16,
+  iconMd: 20,
+  iconLg: 24,
+  touchTarget: 44,
 } as const;
 
 export const typography = {
   families: Platform.select({
     ios: {
-      sans: 'system-ui',
+      sans: 'System',
       serif: 'ui-serif',
-      rounded: 'ui-rounded',
+      rounded: 'System',
       mono: 'ui-monospace',
     },
     default: {
@@ -44,25 +142,82 @@ export const typography = {
       mono: 'monospace',
     },
     web: {
-      sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      sans: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       serif: "Georgia, 'Times New Roman', serif",
-      rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+      rounded: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
     },
   }),
+  roles: {
+    screenTitle: {
+      size: 34,
+      lineHeight: 40,
+      weight: '700',
+      letterSpacing: -0.5,
+    },
+    sectionTitle: {
+      size: 20,
+      lineHeight: 26,
+      weight: '600',
+      letterSpacing: -0.2,
+    },
+    body: {
+      size: 16,
+      lineHeight: 26,
+      weight: '400',
+      letterSpacing: -0.1,
+    },
+    bodySecondary: {
+      size: 15,
+      lineHeight: 24,
+      weight: '400',
+      letterSpacing: -0.1,
+    },
+    caption: {
+      size: 12,
+      lineHeight: 18,
+      weight: '500',
+      letterSpacing: 0.2,
+    },
+    meta: {
+      size: 11,
+      lineHeight: 16,
+      weight: '600',
+      letterSpacing: 1.1,
+    },
+    ctaLabel: {
+      size: 16,
+      lineHeight: 20,
+      weight: '700',
+      letterSpacing: 0.2,
+    },
+  },
   size: {
     caption: 12,
     body: 16,
     subtitle: 20,
-    title: 32,
+    title: 34,
   },
   lineHeight: {
-    body: 24,
-    title: 32,
+    body: 26,
+    title: 40,
   },
   weight: {
     regular: '400',
     semibold: '600',
     bold: '700',
+  },
+} as const;
+
+export const motion = {
+  duration: {
+    fast: 140,
+    normal: 220,
+    slow: 320,
+  },
+  easing: {
+    standard: [0.2, 0, 0, 1],
+    entrance: [0.16, 1, 0.3, 1],
+    exit: [0.4, 0, 1, 1],
   },
 } as const;

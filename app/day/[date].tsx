@@ -1,10 +1,16 @@
-import { Link, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { ContentSection, StateNotice } from '@/components/ui/screen-primitives';
+import {
+  MetaText,
+  PrimaryButton,
+  ScreenContainer,
+  StateBlock,
+  SurfaceSection,
+} from '@/components/ui/screen-primitives';
 import {
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
@@ -71,98 +77,69 @@ export default function DayDetailScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
+    <ScreenContainer scrollable>
       <Stack.Screen options={{ title: journalDate || 'Dagdetail' }} />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <ThemedText type="title">Dagdetail</ThemedText>
-        <ThemedText style={styles.metaText}>Datum (UTC): {journalDate || '-'}</ThemedText>
+      <ThemedText type="screenTitle">Dagdetail</ThemedText>
+      <MetaText>Datum (UTC): {journalDate || '-'}</MetaText>
 
-        {loading ? (
-          <StateNotice tone="loading" message="Dagdetail laden..." detail="Even geduld, we halen de dag op." />
-        ) : null}
-        {!loading && error ? (
-          <StateNotice tone="error" message="Dagdetail kon niet geladen worden." detail={error} />
-        ) : null}
+      {loading ? (
+        <StateBlock tone="loading" message="Dagdetail laden..." detail="Even geduld, we halen de dag op." />
+      ) : null}
+      {!loading && error ? (
+        <StateBlock tone="error" message="Dagdetail kon niet geladen worden." detail={error} />
+      ) : null}
 
-        {!loading && !error && !summary && entries.length === 0 ? (
-          <StateNotice
-            tone="empty"
-            message="Geen inhoud gevonden voor deze dag."
-            detail="Leg een notitie vast om deze dag te vullen."
-          />
-        ) : null}
+      {!loading && !error && !summary && entries.length === 0 ? (
+        <StateBlock
+          tone="empty"
+          message="Geen inhoud gevonden voor deze dag."
+          detail="Leg een notitie vast om deze dag te vullen."
+        />
+      ) : null}
 
-        {!loading && !error && summary ? (
-          <ContentSection title="Samenvatting">
-            <ThemedText>{summary}</ThemedText>
-          </ContentSection>
-        ) : null}
+      {!loading && !error && summary ? (
+        <SurfaceSection title="Samenvatting">
+          <ThemedText>{summary}</ThemedText>
+        </SurfaceSection>
+      ) : null}
 
-        {!loading && !error && sections.length > 0 ? (
-          <ContentSection title="Kernpunten">
-            {sections.map((section, index) => (
-              <ThemedText key={`${section}-${index}`}>• {section}</ThemedText>
-            ))}
-          </ContentSection>
-        ) : null}
-
-        {!loading && !error && entries.length > 0 ? (
-          <ContentSection title="Notities">
-            <ThemedView style={styles.entriesList}>
-              {entries.map((entry) => (
-                <ThemedView key={entry.id} style={styles.entryItem}>
-                  <ThemedText type="defaultSemiBold">{entry.title}</ThemedText>
-                  <ThemedText>{entry.body}</ThemedText>
-                </ThemedView>
-              ))}
-            </ThemedView>
-          </ContentSection>
-        ) : null}
-
-        <Link href="/capture" asChild>
-          <Pressable style={styles.captureButton}>
-            <ThemedText lightColor="#FFFFFF" darkColor="#FFFFFF" type="defaultSemiBold">
-              Naar vastleggen
+      {!loading && !error && sections.length > 0 ? (
+        <SurfaceSection title="Kernpunten">
+          {sections.map((section, index) => (
+            <ThemedText key={`${section}-${index}`} type="bodySecondary">
+              • {section}
             </ThemedText>
-          </Pressable>
-        </Link>
-      </ScrollView>
-    </ThemedView>
+          ))}
+        </SurfaceSection>
+      ) : null}
+
+      {!loading && !error && entries.length > 0 ? (
+        <SurfaceSection title="Notities">
+          <ThemedView style={styles.entriesList}>
+            {entries.map((entry) => (
+              <ThemedView key={entry.id} lightColor="#F4F3F0" darkColor="#302F2B" style={styles.entryItem}>
+                <ThemedText type="defaultSemiBold">{entry.title}</ThemedText>
+                <ThemedText type="bodySecondary">{entry.body}</ThemedText>
+              </ThemedView>
+            ))}
+          </ThemedView>
+        </SurfaceSection>
+      ) : null}
+
+      <PrimaryButton label="Nieuwe entry" onPress={() => router.push('/capture')} />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-    gap: spacing.lg,
-  },
-  block: {
-    gap: spacing.sm,
-  },
-  metaText: {
-    opacity: 0.7,
-  },
   entriesList: {
-    gap: spacing.md,
+    gap: spacing.inline,
   },
   entryItem: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#888888',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    gap: spacing.xs,
-  },
-  captureButton: {
-    marginTop: spacing.sm,
-    backgroundColor: '#0A7EA4',
-    borderRadius: 8,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
+    gap: spacing.inline,
   },
 });

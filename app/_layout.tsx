@@ -8,16 +8,32 @@ import type { Session } from '@supabase/supabase-js';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getCurrentSession, onAuthStateChange } from '@/services';
+import { colorTokens } from '@/theme';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() ?? 'light';
   const segments = useSegments();
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const palette = colorTokens[colorScheme];
+
+  const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+  const appTheme = {
+    ...navigationTheme,
+    colors: {
+      ...navigationTheme.colors,
+      background: palette.background,
+      card: palette.surface,
+      text: palette.text,
+      primary: palette.primary,
+      border: palette.separator,
+      notification: palette.primaryStrong,
+    },
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -69,20 +85,20 @@ export default function RootLayout() {
 
   if (!authReady) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator />
+      <View style={[styles.loadingContainer, { backgroundColor: palette.background }]}>
+        <ActivityIndicator color={palette.primary} />
       </View>
     );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={appTheme}>
       <Stack>
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} backgroundColor={palette.background} />
     </ThemeProvider>
   );
 }

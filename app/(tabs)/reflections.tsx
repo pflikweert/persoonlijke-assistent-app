@@ -1,10 +1,16 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { ContentSection, StateNotice } from '@/components/ui/screen-primitives';
+import {
+  MetaText,
+  PrimaryButton,
+  ScreenContainer,
+  StateBlock,
+  SurfaceSection,
+} from '@/components/ui/screen-primitives';
 import {
   classifyUnknownError,
   fetchLatestReflection,
@@ -95,19 +101,21 @@ export default function ReflectionsScreen() {
   const earlierReflections = recent.filter((row) => !latestIds.has(row.id));
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">Reflecties</ThemedText>
-      <ThemedText>Week- en maandreflecties op basis van je dagjournals.</ThemedText>
+    <ScreenContainer>
+      <ThemedView style={styles.header}>
+        <ThemedText type="screenTitle">Reflecties</ThemedText>
+        <ThemedText type="bodySecondary">Week- en maandreflecties op basis van je dagjournals.</ThemedText>
+      </ThemedView>
 
       {loading ? (
-        <StateNotice
+        <StateBlock
           tone="loading"
           message="Reflecties laden..."
           detail="We halen je laatste week- en maandreflecties op."
         />
       ) : null}
       {!loading && error ? (
-        <StateNotice
+        <StateBlock
           tone="error"
           message={error.message}
           detail={
@@ -118,114 +126,94 @@ export default function ReflectionsScreen() {
           meta={error.requestId ? `Referentie: ${error.requestId}` : null}
         />
       ) : null}
-      {status ? <StateNotice tone="success" message={status} /> : null}
+      {status ? <StateBlock tone="success" message={status} /> : null}
 
       {!loading ? (
-        <ContentSection title="Laatste weekreflectie">
+        <SurfaceSection title="Laatste weekreflectie">
           {latestWeek ? (
             <ThemedView style={styles.cardBody}>
-              <ThemedText>
+              <MetaText>
                 Periode: {latestWeek.period_start} t/m {latestWeek.period_end}
-              </ThemedText>
+              </MetaText>
               <ThemedText>{latestWeek.summary_text}</ThemedText>
             </ThemedView>
           ) : (
-            <ThemedText>Nog geen weekreflectie beschikbaar.</ThemedText>
+            <ThemedText type="bodySecondary">Nog geen weekreflectie beschikbaar.</ThemedText>
           )}
-          <Pressable
+          <PrimaryButton
             onPress={() => void handleGenerate('week')}
             disabled={generating !== null}
-            style={[styles.button, generating !== null && styles.buttonDisabled]}>
-            <ThemedText lightColor="#FFFFFF" darkColor="#FFFFFF" type="defaultSemiBold">
-              {generating === 'week' ? 'Genereren...' : 'Genereer weekreflectie'}
-            </ThemedText>
-          </Pressable>
-        </ContentSection>
+            label={generating === 'week' ? 'Genereren...' : 'Genereer weekreflectie'}
+          />
+        </SurfaceSection>
       ) : null}
 
       {!loading ? (
-        <ContentSection title="Laatste maandreflectie">
+        <SurfaceSection title="Laatste maandreflectie">
           {latestMonth ? (
             <ThemedView style={styles.cardBody}>
-              <ThemedText>
+              <MetaText>
                 Periode: {latestMonth.period_start} t/m {latestMonth.period_end}
-              </ThemedText>
+              </MetaText>
               <ThemedText>{latestMonth.summary_text}</ThemedText>
             </ThemedView>
           ) : (
-            <ThemedText>Nog geen maandreflectie beschikbaar.</ThemedText>
+            <ThemedText type="bodySecondary">Nog geen maandreflectie beschikbaar.</ThemedText>
           )}
-          <Pressable
+          <PrimaryButton
             onPress={() => void handleGenerate('month')}
             disabled={generating !== null}
-            style={[styles.button, generating !== null && styles.buttonDisabled]}>
-            <ThemedText lightColor="#FFFFFF" darkColor="#FFFFFF" type="defaultSemiBold">
-              {generating === 'month' ? 'Genereren...' : 'Genereer maandreflectie'}
-            </ThemedText>
-          </Pressable>
-        </ContentSection>
+            label={generating === 'month' ? 'Genereren...' : 'Genereer maandreflectie'}
+          />
+        </SurfaceSection>
       ) : null}
 
       {!loading ? (
-        <ContentSection title="Eerdere reflecties">
+        <SurfaceSection title="Eerdere reflecties">
           {earlierReflections.length === 0 ? (
-            <ThemedText>Geen eerdere reflecties beschikbaar.</ThemedText>
+            <ThemedText type="bodySecondary">Geen eerdere reflecties beschikbaar.</ThemedText>
           ) : (
             <ThemedView style={styles.list}>
               {earlierReflections.map((row) => {
                 const highlights = parseJsonStringArray(row.highlights_json);
                 const points = parseJsonStringArray(row.reflection_points_json);
                 return (
-                  <ThemedView key={row.id} style={styles.card}>
+                  <ThemedView key={row.id} lightColor="#F4F3F0" darkColor="#302F2B" style={styles.card}>
                     <ThemedText type="defaultSemiBold">
                       {periodTypeLabel(row.period_type)}: {row.period_start} t/m {row.period_end}
                     </ThemedText>
-                    <ThemedText>{row.summary_text}</ThemedText>
+                    <ThemedText type="bodySecondary">{row.summary_text}</ThemedText>
                     {highlights.length > 0 ? (
-                      <ThemedText>Highlights: {highlights.slice(0, 2).join(' | ')}</ThemedText>
+                      <MetaText>Highlights: {highlights.slice(0, 2).join(' | ')}</MetaText>
                     ) : null}
                     {points.length > 0 ? (
-                      <ThemedText>Reflectiepunten: {points.slice(0, 2).join(' | ')}</ThemedText>
+                      <MetaText>Reflectiepunten: {points.slice(0, 2).join(' | ')}</MetaText>
                     ) : null}
                   </ThemedView>
                 );
               })}
             </ThemedView>
           )}
-        </ContentSection>
+        </SurfaceSection>
       ) : null}
-    </ThemedView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-    gap: spacing.lg,
+  header: {
+    gap: spacing.inline,
   },
   list: {
-    gap: spacing.sm,
+    gap: spacing.inline,
   },
   cardBody: {
-    gap: spacing.xs,
+    gap: spacing.inline,
   },
   card: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#888888',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    gap: spacing.xs,
-  },
-  button: {
-    backgroundColor: '#0A7EA4',
-    borderRadius: 8,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
+    gap: spacing.inline,
   },
 });

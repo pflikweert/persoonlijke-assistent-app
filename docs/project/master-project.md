@@ -5,6 +5,10 @@ Dit is het enige hoofd-document dat je in een ChatGPT-project hoeft te uploaden 
 
 Dit document vervangt de eerdere losse projectoverzichten en fasebestanden als **primaire contextbron**.
 
+Voor de actuele MVP-designdoorvoer zijn aanvullend leidend:
+- `docs/project/MVP_Design_Spec_App_Fase_1_2_1.md`
+- `design_refs/1.2.1/`
+
 ---
 
 ## 1. Korte productdefinitie
