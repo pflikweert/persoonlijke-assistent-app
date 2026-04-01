@@ -1,7 +1,7 @@
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -105,6 +105,15 @@ function buildInsight(summary: string | null, sections: string[]): string | null
   return null;
 }
 
+function blurActiveElementOnWeb() {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') {
+    return;
+  }
+
+  const active = document.activeElement as HTMLElement | null;
+  active?.blur?.();
+}
+
 export default function DayDetailScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -202,6 +211,7 @@ export default function DayDetailScreen() {
     if (mutationBusy) {
       return;
     }
+    blurActiveElementOnWeb();
     setReadingEntry(null);
   }
 
@@ -218,11 +228,13 @@ export default function DayDetailScreen() {
     if (mutationBusy) {
       return;
     }
+    blurActiveElementOnWeb();
     setEditingEntry(null);
     setEditBody('');
   }
 
   function forceCloseEditModal() {
+    blurActiveElementOnWeb();
     setEditingEntry(null);
     setEditBody('');
   }
