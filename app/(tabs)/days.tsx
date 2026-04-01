@@ -5,6 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   ScreenContainer,
   StateBlock,
@@ -69,6 +70,8 @@ function buildSnippet(summary: string | null, sections: string[]): string {
 }
 
 export default function DaysScreen() {
+  const scheme = useColorScheme() ?? 'light';
+  const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [journals, setJournals] = useState<Awaited<ReturnType<typeof fetchRecentDayJournals>>>([]);
@@ -121,7 +124,7 @@ export default function DaysScreen() {
       contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.header}>
         <ThemedText type="screenTitle">Dagen</ThemedText>
-        <ThemedText type="bodySecondary" style={styles.headerContext}>
+        <ThemedText type="bodySecondary" style={[styles.headerContext, { color: palette.muted }]}>
           Persoonlijk archief om rustig terug te lezen.
         </ThemedText>
       </ThemedView>
@@ -148,7 +151,7 @@ export default function DaysScreen() {
         <ThemedView style={styles.list}>
           {groups.map((group) => (
             <ThemedView key={group.key} style={styles.monthGroup}>
-              <ThemedText type="meta" style={styles.monthHeading}>
+              <ThemedText type="meta" style={[styles.monthHeading, { color: palette.primary }]}>
                 {group.label}
               </ThemedText>
 
@@ -166,18 +169,21 @@ export default function DaysScreen() {
                           params: { date: journal.journal_date },
                         })
                       }
-                      style={styles.row}>
+                      style={[styles.row, { borderBottomColor: `${palette.separator}88` }]}>
                       <ThemedView style={styles.dateColumn}>
-                        <ThemedText type="caption" style={styles.weekday}>
+                        <ThemedText type="caption" style={[styles.weekday, { color: palette.mutedSoft }]}>
                           {formatWeekdayShort(journal.journal_date)}
                         </ThemedText>
-                        <ThemedText type="sectionTitle" style={styles.dayNumber}>
+                        <ThemedText type="sectionTitle" style={[styles.dayNumber, { color: palette.text }]}>
                           {formatDayNumber(journal.journal_date)}
                         </ThemedText>
                       </ThemedView>
 
-                      <ThemedView style={styles.snippetColumn}>
-                        <ThemedText numberOfLines={2} type="bodySecondary" style={styles.snippet}>
+                      <ThemedView style={[styles.snippetColumn, { borderLeftColor: palette.separator }]}>
+                        <ThemedText
+                          numberOfLines={2}
+                          type="bodySecondary"
+                          style={[styles.snippet, { color: palette.muted }]}>
                           {snippet}
                         </ThemedText>
                       </ThemedView>
@@ -185,7 +191,7 @@ export default function DaysScreen() {
                       <MaterialIcons
                         name="chevron-right"
                         size={18}
-                        color={colorTokens.light.mutedSoft}
+                        color={palette.mutedSoft}
                         style={styles.chevron}
                       />
                     </Pressable>
@@ -209,7 +215,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   headerContext: {
-    color: colorTokens.light.muted,
   },
   list: {
     gap: spacing.xl,
@@ -218,7 +223,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   monthHeading: {
-    color: colorTokens.light.primary,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
@@ -232,6 +236,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
     borderRadius: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   dateColumn: {
     width: 44,
@@ -241,21 +246,17 @@ const styles = StyleSheet.create({
   },
   weekday: {
     textTransform: 'uppercase',
-    color: colorTokens.light.mutedSoft,
     letterSpacing: 0.8,
   },
   dayNumber: {
-    color: colorTokens.light.text,
   },
   snippetColumn: {
     flex: 1,
     borderLeftWidth: 1,
-    borderLeftColor: colorTokens.light.separator,
     paddingLeft: spacing.md,
     justifyContent: 'center',
   },
   snippet: {
-    color: colorTokens.light.muted,
   },
   chevron: {
     opacity: 0.65,

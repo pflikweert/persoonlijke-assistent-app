@@ -4,6 +4,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
   PrimaryButton,
@@ -57,6 +58,8 @@ function formatPeriodRange(start: string, end: string): string {
 }
 
 export default function ReflectionsScreen() {
+  const scheme = useColorScheme() ?? 'light';
+  const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
     message: string;
@@ -141,7 +144,7 @@ export default function ReflectionsScreen() {
       contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.header}>
         <ThemedText type="screenTitle">Reflecties</ThemedText>
-        <ThemedText type="bodySecondary" style={styles.headerCopy}>
+        <ThemedText type="bodySecondary" style={[styles.headerCopy, { color: palette.muted }]}>
           Rustige inzichten op basis van je dagjournals.
         </ThemedText>
       </ThemedView>
@@ -149,17 +152,33 @@ export default function ReflectionsScreen() {
       <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
         <Pressable
           onPress={() => setActivePeriod('week')}
-          style={[styles.periodButton, activePeriod === 'week' && styles.periodButtonActive]}>
-          <ThemedText type="caption" style={[styles.periodButtonLabel, activePeriod === 'week' && styles.periodButtonLabelActive]}>
+          style={[
+            styles.periodButton,
+            activePeriod === 'week' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
+          ]}>
+          <ThemedText
+            type="caption"
+            style={[
+              styles.periodButtonLabel,
+              { color: palette.mutedSoft },
+              activePeriod === 'week' && [styles.periodButtonLabelActive, { color: palette.primary }],
+            ]}>
             Week
           </ThemedText>
         </Pressable>
         <Pressable
           onPress={() => setActivePeriod('month')}
-          style={[styles.periodButton, activePeriod === 'month' && styles.periodButtonActive]}>
+          style={[
+            styles.periodButton,
+            activePeriod === 'month' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
+          ]}>
           <ThemedText
             type="caption"
-            style={[styles.periodButtonLabel, activePeriod === 'month' && styles.periodButtonLabelActive]}>
+            style={[
+              styles.periodButtonLabel,
+              { color: palette.mutedSoft },
+              activePeriod === 'month' && [styles.periodButtonLabelActive, { color: palette.primary }],
+            ]}>
             Maand
           </ThemedText>
         </Pressable>
@@ -200,13 +219,13 @@ export default function ReflectionsScreen() {
               <ThemedView
                 lightColor={colorTokens.light.surfaceLowest}
                 darkColor={colorTokens.dark.surfaceLow}
-                style={styles.summaryInset}>
+                style={[styles.summaryInset, { borderLeftColor: `${palette.primary}55` }]}>
                 <ThemedText type="bodySecondary" style={styles.summaryInsetText}>
                   {activeReflection.summary_text}
                 </ThemedText>
               </ThemedView>
 
-              <ThemedText type="body" style={styles.narrativeText}>
+              <ThemedText type="body" style={[styles.narrativeText, { color: palette.text }]}>
                 {activeReflection.summary_text}
               </ThemedText>
 
@@ -255,7 +274,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   headerCopy: {
-    color: colorTokens.light.muted,
   },
   periodSwitch: {
     flexDirection: 'row',
@@ -271,15 +289,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   periodButtonActive: {
-    backgroundColor: colorTokens.light.surfaceLowest,
   },
   periodButtonLabel: {
-    color: colorTokens.light.mutedSoft,
     textTransform: 'uppercase',
     letterSpacing: 0.9,
   },
   periodButtonLabelActive: {
-    color: colorTokens.light.primary,
   },
   readingCanvas: {
     gap: spacing.xl,
@@ -294,7 +309,6 @@ const styles = StyleSheet.create({
   },
   summaryInset: {
     borderLeftWidth: 2,
-    borderLeftColor: `${colorTokens.light.primary}55`,
     borderTopRightRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
     paddingHorizontal: spacing.lg,
@@ -308,7 +322,6 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     fontSize: 21,
     letterSpacing: -0.1,
-    color: colorTokens.light.text,
   },
   highlightList: {
     gap: spacing.sm,

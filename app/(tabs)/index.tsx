@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
   PrimaryButton,
@@ -14,6 +15,8 @@ import { fetchTodayJournal, getUtcTodayDate, parseJournalSections } from '@/serv
 import { colorTokens, radius, shadows, spacing, typography } from '@/theme';
 
 export default function TodayScreen() {
+  const scheme = useColorScheme() ?? 'light';
+  const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
@@ -69,7 +72,7 @@ export default function TodayScreen() {
         </ThemedView>
         <ThemedText type="sectionTitle">Vandaag</ThemedText>
         <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.topAction}>
-          <IconSymbol size={18} name="bell" color={colorTokens.light.mutedSoft} />
+          <IconSymbol size={18} name="bell" color={palette.mutedSoft} />
         </ThemedView>
       </ThemedView>
 
@@ -83,14 +86,15 @@ export default function TodayScreen() {
           <ThemedView
             style={[
               styles.statusDot,
+              { backgroundColor: palette.success },
               loading
-                ? styles.statusDotLoading
+                ? { backgroundColor: palette.mutedSoft }
                 : error
-                  ? styles.statusDotError
-                  : styles.statusDotReady,
+                  ? { backgroundColor: palette.error }
+                  : { backgroundColor: palette.success },
             ]}
           />
-          <ThemedText type="caption" style={styles.statusText}>
+          <ThemedText type="caption" style={[styles.statusText, { color: palette.mutedSoft }]}>
             {statusLine}
           </ThemedText>
         </ThemedView>
@@ -118,7 +122,7 @@ export default function TodayScreen() {
         <ThemedView
           lightColor={colorTokens.light.surfaceLowest}
           darkColor={colorTokens.dark.surfaceLow}
-          style={styles.insightBlock}>
+          style={[styles.insightBlock, { borderLeftColor: `${palette.primary}33` }]}>
           <ThemedText type="bodySecondary" style={styles.italicText}>
             {`"${reflectionPreview}"`}
           </ThemedText>
@@ -131,8 +135,10 @@ export default function TodayScreen() {
           <MetaText>RECENT</MetaText>
           <ThemedView style={styles.recentList}>
             {recentPreview.map((point, index) => (
-              <ThemedView key={`${point}-${index}`} style={styles.recentRow}>
-                <ThemedText type="meta" style={styles.recentDateLabel}>
+              <ThemedView
+                key={`${point}-${index}`}
+                style={[styles.recentRow, { borderBottomColor: `${palette.separator}AA` }]}>
+                <ThemedText type="meta" style={[styles.recentDateLabel, { color: palette.primary }]}>
                   {dayLabel}
                 </ThemedText>
                 <ThemedText type="bodySecondary" numberOfLines={1} style={styles.recentText}>
@@ -216,23 +222,12 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: radius.pill,
   },
-  statusDotReady: {
-    backgroundColor: colorTokens.light.success,
-  },
-  statusDotLoading: {
-    backgroundColor: colorTokens.light.mutedSoft,
-  },
-  statusDotError: {
-    backgroundColor: colorTokens.light.error,
-  },
   statusText: {
-    color: colorTokens.light.mutedSoft,
     textTransform: 'none',
     letterSpacing: 0.2,
   },
   insightBlock: {
     borderLeftWidth: 2,
-    borderLeftColor: `${colorTokens.light.primary}33`,
     borderTopRightRadius: radius.lg,
     borderBottomRightRadius: radius.lg,
     paddingHorizontal: spacing.lg,
@@ -255,11 +250,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: `${colorTokens.light.separator}AA`,
   },
   recentDateLabel: {
     width: 56,
-    color: colorTokens.light.primary,
   },
   recentText: {
     flex: 1,

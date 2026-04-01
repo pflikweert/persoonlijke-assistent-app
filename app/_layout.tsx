@@ -2,7 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import 'react-native-reanimated';
 import type { Session } from '@supabase/supabase-js';
 
@@ -13,6 +13,8 @@ import { colorTokens } from '@/theme';
 export const unstable_settings = {
   anchor: '(tabs)',
 };
+
+const WEB_APP_SHELL_MAX_WIDTH = 460;
 
 export default function RootLayout() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -85,25 +87,52 @@ export default function RootLayout() {
 
   if (!authReady) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: palette.background }]}>
-        <ActivityIndicator color={palette.primary} />
+      <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.surfaceLow }]}>
+        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
+          <View style={[styles.loadingContainer, { backgroundColor: palette.background }]}>
+            <ActivityIndicator color={palette.primary} />
+          </View>
+        </View>
       </View>
     );
   }
 
   return (
     <ThemeProvider value={appTheme}>
-      <Stack>
-        <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
+      <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.surfaceLow }]}>
+        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
+          <Stack>
+            <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          </Stack>
+        </View>
+      </View>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} backgroundColor={palette.background} />
     </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  rootShell: {
+    flex: 1,
+  },
+  webBackdrop: {
+    width: '100%',
+    ...(Platform.OS === 'web'
+      ? {
+          alignItems: 'center',
+        }
+      : {}),
+  },
+  webAppShell: {
+    width: '100%',
+    ...(Platform.OS === 'web'
+      ? {
+          maxWidth: WEB_APP_SHELL_MAX_WIDTH,
+        }
+      : {}),
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
