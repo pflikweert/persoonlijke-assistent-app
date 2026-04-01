@@ -5,24 +5,17 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import {
-  MetaText,
-  PrimaryButton,
-  ScreenContainer,
-  SecondaryButton,
-  StateBlock,
-  SurfaceSection,
-  TextAreaField,
-} from '@/components/ui/screen-primitives';
-import { classifyUnknownError, submitAudioEntry, submitTextEntry } from '@/services';
-import { spacing } from '@/theme';
+import { PrimaryButton, ScreenContainer, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
+import { classifyUnknownError, getUtcTodayDate, submitAudioEntry, submitTextEntry } from '@/services';
+import { colorTokens, radius, shadows, spacing } from '@/theme';
 
 const MAX_RECORDING_MS = 90_000;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
@@ -90,6 +83,15 @@ async function audioUriToBase64(uri: string): Promise<string> {
   return readAsStringAsync(uri, { encoding: EncodingType.Base64 });
 }
 
+function getWaveformHeights(durationMillis: number): number[] {
+  const seed = Math.floor(durationMillis / 250);
+  const base = [18, 30, 44, 56, 40, 28, 16];
+  return base.map((height, index) => {
+    const pulse = ((seed + index * 3) % 6) - 3;
+    return Math.max(12, height + pulse * 3);
+  });
+}
+
 export default function CaptureScreen() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 250);
@@ -104,14 +106,21 @@ export default function CaptureScreen() {
     requestId: string | null;
   } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [isTypingFocused, setIsTypingFocused] = useState(false);
 
   const autoStopTriggeredRef = useRef(false);
 
   const isRecording = recorderState.isRecording;
   const recordingSeconds = Math.floor(recorderState.durationMillis / 1000);
+  const hasTextDraft = rawText.trim().length > 0;
+  const hasAudioDraft = Boolean(audioUri);
+  const isBusy = submitting || recordingActionBusy;
+
+  const uiMode: 'idle' | 'voice' | 'typing' =
+    isRecording || hasAudioDraft ? 'voice' : isTypingFocused || hasTextDraft ? 'typing' : 'idle';
 
   const handleStopRecording = useCallback(
-    async (source: 'manual' | 'auto') => {
+    async (source: 'manual' | 'auto'): Promise<string | null> => {
       setRecordingActionBusy(true);
 
       try {
@@ -123,11 +132,10 @@ export default function CaptureScreen() {
         }
 
         setAudioUri(uri);
-        setStatus(
-          source === 'auto'
-            ? 'Opname is automatisch gestopt na 90 seconden.'
-            : 'Opname is klaar om te verwerken.'
-        );
+        if (source === 'auto') {
+          setStatus('Opname is automatisch gestopt na 90 seconden.');
+        }
+        return uri;
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
         setError({
@@ -135,6 +143,7 @@ export default function CaptureScreen() {
           retryable: parsed.retryable,
           requestId: parsed.requestId,
         });
+        return null;
       } finally {
         setRecordingActionBusy(false);
       }
@@ -181,7 +190,6 @@ export default function CaptureScreen() {
       autoStopTriggeredRef.current = false;
       setAudioUri(null);
       recorder.record();
-      setStatus('Opname gestart. Stop wanneer je klaar bent.');
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -192,6 +200,37 @@ export default function CaptureScreen() {
     } finally {
       setRecordingActionBusy(false);
     }
+  }
+
+  async function handleCancelCurrentMode() {
+    setError(null);
+    setStatus(null);
+
+    if (isRecording) {
+      setRecordingActionBusy(true);
+      try {
+        await recorder.stop();
+      } catch {
+        // Cancel should stay silent if stop fails.
+      } finally {
+        setRecordingActionBusy(false);
+      }
+    }
+
+    setAudioUri(null);
+    setIsTypingFocused(false);
+
+    if (uiMode === 'typing') {
+      setRawText('');
+    }
+  }
+
+  function handleBackFromCapture() {
+    if (uiMode === 'idle') {
+      router.replace('/');
+      return;
+    }
+    void handleCancelCurrentMode();
   }
 
   async function handleSubmitText() {
@@ -206,8 +245,11 @@ export default function CaptureScreen() {
       });
 
       setRawText('');
-      setStatus('Notitie verwerkt.');
-      router.replace('/');
+      setIsTypingFocused(false);
+      router.replace({
+        pathname: '/day/[date]',
+        params: { date: getUtcTodayDate(), processed: '1' },
+      });
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -248,8 +290,10 @@ export default function CaptureScreen() {
       });
 
       setAudioUri(null);
-      setStatus('Audio-opname verwerkt.');
-      router.replace('/');
+      router.replace({
+        pathname: '/day/[date]',
+        params: { date: getUtcTodayDate(), processed: '1' },
+      });
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -262,13 +306,74 @@ export default function CaptureScreen() {
     }
   }
 
+  async function handleFinishVoice() {
+    if (isRecording) {
+      setSubmitting(true);
+      setError(null);
+      setStatus('Opname verwerken...');
+      const uri = await handleStopRecording('manual');
+
+      if (!uri) {
+        setSubmitting(false);
+        return;
+      }
+
+      try {
+        const audioBase64 = await audioUriToBase64(uri);
+
+        if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
+          throw new Error('Opname is te groot. Neem een kortere opname op.');
+        }
+
+        await submitAudioEntry({
+          audioBase64,
+          audioMimeType: mimeTypeFromUri(uri),
+          capturedAt: new Date().toISOString(),
+        });
+
+        setAudioUri(null);
+        router.replace({
+          pathname: '/day/[date]',
+          params: { date: getUtcTodayDate(), processed: '1' },
+        });
+      } catch (nextError) {
+        const parsed = classifyUnknownError(nextError);
+        setError({
+          message: parsed.message,
+          retryable: parsed.retryable,
+          requestId: parsed.requestId,
+        });
+      } finally {
+        setSubmitting(false);
+      }
+
+      return;
+    }
+
+    await handleSubmitAudio();
+  }
+
   return (
-    <ScreenContainer scrollable>
-      <ThemedView style={styles.header}>
-        <ThemedText type="screenTitle">Vastleggen</ThemedText>
-        <ThemedText type="bodySecondary">
-          Kies tekst of audio. Verwerking gebeurt automatisch op de achtergrond.
-        </ThemedText>
+    <ScreenContainer style={styles.screen}>
+      <ThemedView style={styles.topBar}>
+        <Pressable
+          onPress={handleBackFromCapture}
+          disabled={recordingActionBusy}
+          style={[styles.topAction, recordingActionBusy && styles.topActionDisabled]}>
+          <MaterialIcons name="arrow-back" size={18} color={colorTokens.light.primary} />
+          <ThemedText type="bodySecondary">{uiMode === 'idle' ? 'Terug' : 'Annuleer'}</ThemedText>
+        </Pressable>
+
+        {uiMode === 'typing' ? (
+          <Pressable
+            onPress={() => void handleSubmitText()}
+            disabled={isBusy || !hasTextDraft}
+            style={[styles.topAction, styles.topPrimaryAction, (isBusy || !hasTextDraft) && styles.topActionDisabled]}>
+            <ThemedText type="defaultSemiBold">{submitting ? 'Opslaan...' : 'Klaar'}</ThemedText>
+          </Pressable>
+        ) : (
+          <ThemedView style={styles.topBarSpacer} />
+        )}
       </ThemedView>
 
       {error ? (
@@ -283,56 +388,235 @@ export default function CaptureScreen() {
           meta={error.requestId ? `Referentie: ${error.requestId}` : null}
         />
       ) : null}
-      {status ? <StateBlock tone="success" message={status} /> : null}
 
-      <SurfaceSection title="Tekstnotitie" subtitle="Schrijf kort wat je wilt vastleggen.">
-        <TextAreaField
-          onChangeText={setRawText}
-          placeholder="Wat wil je vastleggen?"
-          value={rawText}
-        />
-        <PrimaryButton
-          disabled={submitting || isRecording}
-          onPress={() => void handleSubmitText()}
-          label={submitting ? 'Notitie verwerken...' : 'Notitie opslaan'}
-        />
-      </SurfaceSection>
+      {status && !error && uiMode === 'voice' && (isRecording || submitting) ? (
+        <ThemedText type="caption" style={styles.statusText}>
+          {status}
+        </ThemedText>
+      ) : null}
 
-      <SurfaceSection title="Audio-opname" subtitle="Neem kort op en verwerk wanneer je klaar bent.">
-        {isRecording ? <MetaText>Opname loopt: {recordingSeconds}s / 90s</MetaText> : null}
-        {!isRecording && audioUri ? <MetaText>Opname staat klaar voor verwerking.</MetaText> : null}
+      {uiMode === 'voice' ? (
+        <ThemedView style={styles.voiceCanvas}>
+          <ThemedView style={styles.waveCluster}>
+            {getWaveformHeights(recorderState.durationMillis).map((height, index) => (
+              <ThemedView
+                key={`wave-${index}`}
+                style={[
+                  styles.waveBar,
+                  { height, opacity: isRecording ? 1 : 0.45 },
+                ]}
+              />
+            ))}
+          </ThemedView>
 
-        <ThemedView style={styles.audioButtons}>
-          <SecondaryButton
-            disabled={submitting || recordingActionBusy || isRecording}
-            onPress={() => void handleStartRecording()}
-            label="Start opname"
-          />
+          <ThemedText type="bodySecondary" style={styles.voiceLead}>
+            Aan het luisteren...
+          </ThemedText>
 
-          <SecondaryButton
-            disabled={submitting || recordingActionBusy || !isRecording}
-            onPress={() => void handleStopRecording('manual')}
-            label="Stop opname"
-          />
+          <ThemedText type="bodySecondary" style={styles.voiceHint}>
+            Opname loopt: {recordingSeconds}s / 90s
+          </ThemedText>
+
+          <ThemedView style={styles.voicePrimaryZone}>
+            <PrimaryButton
+              disabled={isBusy || (!isRecording && !hasAudioDraft)}
+              onPress={() => void handleFinishVoice()}
+              label={isRecording ? 'Klaar' : submitting ? 'Opname verwerken...' : 'Opname opslaan'}
+            />
+          </ThemedView>
         </ThemedView>
+      ) : (
+        <ThemedView style={styles.idleTypingCanvas}>
+          {uiMode === 'idle' ? (
+            <Pressable
+              style={styles.idleTapCanvas}
+              disabled={isBusy}
+              onPress={() => {
+                setIsTypingFocused(true);
+                setError(null);
+                setStatus(null);
+              }}>
+              <ThemedView style={styles.idleCopy}>
+                <ThemedText type="screenTitle" style={styles.idleTitle}>
+                  Wat houdt je bezig?
+                </ThemedText>
+                <ThemedText type="bodySecondary" style={styles.guidanceText}>
+                  Klik hier en begin met typen
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+          ) : (
+            <TextAreaField
+              onChangeText={setRawText}
+              placeholder="Wat houdt je bezig?"
+              value={rawText}
+              autoFocus
+              editable={!isBusy}
+              style={[styles.captureInput, styles.captureInputTyping]}
+            />
+          )}
 
-        <PrimaryButton
-          disabled={submitting || recordingActionBusy || isRecording || !audioUri}
-          onPress={() => void handleSubmitAudio()}
-          label={submitting ? 'Opname verwerken...' : 'Opname opslaan'}
-        />
-      </SurfaceSection>
+          <ThemedView style={styles.micZone}>
+            <Pressable
+              onPress={() => void handleStartRecording()}
+              disabled={isBusy}
+              style={[
+                uiMode === 'idle' ? styles.micPrimary : styles.micSecondary,
+                isBusy && styles.micDisabled,
+              ]}>
+              <MaterialIcons
+                name="mic"
+                size={uiMode === 'idle' ? 34 : 21}
+                color={uiMode === 'idle' ? '#FFFFFF' : colorTokens.light.primary}
+              />
+            </Pressable>
+          </ThemedView>
+        </ThemedView>
+      )}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: spacing.inline,
+  screen: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    gap: spacing.md,
   },
-  audioButtons: {
+  topBar: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 36,
+  },
+  topAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  topPrimaryAction: {
+    backgroundColor: `${colorTokens.light.primary}12`,
+  },
+  topActionDisabled: {
+    opacity: 0.45,
+  },
+  topBarSpacer: {
+    width: 76,
+  },
+  statusText: {
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  idleTypingCanvas: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: spacing.lg,
+  },
+  idleTapCanvas: {
+    minHeight: 360,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  captureInput: {
+    borderWidth: 1,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+    minHeight: 320,
+    fontSize: 42,
+    lineHeight: 54,
+    letterSpacing: -0.5,
+    textAlign: 'center',
+    paddingTop: spacing.lg,
+    paddingHorizontal: spacing.md,
+  },
+  captureInputTyping: {
+    textAlign: 'left',
+    minHeight: 480,
+    fontSize: 28,
+    lineHeight: 40,
+    borderColor: `${colorTokens.light.separator}CC`,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    backgroundColor: `${colorTokens.light.surfaceLowest}D6`,
+  },
+  idleCopy: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  idleTitle: {
+    fontSize: 40,
+    lineHeight: 48,
+    textAlign: 'center',
+  },
+  guidanceText: {
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  micZone: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: spacing.md,
+    marginTop: spacing.md,
+  },
+  micPrimary: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colorTokens.light.primaryStrong,
+    ...shadows.cta,
+  },
+  micSecondary: {
+    width: 50,
+    height: 50,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${colorTokens.light.primary}10`,
+  },
+  micDisabled: {
+    opacity: 0.5,
+  },
+  voiceCanvas: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+    gap: spacing.lg,
+  },
+  waveCluster: {
+    height: 190,
+    width: '100%',
+    maxWidth: 320,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.xl,
+    backgroundColor: `${colorTokens.light.primary}08`,
+  },
+  waveBar: {
+    width: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colorTokens.light.primaryStrong,
+  },
+  voiceLead: {
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+  voiceHint: {
+    textAlign: 'center',
+    opacity: 0.72,
+  },
+  voicePrimaryZone: {
+    width: '100%',
+    marginTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
 });

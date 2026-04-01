@@ -41,6 +41,8 @@ export default function TabLayout() {
         name="capture"
         options={{
           title: 'Vastleggen',
+          // Capture is a utility screen: keep focus on task and hide tabbar.
+          tabBarStyle: { display: 'none' },
           tabBarIcon: ({ color }) => (
             <IconSymbol size={sizing.iconMd} name="square.and.pencil" color={color} />
           ),

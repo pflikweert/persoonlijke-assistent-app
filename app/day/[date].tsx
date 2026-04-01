@@ -21,6 +21,7 @@ import { spacing } from '@/theme';
 
 type RouteParams = {
   date?: string | string[];
+  processed?: string | string[];
 };
 
 function resolveRouteDate(value: string | string[] | undefined): string {
@@ -28,8 +29,12 @@ function resolveRouteDate(value: string | string[] | undefined): string {
 }
 
 export default function DayDetailScreen() {
-  const { date } = useLocalSearchParams<RouteParams>();
+  const { date, processed } = useLocalSearchParams<RouteParams>();
   const journalDate = useMemo(() => resolveRouteDate(date), [date]);
+  const showProcessedBanner = useMemo(() => {
+    const value = resolveRouteDate(processed);
+    return value === '1' || value.toLowerCase() === 'true';
+  }, [processed]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +87,10 @@ export default function DayDetailScreen() {
 
       <ThemedText type="screenTitle">Dagdetail</ThemedText>
       <MetaText>Datum (UTC): {journalDate || '-'}</MetaText>
+
+      {showProcessedBanner ? (
+        <StateBlock tone="success" message="Entry verwerkt" />
+      ) : null}
 
       {loading ? (
         <StateBlock tone="loading" message="Dagdetail laden..." detail="Even geduld, we halen de dag op." />
