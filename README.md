@@ -1,4 +1,6 @@
 # Persoonlijke Assistent App
+Status: Setup referentie
+Zie: docs/project/current-status.md
 
 ## Projectdoel
 Deze repository is de lokale basis voor een React Native / Expo app met Expo Router.  

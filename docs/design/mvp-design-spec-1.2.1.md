@@ -1,7 +1,7 @@
-# MVP Design Spec v1.3 — Capture First
+# MVP Design Spec v1.2.1 — Capture First
 
 ## Version
-v1.3 — Based on validated Stitch design direction  
+v1.2.1 — Based on validated Stitch design direction  
 Status: FINAL for implementation
 
 ---

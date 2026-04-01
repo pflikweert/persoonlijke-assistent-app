@@ -1,7 +1,10 @@
+Status: Historisch
+Zie: docs/project/current-status.md
+
 # Persoonlijke Assistent App — Fase 1.3 MVP Design Beschrijving
 
 > Status: **VEROUDERD / NIET LEIDEND**.  
-> Voor designbeslissingen is leidend: `docs/project/MVP_Design_Spec_App_Fase_1_2_1.md` en `design_refs/1.2.1/`.
+> Voor designbeslissingen is leidend: `docs/design/mvp-design-spec-1.2.1.md` en `design_refs/1.2.1/`.
 
 ## Doel
 Fase 1.3 is de **design-doorvoerfase** van de bestaande MVP.
