@@ -43,7 +43,7 @@ export function getFunctionRuntimeEnv(): FunctionRuntimeEnv {
   const supabaseUrl = readEnv('SUPABASE_URL') || selectedPublic.url;
   const supabaseAnonKey = readEnv('SUPABASE_ANON_KEY') || selectedPublic.publishableKey;
   const openAiApiKey = readEnv('OPENAI_API_KEY');
-  const openAiModel = readEnv('OPENAI_MODEL') || 'gpt-4o-mini';
+  const openAiModel = readEnv('OPENAI_MODEL') || 'gpt-5.4-mini';
   const openAiTranscriptionModel =
     readEnv('OPENAI_TRANSCRIPTION_MODEL') || 'gpt-4o-mini-transcribe';
 

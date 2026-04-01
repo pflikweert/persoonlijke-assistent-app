@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           id: string
           journal_date: string
+          narrative_text: string
           sections: Json
           summary: string
           updated_at: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           id?: string
           journal_date: string
+          narrative_text?: string
           sections?: Json
           summary?: string
           updated_at?: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           id?: string
           journal_date?: string
+          narrative_text?: string
           sections?: Json
           summary?: string
           updated_at?: string

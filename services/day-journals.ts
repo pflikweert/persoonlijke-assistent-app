@@ -1,10 +1,15 @@
 import type { Json, Tables } from '@/src/lib/supabase/database.types';
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
 import { getCurrentSession } from './auth';
+import {
+  createClientFlowId,
+  FunctionFlowError,
+  isFunctionErrorPayload,
+} from './function-error';
 
 export type DayJournalSummary = Pick<
   Tables<'day_journals'>,
-  'id' | 'journal_date' | 'summary' | 'sections' | 'updated_at'
+  'id' | 'journal_date' | 'summary' | 'narrative_text' | 'sections' | 'updated_at'
 >;
 
 export type NormalizedDayEntry = Pick<
@@ -17,70 +22,14 @@ export type NormalizedDayEntry = Pick<
 
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-function normalizeLine(value: string): string {
-  return value.replace(/\s+/g, ' ').trim();
-}
-
-function dedupeLines(values: string[]): string[] {
-  const seen = new Set<string>();
-  const output: string[] = [];
-
-  for (const value of values) {
-    const clean = normalizeLine(value);
-    if (!clean) {
-      continue;
-    }
-
-    const key = clean.toLowerCase();
-    if (seen.has(key)) {
-      continue;
-    }
-
-    seen.add(key);
-    output.push(clean);
-  }
-
-  return output;
-}
-
-function composeDayJournalDraft(entries: NormalizedDayEntry[]): { summary: string; sections: string[] } {
-  const normalized = entries
-    .map((entry) => ({
-      title: normalizeLine(entry.title || ''),
-      body: normalizeLine(entry.body || ''),
-    }))
-    .filter((entry) => entry.title.length > 0 || entry.body.length > 0);
-
-  if (normalized.length === 0) {
-    return {
-      summary: 'Nog geen bruikbare notities voor deze dag.',
-      sections: [],
-    };
-  }
-
-  const narrativeParts = normalized
-    .map((entry) => entry.body)
-    .filter((body) => body.length > 0)
-    .slice(0, 3)
-    .map((body) => (/[.!?]$/.test(body) ? body : `${body}.`));
-
-  const summary =
-    narrativeParts.length > 0
-      ? narrativeParts.join(' ')
-      : normalized.length === 1
-        ? `${normalized[0]?.title || 'Moment'} vastgelegd.`
-        : `${normalized.length} momenten vastgelegd in je dag.`;
-
-  const sections = dedupeLines(
-    normalized
-      .map((entry) => entry.title)
-      .filter((title) => title.length > 0)
-  ).slice(0, 4);
-
-  return {
-    summary,
-    sections,
-  };
+interface RegenerateDayJournalResult {
+  status: 'ok';
+  flow: 'regenerate-day-journal';
+  requestId: string;
+  flowId: string;
+  journalDate: string;
+  dayJournalId: string;
+  updatedAt: string;
 }
 
 export function getUtcTodayDate(): string {
@@ -99,6 +48,53 @@ export function parseJournalSections(value: Json): string[] {
   return value
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
     .filter((item) => item.length > 0);
+}
+
+async function parseFunctionInvokeError(error: unknown): Promise<never> {
+  const fallback = error instanceof Error ? error.message : 'Opnieuw opbouwen van dagjournal mislukt.';
+
+  if (!error || typeof error !== 'object') {
+    throw new Error(fallback);
+  }
+
+  const maybeContext = (error as { context?: unknown }).context;
+  if (!(maybeContext instanceof Response)) {
+    throw new Error(fallback);
+  }
+
+  try {
+    const text = await maybeContext.text();
+    if (!text) {
+      throw new Error(fallback);
+    }
+
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      if (isFunctionErrorPayload(parsed)) {
+        throw new FunctionFlowError(parsed);
+      }
+
+      if (parsed && typeof parsed === 'object') {
+        const message = (parsed as { error?: unknown; message?: unknown }).error;
+        if (typeof message === 'string' && message.length > 0) {
+          throw new Error(message);
+        }
+      }
+
+      throw new Error(text);
+    } catch (jsonError) {
+      if (jsonError instanceof FunctionFlowError || jsonError instanceof Error) {
+        throw jsonError;
+      }
+      throw new Error(text);
+    }
+  } catch (nextError) {
+    if (nextError instanceof FunctionFlowError || nextError instanceof Error) {
+      throw nextError;
+    }
+
+    throw new Error(fallback);
+  }
 }
 
 function getUtcDateBounds(journalDate: string): { start: string; end: string } {
@@ -125,7 +121,7 @@ export async function fetchTodayJournal(todayDate = getUtcTodayDate()): Promise<
 
   const { data, error } = await supabase
     .from('day_journals')
-    .select('id, journal_date, summary, sections, updated_at')
+    .select('id, journal_date, summary, narrative_text, sections, updated_at')
     .eq('journal_date', todayDate)
     .maybeSingle();
 
@@ -147,7 +143,7 @@ export async function fetchRecentDayJournals(limit = 14): Promise<DayJournalSumm
 
   const { data, error } = await supabase
     .from('day_journals')
-    .select('id, journal_date, summary, sections, updated_at')
+    .select('id, journal_date, summary, narrative_text, sections, updated_at')
     .order('journal_date', { ascending: false })
     .limit(safeLimit);
 
@@ -171,7 +167,7 @@ export async function fetchDayJournalByDate(journalDate: string): Promise<DayJou
 
   const { data, error } = await supabase
     .from('day_journals')
-    .select('id, journal_date, summary, sections, updated_at')
+    .select('id, journal_date, summary, narrative_text, sections, updated_at')
     .eq('journal_date', journalDate)
     .maybeSingle();
 
@@ -329,33 +325,36 @@ export async function regenerateDayJournalByDate(journalDate: string): Promise<D
   }
 
   const session = await getCurrentSession();
-  const userId = session?.user.id;
+  const accessToken = session?.access_token;
 
-  if (!userId) {
+  if (!accessToken) {
     throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
   }
 
-  const entries = await fetchNormalizedEntriesByDate(journalDate);
-  const draft = composeDayJournalDraft(entries);
-
-  const { data, error } = await supabase
-    .from('day_journals')
-    .upsert(
-      {
-        user_id: userId,
-        journal_date: journalDate,
-        summary: draft.summary,
-        sections: draft.sections,
-        updated_at: new Date().toISOString(),
+  const flowId = createClientFlowId('day-regenerate');
+  const { data, error } = await supabase.functions.invoke<RegenerateDayJournalResult>(
+    'regenerate-day-journal',
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'x-flow-id': flowId,
       },
-      { onConflict: 'user_id,journal_date' }
-    )
-    .select('id, journal_date, summary, sections, updated_at')
-    .single();
+      body: { journalDate },
+    }
+  );
 
-  if (error || !data) {
-    throw error ?? new Error('Kon dagjournal niet opnieuw opbouwen.');
+  if (error) {
+    await parseFunctionInvokeError(error);
   }
 
-  return data;
+  if (!data || data.status !== 'ok' || data.flow !== 'regenerate-day-journal' || !data.requestId) {
+    throw new Error('Ongeldige response van regenerate-day-journal.');
+  }
+
+  const refreshed = await fetchDayJournalByDate(journalDate);
+  if (!refreshed) {
+    throw new Error('Kon dagjournal niet opnieuw opbouwen.');
+  }
+
+  return refreshed;
 }

@@ -28,6 +28,7 @@ type GenerateReflectionResponse = {
 type DayJournalRow = {
   journal_date: string;
   summary: string;
+  narrative_text: string;
   sections: unknown;
 };
 
@@ -66,6 +67,7 @@ const GENERIC_REFLECTION_PATTERNS = [
   /inzicht/i,
   /reflectie/i,
 ];
+const NO_SPEECH_MARKER = 'geen spraak herkend in audio-opname';
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') ?? '*';
@@ -162,6 +164,10 @@ function looksGenericReflectionText(value: string): boolean {
   return GENERIC_REFLECTION_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+function containsNoSpeechMarker(value: string): boolean {
+  return normalizeForCompare(value).includes(NO_SPEECH_MARKER);
+}
+
 function cleanReflectionSummary(summary: string, fallback: string): string {
   const cleaned = sanitizeLine(summary, MAX_SUMMARY_LENGTH);
   if (!cleaned || looksGenericReflectionText(cleaned) || containsHeavyLanguage(cleaned)) {
@@ -176,6 +182,7 @@ function cleanReflectionList(values: string[], fallback: string[], maxItems: num
   const cleaned = preferred
     .map((value) => sanitizeLine(value, MAX_LIST_ITEM_LENGTH))
     .filter((value) => value.length > 0)
+    .filter((value) => !containsNoSpeechMarker(value))
     .filter((value) => !containsHeavyLanguage(value))
     .filter((value) => !looksGenericReflectionText(value));
 
@@ -364,7 +371,10 @@ async function callOpenAiJson(args: {
 function sanitizeDayJournalRows(rows: DayJournalRow[]): DayJournalRow[] {
   return rows.map((row) => ({
     journal_date: row.journal_date,
-    summary: parseString(row.summary) ?? '',
+    summary: containsNoSpeechMarker(parseString(row.summary) ?? '') ? '' : parseString(row.summary) ?? '',
+    narrative_text: containsNoSpeechMarker(parseString(row.narrative_text) ?? '')
+      ? ''
+      : parseString(row.narrative_text) ?? '',
     sections: Array.isArray(row.sections) ? row.sections : [],
   }));
 }
@@ -388,7 +398,7 @@ async function composeReflection(args: {
     step: 'reflection_upserted',
     userPrompt: JSON.stringify({
       instruction:
-        'Vat de periode samen in concrete taal, noem korte unieke highlights en praktische reflectiepunten. Geen aannames buiten de input, geen therapie/diepte-duiding.',
+        'Gebruik alleen de meegegeven day journals (summary, narrative_text, sections). Vat de periode samen in concrete taal, noem korte unieke highlights en praktische reflectiepunten. Geen aannames buiten de input, geen therapie/diepte-duiding.',
       periodType: args.periodType,
       periodStart: args.periodStart,
       periodEnd: args.periodEnd,
@@ -638,7 +648,7 @@ Deno.serve(async (request: Request) => {
     step = 'day_journals_loaded';
     const { data: dayJournals, error: dayJournalsError } = await supabase
       .from('day_journals')
-      .select('journal_date, summary, sections')
+      .select('journal_date, summary, narrative_text, sections')
       .eq('user_id', authData.user.id)
       .gte('journal_date', bounds.periodStart)
       .lte('journal_date', bounds.periodEnd)

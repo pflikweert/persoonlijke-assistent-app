@@ -132,7 +132,7 @@ curl -sS "$API_URL/rest/v1/entries_normalized?select=id,raw_entry_id&user_id=eq.
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$NORMALIZED_FILE"
 
-curl -sS "$API_URL/rest/v1/day_journals?select=id,summary&user_id=eq.$USER_ID&id=eq.$DAY_JOURNAL_ID" \
+curl -sS "$API_URL/rest/v1/day_journals?select=id,summary,narrative_text&user_id=eq.$USER_ID&id=eq.$DAY_JOURNAL_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$DAY_FILE"
 
@@ -141,14 +141,15 @@ TRANSCRIPT_COUNT="$(jq '[.[] | select((.transcript_text // "") | length > 0)] | 
 NORMALIZED_COUNT="$(jq 'length' "$NORMALIZED_FILE")"
 DAY_COUNT="$(jq 'length' "$DAY_FILE")"
 MATCHED_NORMALIZED_COUNT="$(jq --arg rawId "$RAW_ENTRY_ID" '[.[] | select(.raw_entry_id == $rawId)] | length' "$NORMALIZED_FILE")"
+NO_SPEECH_MARKER_COUNT="$(jq '[.[] | select((((.summary // "") + " " + (.narrative_text // "")) | ascii_downcase) | contains("geen spraak herkend in audio-opname"))] | length' "$DAY_FILE")"
 
-if [ "$RAW_COUNT" -lt 1 ] || [ "$TRANSCRIPT_COUNT" -lt 1 ] || [ "$NORMALIZED_COUNT" -lt 1 ] || [ "$MATCHED_NORMALIZED_COUNT" -lt 1 ] || [ "$DAY_COUNT" -lt 1 ]; then
+if [ "$RAW_COUNT" -lt 1 ] || [ "$TRANSCRIPT_COUNT" -lt 1 ] || [ "$NORMALIZED_COUNT" -lt 1 ] || [ "$MATCHED_NORMALIZED_COUNT" -lt 1 ] || [ "$DAY_COUNT" -lt 1 ] || [ "$NO_SPEECH_MARKER_COUNT" -ne 0 ]; then
   echo "FAIL audio-flow: database invariant mismatch"
   echo "entries_raw(audio): $RAW_COUNT"
   echo "entries_raw(audio with transcript): $TRANSCRIPT_COUNT"
   echo "entries_normalized: $NORMALIZED_COUNT"
   echo "entries_normalized(matched raw): $MATCHED_NORMALIZED_COUNT"
-  echo "day_journals: $DAY_COUNT"
+  echo "day_journals: $DAY_COUNT no_speech_marker_rows=$NO_SPEECH_MARKER_COUNT"
   echo "requestId=$REQUEST_ID flowId=$FLOW_ID"
   echo "Function response:"
   cat "$FUNCTION_FILE"

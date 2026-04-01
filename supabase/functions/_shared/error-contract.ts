@@ -1,4 +1,4 @@
-export type FlowName = 'process-entry' | 'generate-reflection';
+export type FlowName = 'process-entry' | 'generate-reflection' | 'regenerate-day-journal';
 
 export type FlowErrorCode =
   | 'AUTH_MISSING'

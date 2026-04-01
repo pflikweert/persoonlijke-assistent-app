@@ -133,7 +133,8 @@ export default function ReflectionsScreen() {
   const reflectionPoints = activeReflection
     ? parseJsonStringArray(activeReflection.reflection_points_json)
     : [];
-  const mergedHighlights = [...highlights, ...reflectionPoints]
+  const cleanHighlights = highlights.map((item) => item.trim()).filter((item) => item.length > 0).slice(0, 3);
+  const cleanReflectionPoints = reflectionPoints
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
     .slice(0, 3);
@@ -229,9 +230,25 @@ export default function ReflectionsScreen() {
                 {activeReflection.summary_text}
               </ThemedText>
 
-              {mergedHighlights.length > 0 ? (
+              {cleanHighlights.length > 0 ? (
                 <ThemedView style={styles.highlightList}>
-                  {mergedHighlights.map((item, index) => (
+                  <MetaText>Belangrijkste gebeurtenissen</MetaText>
+                  {cleanHighlights.map((item, index) => (
+                    <ThemedView
+                      key={`${item}-${index}`}
+                      lightColor={colorTokens.light.surfaceLow}
+                      darkColor={colorTokens.dark.surfaceLow}
+                      style={styles.highlightItem}>
+                      <ThemedText type="bodySecondary">{item}</ThemedText>
+                    </ThemedView>
+                  ))}
+                </ThemedView>
+              ) : null}
+
+              {cleanReflectionPoints.length > 0 ? (
+                <ThemedView style={styles.highlightList}>
+                  <MetaText>Reflectiepunten</MetaText>
+                  {cleanReflectionPoints.map((item, index) => (
                     <ThemedView
                       key={`${item}-${index}`}
                       lightColor={colorTokens.light.surfaceLow}

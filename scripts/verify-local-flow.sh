@@ -100,7 +100,7 @@ curl -sS "$API_URL/rest/v1/entries_normalized?select=id,raw_entry_id&user_id=eq.
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$NORMALIZED_FILE"
 
-curl -sS "$API_URL/rest/v1/day_journals?select=id,journal_date,summary&user_id=eq.$USER_ID&id=eq.$DAY_JOURNAL_ID" \
+curl -sS "$API_URL/rest/v1/day_journals?select=id,journal_date,summary,narrative_text&user_id=eq.$USER_ID&id=eq.$DAY_JOURNAL_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$DAY_FILE"
 
@@ -111,12 +111,14 @@ RAW_TEXT_COUNT="$(jq '[.[] | select((.raw_text // "") | length > 0)] | length' "
 TRANSCRIPT_COUNT="$(jq '[.[] | select((.transcript_text // "") | length > 0)] | length' "$RAW_FILE")"
 MATCHED_NORMALIZED_COUNT="$(jq --arg rawId "$RAW_ENTRY_ID" '[.[] | select(.raw_entry_id == $rawId)] | length' "$NORMALIZED_FILE")"
 MATCHED_JOURNAL_DATE_COUNT="$(jq --arg journalDate "$JOURNAL_DATE" '[.[] | select(.journal_date == $journalDate)] | length' "$DAY_FILE")"
+NARRATIVE_COUNT="$(jq '[.[] | select((.narrative_text // "") | length > 0)] | length' "$DAY_FILE")"
+NO_SPEECH_MARKER_COUNT="$(jq '[.[] | select((((.summary // "") + " " + (.narrative_text // "")) | ascii_downcase) | contains("geen spraak herkend in audio-opname"))] | length' "$DAY_FILE")"
 
-if [ "$RAW_COUNT" -lt 1 ] || [ "$RAW_TEXT_COUNT" -lt 1 ] || [ "$TRANSCRIPT_COUNT" -ne 0 ] || [ "$NORMALIZED_COUNT" -lt 1 ] || [ "$MATCHED_NORMALIZED_COUNT" -lt 1 ] || [ "$DAY_COUNT" -lt 1 ] || [ "$MATCHED_JOURNAL_DATE_COUNT" -lt 1 ]; then
+if [ "$RAW_COUNT" -lt 1 ] || [ "$RAW_TEXT_COUNT" -lt 1 ] || [ "$TRANSCRIPT_COUNT" -ne 0 ] || [ "$NORMALIZED_COUNT" -lt 1 ] || [ "$MATCHED_NORMALIZED_COUNT" -lt 1 ] || [ "$DAY_COUNT" -lt 1 ] || [ "$MATCHED_JOURNAL_DATE_COUNT" -lt 1 ] || [ "$NARRATIVE_COUNT" -lt 1 ] || [ "$NO_SPEECH_MARKER_COUNT" -ne 0 ]; then
   echo "FAIL text-flow: database invariant mismatch"
   echo "entries_raw=$RAW_COUNT raw_text_rows=$RAW_TEXT_COUNT transcript_rows=$TRANSCRIPT_COUNT"
   echo "entries_normalized=$NORMALIZED_COUNT matched_normalized=$MATCHED_NORMALIZED_COUNT"
-  echo "day_journals=$DAY_COUNT matched_journal_date=$MATCHED_JOURNAL_DATE_COUNT"
+  echo "day_journals=$DAY_COUNT matched_journal_date=$MATCHED_JOURNAL_DATE_COUNT narrative_rows=$NARRATIVE_COUNT no_speech_marker_rows=$NO_SPEECH_MARKER_COUNT"
   echo "requestId=$REQUEST_ID flowId=$FLOW_ID"
   echo "Function response:"
   cat "$FUNCTION_FILE"

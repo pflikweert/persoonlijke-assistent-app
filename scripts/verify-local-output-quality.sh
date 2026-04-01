@@ -83,7 +83,7 @@ curl -sS "$API_URL/rest/v1/entries_normalized?select=id,title,body,created_at&us
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$NORMALIZED_FILE"
 
-curl -sS "$API_URL/rest/v1/day_journals?select=id,journal_date,summary,sections&user_id=eq.$USER_ID&journal_date=eq.$TODAY_UTC" \
+curl -sS "$API_URL/rest/v1/day_journals?select=id,journal_date,summary,narrative_text,sections&user_id=eq.$USER_ID&journal_date=eq.$TODAY_UTC" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$DAY_FILE"
 
@@ -198,17 +198,27 @@ if (!dayRow) {
   add('FAIL', 'day-journal', 'Geen day journal gevonden voor vandaag.');
 } else {
   const summary = norm(dayRow.summary);
+  const narrative = norm(dayRow.narrative_text);
   const sections = Array.isArray(dayRow.sections) ? dayRow.sections.map(norm).filter(Boolean) : [];
+  const normalizedBodies = validNormalized.map((row) => norm(row.body)).filter(Boolean);
 
   if (!summary) {
     add('FAIL', 'day-journal', 'Day journal summary is leeg.');
   }
+  if (!narrative) {
+    add('FAIL', 'day-journal', 'Day journal narrative_text is leeg.');
+  }
 
-  if (hasHeavy(summary) || sections.some(hasHeavy)) {
+  if (hasHeavy(summary) || hasHeavy(narrative) || sections.some(hasHeavy)) {
     add('FAIL', 'day-journal', 'Zware/therapeutische formulering gevonden in day journal output.');
   }
 
-  if (audioMarker && (summary.includes(audioMarker) || sections.some((section) => section.includes(audioMarker)))) {
+  if (
+    audioMarker &&
+    (summary.includes(audioMarker) ||
+      narrative.includes(audioMarker) ||
+      sections.some((section) => section.includes(audioMarker)))
+  ) {
     add('FAIL', 'day-journal', 'Audio fallback marker lekt door in day journal output.');
   }
 
@@ -217,10 +227,28 @@ if (!dayRow) {
     add('WARN', 'day-journal', 'Dubbele sections gevonden in day journal output.');
   }
 
+  if (summary && narrative && summary === narrative) {
+    add('WARN', 'day-journal', 'Summary en narrative_text zijn identiek; narrative laag mist eigen verhaal.');
+  }
+
+  if (narrative && normalizedBodies.length > 0) {
+    const hasSourceOverlap = normalizedBodies.some((body) => {
+      const tokens = body.split(' ').filter((token) => token.length >= 6).slice(0, 8);
+      return tokens.some((token) => narrative.includes(token));
+    });
+    if (!hasSourceOverlap) {
+      add('WARN', 'day-journal', 'Narrative_text lijkt weinig overlap te hebben met bronentries.');
+    }
+  }
+
   if (looksGeneric(summary)) {
     add('WARN', 'day-journal', 'Day journal summary oogt generiek.');
   } else {
     add('PASS', 'day-journal', 'Day journal summary oogt concreet en feitelijk.');
+  }
+
+  if (narrative && !looksGeneric(narrative)) {
+    add('PASS', 'day-journal', 'Day journal narrative_text oogt brongebonden en bruikbaar.');
   }
 }
 

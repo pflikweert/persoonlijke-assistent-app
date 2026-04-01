@@ -90,9 +90,10 @@ function getDayHeadingLabel(journalDate: string): string {
   return capitalizeFirst(weekday);
 }
 
-function buildInsight(summary: string | null, sections: string[]): string | null {
+function buildInsight(summary: string | null, narrativeText: string | null, sections: string[]): string | null {
   const firstSection = sections.find((section) => section.trim().length > 0)?.trim() ?? '';
-  const firstSentence = (summary ?? '').split(/[.!?]/)[0]?.trim() ?? '';
+  const firstSentence =
+    (narrativeText ?? '').split(/[.!?]/)[0]?.trim() ?? (summary ?? '').split(/[.!?]/)[0]?.trim() ?? '';
 
   if (firstSection.length >= 10) {
     return `Opvallend vandaag: ${firstSection}.`;
@@ -128,6 +129,7 @@ export default function DayDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
+  const [narrativeText, setNarrativeText] = useState<string | null>(null);
   const [sections, setSections] = useState<string[]>([]);
   const [entries, setEntries] = useState<DayEntry[]>([]);
   const [readingEntry, setReadingEntry] = useState<DayEntry | null>(null);
@@ -140,6 +142,7 @@ export default function DayDetailScreen() {
       setLoading(false);
       setError('Ongeldige datum in route.');
       setSummary(null);
+      setNarrativeText(null);
       setSections([]);
       setEntries([]);
       return;
@@ -155,12 +158,14 @@ export default function DayDetailScreen() {
       ]);
 
       setSummary(journal?.summary?.trim() ? journal.summary : null);
+      setNarrativeText(journal?.narrative_text?.trim() ? journal.narrative_text : journal?.summary?.trim() || null);
       setSections(journal ? parseJournalSections(journal.sections) : []);
       setEntries(normalizedEntries);
     } catch (nextError) {
       const message = nextError instanceof Error ? nextError.message : 'Kon dagdetail niet laden.';
       setError(message);
       setSummary(null);
+      setNarrativeText(null);
       setSections([]);
       setEntries([]);
     } finally {
@@ -177,7 +182,10 @@ export default function DayDetailScreen() {
   const previewSections = sections.slice(0, 4);
   const readableDate = useMemo(() => formatLongDate(journalDate), [journalDate]);
   const dayHeading = useMemo(() => getDayHeadingLabel(journalDate), [journalDate]);
-  const insightText = useMemo(() => buildInsight(summary, sections), [sections, summary]);
+  const insightText = useMemo(
+    () => buildInsight(summary, narrativeText, sections),
+    [sections, summary, narrativeText]
+  );
   const visibleEntries = useMemo(
     () =>
       entries
@@ -387,6 +395,15 @@ export default function DayDetailScreen() {
       ) : null}
 
       {!loading && !error && summary ? (
+        <ThemedView style={styles.summaryBlock}>
+          <MetaText>Samenvatting</MetaText>
+          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+            {summary}
+          </ThemedText>
+        </ThemedView>
+      ) : null}
+
+      {!loading && !error && narrativeText ? (
         <ThemedView
           lightColor={colorTokens.light.surfaceLow}
           darkColor={colorTokens.dark.surfaceLow}
@@ -395,9 +412,9 @@ export default function DayDetailScreen() {
         </ThemedView>
       ) : null}
 
-      {!loading && !error && summary ? (
+      {!loading && !error && narrativeText ? (
         <ThemedText type="body" style={[styles.editorialBody, { color: palette.text }]}>
-          {summary}
+          {narrativeText}
         </ThemedText>
       ) : null}
 
@@ -626,6 +643,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   processedText: {
+  },
+  summaryBlock: {
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   heroVisual: {
     borderRadius: 32,

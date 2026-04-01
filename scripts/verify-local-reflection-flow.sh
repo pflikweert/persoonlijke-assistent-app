@@ -91,6 +91,7 @@ const payload = uniqueDates.map((journalDate, index) => ({
   user_id: userId,
   journal_date: journalDate,
   summary: `Samenvatting voor ${journalDate}`,
+  narrative_text: `Verhalende dagtekst voor ${journalDate} met concreet dagverloop en brongebonden details.`,
   sections: [`Highlight ${index + 1}`, `Actiepunt ${index + 1}`],
   updated_at: new Date().toISOString(),
 }));

@@ -32,6 +32,7 @@ type NormalizedEntry = {
 
 type DayJournalDraft = {
   summary: string;
+  narrativeText: string;
   sections: string[];
 };
 
@@ -164,9 +165,17 @@ function fallbackDayJournal(entries: NormalizedEntry[]): DayJournalDraft {
   if (entries.length === 0) {
     return {
       summary: 'Nog geen bruikbare notities voor deze dag.',
+      narrativeText: '',
       sections: [],
     };
   }
+
+  const narrativeText = entries
+    .map((entry) => sanitizeShortLine(entry.body, 320))
+    .filter((entry) => entry.length > 0)
+    .slice(0, 4)
+    .map((entry) => (/[.!?]$/.test(entry) ? entry : `${entry}.`))
+    .join(' ');
 
   const sections = entries
     .map((entry) => sanitizeShortLine(entry.title, 80))
@@ -175,6 +184,7 @@ function fallbackDayJournal(entries: NormalizedEntry[]): DayJournalDraft {
 
   return {
     summary: entries.length === 1 ? '1 concrete notitie vastgelegd.' : `${entries.length} concrete notities vastgelegd.`,
+    narrativeText,
     sections,
   };
 }
@@ -257,11 +267,22 @@ function cleanNormalizedBody(value: string, fallback: string): string {
 
 function cleanDaySummary(value: string, fallback: string): string {
   const summary = sanitizeShortLine(value, 220);
-  if (!summary || looksGenericDayText(summary)) {
+  if (!summary || looksGenericDayText(summary) || containsNoSpeechMarker(summary)) {
     return sanitizeShortLine(fallback, 220);
   }
 
   return summary;
+}
+
+function cleanDayNarrativeText(value: string, fallback: string): string {
+  const narrative = sanitizeShortLine(value, 2400);
+  const fallbackNarrative = sanitizeShortLine(fallback, 2400);
+
+  if (!narrative || containsNoSpeechMarker(narrative) || looksGenericDayText(narrative)) {
+    return fallbackNarrative;
+  }
+
+  return narrative;
 }
 
 function cleanDaySections(input: {
@@ -274,6 +295,7 @@ function cleanDaySections(input: {
   const cleaned = preferred
     .map((item) => sanitizeShortLine(item, 90))
     .filter((item) => item.length > 0)
+    .filter((item) => !containsNoSpeechMarker(item))
     .filter((item) => !looksGenericDayText(item))
     .filter((item) => {
       const key = normalizeForCompare(item);
@@ -604,10 +626,10 @@ async function composeDayJournal(args: {
     step: 'day_journal_upserted',
     promptVersion: DAY_COMPOSITION_PROMPT_VERSION,
     systemPrompt:
-      'Maak een rustige, feitelijke dagsamenvatting op basis van notities. Blijf dicht bij de bron, compact en praktisch. Geen therapietaal of interpretatie. Geef alleen JSON terug met summary en sections.',
+      'Maak een rustige, brongetrouwe dagboekdag op basis van notities. Geen therapietaal, geen diagnoses, geen coachtoon en geen interpretaties. Geef alleen JSON terug met summary, narrativeText en sections.',
     userPrompt: JSON.stringify({
       instruction:
-        'Vat de dag samen in 1-2 concrete zinnen. Geef 2-5 unieke sections met korte, specifieke bullets. Vermijd herhaling en opvulzinnen.',
+        'Vat de dag samen in 1-2 concrete zinnen (summary), schrijf daarna een natuurlijk verhalende dagtekst dicht bij de bron (narrativeText), en geef 2-5 unieke sections met korte kernpunten. Geen herhaling, geen nieuwe informatie, geen fallbackmarkers.',
       journalDate: args.journalDate,
       entries: contentEntries,
     }),
@@ -618,6 +640,10 @@ async function composeDayJournal(args: {
   }
 
   const summary = cleanDaySummary(parseString(aiResult.summary) ?? fallback.summary, fallback.summary);
+  const narrativeText = cleanDayNarrativeText(
+    parseString(aiResult.narrativeText) ?? fallback.narrativeText,
+    fallback.narrativeText
+  );
   const parsedSections = parseSections(aiResult.sections);
   const sections = cleanDaySections({
     candidateSections: parsedSections,
@@ -627,6 +653,7 @@ async function composeDayJournal(args: {
 
   return {
     summary,
+    narrativeText,
     sections,
   };
 }
@@ -1045,6 +1072,7 @@ Deno.serve(async (request: Request) => {
           user_id: authData.user.id,
           journal_date: journalDate,
           summary: dayDraft.summary,
+          narrative_text: dayDraft.narrativeText,
           sections: dayDraft.sections,
           updated_at: new Date().toISOString(),
         },
