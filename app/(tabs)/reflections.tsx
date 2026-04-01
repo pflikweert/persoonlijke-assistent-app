@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -9,20 +9,51 @@ import {
   PrimaryButton,
   ScreenContainer,
   StateBlock,
-  SurfaceSection,
 } from '@/components/ui/screen-primitives';
 import {
   classifyUnknownError,
   fetchLatestReflection,
-  fetchRecentReflections,
   generateReflection,
   parseJsonStringArray,
 } from '@/services';
 import type { PeriodType } from '@/services/reflections';
-import { spacing } from '@/theme';
+import { colorTokens, radius, spacing, typography } from '@/theme';
 
 function periodTypeLabel(periodType: PeriodType): string {
   return periodType === 'week' ? 'Week' : 'Maand';
+}
+
+function periodHeading(periodType: PeriodType): string {
+  return periodType === 'week' ? 'Deze week' : 'Deze maand';
+}
+
+function formatPeriodRange(start: string, end: string): string {
+  const startDate = new Date(`${start}T12:00:00.000Z`);
+  const endDate = new Date(`${end}T12:00:00.000Z`);
+
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return `${start} – ${end}`;
+  }
+
+  const sameMonth =
+    startDate.getUTCMonth() === endDate.getUTCMonth() &&
+    startDate.getUTCFullYear() === endDate.getUTCFullYear();
+
+  const startDay = String(startDate.getUTCDate()).padStart(2, '0');
+  const endDay = String(endDate.getUTCDate()).padStart(2, '0');
+  const startMonth = startDate
+    .toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' })
+    .toUpperCase();
+  const endMonth = endDate
+    .toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' })
+    .toUpperCase();
+  const endYear = endDate.getUTCFullYear();
+
+  if (sameMonth) {
+    return `${startDay} – ${endDay} ${endMonth} ${endYear}`;
+  }
+
+  return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${endYear}`;
 }
 
 export default function ReflectionsScreen() {
@@ -34,24 +65,22 @@ export default function ReflectionsScreen() {
   } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [generating, setGenerating] = useState<PeriodType | null>(null);
+  const [activePeriod, setActivePeriod] = useState<PeriodType>('week');
   const [latestWeek, setLatestWeek] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
   const [latestMonth, setLatestMonth] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
-  const [recent, setRecent] = useState<Awaited<ReturnType<typeof fetchRecentReflections>>>([]);
 
   const loadReflections = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const [weekRow, monthRow, recentRows] = await Promise.all([
+      const [weekRow, monthRow] = await Promise.all([
         fetchLatestReflection('week'),
         fetchLatestReflection('month'),
-        fetchRecentReflections(20),
       ]);
 
       setLatestWeek(weekRow);
       setLatestMonth(monthRow);
-      setRecent(recentRows);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -61,7 +90,6 @@ export default function ReflectionsScreen() {
       });
       setLatestWeek(null);
       setLatestMonth(null);
-      setRecent([]);
     } finally {
       setLoading(false);
     }
@@ -97,8 +125,15 @@ export default function ReflectionsScreen() {
     }
   }
 
-  const latestIds = new Set([latestWeek?.id, latestMonth?.id].filter(Boolean));
-  const earlierReflections = recent.filter((row) => !latestIds.has(row.id));
+  const activeReflection = activePeriod === 'week' ? latestWeek : latestMonth;
+  const highlights = activeReflection ? parseJsonStringArray(activeReflection.highlights_json) : [];
+  const reflectionPoints = activeReflection
+    ? parseJsonStringArray(activeReflection.reflection_points_json)
+    : [];
+  const mergedHighlights = [...highlights, ...reflectionPoints]
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .slice(0, 3);
 
   return (
     <ScreenContainer
@@ -106,7 +141,28 @@ export default function ReflectionsScreen() {
       contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.header}>
         <ThemedText type="screenTitle">Reflecties</ThemedText>
-        <ThemedText type="bodySecondary">Week- en maandreflecties op basis van je dagjournals.</ThemedText>
+        <ThemedText type="bodySecondary" style={styles.headerCopy}>
+          Rustige inzichten op basis van je dagjournals.
+        </ThemedText>
+      </ThemedView>
+
+      <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
+        <Pressable
+          onPress={() => setActivePeriod('week')}
+          style={[styles.periodButton, activePeriod === 'week' && styles.periodButtonActive]}>
+          <ThemedText type="caption" style={[styles.periodButtonLabel, activePeriod === 'week' && styles.periodButtonLabelActive]}>
+            Week
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          onPress={() => setActivePeriod('month')}
+          style={[styles.periodButton, activePeriod === 'month' && styles.periodButtonActive]}>
+          <ThemedText
+            type="caption"
+            style={[styles.periodButtonLabel, activePeriod === 'month' && styles.periodButtonLabelActive]}>
+            Maand
+          </ThemedText>
+        </Pressable>
       </ThemedView>
 
       {loading ? (
@@ -131,72 +187,60 @@ export default function ReflectionsScreen() {
       {status ? <StateBlock tone="success" message={status} /> : null}
 
       {!loading ? (
-        <SurfaceSection title="Laatste weekreflectie">
-          {latestWeek ? (
-            <ThemedView style={styles.cardBody}>
-              <MetaText>
-                Periode: {latestWeek.period_start} t/m {latestWeek.period_end}
-              </MetaText>
-              <ThemedText>{latestWeek.summary_text}</ThemedText>
-            </ThemedView>
+        <ThemedView style={styles.readingCanvas}>
+          {activeReflection ? (
+            <>
+              <ThemedView style={styles.reflectHeader}>
+                <ThemedText type="screenTitle" style={styles.reflectTitle}>
+                  {periodHeading(activePeriod)}
+                </ThemedText>
+                <MetaText>{formatPeriodRange(activeReflection.period_start, activeReflection.period_end)}</MetaText>
+              </ThemedView>
+
+              <ThemedView
+                lightColor={colorTokens.light.surfaceLowest}
+                darkColor={colorTokens.dark.surfaceLow}
+                style={styles.summaryInset}>
+                <ThemedText type="bodySecondary" style={styles.summaryInsetText}>
+                  {activeReflection.summary_text}
+                </ThemedText>
+              </ThemedView>
+
+              <ThemedText type="body" style={styles.narrativeText}>
+                {activeReflection.summary_text}
+              </ThemedText>
+
+              {mergedHighlights.length > 0 ? (
+                <ThemedView style={styles.highlightList}>
+                  {mergedHighlights.map((item, index) => (
+                    <ThemedView
+                      key={`${item}-${index}`}
+                      lightColor={colorTokens.light.surfaceLow}
+                      darkColor={colorTokens.dark.surfaceLow}
+                      style={styles.highlightItem}>
+                      <ThemedText type="bodySecondary">{item}</ThemedText>
+                    </ThemedView>
+                  ))}
+                </ThemedView>
+              ) : null}
+            </>
           ) : (
-            <ThemedText type="bodySecondary">Nog geen weekreflectie beschikbaar.</ThemedText>
+            <StateBlock
+              tone="empty"
+              message={`Nog geen ${periodTypeLabel(activePeriod).toLowerCase()}reflectie beschikbaar.`}
+              detail="Genereer een reflectie om hier je inzichten terug te lezen."
+            />
           )}
           <PrimaryButton
-            onPress={() => void handleGenerate('week')}
+            onPress={() => void handleGenerate(activePeriod)}
             disabled={generating !== null}
-            label={generating === 'week' ? 'Genereren...' : 'Genereer weekreflectie'}
+            label={
+              generating === activePeriod
+                ? 'Genereren...'
+                : `Genereer ${periodTypeLabel(activePeriod).toLowerCase()}reflectie`
+            }
           />
-        </SurfaceSection>
-      ) : null}
-
-      {!loading ? (
-        <SurfaceSection title="Laatste maandreflectie">
-          {latestMonth ? (
-            <ThemedView style={styles.cardBody}>
-              <MetaText>
-                Periode: {latestMonth.period_start} t/m {latestMonth.period_end}
-              </MetaText>
-              <ThemedText>{latestMonth.summary_text}</ThemedText>
-            </ThemedView>
-          ) : (
-            <ThemedText type="bodySecondary">Nog geen maandreflectie beschikbaar.</ThemedText>
-          )}
-          <PrimaryButton
-            onPress={() => void handleGenerate('month')}
-            disabled={generating !== null}
-            label={generating === 'month' ? 'Genereren...' : 'Genereer maandreflectie'}
-          />
-        </SurfaceSection>
-      ) : null}
-
-      {!loading ? (
-        <SurfaceSection title="Eerdere reflecties">
-          {earlierReflections.length === 0 ? (
-            <ThemedText type="bodySecondary">Geen eerdere reflecties beschikbaar.</ThemedText>
-          ) : (
-            <ThemedView style={styles.list}>
-              {earlierReflections.map((row) => {
-                const highlights = parseJsonStringArray(row.highlights_json);
-                const points = parseJsonStringArray(row.reflection_points_json);
-                return (
-                  <ThemedView key={row.id} lightColor="#F4F3F0" darkColor="#302F2B" style={styles.card}>
-                    <ThemedText type="defaultSemiBold">
-                      {periodTypeLabel(row.period_type)}: {row.period_start} t/m {row.period_end}
-                    </ThemedText>
-                    <ThemedText type="bodySecondary">{row.summary_text}</ThemedText>
-                    {highlights.length > 0 ? (
-                      <MetaText>Highlights: {highlights.slice(0, 2).join(' | ')}</MetaText>
-                    ) : null}
-                    {points.length > 0 ? (
-                      <MetaText>Reflectiepunten: {points.slice(0, 2).join(' | ')}</MetaText>
-                    ) : null}
-                  </ThemedView>
-                );
-              })}
-            </ThemedView>
-          )}
-        </SurfaceSection>
+        </ThemedView>
       ) : null}
     </ScreenContainer>
   );
@@ -208,17 +252,71 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: spacing.xs,
+    marginBottom: spacing.xs,
   },
-  list: {
-    gap: spacing.inline,
+  headerCopy: {
+    color: colorTokens.light.muted,
   },
-  cardBody: {
-    gap: spacing.inline,
+  periodSwitch: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    borderRadius: radius.pill,
+    padding: 3,
+    marginBottom: spacing.lg,
+    gap: spacing.xxs,
   },
-  card: {
-    borderRadius: 12,
+  periodButton: {
+    borderRadius: radius.pill,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  periodButtonActive: {
+    backgroundColor: colorTokens.light.surfaceLowest,
+  },
+  periodButtonLabel: {
+    color: colorTokens.light.mutedSoft,
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+  },
+  periodButtonLabelActive: {
+    color: colorTokens.light.primary,
+  },
+  readingCanvas: {
+    gap: spacing.xl,
+  },
+  reflectHeader: {
+    gap: spacing.xs,
+  },
+  reflectTitle: {
+    fontSize: 42,
+    lineHeight: 46,
+    letterSpacing: -1,
+  },
+  summaryInset: {
+    borderLeftWidth: 2,
+    borderLeftColor: `${colorTokens.light.primary}55`,
+    borderTopRightRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+  },
+  summaryInsetText: {
+    fontStyle: 'italic',
+    lineHeight: typography.roles.bodySecondary.lineHeight + 3,
+  },
+  narrativeText: {
+    lineHeight: 34,
+    fontSize: 21,
+    letterSpacing: -0.1,
+    color: colorTokens.light.text,
+  },
+  highlightList: {
+    gap: spacing.sm,
+  },
+  highlightItem: {
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    gap: spacing.inline,
+    gap: spacing.xs,
   },
 });
