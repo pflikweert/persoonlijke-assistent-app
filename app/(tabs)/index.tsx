@@ -1,9 +1,8 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
@@ -11,8 +10,12 @@ import {
   ScreenContainer,
   StateBlock,
 } from '@/components/ui/screen-primitives';
-import { fetchTodayJournal, getUtcTodayDate, parseJournalSections } from '@/services';
-import { colorTokens, radius, shadows, spacing, typography } from '@/theme';
+import {
+  fetchRecentNormalizedEntries,
+  fetchTodayJournal,
+  getUtcTodayDate,
+} from '@/services';
+import { colorTokens, radius, spacing, typography } from '@/theme';
 
 export default function TodayScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -20,7 +23,9 @@ export default function TodayScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
-  const [sections, setSections] = useState<string[]>([]);
+  const [recentEntries, setRecentEntries] = useState<
+    Awaited<ReturnType<typeof fetchRecentNormalizedEntries>>
+  >([]);
   const todayDate = getUtcTodayDate();
 
   const loadToday = useCallback(async () => {
@@ -28,15 +33,18 @@ export default function TodayScreen() {
     setError(null);
 
     try {
-      const journal = await fetchTodayJournal(todayDate);
+      const [journal, recent] = await Promise.all([
+        fetchTodayJournal(todayDate),
+        fetchRecentNormalizedEntries(5),
+      ]);
       setSummary(journal?.summary?.trim() ? journal.summary : null);
-      setSections(journal ? parseJournalSections(journal.sections) : []);
+      setRecentEntries(recent);
     } catch (nextError) {
       const message =
         nextError instanceof Error ? nextError.message : 'Kon vandaag niet laden.';
       setError(message);
       setSummary(null);
-      setSections([]);
+      setRecentEntries([]);
     } finally {
       setLoading(false);
     }
@@ -48,14 +56,13 @@ export default function TodayScreen() {
     }, [loadToday])
   );
 
-  const recentPreview = sections.slice(0, 3);
   const reflectionPreview = summary ? summary.split('. ')[0]?.trim() ?? summary : null;
-  const dayLabel = formatDayLabel(todayDate);
+  const formattedDate = formatLongDate(todayDate);
   const statusLine = loading
     ? 'Wordt bijgewerkt'
     : error
       ? 'Update tijdelijk niet beschikbaar'
-      : summary || sections.length > 0
+      : summary || recentEntries.length > 0
         ? 'Vandaag bijgewerkt'
         : 'Klaar voor je eerste entry';
 
@@ -65,23 +72,23 @@ export default function TodayScreen() {
       style={styles.screen}
       contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.topBar}>
-        <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.avatar}>
-          <ThemedText type="caption" style={styles.avatarText}>
-            IK
-          </ThemedText>
-        </ThemedView>
-        <ThemedText type="sectionTitle">Vandaag</ThemedText>
-        <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.topAction}>
-          <IconSymbol size={18} name="bell" color={palette.mutedSoft} />
+        <ThemedView style={styles.topBarCopy}>
+          <ThemedText type="sectionTitle">Vandaag</ThemedText>
+          <MetaText>{formattedDate}</MetaText>
         </ThemedView>
       </ThemedView>
 
       <ThemedView style={styles.hero}>
-        <MetaText>PERSOONLIJKE RUIMTE</MetaText>
+        <MetaText>START</MetaText>
         <ThemedText type="screenTitle" style={styles.heroTitle}>
-          Vandaag
+          Leg iets vast
         </ThemedText>
-        <PrimaryButton label="Nieuwe entry" onPress={() => router.push('/capture')} />
+        <ThemedText type="bodySecondary" style={[styles.heroCopy, { color: palette.muted }]}>
+          Spreek iets in of schrijf iets op voor je dagboek.
+        </ThemedText>
+        <ThemedView style={styles.heroCtaWrap}>
+          <PrimaryButton label="Spreek of schrijf iets" onPress={() => router.push('/capture')} />
+        </ThemedView>
         <ThemedView style={styles.statusRow}>
           <ThemedView
             style={[
@@ -94,7 +101,7 @@ export default function TodayScreen() {
                   : { backgroundColor: palette.success },
             ]}
           />
-          <ThemedText type="caption" style={[styles.statusText, { color: palette.mutedSoft }]}>
+          <ThemedText type="caption" style={[styles.statusText, { color: palette.mutedSoft }]} numberOfLines={1}>
             {statusLine}
           </ThemedText>
         </ThemedView>
@@ -122,37 +129,59 @@ export default function TodayScreen() {
         <ThemedView
           lightColor={colorTokens.light.surfaceLowest}
           darkColor={colorTokens.dark.surfaceLow}
-          style={[styles.insightBlock, { borderLeftColor: `${palette.primary}33` }]}>
-          <ThemedText type="bodySecondary" style={styles.italicText}>
-            {`"${reflectionPreview}"`}
+          style={[styles.compactBlock, styles.reflectionBlock]}>
+          <MetaText>Reflectie</MetaText>
+          <ThemedText type="bodySecondary" style={[styles.compactText, { color: palette.muted }]} numberOfLines={2}>
+            {reflectionPreview}
           </ThemedText>
-          <MetaText>PERSOONLIJK INZICHT</MetaText>
         </ThemedView>
       ) : null}
 
-      {!loading && !error && recentPreview.length > 0 ? (
+      {!loading && !error && recentEntries.length > 0 ? (
         <ThemedView style={styles.recentBlock}>
-          <MetaText>RECENT</MetaText>
+          <MetaText>Recent</MetaText>
           <ThemedView style={styles.recentList}>
-            {recentPreview.map((point, index) => (
-              <ThemedView
-                key={`${point}-${index}`}
-                style={[styles.recentRow, { borderBottomColor: `${palette.separator}AA` }]}>
-                <ThemedText type="meta" style={[styles.recentDateLabel, { color: palette.primary }]}>
-                  {dayLabel}
-                </ThemedText>
-                <ThemedText type="bodySecondary" numberOfLines={1} style={styles.recentText}>
-                  {point}
-                </ThemedText>
-              </ThemedView>
+            {recentEntries.map((entry) => (
+              <Pressable
+                key={entry.id}
+                onPress={() =>
+                  router.push({
+                    pathname: '/day/[date]',
+                    params: { date: entry.journal_date, entryId: entry.id },
+                  })
+                }
+                style={[styles.recentRow, { borderBottomColor: `${palette.separator}66` }]}>
+                <ThemedView style={styles.recentMain}>
+                  <ThemedText
+                    type="defaultSemiBold"
+                    numberOfLines={1}
+                    style={[styles.recentTitle, { color: palette.text }]}>
+                    {entry.title?.trim() || 'Moment zonder titel'}
+                  </ThemedText>
+                  <ThemedText type="caption" style={[styles.recentMeta, { color: palette.mutedSoft }]}>
+                    {formatRecentMeta(entry.journal_date, entry.captured_at)}
+                  </ThemedText>
+                  <ThemedText
+                    type="bodySecondary"
+                    numberOfLines={1}
+                    style={[styles.recentText, { color: palette.muted }]}>
+                    {summarizeSnippet(entry.body)}
+                  </ThemedText>
+                </ThemedView>
+              </Pressable>
             ))}
           </ThemedView>
+          <Pressable onPress={() => router.push(`/day/${todayDate}`)} style={styles.secondaryLink}>
+            <ThemedText type="caption" style={[styles.secondaryLinkText, { color: palette.primary }]}>
+              Bekijk vandaag
+            </ThemedText>
+          </Pressable>
         </ThemedView>
       ) : null}
 
-      {!loading && !error && !reflectionPreview && recentPreview.length === 0 ? (
-        <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.fallbackBlock}>
-          <ThemedText type="bodySecondary">
+      {!loading && !error && !reflectionPreview && recentEntries.length === 0 ? (
+        <ThemedView style={styles.compactBlock}>
+          <ThemedText type="bodySecondary" style={[styles.compactText, { color: palette.muted }]}>
             Zodra je iets vastlegt, verschijnt hier een rustig overzicht van vandaag.
           </ThemedText>
         </ThemedView>
@@ -161,12 +190,44 @@ export default function TodayScreen() {
   );
 }
 
-function formatDayLabel(utcDate: string): string {
-  const [year, month, day] = utcDate.split('-');
-  if (!year || !month || !day) {
-    return 'VANDAAG';
+function formatLongDate(utcDate: string): string {
+  const parsed = new Date(`${utcDate}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return utcDate;
   }
-  return `${day}.${month}`;
+
+  return parsed.toLocaleDateString('nl-NL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+function summarizeSnippet(value: string): string {
+  const clean = value.replace(/\s+/g, ' ').trim();
+  if (!clean) {
+    return 'Geen korte samenvatting beschikbaar.';
+  }
+
+  return clean.length > 96 ? `${clean.slice(0, 95).trimEnd()}...` : clean;
+}
+
+function formatTime(isoValue: string): string {
+  const date = new Date(isoValue);
+  if (Number.isNaN(date.getTime())) {
+    return '--:--';
+  }
+
+  return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatRecentMeta(journalDate: string, capturedAt: string): string {
+  const [year, month, day] = journalDate.split('-');
+  if (!year || !month || !day) {
+    return formatTime(capturedAt);
+  }
+  return `${day}.${month} · ${formatTime(capturedAt)}`;
 }
 
 const styles = StyleSheet.create({
@@ -178,39 +239,29 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    letterSpacing: 0.6,
-  },
-  topAction: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+  topBarCopy: {
+    gap: spacing.xxs,
   },
   hero: {
     alignItems: 'center',
-    gap: spacing.md,
-    paddingTop: spacing.lg,
+    gap: spacing.xxs,
+    paddingTop: spacing.xs,
     paddingBottom: spacing.xs,
   },
   heroTitle: {
-    fontSize: 44,
-    lineHeight: 48,
-    letterSpacing: -1.1,
+    fontSize: 34,
+    lineHeight: 38,
+    letterSpacing: -0.45,
     textAlign: 'center',
+  },
+  heroCopy: {
+    textAlign: 'center',
+  },
+  heroCtaWrap: {
+    width: '100%',
+    marginTop: spacing.xs,
   },
   statusRow: {
     flexDirection: 'row',
@@ -225,42 +276,51 @@ const styles = StyleSheet.create({
   statusText: {
     textTransform: 'none',
     letterSpacing: 0.2,
+    flexShrink: 1,
   },
-  insightBlock: {
-    borderLeftWidth: 2,
-    borderTopRightRadius: radius.lg,
-    borderBottomRightRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+  compactBlock: {
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  reflectionBlock: {
+    paddingVertical: spacing.md,
     gap: spacing.sm,
   },
-  italicText: {
-    fontStyle: 'italic',
-    lineHeight: typography.roles.body.lineHeight + 2,
+  compactText: {
+    lineHeight: typography.roles.bodySecondary.lineHeight + 1,
   },
   recentBlock: {
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   recentList: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   recentRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing.md,
-    paddingBottom: spacing.sm,
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: radius.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  recentDateLabel: {
-    width: 56,
+  recentMain: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  recentTitle: {
+  },
+  recentMeta: {
+    letterSpacing: 0.1,
   },
   recentText: {
-    flex: 1,
   },
-  fallbackBlock: {
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    ...shadows.surface,
+  secondaryLink: {
+    alignSelf: 'flex-start',
+    paddingTop: spacing.xs,
+  },
+  secondaryLinkText: {
+    letterSpacing: 0.2,
   },
 });

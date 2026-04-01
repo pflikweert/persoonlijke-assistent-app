@@ -20,6 +20,15 @@ export type NormalizedDayEntry = Pick<
   captured_at: string;
 };
 
+export type RecentNormalizedEntry = Pick<
+  Tables<'entries_normalized'>,
+  'id' | 'raw_entry_id' | 'title' | 'body' | 'created_at'
+> & {
+  source_type: 'text' | 'audio';
+  captured_at: string;
+  journal_date: string;
+};
+
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 interface RegenerateDayJournalResult {
@@ -245,6 +254,72 @@ export async function fetchNormalizedEntriesByDate(journalDate: string): Promise
         captured_at: meta?.captured_at ?? row.created_at,
       };
     });
+}
+
+export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNormalizedEntry[]> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const safeLimit = Math.max(1, Math.min(limit, 12));
+  const rawFetchLimit = Math.max(safeLimit * 4, 16);
+
+  const { data: rawRows, error: rawError } = await supabase
+    .from('entries_raw')
+    .select('id, source_type, captured_at')
+    .order('captured_at', { ascending: false })
+    .limit(rawFetchLimit);
+
+  if (rawError) {
+    throw rawError;
+  }
+
+  const rawIds = (rawRows ?? []).map((row) => row.id);
+  if (rawIds.length === 0) {
+    return [];
+  }
+
+  const { data: normalizedRows, error: normalizedError } = await supabase
+    .from('entries_normalized')
+    .select('id, raw_entry_id, title, body, created_at')
+    .in('raw_entry_id', rawIds);
+
+  if (normalizedError) {
+    throw normalizedError;
+  }
+
+  const rawMeta = new Map<
+    string,
+    {
+      source_type: 'text' | 'audio';
+      captured_at: string;
+    }
+  >(
+    (rawRows ?? []).map((row) => [
+      row.id,
+      {
+        source_type: row.source_type as 'text' | 'audio',
+        captured_at: row.captured_at,
+      },
+    ])
+  );
+
+  return (normalizedRows ?? [])
+    .map((row) => {
+      const meta = rawMeta.get(row.raw_entry_id);
+      const capturedAt = meta?.captured_at ?? row.created_at;
+
+      return {
+        ...row,
+        source_type: meta?.source_type ?? 'text',
+        captured_at: capturedAt,
+        journal_date: capturedAt.slice(0, 10),
+      };
+    })
+    .sort((left, right) => new Date(right.captured_at).getTime() - new Date(left.captured_at).getTime())
+    .slice(0, safeLimit);
 }
 
 export async function updateNormalizedEntryById(input: {

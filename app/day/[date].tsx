@@ -1,5 +1,5 @@
 import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
@@ -27,6 +27,7 @@ import { colorTokens, radius, spacing } from '@/theme';
 type RouteParams = {
   date?: string | string[];
   processed?: string | string[];
+  entryId?: string | string[];
 };
 
 function resolveRouteDate(value: string | string[] | undefined): string {
@@ -118,8 +119,9 @@ function blurActiveElementOnWeb() {
 export default function DayDetailScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
-  const { date, processed } = useLocalSearchParams<RouteParams>();
+  const { date, processed, entryId } = useLocalSearchParams<RouteParams>();
   const journalDate = useMemo(() => resolveRouteDate(date), [date]);
+  const targetEntryId = useMemo(() => resolveRouteDate(entryId), [entryId]);
   const showProcessedBanner = useMemo(() => {
     const value = resolveRouteDate(processed);
     return value === '1' || value.toLowerCase() === 'true';
@@ -132,10 +134,16 @@ export default function DayDetailScreen() {
   const [narrativeText, setNarrativeText] = useState<string | null>(null);
   const [sections, setSections] = useState<string[]>([]);
   const [entries, setEntries] = useState<DayEntry[]>([]);
+  const [entryOffsets, setEntryOffsets] = useState<Record<string, number>>({});
+  const [focusedEntryId, setFocusedEntryId] = useState<string | null>(null);
+  const [pendingFocusEntryId, setPendingFocusEntryId] = useState<string | null>(null);
   const [readingEntry, setReadingEntry] = useState<DayEntry | null>(null);
   const [editingEntry, setEditingEntry] = useState<DayEntry | null>(null);
   const [editBody, setEditBody] = useState('');
   const [mutationBusy, setMutationBusy] = useState(false);
+
+  const scrollRef = useRef<ScrollView | null>(null);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadDay = useCallback(async () => {
     if (!isValidJournalDate(journalDate)) {
@@ -160,6 +168,7 @@ export default function DayDetailScreen() {
       setSummary(journal?.summary?.trim() ? journal.summary : null);
       setNarrativeText(journal?.narrative_text?.trim() ? journal.narrative_text : journal?.summary?.trim() || null);
       setSections(journal ? parseJournalSections(journal.sections) : []);
+      setEntryOffsets({});
       setEntries(normalizedEntries);
     } catch (nextError) {
       const message = nextError instanceof Error ? nextError.message : 'Kon dagdetail niet laden.';
@@ -179,6 +188,25 @@ export default function DayDetailScreen() {
     }, [loadDay])
   );
 
+  useEffect(() => {
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current);
+      focusTimeoutRef.current = null;
+    }
+
+    setFocusedEntryId(null);
+    setPendingFocusEntryId(targetEntryId || null);
+  }, [targetEntryId, journalDate]);
+
+  useEffect(() => {
+    return () => {
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current);
+        focusTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const previewSections = sections.slice(0, 4);
   const readableDate = useMemo(() => formatLongDate(journalDate), [journalDate]);
   const dayHeading = useMemo(() => getDayHeadingLabel(journalDate), [journalDate]);
@@ -197,6 +225,44 @@ export default function DayDetailScreen() {
         }),
     [entries]
   );
+
+  useEffect(() => {
+    if (!pendingFocusEntryId || loading || Boolean(error)) {
+      return;
+    }
+
+    const targetExists = visibleEntries.some((entry) => entry.id === pendingFocusEntryId);
+    if (!targetExists) {
+      setPendingFocusEntryId(null);
+      return;
+    }
+
+    const targetOffset = entryOffsets[pendingFocusEntryId];
+    if (typeof targetOffset !== 'number') {
+      return;
+    }
+
+    const y = Math.max(targetOffset - 12, 0);
+    scrollRef.current?.scrollTo({ y, animated: true });
+    setFocusedEntryId(pendingFocusEntryId);
+    setPendingFocusEntryId(null);
+
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current);
+    }
+    focusTimeoutRef.current = setTimeout(() => {
+      setFocusedEntryId((current) => (current === pendingFocusEntryId ? null : current));
+    }, 2200);
+  }, [entryOffsets, error, loading, pendingFocusEntryId, visibleEntries]);
+
+  const handleEntryLayout = useCallback((id: string, y: number) => {
+    setEntryOffsets((current) => {
+      if (current[id] === y) {
+        return current;
+      }
+      return { ...current, [id]: y };
+    });
+  }, []);
 
   function formatTime(isoValue: string): string {
     const date = new Date(isoValue);
@@ -341,7 +407,7 @@ export default function DayDetailScreen() {
   }
 
   return (
-    <ScreenContainer scrollable>
+    <ScreenContainer scrollable scrollRef={scrollRef}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <ThemedView style={styles.topBar}>
@@ -465,9 +531,15 @@ export default function DayDetailScreen() {
             {visibleEntries.map((entry) => (
               <ThemedView
                 key={entry.id}
+                onLayout={(event) => handleEntryLayout(entry.id, event.nativeEvent.layout.y)}
                 lightColor="transparent"
                 darkColor="transparent"
-                style={[styles.entryItem, { borderBottomColor: palette.separator }]}>
+                style={[
+                  styles.entryItem,
+                  { borderBottomColor: palette.separator },
+                  focusedEntryId === entry.id ? styles.entryFocused : null,
+                  focusedEntryId === entry.id ? { backgroundColor: palette.surfaceLow, borderColor: palette.primary } : null,
+                ]}>
                 <ThemedView style={styles.entryHead}>
                   <Pressable
                     onPress={() => openReadModal(entry)}
@@ -724,6 +796,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     gap: spacing.inline,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  entryFocused: {
+    borderWidth: 1,
   },
   entryHead: {
     flexDirection: 'row',

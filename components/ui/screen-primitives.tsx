@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -21,11 +21,13 @@ export function ScreenContainer({
   style,
   scrollable = false,
   contentContainerStyle,
+  scrollRef,
 }: {
   children: ReactNode;
   style?: ViewStyle;
   scrollable?: boolean;
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
+  scrollRef?: RefObject<ScrollView | null>;
 }) {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -39,6 +41,7 @@ export function ScreenContainer({
     return (
       <ThemedView style={[styles.screenContainer, style, { backgroundColor: palette.background }]}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={[
             flattenedContentStyle,
             {

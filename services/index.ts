@@ -3,6 +3,7 @@ export { getCurrentSession, onAuthStateChange, sendMagicLink } from './auth';
 export {
   deleteNormalizedEntryById,
   fetchDayJournalByDate,
+  fetchRecentNormalizedEntries,
   fetchNormalizedEntriesByDate,
   fetchRecentDayJournals,
   fetchTodayJournal,
