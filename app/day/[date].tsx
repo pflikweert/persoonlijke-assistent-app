@@ -1,7 +1,7 @@
 import { Stack, router, useFocusEffect, useLocalSearchParams, useRootNavigationState } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { Alert, Animated, Easing, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -167,9 +167,11 @@ export default function DayDetailScreen() {
   const [mutationBusy, setMutationBusy] = useState(false);
   const [showEditProcessing, setShowEditProcessing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [heroBounds, setHeroBounds] = useState({ width: 0, height: 0 });
 
   const scrollRef = useRef<ScrollView | null>(null);
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heroGlowProgress = useRef(new Animated.Value(0)).current;
 
   const loadDay = useCallback(async () => {
     if (!isValidJournalDate(journalDate)) {
@@ -233,6 +235,31 @@ export default function DayDetailScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!summary) {
+      return;
+    }
+
+    heroGlowProgress.setValue(0);
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(heroGlowProgress, {
+          toValue: 1,
+          duration: 2400,
+          easing: Easing.linear,
+          useNativeDriver: false,
+        }),
+        Animated.delay(3600),
+      ])
+    );
+    pulse.start();
+
+    return () => {
+      pulse.stop();
+      heroGlowProgress.setValue(0);
+    };
+  }, [heroGlowProgress, summary]);
+
   const aiInsight = useMemo(() => extractAiInsight(sections), [sections]);
   const previewSections = aiInsight.remainingSections.slice(0, 4);
   const readableDate = useMemo(() => formatLongDate(journalDate), [journalDate]);
@@ -240,6 +267,58 @@ export default function DayDetailScreen() {
   const insightText = useMemo(
     () => aiInsight.insight ?? buildInsight(summary, narrativeText, aiInsight.remainingSections),
     [aiInsight.insight, aiInsight.remainingSections, summary, narrativeText]
+  );
+  const heroGlowPath = useMemo(() => {
+    const glowSize = 10;
+    const width = Math.max(0, heroBounds.width - glowSize);
+    const height = Math.max(0, heroBounds.height - glowSize);
+    const perimeter = width * 2 + height * 2;
+
+    if (perimeter <= 0) {
+      return null;
+    }
+
+    const p1 = width / perimeter;
+    const p2 = (width + height) / perimeter;
+    const p3 = (width * 2 + height) / perimeter;
+
+    return {
+      glowSize,
+      inputRange: [0, p1, p2, p3, 1],
+      leftRange: [0, width, width, 0, 0],
+      topRange: [0, 0, height, height, 0],
+    };
+  }, [heroBounds.height, heroBounds.width]);
+  const heroGlowLeft = useMemo(
+    () =>
+      heroGlowPath
+        ? heroGlowProgress.interpolate({
+            inputRange: heroGlowPath.inputRange,
+            outputRange: heroGlowPath.leftRange,
+            extrapolate: 'clamp',
+          })
+        : null,
+    [heroGlowPath, heroGlowProgress]
+  );
+  const heroGlowTop = useMemo(
+    () =>
+      heroGlowPath
+        ? heroGlowProgress.interpolate({
+            inputRange: heroGlowPath.inputRange,
+            outputRange: heroGlowPath.topRange,
+            extrapolate: 'clamp',
+          })
+        : null,
+    [heroGlowPath, heroGlowProgress]
+  );
+  const heroGlowOpacity = useMemo(
+    () =>
+      heroGlowProgress.interpolate({
+        inputRange: [0, 0.08, 0.7, 1],
+        outputRange: [0, 0.78, 0.42, 0],
+        extrapolate: 'clamp',
+      }),
+    [heroGlowProgress]
   );
   const visibleEntries = useMemo(
     () =>
@@ -522,7 +601,31 @@ export default function DayDetailScreen() {
         <ThemedView
           lightColor={colorTokens.light.surfaceLow}
           darkColor={colorTokens.dark.surfaceLow}
+          onLayout={(event) => {
+            const { width, height } = event.nativeEvent.layout;
+            setHeroBounds((current) =>
+              current.width === width && current.height === height ? current : { width, height }
+            );
+          }}
           style={[styles.heroVisual, { borderColor: palette.separator }]}>
+          {heroGlowPath && heroGlowLeft && heroGlowTop ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.heroBorderGlow,
+                {
+                  width: heroGlowPath.glowSize,
+                  height: heroGlowPath.glowSize,
+                  borderRadius: heroGlowPath.glowSize / 2,
+                  left: heroGlowLeft,
+                  top: heroGlowTop,
+                  opacity: heroGlowOpacity,
+                  backgroundColor: palette.primary,
+                  shadowColor: palette.primary,
+                },
+              ]}
+            />
+          ) : null}
           <MaterialIcons
             name="auto-awesome"
             size={24}
@@ -764,6 +867,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 18,
     top: 16,
+  },
+  heroBorderGlow: {
+    position: 'absolute',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 7,
+    elevation: 3,
   },
   heroSummaryContent: {
     gap: spacing.xs,
