@@ -449,6 +449,7 @@ Focus:
 - duplicatie verminderen
 - toon rustig en praktisch houden
 - normalization en composition aanscherpen
+- entry-normalisatie blijft bronnabij en volledig: opschonen mag, inkorten/samenvatten niet
 
 Concreet:
 - kleine vaste kwaliteitsset met representatieve invoer

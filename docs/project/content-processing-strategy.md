@@ -21,11 +21,12 @@ De engine structureert en verwoordt — maar interpreteert niet.
 ### Laag 2 — Entry
 Output:
 - titel
-- opgeschoonde tekst
+- opgeschoonde volledige tekst
 - korte samenvatting
 
 Regels:
 - dicht bij bron
+- opschonen mag, inkorten/samenvatten niet
 - geen interpretatie
 
 ### Laag 3 — Dagboekdag

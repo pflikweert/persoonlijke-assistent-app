@@ -30,7 +30,7 @@ Gevalideerd in:
 | Capture text | In scope | Aanwezig | `submitTextEntry` + typing state in `app/(tabs)/capture.tsx`. |
 | Capture audio | In scope | Aanwezig | Recorder + submitAudioEntry + guards in `capture.tsx`/`services/entries.ts`. |
 | Process-entry flow | Kernflow release 1 | Aanwezig | Edge function `supabase/functions/process-entry/index.ts` actief gebruikt. |
-| Entry normalisatie | Kernflow release 1 | Aanwezig | In `process-entry` (normalize stap + persist `entries_normalized`). |
+| Entry normalisatie | Kernflow release 1 | Aanwezig | In `process-entry` (normalize stap + persist `entries_normalized.body` als opgeschoonde volledige tekst, met bronbehoud-guardrail). |
 | Day journal opbouw | Kernflow release 1 | Aanwezig | In `process-entry` en extra client-regenerate helper in `services/day-journals.ts`. |
 | Vandaag/Home scherm | In scope | Aanwezig | `app/(tabs)/index.tsx`. |
 | Dagenlijst | In scope | Aanwezig | `app/(tabs)/days.tsx`. |
@@ -58,6 +58,7 @@ Gevalideerd in:
 - Datamodel voor release-1 tabellen staat in migrations en types.
 - Lokale verify scripts voor text/audio/reflection/output-quality zijn aanwezig.
 - Dagdetail entry-actions zijn aanwezig (read/edit/delete) met herverwerking van dag + reflecties.
+- Entry-normalisatie is nu expliciet bronnabij gehouden: `entries_raw` blijft bron, `entries_normalized.body` blijft volledige opgeschoonde tekst, en quality-verify bevat een lange-entry regressiecheck.
 
 ## Fases/subfases (herijkt op code)
 - Fase 0: Aanwezig (setupbasis, scripts, env-structuur).
