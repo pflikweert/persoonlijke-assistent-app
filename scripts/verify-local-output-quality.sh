@@ -715,6 +715,8 @@ function reviewReflection(rows, label) {
   const points = Array.isArray(row.reflection_points_json)
     ? row.reflection_points_json.map(norm).filter(Boolean)
     : [];
+  const todoLikePointPatterns = [/^(doe|plan|maak|ga|probeer|zorg|hou|houd|zet|schrijf|werk)\b/i, /\bto[- ]?do\b/i, /\bactiepunt\b/i];
+  const patternSignals = ['terugker', 'patroon', 'thema', 'verschuiving', 'spanning', 'ritme', 'lijn'];
 
   if (!summary) {
     add('FAIL', label, 'Summary_text is leeg.');
@@ -724,6 +726,17 @@ function reviewReflection(rows, label) {
   }
   if (points.length === 0) {
     add('WARN', label, 'Geen reflection points gevonden.');
+  }
+
+  const todoLikePoints = points.filter((point) => todoLikePointPatterns.some((pattern) => pattern.test(point)));
+  if (points.length > 0 && todoLikePoints.length >= Math.ceil(points.length * 0.6)) {
+    add('FAIL', label, 'Reflection points lijken te veel op todo/actiepunten.');
+  }
+
+  const combined = [summary, ...highlights, ...points].join(' ');
+  const hasPatternSignal = patternSignals.some((signal) => combined.includes(signal));
+  if (!hasPatternSignal) {
+    add('WARN', label, 'Reflectie benoemt weinig expliciete patroon-/verschuivingssignalen.');
   }
 
   const heavyHit = [summary, ...highlights, ...points].some(hasHeavy);

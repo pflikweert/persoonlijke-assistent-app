@@ -256,6 +256,57 @@ if [ "$WEEK_SOURCE_OVERLAP" != "true" ] || [ "$MONTH_SOURCE_OVERLAP" != "true" ]
   exit 1
 fi
 
+REFLECTION_QUALITY_RESULT="$(
+  WEEK_ROW_JSON="$WEEK_ROW_JSON" MONTH_ROW_JSON="$MONTH_ROW_JSON" node <<'NODE'
+function parseRow(raw) {
+  try {
+    return JSON.parse(raw || '{}');
+  } catch {
+    return {};
+  }
+}
+
+const todoLikePointPatterns = [/^(doe|plan|maak|ga|probeer|zorg|hou|houd|zet|schrijf|werk)\b/i, /\bto[- ]?do\b/i, /\bactiepunt\b/i];
+const patternSignals = ['terugker', 'patroon', 'thema', 'verschuiving', 'spanning', 'ritme', 'lijn'];
+
+function inspect(row) {
+  const summary = String(row.summary_text || '').toLowerCase();
+  const highlights = Array.isArray(row.highlights_json) ? row.highlights_json.map((v) => String(v || '').toLowerCase()) : [];
+  const points = Array.isArray(row.reflection_points_json) ? row.reflection_points_json.map((v) => String(v || '').toLowerCase()) : [];
+  const todoLikePoints = points.filter((p) => todoLikePointPatterns.some((pattern) => pattern.test(p))).length;
+  const hasPatternSignal = patternSignals.some((signal) => [summary, ...highlights, ...points].join(' ').includes(signal));
+  return { todoLikePoints, totalPoints: points.length, hasPatternSignal };
+}
+
+const week = inspect(parseRow(process.env.WEEK_ROW_JSON));
+const month = inspect(parseRow(process.env.MONTH_ROW_JSON));
+process.stdout.write(JSON.stringify({ week, month }));
+NODE
+)"
+
+WEEK_TODO_POINTS="$(printf '%s' "$REFLECTION_QUALITY_RESULT" | jq -r '.week.todoLikePoints')"
+WEEK_TOTAL_POINTS="$(printf '%s' "$REFLECTION_QUALITY_RESULT" | jq -r '.week.totalPoints')"
+WEEK_HAS_PATTERN="$(printf '%s' "$REFLECTION_QUALITY_RESULT" | jq -r '.week.hasPatternSignal')"
+MONTH_TODO_POINTS="$(printf '%s' "$REFLECTION_QUALITY_RESULT" | jq -r '.month.todoLikePoints')"
+MONTH_TOTAL_POINTS="$(printf '%s' "$REFLECTION_QUALITY_RESULT" | jq -r '.month.totalPoints')"
+MONTH_HAS_PATTERN="$(printf '%s' "$REFLECTION_QUALITY_RESULT" | jq -r '.month.hasPatternSignal')"
+
+if [ "$WEEK_TOTAL_POINTS" -gt 0 ] && [ "$WEEK_TODO_POINTS" -ge $(( (WEEK_TOTAL_POINTS + 1) / 2 )) ]; then
+  echo "FAIL reflection-flow: week reflection_points lijken te veel op todo/actiepunten"
+  exit 1
+fi
+
+if [ "$MONTH_TOTAL_POINTS" -gt 0 ] && [ "$MONTH_TODO_POINTS" -ge $(( (MONTH_TOTAL_POINTS + 1) / 2 )) ]; then
+  echo "FAIL reflection-flow: month reflection_points lijken te veel op todo/actiepunten"
+  exit 1
+fi
+
+if [ "$WEEK_HAS_PATTERN" != "true" ] || [ "$MONTH_HAS_PATTERN" != "true" ]; then
+  echo "FAIL reflection-flow: week/month reflectie missen expliciete patroon-/verschuivingssignalen"
+  echo "week_has_pattern=$WEEK_HAS_PATTERN month_has_pattern=$MONTH_HAS_PATTERN"
+  exit 1
+fi
+
 node <<'NODE' >"$EXPECTED_FILE"
 const anchorDate = process.env.ANCHOR_DATE;
 const anchor = new Date(`${anchorDate}T00:00:00.000Z`);
