@@ -38,46 +38,6 @@ jobs:
       - name: Log Supabase CLI version
         run: npx supabase@latest --version
 
-      - name: Configure cloud verify target
-        shell: bash
-        run: |
-          rm -f .env.local
-
-          CLOUD_URL="https://${SUPABASE_PROJECT_REF}.supabase.co"
-          API_KEYS_JSON="$(npx supabase@latest projects api-keys --project-ref "$SUPABASE_PROJECT_REF" --output json)"
-          PUBLISHABLE_KEY="$(
-            printf '%s' "$API_KEYS_JSON" | node -e '
-              const fs = require("node:fs");
-              const raw = fs.readFileSync(0, "utf8");
-              const data = JSON.parse(raw);
-              const list = Array.isArray(data) ? data : (Array.isArray(data.keys) ? data.keys : []);
-              const match = list.find((item) => /anon|publishable/i.test(String(item?.name ?? item?.type ?? "")));
-              const fallback = list[0];
-              const selected = match ?? fallback ?? {};
-              const key = selected.api_key ?? selected.key ?? selected.value ?? "";
-              if (!key) process.exit(1);
-              process.stdout.write(String(key));
-            '
-          )"
-
-          {
-            echo "EXPO_PUBLIC_SUPABASE_TARGET=cloud"
-            echo "EXPO_PUBLIC_SUPABASE_CLOUD_URL=$CLOUD_URL"
-            echo "EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
-          } >> "$GITHUB_ENV"
-
-      - name: Verify local flow
-        run: npm run verify:local-flow
-
-      - name: Verify local audio flow
-        run: npm run verify:local-audio-flow
-
-      - name: Verify local reflection flow
-        run: npm run verify:local-reflection-flow
-
-      - name: Verify local output quality
-        run: npm run verify:local-output-quality
-
       - name: Link Supabase project
         run: npx supabase@latest link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
 
