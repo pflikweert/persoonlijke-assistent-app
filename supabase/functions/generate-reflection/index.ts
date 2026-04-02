@@ -47,28 +47,8 @@ const CORS_BASE_HEADERS = {
 };
 
 const FLOW = 'generate-reflection' as const;
-const REFLECTION_PROMPT_VERSION = 'period-reflection.v1.phase1';
+const REFLECTION_PROMPT_VERSION = 'period-reflection.v1.phase2';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const MAX_SUMMARY_LENGTH = 280;
-const MAX_LIST_ITEM_LENGTH = 140;
-const HEAVY_LANGUAGE_PATTERNS = [
-  /\btrauma\b/i,
-  /\bdepress/i,
-  /\bstoornis\b/i,
-  /\bdiagnose\b/i,
-  /\bheling\b/i,
-  /\btherapie\b/i,
-  /\bdiepgeworteld\b/i,
-];
-const GENERIC_REFLECTION_PATTERNS = [
-  /in deze periode is/i,
-  /dagjournal/i,
-  /belangrijkste momenten/i,
-  /samengevoegd/i,
-  /algemene/i,
-  /inzicht/i,
-  /reflectie/i,
-];
 const NO_SPEECH_MARKER = 'geen spraak herkend in audio-opname';
 
 function buildCorsHeaders(request: Request): Record<string, string> {
@@ -129,43 +109,12 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
-function sanitizeLine(value: string, maxLength: number): string {
-  return normalizeWhitespace(value).slice(0, maxLength);
+function sanitizeLine(value: string): string {
+  return normalizeWhitespace(value);
 }
 
-function sanitizeSummaryLine(value: string, maxLength: number): string {
-  const normalized = normalizeWhitespace(value);
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  const sliced = normalized.slice(0, maxLength);
-  const boundary = Math.max(
-    sliced.lastIndexOf('. '),
-    sliced.lastIndexOf('; '),
-    sliced.lastIndexOf(', '),
-    sliced.lastIndexOf(' ')
-  );
-
-  if (boundary > maxLength * 0.55) {
-    let candidate = sliced.slice(0, boundary).trim();
-    while (/\b(en|of|maar|met|voor|daarna|waarna|ook|omdat|een|de|het)$/i.test(candidate)) {
-      candidate = candidate.replace(/\s+\S+$/u, '').trim();
-    }
-    if (candidate && !/[.!?]$/.test(candidate)) {
-      candidate = `${candidate}.`;
-    }
-    return candidate;
-  }
-
-  let fallbackCandidate = sliced.trim();
-  while (/\b(en|of|maar|met|voor|daarna|waarna|ook|omdat|een|de|het)$/i.test(fallbackCandidate)) {
-    fallbackCandidate = fallbackCandidate.replace(/\s+\S+$/u, '').trim();
-  }
-  if (fallbackCandidate && !/[.!?]$/.test(fallbackCandidate)) {
-    fallbackCandidate = `${fallbackCandidate}.`;
-  }
-  return fallbackCandidate;
+function sanitizeSummaryLine(value: string): string {
+  return normalizeWhitespace(value);
 }
 
 function normalizeForCompare(value: string): string {
@@ -188,41 +137,19 @@ function dedupeLines(values: string[]): string[] {
   return output;
 }
 
-function containsHeavyLanguage(value: string): boolean {
-  return HEAVY_LANGUAGE_PATTERNS.some((pattern) => pattern.test(value));
-}
-
-function looksGenericReflectionText(value: string): boolean {
-  const normalized = normalizeWhitespace(value);
-  if (normalized.length < 16) {
-    return true;
-  }
-
-  return GENERIC_REFLECTION_PATTERNS.some((pattern) => pattern.test(normalized));
-}
-
 function containsNoSpeechMarker(value: string): boolean {
   return normalizeForCompare(value).includes(NO_SPEECH_MARKER);
 }
 
-function cleanReflectionSummary(summary: string, fallback: string): string {
-  const cleaned = sanitizeSummaryLine(summary, MAX_SUMMARY_LENGTH);
-  if (!cleaned || looksGenericReflectionText(cleaned) || containsHeavyLanguage(cleaned)) {
-    return sanitizeSummaryLine(fallback, MAX_SUMMARY_LENGTH);
-  }
-
-  return cleaned;
+function cleanReflectionSummary(summary: string): string {
+  return sanitizeSummaryLine(summary);
 }
 
-function cleanReflectionList(values: string[], fallback: string[], maxItems: number): string[] {
-  const preferred = values.length > 0 ? values : fallback;
-  const cleaned = preferred
-    .map((value) => sanitizeLine(value, MAX_LIST_ITEM_LENGTH))
+function cleanReflectionList(values: string[], maxItems: number): string[] {
+  const cleaned = values
+    .map((value) => sanitizeLine(value))
     .filter((value) => value.length > 0)
-    .filter((value) => !value.includes('?'))
-    .filter((value) => !containsNoSpeechMarker(value))
-    .filter((value) => !containsHeavyLanguage(value))
-    .filter((value) => !looksGenericReflectionText(value));
+    .filter((value) => !containsNoSpeechMarker(value));
 
   return dedupeLines(cleaned).slice(0, maxItems);
 }
@@ -327,19 +254,23 @@ function fallbackReflection(periodType: 'week' | 'month', dayJournals: DayJourna
   }
 
   const firstSummary = dayJournals
-    .map((row) => sanitizeSummaryLine(parseString(row.summary) ?? '', MAX_SUMMARY_LENGTH))
+    .map((row) => sanitizeSummaryLine(parseString(row.summary) ?? ''))
     .find((value) => value.length > 0);
   const highlightPool = dedupeLines(
     dayJournals
       .flatMap((row) => (Array.isArray(row.sections) ? row.sections : []))
-      .map((item) => sanitizeLine(parseString(item) ?? '', MAX_LIST_ITEM_LENGTH))
+      .map((item) => sanitizeLine(parseString(item) ?? ''))
       .filter((value) => value.length > 0)
   ).slice(0, 3);
 
   const points =
     highlightPool.length > 0
-      ? highlightPool.slice(0, 2).map((item) => `Blijf praktisch op: ${item}.`)
-      : ['Houd de komende periode je notities concreet met wat je deed en wat werkte.'];
+      ? highlightPool.slice(0, 2).map((item) => `Dit thema kwam meerdere keren terug: ${item}.`)
+      : [
+          periodType === 'week'
+            ? 'In deze week was een terugkerende lijn zichtbaar in hoe de dagen zich opbouwden.'
+            : 'In deze maand was een bredere verschuiving zichtbaar over meerdere weken.',
+        ];
 
   return {
     summaryText:
@@ -373,7 +304,7 @@ async function callOpenAiJson(args: {
           {
             role: 'system',
             content:
-              'Maak een rustige periodereflectie op basis van dagjournals. Blijf feitelijk, compact, praktisch en brongetrouw. Geen therapietaal, diagnose-taal of zware psychologische interpretaties. Stel geen vragen in de output. Geef alleen JSON terug met summaryText, highlights, reflectionPoints.',
+              'Maak een rustige periodereflectie op basis van dagjournals. Dit is geen takenlijst en geen platte samenvatting: geef synthese over de periode. Blijf feitelijk, compact, praktisch, nuchter en brongetrouw. Geen therapietaal, diagnose-taal, coachingtaal of zware psychologische interpretaties. Stel geen vragen in de output. Geef alleen JSON terug met summaryText, highlights, reflectionPoints.',
           },
           {
             role: 'user',
@@ -446,6 +377,10 @@ async function composeReflection(args: {
   dayJournals: DayJournalRow[];
 }): Promise<ReflectionDraft> {
   const fallback = fallbackReflection(args.periodType, args.dayJournals);
+  const periodSpecificGuidance =
+    args.periodType === 'week'
+      ? 'Weekreflectie: blijf dicht op concrete dagen, dagritme en opvallende weeklijnen. Benoem terugkerende lijnen die over meerdere dagen zichtbaar zijn.'
+      : 'Maandreflectie: zoom uit over meerdere weken, benoem bredere ontwikkeling en verschuivingen over de maand zonder vaag of managementachtig te worden.';
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
     model: args.model,
@@ -454,7 +389,8 @@ async function composeReflection(args: {
     step: 'reflection_upserted',
     userPrompt: JSON.stringify({
       instruction:
-        'Gebruik alleen de meegegeven day journals (summary, narrative_text, sections). Vat de periode samen in concrete taal, noem korte unieke highlights en praktische reflectiepunten. Geen aannames buiten de input, geen therapie/diepte-duiding, geen meta-zinnen over aantallen dagjournals en geen vragen.',
+        'Gebruik alleen de meegegeven day journals (summary, narrative_text, sections). Schrijf een periodereflexie die meer doet dan gebeurtenissen herhalen. summaryText: 2-4 zinnen met de kernlijn van de periode, concreet en rustig. highlights: selectieve concrete gebeurtenissen die de periode dragen, geen uitputtende takenopsomming. reflectionPoints: korte observaties of voorzichtige richtingen voor aandacht, geen todo-lijst, geen imperatieve actiepunten. Benoem minstens één terugkerend patroon, spanning, verschuiving of thema dat over meerdere dagen zichtbaar wordt. Geen aannames buiten de input, geen therapie/diepte-duiding, geen rapport-/managementtaal, geen generieke AI-samenvattingstaal, geen meta-zinnen over aantallen dagjournals, geen halve/afgebroken zinnen en geen vragen.',
+      periodGuidance: periodSpecificGuidance,
       periodType: args.periodType,
       periodStart: args.periodStart,
       periodEnd: args.periodEnd,
@@ -466,16 +402,17 @@ async function composeReflection(args: {
     return fallback;
   }
 
-  const summaryText = cleanReflectionSummary(
-    parseString(aiResult.summaryText) ?? fallback.summaryText,
-    fallback.summaryText
-  );
-  const highlights = cleanReflectionList(parseStringArray(aiResult.highlights), fallback.highlights, 3);
-  const reflectionPoints = cleanReflectionList(
-    parseStringArray(aiResult.reflectionPoints),
-    fallback.reflectionPoints,
-    3
-  );
+  const summaryRaw = parseString(aiResult.summaryText);
+  const highlightsRaw = parseStringArray(aiResult.highlights);
+  const reflectionPointsRaw = parseStringArray(aiResult.reflectionPoints);
+
+  const summaryText = summaryRaw ? cleanReflectionSummary(summaryRaw) : '';
+  const highlights = cleanReflectionList(highlightsRaw, 3);
+  const reflectionPoints = cleanReflectionList(reflectionPointsRaw, 3);
+
+  if (!summaryText || highlights.length === 0 || reflectionPoints.length === 0) {
+    return fallback;
+  }
 
   return {
     summaryText,
