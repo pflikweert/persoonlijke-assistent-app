@@ -1,14 +1,17 @@
-import { Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useFocusEffect, useLocalSearchParams, useRootNavigationState } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 
+import { ScreenHeader } from '@/components/layout/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ProcessingScreen } from '@/components/feedback/processing-screen';
+import { FullscreenMenuOverlay, type MainMenuRouteKey } from '@/components/navigation/fullscreen-menu-overlay';
+import { QuickMenuBar, quickMenuPathFromKey } from '@/components/navigation/quick-menu-bar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
-  ScreenContainer,
   StateBlock,
 } from '@/components/ui/screen-primitives';
 import {
@@ -119,6 +122,7 @@ function blurActiveElementOnWeb() {
 export default function DayDetailScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
+  const navigationState = useRootNavigationState();
   const { date, processed, entryId } = useLocalSearchParams<RouteParams>();
   const journalDate = useMemo(() => resolveRouteDate(date), [date]);
   const targetEntryId = useMemo(() => resolveRouteDate(entryId), [entryId]);
@@ -141,6 +145,8 @@ export default function DayDetailScreen() {
   const [editingEntry, setEditingEntry] = useState<DayEntry | null>(null);
   const [editBody, setEditBody] = useState('');
   const [mutationBusy, setMutationBusy] = useState(false);
+  const [showEditProcessing, setShowEditProcessing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const scrollRef = useRef<ScrollView | null>(null);
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -225,6 +231,41 @@ export default function DayDetailScreen() {
         }),
     [entries]
   );
+  const previousTabName = useMemo(() => {
+    const root = navigationState;
+    if (!root || root.index < 1) {
+      return null;
+    }
+
+    const previousRoute = root.routes[root.index - 1] as {
+      name?: string;
+      state?: { index?: number; routes?: { name?: string }[] };
+    };
+
+    if (previousRoute?.name !== '(tabs)') {
+      return null;
+    }
+
+    const tabState = previousRoute.state;
+    if (!tabState || typeof tabState.index !== 'number' || !Array.isArray(tabState.routes)) {
+      return null;
+    }
+
+    return tabState.routes[tabState.index]?.name ?? null;
+  }, [navigationState]);
+  const menuRouteKey = useMemo<MainMenuRouteKey>(() => {
+    if (previousTabName === 'days') {
+      return 'days';
+    }
+    if (previousTabName === 'reflections') {
+      return 'reflections';
+    }
+    if (previousTabName === 'capture') {
+      return 'capture';
+    }
+
+    return 'today';
+  }, [previousTabName]);
 
   useEffect(() => {
     if (!pendingFocusEntryId || loading || Boolean(error)) {
@@ -348,6 +389,7 @@ export default function DayDetailScreen() {
     }
 
     setMutationBusy(true);
+    setShowEditProcessing(true);
     try {
       await updateNormalizedEntryById({
         id: editingEntry.id,
@@ -367,6 +409,7 @@ export default function DayDetailScreen() {
       Alert.alert('Bewerken mislukt', message);
     } finally {
       setMutationBusy(false);
+      setShowEditProcessing(false);
     }
   }
 
@@ -406,35 +449,44 @@ export default function DayDetailScreen() {
     ]);
   }
 
+  function handleBackPress() {
+    const fromCapture = showProcessedBanner || previousTabName === 'capture';
+    if (fromCapture) {
+      router.replace('/(tabs)');
+      return;
+    }
+
+    const cameFromValidMain = previousTabName === 'index' || previousTabName === 'days' || previousTabName === 'reflections';
+    if (cameFromValidMain && router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/(tabs)');
+  }
+
   return (
-    <ScreenContainer scrollable scrollRef={scrollRef}>
+    <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-
-      <ThemedView style={styles.topBar}>
-        <Pressable onPress={() => router.back()} style={[styles.topBarIconButton, { backgroundColor: palette.surfaceLow }]}>
-          <MaterialIcons name="arrow-back" size={18} color={palette.mutedSoft} />
-        </Pressable>
-
-        <ThemedView style={styles.topBarContext}>
-          <ThemedText type="sectionTitle" style={[styles.topBarTitle, { color: palette.text }]}>
-            {dayHeading}
-          </ThemedText>
-          <MetaText>{readableDate}</MetaText>
-        </ThemedView>
-
-        <Pressable
-          onPress={() => {
-            if (visibleEntries.length > 0) {
-              openEditModal(visibleEntries[0]);
-            }
-          }}
-          disabled={visibleEntries.length === 0}
-          style={styles.topBarEditButton}>
-          <ThemedText type="caption" style={[styles.topBarEditLabel, { color: palette.primary }]}>
-            Bewerken
-          </ThemedText>
-        </Pressable>
-      </ThemedView>
+      <ScrollView ref={scrollRef} stickyHeaderIndices={[0]} contentContainerStyle={styles.scrollContent}>
+      <ScreenHeader
+        title={dayHeading}
+        subtitle={readableDate}
+        leftAction={
+          <Pressable onPress={handleBackPress} style={[styles.topBarIconButton, { backgroundColor: palette.surfaceLow }]}>
+            <MaterialIcons name="arrow-back" size={18} color={palette.mutedSoft} />
+          </Pressable>
+        }
+        rightAction={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            onPress={() => setMenuVisible(true)}
+            style={[styles.topBarIconButton, { backgroundColor: palette.surfaceLow }]}>
+            <MaterialIcons name="menu" size={20} color={palette.primary} />
+          </Pressable>
+        }
+      />
 
       {showProcessedBanner ? (
         <ThemedView style={styles.processedRow}>
@@ -658,6 +710,7 @@ export default function DayDetailScreen() {
             placeholder="Typ de inhoud van dit moment..."
             placeholderTextColor={palette.mutedSoft}
           />
+          <ProcessingScreen visible={showEditProcessing} variant="entry-edit" />
         </ThemedView>
       </Modal>
 
@@ -668,17 +721,38 @@ export default function DayDetailScreen() {
           </ThemedText>
         </Pressable>
       </ThemedView>
-    </ScreenContainer>
+
+      </ScrollView>
+
+      <QuickMenuBar
+        activeKey={menuRouteKey}
+        onSelect={(key) => {
+          const targetPath = quickMenuPathFromKey(key);
+          if (targetPath === '/capture') {
+            router.push('/capture');
+            return;
+          }
+          router.replace(targetPath);
+        }}
+      />
+
+      <FullscreenMenuOverlay
+        visible={menuVisible}
+        currentRouteKey={menuRouteKey}
+        onRequestClose={() => setMenuVisible(false)}
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
+  screen: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.page,
+    gap: spacing.section,
+    paddingBottom: spacing.xxxl + spacing.xxl + spacing.xxl,
   },
   topBarIconButton: {
     width: 34,
@@ -686,22 +760,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  topBarContext: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-    paddingHorizontal: spacing.xs,
-  },
-  topBarTitle: {
-  },
-  topBarEditButton: {
-    minWidth: 58,
-    alignItems: 'flex-end',
-  },
-  topBarEditLabel: {
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
   },
   processedRow: {
     flexDirection: 'row',
@@ -892,7 +950,7 @@ const styles = StyleSheet.create({
   bottomActionWrap: {
     alignItems: 'center',
     marginTop: spacing.xl,
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   bottomAction: {
     paddingVertical: spacing.xs,

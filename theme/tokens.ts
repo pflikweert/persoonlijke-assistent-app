@@ -3,7 +3,7 @@ import { Platform, StyleSheet } from 'react-native';
 export const colorTokens = {
   light: {
     text: '#1B1C1A',
-    background: '#FAF4E6',
+    background: '#FAF9F4',
     surface: '#EFEEEB',
     surfaceLow: '#F4F3F0',
     surfaceLowest: '#FFFFFF',

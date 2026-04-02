@@ -11,8 +11,10 @@ import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 
+import { ScreenHeader } from '@/components/layout/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ProcessingScreen, type ProcessingVariant } from '@/components/feedback/processing-screen';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { PrimaryButton, ScreenContainer, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
 import { classifyUnknownError, getUtcTodayDate, submitAudioEntry, submitTextEntry } from '@/services';
@@ -109,6 +111,7 @@ export default function CaptureScreen() {
   const [status, setStatus] = useState<string | null>(null);
   const [isTypingFocused, setIsTypingFocused] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [processingVariant, setProcessingVariant] = useState<ProcessingVariant | null>(null);
 
   const autoStopTriggeredRef = useRef(false);
 
@@ -239,6 +242,7 @@ export default function CaptureScreen() {
     setSubmitting(true);
     setError(null);
     setStatus(null);
+    setProcessingVariant('text-entry');
 
     try {
       await submitTextEntry({
@@ -261,6 +265,7 @@ export default function CaptureScreen() {
       });
     } finally {
       setSubmitting(false);
+      setProcessingVariant(null);
     }
   }
 
@@ -277,6 +282,7 @@ export default function CaptureScreen() {
     setSubmitting(true);
     setError(null);
     setStatus(null);
+    setProcessingVariant('audio-entry');
 
     try {
       const audioBase64 = await audioUriToBase64(audioUri);
@@ -305,6 +311,7 @@ export default function CaptureScreen() {
       });
     } finally {
       setSubmitting(false);
+      setProcessingVariant(null);
     }
   }
 
@@ -313,10 +320,12 @@ export default function CaptureScreen() {
       setSubmitting(true);
       setError(null);
       setStatus('Opname verwerken...');
+      setProcessingVariant('audio-entry');
       const uri = await handleStopRecording('manual');
 
       if (!uri) {
         setSubmitting(false);
+        setProcessingVariant(null);
         return;
       }
 
@@ -347,6 +356,7 @@ export default function CaptureScreen() {
         });
       } finally {
         setSubmitting(false);
+        setProcessingVariant(null);
       }
 
       return;
@@ -357,34 +367,37 @@ export default function CaptureScreen() {
 
   return (
     <ScreenContainer style={styles.screen}>
-      <ThemedView style={styles.topBar}>
-        <Pressable
-          onPress={handleBackFromCapture}
-          disabled={recordingActionBusy}
-          style={[styles.topAction, recordingActionBusy && styles.topActionDisabled]}>
-          <MaterialIcons name="arrow-back" size={18} color={colorTokens.light.primary} />
-          <ThemedText type="bodySecondary">{uiMode === 'idle' ? 'Terug' : 'Annuleer'}</ThemedText>
-        </Pressable>
-
-        {uiMode === 'typing' ? (
+      <ScreenHeader
+        leftAction={
           <Pressable
-            onPress={() => void handleSubmitText()}
-            disabled={isBusy || !hasTextDraft}
-            style={[styles.topAction, styles.topPrimaryAction, (isBusy || !hasTextDraft) && styles.topActionDisabled]}>
-            <ThemedText type="defaultSemiBold">{submitting ? 'Opslaan...' : 'Klaar'}</ThemedText>
+            onPress={handleBackFromCapture}
+            disabled={recordingActionBusy}
+            style={[styles.topAction, recordingActionBusy && styles.topActionDisabled]}>
+            <MaterialIcons name="arrow-back" size={18} color={colorTokens.light.primary} />
+            <ThemedText type="bodySecondary">{uiMode === 'idle' ? 'Terug' : 'Annuleer'}</ThemedText>
           </Pressable>
-        ) : uiMode === 'idle' ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.menuButton, { backgroundColor: colorTokens.light.surfaceLow }]}>
-            <MaterialIcons name="menu" size={20} color={colorTokens.light.primary} />
-          </Pressable>
-        ) : (
-          <ThemedView style={styles.topBarSpacer} />
-        )}
-      </ThemedView>
+        }
+        rightAction={
+          uiMode === 'typing' ? (
+            <Pressable
+              onPress={() => void handleSubmitText()}
+              disabled={isBusy || !hasTextDraft}
+              style={[styles.topAction, styles.topPrimaryAction, (isBusy || !hasTextDraft) && styles.topActionDisabled]}>
+              <ThemedText type="defaultSemiBold">{submitting ? 'Opslaan...' : 'Klaar'}</ThemedText>
+            </Pressable>
+          ) : uiMode === 'idle' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open menu"
+              onPress={() => setMenuVisible(true)}
+              style={[styles.menuButton, { backgroundColor: colorTokens.light.surfaceLow }]}>
+              <MaterialIcons name="menu" size={20} color={colorTokens.light.primary} />
+            </Pressable>
+          ) : (
+            <ThemedView style={styles.topBarSpacer} />
+          )
+        }
+      />
 
       {error ? (
         <StateBlock
@@ -489,21 +502,15 @@ export default function CaptureScreen() {
         currentRouteKey="capture"
         onRequestClose={() => setMenuVisible(false)}
       />
+      <ProcessingScreen visible={Boolean(processingVariant)} variant={processingVariant ?? 'text-entry'} />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    paddingTop: spacing.md,
     paddingBottom: spacing.md,
     gap: spacing.md,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    minHeight: 36,
   },
   topAction: {
     flexDirection: 'row',

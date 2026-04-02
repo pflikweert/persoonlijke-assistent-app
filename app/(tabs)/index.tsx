@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
@@ -72,21 +73,22 @@ export default function TodayScreen() {
   return (
     <ScreenContainer
       scrollable
+      stickyHeaderIndices={[0]}
       style={styles.screen}
       contentContainerStyle={styles.scrollContent}>
-      <ThemedView style={styles.topBar}>
-        <ThemedView style={styles.topBarCopy}>
-          <ThemedText type="sectionTitle">Vandaag</ThemedText>
-          <MetaText>{formattedDate}</MetaText>
-        </ThemedView>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open menu"
-          onPress={() => setMenuVisible(true)}
-          style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
-          <MaterialIcons name="menu" size={20} color={palette.primary} />
-        </Pressable>
-      </ThemedView>
+      <ScreenHeader
+        title="Vandaag"
+        subtitle={formattedDate}
+        rightAction={
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            onPress={() => setMenuVisible(true)}
+            style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+            <MaterialIcons name="menu" size={20} color={palette.primary} />
+          </Pressable>
+        }
+      />
 
       <ThemedView style={styles.hero}>
         <MetaText>START</MetaText>
@@ -248,20 +250,10 @@ function formatRecentMeta(journalDate: string, capturedAt: string): string {
 
 const styles = StyleSheet.create({
   screen: {
-    paddingTop: spacing.md,
     gap: spacing.xl,
   },
   scrollContent: {
     paddingBottom: spacing.xxxl,
-  },
-  topBar: {
-    marginBottom: spacing.xs,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  topBarCopy: {
-    gap: spacing.xxs,
   },
   menuButton: {
     width: 40,

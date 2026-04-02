@@ -5,6 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
@@ -145,10 +146,13 @@ export default function ReflectionsScreen() {
   return (
     <ScreenContainer
       scrollable
+      stickyHeaderIndices={[0]}
       contentContainerStyle={styles.scrollContent}>
-      <ThemedView style={styles.header}>
-        <ThemedView style={styles.headerTopRow}>
-          <ThemedText type="screenTitle">Reflecties</ThemedText>
+      <ScreenHeader
+        title="Reflecties"
+        titleType="screenTitle"
+        subtitle="Rustige inzichten op basis van je dagjournals."
+        rightAction={
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open menu"
@@ -156,11 +160,8 @@ export default function ReflectionsScreen() {
             style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
             <MaterialIcons name="menu" size={20} color={palette.primary} />
           </Pressable>
-        </ThemedView>
-        <ThemedText type="bodySecondary" style={[styles.headerCopy, { color: palette.muted }]}>
-          Rustige inzichten op basis van je dagjournals.
-        </ThemedText>
-      </ThemedView>
+        }
+      />
 
       <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
         <Pressable
@@ -300,23 +301,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  header: {
-    gap: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   menuButton: {
     width: 40,
     height: 40,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerCopy: {
   },
   periodSwitch: {
     flexDirection: 'row',

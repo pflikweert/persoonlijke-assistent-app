@@ -22,12 +22,14 @@ export function ScreenContainer({
   scrollable = false,
   contentContainerStyle,
   scrollRef,
+  stickyHeaderIndices,
 }: {
   children: ReactNode;
   style?: ViewStyle;
   scrollable?: boolean;
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
   scrollRef?: RefObject<ScrollView | null>;
+  stickyHeaderIndices?: number[];
 }) {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -39,9 +41,10 @@ export function ScreenContainer({
       styles.scrollContent.paddingBottom;
 
     return (
-      <ThemedView style={[styles.screenContainer, style, { backgroundColor: palette.background }]}>
+      <ThemedView style={[styles.screenContainer, styles.scrollHost, style, { backgroundColor: palette.background }]}>
         <ScrollView
           ref={scrollRef}
+          stickyHeaderIndices={stickyHeaderIndices}
           contentContainerStyle={[
             flattenedContentStyle,
             {
@@ -269,8 +272,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.page,
     gap: spacing.section,
   },
+  scrollHost: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    gap: 0,
+  },
   scrollContent: {
     gap: spacing.section,
+    paddingHorizontal: spacing.page,
+    paddingTop: spacing.page,
     paddingBottom: spacing.xxxl + spacing.xxl + spacing.xxl,
   },
   section: {

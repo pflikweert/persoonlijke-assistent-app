@@ -5,6 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
@@ -123,10 +124,13 @@ export default function DaysScreen() {
   return (
     <ScreenContainer
       scrollable
+      stickyHeaderIndices={[0]}
       contentContainerStyle={styles.scrollContent}>
-      <ThemedView style={styles.header}>
-        <ThemedView style={styles.headerTopRow}>
-          <ThemedText type="screenTitle">Dagen</ThemedText>
+      <ScreenHeader
+        title="Dagen"
+        titleType="screenTitle"
+        subtitle="Persoonlijk archief om rustig terug te lezen."
+        rightAction={
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open menu"
@@ -134,11 +138,8 @@ export default function DaysScreen() {
             style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
             <MaterialIcons name="menu" size={20} color={palette.primary} />
           </Pressable>
-        </ThemedView>
-        <ThemedText type="bodySecondary" style={[styles.headerContext, { color: palette.muted }]}>
-          Persoonlijk archief om rustig terug te lezen.
-        </ThemedText>
-      </ThemedView>
+        }
+      />
 
       {loading ? (
         <StateBlock tone="loading" message="Archief laden..." detail="We halen je recente dagen op." />
@@ -227,23 +228,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  header: {
-    gap: spacing.xs,
-    marginBottom: spacing.lg,
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   menuButton: {
     width: 40,
     height: 40,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerContext: {
   },
   list: {
     gap: spacing.xl,
