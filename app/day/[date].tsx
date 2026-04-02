@@ -141,7 +141,6 @@ export default function DayDetailScreen() {
   const [entryOffsets, setEntryOffsets] = useState<Record<string, number>>({});
   const [focusedEntryId, setFocusedEntryId] = useState<string | null>(null);
   const [pendingFocusEntryId, setPendingFocusEntryId] = useState<string | null>(null);
-  const [readingEntry, setReadingEntry] = useState<DayEntry | null>(null);
   const [editingEntry, setEditingEntry] = useState<DayEntry | null>(null);
   const [editBody, setEditBody] = useState('');
   const [mutationBusy, setMutationBusy] = useState(false);
@@ -223,7 +222,11 @@ export default function DayDetailScreen() {
   const visibleEntries = useMemo(
     () =>
       entries
-        .map((entry) => ({ ...entry, body: cleanMomentPreview(entry.body ?? '') }))
+        .map((entry) => ({
+          ...entry,
+          body: cleanMomentPreview(entry.body ?? ''),
+          summary_short: cleanMomentPreview(entry.summary_short ?? ''),
+        }))
         .sort((left, right) => {
           const leftTime = new Date(left.captured_at).getTime();
           const rightTime = new Date(right.captured_at).getTime();
@@ -266,6 +269,7 @@ export default function DayDetailScreen() {
 
     return 'today';
   }, [previousTabName]);
+  const showInlineEntryActions = false;
 
   useEffect(() => {
     if (!pendingFocusEntryId || loading || Boolean(error)) {
@@ -313,28 +317,10 @@ export default function DayDetailScreen() {
     return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
   }
 
-  function openReadModal(entry: DayEntry) {
-    if (mutationBusy) {
-      return;
-    }
-    setEditingEntry(null);
-    setEditBody('');
-    setReadingEntry(entry);
-  }
-
-  function closeReadModal() {
-    if (mutationBusy) {
-      return;
-    }
-    blurActiveElementOnWeb();
-    setReadingEntry(null);
-  }
-
   function openEditModal(entry: DayEntry) {
     if (mutationBusy) {
       return;
     }
-    setReadingEntry(null);
     setEditingEntry(entry);
     setEditBody(entry.body ?? '');
   }
@@ -393,7 +379,6 @@ export default function DayDetailScreen() {
     try {
       await updateNormalizedEntryById({
         id: editingEntry.id,
-        title: editingEntry.title ?? '',
         body: editBody,
       });
       const reflectionRefreshError = await refreshDerivedContentAfterEntryMutation();
@@ -426,7 +411,6 @@ export default function DayDetailScreen() {
         onPress: () => {
           void (async () => {
             setMutationBusy(true);
-            setReadingEntry((current) => (current?.id === id ? null : current));
             try {
               await deleteNormalizedEntryById(id);
               const reflectionRefreshError = await refreshDerivedContentAfterEntryMutation();
@@ -468,7 +452,6 @@ export default function DayDetailScreen() {
   return (
     <ThemedView style={[styles.screen, { backgroundColor: palette.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView ref={scrollRef} stickyHeaderIndices={[0]} contentContainerStyle={styles.scrollContent}>
       <ScreenHeader
         title={dayHeading}
         subtitle={readableDate}
@@ -487,6 +470,7 @@ export default function DayDetailScreen() {
           </Pressable>
         }
       />
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
 
       {showProcessedBanner ? (
         <ThemedView style={styles.processedRow}>
@@ -594,7 +578,12 @@ export default function DayDetailScreen() {
                 ]}>
                 <ThemedView style={styles.entryHead}>
                   <Pressable
-                    onPress={() => openReadModal(entry)}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/entry/[id]',
+                        params: { id: entry.id, source: 'day', date: journalDate },
+                      })
+                    }
                     disabled={mutationBusy}
                     style={styles.entryContentTap}>
                     <ThemedText type="defaultSemiBold" numberOfLines={1} style={[styles.entryTitle, { color: palette.text }]}>
@@ -614,67 +603,26 @@ export default function DayDetailScreen() {
                       </ThemedText>
                     </ThemedView>
                     <ThemedText type="bodySecondary" numberOfLines={3} style={[styles.entryPreview, { color: palette.muted }]}>
-                      {entry.body}
+                      {entry.summary_short || entry.body}
                     </ThemedText>
                   </Pressable>
 
-                  <ThemedView style={styles.entryActions}>
-                    <Pressable onPress={() => openEditModal(entry)} disabled={mutationBusy} style={styles.iconAction}>
-                      <MaterialIcons name="edit" size={15} color={palette.mutedSoft} />
-                    </Pressable>
-                    <Pressable onPress={() => handleDeleteEntry(entry.id)} disabled={mutationBusy} style={styles.iconAction}>
-                      <MaterialIcons name="delete-outline" size={15} color={palette.mutedSoft} />
-                    </Pressable>
-                  </ThemedView>
+                  {showInlineEntryActions ? (
+                    <ThemedView style={styles.entryActions}>
+                      <Pressable onPress={() => openEditModal(entry)} disabled={mutationBusy} style={styles.iconAction}>
+                        <MaterialIcons name="edit" size={15} color={palette.mutedSoft} />
+                      </Pressable>
+                      <Pressable onPress={() => handleDeleteEntry(entry.id)} disabled={mutationBusy} style={styles.iconAction}>
+                        <MaterialIcons name="delete-outline" size={15} color={palette.mutedSoft} />
+                      </Pressable>
+                    </ThemedView>
+                  ) : null}
                 </ThemedView>
               </ThemedView>
             ))}
           </ThemedView>
         </ThemedView>
       ) : null}
-
-      <Modal visible={Boolean(readingEntry)} animationType="slide" onRequestClose={closeReadModal}>
-        <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.modalScreen}>
-          <ThemedView style={styles.modalTopBar}>
-            <Pressable onPress={closeReadModal} disabled={mutationBusy} style={styles.modalTopAction}>
-              <ThemedText type="bodySecondary">Sluiten</ThemedText>
-            </Pressable>
-            <ThemedText type="sectionTitle">Moment</ThemedText>
-            <Pressable
-              onPress={() => {
-                if (readingEntry) {
-                  openEditModal(readingEntry);
-                }
-              }}
-              disabled={!readingEntry || mutationBusy}
-              style={[styles.modalTopAction, styles.modalTopActionPrimary, { backgroundColor: palette.surfaceLow }]}>
-              <ThemedText type="defaultSemiBold">Bewerken</ThemedText>
-            </Pressable>
-          </ThemedView>
-
-          <ScrollView contentContainerStyle={styles.readModalContent}>
-            <ThemedText type="sectionTitle" style={[styles.readEntryTitle, { color: palette.text }]}>
-              {readingEntry?.title?.trim() || 'Moment zonder titel'}
-            </ThemedText>
-            <ThemedView style={styles.readEntryMeta}>
-              <MaterialIcons
-                name={readingEntry?.source_type === 'audio' ? 'mic' : 'edit-note'}
-                size={14}
-                color={palette.primary}
-              />
-              <ThemedText type="caption" style={[styles.readEntryMetaText, { color: palette.mutedSoft }]}>
-                {readingEntry?.source_type === 'audio' ? 'Audio' : 'Tekst'}
-              </ThemedText>
-              <ThemedText type="caption" style={[styles.readEntryMetaText, { color: palette.mutedSoft }]}>
-                • {readingEntry ? formatTime(readingEntry.captured_at) : '--:--'}
-              </ThemedText>
-            </ThemedView>
-            <ThemedText type="body" style={[styles.readEntryBody, { color: palette.text }]}>
-              {readingEntry?.body?.trim() || 'Geen inhoud beschikbaar.'}
-            </ThemedText>
-          </ScrollView>
-        </ThemedView>
-      </Modal>
 
       <Modal visible={Boolean(editingEntry)} animationType="slide" onRequestClose={closeEditModal}>
         <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.modalScreen}>
@@ -918,23 +866,6 @@ const styles = StyleSheet.create({
   },
   modalTopActionPrimary: {
     alignItems: 'center',
-  },
-  readModalContent: {
-    gap: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  readEntryTitle: {
-    marginTop: spacing.xs,
-  },
-  readEntryMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  readEntryMetaText: {
-  },
-  readEntryBody: {
-    lineHeight: 30,
   },
   modalInputFull: {
     flex: 1,

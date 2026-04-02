@@ -28,6 +28,7 @@ type ProcessEntryResponse = {
 type NormalizedEntry = {
   title: string;
   body: string;
+  summaryShort: string;
 };
 
 type DayJournalDraft = {
@@ -56,13 +57,21 @@ const CORS_BASE_HEADERS = {
 };
 
 const FLOW = 'process-entry' as const;
-const NORMALIZATION_PROMPT_VERSION = 'entry-normalization.v1.phase1';
+const NORMALIZATION_PROMPT_VERSION = 'entry-normalization.v1.2.phase1';
 const DAY_COMPOSITION_PROMPT_VERSION = 'day-composition.v1.phase1';
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 const NO_SPEECH_TRANSCRIPT = 'Geen spraak herkend in audio-opname.';
 const LOW_CONTENT_TITLE = 'Audio-opname zonder spraak';
 const LOW_CONTENT_BODY = 'Geen bruikbare spraakinhoud gevonden in de opname.';
+const LOW_CONTENT_SUMMARY_SHORT = 'Geen bruikbare spraakinhoud in deze opname.';
 const GENERIC_TITLES = new Set(['notitie', 'update', 'gedachte', 'dagboek', 'memo']);
+const GENERIC_PREVIEW_PHRASES = [
+  'algemene samenvatting',
+  'korte samenvatting',
+  'samenvatting',
+  'overzicht van de notitie',
+];
+const META_PREVIEW_STARTS = ['de gebruiker', 'er wordt beschreven', 'de notitie gaat over', 'in deze notitie'];
 const GENERIC_DAY_PHRASES = [
   'belangrijkste momenten',
   'samengevoegd',
@@ -157,6 +166,7 @@ function fallbackNormalization(rawText: string): NormalizedEntry {
   return {
     title,
     body: clean,
+    summaryShort: createSummaryShortFromBody(clean),
   };
 }
 
@@ -290,12 +300,96 @@ function cleanNormalizedTitle(value: string, fallback: string): string {
 }
 
 function cleanNormalizedBody(value: string, fallback: string): string {
-  const candidate = sanitizeShortLine(value, 600);
+  const candidate = normalizeWhitespace(value);
   if (!candidate || candidate.length < 12) {
-    return sanitizeShortLine(fallback, 600);
+    return normalizeWhitespace(fallback);
   }
 
   return candidate;
+}
+
+function isSuspiciouslyCompressedNormalization(source: string, normalizedBody: string): boolean {
+  const sourceClean = normalizeWhitespace(source);
+  const normalizedClean = normalizeWhitespace(normalizedBody);
+
+  if (sourceClean.length < 500) {
+    return false;
+  }
+
+  return normalizedClean.length < Math.floor(sourceClean.length * 0.72);
+}
+
+function trimPreviewForMobile(value: string, maxLength = 156): string {
+  const normalized = normalizeWhitespace(value);
+  if (!normalized) {
+    return '';
+  }
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  const sliced = normalized.slice(0, maxLength);
+  const boundary = Math.max(
+    sliced.lastIndexOf('. '),
+    sliced.lastIndexOf('; '),
+    sliced.lastIndexOf(', '),
+    sliced.lastIndexOf(' ')
+  );
+  const base = boundary > maxLength * 0.6 ? sliced.slice(0, boundary).trim() : sliced.trim();
+  const safeBase = base || sliced.trim();
+  return `${safeBase}...`;
+}
+
+function finalizePreviewTone(value: string): string {
+  const clean = value.trim();
+  if (!clean) {
+    return '';
+  }
+  if (clean.endsWith('?')) {
+    return `${clean.slice(0, -1).trimEnd()}.`;
+  }
+  return clean;
+}
+
+function looksMetaPreview(value: string): boolean {
+  const normalized = normalizeForCompare(value);
+  return META_PREVIEW_STARTS.some((prefix) => normalized.startsWith(prefix));
+}
+
+function looksGenericPreview(value: string): boolean {
+  const normalized = normalizeForCompare(value);
+  if (normalized.length < 12) {
+    return true;
+  }
+  return GENERIC_PREVIEW_PHRASES.some((phrase) => normalized.includes(phrase));
+}
+
+function createSummaryShortFromBody(body: string): string {
+  const normalizedBody = normalizeWhitespace(body);
+  if (!normalizedBody) {
+    return 'Korte preview niet beschikbaar.';
+  }
+
+  const firstSentence = normalizedBody.split(/[.!?]/)[0]?.trim() ?? '';
+  const source = firstSentence.length >= 24 ? firstSentence : normalizedBody;
+  const preview = trimPreviewForMobile(source);
+  return finalizePreviewTone(preview || trimPreviewForMobile(normalizedBody));
+}
+
+function cleanNormalizedSummaryShort(value: string | null, fallbackBody: string): string {
+  const candidate = trimPreviewForMobile(value ?? '');
+  if (!candidate) {
+    return createSummaryShortFromBody(fallbackBody);
+  }
+  if (candidate.endsWith('?')) {
+    return createSummaryShortFromBody(fallbackBody);
+  }
+  if (looksMetaPreview(candidate) || looksGenericPreview(candidate)) {
+    return createSummaryShortFromBody(fallbackBody);
+  }
+
+  return finalizePreviewTone(candidate);
 }
 
 function cleanDaySummary(value: string, fallback: string): string {
@@ -602,6 +696,7 @@ async function normalizeEntry(args: {
     return {
       title: LOW_CONTENT_TITLE,
       body: LOW_CONTENT_BODY,
+      summaryShort: LOW_CONTENT_SUMMARY_SHORT,
     };
   }
 
@@ -613,10 +708,10 @@ async function normalizeEntry(args: {
     step: 'normalized_persisted',
     promptVersion: NORMALIZATION_PROMPT_VERSION,
     systemPrompt:
-      'Normaliseer een persoonlijke notitie. Blijf strikt brongetrouw, feitelijk en compact. Geen therapietaal, geen diagnoses, geen interpretaties. Geef alleen JSON terug met title en body.',
+      'Normaliseer een persoonlijke notitie. Blijf strikt brongetrouw en feitelijk. Behoud alle betekenisvolle inhoud uit de bron. Laat geen details weg, vat niet samen en herschrijf niet naar een kortere hervertelling. Maak alleen licht leesbaarder (spraakruis/kleine grammaticale oneffenheden), zonder nieuwe informatie of interpretaties. Geen therapietaal of diagnoses. Geef alleen JSON terug met title, body en summary_short.',
     userPrompt: JSON.stringify({
       instruction:
-        'Maak 1 concrete titel en 1 opgeschoonde body op basis van de bron. Gebruik rustige, praktische taal. Vermijd clichés en herhaling.',
+        'Maak 1 concrete titel, 1 volledige opgeschoonde body en 1 compacte summary_short op basis van de bron. Body: volledige inhoud behouden, bronnabij, niet samenvatten. summary_short: compacte preview voor mobiele lijsten (ongeveer 2 regels), natuurlijk Nederlands, niet-meta, niet-analytisch, geen vraagvorm.',
       rawText: args.rawText,
     }),
   });
@@ -629,10 +724,27 @@ async function normalizeEntry(args: {
 
   const nextTitle = cleanNormalizedTitle(parseString(aiResult.title) ?? fallback.title, fallback.title);
   const nextBody = cleanNormalizedBody(parseString(aiResult.body) ?? fallback.body, fallback.body);
+  const body = isSuspiciouslyCompressedNormalization(args.rawText, nextBody) ? fallback.body : nextBody;
+  const summaryShort = cleanNormalizedSummaryShort(parseString(aiResult.summary_short), body);
+
+  if (body !== nextBody) {
+    logFlow('warn', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'normalized_persisted',
+      event: 'normalized_body_compression_guardrail_triggered',
+      details: {
+        sourceLength: normalizeWhitespace(args.rawText).length,
+        normalizedLength: normalizeWhitespace(nextBody).length,
+      },
+    });
+  }
 
   return {
     title: nextTitle,
-    body: nextBody,
+    body,
+    summaryShort,
   };
 }
 
@@ -986,6 +1098,7 @@ Deno.serve(async (request: Request) => {
         user_id: authData.user.id,
         title: normalized.title,
         body: normalized.body,
+        summary_short: normalized.summaryShort,
       })
       .select('id')
       .single();
@@ -1053,7 +1166,7 @@ Deno.serve(async (request: Request) => {
     if (rawIds.length > 0) {
       const { data: dayNormalizedRows, error: dayNormalizedError } = await supabase
         .from('entries_normalized')
-        .select('title, body')
+        .select('title, body, summary_short')
         .eq('user_id', authData.user.id)
         .in('raw_entry_id', rawIds);
 
@@ -1085,6 +1198,7 @@ Deno.serve(async (request: Request) => {
         normalizedEntriesForDay.push({
           title: row.title,
           body: row.body,
+          summaryShort: cleanNormalizedSummaryShort(parseString(row.summary_short), row.body),
         });
       }
     }

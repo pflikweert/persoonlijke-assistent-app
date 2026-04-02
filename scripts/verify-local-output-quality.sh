@@ -34,13 +34,14 @@ SIGNUP_FILE="$(mktemp)"
 ENTRY_FILE="$(mktemp)"
 DAY_FILE="$(mktemp)"
 NORMALIZED_FILE="$(mktemp)"
+RAW_FILE="$(mktemp)"
 WEEK_FILE="$(mktemp)"
 MONTH_FILE="$(mktemp)"
 WEEK_ROW_FILE="$(mktemp)"
 MONTH_ROW_FILE="$(mktemp)"
 
 cleanup() {
-  rm -f "$SIGNUP_FILE" "$ENTRY_FILE" "$DAY_FILE" "$NORMALIZED_FILE" "$WEEK_FILE" "$MONTH_FILE" "$WEEK_ROW_FILE" "$MONTH_ROW_FILE"
+  rm -f "$SIGNUP_FILE" "$ENTRY_FILE" "$DAY_FILE" "$NORMALIZED_FILE" "$RAW_FILE" "$WEEK_FILE" "$MONTH_FILE" "$WEEK_ROW_FILE" "$MONTH_ROW_FILE"
 }
 
 trap cleanup EXIT
@@ -79,9 +80,13 @@ done
 
 TODAY_UTC="$(date -u +%Y-%m-%d)"
 
-curl -sS "$API_URL/rest/v1/entries_normalized?select=id,title,body,created_at&user_id=eq.$USER_ID" \
+curl -sS "$API_URL/rest/v1/entries_normalized?select=id,raw_entry_id,title,body,summary_short,created_at&user_id=eq.$USER_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$NORMALIZED_FILE"
+
+curl -sS "$API_URL/rest/v1/entries_raw?select=id,source_type,raw_text,transcript_text,captured_at&user_id=eq.$USER_ID" \
+  -H "apikey: $API_KEY" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" >"$RAW_FILE"
 
 curl -sS "$API_URL/rest/v1/day_journals?select=id,journal_date,summary,narrative_text,sections&user_id=eq.$USER_ID&journal_date=eq.$TODAY_UTC" \
   -H "apikey: $API_KEY" \
@@ -121,6 +126,7 @@ curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,summary_text
 
 FIXTURE_FILE="$FIXTURE_FILE" \
 NORMALIZED_FILE="$NORMALIZED_FILE" \
+RAW_FILE="$RAW_FILE" \
 DAY_FILE="$DAY_FILE" \
 WEEK_ROW_FILE="$WEEK_ROW_FILE" \
 MONTH_ROW_FILE="$MONTH_ROW_FILE" \
@@ -133,6 +139,7 @@ function readJson(path) {
 
 const fixture = readJson(process.env.FIXTURE_FILE);
 const normalizedRows = readJson(process.env.NORMALIZED_FILE);
+const rawRows = readJson(process.env.RAW_FILE);
 const dayRows = readJson(process.env.DAY_FILE);
 const weekRows = readJson(process.env.WEEK_ROW_FILE);
 const monthRows = readJson(process.env.MONTH_ROW_FILE);
@@ -140,6 +147,12 @@ const monthRows = readJson(process.env.MONTH_ROW_FILE);
 const heavy = (fixture.heavyPhrases ?? []).map((value) => String(value).toLowerCase());
 const generic = (fixture.genericPhrases ?? []).map((value) => String(value).toLowerCase());
 const audioMarker = String(fixture.audioFallbackMarker ?? '').toLowerCase();
+const previewMetaStarts = (fixture.previewMetaStarts ?? [
+  'de gebruiker',
+  'er wordt beschreven',
+  'de notitie gaat over',
+  'in deze notitie',
+]).map((value) => String(value).toLowerCase());
 
 const results = [];
 let hardFails = 0;
@@ -168,7 +181,34 @@ function looksGeneric(value) {
   return generic.some((phrase) => phrase && text.includes(phrase));
 }
 
+function looksMetaPreview(value) {
+  const text = norm(value);
+  return previewMetaStarts.some((prefix) => prefix && text.startsWith(prefix));
+}
+
+function tokenize(value) {
+  return Array.from(
+    new Set(
+      norm(value)
+        .split(/[^a-z0-9]+/i)
+        .filter((token) => token.length >= 6)
+    )
+  );
+}
+
+function sourceTextForRawRow(row) {
+  if (!row || typeof row !== 'object') {
+    return '';
+  }
+  const sourceType = String(row.source_type ?? '').toLowerCase();
+  const transcript = String(row.transcript_text ?? '').trim();
+  const raw = String(row.raw_text ?? '').trim();
+  return sourceType === 'audio' ? transcript || raw : raw || transcript;
+}
+
 const validNormalized = Array.isArray(normalizedRows) ? normalizedRows : [];
+const validRaw = Array.isArray(rawRows) ? rawRows : [];
+const rawById = new Map(validRaw.map((row) => [String(row.id), row]));
 if (validNormalized.length === 0) {
   add('FAIL', 'entry', 'Geen normalized entries gevonden.');
 } else {
@@ -190,6 +230,90 @@ if (validNormalized.length === 0) {
     add('WARN', 'entry', `Dubbele normalized titels gedetecteerd: ${duplicateTitles}.`);
   } else {
     add('PASS', 'entry', 'Normalized titels/body aanwezig en bruikbaar.');
+  }
+
+  const emptySummaryShortRows = validNormalized.filter((row) => !norm(row.summary_short));
+  if (emptySummaryShortRows.length > 0) {
+    add('FAIL', 'entry', `Lege summary_short gevonden in ${emptySummaryShortRows.length} normalized entries.`);
+  }
+
+  const tooLongSummaryShortRows = validNormalized.filter((row) => norm(row.summary_short).length > 180);
+  if (tooLongSummaryShortRows.length > 0) {
+    add('FAIL', 'entry', `summary_short is te lang in ${tooLongSummaryShortRows.length} normalized entries.`);
+  }
+
+  const metaSummaryShortRows = validNormalized.filter((row) => looksMetaPreview(row.summary_short));
+  if (metaSummaryShortRows.length > 0) {
+    add('FAIL', 'entry', `summary_short bevat meta-formulering in ${metaSummaryShortRows.length} normalized entries.`);
+  }
+
+  const genericSummaryShortRows = validNormalized.filter((row) => looksGeneric(row.summary_short));
+  if (genericSummaryShortRows.length > 0) {
+    add('FAIL', 'entry', `summary_short lijkt te generiek in ${genericSummaryShortRows.length} normalized entries.`);
+  }
+
+  const questionSummaryShortRows = validNormalized.filter((row) =>
+    String(row.summary_short ?? '').trim().endsWith('?')
+  );
+  if (questionSummaryShortRows.length > 0) {
+    add('FAIL', 'entry', `summary_short staat in vraagvorm in ${questionSummaryShortRows.length} normalized entries.`);
+  }
+
+  const bodyLikeSummaryShortRows = validNormalized.filter((row) => {
+    const bodyLength = norm(row.body).length;
+    const summaryShortLength = norm(row.summary_short).length;
+    return bodyLength >= 220 && summaryShortLength >= Math.floor(bodyLength * 0.85);
+  });
+  if (bodyLikeSummaryShortRows.length > 0) {
+    add('FAIL', 'entry', `summary_short lijkt te veel op volledige body in ${bodyLikeSummaryShortRows.length} normalized entries.`);
+  } else if (emptySummaryShortRows.length === 0) {
+    add('PASS', 'entry', 'summary_short is compact en bruikbaar voor entry previews.');
+  }
+
+  const longRows = validNormalized
+    .map((row) => {
+      const rawRow = rawById.get(String(row.raw_entry_id));
+      const sourceText = sourceTextForRawRow(rawRow);
+      return {
+        row,
+        sourceText,
+        sourceLength: norm(sourceText).length,
+        normalizedLength: norm(row.body).length,
+      };
+    })
+    .filter((item) => item.sourceLength >= 500 && !norm(item.sourceText).includes(audioMarker));
+
+  if (longRows.length > 0) {
+    const compressed = longRows.filter(
+      (item) => item.normalizedLength < Math.floor(item.sourceLength * 0.72)
+    );
+    if (compressed.length > 0) {
+      add(
+        'FAIL',
+        'entry',
+        `Normalized body lijkt ingekort bij ${compressed.length} lange entries (verwacht >=72% van bronlengte).`
+      );
+    } else {
+      add('PASS', 'entry', 'Lange entries behouden voldoende lengte in normalized body.');
+    }
+
+    const lowOverlap = longRows.filter((item) => {
+      const sourceTokens = tokenize(item.sourceText).slice(0, 12);
+      if (sourceTokens.length < 4) {
+        return false;
+      }
+      const normalizedText = norm(item.row.body);
+      const overlapCount = sourceTokens.filter((token) => normalizedText.includes(token)).length;
+      return overlapCount < 3;
+    });
+
+    if (lowOverlap.length > 0) {
+      add('FAIL', 'entry', `Normalized body verliest te veel bronwoorden bij ${lowOverlap.length} lange entries.`);
+    } else {
+      add('PASS', 'entry', 'Lange entries blijven bronnabij qua kernwoorden.');
+    }
+  } else {
+    add('WARN', 'entry', 'Geen lange bronentries gevonden voor compressiecheck.');
   }
 }
 

@@ -20,6 +20,7 @@ export function ScreenContainer({
   children,
   style,
   scrollable = false,
+  fixedHeader,
   contentContainerStyle,
   scrollRef,
   stickyHeaderIndices,
@@ -27,6 +28,7 @@ export function ScreenContainer({
   children: ReactNode;
   style?: ViewStyle;
   scrollable?: boolean;
+  fixedHeader?: ReactNode;
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
   scrollRef?: RefObject<ScrollView | null>;
   stickyHeaderIndices?: number[];
@@ -42,6 +44,7 @@ export function ScreenContainer({
 
     return (
       <ThemedView style={[styles.screenContainer, styles.scrollHost, style, { backgroundColor: palette.background }]}>
+        {fixedHeader}
         <ScrollView
           ref={scrollRef}
           stickyHeaderIndices={stickyHeaderIndices}

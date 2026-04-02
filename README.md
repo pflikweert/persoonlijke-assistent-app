@@ -24,7 +24,7 @@ npm run lint
 npm run typecheck
 ```
 
-`npm run dev` start Expo + lokale Supabase Functions runtime samen. Bij herstart wordt de oude runtime eerst opgeruimd, en bij `Ctrl+C` wordt hij automatisch gestopt.
+`npm run dev` deployt eerst de lokale edge functions en start daarna Expo + lokale Supabase Functions runtime samen. Bij herstart wordt de oude runtime eerst opgeruimd, en bij `Ctrl+C` wordt hij automatisch gestopt.
 Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-functions.log`.
 
 ## Env-overzicht
@@ -80,7 +80,7 @@ npx supabase gen types typescript --linked --schema public > src/lib/supabase/da
 # App
 npm run dev
 
-# Edge Function (laadt OPENAI_* en EXPO_PUBLIC_* uit .env.local)
+# Edge Function runtime (als je alleen de functions wilt serven)
 npx supabase functions serve --env-file .env.local
 ```
 

@@ -54,7 +54,7 @@ function getExpectedIssuerFromPublicEnv(): string | null {
 
 export async function ensureAuthenticatedUserSession(args: {
   flowId: string;
-  source: 'process-entry' | 'generate-reflection' | 'regenerate-day-journal';
+  source: 'process-entry' | 'generate-reflection' | 'regenerate-day-journal' | 'renormalize-entry';
 }): Promise<{ userId: string }> {
   const supabase = getSupabaseBrowserClient();
 
@@ -67,16 +67,18 @@ export async function ensureAuthenticatedUserSession(args: {
   const tokenIssuer = parseJwtIssuer(accessToken);
   const expectedIssuer = getExpectedIssuerFromPublicEnv();
 
-  console.info('[function-auth:client-session]', {
-    flowId: args.flowId,
-    source: args.source,
-    hasSession: Boolean(session),
-    hasUserId: Boolean(session?.user?.id),
-    hasAccessToken: Boolean(accessToken),
-    tokenIssuer,
-    expectedIssuer,
-    issuerMatches: tokenIssuer && expectedIssuer ? tokenIssuer === expectedIssuer : null,
-  });
+  if (process.env.EXPO_PUBLIC_DEBUG_FUNCTION_AUTH === '1') {
+    console.info('[function-auth:client-session]', {
+      flowId: args.flowId,
+      source: args.source,
+      hasSession: Boolean(session),
+      hasUserId: Boolean(session?.user?.id),
+      hasAccessToken: Boolean(accessToken),
+      tokenIssuer,
+      expectedIssuer,
+      issuerMatches: tokenIssuer && expectedIssuer ? tokenIssuer === expectedIssuer : null,
+    });
+  }
 
   if (!accessToken) {
     throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');

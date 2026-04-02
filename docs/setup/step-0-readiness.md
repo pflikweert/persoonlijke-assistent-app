@@ -22,7 +22,8 @@ Zie: docs/project/current-status.md
 - Regenerate DB types wanneer schema wijzigt:
   - `npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts`
 - Voor Edge Functions lokaal:
-  - `npx supabase functions serve process-entry --env-file .env.local`
+  - `npm run dev` deployt eerst de lokale edge functions en start daarna Expo + de lokale functions runtime.
+  - Als je alleen de functions wilt serven: `npx supabase functions serve process-entry --env-file .env.local`
   - Gebruik geen custom function-env namen die met `SUPABASE_` beginnen in `.env.local`.
 - Voor lokale auth redirects gebruikt de Supabase config nu `http://localhost:8081` / `http://127.0.0.1:8081` voor Expo web.
 

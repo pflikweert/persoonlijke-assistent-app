@@ -73,23 +73,23 @@ export default function TodayScreen() {
   return (
     <ScreenContainer
       scrollable
-      stickyHeaderIndices={[0]}
       style={styles.screen}
+      fixedHeader={
+        <ScreenHeader
+          title="Vandaag"
+          subtitle={formattedDate}
+          rightAction={
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open menu"
+              onPress={() => setMenuVisible(true)}
+              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+              <MaterialIcons name="menu" size={20} color={palette.primary} />
+            </Pressable>
+          }
+        />
+      }
       contentContainerStyle={styles.scrollContent}>
-      <ScreenHeader
-        title="Vandaag"
-        subtitle={formattedDate}
-        rightAction={
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
-            <MaterialIcons name="menu" size={20} color={palette.primary} />
-          </Pressable>
-        }
-      />
-
       <ThemedView style={styles.hero}>
         <MetaText>START</MetaText>
         <ThemedText type="screenTitle" style={styles.heroTitle}>
@@ -158,8 +158,8 @@ export default function TodayScreen() {
                 key={entry.id}
                 onPress={() =>
                   router.push({
-                    pathname: '/day/[date]',
-                    params: { date: entry.journal_date, entryId: entry.id },
+                    pathname: '/entry/[id]',
+                    params: { id: entry.id, source: 'today', date: entry.journal_date },
                   })
                 }
                 style={[styles.recentRow, { borderBottomColor: `${palette.separator}66` }]}>
@@ -177,7 +177,7 @@ export default function TodayScreen() {
                     type="bodySecondary"
                     numberOfLines={1}
                     style={[styles.recentText, { color: palette.muted }]}>
-                    {summarizeSnippet(entry.body)}
+                    {entry.summary_short?.trim() || summarizeSnippet(entry.body)}
                   </ThemedText>
                 </ThemedView>
               </Pressable>

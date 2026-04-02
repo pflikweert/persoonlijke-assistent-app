@@ -23,6 +23,9 @@ export const colorTokens = {
     info: '#395F94',
     success: '#1B6D24',
     error: '#BA1A1A',
+    destructiveSoftBackground: '#F6E8E5',
+    destructiveSoftText: '#C62929',
+    destructiveSoftBorder: '#ECC1BF',
   },
   dark: {
     text: '#F4F1E8',
@@ -46,6 +49,9 @@ export const colorTokens = {
     info: '#A7C8FF',
     success: '#A3F69C',
     error: '#FFB4AB',
+    destructiveSoftBackground: '#F6E8E5',
+    destructiveSoftText: '#C62929',
+    destructiveSoftBorder: '#ECC1BF',
   },
 } as const;
 

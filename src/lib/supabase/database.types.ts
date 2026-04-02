@@ -50,6 +50,7 @@ export type Database = {
           created_at: string
           id: string
           raw_entry_id: string
+          summary_short: string | null
           title: string
           user_id: string
         }
@@ -58,6 +59,7 @@ export type Database = {
           created_at?: string
           id?: string
           raw_entry_id: string
+          summary_short?: string | null
           title: string
           user_id: string
         }
@@ -66,6 +68,7 @@ export type Database = {
           created_at?: string
           id?: string
           raw_entry_id?: string
+          summary_short?: string | null
           title?: string
           user_id?: string
         }

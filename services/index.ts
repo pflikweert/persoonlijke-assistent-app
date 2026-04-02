@@ -3,6 +3,7 @@ export { getCurrentSession, onAuthStateChange, sendMagicLink, signOutUser } from
 export {
   deleteNormalizedEntryById,
   fetchDayJournalByDate,
+  fetchNormalizedEntryById,
   fetchRecentNormalizedEntries,
   fetchNormalizedEntriesByDate,
   fetchRecentDayJournals,
@@ -17,6 +18,7 @@ export { submitAudioEntry, submitTextEntry } from './entries';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
 export {
   fetchLatestReflection,
+  hasReflectionForAnchorDate,
   fetchRecentReflections,
   generateReflection,
   parseJsonStringArray,

@@ -29,9 +29,9 @@ Gevalideerd in:
 | Auth basis (magic link) | In scope / aanwezig | Aanwezig | `app/sign-in.tsx` + `services/auth.ts` + auth-gating in `app/_layout.tsx`. |
 | Capture text | In scope | Aanwezig | `submitTextEntry` + typing state in `app/(tabs)/capture.tsx`. |
 | Capture audio | In scope | Aanwezig | Recorder + submitAudioEntry + guards in `capture.tsx`/`services/entries.ts`. |
-| Process-entry flow | Kernflow release 1 | Aanwezig | Edge function `supabase/functions/process-entry/index.ts` actief gebruikt. |
-| Entry normalisatie | Kernflow release 1 | Aanwezig | In `process-entry` (normalize stap + persist `entries_normalized.body` als opgeschoonde volledige tekst, met bronbehoud-guardrail). |
-| Day journal opbouw | Kernflow release 1 | Aanwezig | In `process-entry` en extra client-regenerate helper in `services/day-journals.ts`. |
+| Process-entry flow | Kernflow release 1 | Aanwezig | Edge function `supabase/functions/process-entry/index.ts` actief gebruikt, plus aparte `renormalize-entry` stap voor edits. |
+| Entry normalisatie | Kernflow release 1 | Aanwezig | In `process-entry` (normalize stap + persist `entries_normalized.body` als opgeschoonde volledige tekst, met bronbehoud-guardrail) en `renormalize-entry` voor edit-hernormalisatie. |
+| Day journal opbouw | Kernflow release 1 | Aanwezig | In `process-entry` en extra client-regenerate helper in `services/day-journals.ts`; via edits/delete kan de dagjournal opnieuw opgebouwd worden. |
 | Vandaag/Home scherm | In scope | Aanwezig | `app/(tabs)/index.tsx`. |
 | Dagenlijst | In scope | Aanwezig | `app/(tabs)/days.tsx`. |
 | Dagdetail | In scope | Aanwezig | `app/day/[date].tsx`. |
@@ -39,8 +39,8 @@ Gevalideerd in:
 | Edit entry | In scope dagdetail entries | Aanwezig | `updateNormalizedEntryById` + edit modal in dagdetail. |
 | Delete entry | In scope dagdetail entries | Aanwezig | Delete via `deleteNormalizedEntryById` met raw+cascade pad. |
 | Regenerate day journal | Genoemd in docs als actie | Deels aanwezig | Functioneel aanwezig via service/helper; geen aparte zichtbare “Opnieuw samenvatten”-knop in huidige UI. |
-| Weekreflecties | In scope | Aanwezig | `generate-reflection` + UI generatie/fetch. |
-| Maandreflecties | In scope | Aanwezig | `generate-reflection` + UI generatie/fetch. |
+| Weekreflecties | In scope | Aanwezig | `generate-reflection` + UI generatie/fetch; hergeneratie wordt ook gebruikt na relevante entry-mutaties. |
+| Maandreflecties | In scope | Aanwezig | `generate-reflection` + UI generatie/fetch; hergeneratie wordt ook gebruikt na relevante entry-mutaties. |
 | Reflectiescherm | In scope | Aanwezig | `app/(tabs)/reflections.tsx` met week/maand switch + generatie. |
 | Export / backup | Gepland in Fase 1.2D | Niet aangetroffen | Geen export-feature in app/services/scripts gevonden. |
 | Reset flows (productniveau) | Gepland in Fase 1.2D | Niet aangetroffen | Alleen infra/db reset commando’s; geen product-resetflow. |
@@ -52,13 +52,14 @@ Gevalideerd in:
 
 ## Wat aantoonbaar al gedaan/besloten is
 - Release-1 kernschermen en kernservices zijn aanwezig.
-- Twee edge functions zijn aanwezig en gekoppeld aan app-services:
+- Drie edge functions zijn aanwezig en gekoppeld aan app-services:
   - `process-entry`
   - `generate-reflection`
+  - `renormalize-entry`
 - Datamodel voor release-1 tabellen staat in migrations en types.
 - Lokale verify scripts voor text/audio/reflection/output-quality zijn aanwezig.
 - Dagdetail entry-actions zijn aanwezig (read/edit/delete) met herverwerking van dag + reflecties.
-- Entry-normalisatie is nu expliciet bronnabij gehouden: `entries_raw` blijft bron, `entries_normalized.body` blijft volledige opgeschoonde tekst, en quality-verify bevat een lange-entry regressiecheck.
+- Entry-normalisatie is nu expliciet bronnabij gehouden: `entries_raw` blijft bron, `entries_normalized.body` blijft volledige opgeschoonde tekst, `summary_short` is preview-only, en quality-verify bevat een lange-entry regressiecheck.
 
 ## Fases/subfases (herijkt op code)
 - Fase 0: Aanwezig (setupbasis, scripts, env-structuur).

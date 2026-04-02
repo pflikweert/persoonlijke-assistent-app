@@ -17,7 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ProcessingScreen, type ProcessingVariant } from '@/components/feedback/processing-screen';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { PrimaryButton, ScreenContainer, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
-import { classifyUnknownError, getUtcTodayDate, submitAudioEntry, submitTextEntry } from '@/services';
+import { classifyUnknownError, submitAudioEntry, submitTextEntry } from '@/services';
 import { colorTokens, radius, shadows, spacing } from '@/theme';
 
 const MAX_RECORDING_MS = 90_000;
@@ -245,7 +245,7 @@ export default function CaptureScreen() {
     setProcessingVariant('text-entry');
 
     try {
-      await submitTextEntry({
+      const result = await submitTextEntry({
         rawText,
         capturedAt: new Date().toISOString(),
       });
@@ -253,8 +253,8 @@ export default function CaptureScreen() {
       setRawText('');
       setIsTypingFocused(false);
       router.replace({
-        pathname: '/day/[date]',
-        params: { date: getUtcTodayDate(), processed: '1' },
+        pathname: '/entry/[id]',
+        params: { id: result.normalizedEntryId, source: 'capture', date: result.journalDate },
       });
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -291,7 +291,7 @@ export default function CaptureScreen() {
         throw new Error('Opname is te groot. Neem een kortere opname op.');
       }
 
-      await submitAudioEntry({
+      const result = await submitAudioEntry({
         audioBase64,
         audioMimeType: mimeTypeFromUri(audioUri),
         capturedAt: new Date().toISOString(),
@@ -299,8 +299,8 @@ export default function CaptureScreen() {
 
       setAudioUri(null);
       router.replace({
-        pathname: '/day/[date]',
-        params: { date: getUtcTodayDate(), processed: '1' },
+        pathname: '/entry/[id]',
+        params: { id: result.normalizedEntryId, source: 'capture', date: result.journalDate },
       });
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -336,7 +336,7 @@ export default function CaptureScreen() {
           throw new Error('Opname is te groot. Neem een kortere opname op.');
         }
 
-        await submitAudioEntry({
+        const result = await submitAudioEntry({
           audioBase64,
           audioMimeType: mimeTypeFromUri(uri),
           capturedAt: new Date().toISOString(),
@@ -344,8 +344,8 @@ export default function CaptureScreen() {
 
         setAudioUri(null);
         router.replace({
-          pathname: '/day/[date]',
-          params: { date: getUtcTodayDate(), processed: '1' },
+          pathname: '/entry/[id]',
+          params: { id: result.normalizedEntryId, source: 'capture', date: result.journalDate },
         });
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);

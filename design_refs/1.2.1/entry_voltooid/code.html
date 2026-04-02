@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "secondary": "#395f94",
+            "on-secondary": "#ffffff",
+            "on-background": "#1b1c1a",
+            "inverse-on-surface": "#f2f1ee",
+            "outline-variant": "#d1c5ac",
+            "surface-dim": "#dbdad7",
+            "on-tertiary-fixed": "#002204",
+            "primary-container": "#e6b800",
+            "on-primary-container": "#5e4a00",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#d5e3ff",
+            "secondary-fixed-dim": "#a7c8ff",
+            "secondary-container": "#9ec2fe",
+            "on-surface": "#1b1c1a",
+            "on-primary-fixed-variant": "#574400",
+            "surface-container-lowest": "#ffffff",
+            "surface-variant": "#e3e2df",
+            "primary": "#745b00",
+            "on-tertiary": "#ffffff",
+            "on-surface-variant": "#4e4633",
+            "surface-bright": "#faf9f6",
+            "inverse-primary": "#f0c115",
+            "primary-fixed": "#ffe08a",
+            "tertiary": "#1b6d24",
+            "surface-tint": "#745b00",
+            "on-secondary-fixed-variant": "#1e477b",
+            "background": "#faf9f6",
+            "error": "#ba1a1a",
+            "tertiary-container": "#7fd07a",
+            "surface": "#faf9f6",
+            "outline": "#807660",
+            "surface-container": "#efeeeb",
+            "on-tertiary-fixed-variant": "#005312",
+            "on-secondary-container": "#284f83",
+            "on-secondary-fixed": "#001c3b",
+            "on-primary-fixed": "#241a00",
+            "tertiary-fixed-dim": "#88d982",
+            "on-primary": "#ffffff",
+            "on-tertiary-container": "#005914",
+            "tertiary-fixed": "#a3f69c",
+            "surface-container-low": "#f4f3f0",
+            "surface-container-high": "#e9e8e5",
+            "inverse-surface": "#2f312f",
+            "on-error": "#ffffff",
+            "error-container": "#ffdad6",
+            "surface-container-highest": "#e3e2df",
+            "primary-fixed-dim": "#f0c115"
+          },
+          fontFamily: {
+            "headline": ["Inter"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #faf9f6;
+      color: #1b1c1a;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .text-balance {
+      text-wrap: balance;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body min-h-screen flex flex-col items-center selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-[#faf9f6] dark:bg-stone-950 flex items-center justify-between px-6 h-16 w-full z-10 transition-colors">
+<div class="flex items-center">
+<button class="material-symbols-outlined text-[#745b00] dark:text-[#e6b800] p-2 hover:bg-stone-200/50 dark:hover:bg-stone-800/50 transition-colors rounded-full Active: scale-95 transition-transform duration-200" data-icon="close">
+        close
+      </button>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-stone-500 dark:text-stone-400 font-sans tracking-tight text-sm font-medium hover:bg-stone-200/50 dark:hover:bg-stone-800/50 px-3 py-1.5 rounded-full transition-colors transition-transform duration-200 Active: scale-95">
+        Bewerken
+      </button>
+</div>
+</header>
+<main class="w-full max-w-2xl px-6 pt-8 pb-32 flex-grow">
+<!-- Title & Date -->
+<section class="mb-12">
+<h1 class="font-headline text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100 mb-2">
+        Ochtend in de studio
+      </h1>
+<p class="font-sans text-stone-500 dark:text-stone-400 text-sm tracking-wide">
+        Dinsdag 24 oktober, 09:42
+      </p>
+</section>
+<!-- Summary Block -->
+<section class="mb-12">
+<div class="p-6 rounded-2xl bg-surface-container-low border-none">
+<p class="text-on-surface-variant font-medium leading-relaxed italic opacity-90 text-balance">
+          "Je begon de dag met een focus op textuur en licht..."
+        </p>
+</div>
+</section>
+<!-- Narrative Content -->
+<article class="space-y-6">
+<p class="text-lg leading-[1.8] text-on-surface font-normal">
+        Vandaag voelde anders. Er hing een soort stilte in de studio die alleen ontstaat wanneer het licht precies goed valt op de ruwe oppervlakken van de klei. Het was niet de gebruikelijke haast om te creëren, maar eerder een observatie. 
+      </p>
+<p class="text-lg leading-[1.8] text-on-surface font-normal">
+        Ik merkte hoe de schaduwen zich langzaam verplaatsten over de werkbank. Het herinnerde me eraan dat het proces net zo belangrijk is als het eindresultaat. De tactiele ervaring van de natte aarde tussen mijn vingers dwong me om in het nu te blijven. Geen gedachten aan de deadlines of de expositie van volgende maand, alleen de textuur die zich vormde onder mijn handen.
+      </p>
+<p class="text-lg leading-[1.8] text-on-surface font-normal">
+        Er is iets bevrijdends aan het toelaten van imperfectie. De kleine scheurtjes in de rand van het nieuwe object voelden niet als fouten, maar als karakteristieken van de ochtend zelf. Een herinnering aan de fragiliteit van het moment.
+      </p>
+</article>
+<!-- CTA Area -->
+<section class="mt-20 flex flex-col items-center space-y-6">
+<!-- Primary CTA: Nog iets vastleggen -->
+<button class="group relative flex items-center justify-center gap-3 w-full max-w-sm h-16 bg-gradient-to-br from-[#745b00] to-[#e6b800] text-white rounded-full font-semibold text-lg shadow-lg hover:opacity-95 active:scale-[0.98] transition-all duration-300 ease-out">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span>Nog iets vastleggen</span>
+</button>
+<!-- Secondary CTA: Ga naar vandaag -->
+<button class="text-stone-500 dark:text-stone-400 font-medium text-base hover:text-stone-800 dark:hover:text-stone-200 transition-colors py-2">
+        Ga naar vandaag
+      </button>
+<!-- Spacing -->
+<div class="h-12"></div>
+<!-- Destructive Action: VERWIJDEREN -->
+<button class="text-stone-300 dark:text-stone-700 font-bold text-[10px] tracking-[0.2em] uppercase hover:text-error transition-colors pt-8">
+        VERWIJDEREN
+      </button>
+</section>
+</main>
+<!-- Bottom Navigation Shell (Filtered for completion screen per prompt - providing semantic presence but subtle) -->
+<!-- Note: The prompt implies a "Focused" view, usually navigation is suppressed. 
+       However, based on Shared Components instructions, we render it if it's a top-level context. 
+       Given 'Entry Voltooid' is a task completion screen, the shell is kept minimal as requested. -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 bg-[#faf9f6] dark:bg-stone-950 shadow-[0_-4px_20px_0_rgba(0,0,0,0.03)] rounded-t-3xl border-t-0 md:hidden">
+<!-- Today Icon -->
+<div class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 p-4 hover:opacity-90 transition-opacity Active: scale-98 transition-all duration-300 ease-out">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</div>
+<!-- Central Action (Simulated FAB context) -->
+<div class="flex flex-col items-center justify-center bg-gradient-to-br from-[#745b00] to-[#e6b800] text-white rounded-full p-4 shadow-lg hover:opacity-90 transition-opacity Active: scale-98 transition-all duration-300 ease-out">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+</div>
+</nav>
+</body></html>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,11 +24,19 @@ export function ScreenHeader({
   style?: ViewStyle;
 }) {
   const scheme = useColorScheme() ?? 'light';
-  const palette = colorTokens[scheme];
   const hasLeftAction = Boolean(leftAction);
+  const headerBackground = scheme === 'light' ? 'rgba(250, 249, 244, 0.84)' : 'rgba(23, 23, 23, 0.76)';
+  const webBlurStyle: ViewStyle =
+    Platform.OS === 'web'
+      ? ({
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+        } as unknown as ViewStyle)
+      : {};
 
   return (
-    <ThemedView style={[styles.header, { backgroundColor: palette.background }, style]}>
+    <ThemedView style={[styles.header, style]}>
+      <ThemedView style={[styles.blurLayer, { backgroundColor: headerBackground }, webBlurStyle]} />
       <ThemedView style={styles.topRow}>
         <ThemedView style={[styles.side, !hasLeftAction ? styles.sideEmpty : null]}>{leftAction}</ThemedView>
 
@@ -44,7 +52,7 @@ export function ScreenHeader({
                 type="bodySecondary"
                 style={[
                   styles.subtitle,
-                  { color: palette.muted },
+                  { color: colorTokens[scheme].muted },
                   styles.subtitleLeft,
                 ]}>
                 {subtitle}
@@ -63,9 +71,14 @@ export function ScreenHeader({
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 0,
-    paddingBottom: spacing.xs,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 4,
     zIndex: 2,
+    position: 'relative',
+  },
+  blurLayer: {
+    ...StyleSheet.absoluteFillObject,
   },
   topRow: {
     flexDirection: 'row',

@@ -124,23 +124,23 @@ export default function DaysScreen() {
   return (
     <ScreenContainer
       scrollable
-      stickyHeaderIndices={[0]}
+      fixedHeader={
+        <ScreenHeader
+          title="Dagen"
+          titleType="screenTitle"
+          subtitle="Persoonlijk archief om rustig terug te lezen."
+          rightAction={
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open menu"
+              onPress={() => setMenuVisible(true)}
+              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+              <MaterialIcons name="menu" size={20} color={palette.primary} />
+            </Pressable>
+          }
+        />
+      }
       contentContainerStyle={styles.scrollContent}>
-      <ScreenHeader
-        title="Dagen"
-        titleType="screenTitle"
-        subtitle="Persoonlijk archief om rustig terug te lezen."
-        rightAction={
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
-            <MaterialIcons name="menu" size={20} color={palette.primary} />
-          </Pressable>
-        }
-      />
-
       {loading ? (
         <StateBlock tone="loading" message="Archief laden..." detail="We halen je recente dagen op." />
       ) : null}

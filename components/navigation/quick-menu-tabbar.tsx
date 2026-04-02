@@ -1,6 +1,7 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { Platform, StyleSheet, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 
 import {
   QuickMenuBar,
@@ -11,8 +12,11 @@ import {
 export function QuickMenuTabBar({ state, navigation, descriptors }: BottomTabBarProps) {
   const activeRoute = state.routes[state.index];
   const activeRouteName = activeRoute?.name;
+  const activeOptions = descriptors[activeRoute.key]?.options;
+  const flattenedTabBarStyle = StyleSheet.flatten(activeOptions?.tabBarStyle);
+  const tabBarDisplay = (flattenedTabBarStyle as ViewStyle | undefined)?.display;
 
-  if (activeRouteName === 'capture') {
+  if (activeRouteName === 'capture' || tabBarDisplay === 'none') {
     return null;
   }
 
@@ -41,7 +45,7 @@ export function QuickMenuTabBar({ state, navigation, descriptors }: BottomTabBar
     }
   }
 
-  const tabBarBackground = descriptors[activeRoute.key]?.options.tabBarBackground;
+  const tabBarBackground = activeOptions?.tabBarBackground;
 
   return (
     <View pointerEvents="box-none" style={styles.host}>

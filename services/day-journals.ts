@@ -14,7 +14,7 @@ export type DayJournalSummary = Pick<
 
 export type NormalizedDayEntry = Pick<
   Tables<'entries_normalized'>,
-  'id' | 'raw_entry_id' | 'title' | 'body' | 'created_at'
+  'id' | 'raw_entry_id' | 'title' | 'body' | 'summary_short' | 'created_at'
 > & {
   source_type: 'text' | 'audio';
   captured_at: string;
@@ -22,11 +22,21 @@ export type NormalizedDayEntry = Pick<
 
 export type RecentNormalizedEntry = Pick<
   Tables<'entries_normalized'>,
-  'id' | 'raw_entry_id' | 'title' | 'body' | 'created_at'
+  'id' | 'raw_entry_id' | 'title' | 'body' | 'summary_short' | 'created_at'
 > & {
   source_type: 'text' | 'audio';
   captured_at: string;
   journal_date: string;
+};
+
+export type NormalizedEntryDetail = Pick<
+  Tables<'entries_normalized'>,
+  'id' | 'raw_entry_id' | 'title' | 'body' | 'summary_short' | 'created_at'
+> & {
+  source_type: 'text' | 'audio';
+  captured_at: string;
+  journal_date: string;
+  full_text: string;
 };
 
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -39,6 +49,16 @@ interface RegenerateDayJournalResult {
   journalDate: string;
   dayJournalId: string;
   updatedAt: string;
+}
+
+interface RenormalizeEntryResult {
+  status: 'ok';
+  flow: 'renormalize-entry';
+  requestId: string;
+  flowId: string;
+  title: string;
+  body: string;
+  summaryShort: string;
 }
 
 export function getUtcTodayDate(): string {
@@ -59,8 +79,11 @@ export function parseJournalSections(value: Json): string[] {
     .filter((item) => item.length > 0);
 }
 
-async function parseFunctionInvokeError(error: unknown): Promise<never> {
-  const fallback = error instanceof Error ? error.message : 'Opnieuw opbouwen van dagjournal mislukt.';
+async function parseFunctionInvokeError(
+  error: unknown,
+  fallbackMessage = 'Opnieuw opbouwen van dagjournal mislukt.'
+): Promise<never> {
+  const fallback = error instanceof Error ? error.message : fallbackMessage;
 
   if (!error || typeof error !== 'object') {
     throw new Error(fallback);
@@ -119,6 +142,54 @@ function getUtcDateBounds(journalDate: string): { start: string; end: string } {
     start,
     end: endDate.toISOString(),
   };
+}
+
+function normalizeEntryWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function trimEntryPreview(value: string, maxLength = 156): string {
+  const clean = normalizeEntryWhitespace(value);
+  if (!clean) {
+    return '';
+  }
+  if (clean.length <= maxLength) {
+    return clean;
+  }
+
+  const sliced = clean.slice(0, maxLength);
+  const boundary = Math.max(
+    sliced.lastIndexOf('. '),
+    sliced.lastIndexOf('; '),
+    sliced.lastIndexOf(', '),
+    sliced.lastIndexOf(' ')
+  );
+  const base = boundary > maxLength * 0.6 ? sliced.slice(0, boundary).trim() : sliced.trim();
+  const safe = base || sliced.trim();
+  return `${safe}...`;
+}
+
+function finalizeEntryPreviewTone(value: string): string {
+  const clean = value.trim();
+  if (!clean) {
+    return '';
+  }
+  if (clean.endsWith('?')) {
+    return `${clean.slice(0, -1).trimEnd()}.`;
+  }
+  return clean;
+}
+
+function buildSummaryShortFromBody(body: string): string {
+  const clean = normalizeEntryWhitespace(body);
+  if (!clean) {
+    return 'Korte preview niet beschikbaar.';
+  }
+
+  const firstSentence = clean.split(/[.!?]/)[0]?.trim() ?? '';
+  const source = firstSentence.length >= 24 ? firstSentence : clean;
+  const preview = trimEntryPreview(source);
+  return finalizeEntryPreviewTone(preview || trimEntryPreview(clean));
 }
 
 export async function fetchTodayJournal(todayDate = getUtcTodayDate()): Promise<DayJournalSummary | null> {
@@ -215,7 +286,7 @@ export async function fetchNormalizedEntriesByDate(journalDate: string): Promise
 
   const { data: normalizedRows, error: normalizedError } = await supabase
     .from('entries_normalized')
-    .select('id, raw_entry_id, title, body, created_at')
+    .select('id, raw_entry_id, title, body, summary_short, created_at')
     .in('raw_entry_id', rawIds)
     .order('created_at', { ascending: true });
 
@@ -283,7 +354,7 @@ export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNor
 
   const { data: normalizedRows, error: normalizedError } = await supabase
     .from('entries_normalized')
-    .select('id, raw_entry_id, title, body, created_at')
+    .select('id, raw_entry_id, title, body, summary_short, created_at')
     .in('raw_entry_id', rawIds);
 
   if (normalizedError) {
@@ -322,11 +393,60 @@ export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNor
     .slice(0, safeLimit);
 }
 
-export async function updateNormalizedEntryById(input: {
-  id: string;
-  title?: string;
-  body: string;
-}): Promise<void> {
+export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEntryDetail | null> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const normalizedId = id.trim();
+  if (!normalizedId) {
+    throw new Error('Entry id ontbreekt.');
+  }
+
+  const { data: normalizedRow, error: normalizedError } = await supabase
+    .from('entries_normalized')
+    .select('id, raw_entry_id, title, body, summary_short, created_at')
+    .eq('id', normalizedId)
+    .maybeSingle();
+
+  if (normalizedError) {
+    throw normalizedError;
+  }
+
+  if (!normalizedRow) {
+    return null;
+  }
+
+  const { data: rawRow, error: rawError } = await supabase
+    .from('entries_raw')
+    .select('source_type, captured_at, raw_text, transcript_text')
+    .eq('id', normalizedRow.raw_entry_id)
+    .maybeSingle();
+
+  if (rawError) {
+    throw rawError;
+  }
+
+  const capturedAt = rawRow?.captured_at ?? normalizedRow.created_at;
+  const rawFullText =
+    (rawRow?.source_type === 'audio' ? rawRow.transcript_text : rawRow?.raw_text) ??
+    rawRow?.raw_text ??
+    rawRow?.transcript_text ??
+    null;
+  const fullText = typeof rawFullText === 'string' && rawFullText.trim().length > 0 ? rawFullText : normalizedRow.body;
+
+  return {
+    ...normalizedRow,
+    source_type: (rawRow?.source_type as 'text' | 'audio' | undefined) ?? 'text',
+    captured_at: capturedAt,
+    journal_date: capturedAt.slice(0, 10),
+    full_text: fullText,
+  };
+}
+
+export async function updateNormalizedEntryById(input: { id: string; body: string }): Promise<void> {
   const supabase = getSupabaseBrowserClient();
 
   if (!supabase) {
@@ -339,18 +459,88 @@ export async function updateNormalizedEntryById(input: {
     throw new Error('Inhoud mag niet leeg zijn.');
   }
 
-  const updates: { title?: string; body: string } = {
-    body,
-  };
+  const { data: normalizedRow, error: normalizedSelectError } = await supabase
+    .from('entries_normalized')
+    .select('raw_entry_id')
+    .eq('id', input.id)
+    .maybeSingle();
 
-  if (typeof input.title === 'string') {
-    updates.title = input.title.trim();
+  if (normalizedSelectError) {
+    throw normalizedSelectError;
   }
 
-  const { error } = await supabase.from('entries_normalized').update(updates).eq('id', input.id);
+  const rawEntryId = normalizedRow?.raw_entry_id ?? null;
+  if (!rawEntryId) {
+    throw new Error('Gekoppelde bron-entry ontbreekt.');
+  }
 
-  if (error) {
-    throw error;
+  const { data: rawRow, error: rawSelectError } = await supabase
+    .from('entries_raw')
+    .select('source_type')
+    .eq('id', rawEntryId)
+    .maybeSingle();
+
+  if (rawSelectError) {
+    throw rawSelectError;
+  }
+
+  if (!rawRow) {
+    throw new Error('Kon bron-entry niet laden voor update.');
+  }
+
+  const flowId = createClientFlowId('entry-renormalize');
+  await ensureAuthenticatedUserSession({ flowId, source: 'renormalize-entry' });
+  const { data: normalizedData, error: normalizedInvokeError } = await supabase.functions.invoke<RenormalizeEntryResult>(
+    'renormalize-entry',
+    {
+      headers: {
+        'x-flow-id': flowId,
+      },
+      body: {
+        rawText: body,
+      },
+    }
+  );
+
+  if (normalizedInvokeError) {
+    await parseFunctionInvokeError(normalizedInvokeError, 'Entry kon niet opnieuw verwerkt worden.');
+  }
+
+  if (
+    !normalizedData ||
+    normalizedData.status !== 'ok' ||
+    normalizedData.flow !== 'renormalize-entry' ||
+    !normalizedData.requestId
+  ) {
+    throw new Error('Ongeldige response van renormalize-entry.');
+  }
+
+  const normalizedBody = normalizeEntryWhitespace(normalizedData.body) || body;
+  const updates: { title: string; body: string; summary_short: string } = {
+    title: normalizeEntryWhitespace(normalizedData.title) || 'Je entry',
+    body: normalizedBody,
+    summary_short:
+      normalizeEntryWhitespace(normalizedData.summaryShort) || buildSummaryShortFromBody(normalizedBody),
+  };
+
+  const normalizedUpdatePromise = supabase.from('entries_normalized').update(updates).eq('id', input.id);
+  const rawUpdates =
+    (rawRow.source_type as 'text' | 'audio') === 'audio'
+      ? { transcript_text: normalizedBody }
+      : { raw_text: normalizedBody };
+  const rawUpdatePromise = supabase.from('entries_raw').update(rawUpdates).eq('id', rawEntryId);
+
+  const [{ error: normalizedUpdateError }, { error: rawUpdateError }] = await Promise.all([
+    normalizedUpdatePromise,
+    rawUpdatePromise,
+  ]);
+
+  if (normalizedUpdateError) {
+    throw normalizedUpdateError;
+  }
+
+  if (rawUpdateError) {
+    throw rawUpdateError;
   }
 }
 

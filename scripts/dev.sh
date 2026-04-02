@@ -5,6 +5,23 @@ ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 PID_FILE="/tmp/pers-assistent-functions.pid"
 LOG_FILE="/tmp/supabase-functions.log"
 FUNCTION_CMD="supabase functions serve --env-file .env.local"
+FUNCTIONS_DIR="$ROOT_DIR/supabase/functions"
+
+deploy_edge_functions() {
+  if [ ! -d "$FUNCTIONS_DIR" ]; then
+    echo "No supabase/functions directory found, skipping deploy."
+    return
+  fi
+
+  echo "Deploying Supabase edge functions..."
+  find "$FUNCTIONS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "_shared" | sort | while IFS= read -r function_path; do
+    function_name="$(basename "$function_path")"
+    if [ -f "$function_path/index.ts" ]; then
+      echo " - deploy $function_name"
+      npx supabase functions deploy "$function_name"
+    fi
+  done
+}
 
 stop_existing_function() {
   if [ -f "$PID_FILE" ]; then
@@ -36,6 +53,7 @@ cleanup() {
 stop_existing_function
 
 cd "$ROOT_DIR"
+deploy_edge_functions
 echo "Starting Supabase functions runtime in background..."
 npx $FUNCTION_CMD >"$LOG_FILE" 2>&1 &
 FUNCTION_PID=$!

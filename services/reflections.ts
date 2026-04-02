@@ -41,6 +41,8 @@ export interface GenerateReflectionResult {
   modelVersion: string;
 }
 
+const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 function parseString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
@@ -61,6 +63,46 @@ function ensurePeriodType(periodType: string): PeriodType {
   }
 
   throw new Error('Onbekend periodType. Gebruik week of month.');
+}
+
+function dateFromDayString(day: string): Date {
+  return new Date(`${day}T00:00:00.000Z`);
+}
+
+function toDayStringUtc(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDaysUtc(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function computePeriodBounds(periodType: PeriodType, anchorDate: string): {
+  periodStart: string;
+  periodEnd: string;
+} {
+  const anchor = dateFromDayString(anchorDate);
+
+  if (periodType === 'week') {
+    const day = anchor.getUTCDay();
+    const offsetToMonday = (day + 6) % 7;
+    const weekStart = addDaysUtc(anchor, -offsetToMonday);
+    const weekEnd = addDaysUtc(weekStart, 6);
+
+    return {
+      periodStart: toDayStringUtc(weekStart),
+      periodEnd: toDayStringUtc(weekEnd),
+    };
+  }
+
+  const monthStart = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1));
+  const nextMonthStart = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 1));
+  const monthEnd = addDaysUtc(nextMonthStart, -1);
+
+  return {
+    periodStart: toDayStringUtc(monthStart),
+    periodEnd: toDayStringUtc(monthEnd),
+  };
 }
 
 async function parseFunctionInvokeError(error: unknown): Promise<never> {
@@ -209,4 +251,35 @@ export async function fetchRecentReflections(limit = 20): Promise<ReflectionRow[
     ...row,
     period_type: ensurePeriodType(row.period_type),
   }));
+}
+
+export async function hasReflectionForAnchorDate(input: {
+  periodType: PeriodType;
+  anchorDate: string;
+}): Promise<boolean> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  if (!JOURNAL_DATE_PATTERN.test(input.anchorDate)) {
+    return false;
+  }
+
+  const bounds = computePeriodBounds(input.periodType, input.anchorDate);
+  const { data, error } = await supabase
+    .from('period_reflections')
+    .select('id')
+    .eq('period_type', input.periodType)
+    .eq('period_start', bounds.periodStart)
+    .eq('period_end', bounds.periodEnd)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return Boolean(data?.id);
 }

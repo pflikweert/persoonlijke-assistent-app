@@ -28,6 +28,11 @@ const COPY_BY_VARIANT = {
     subtitle: 'Je aanpassing wordt verwerkt en je dag wordt bijgewerkt.',
     statuses: ['Wijziging verwerken', 'Dag bijwerken', 'Bijna klaar'],
   },
+  'reflection-generate': {
+    title: 'We verwerken je reflectie',
+    subtitle: 'Je reflectie wordt rustig opgebouwd en toegevoegd aan je overzicht.',
+    statuses: ['Voorbereiden', 'Inzichten opbouwen', 'Reflectie afronden', 'Bijna klaar'],
+  },
 } as const;
 
 export type ProcessingVariant = keyof typeof COPY_BY_VARIANT;
@@ -185,37 +190,39 @@ export function ProcessingScreen({
       <ImageBackground source={backgroundSource} resizeMode="cover" style={styles.background} />
       <View style={[styles.overlay, { backgroundColor: overlayColor }]} />
 
-      <View
-        style={[
-          styles.card,
-          {
-            backgroundColor: cardColor,
-            borderColor: cardBorderColor,
-          },
-        ]}>
-        <Animated.View
+      <View style={styles.contentWrap}>
+        <View
           style={[
-            styles.pulseHalo,
+            styles.card,
             {
-              backgroundColor: `${palette.primaryStrong}33`,
-              opacity: pulseOpacity,
-              transform: [{ scale: pulseScale }],
+              backgroundColor: cardColor,
+              borderColor: cardBorderColor,
             },
-          ]}
-        />
-        <View style={[styles.pulseCore, { backgroundColor: palette.primaryStrong }]}>
-          <View style={[styles.pulseCoreInner, { backgroundColor: palette.primary }]} />
-        </View>
+          ]}>
+          <Animated.View
+            style={[
+              styles.pulseHalo,
+              {
+                backgroundColor: `${palette.primaryStrong}33`,
+                opacity: pulseOpacity,
+                transform: [{ scale: pulseScale }],
+              },
+            ]}
+          />
+          <View style={[styles.pulseCore, { backgroundColor: palette.primaryStrong }]}>
+            <View style={[styles.pulseCoreInner, { backgroundColor: palette.primary }]} />
+          </View>
 
-        <ThemedText type="sectionTitle" style={styles.title}>
-          {copy.title}
-        </ThemedText>
-        <ThemedText type="bodySecondary" style={[styles.subtitle, { color: palette.muted }]}>
-          {copy.subtitle}
-        </ThemedText>
-        <ThemedText type="caption" style={[styles.status, { color: palette.mutedSoft }]}>
-          {status}
-        </ThemedText>
+          <ThemedText type="sectionTitle" style={styles.title}>
+            {copy.title}
+          </ThemedText>
+          <ThemedText type="bodySecondary" style={[styles.subtitle, { color: palette.muted }]}>
+            {copy.subtitle}
+          </ThemedText>
+          <ThemedText type="caption" style={[styles.status, { color: palette.mutedSoft }]}>
+            {status}
+          </ThemedText>
+        </View>
       </View>
     </Animated.View>
   );
@@ -228,7 +235,7 @@ const styles = StyleSheet.create({
     elevation: 80,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
+    overflow: 'hidden',
   },
   background: {
     ...StyleSheet.absoluteFillObject,
@@ -236,9 +243,13 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
   },
+  contentWrap: {
+    width: '100%',
+    maxWidth: 440 + spacing.xl * 2,
+    paddingHorizontal: spacing.xl,
+  },
   card: {
     width: '100%',
-    maxWidth: 440,
     borderRadius: radius.xl,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.xl,

@@ -1,10 +1,11 @@
-import { useFocusEffect } from 'expo-router';
+import { Tabs, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ProcessingScreen } from '@/components/feedback/processing-screen';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -75,6 +76,7 @@ export default function ReflectionsScreen() {
   const [activePeriod, setActivePeriod] = useState<PeriodType>('week');
   const [latestWeek, setLatestWeek] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
   const [latestMonth, setLatestMonth] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
+  const isProcessing = generating !== null;
 
   const loadReflections = useCallback(async () => {
     setLoading(true);
@@ -109,6 +111,11 @@ export default function ReflectionsScreen() {
   );
 
   async function handleGenerate(periodType: PeriodType) {
+    if (isProcessing) {
+      return;
+    }
+
+    setMenuVisible(false);
     setError(null);
     setStatus(null);
     setGenerating(periodType);
@@ -144,25 +151,35 @@ export default function ReflectionsScreen() {
     .slice(0, 3);
 
   return (
-    <ScreenContainer
-      scrollable
-      stickyHeaderIndices={[0]}
-      contentContainerStyle={styles.scrollContent}>
-      <ScreenHeader
-        title="Reflecties"
-        titleType="screenTitle"
-        subtitle="Rustige inzichten op basis van je dagjournals."
-        rightAction={
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
-            <MaterialIcons name="menu" size={20} color={palette.primary} />
-          </Pressable>
-        }
+    <>
+      <Tabs.Screen
+        options={{
+          tabBarStyle: isProcessing ? { display: 'none' } : undefined,
+        }}
       />
-
+      <ScreenContainer
+        scrollable
+        fixedHeader={
+          isProcessing ? null : (
+            <ScreenHeader
+              title="Reflecties"
+              titleType="screenTitle"
+              subtitle="Rustige inzichten op basis van je dagjournals."
+              rightAction={
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Open menu"
+                  onPress={() => setMenuVisible(true)}
+                  style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+                  <MaterialIcons name="menu" size={20} color={palette.primary} />
+                </Pressable>
+              }
+            />
+          )
+        }
+        contentContainerStyle={styles.scrollContent}>
+      {!isProcessing ? (
+        <>
       <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
         <Pressable
           onPress={() => setActivePeriod('week')}
@@ -278,7 +295,7 @@ export default function ReflectionsScreen() {
           )}
           <PrimaryButton
             onPress={() => void handleGenerate(activePeriod)}
-            disabled={generating !== null}
+            disabled={isProcessing}
             label={
               generating === activePeriod
                 ? 'Genereren...'
@@ -287,13 +304,17 @@ export default function ReflectionsScreen() {
           />
         </ThemedView>
       ) : null}
+        </>
+      ) : null}
 
       <FullscreenMenuOverlay
-        visible={menuVisible}
+        visible={menuVisible && !isProcessing}
         currentRouteKey="reflections"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </ScreenContainer>
+      </ScreenContainer>
+      <ProcessingScreen visible={isProcessing} variant="reflection-generate" />
+    </>
   );
 }
 
