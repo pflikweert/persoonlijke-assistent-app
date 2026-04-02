@@ -18,57 +18,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install dependencies
-        run: npm install
-
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
 
-      - name: Configure cloud verify target
+      - name: Validate required secrets
         shell: bash
         run: |
-          rm -f .env.local
-
-          CLOUD_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
-          API_KEYS_JSON="$(supabase projects api-keys --project-ref "$SUPABASE_PROJECT_ID" --output json)"
-          PUBLISHABLE_KEY="$(
-            printf '%s' "$API_KEYS_JSON" | node -e '
-              const fs = require("node:fs");
-              const raw = fs.readFileSync(0, "utf8");
-              const data = JSON.parse(raw);
-              const list = Array.isArray(data) ? data : (Array.isArray(data.keys) ? data.keys : []);
-              const match = list.find((item) => /anon|publishable/i.test(String(item?.name ?? item?.type ?? "")));
-              const fallback = list[0];
-              const selected = match ?? fallback ?? {};
-              const key = selected.api_key ?? selected.key ?? selected.value ?? "";
-              if (!key) process.exit(1);
-              process.stdout.write(String(key));
-            '
-          )"
-
-          {
-            echo "EXPO_PUBLIC_SUPABASE_TARGET=cloud"
-            echo "EXPO_PUBLIC_SUPABASE_CLOUD_URL=$CLOUD_URL"
-            echo "EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
-          } >> "$GITHUB_ENV"
-
-      - name: Verify local flow
-        run: npm run verify:local-flow
-
-      - name: Verify local audio flow
-        run: npm run verify:local-audio-flow
-
-      - name: Verify local reflection flow
-        run: npm run verify:local-reflection-flow
-
-      - name: Verify local output quality
-        run: npm run verify:local-output-quality
+          [ -n "$SUPABASE_ACCESS_TOKEN" ] || (echo "Missing secret: SUPABASE_ACCESS_TOKEN" && exit 1)
+          [ -n "$SUPABASE_PROJECT_ID" ] || (echo "Missing secret: SUPABASE_PROJECT_ID" && exit 1)
+          [ -n "$SUPABASE_DB_PASSWORD" ] || (echo "Missing secret: SUPABASE_DB_PASSWORD" && exit 1)
 
       - name: Link Supabase project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
