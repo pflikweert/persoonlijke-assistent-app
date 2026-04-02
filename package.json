@@ -15,7 +15,8 @@
     "verify:local-flow": "./scripts/verify-local-flow.sh",
     "verify:local-audio-flow": "./scripts/verify-local-audio-flow.sh",
     "verify:local-reflection-flow": "./scripts/verify-local-reflection-flow.sh",
-    "verify:local-output-quality": "./scripts/verify-local-output-quality.sh"
+    "verify:local-output-quality": "./scripts/verify-local-output-quality.sh",
+    "env:pull": "npx vercel env pull .env.local"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

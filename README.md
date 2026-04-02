@@ -41,6 +41,7 @@ Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-f
 - `OPENAI_API_KEY` blijft strikt server-side en mag nooit in Expo clientcode of `EXPO_PUBLIC_*` variabelen terechtkomen.
 - Voor Edge Functions lokaal geldt: `supabase functions serve --env-file ...` kan custom variabelen met prefix `SUPABASE_` overslaan. Gebruik daarom geen custom `SUPABASE_*` namen in `.env.local`.
 - Zet `EXPO_PUBLIC_SUPABASE_TARGET=local` voor lokaal testen en `cloud` voor remote Supabase.
+- Sync lokale env vanuit Vercel met: `npm run env:pull`.
 
 ## Stap-0 checklist
 - [ ] Node `24` actief (via `.nvmrc`)
