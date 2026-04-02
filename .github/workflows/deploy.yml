@@ -50,5 +50,8 @@ jobs:
           echo "Functions from repo:"
           find supabase/functions -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort
 
-      - name: Deploy edge functions
-        run: npx supabase@latest functions deploy --project-ref "$SUPABASE_PROJECT_REF" --use-api
+      - name: Deploy private edge functions
+        run: |
+          npx supabase@latest functions deploy process-entry --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+          npx supabase@latest functions deploy generate-reflection --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+          npx supabase@latest functions deploy regenerate-day-journal --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt

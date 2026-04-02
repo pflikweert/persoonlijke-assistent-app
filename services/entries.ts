@@ -1,5 +1,5 @@
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
-import { getCurrentSession } from './auth';
+import { ensureAuthenticatedUserSession } from './auth';
 import {
   createClientFlowId,
   FunctionFlowError,
@@ -82,18 +82,11 @@ export async function submitTextEntry(input: {
     throw new Error('Vul eerst een notitie in.');
   }
 
-  const session = await getCurrentSession();
-  const accessToken = session?.access_token;
-
-  if (!accessToken) {
-    throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
-  }
-
   const flowId = createClientFlowId('capture-text');
+  await ensureAuthenticatedUserSession({ flowId, source: 'process-entry' });
 
   const { data, error } = await supabase.functions.invoke<ProcessEntryResult>('process-entry', {
     headers: {
-      Authorization: `Bearer ${accessToken}`,
       'x-flow-id': flowId,
     },
     body: {
@@ -146,18 +139,11 @@ export async function submitAudioEntry(input: {
     throw new Error('Audio-opname is te groot. Neem een kortere opname op.');
   }
 
-  const session = await getCurrentSession();
-  const accessToken = session?.access_token;
-
-  if (!accessToken) {
-    throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
-  }
-
   const flowId = createClientFlowId('capture-audio');
+  await ensureAuthenticatedUserSession({ flowId, source: 'process-entry' });
 
   const { data, error } = await supabase.functions.invoke<ProcessEntryResult>('process-entry', {
     headers: {
-      Authorization: `Bearer ${accessToken}`,
       'x-flow-id': flowId,
     },
     body: {

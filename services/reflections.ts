@@ -1,7 +1,7 @@
 import type { Json, Tables } from '@/src/lib/supabase/database.types';
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
 
-import { getCurrentSession } from './auth';
+import { ensureAuthenticatedUserSession } from './auth';
 import {
   createClientFlowId,
   FunctionFlowError,
@@ -121,20 +121,13 @@ export async function generateReflection(input: {
     throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
   }
 
-  const session = await getCurrentSession();
-  const accessToken = session?.access_token;
-
-  if (!accessToken) {
-    throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
-  }
-
   const flowId = createClientFlowId('reflection');
+  await ensureAuthenticatedUserSession({ flowId, source: 'generate-reflection' });
 
   const { data, error } = await supabase.functions.invoke<GenerateReflectionResult>(
     'generate-reflection',
     {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         'x-flow-id': flowId,
       },
       body: {

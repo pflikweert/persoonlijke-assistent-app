@@ -1,6 +1,6 @@
 import type { Json, Tables } from '@/src/lib/supabase/database.types';
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
-import { getCurrentSession } from './auth';
+import { ensureAuthenticatedUserSession } from './auth';
 import {
   createClientFlowId,
   FunctionFlowError,
@@ -399,19 +399,12 @@ export async function regenerateDayJournalByDate(journalDate: string): Promise<D
     throw new Error('Ongeldige datum. Gebruik formaat YYYY-MM-DD.');
   }
 
-  const session = await getCurrentSession();
-  const accessToken = session?.access_token;
-
-  if (!accessToken) {
-    throw new Error('Je bent niet ingelogd. Vraag opnieuw een magic link aan.');
-  }
-
   const flowId = createClientFlowId('day-regenerate');
+  await ensureAuthenticatedUserSession({ flowId, source: 'regenerate-day-journal' });
   const { data, error } = await supabase.functions.invoke<RegenerateDayJournalResult>(
     'regenerate-day-journal',
     {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         'x-flow-id': flowId,
       },
       body: { journalDate },

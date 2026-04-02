@@ -60,6 +60,12 @@ npx supabase db reset
 npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts
 ```
 
+## Edge Function auth (prod)
+- Private user-bound functions: `process-entry`, `generate-reflection`, `regenerate-day-journal`.
+- Deze functies draaien met function-level auth check (`Authorization` header + `auth.getUser()` in function code).
+- JWT gateway verify staat expliciet op `false` per functie in `supabase/config.toml` voor compatibiliteit met huidige signing keys.
+- GitHub deploy secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`.
+
 ## Supabase dashboard en mail
 - Lokaal dashboard: `http://127.0.0.1:54323`
 - Lokale mail inbox: `http://127.0.0.1:54324`
