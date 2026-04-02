@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed": "#a3f69c",
+              "surface-variant": "#e3e2df",
+              "on-primary": "#ffffff",
+              "surface": "#faf9f6",
+              "tertiary-container": "#7fd07a",
+              "on-tertiary-fixed": "#002204",
+              "surface-container-highest": "#e3e2df",
+              "error": "#ba1a1a",
+              "primary": "#745b00",
+              "outline-variant": "#d1c5ac",
+              "on-secondary-fixed-variant": "#1e477b",
+              "on-error-container": "#93000a",
+              "surface-container-lowest": "#ffffff",
+              "inverse-surface": "#2f312f",
+              "on-surface-variant": "#4e4633",
+              "on-primary-container": "#5e4a00",
+              "on-error": "#ffffff",
+              "surface-container-high": "#e9e8e5",
+              "surface-dim": "#dbdad7",
+              "surface-bright": "#faf9f6",
+              "secondary-fixed": "#d5e3ff",
+              "on-primary-fixed": "#241a00",
+              "secondary-container": "#9ec2fe",
+              "secondary": "#395f94",
+              "on-secondary-container": "#284f83",
+              "primary-container": "#e6b800",
+              "inverse-on-surface": "#f2f1ee",
+              "on-primary-fixed-variant": "#574400",
+              "error-container": "#ffdad6",
+              "on-tertiary-fixed-variant": "#005312",
+              "on-tertiary-container": "#005914",
+              "tertiary": "#1b6d24",
+              "outline": "#807660",
+              "on-secondary": "#ffffff",
+              "primary-fixed": "#ffe08a",
+              "inverse-primary": "#f0c115",
+              "on-secondary-fixed": "#001c3b",
+              "background": "#faf9f6",
+              "surface-container-low": "#f4f3f0",
+              "on-surface": "#1b1c1a",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#efeeeb",
+              "surface-tint": "#745b00",
+              "on-background": "#1b1c1a",
+              "primary-fixed-dim": "#f0c115",
+              "tertiary-fixed-dim": "#88d982",
+              "secondary-fixed-dim": "#a7c8ff"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        line-height: 1;
+        text-transform: none;
+        letter-spacing: normal;
+        word-wrap: normal;
+        white-space: nowrap;
+        direction: ltr;
+      }
+      .bg-success-soft {
+        background-color: rgba(46, 125, 50, 0.08);
+      }
+      .text-success-muted {
+        color: #2E7D32;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface flex flex-col min-h-screen">
+<nav class="w-full top-0 left-0 bg-[#faf9f6] dark:bg-stone-950 no-border tonal-shift-only">
+<div class="flex items-center w-full px-6 py-4 max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-stone-400 dark:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-900 transition-colors p-2 rounded-full active:scale-95 duration-200 ease-in-out">arrow_back</button>
+<span class="text-lg font-bold text-[#745b00] dark:text-[#e6b800] tracking-tight font-['Inter']">Persoonlijke Assistent App</span>
+</div>
+</div>
+</nav>
+<main class="flex-grow flex items-center justify-center px-6 py-12">
+<div class="max-w-md w-full text-center">
+<div class="mb-10 flex justify-center">
+<div class="relative">
+<div class="w-32 h-32 rounded-full bg-success-soft flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-success-muted" style="font-variation-settings: 'wght' 300;">mark_email_read</span>
+</div>
+<div class="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-success-muted" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+<div class="space-y-4 mb-12">
+<h1 class="text-3xl md:text-4xl font-extrabold font-headline text-on-surface tracking-tight leading-tight">
+                    De link is onderweg
+                </h1>
+<p class="text-on-surface-variant text-lg leading-relaxed max-w-sm mx-auto">
+                    We hebben een inloglink naar je e-mailadres gestuurd. Open de link in je inbox om direct verder te gaan.
+                </p>
+</div>
+<div class="grid grid-cols-1 gap-6">
+<button class="w-full h-14 rounded-full bg-gradient-to-r from-primary to-primary-container text-on-primary font-semibold text-lg flex items-center justify-center gap-2 shadow-lg hover:opacity-90 transition-opacity active:scale-[0.98] duration-200">
+<span class="material-symbols-outlined text-2xl">mail</span>
+<span>Open Mail App</span>
+</button>
+<div class="pt-6">
+<a class="inline-flex items-center gap-2 text-on-surface-variant font-medium hover:text-primary transition-colors text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-xl">arrow_back</span>
+                        Terug naar inloggen
+                    </a>
+</div>
+</div>
+<div class="mt-20 p-6 rounded-xl bg-surface-container-low">
+<div class="flex items-start gap-4 text-left">
+<span class="material-symbols-outlined text-outline p-2 bg-surface-container rounded-lg">help_outline</span>
+<div>
+<h4 class="font-semibold text-on-surface-variant text-sm mb-1">Geen e-mail ontvangen?</h4>
+<p class="text-xs text-outline leading-relaxed">
+                            Controleer je spamfolder of probeer het over 2 minuten opnieuw. Hulp nodig? <a class="underline text-primary" href="#">Contact support</a>.
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed inset-x-0 bottom-0 pointer-events-none overflow-hidden h-64 -z-10 opacity-40">
+<div class="absolute bottom-[-100px] left-[-50px] w-[300px] h-[300px] bg-primary-container/20 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-[-50px] right-[-50px] w-[250px] h-[250px] bg-tertiary-container/10 rounded-full blur-[80px]"></div>
+</div>
+</body></html>
