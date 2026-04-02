@@ -1,9 +1,11 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
@@ -68,6 +70,7 @@ export default function ReflectionsScreen() {
   } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [generating, setGenerating] = useState<PeriodType | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [activePeriod, setActivePeriod] = useState<PeriodType>('week');
   const [latestWeek, setLatestWeek] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
   const [latestMonth, setLatestMonth] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
@@ -144,7 +147,16 @@ export default function ReflectionsScreen() {
       scrollable
       contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.header}>
-        <ThemedText type="screenTitle">Reflecties</ThemedText>
+        <ThemedView style={styles.headerTopRow}>
+          <ThemedText type="screenTitle">Reflecties</ThemedText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            onPress={() => setMenuVisible(true)}
+            style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+            <MaterialIcons name="menu" size={20} color={palette.primary} />
+          </Pressable>
+        </ThemedView>
         <ThemedText type="bodySecondary" style={[styles.headerCopy, { color: palette.muted }]}>
           Rustige inzichten op basis van je dagjournals.
         </ThemedText>
@@ -274,6 +286,12 @@ export default function ReflectionsScreen() {
           />
         </ThemedView>
       ) : null}
+
+      <FullscreenMenuOverlay
+        visible={menuVisible}
+        currentRouteKey="reflections"
+        onRequestClose={() => setMenuVisible(false)}
+      />
     </ScreenContainer>
   );
 }
@@ -285,6 +303,18 @@ const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
     marginBottom: spacing.xs,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCopy: {
   },

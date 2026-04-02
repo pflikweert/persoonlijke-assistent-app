@@ -13,6 +13,7 @@ import { Platform, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { PrimaryButton, ScreenContainer, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
 import { classifyUnknownError, getUtcTodayDate, submitAudioEntry, submitTextEntry } from '@/services';
 import { colorTokens, radius, shadows, spacing } from '@/theme';
@@ -107,6 +108,7 @@ export default function CaptureScreen() {
   } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [isTypingFocused, setIsTypingFocused] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const autoStopTriggeredRef = useRef(false);
 
@@ -371,6 +373,14 @@ export default function CaptureScreen() {
             style={[styles.topAction, styles.topPrimaryAction, (isBusy || !hasTextDraft) && styles.topActionDisabled]}>
             <ThemedText type="defaultSemiBold">{submitting ? 'Opslaan...' : 'Klaar'}</ThemedText>
           </Pressable>
+        ) : uiMode === 'idle' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            onPress={() => setMenuVisible(true)}
+            style={[styles.menuButton, { backgroundColor: colorTokens.light.surfaceLow }]}>
+            <MaterialIcons name="menu" size={20} color={colorTokens.light.primary} />
+          </Pressable>
         ) : (
           <ThemedView style={styles.topBarSpacer} />
         )}
@@ -473,6 +483,12 @@ export default function CaptureScreen() {
           </ThemedView>
         </ThemedView>
       )}
+
+      <FullscreenMenuOverlay
+        visible={menuVisible}
+        currentRouteKey="capture"
+        onRequestClose={() => setMenuVisible(false)}
+      />
     </ScreenContainer>
   );
 }
@@ -505,6 +521,13 @@ const styles = StyleSheet.create({
   },
   topBarSpacer: {
     width: 76,
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statusText: {
     opacity: 0.8,

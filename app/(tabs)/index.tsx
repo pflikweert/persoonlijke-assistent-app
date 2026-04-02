@@ -1,8 +1,10 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
@@ -22,6 +24,7 @@ export default function TodayScreen() {
   const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [recentEntries, setRecentEntries] = useState<
     Awaited<ReturnType<typeof fetchRecentNormalizedEntries>>
@@ -76,6 +79,13 @@ export default function TodayScreen() {
           <ThemedText type="sectionTitle">Vandaag</ThemedText>
           <MetaText>{formattedDate}</MetaText>
         </ThemedView>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open menu"
+          onPress={() => setMenuVisible(true)}
+          style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+          <MaterialIcons name="menu" size={20} color={palette.primary} />
+        </Pressable>
       </ThemedView>
 
       <ThemedView style={styles.hero}>
@@ -186,6 +196,12 @@ export default function TodayScreen() {
           </ThemedText>
         </ThemedView>
       ) : null}
+
+      <FullscreenMenuOverlay
+        visible={menuVisible}
+        currentRouteKey="today"
+        onRequestClose={() => setMenuVisible(false)}
+      />
     </ScreenContainer>
   );
 }
@@ -240,9 +256,19 @@ const styles = StyleSheet.create({
   },
   topBar: {
     marginBottom: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   topBarCopy: {
     gap: spacing.xxs,
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   hero: {
     alignItems: 'center',

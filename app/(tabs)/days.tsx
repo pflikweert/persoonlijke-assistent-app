@@ -5,6 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   ScreenContainer,
@@ -74,6 +75,7 @@ export default function DaysScreen() {
   const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [journals, setJournals] = useState<Awaited<ReturnType<typeof fetchRecentDayJournals>>>([]);
 
   const loadDays = useCallback(async () => {
@@ -123,7 +125,16 @@ export default function DaysScreen() {
       scrollable
       contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.header}>
-        <ThemedText type="screenTitle">Dagen</ThemedText>
+        <ThemedView style={styles.headerTopRow}>
+          <ThemedText type="screenTitle">Dagen</ThemedText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            onPress={() => setMenuVisible(true)}
+            style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+            <MaterialIcons name="menu" size={20} color={palette.primary} />
+          </Pressable>
+        </ThemedView>
         <ThemedText type="bodySecondary" style={[styles.headerContext, { color: palette.muted }]}>
           Persoonlijk archief om rustig terug te lezen.
         </ThemedText>
@@ -202,6 +213,12 @@ export default function DaysScreen() {
           ))}
         </ThemedView>
       ) : null}
+
+      <FullscreenMenuOverlay
+        visible={menuVisible}
+        currentRouteKey="days"
+        onRequestClose={() => setMenuVisible(false)}
+      />
     </ScreenContainer>
   );
 }
@@ -213,6 +230,18 @@ const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
     marginBottom: spacing.lg,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  menuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerContext: {
   },

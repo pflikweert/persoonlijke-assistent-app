@@ -135,3 +135,16 @@ export async function sendMagicLink(email: string): Promise<void> {
     throw error;
   }
 }
+
+export async function signOutUser(): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    throw error;
+  }
+}

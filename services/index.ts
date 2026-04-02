@@ -1,5 +1,5 @@
 // Service layer for API/data orchestration lives here.
-export { getCurrentSession, onAuthStateChange, sendMagicLink } from './auth';
+export { getCurrentSession, onAuthStateChange, sendMagicLink, signOutUser } from './auth';
 export {
   deleteNormalizedEntryById,
   fetchDayJournalByDate,
