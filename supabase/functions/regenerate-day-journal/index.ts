@@ -5,6 +5,15 @@ import { getFunctionRuntimeEnv } from '../_shared/env.ts';
 import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import {
+  buildDayJournalRepairPromptSpec,
+  buildDayJournalPromptSpec,
+  createFallbackDayJournal,
+  finalizeDayJournalDraft,
+  isLowContentDayEntry,
+  orderDayJournalEntries,
+} from '../_shared/day-journal-contract.mjs';
 
 type RegenerateDayJournalRequest = {
   journalDate?: unknown;
@@ -21,6 +30,8 @@ type RegenerateDayJournalResponse = {
 };
 
 type NormalizedEntry = {
+  rawEntryId?: string;
+  capturedAt?: string;
   title: string;
   body: string;
 };
@@ -40,15 +51,8 @@ const CORS_BASE_HEADERS = {
 };
 
 const FLOW = 'regenerate-day-journal' as const;
-const DAY_COMPOSITION_PROMPT_VERSION = 'day-composition.v1.phase1';
 const NO_SPEECH_TRANSCRIPT = 'Geen spraak herkend in audio-opname.';
 const LOW_CONTENT_TITLE = 'Audio-opname zonder spraak';
-const GENERIC_DAY_PHRASES = [
-  'belangrijkste momenten',
-  'samengevoegd',
-  'notities vastgelegd',
-  'algemene samenvatting',
-];
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function buildCorsHeaders(request: Request): Record<string, string> {
@@ -104,170 +108,6 @@ function parseString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
 
-function normalizeWhitespace(value: string): string {
-  return value.replace(/\s+/g, ' ').trim();
-}
-
-function sanitizeShortLine(value: string, maxLength: number): string {
-  return normalizeWhitespace(value).slice(0, maxLength);
-}
-
-function sanitizeSummaryLine(value: string, maxLength: number): string {
-  const normalized = normalizeWhitespace(value);
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  const sliced = normalized.slice(0, maxLength);
-  const boundary = Math.max(
-    sliced.lastIndexOf('. '),
-    sliced.lastIndexOf('; '),
-    sliced.lastIndexOf(', '),
-    sliced.lastIndexOf(' ')
-  );
-  let candidate = boundary > maxLength * 0.55 ? sliced.slice(0, boundary).trim() : sliced.trim();
-
-  while (/\b(en|of|maar|met|voor|daarna|waarna|ook|omdat|een|de|het)$/i.test(candidate)) {
-    candidate = candidate.replace(/\s+\S+$/u, '').trim();
-  }
-
-  if (candidate && !/[.!?]$/.test(candidate)) {
-    candidate = `${candidate}.`;
-  }
-
-  return candidate;
-}
-
-function normalizeForCompare(value: string): string {
-  return normalizeWhitespace(value).toLowerCase();
-}
-
-function dedupeByNormalizedValue(items: string[]): string[] {
-  const seen = new Set<string>();
-  const output: string[] = [];
-
-  for (const item of items) {
-    const key = normalizeForCompare(item);
-    if (!key || seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    output.push(item);
-  }
-
-  return output;
-}
-
-function looksGenericDayText(value: string): boolean {
-  const normalized = normalizeForCompare(value);
-  if (normalized.length < 12) {
-    return true;
-  }
-
-  return GENERIC_DAY_PHRASES.some((phrase) => normalized.includes(phrase));
-}
-
-function containsNoSpeechMarker(value: string): boolean {
-  return normalizeForCompare(value).includes(normalizeForCompare(NO_SPEECH_TRANSCRIPT));
-}
-
-function isLowContentEntry(entry: NormalizedEntry): boolean {
-  return (
-    containsNoSpeechMarker(entry.title) ||
-    containsNoSpeechMarker(entry.body) ||
-    normalizeForCompare(entry.title) === normalizeForCompare(LOW_CONTENT_TITLE)
-  );
-}
-
-function fallbackDayJournal(entries: NormalizedEntry[]): DayJournalDraft {
-  if (entries.length === 0) {
-    return {
-      summary: 'Nog geen bruikbare notities voor deze dag.',
-      narrativeText: '',
-      sections: [],
-    };
-  }
-
-  const narrativeText = entries
-    .map((entry) => sanitizeShortLine(entry.body, 320))
-    .filter((entry) => entry.length > 0)
-    .slice(0, 4)
-    .map((entry) => (/[.!?]$/.test(entry) ? entry : `${entry}.`))
-    .join(' ');
-
-  const sections = entries
-    .map((entry) => sanitizeShortLine(entry.title, 80))
-    .filter((entry) => entry.length > 0)
-    .slice(0, 4);
-
-  const firstSentence = narrativeText.split(/[.!?]/)[0]?.trim() ?? '';
-  const fallbackSummary =
-    firstSentence.length >= 24
-      ? sanitizeShortLine(/[.!?]$/.test(firstSentence) ? firstSentence : `${firstSentence}.`, 220)
-      : entries.length === 1
-        ? 'Kern van vandaag: 1 concrete notitie.'
-        : `Kern van vandaag: ${entries.length} concrete notities.`;
-
-  return {
-    summary: fallbackSummary,
-    narrativeText,
-    sections,
-  };
-}
-
-function cleanDaySummary(value: string, fallback: string): string {
-  const summary = sanitizeSummaryLine(value, 220);
-  if (!summary || looksGenericDayText(summary) || containsNoSpeechMarker(summary)) {
-    return sanitizeSummaryLine(fallback, 220);
-  }
-
-  return summary;
-}
-
-function cleanDayNarrativeText(value: string, fallback: string): string {
-  const narrative = sanitizeShortLine(value, 2400);
-  const fallbackNarrative = sanitizeShortLine(fallback, 2400);
-
-  if (!narrative || containsNoSpeechMarker(narrative) || looksGenericDayText(narrative)) {
-    return fallbackNarrative;
-  }
-
-  return narrative;
-}
-
-function cleanDaySections(input: {
-  candidateSections: string[];
-  summary: string;
-  fallbackSections: string[];
-}): string[] {
-  const summaryKey = normalizeForCompare(input.summary);
-  const preferred = input.candidateSections.length > 0 ? input.candidateSections : input.fallbackSections;
-  const cleaned = preferred
-    .map((item) => sanitizeShortLine(item, 90))
-    .filter((item) => item.length > 0)
-    .filter((item) => !containsNoSpeechMarker(item))
-    .filter((item) => !looksGenericDayText(item))
-    .filter((item) => {
-      const key = normalizeForCompare(item);
-      return !summaryKey || key !== summaryKey;
-    });
-
-  return dedupeByNormalizedValue(cleaned).slice(0, 5);
-}
-
-function parseSections(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  const parsed = value
-    .map((item) => (typeof item === 'string' ? item.trim() : ''))
-    .map((item) => sanitizeShortLine(item, 90))
-    .filter((item) => item.length > 0);
-
-  return dedupeByNormalizedValue(parsed).slice(0, 5);
-}
-
 function dateBoundsUtc(journalDate: string): { start: string; end: string } {
   const start = `${journalDate}T00:00:00.000Z`;
   const startDate = new Date(start);
@@ -300,6 +140,7 @@ async function callOpenAiJson(args: {
   flowId: string;
   step: string;
   promptVersion: string;
+  systemPrompt: string;
   userPrompt: string;
 }): Promise<OpenAiJson | null> {
   try {
@@ -316,8 +157,7 @@ async function callOpenAiJson(args: {
         messages: [
           {
             role: 'system',
-            content:
-              'Maak een rustige, brongetrouwe dagboekdag op basis van notities. Geen therapietaal, geen diagnoses, geen coachtoon en geen interpretaties. Geef alleen JSON terug met summary, narrativeText en sections.',
+            content: args.systemPrompt,
           },
           {
             role: 'user',
@@ -373,14 +213,35 @@ async function composeDayJournal(args: {
   requestId: string;
   flowId: string;
   journalDate: string;
+  strictValidation: boolean;
+  softQualityGuards: boolean;
   normalizedEntries: NormalizedEntry[];
 }): Promise<DayJournalDraft> {
-  const contentEntries = args.normalizedEntries.filter((entry) => !isLowContentEntry(entry));
-  const fallback = fallbackDayJournal(contentEntries);
+  const orderedEntries = orderDayJournalEntries(args.normalizedEntries);
+  const contentEntries = orderedEntries.filter((entry) =>
+    !isLowContentDayEntry(entry, {
+      noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
+      lowContentTitle: LOW_CONTENT_TITLE,
+    })
+  );
 
   if (contentEntries.length === 0) {
-    return fallback;
+    return finalizeDayJournalDraft({
+      aiResult: null,
+      entries: contentEntries,
+      options: {
+        noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
+        lowContentTitle: LOW_CONTENT_TITLE,
+        strictValidation: args.strictValidation,
+        softQualityGuards: args.softQualityGuards,
+      },
+    });
   }
+
+  const promptSpec = buildDayJournalPromptSpec({
+    journalDate: args.journalDate,
+    entries: contentEntries,
+  });
 
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
@@ -388,35 +249,188 @@ async function composeDayJournal(args: {
     requestId: args.requestId,
     flowId: args.flowId,
     step: 'day_journal_upserted',
-    promptVersion: DAY_COMPOSITION_PROMPT_VERSION,
-    userPrompt: JSON.stringify({
-      instruction:
-        'Vat de dag samen in 1-2 concrete zinnen (summary), schrijf daarna een natuurlijk verhalende dagtekst dicht bij de bron (narrativeText), en geef 2-5 unieke sections met korte kernpunten. Geen herhaling, geen nieuwe informatie, geen fallbackmarkers en geen meta-zinnen over aantallen notities.',
-      journalDate: args.journalDate,
-      entries: contentEntries,
-    }),
+    promptVersion: promptSpec.promptVersion,
+    systemPrompt: promptSpec.systemPrompt,
+    userPrompt: promptSpec.userPrompt,
   });
 
-  if (!aiResult) {
+  const finalized = finalizeDayJournalDraft({
+    aiResult,
+    entries: contentEntries,
+    options: {
+      noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
+      lowContentTitle: LOW_CONTENT_TITLE,
+      strictValidation: args.strictValidation,
+      softQualityGuards: args.softQualityGuards,
+    },
+  });
+
+  if (!args.softQualityGuards && finalized.softQualitySignals.length > 0) {
+    logFlow('info', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      event: 'soft_quality_not_enforced',
+      details: {
+        reasons: finalized.softQualitySignals,
+        softGuardsEnabled: false,
+      },
+    });
+  }
+
+  const narrativeRepairReasons = finalized.narrativeQualityReasons.filter((reason) =>
+    ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
+  );
+  const narrativeNeedsRepair =
+    args.softQualityGuards && !finalized.usedFallback && narrativeRepairReasons.length > 0;
+  if (narrativeNeedsRepair) {
+    logFlow('info', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      event: narrativeRepairReasons.includes('compressed_narrative') ? 'compressed_detected' : 'narrative_quality_detected',
+      details: {
+        reasons: narrativeRepairReasons,
+      },
+    });
+
+    const repairPrompt = buildDayJournalRepairPromptSpec({
+      journalDate: args.journalDate,
+      entries: contentEntries,
+    });
+
+    logFlow('info', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      event: 'retry_attempted',
+      details: {
+        reason: narrativeRepairReasons[0] ?? 'narrative_quality',
+      },
+    });
+
+    const repairedAiResult = await callOpenAiJson({
+      apiKey: args.apiKey,
+      model: args.model,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      promptVersion: repairPrompt.promptVersion,
+      systemPrompt: repairPrompt.systemPrompt,
+      userPrompt: repairPrompt.userPrompt,
+    });
+
+    const repairedFinalized = finalizeDayJournalDraft({
+      aiResult: repairedAiResult,
+      entries: contentEntries,
+      options: {
+        noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
+        lowContentTitle: LOW_CONTENT_TITLE,
+        strictValidation: args.strictValidation,
+        softQualityGuards: args.softQualityGuards,
+      },
+    });
+
+    const remainingNarrativeRepairReasons = repairedFinalized.narrativeQualityReasons.filter((reason) =>
+      ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
+    );
+    const retrySucceeded = !repairedFinalized.usedFallback && remainingNarrativeRepairReasons.length === 0;
+
+    if (retrySucceeded) {
+      logFlow('info', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: 'day_journal_upserted',
+        event: 'retry_succeeded',
+      });
+
+      return {
+        summary: repairedFinalized.summary,
+        narrativeText: repairedFinalized.narrativeText,
+        sections: repairedFinalized.sections,
+      };
+    }
+
+    const fallback = createFallbackDayJournal(contentEntries);
+    const retryFailureReasons = repairedFinalized.usedFallback
+      ? repairedFinalized.rejectionReasons
+      : remainingNarrativeRepairReasons;
+
+    logFlow('warn', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      event: 'retry_failed',
+      details: {
+        reasons: retryFailureReasons,
+      },
+    });
+    logFlow('warn', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      event: 'day_journal_fallback_used',
+      details: {
+        dominantReason: retryFailureReasons[0] ?? 'narrative_quality',
+        reasons: retryFailureReasons,
+      },
+    });
+
     return fallback;
   }
 
-  const summary = cleanDaySummary(parseString(aiResult.summary) ?? fallback.summary, fallback.summary);
-  const narrativeText = cleanDayNarrativeText(
-    parseString(aiResult.narrativeText) ?? fallback.narrativeText,
-    fallback.narrativeText
-  );
-  const parsedSections = parseSections(aiResult.sections);
-  const sections = cleanDaySections({
-    candidateSections: parsedSections,
-    summary,
-    fallbackSections: fallback.sections,
-  });
+  if (finalized.usedFallback) {
+    logFlow('warn', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      event: 'day_journal_fallback_used',
+      details: {
+        dominantReason: finalized.rejectionReasons[0] ?? 'unknown',
+        reasons: finalized.rejectionReasons,
+      },
+    });
+  } else {
+    if (finalized.usedFallbackSummary) {
+      logFlow('info', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: 'day_journal_upserted',
+        event: 'day_journal_summary_fallback_used',
+        details: {
+          dominantReason: finalized.summaryFallbackReasons[0] ?? 'unknown',
+          reasons: finalized.summaryFallbackReasons,
+        },
+      });
+    }
+
+    if (finalized.usedFallbackSections) {
+      logFlow('info', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: 'day_journal_upserted',
+        event: 'day_journal_sections_fallback_used',
+        details: {
+          dominantReason: finalized.sectionFallbackReasons[0] ?? 'unknown',
+          reasons: finalized.sectionFallbackReasons,
+        },
+      });
+    }
+  }
 
   return {
-    summary,
-    narrativeText,
-    sections,
+    summary: finalized.summary,
+    narrativeText: finalized.narrativeText,
+    sections: finalized.sections,
   };
 }
 
@@ -529,10 +543,11 @@ Deno.serve(async (request: Request) => {
     step = 'entries_loaded';
     const { data: rawEntriesForDay, error: dayRawError } = await supabase
       .from('entries_raw')
-      .select('id')
+      .select('id, captured_at')
       .eq('user_id', authData.user.id)
       .gte('captured_at', bounds.start)
-      .lt('captured_at', bounds.end);
+      .lt('captured_at', bounds.end)
+      .order('captured_at', { ascending: true });
 
     if (dayRawError) {
       return errorResponse({
@@ -552,7 +567,7 @@ Deno.serve(async (request: Request) => {
     if (rawIds.length > 0) {
       const { data: dayNormalizedRows, error: dayNormalizedError } = await supabase
         .from('entries_normalized')
-        .select('title, body')
+        .select('raw_entry_id, title, body')
         .eq('user_id', authData.user.id)
         .in('raw_entry_id', rawIds);
 
@@ -568,10 +583,24 @@ Deno.serve(async (request: Request) => {
         });
       }
 
+      const normalizedByRawId = new Map<string, NormalizedEntry>();
       for (const row of dayNormalizedRows ?? []) {
-        normalizedEntriesForDay.push({
+        normalizedByRawId.set(String(row.raw_entry_id), {
+          rawEntryId: String(row.raw_entry_id),
           title: row.title,
           body: row.body,
+        });
+      }
+
+      for (const rawEntry of rawEntriesForDay ?? []) {
+        const normalized = normalizedByRawId.get(String(rawEntry.id));
+        if (!normalized) {
+          continue;
+        }
+
+        normalizedEntriesForDay.push({
+          ...normalized,
+          capturedAt: rawEntry.captured_at,
         });
       }
     }
@@ -583,6 +612,8 @@ Deno.serve(async (request: Request) => {
       requestId,
       flowId,
       journalDate,
+      strictValidation: runtimeEnv.dayJournalStrictValidation,
+      softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
       normalizedEntries: normalizedEntriesForDay,
     });
 

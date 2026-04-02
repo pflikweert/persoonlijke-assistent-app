@@ -148,6 +148,39 @@ function normalizeEntryWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function normalizeEntryBodyParagraphs(value: string): string {
+  const normalizedLines = String(value ?? '')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim());
+
+  const collapsed: string[] = [];
+  let previousWasBlank = false;
+
+  for (const line of normalizedLines) {
+    if (!line) {
+      if (!previousWasBlank && collapsed.length > 0) {
+        collapsed.push('');
+      }
+      previousWasBlank = true;
+      continue;
+    }
+
+    collapsed.push(line);
+    previousWasBlank = false;
+  }
+
+  while (collapsed[0] === '') {
+    collapsed.shift();
+  }
+
+  while (collapsed.length > 0 && collapsed[collapsed.length - 1] === '') {
+    collapsed.pop();
+  }
+
+  return collapsed.join('\n');
+}
+
 function trimEntryPreview(value: string, maxLength = 156): string {
   const clean = normalizeEntryWhitespace(value);
   if (!clean) {
@@ -453,7 +486,7 @@ export async function updateNormalizedEntryById(input: { id: string; body: strin
     throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
   }
 
-  const body = input.body.trim();
+  const body = normalizeEntryBodyParagraphs(input.body);
 
   if (!body) {
     throw new Error('Inhoud mag niet leeg zijn.');
@@ -515,7 +548,7 @@ export async function updateNormalizedEntryById(input: { id: string; body: strin
     throw new Error('Ongeldige response van renormalize-entry.');
   }
 
-  const normalizedBody = normalizeEntryWhitespace(normalizedData.body) || body;
+  const normalizedBody = normalizeEntryBodyParagraphs(normalizedData.body) || body;
   const updates: { title: string; body: string; summary_short: string } = {
     title: normalizeEntryWhitespace(normalizedData.title) || 'Je entry',
     body: normalizedBody,

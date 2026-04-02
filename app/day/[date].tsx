@@ -110,6 +110,27 @@ function buildInsight(summary: string | null, narrativeText: string | null, sect
   return null;
 }
 
+function extractAiInsight(sections: string[]): { insight: string | null; remainingSections: string[] } {
+  const remaining: string[] = [];
+  let insight: string | null = null;
+
+  for (const section of sections) {
+    const clean = section.trim();
+    if (!clean) {
+      continue;
+    }
+
+    if (!insight && /^inzicht\s*:/i.test(clean)) {
+      insight = clean.replace(/^inzicht\s*:/i, '').trim();
+      continue;
+    }
+
+    remaining.push(clean);
+  }
+
+  return { insight: insight && insight.length > 0 ? insight : null, remainingSections: remaining };
+}
+
 function blurActiveElementOnWeb() {
   if (Platform.OS !== 'web' || typeof document === 'undefined') {
     return;
@@ -212,12 +233,13 @@ export default function DayDetailScreen() {
     };
   }, []);
 
-  const previewSections = sections.slice(0, 4);
+  const aiInsight = useMemo(() => extractAiInsight(sections), [sections]);
+  const previewSections = aiInsight.remainingSections.slice(0, 4);
   const readableDate = useMemo(() => formatLongDate(journalDate), [journalDate]);
   const dayHeading = useMemo(() => getDayHeadingLabel(journalDate), [journalDate]);
   const insightText = useMemo(
-    () => buildInsight(summary, narrativeText, sections),
-    [sections, summary, narrativeText]
+    () => aiInsight.insight ?? buildInsight(summary, narrativeText, aiInsight.remainingSections),
+    [aiInsight.insight, aiInsight.remainingSections, summary, narrativeText]
   );
   const visibleEntries = useMemo(
     () =>
@@ -497,20 +519,22 @@ export default function DayDetailScreen() {
       ) : null}
 
       {!loading && !error && summary ? (
-        <ThemedView style={styles.summaryBlock}>
-          <MetaText>Samenvatting</MetaText>
-          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-            {summary}
-          </ThemedText>
-        </ThemedView>
-      ) : null}
-
-      {!loading && !error && narrativeText ? (
         <ThemedView
           lightColor={colorTokens.light.surfaceLow}
           darkColor={colorTokens.dark.surfaceLow}
           style={[styles.heroVisual, { borderColor: palette.separator }]}>
-          <MaterialIcons name="auto-awesome" size={20} color={palette.primary} />
+          <MaterialIcons
+            name="auto-awesome"
+            size={24}
+            color={palette.primary}
+            style={styles.heroVisualIcon}
+          />
+          <ThemedView lightColor="transparent" darkColor="transparent" style={styles.heroSummaryContent}>
+            <MetaText>Samenvatting</MetaText>
+            <ThemedText type="bodySecondary" style={[styles.heroSummaryText, { color: palette.text, backgroundColor: 'transparent' }]}>
+              {summary}
+            </ThemedText>
+          </ThemedView>
         </ThemedView>
       ) : null}
 
@@ -722,17 +746,32 @@ const styles = StyleSheet.create({
   },
   processedText: {
   },
-  summaryBlock: {
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-  },
   heroVisual: {
     borderRadius: 32,
     minHeight: 152,
+    marginTop: 24,
     marginBottom: spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
     borderWidth: 1,
+    overflow: 'hidden',
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 20,
+    position: 'relative',
+  },
+  heroVisualIcon: {
+    position: 'absolute',
+    right: 18,
+    top: 16,
+  },
+  heroSummaryContent: {
+    gap: spacing.xs,
+    width: '100%',
+    zIndex: 1,
+  },
+  heroSummaryText: {
+    lineHeight: 26,
   },
   editorialBody: {
     fontSize: 20,
@@ -742,8 +781,10 @@ const styles = StyleSheet.create({
   },
   insightBlock: {
     borderRadius: 24,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingLeft: 16,
+    paddingRight: 8,
+    paddingTop: 16,
+    paddingBottom: 16,
     marginBottom: spacing.xl,
     borderLeftWidth: 2,
     gap: spacing.xs,

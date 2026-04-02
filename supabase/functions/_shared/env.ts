@@ -4,6 +4,8 @@ export type FunctionRuntimeEnv = {
   openAiApiKey: string;
   openAiModel: string;
   openAiTranscriptionModel: string;
+  dayJournalStrictValidation: boolean;
+  dayJournalSoftQualityGuards: boolean;
 };
 
 function readEnv(name: string): string {
@@ -16,6 +18,21 @@ function requireValue(name: string, value: string): string {
   }
 
   return value;
+}
+
+function readBooleanEnv(name: string, fallback = false): boolean {
+  const value = readEnv(name).toLowerCase();
+  if (!value) {
+    return fallback;
+  }
+  if (value === '1' || value === 'true' || value === 'yes' || value === 'on') {
+    return true;
+  }
+  if (value === '0' || value === 'false' || value === 'no' || value === 'off') {
+    return false;
+  }
+
+  return fallback;
 }
 
 function getSelectedPublicSupabaseValues(): { url: string; publishableKey: string } {
@@ -46,6 +63,8 @@ export function getFunctionRuntimeEnv(): FunctionRuntimeEnv {
   const openAiModel = readEnv('OPENAI_MODEL') || 'gpt-5.4-mini';
   const openAiTranscriptionModel =
     readEnv('OPENAI_TRANSCRIPTION_MODEL') || 'gpt-4o-mini-transcribe';
+  const dayJournalStrictValidation = readBooleanEnv('DAY_JOURNAL_STRICT_VALIDATION', false);
+  const dayJournalSoftQualityGuards = readBooleanEnv('DAY_JOURNAL_SOFT_QUALITY_GUARDS', false);
 
   return {
     supabaseUrl: requireValue(
@@ -59,5 +78,7 @@ export function getFunctionRuntimeEnv(): FunctionRuntimeEnv {
     openAiApiKey: requireValue('OPENAI_API_KEY', openAiApiKey),
     openAiModel,
     openAiTranscriptionModel,
+    dayJournalStrictValidation,
+    dayJournalSoftQualityGuards,
   };
 }

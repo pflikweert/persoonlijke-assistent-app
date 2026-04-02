@@ -107,6 +107,39 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function normalizeBodyParagraphs(value: string): string {
+  const normalizedLines = String(value ?? '')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim());
+
+  const collapsed: string[] = [];
+  let previousWasBlank = false;
+
+  for (const line of normalizedLines) {
+    if (!line) {
+      if (!previousWasBlank && collapsed.length > 0) {
+        collapsed.push('');
+      }
+      previousWasBlank = true;
+      continue;
+    }
+
+    collapsed.push(line);
+    previousWasBlank = false;
+  }
+
+  while (collapsed[0] === '') {
+    collapsed.shift();
+  }
+
+  while (collapsed.length > 0 && collapsed[collapsed.length - 1] === '') {
+    collapsed.pop();
+  }
+
+  return collapsed.join('\n');
+}
+
 function sanitizeShortLine(value: string, maxLength: number): string {
   return normalizeWhitespace(value).slice(0, maxLength);
 }
@@ -134,9 +167,9 @@ function cleanNormalizedTitle(value: string, fallback: string): string {
 }
 
 function cleanNormalizedBody(value: string, fallback: string): string {
-  const candidate = normalizeWhitespace(value);
+  const candidate = normalizeBodyParagraphs(value);
   if (!candidate || candidate.length < 12) {
-    return normalizeWhitespace(fallback);
+    return normalizeBodyParagraphs(fallback);
   }
 
   return candidate;
@@ -150,7 +183,7 @@ function isSuspiciouslyCompressedNormalization(source: string, normalizedBody: s
     return false;
   }
 
-  return normalizedClean.length < Math.floor(sourceClean.length * 0.72);
+  return normalizedClean.length < Math.floor(sourceClean.length * 0.8);
 }
 
 function trimPreviewForMobile(value: string, maxLength = 156): string {
@@ -227,7 +260,7 @@ function cleanNormalizedSummaryShort(value: string | null, fallbackBody: string)
 }
 
 function fallbackNormalization(rawText: string): NormalizedEntry {
-  const clean = rawText.trim().replace(/\s+/g, ' ');
+  const clean = normalizeBodyParagraphs(rawText);
   const titleBase = clean.split(/[.!?\n]/)[0]?.trim() || clean;
   const title = titleBase.slice(0, 80) || 'Notitie';
 
@@ -337,10 +370,10 @@ async function normalizeEntry(args: {
     step: 'normalized_generated',
     promptVersion: NORMALIZATION_PROMPT_VERSION,
     systemPrompt:
-      'Normaliseer een persoonlijke notitie. Blijf strikt brongetrouw en feitelijk. Behoud alle betekenisvolle inhoud uit de bron. Laat geen details weg, vat niet samen en herschrijf niet naar een kortere hervertelling. Maak alleen licht leesbaarder (spraakruis/kleine grammaticale oneffenheden), zonder nieuwe informatie of interpretaties. Geen therapietaal of diagnoses. Geef alleen JSON terug met title, body en summary_short.',
+      'Normaliseer een persoonlijke notitie. Blijf strikt brongetrouw en feitelijk. Behoud alle betekenisvolle inhoud uit de bron van begin tot eind. Laat geen details weg, vat niet samen en herschrijf niet naar een kortere hervertelling. Maak alleen licht leesbaarder (spraakruis, stotteren, kleine grammaticale oneffenheden en duidelijke dubbele herhaling zonder extra betekenis), zonder nieuwe informatie of interpretaties. Geen therapietaal of diagnoses. Behoud betekenisvolle alineascheiding uit de bron in body (bijv. chatblokken of dagboekalinea’s); sla die niet plat. Meerdere lege regels mag je terugbrengen naar maximaal één lege regel tussen alinea’s. Geef alleen JSON terug met title, body en summary_short.',
     userPrompt: JSON.stringify({
       instruction:
-        'Maak 1 concrete titel, 1 volledige opgeschoonde body en 1 compacte summary_short op basis van de bron. Body: volledige inhoud behouden, bronnabij, niet samenvatten. summary_short: compacte preview voor mobiele lijsten (ongeveer 2 regels), natuurlijk Nederlands, niet-meta, niet-analytisch, geen vraagvorm.',
+        'Maak 1 concrete titel, 1 volledige opgeschoonde body en 1 compacte summary_short op basis van de bron. Body: volledige inhoud behouden, bronnabij, niet samenvatten, niet merkbaar reduceren en geen generieke parafrase. Behoud bestaande alinea’s/lege regels waar betekenisvol; normaliseer 3+ lege regels naar maximaal één lege regel tussen alinea’s. summary_short: compacte preview voor mobiele lijsten (ongeveer 2 regels), natuurlijk Nederlands, niet-meta, niet-analytisch, geen vraagvorm.',
       rawText: args.rawText,
     }),
   });

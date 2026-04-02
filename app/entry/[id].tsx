@@ -48,12 +48,37 @@ function formatCapturedAtLabel(value: string): string {
 }
 
 function cleanEntryText(value: string): string {
-  const lines = value
-    .split(/\n+/)
-    .map((line) => line.replace(/\s+/g, ' ').trim())
-    .filter((line) => line.length > 0);
+  const lines = String(value ?? '')
+    .replace(/\r\n?/g, '\n')
+    .trim()
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim());
 
-  return lines.join('\n\n');
+  const collapsed: string[] = [];
+  let previousWasBlank = false;
+
+  for (const line of lines) {
+    if (!line) {
+      if (!previousWasBlank && collapsed.length > 0) {
+        collapsed.push('');
+      }
+      previousWasBlank = true;
+      continue;
+    }
+
+    collapsed.push(line);
+    previousWasBlank = false;
+  }
+
+  while (collapsed[0] === '') {
+    collapsed.shift();
+  }
+
+  while (collapsed.length > 0 && collapsed[collapsed.length - 1] === '') {
+    collapsed.pop();
+  }
+
+  return collapsed.join('\n');
 }
 
 function buildSummary(value: string): string {

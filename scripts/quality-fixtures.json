@@ -1,11 +1,79 @@
 {
   "textEntries": [
+    "Ik was vanmorgen al vroeg wakker omdat ik tegen het overleg opzag. Toch ben ik gaan hardlopen en dat hielp even. Op kantoor liep het overleg uit en daarna kreeg ik mijn aandacht er niet goed meer bij. Aan het eind van de middag belde ik mijn zus. Dat luchtte op. 's Avonds was ik moe en heb ik vroeg gegeten.",
+    "Vanmorgen heb ik eerst een database-fix uitgezocht omdat een sync bleef hangen. Rond de lunch heb ik mijn moeder even gebeld en dat gaf rust. Later heb ik de foutmelding opnieuw getest en 's avonds heb ik de planning voor morgen opgeschreven.",
     "Korte update: vanochtend planning gemaakt, middag gefocust gewerkt, vanavond vroeg afronden.",
-    "Ik liep vast op de planning. Daarna taken opgesplitst in kleinere stappen en één ding afgemaakt.",
+    "Ik liep vast op de planning. Ik heb de taken opgesplitst in kleinere stappen en daarna één ding echt afgemaakt.",
     "Geen spraak herkend in audio-opname.",
     "Morgen eerst 30 minuten focusblok voor de lastigste taak en daarna mailbox.",
     "Vandaag voelde ik spanning rond een lastig gesprek, maar ik heb het wel rustig en concreet voorbereid.",
-    "Goed, ik wil eerst een klein beetje over mijn vader vertellen. Wat ik weet, ik weet niet zo heel erg veel, maar ik ga m'n best doen. Wat ik weet is dat hij op z'n veertiende uit huis ging, bij de Koopvaardij. Ging in de wereld rond. Ik weet dat hij op latere leeftijd, dat hij ook met mijn moeder was, die samen met mijn oma Evert Pieper, zat hij op de baggerschepen. Volgens mij moesten ze het op een gegeven moment wel rustiger aandoen. Die vrouw wou ze ook vaker zien, dus is hij een loodgieter geworden of iets in de bouw. Ik weet ook dat hij bij de mariniers heeft gezeten. Maar ja, dat hij in de bouw zat, uiteindelijk werd hij bij de mariniers, in de bouw werd hij uiteindelijk afgekeurd vanwege onze bloedziekte, beta-thalassemie, minor. Toen heeft hij zich laten herscholen, is hij naar de kapper. Nou, ik weet nog dat ik één was, is de kapperzaak geopend. Daarvoor woonden we aan de Nimbrandstraat in Tollebeek, maar dat kan ik me niet echt herinneren. Ik weet altijd dat we aan de Sint-Bertusplaats bij de kapperzaak hebben gewoond."
+    "Goed, ik wil eerst een klein beetje over mijn vader vertellen. Wat ik weet, ik weet niet zo heel erg veel, maar ik ga m'n best doen. Wat ik weet is dat hij op z'n veertiende uit huis ging, bij de Koopvaardij. Ging in de wereld rond. Ik weet dat hij op latere leeftijd, dat hij ook met mijn moeder was, die samen met mijn oma Evert Pieper, zat hij op de baggerschepen. Volgens mij moesten ze het op een gegeven moment wel rustiger aandoen. Die vrouw wou ze ook vaker zien, dus is hij een loodgieter geworden of iets in de bouw. Ik weet ook dat hij bij de mariniers heeft gezeten. Maar ja, dat hij in de bouw zat, uiteindelijk werd hij bij de mariniers, in de bouw werd hij uiteindelijk afgekeurd vanwege onze bloedziekte, beta-thalassemie, minor. Toen heeft hij zich laten herscholen, is hij naar de kapper. Nou, ik weet nog dat ik één was, is de kapperzaak geopend. Daarvoor woonden we aan de Nimbrandstraat in Tollebeek, maar dat kan ik me niet echt herinneren. Ik weet altijd dat we aan de Sint-Bertusplaats bij de kapperzaak hebben gewoond.",
+    "NormalisatieCaseTech: test login knop, werkt nu wel.",
+    "NormalisatieCaseTerm: met SupabaseEdgeV2 bleef API-42 hangen tijdens sync.",
+    "NormalisatieCaseNoisy: eh volgens mij doen we die deploy morgen of zo, misschien.",
+    "NormalisatieCaseClaim: ik heb de kabel vervangen en de test opnieuw gestart.",
+    "NormalisatieCaseTypo: ik heb gister de planning niet afgekregen want was te moe en ben vroeg gaan slapen",
+    "NormalisatieCaseParagraphOne: Eerste blok blijft apart.\n\nNormalisatieCaseParagraphOneB: Tweede blok moet als tweede alinea blijven.",
+    "NormalisatieCaseParagraphMany: Eerste alinea.\n\n\n\nNormalisatieCaseParagraphManyB: Tweede alinea met teveel witregels in de bron.",
+    "NormalisatieCaseParagraphNone: Dit is een korte regel zonder lege regels ertussen.",
+    "NormalisatieCaseChat: [30-10, 08:04] Pieter: Ik stuurde een bericht.\n\n[30-10, 08:51] Ellen: Ik reageerde op je bericht."
+  ],
+  "normalizationRegressionCases": [
+    {
+      "label": "short-tech-line",
+      "marker": "NormalisatieCaseTech",
+      "requiredBodyTokens": ["normalisatiecasetech", "login", "werkt"],
+      "minOverlap": 0.45
+    },
+    {
+      "label": "specific-term-preservation",
+      "marker": "NormalisatieCaseTerm",
+      "requiredBodyTokens": ["supabaseedgev2", "api-42"],
+      "minOverlap": 0.5
+    },
+    {
+      "label": "noisy-transcript-retention",
+      "marker": "NormalisatieCaseNoisy",
+      "requiredBodyTokens": ["volgens", "misschien"],
+      "minOverlap": 0.45,
+      "requiresUncertaintyCue": true
+    },
+    {
+      "label": "no-added-claim",
+      "marker": "NormalisatieCaseClaim",
+      "requiredBodyTokens": ["kabel", "test", "gestart"],
+      "forbiddenBodyPhrases": ["dat maakte duidelijk dat", "het liet zien dat", "conclusie", "daarom"],
+      "minOverlap": 0.5
+    },
+    {
+      "label": "light-edit-keep-voice",
+      "marker": "NormalisatieCaseTypo",
+      "requiredBodyTokens": ["planning", "afgekregen", "vroeg", "slapen"],
+      "minOverlap": 0.5
+    }
+  ],
+  "newlineNormalizationCases": [
+    {
+      "label": "preserve-single-blank-line",
+      "marker": "NormalisatieCaseParagraphOne",
+      "expectedDoubleBreaks": 1
+    },
+    {
+      "label": "collapse-multiple-blank-lines",
+      "marker": "NormalisatieCaseParagraphMany",
+      "expectedDoubleBreaks": 1,
+      "forbidTripleBreak": true
+    },
+    {
+      "label": "no-new-blank-lines-when-source-has-none",
+      "marker": "NormalisatieCaseParagraphNone",
+      "expectedDoubleBreaks": 0
+    },
+    {
+      "label": "chat-block-keeps-paragraph-separation",
+      "marker": "NormalisatieCaseChat",
+      "expectedDoubleBreaks": 1
+    }
   ],
   "genericPhrases": [
     "algemene samenvatting",
@@ -13,6 +81,196 @@
     "samengevoegd",
     "reflectie"
   ],
+  "narrativeGenericPhrases": [
+    "de dag begon",
+    "de dag draaide om",
+    "in deze dag",
+    "ontwikkelde zich gaandeweg",
+    "deze dag liet zien"
+  ],
+  "narrativeBridgePhrases": [
+    "later op de dag",
+    "uiteindelijk bleek",
+    "daarna werd duidelijk",
+    "gaandeweg bleek",
+    "het liet zien dat",
+    "dat maakte duidelijk dat"
+  ],
+  "firstPersonMarkers": [
+    " ik ",
+    " mijn ",
+    " me ",
+    " mij ",
+    " we ",
+    " ons ",
+    " onze "
+  ],
+  "thirdPersonStarts": [
+    "de gebruiker",
+    "hij ",
+    "zij ",
+    "de dag"
+  ],
+  "requiredNarrativeGroups": [
+    {
+      "label": "multi-moment-dag",
+      "tokens": ["hardlopen", "overleg", "zus", "vroeg gegeten"]
+    },
+    {
+      "label": "lange-bronentry",
+      "tokens": ["koopvaardij", "mariniers", "kapperzaak"]
+    },
+    {
+      "label": "technisch-persoonlijke-dag",
+      "tokens": ["database-fix", "moeder", "planning voor morgen"]
+    }
+  ],
+  "fallbackRegression": {
+    "entries": [
+      {
+        "capturedAt": "2026-02-03T08:15:00Z",
+        "title": "Productiestoring",
+        "body": "Ik begon vroeg met een productiestoring en moest twee logs nalopen voordat ik zag waar de sync vastliep."
+      },
+      {
+        "capturedAt": "2026-02-03T13:05:00Z",
+        "title": "Telefoontje",
+        "body": "Tussen de middag belde ik mijn broer even en dat maakte mijn hoofd rustiger."
+      },
+      {
+        "capturedAt": "2026-02-03T20:10:00Z",
+        "title": "Afsluiten",
+        "body": "'s Avonds schreef ik de planning voor morgen op en klapte ik mijn laptop dicht."
+      }
+    ],
+    "narrativeTokens": ["productiestoring", "broer", "planning voor morgen"],
+    "summaryTokens": ["productiestoring", "broer"]
+  },
+  "defaultValidationRegression": {
+    "entries": [
+      {
+        "capturedAt": "2026-04-02T18:00:00Z",
+        "title": "Persoonlijke notitie",
+        "body": "Ik schreef op dat therapie mij helpt om afspraken vast te houden, zonder daar conclusies aan te hangen."
+      }
+    ],
+    "aiResult": {
+      "summary": "Ik noteerde rustig wat me hielp om afspraken vast te houden.",
+      "narrativeText": "Ik schreef op dat therapie mij helpt om afspraken vast te houden, zonder daar conclusies aan te hangen.",
+      "sections": ["Persoonlijke notitie"]
+    }
+  },
+  "strictValidationRegression": {
+    "entries": [
+      {
+        "capturedAt": "2026-04-02T18:10:00Z",
+        "title": "Werkdag",
+        "body": "Ik werkte aan mijn planning en maakte mijn takenlijst af."
+      }
+    ],
+    "aiResult": {
+      "summary": "Ik sloot mijn takenlijst af.",
+      "narrativeText": "Ik werkte aan mijn planning en maakte mijn takenlijst af. Therapie hielp mij hier vandaag doorheen.",
+      "sections": ["Werkdag"]
+    }
+  },
+  "compressionSignalRegression": {
+    "entries": [
+      {
+        "capturedAt": "2026-04-02T08:00:00Z",
+        "title": "Lange bron",
+        "body": "Ik begon met een lang overleg en schreef daarna in detail op wat er gebeurde, welke stappen ik nam, welke reacties ik kreeg en wat ik in de middag nog uitzocht. Ik bleef noteren wat ik precies deed, waar ik vastliep, hoe ik het oploste en welke vervolgstappen ik voor de avond plande. Ik schreef ook op dat ik meerdere keren terugging naar hetzelfde document om details te controleren en dat ik daarna mijn planning bijstelde met concrete punten."
+      },
+      {
+        "capturedAt": "2026-04-02T12:30:00Z",
+        "title": "Nog een lang moment",
+        "body": "In de middag beschreef ik opnieuw uitgebreid welke taakblokken ik afrondde, met welke mensen ik contact had, welke open punten bleven staan en welke concrete acties ik daarna in volgorde uitvoerde. Aan het einde van de dag noteerde ik nogmaals wat ik had gedaan, wat nog overbleef en welke details ik de volgende ochtend als eerste wilde oppakken."
+      }
+    ],
+    "aiResult": {
+      "summary": "Ik had een drukke dag met meerdere taken en rondde veel af.",
+      "narrativeText": "Ik had een drukke dag met lang overleg en taakblokken, en ik rondde veel taken af.",
+      "sections": ["Lange bron"]
+    }
+  },
+  "compositionQualityRegression": {
+    "entries": [
+      {
+        "capturedAt": "2026-04-02T08:10:00Z",
+        "title": "Testflow",
+        "body": "Ik testte de capture flow opnieuw en zag dezelfde melding terugkomen."
+      },
+      {
+        "capturedAt": "2026-04-02T08:25:00Z",
+        "title": "Nog een test",
+        "body": "Ik draaide dezelfde test nog een keer en controleerde dezelfde foutregel."
+      },
+      {
+        "capturedAt": "2026-04-02T12:30:00Z",
+        "title": "Belangrijk gesprek",
+        "body": "Rond de lunch had ik een lang gesprek met mijn moeder over hoe het thuis gaat en dat gaf rust."
+      },
+      {
+        "capturedAt": "2026-04-02T16:15:00Z",
+        "title": "Afronden",
+        "body": "In de middag maakte ik de open punten af en zette ik de planning voor morgen klaar."
+      },
+      {
+        "capturedAt": "2026-04-02T20:40:00Z",
+        "title": "Rustige avond",
+        "body": "Aan het eind van de avond schreef ik kort op wat goed ging en deed ik rustig de dag dicht."
+      }
+    ],
+    "aiResultGood": {
+      "summary": "Ik combineerde herhaalde tests in de ochtend met een belangrijk gesprek rond de lunch en sloot de dag rustig af met een duidelijke planning.",
+      "narrativeText": "In de ochtend was ik vooral bezig met dezelfde testflow. Ik controleerde de foutmelding nog een keer, maar hield het bewust bij de kern zodat ik niet bleef herhalen.\n\nRond de lunch had ik een lang gesprek met mijn moeder over hoe het thuis gaat. Dat gaf rust en hielp me om in de middag de open punten stap voor stap af te maken.\n\nLater zette ik de planning voor morgen klaar. Aan het eind van de avond schreef ik kort op wat goed ging en sloot ik de dag rustig af.",
+      "sections": ["Ochtendtests en foutcontrole", "Gesprek met mijn moeder", "Afronden en rustige afsluiting"]
+    },
+    "aiResultStitchedBad": {
+      "summary": "Ik testte, sprak met mijn moeder en sloot de dag af.",
+      "narrativeText": "Ik testte de capture flow opnieuw en zag dezelfde melding terugkomen.\n\nIk draaide dezelfde test nog een keer en controleerde dezelfde foutregel.\n\nRond de lunch had ik een lang gesprek met mijn moeder over hoe het thuis gaat en dat gaf rust.\n\nIn de middag maakte ik de open punten af en zette ik de planning voor morgen klaar.\n\nAan het eind van de avond schreef ik kort op wat goed ging en deed ik rustig de dag dicht.",
+      "sections": ["Tests", "Gesprek", "Afronden"]
+    },
+    "aiResultReportLikeSummary": {
+      "summary": "Dagboeknotities over tests, gesprek en planning.",
+      "narrativeText": "In de ochtend was ik bezig met herhaalde tests. Rond de lunch had ik een belangrijk gesprek met mijn moeder. Daarna rondde ik de open punten af en sloot ik de dag rustig af.",
+      "sections": ["Tests", "Gesprek", "Afsluiting"]
+    },
+    "aiResultTruncatedNarrative": {
+      "summary": "Ik begon met tests, had een belangrijk gesprek en rondde de dag af.",
+      "narrativeText": "In de ochtend testte ik opnieuw dezelfde flow. Rond de lunch sprak ik lang met mijn moeder en dat gaf rust. In de middag werkte ik de open punten af en",
+      "sections": ["Tests", "Gesprek", "Afronden"]
+    }
+  },
+  "meaningfulClusterCoverageRegression": {
+    "entries": [
+      {
+        "capturedAt": "2026-04-02T09:00:00Z",
+        "title": "Testflow ochtend",
+        "body": "Ik testte de loginflow drie keer achter elkaar en noteerde dezelfde kleine fout."
+      },
+      {
+        "capturedAt": "2026-04-02T12:40:00Z",
+        "title": "Love Me Back moment",
+        "body": "Ik stuurde een bericht over Love Me Back en over mooie momenten samen, en dat voelde dichtbij en rustig."
+      },
+      {
+        "capturedAt": "2026-04-02T17:20:00Z",
+        "title": "Middag afronden",
+        "body": "Ik werkte de laatste taken af en zette mijn planning voor morgen klaar."
+      }
+    ],
+    "aiResultMissingCluster": {
+      "summary": "Ik had een dag met testen in de ochtend en rustig afronden in de middag.",
+      "narrativeText": "In de ochtend was ik vooral bezig met dezelfde testflow en noteerde ik de foutmelding. Later rondde ik mijn taken af en maakte ik de planning voor morgen.",
+      "sections": ["Testflow", "Afronden"]
+    },
+    "aiResultCoveredCluster": {
+      "summary": "Ik combineerde testen met een persoonlijk berichtmoment en sloot de dag rustig af.",
+      "narrativeText": "In de ochtend testte ik de loginflow meerdere keren en noteerde ik dezelfde kleine fout.\n\nRond de middag stuurde ik een bericht over Love Me Back en over mooie momenten samen. Dat moment voelde dichtbij en gaf rust.\n\nDaarna werkte ik de laatste taken af en zette ik de planning voor morgen klaar.",
+      "sections": ["Testflow", "Persoonlijk berichtmoment", "Afronden"]
+    }
+  },
   "previewMetaStarts": [
     "de gebruiker",
     "er wordt beschreven",
@@ -20,13 +278,11 @@
     "in deze notitie"
   ],
   "heavyPhrases": [
-    "trauma",
-    "depressie",
-    "diagnose",
-    "stoornis",
-    "therapie",
     "diepgeworteld",
-    "heling"
+    "je zou",
+    "het helpt om",
+    "kan helpen om",
+    "uit de notities blijkt"
   ],
   "audioFallbackMarker": "Geen spraak herkend in audio-opname."
 }
