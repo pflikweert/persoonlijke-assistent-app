@@ -1,9 +1,10 @@
 # DO NOT EDIT — GENERATED FILE
 
-Build Timestamp (UTC): 2026-04-03T12:47:57.234Z
-Source Commit: 9e4ce59
+Build Timestamp (UTC): 2026-04-03T13:06:51.767Z
+Source Commit: 32c9c5e
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs.
+Upload standaard samen met docs/design/mvp-design-spec-1.2.1.md voor volledige MVP-designwaarheid.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
@@ -21,49 +22,48 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Projectdocs — Waarheidshiërarchie
 
-Deze map bevat de actieve projectwaarheid voor productscope, faseplanning en actuele status.
+Deze map bevat de actieve projectwaarheid voor scope, richting en status.
 
-## 1) Leidende documenten (handmatig onderhouden)
+## 1) Canonieke handmatige documenten (leidend)
 1. `docs/project/master-project.md`
 2. `docs/project/product-vision-mvp.md`
 3. `docs/project/current-status.md`
 4. `docs/project/open-points.md`
 5. `docs/project/content-processing-rules.md`
 
-Gebruik deze volgorde ook als leesvolgorde.
-
 ## 2) Generated document (afgeleid, niet leidend)
 - `docs/project/generated/chatgpt-project-context.md`
 
-Dit bestand is bedoeld als compacte uploadcontext voor ChatGPT Project.
-Het is afgeleid van de leidende documenten hierboven.
-
 Regel:
 - handmatige docs zijn de bron
-- generated docs zijn output
+- generated docs zijn afgeleide output
 
 ## 3) Archive-only (niet leidend)
 - `docs/project/archive/**`
 - `docs/design/archive/**`
-- historische dumps in `docs/dev/archive/**`
+- `docs/dev/archive/**`
 
-Archive-only documenten mogen context geven, maar zijn nooit bindend voor scopebeslissingen.
+## 4) Standaard upload naar ChatGPT Project
+Upload standaard beide bestanden:
+1. `docs/project/generated/chatgpt-project-context.md`
+2. `docs/design/mvp-design-spec-1.2.1.md`
 
-## 4) Uploadworkflow voor ChatGPT Project
-Upload primair:
-- `docs/project/generated/chatgpt-project-context.md`
+Reden:
+- de bundle bevat compacte projectcontext
+- de bundle bevat niet de volledige designwaarheid
+- de design spec blijft apart leidend voor MVP-designbesluiten
 
-Niet nodig om mee te uploaden:
+## 5) Wat je normaal niet hoeft te uploaden
 - `docs/project/archive/**`
 - `docs/design/archive/**`
 - `docs/dev/**`
-- lokale setup/run-instructies die geen productwaarheid zijn
+- setup/run-notities zonder canonieke productwaarheid
 
-## 5) Onderhoudsworkflow
-1. Werk eerst de handmatige leidende docs bij.
+## 6) Onderhoudsflow
+1. Werk eerst de handmatige canonieke docs bij.
 2. Draai `npm run docs:bundle`.
 3. Controleer met `npm run docs:bundle:verify`.
-4. Commit handmatige docs + generated bundle samen.
+4. Commit canonieke docs + generated bundle samen.
 
 ---
 
@@ -72,134 +72,73 @@ Niet nodig om mee te uploaden:
 # Persoonlijke Assistent App — Master Project (Canoniek)
 
 ## Doel van dit document
-Dit is het hoofd-document voor:
+Dit document beschrijft de stabiele productkaders:
 - productdefinitie
-- scopegrenzen
+- scope en buiten scope
 - fasekaart
-- huidige uitvoervolgorde
+- beslisregels
 
-Dit document is leidend samen met:
-- `docs/project/product-vision-mvp.md`
-- `docs/project/content-processing-rules.md`
+Voor feitelijke implementatiestatus en code-realiteit is leidend:
+- `docs/project/current-status.md`
 
-Designbeslissingen blijven leidend in:
-- `docs/design/mvp-design-spec-1.2.1.md`
-- `design_refs/1.2.1/**`
-
-## Productkern
-De app is een persoonlijke contextmachine:
-- capture via tekst en audio
-- server-side verwerking naar bruikbare entries
-- opbouw van één canonieke dagboeklaag per dag
-- week- en maandreflecties op basis van die dagboeklaag
+## Productdefinitie
+De app is een capture-first persoonlijke contextmachine:
+- vastleggen via tekst en audio
+- verwerken naar een leesbare dagboeklaag
+- periodieke reflectie op basis van die dagboeklaag
 
 Kernbelofte:
 - snel vastleggen
 - rustig teruglezen
-- later overzicht zonder handmatig knip- en plakwerk
+- later overzicht zonder handmatig samenstellen
 
-## Harde scopegrens (MVP)
+## Scope (MVP)
 In scope:
-- auth (magic link)
-- tekstcapture en audiocapture
-- transcriptie voor audio
-- entry normalisatie
-- day journal opbouw per kalenderdag
+- auth-baseline
+- capture via tekst en audio
+- server-side verwerking van input
+- dagboeklaag per dag
 - week- en maandreflecties
-- kernschermen: Vandaag, Vastleggen, Dagen, Dagdetail, Reflecties
+- kernschermen voor capture, dagweergave en reflecties
 
 Buiten scope:
 - brede chat/coach/agent-ervaring
 - retrieval/Q&A en vector search
-- document intelligence en brede uploadsuite
+- document intelligence als brede productlaag
 - taken/agenda/reminders
 - realtime voice als productmodus
 
-## Productprincipes
-1. Capture-first: vastleggen moet laagdrempelig en snel zijn.
-2. Dagboeklaag leidend: day journal is de canonieke productlaag.
-3. Bron en AI-output gescheiden: ruwe bron blijft herleidbaar.
-4. Reflectie boven pseudo-intelligentie: eerst kwaliteit en betrouwbaarheid.
-5. Geen scope-creep naar brede assistent in MVP.
+## Fasekaart
+### Fase 0
+Setup en basisomgeving.
 
-## Huidige code-realiteit (samengevat)
-Aantoonbaar aanwezig in code:
-- auth, capture (tekst/audio), processing, day journals, reflecties
-- edge functions: `process-entry`, `regenerate-day-journal`, `renormalize-entry`, `generate-reflection`
-- dagdetail mutaties (edit/delete) met heropbouw van afgeleide lagen
+### Fase 1
+Kernlus bouwen: van capture naar dagboeklaag en reflecties.
 
-Ook aanwezig, maar niet leidend voor kernscope:
-- ChatGPT markdown importpad via instellingen + edge function (`import-chatgpt-markdown`)
-- dit pad is feature-flagged en moet niet gelezen worden als verbreding naar brede chatapp
-
-Niet aangetroffen als productfeature:
-- gebruikersgerichte export/backupflow
-- gebruikersgerichte reset/delete-all flow
-
-## Fasehistorie
-- Fase 0: setupbasis
-- Fase 1: kernlus (auth → capture → verwerking → day journal → reflectie)
-- Huidige hardeningfase: Fase 1.2
-
-## Fase 1.2 (hardening, geen featureverbreding)
-Fase 1.2 is pre-release hardening van de bestaande kern, niet een nieuwe productrichting.
-
-### Subfases met huidige status
-| Subfase | Doel | Status (code) | Toelichting |
-|---|---|---|---|
-| 1.2A Stabiliteit/foutafhandeling | deterministische flow + tracing + verify | **Deels aanwezig** | request/flow logging en verify scripts aanwezig; afronding als geheel niet hard bewezen. |
-| 1.2B Outputkwaliteit | betere narrative/reflection kwaliteit | **Deels aanwezig** | contracts, guardrails en quality-checks aanwezig; geen harde “afgerond”-markering als complete set. |
-| 1.2C UX-polish | rustiger kernflows zonder feature-uitbreiding | **Deels aanwezig** | veel loading/empty/error states aanwezig; volledige uniformiteit niet hard bewezen. |
-| 1.2D Vertrouwen (export/reset) | eigenaarschap via export/reset-basis | **Niet aangetroffen** | alleen dev/export tooling gevonden, geen gebruikersfeature in app-flow. |
-| 1.2E Private-beta readiness | overdraagbaarheid, checks, checklist | **Deels aanwezig** | setup + verify aanwezig; complete smoke/release-checklist als afgeronde set niet hard bewezen. |
-
-Statuslabels:
-- Aanwezig = hard aantoonbaar in code
-- Deels aanwezig = aantoonbare onderdelen, maar niet volledig bewezen als afgeronde subfase
-- Niet aangetroffen = geen productimplementatie gevonden
-- Onzeker = bewijs onvoldoende
-
-## Juiste huidige uitvoervolgorde
+### Fase 1.2 (hardening)
+Release-1 hardening in subfases:
 1. 1.2A stabiliteit en foutafhandeling
 2. 1.2B outputkwaliteit
 3. 1.2C UX-polish
-4. 1.2D export/reset op productniveau
+4. 1.2D vertrouwen (export/reset)
 5. 1.2E private-beta readiness
 
-## Open beslisregels voor deze fase
-- Geen nieuwe architectuur voor de app.
-- Geen verbreding naar brede chat/coach/agent.
-- Geen runtime featurewerk buiten bestaande scope.
-- Twijfelgevallen blijven expliciet “onzeker” tot bewijs in code/docs.
+Deze fase blijft hardening en is geen verbreding van productscope.
 
-## Bekende spanningen tussen plan en realiteit
-1. Productvisie noemt een kleine directe assistentlaag na capture.
-   - Status: **deels/onzeker** als aparte expliciete featurelaag.
-   - Wel aanwezig: entry-completion en afgeleide verwerking.
-   - Niet hard aangetroffen: zelfstandige, duidelijk afgebakende post-capture assistentmodule.
+## Beslisregels
+1. Capture-first blijft leidend.
+2. Dagboeklaag blijft canonieke productlaag.
+3. Geen scope-creep naar brede assistent.
+4. Geen nieuwe app-architectuur binnen deze fase.
+5. Twijfelgevallen worden niet als waarheid vastgezet zonder bewijs.
 
-2. Export/reset stond gepland in 1.2D.
-   - Status: **niet aangetroffen** als gebruikersfeature.
-   - Wel aanwezig: developer dumps en verify tooling.
+## Post-MVP
+Mogelijke vervolgsporen na afronding van 1.2:
+- retrieval/Q&A over archief
+- verdere intelligentie-lagen
+- uitgebreidere assistentfunctionaliteit
 
-3. ChatGPT markdown import is gebouwd.
-   - Status: **aanwezig** als feature-flagged importpad.
-   - Positionering: ondersteunende ingest, geen wijziging van kernscope.
-
-## Post-MVP / expliciet buiten huidige scope
-- retrieval/Q&A over volledig archief
-- vector en semantic search
-- brede assistant/chatcoaching
-- document intelligence als brede productlaag
-- taken/agenda/reminder-suite
-
-## Niet leidend / archive-only
-- `docs/project/archive/**`
-- `docs/design/archive/**`
-- historische dumps in `docs/dev/archive/**`
-
-## Samenvatting in één zin
-De app blijft een capture-first dagboekmachine met day journals als hoofdwaarheid; Fase 1.2 draait om hardening van de bestaande kern, niet om verbreding naar een brede assistent.
+Deze vallen expliciet buiten de huidige fase.
 
 ---
 
@@ -208,93 +147,54 @@ De app blijft een capture-first dagboekmachine met day journals als hoofdwaarhei
 # Persoonlijke Assistent App — Productvisie Aanscherping (MVP)
 
 ## Doel
-Dit document scherpt de productrichting aan zonder de oorspronkelijke scope te verbreden.
+Dit document beschrijft gewenst productgedrag en guardrails binnen MVP.
 
-Bindend in combinatie met:
-- `docs/project/master-project.md`
-- `docs/project/content-processing-rules.md`
+Voor implementatiestatus en code-audit is leidend:
+- `docs/project/current-status.md`
 
-## Kernformule
-De productformule voor MVP blijft:
-- capture → structureren → dagboekdag → weekreflectie → maandreflectie
+## Productgedrag
+Bindende formule:
+- capture → structureren → dagboeklaag → periodieke reflectie
 
-Aangescherpte formule:
-- capture → korte terugkoppeling waar passend → opname in dagboeklaag → latere reflectie
+Aangescherpte interactieformule:
+- capture → korte ondersteuning waar passend → opname in dagboeklaag → latere reflectie
 
-## Harde productregel
-De app is eerst een dagboekmachine, pas daarna een lichte assistentlaag.
+## Dagboeklaag vs assistentlaag
+### Dagboeklaag (canoniek)
+- broninhoud van de gebruiker
+- verwerkte daginhoud
+- periodieke reflecties
 
-Dat betekent:
-- dagboeklaag is leidend
-- assistentlaag is ondersteunend
-- geen open chatproduct als default
+Eigenschappen:
+- duurzaam
+- terugleesbaar
+- leidend voor productwaarde
 
-## Twee sporen
-### Spoor A — Canonieke inhoud (leidend)
-- ruwe input
-- genormaliseerde entry
-- day journal
-- weekreflectie
-- maandreflectie
+### Assistentlaag (ondersteunend)
+- korte begeleiding direct rond capture
+- begrensde, lichte ondersteuning
 
-Eigenschap:
-- duurzaam opgeslagen en terugleesbaar
+Eigenschappen:
+- ondergeschikt aan dagboeklaag
+- niet de primaire productmodus
+- geen open chat als default
 
-### Spoor B — Tijdelijke assistentie (ondersteunend)
-- korte observatie/spiegel/vraag direct rond capture
-- eventueel zeer beperkte vervolginteractie
+## Productguardrails
+1. Dagboeklaag blijft centraal.
+2. Assistentgedrag blijft kort en functioneel.
+3. Geen therapeutische positionering.
+4. Geen verschuiving naar brede coach/chatapp.
+5. Rust, helderheid en eigenaarschap van gebruikersinhoud blijven leidend.
 
-Eigenschap:
-- niet leidend
-- standaard niet de canonieke dagboeklaag
+## UX-principes rond de kleine assistentlaag
+1. Ondersteuning direct rond capture, niet als los chatuniversum.
+2. Duidelijk onderscheid tussen wat tijdelijk helpt en wat canoniek wordt opgeslagen.
+3. Toon: rustig, concreet, niet-zwaar.
+4. Interactie blijft compact en doelgericht.
 
-## Realiteitscheck t.o.v. actuele code
-Status van de aangescherpte assistentlaag als aparte feature:
-- **Deels aanwezig / onzeker**
-
-Wat wel hard aantoonbaar is:
-- capture-verwerking
-- entry completion schermen
-- afgeleide heropbouw (day journal + reflecties)
-
-Wat niet hard als aparte laag is aangetoond:
-- een duidelijk afgebakende, zelfstandige post-capture assistentmodule met eigen persistentieregels
-
-Beslisregel:
-- zolang dat bewijs ontbreekt, blijft de status “deels aanwezig / onzeker”.
-
-## Dagboekhygiëne
-Standaard niet in de canonieke dagboeklaag:
-- assistentmeta-tekst
-- analyse-over-analyse
-- losse chatachtige interactie zonder dagboekwaarde
-
-Wel in de canonieke dagboeklaag:
-- gebruikersbron
-- genormaliseerde inhoud
-- dagboekdag
-- week/maandreflecties
-
-## Scopebehoud
-Binnen MVP:
-- capture-first flows
-- betrouwbare dagboekopbouw
-- rustige reflecties
-
-Buiten MVP:
-- brede coach/chatmodus
-- therapeutische of diagnose-achtige assistentrollen
-- open memory-agentgedrag
-- verbreding naar algemene agentarchitectuur
-
-## Fase 1.2 implicaties
-- 1.2B: kwaliteit van narrative en reflecties moet brongetrouw en niet-generiek blijven.
-- 1.2C: UX moet duidelijk maken wat canonieke opslag is en wat tijdelijke assistentie is.
-- 1.2D: export mag niet impliciet verworden tot chatlog-export.
-
-## Beslisregel voor vervolg
-Nieuwe ideeën tellen alleen mee als ze de dagboekmachine versterken.
-Als iets vooral richting brede assistent trekt, valt het buiten de huidige fase.
+## Beslisregel voor uitbreidingen
+Alleen uitbreiden als het de dagboekmachine versterkt.
+Als het vooral richting brede assistent trekt, valt het buiten de huidige MVP-kaders.
 
 ---
 
@@ -303,7 +203,9 @@ Als iets vooral richting brede assistent trekt, valt het buiten de huidige fase.
 # Current Status — Codegevalideerd
 
 ## Doel
-Dit document beschrijft de actuele werkelijkheid van het project op basis van:
+Dit document is de enige statuswaarheid voor implementatierealiteit.
+
+Bronnen voor deze status:
 1. bestaande projectdocs (scope/planning)
 2. actuele codebase (bewijs van implementatie)
 
@@ -315,12 +217,11 @@ Gecontroleerd op:
 - `supabase/functions/**`, `supabase/migrations/**`
 - `scripts/**`, `package.json`
 
-## Leidende documenten nu
-- `docs/project/master-project.md`
-- `docs/project/product-vision-mvp.md`
-- `docs/project/current-status.md`
-- `docs/project/open-points.md`
-- `docs/project/content-processing-rules.md`
+## Statuslabels
+- **Aanwezig**: hard aantoonbaar in code
+- **Deels aanwezig**: aantoonbare onderdelen, maar niet volledig bewezen als afgerond
+- **Niet aangetroffen**: geen implementatie gevonden
+- **Onzeker**: bewijs onvoldoende
 
 ## Bewijsmatrix (docsplan vs code)
 | Onderwerp | Oorspronkelijk plan | Code-status | Conclusie |
@@ -333,39 +234,31 @@ Gecontroleerd op:
 | Day journal opbouw | Kernflow | **Aanwezig** | upsert in `process-entry` + `regenerate-day-journal` flow. |
 | Reflecties week/maand | Kernflow | **Aanwezig** | `generate-reflection` function + reflectie UI/service. |
 | Dagdetail mutaties | UX/hardening | **Aanwezig** | edit/delete + derived refresh in `app/day/[date].tsx` en `app/entry/[id].tsx`. |
-| “Opnieuw samenvatten” als zichtbare knop | Genoemd in oude beschrijving | **Deels aanwezig** | functionele heropbouw bestaat, maar geen expliciete knop met die naam in huidige UI. |
+| “Opnieuw samenvatten” als zichtbare knop | Genoemd in documentatie | **Deels aanwezig** | heropbouw bestaat functioneel, expliciete zichtbare knop niet hard aangetroffen. |
 | ChatGPT markdown import | Niet kern in oorspronkelijke scope | **Aanwezig (feature-flagged)** | `app/settings.tsx`, `services/import/*`, `import-chatgpt-markdown` function + migrationkolommen. |
 | Product-export voor gebruiker | Gepland in 1.2D | **Niet aangetroffen** | geen exportflow in app-UX/services voor eindgebruiker. |
 | Product-reset/delete-all | Gepland in 1.2D | **Niet aangetroffen** | geen gebruikersresetflow aangetroffen. |
 | Logging/tracing | Gepland 1.2A | **Aanwezig** | `requestId/flowId` contract + `_shared/flow-logger.ts`. |
 | Verify scripts lokaal | Gepland 1.2A/1.2E | **Aanwezig** | text/audio/reflection/output-quality scripts aanwezig. |
-| Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | `scripts/test-chatgpt-markdown-import.mjs` en `verify-local-chatgpt-import.sh` verwijzen naar ontbrekend `docs/dev/Dagboek voor gemoedstoestand.md`. |
-| Design 1.2.1 volledige doorvoer | Gepland designspoor | **Onzeker** | refs bestaan, maar complete implementatiedekking per scherm niet hard bewezen. |
+| Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
+| Design 1.2.1 volledige doorvoer | Gepland designspoor | **Onzeker** | refs bestaan, maar volledige implementatiedekking per scherm niet hard bewezen. |
 
-## Fase 1.2 status op code
+## Fase 1.2 status
 | Subfase | Status | Onderbouwing |
 |---|---|---|
 | 1.2A Stabiliteit/foutafhandeling | **Deels aanwezig** | tracing + verify aanwezig; geen harde afrondingsregistratie als complete subfase. |
-| 1.2B Outputkwaliteit | **Deels aanwezig** | contracts/guardrails/quality-script aanwezig; eindstatus “afgerond” niet hard vastgelegd. |
+| 1.2B Outputkwaliteit | **Deels aanwezig** | contracts/guardrails/quality-checks aanwezig; eindstatus “afgerond” niet hard vastgelegd. |
 | 1.2C UX-polish | **Deels aanwezig** | duidelijke polish in kernschermen; volledigheid over alle flows niet hard bewezen. |
-| 1.2D Export/reset vertrouwen | **Niet aangetroffen** | productniveau export/reset ontbreekt. |
+| 1.2D Vertrouwen (export/reset) | **Niet aangetroffen** | productniveau export/reset ontbreekt. |
 | 1.2E Private-beta readiness | **Deels aanwezig** | setup + verify aanwezig; complete smoke/release-checklist niet hard aangetroffen. |
 
-## Correcties op eerdere documentatieruis
+## Correcties op eerdere ruis
 - Foutieve padverwijzing gecorrigeerd: `docs/project/docs/project/master-project.md` bestaat niet; correct is `docs/project/master-project.md`.
-- Verschil expliciet gemaakt tussen:
-  - productfeature
-  - dev tooling (bijv. dumps)
-  - verify tooling
-- Aanwezigheid van tooling is niet automatisch aanwezigheid van gebruikersfeature.
-
-## Wat niet meer leidend is
-- `docs/project/archive/**`
-- `docs/design/archive/**`
-- historische dumps in `docs/dev/archive/**`
+- Productfeature, dev-tooling en verify-tooling zijn expliciet onderscheiden.
+- Tooling-aanwezigheid telt niet automatisch als gebruikersfeature.
 
 ## Samenvatting
-De release-1 kernlus is aantoonbaar gebouwd. Fase 1.2 heeft duidelijke voortgang in A/B/C/E, maar D (export/reset als productfeature) is niet aangetroffen. Enkele claims blijven bewust onzeker tot hard bewijs beschikbaar is.
+De release-1 kernlus is aantoonbaar gebouwd. Fase 1.2 heeft voortgang in A/B/C/E, terwijl 1.2D als productfeature niet is aangetroffen. Onvoldoende bewezen claims blijven expliciet onzeker.
 
 ---
 
@@ -374,9 +267,7 @@ De release-1 kernlus is aantoonbaar gebouwd. Fase 1.2 heeft duidelijke voortgang
 # Open Points — Resterend Werk
 
 ## Doel
-Dit document bevat alleen resterende gaps op basis van:
-- oorspronkelijke planning in projectdocs
-- aantoonbare code-realiteit
+Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
 ## Echt open (niet aangetroffen in code als productfeature)
 1. Export van dagboeklaag voor eindgebruiker (1.2D).
@@ -386,29 +277,23 @@ Dit document bevat alleen resterende gaps op basis van:
 Toelichting:
 - bestaande dump/export scripts zijn developer tooling, geen gebruikersfeature.
 
-## Deels open (aanwezig maar niet aantoonbaar afgerond)
-1. 1.2A stabiliteit/foutafhandeling.
+## Deels open (nog niet hard afgerond)
+1. 1.2A stabiliteit/foutafhandeling als complete afgeronde subfase.
 2. 1.2B outputkwaliteit als complete afgeronde kwaliteitsset.
 3. 1.2C UX-polish over alle kernflows.
-4. 1.2E private-beta readiness inclusief expliciete releasechecklist.
+4. 1.2E private-beta readiness met expliciete releasechecklist.
 
-## Onzeker (bewust niet geüpgraded naar “aanwezig”)
+## Onzeker
 1. Volledige implementatiedekking van designrefs 1.2.1 per scherm.
-2. Expliciete, aparte post-capture assistentlaag zoals visieformulering suggereert.
-3. Import-verify robuustheid: chatgpt-import tests verwijzen naar ontbrekende fixture (`docs/dev/Dagboek voor gemoedstoestand.md`).
+2. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
+3. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
 
-## Prioriteitsvolgorde
+## Prioriteit
 1. Sluit 1.2D productgaps (export/reset).
 2. Maak completion-criteria voor 1.2A/1.2B/1.2C/1.2E expliciet en toetsbaar.
-3. Los onzekerheden op met hard bewijs (code + docs), anders onzeker laten.
+3. Los onzekerheden op met hard bewijs; anders onzeker laten.
 
-## Buiten scope / post-MVP
-- brede chat/coach/agent-richting
-- retrieval/Q&A en vector search
-- document intelligence als brede productlaag
-- taken/agenda/reminders
-
-## Risico's
+## Risico’s
 1. Scope-creep richting brede assistent.
 2. Verwarring tussen tooling en productfeature.
 3. Te snelle status-upgrade van onbewezen claims.
@@ -425,11 +310,11 @@ Dit document is het bindende gedragscontract voor contentverwerking in drie lage
 2. `day_journals.narrative_text`
 3. `day_journals.summary`
 
-Dit is de canonieke content-regeldoc voor MVP.
+Dit is de canonieke content-regeldoc voor MVP en fase 1.2B.
 
 ## Waarom dit document leidend is
 Deze regels sluiten direct aan op:
-- server contracts en guardrails in `process-entry`, `regenerate-day-journal`, `renormalize-entry`
+- server contracts en guardrails in `process-entry`, `regenerate-day-journal`, `renormalize-entry`, `generate-reflection`
 - quality-verify checks in `scripts/verify-local-output-quality.sh`
 
 ## Kernregel
@@ -478,10 +363,38 @@ Mag niet:
 - rol van narrative overnemen
 - nieuwe interpretatie of niet-brongebonden inhoud introduceren
 
+## Aanvullend contract — `period_reflections`
+Doel:
+- compacte periodieke synthese op basis van day journals
+
+Moet:
+- brongebonden blijven op `day_journals`
+- samenvatting, highlights en reflectiepunten compact en bruikbaar houden
+
+Mag niet:
+- therapeutische of diagnostische taal gebruiken
+- inhoud verzinnen buiten de bron
+- standaard vervallen in todo-achtige actiepunten of checklisttaal
+
+## Aanvullend contract — directe assistentlaag na capture (indien gebruikt)
+Doel:
+- korte ondersteuning direct rond vastleggen
+
+Moet:
+- kort en ondersteunend zijn
+- niet-canoniek blijven t.o.v. dagboeklaag
+- rustige, niet-therapeutische toon gebruiken
+
+Mag niet:
+- automatisch dagboeklaag vervuilen
+- de productervaring verschuiven naar open chatmodus
+
 ## Scheidingsregel tussen lagen
 - `entries_normalized.body` = volledige opgeschoonde bronlaag van één entry
 - `day_journals.narrative_text` = volledige dagverhaallaag
 - `day_journals.summary` = compacte samenvattingslaag
+- `period_reflections` = periodieke synthese op dagboeklaag
+- directe assistentlaag = tijdelijk, ondersteunend, niet-canoniek
 
 Als `summary` en `narrative_text` functioneel hetzelfde worden, is dat contractbreuk.
 
@@ -502,14 +415,16 @@ Ongewenst:
 1. Betekenisvolle broninhoud blijft behouden in `entries_normalized.body`.
 2. `narrative_text` bevat alle relevante dagmomenten zonder verzinsels.
 3. `summary` is korter en compacter dan `narrative_text`.
-4. Geen marker-leak of fallback-tekst als inhoud in dagboek/reflectie.
-5. Output blijft brongebonden en leesbaar op representatieve quality-fixtures.
+4. `period_reflections` blijven brongebonden en compact-synthetisch.
+5. Directe assistentreacties (indien gebruikt) blijven kort, ondersteunend en niet-canoniek.
+6. Geen marker-leak of fallback-tekst als inhoud in dagboek/reflectie.
 
 ## Implementatiekoppeling
 Primair geraakt door:
 - `supabase/functions/process-entry/index.ts`
 - `supabase/functions/regenerate-day-journal/index.ts`
 - `supabase/functions/renormalize-entry/index.ts`
+- `supabase/functions/generate-reflection/index.ts`
 - `supabase/functions/_shared/day-journal-contract.mjs`
 - `scripts/verify-local-output-quality.sh`
 

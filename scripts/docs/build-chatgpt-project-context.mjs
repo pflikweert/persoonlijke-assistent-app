@@ -144,6 +144,7 @@ function renderBundle({ buildTimestamp, commitHash, loadedSources, appendixSumma
   blocks.push(`Source Commit: ${commitHash}`);
   blocks.push('');
   blocks.push('Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs.');
+  blocks.push('Upload standaard samen met docs/design/mvp-design-spec-1.2.1.md voor volledige MVP-designwaarheid.');
   blocks.push('Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.');
   blocks.push('');
   blocks.push('## Bronbestanden (vaste volgorde)');
