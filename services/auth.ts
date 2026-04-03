@@ -67,7 +67,7 @@ export async function ensureAuthenticatedUserSession(args: {
   const tokenIssuer = parseJwtIssuer(accessToken);
   const expectedIssuer = getExpectedIssuerFromPublicEnv();
 
-  if (process.env.EXPO_PUBLIC_DEBUG_FUNCTION_AUTH === '1') {
+  if (process.env.EXPO_PUBLIC_VERCEL_FLAG_DEBUG_FUNCTION_AUTH === '1') {
     console.info('[function-auth:client-session]', {
       flowId: args.flowId,
       source: args.source,

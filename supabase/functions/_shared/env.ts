@@ -8,6 +8,11 @@ export type FunctionRuntimeEnv = {
   dayJournalSoftQualityGuards: boolean;
 };
 
+const FEATURE_FLAG_ENV_KEYS = {
+  dayJournalStrictValidation: 'VERCEL_FLAG_DAY_JOURNAL_STRICT_VALIDATION',
+  dayJournalSoftQualityGuards: 'VERCEL_FLAG_DAY_JOURNAL_SOFT_QUALITY_GUARDS',
+} as const;
+
 function readEnv(name: string): string {
   return Deno.env.get(name)?.trim() ?? '';
 }
@@ -63,8 +68,14 @@ export function getFunctionRuntimeEnv(): FunctionRuntimeEnv {
   const openAiModel = readEnv('OPENAI_MODEL') || 'gpt-5.4-mini';
   const openAiTranscriptionModel =
     readEnv('OPENAI_TRANSCRIPTION_MODEL') || 'gpt-4o-mini-transcribe';
-  const dayJournalStrictValidation = readBooleanEnv('DAY_JOURNAL_STRICT_VALIDATION', false);
-  const dayJournalSoftQualityGuards = readBooleanEnv('DAY_JOURNAL_SOFT_QUALITY_GUARDS', false);
+  const dayJournalStrictValidation = readBooleanEnv(
+    FEATURE_FLAG_ENV_KEYS.dayJournalStrictValidation,
+    false
+  );
+  const dayJournalSoftQualityGuards = readBooleanEnv(
+    FEATURE_FLAG_ENV_KEYS.dayJournalSoftQualityGuards,
+    false
+  );
 
   return {
     supabaseUrl: requireValue(

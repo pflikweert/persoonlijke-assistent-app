@@ -38,6 +38,11 @@ Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-f
   - `EXPO_PUBLIC_APP_ENV`
 - Server-only app var: `APP_SUPABASE_SERVICE_ROLE_KEY` (alleen voor server utilities, nooit in clientcode).
 - Edge Function vars: `OPENAI_API_KEY` (vereist), `OPENAI_MODEL` (optioneel, default `gpt-5.4-mini`), `OPENAI_TRANSCRIPTION_MODEL` (optioneel, default `gpt-4o-mini-transcribe`).
+- Feature flags (Vercel-managed env vars, lokaal via `.env.local`):
+  - `VERCEL_FLAG_DAY_JOURNAL_SOFT_QUALITY_GUARDS` (default `false`): zet zachte quality-guards voor day-journal post-checks aan/uit.
+  - `VERCEL_FLAG_DAY_JOURNAL_STRICT_VALIDATION` (default `false`): zet striktere day-journal validatie aan/uit.
+  - `EXPO_PUBLIC_VERCEL_FLAG_DEBUG_FUNCTION_AUTH` (default `0`): toont client-side auth debug logging voor function calls.
+- Conventie voor nieuwe flags: gebruik `VERCEL_FLAG_*` (server/function) en `EXPO_PUBLIC_VERCEL_FLAG_*` (client/web). Beheer deze in Vercel envs; lokaal override je ze in `.env.local`.
 - `OPENAI_API_KEY` blijft strikt server-side en mag nooit in Expo clientcode of `EXPO_PUBLIC_*` variabelen terechtkomen.
 - Voor Edge Functions lokaal geldt: `supabase functions serve --env-file ...` kan custom variabelen met prefix `SUPABASE_` overslaan. Gebruik daarom geen custom `SUPABASE_*` namen in `.env.local`.
 - Zet `EXPO_PUBLIC_SUPABASE_TARGET=local` voor lokaal testen en `cloud` voor remote Supabase.

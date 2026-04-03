@@ -3,6 +3,7 @@ import { Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { Analytics } from '@vercel/analytics/react';
 import 'react-native-reanimated';
 import type { Session } from '@supabase/supabase-js';
 
@@ -110,6 +111,7 @@ export default function RootLayout() {
         </View>
       </View>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} backgroundColor={palette.background} />
+      {Platform.OS === 'web' ? <Analytics /> : null}
     </ThemeProvider>
   );
 }
