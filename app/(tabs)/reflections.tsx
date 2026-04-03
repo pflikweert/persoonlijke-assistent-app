@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ProcessingScreen } from '@/components/feedback/processing-screen';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
+import { CopyIconButton } from '@/components/ui/copy-icon-button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
@@ -21,6 +22,7 @@ import {
   generateReflection,
   parseJsonStringArray,
 } from '@/services';
+import { buildReflectionCopyPayload } from '@/src/lib/copy-payloads';
 import type { PeriodType } from '@/services/reflections';
 import { colorTokens, radius, spacing, typography } from '@/theme';
 
@@ -103,6 +105,50 @@ function formatPeriodRange(start: string, end: string): string {
   }
 
   return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${endYear}`;
+}
+
+function capitalizeFirst(value: string): string {
+  if (!value) {
+    return value;
+  }
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function getIsoWeekNumber(date: Date): number {
+  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = utcDate.getUTCDay() || 7;
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+  return Math.ceil(((utcDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+function formatWeekCopyTitle(periodStart: string, periodEnd: string): string {
+  const startDate = new Date(`${periodStart}T12:00:00.000Z`);
+  const endDate = new Date(`${periodEnd}T12:00:00.000Z`);
+
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return `Week · ${periodStart} – ${periodEnd}`;
+  }
+
+  const weekNumber = getIsoWeekNumber(startDate);
+  const startDay = String(startDate.getUTCDate()).padStart(2, '0');
+  const startMonth = startDate.toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' });
+  const endDay = String(endDate.getUTCDate()).padStart(2, '0');
+  const endMonth = endDate.toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' });
+  const year = endDate.getUTCFullYear();
+
+  return `Week ${weekNumber} · ${startDay} ${startMonth} – ${endDay} ${endMonth} ${year}`;
+}
+
+function formatMonthCopyTitle(periodStart: string): string {
+  const date = new Date(`${periodStart}T12:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) {
+    return periodStart;
+  }
+
+  const month = date.toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' });
+  const year = date.getUTCFullYear();
+  return `${capitalizeFirst(month)} ${year}`;
 }
 
 function utcDayStringNow(): string {
@@ -228,6 +274,23 @@ export default function ReflectionsScreen() {
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
     .slice(0, 3);
+  const reflectionCopyPayload = useMemo(() => {
+    if (!activeReflection) {
+      return null;
+    }
+
+    const title =
+      activePeriod === 'week'
+        ? formatWeekCopyTitle(activeReflection.period_start, activeReflection.period_end)
+        : formatMonthCopyTitle(activeReflection.period_start);
+
+    return buildReflectionCopyPayload({
+      periodRange: title,
+      summaryText: activeReflection.summary_text,
+      highlights: cleanHighlights,
+      reflectionPoints: cleanReflectionPoints,
+    });
+  }, [activePeriod, activeReflection, cleanHighlights, cleanReflectionPoints]);
 
   function openSelector(periodType: PeriodType) {
     setSelectorPeriod(periodType);
@@ -360,11 +423,18 @@ export default function ReflectionsScreen() {
 
           {activeReflection ? (
             <>
-              <ThemedView style={styles.reflectHeader}>
-                <ThemedText type="screenTitle" style={styles.reflectTitle}>
-                  {periodHeading(activePeriod)}
-                </ThemedText>
-                <MetaText>{formatPeriodRange(activeReflection.period_start, activeReflection.period_end)}</MetaText>
+              <ThemedView style={styles.reflectHeaderWrap}>
+                <ThemedView style={styles.reflectHeader}>
+                  <ThemedText type="screenTitle" style={styles.reflectTitle}>
+                    {periodHeading(activePeriod)}
+                  </ThemedText>
+                  <MetaText>{formatPeriodRange(activeReflection.period_start, activeReflection.period_end)}</MetaText>
+                </ThemedView>
+                <CopyIconButton
+                  payload={reflectionCopyPayload}
+                  copyLabel="Kopieer reflectie"
+                  copiedLabel="Reflectie gekopieerd"
+                />
               </ThemedView>
 
               <ThemedView
@@ -560,6 +630,12 @@ const styles = StyleSheet.create({
   },
   reflectHeader: {
     gap: spacing.xs,
+  },
+  reflectHeaderWrap: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.md,
   },
   reflectTitle: {
     fontSize: 42,

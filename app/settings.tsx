@@ -20,6 +20,7 @@ import {
   SurfaceSection,
 } from '@/components/ui/screen-primitives';
 import {
+  isChatGptMarkdownImportEnabled,
   invokeChatGptMarkdownImport,
   parseChatGptMarkdownFile,
   refreshImportedChatGptDerivedContent,
@@ -88,6 +89,7 @@ export default function SettingsScreen() {
   const [replaceConfirmVisible, setReplaceConfirmVisible] = useState(false);
   const [status, setStatus] = useState<FlowStatus | null>(null);
   const [importProgress, setImportProgress] = useState<ImportProgressState | null>(null);
+  const importEnabled = isChatGptMarkdownImportEnabled();
 
   const previewTitle = useMemo(() => {
     if (!preview) {
@@ -105,6 +107,15 @@ export default function SettingsScreen() {
   }
 
   async function handlePickFile() {
+    if (!importEnabled) {
+      setStatus({
+        tone: 'info',
+        message: 'Import is uitgeschakeld.',
+        detail: 'Deze feature staat nu niet aan in deze omgeving.',
+      });
+      return;
+    }
+
     setLoadingPreview(true);
     setStatus(null);
     setReplaceConfirmVisible(false);
@@ -151,7 +162,7 @@ export default function SettingsScreen() {
   }
 
   async function runImport(replaceExisting = false) {
-    if (!preview) {
+    if (!preview || !importEnabled) {
       return;
     }
 
@@ -258,7 +269,19 @@ export default function SettingsScreen() {
           />
         }
         contentContainerStyle={styles.scrollContent}>
-        {flowStep === 'pick' ? (
+        {!importEnabled ? (
+          <SurfaceSection
+            title="Importeer ChatGPT markdown"
+            subtitle="Deze importfeature staat standaard uit in productie.">
+            <StateBlock
+              tone="info"
+              message="Import is momenteel niet beschikbaar."
+              detail="In lokale development blijft deze flow wel zichtbaar voor testen."
+            />
+          </SurfaceSection>
+        ) : null}
+
+        {importEnabled && flowStep === 'pick' ? (
           <SurfaceSection
             title="Importeer ChatGPT markdown"
             subtitle="Laad één Nexus/ChatGPT markdown-export in als dagboekentries.">
@@ -289,7 +312,7 @@ export default function SettingsScreen() {
           </SurfaceSection>
         ) : null}
 
-        {flowStep === 'preview' && preview ? (
+        {importEnabled && flowStep === 'preview' && preview ? (
           <SurfaceSection
             title="Preview"
             subtitle="Controleer eerst wat er wordt toegevoegd aan je dagboek.">
@@ -345,7 +368,7 @@ export default function SettingsScreen() {
           </SurfaceSection>
         ) : null}
 
-        {flowStep === 'result' && status ? (
+        {importEnabled && flowStep === 'result' && status ? (
           <SurfaceSection
             title={status.tone === 'error' ? 'Import mislukt' : 'Gelukt'}
             subtitle={
@@ -369,7 +392,7 @@ export default function SettingsScreen() {
         />
 
         <ConfirmDialog
-          visible={replaceConfirmVisible}
+          visible={importEnabled && replaceConfirmVisible}
           title="Vervang eerdere import?"
           message="Voor dit bestand zijn al entries geïmporteerd. Wil je de eerdere import vervangen?"
           cancelLabel="Nee"
@@ -381,7 +404,7 @@ export default function SettingsScreen() {
       </ScreenContainer>
 
       <ProcessingScreen
-        visible={importing}
+        visible={importEnabled && importing}
         variant="chatgpt-import"
         statusOverride={formatImportStatus(importProgress)}
       />

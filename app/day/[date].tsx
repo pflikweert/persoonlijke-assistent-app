@@ -14,6 +14,7 @@ import {
   MetaText,
   StateBlock,
 } from '@/components/ui/screen-primitives';
+import { CopyIconButton } from '@/components/ui/copy-icon-button';
 import {
   deleteNormalizedEntryById,
   fetchDayJournalByDate,
@@ -25,6 +26,7 @@ import {
   regenerateDayJournalByDate,
   updateNormalizedEntryById,
 } from '@/services';
+import { buildDayJournalCopyPayload } from '@/src/lib/copy-payloads';
 import { colorTokens, radius, spacing } from '@/theme';
 
 type RouteParams = {
@@ -49,6 +51,23 @@ function formatLongDate(value: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   });
+}
+
+function formatDayCopyTitle(value: string): string {
+  const parsed = new Date(`${value}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return value || '-';
+  }
+
+  const label = parsed.toLocaleDateString('nl-NL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+
+  return capitalizeFirst(label);
 }
 
 function cleanMomentPreview(value: string): string {
@@ -236,6 +255,7 @@ export default function DayDetailScreen() {
   const aiInsight = useMemo(() => extractAiInsight(sections), [sections]);
   const previewSections = aiInsight.remainingSections.slice(0, 4);
   const readableDate = useMemo(() => formatLongDate(journalDate), [journalDate]);
+  const copyDateTitle = useMemo(() => formatDayCopyTitle(journalDate), [journalDate]);
   const dayHeading = useMemo(() => getDayHeadingLabel(journalDate), [journalDate]);
   const insightText = useMemo(
     () => aiInsight.insight ?? buildInsight(summary, narrativeText, aiInsight.remainingSections),
@@ -292,6 +312,17 @@ export default function DayDetailScreen() {
     return 'today';
   }, [previousTabName]);
   const showInlineEntryActions = false;
+  const dayJournalCopyPayload = useMemo(
+    () =>
+      buildDayJournalCopyPayload({
+        dateLabel: copyDateTitle,
+        summary,
+        narrativeText,
+        insight: insightText,
+        keyPoints: previewSections,
+      }),
+    [copyDateTitle, insightText, narrativeText, previewSections, summary]
+  );
 
   useEffect(() => {
     if (!pendingFocusEntryId || loading || Boolean(error)) {
@@ -539,9 +570,21 @@ export default function DayDetailScreen() {
       ) : null}
 
       {!loading && !error && narrativeText ? (
-        <ThemedText type="body" style={[styles.editorialBody, { color: palette.text }]}>
-          {narrativeText}
-        </ThemedText>
+        <ThemedView style={styles.narrativeBlock}>
+          <ThemedView style={styles.narrativeHeaderRow}>
+            <ThemedText type="meta" style={[styles.narrativeTitle, { color: palette.primary }]}>
+              Dagverhaal
+            </ThemedText>
+            <CopyIconButton
+              payload={dayJournalCopyPayload}
+              copyLabel="Kopieer dagjournaal"
+              copiedLabel="Dagjournaal gekopieerd"
+            />
+          </ThemedView>
+          <ThemedText type="body" style={[styles.editorialBody, { color: palette.text }]}>
+            {narrativeText}
+          </ThemedText>
+        </ThemedView>
       ) : null}
 
       {!loading && !error && insightText ? (
@@ -772,6 +815,18 @@ const styles = StyleSheet.create({
   },
   heroSummaryText: {
     lineHeight: 26,
+  },
+  narrativeBlock: {
+    gap: spacing.sm,
+  },
+  narrativeHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  narrativeTitle: {
+    letterSpacing: 0.4,
   },
   editorialBody: {
     fontSize: 20,
