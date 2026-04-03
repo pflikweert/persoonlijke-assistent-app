@@ -1,7 +1,7 @@
 import { Tabs, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Pressable, StyleSheet } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/screen-primitives';
 import {
   classifyUnknownError,
-  fetchLatestReflection,
+  fetchRecentReflectionsByType,
   generateReflection,
   parseJsonStringArray,
 } from '@/services';
@@ -30,6 +30,50 @@ function periodTypeLabel(periodType: PeriodType): string {
 
 function periodHeading(periodType: PeriodType): string {
   return periodType === 'week' ? 'Deze week' : 'Deze maand';
+}
+
+function monthHeading(periodStart: string): string {
+  const date = new Date(`${periodStart}T12:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) {
+    return periodStart;
+  }
+
+  const month = date.toLocaleDateString('nl-NL', {
+    month: 'long',
+    timeZone: 'UTC',
+  });
+  const year = date.getUTCFullYear();
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${year}`;
+}
+
+function weekHeading(periodStart: string, periodEnd: string): string {
+  const startDate = new Date(`${periodStart}T12:00:00.000Z`);
+  const endDate = new Date(`${periodEnd}T12:00:00.000Z`);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return `Week ${periodStart} – ${periodEnd}`;
+  }
+
+  const dayStart = String(startDate.getUTCDate()).padStart(2, '0');
+  const monthStart = startDate.toLocaleDateString('nl-NL', {
+    month: 'short',
+    timeZone: 'UTC',
+  });
+  const dayEnd = String(endDate.getUTCDate()).padStart(2, '0');
+  const monthEnd = endDate.toLocaleDateString('nl-NL', {
+    month: 'short',
+    timeZone: 'UTC',
+  });
+  const year = endDate.getUTCFullYear();
+
+  return `Week ${dayStart} ${monthStart} – ${dayEnd} ${monthEnd} ${year}`;
+}
+
+function shortSummary(value: string): string {
+  const clean = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (clean.length <= 110) {
+    return clean;
+  }
+  return `${clean.slice(0, 107).trimEnd()}...`;
 }
 
 function formatPeriodRange(start: string, end: string): string {
@@ -61,6 +105,18 @@ function formatPeriodRange(start: string, end: string): string {
   return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${endYear}`;
 }
 
+function utcDayStringNow(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function selectCurrentPeriodId(
+  rows: Awaited<ReturnType<typeof fetchRecentReflectionsByType>>,
+  day: string = utcDayStringNow()
+): string | null {
+  const current = rows.find((row) => row.period_start <= day && row.period_end >= day);
+  return current?.id ?? rows[0]?.id ?? null;
+}
+
 export default function ReflectionsScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -74,8 +130,12 @@ export default function ReflectionsScreen() {
   const [generating, setGenerating] = useState<PeriodType | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [activePeriod, setActivePeriod] = useState<PeriodType>('week');
-  const [latestWeek, setLatestWeek] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
-  const [latestMonth, setLatestMonth] = useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
+  const [weekReflections, setWeekReflections] = useState<Awaited<ReturnType<typeof fetchRecentReflectionsByType>>>([]);
+  const [monthReflections, setMonthReflections] = useState<Awaited<ReturnType<typeof fetchRecentReflectionsByType>>>([]);
+  const [selectedWeekId, setSelectedWeekId] = useState<string | null>(null);
+  const [selectedMonthId, setSelectedMonthId] = useState<string | null>(null);
+  const [selectorVisible, setSelectorVisible] = useState(false);
+  const [selectorPeriod, setSelectorPeriod] = useState<PeriodType>('week');
   const isProcessing = generating !== null;
 
   const loadReflections = useCallback(async () => {
@@ -83,13 +143,23 @@ export default function ReflectionsScreen() {
     setError(null);
 
     try {
-      const [weekRow, monthRow] = await Promise.all([
-        fetchLatestReflection('week'),
-        fetchLatestReflection('month'),
+      const [weekRows, monthRows] = await Promise.all([
+        fetchRecentReflectionsByType({ periodType: 'week', limit: 20 }),
+        fetchRecentReflectionsByType({ periodType: 'month', limit: 20 }),
       ]);
 
-      setLatestWeek(weekRow);
-      setLatestMonth(monthRow);
+      setWeekReflections(weekRows);
+      setMonthReflections(monthRows);
+      setSelectedWeekId((current) =>
+        current && weekRows.some((row) => row.id === current)
+          ? current
+          : selectCurrentPeriodId(weekRows)
+      );
+      setSelectedMonthId((current) =>
+        current && monthRows.some((row) => row.id === current)
+          ? current
+          : selectCurrentPeriodId(monthRows)
+      );
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -97,8 +167,10 @@ export default function ReflectionsScreen() {
         retryable: parsed.retryable,
         requestId: parsed.requestId,
       });
-      setLatestWeek(null);
-      setLatestMonth(null);
+      setWeekReflections([]);
+      setMonthReflections([]);
+      setSelectedWeekId(null);
+      setSelectedMonthId(null);
     } finally {
       setLoading(false);
     }
@@ -139,7 +211,14 @@ export default function ReflectionsScreen() {
     }
   }
 
-  const activeReflection = activePeriod === 'week' ? latestWeek : latestMonth;
+  const activeRows = activePeriod === 'week' ? weekReflections : monthReflections;
+  const selectedId = activePeriod === 'week' ? selectedWeekId : selectedMonthId;
+  const activeReflection = useMemo(
+    () => activeRows.find((row) => row.id === selectedId) ?? activeRows[0] ?? null,
+    [activeRows, selectedId]
+  );
+  const selectorRows = selectorPeriod === 'week' ? weekReflections : monthReflections;
+  const selectorSelectedId = selectorPeriod === 'week' ? selectedWeekId : selectedMonthId;
   const highlights = activeReflection ? parseJsonStringArray(activeReflection.highlights_json) : [];
   const reflectionPoints = activeReflection
     ? parseJsonStringArray(activeReflection.reflection_points_json)
@@ -149,6 +228,26 @@ export default function ReflectionsScreen() {
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
     .slice(0, 3);
+
+  function openSelector(periodType: PeriodType) {
+    setSelectorPeriod(periodType);
+    setSelectorVisible(true);
+  }
+
+  function closeSelector() {
+    setSelectorVisible(false);
+  }
+
+  function selectReflection(id: string) {
+    if (selectorPeriod === 'week') {
+      setSelectedWeekId(id);
+      setActivePeriod('week');
+    } else {
+      setSelectedMonthId(id);
+      setActivePeriod('month');
+    }
+    closeSelector();
+  }
 
   return (
     <>
@@ -182,7 +281,12 @@ export default function ReflectionsScreen() {
         <>
       <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
         <Pressable
-          onPress={() => setActivePeriod('week')}
+          onPress={() => {
+            setActivePeriod('week');
+            if (!selectedWeekId) {
+              setSelectedWeekId(selectCurrentPeriodId(weekReflections));
+            }
+          }}
           style={[
             styles.periodButton,
             activePeriod === 'week' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
@@ -198,7 +302,12 @@ export default function ReflectionsScreen() {
           </ThemedText>
         </Pressable>
         <Pressable
-          onPress={() => setActivePeriod('month')}
+          onPress={() => {
+            setActivePeriod('month');
+            if (!selectedMonthId) {
+              setSelectedMonthId(selectCurrentPeriodId(monthReflections));
+            }
+          }}
           style={[
             styles.periodButton,
             activePeriod === 'month' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
@@ -238,6 +347,17 @@ export default function ReflectionsScreen() {
 
       {!loading ? (
         <ThemedView style={styles.readingCanvas}>
+          {activeRows.length > 0 ? (
+            <Pressable
+              onPress={() => openSelector(activePeriod)}
+              accessibilityRole="button"
+              style={[styles.choosePeriodButton, { backgroundColor: palette.surfaceLow }]}>
+              <ThemedText type="caption" style={{ color: palette.primary }}>
+                {activePeriod === 'week' ? 'Kies andere week' : 'Kies andere maand'}
+              </ThemedText>
+            </Pressable>
+          ) : null}
+
           {activeReflection ? (
             <>
               <ThemedView style={styles.reflectHeader}>
@@ -312,6 +432,78 @@ export default function ReflectionsScreen() {
         currentRouteKey="reflections"
         onRequestClose={() => setMenuVisible(false)}
       />
+      <Modal visible={selectorVisible && !isProcessing} animationType="slide" onRequestClose={closeSelector}>
+        <ThemedView style={styles.selectorScreen}>
+          <ThemedView style={styles.selectorHeader}>
+            <Pressable onPress={closeSelector} accessibilityRole="button" style={styles.selectorTopAction}>
+              <ThemedText type="bodySecondary">Sluiten</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setActivePeriod(selectorPeriod);
+                closeSelector();
+              }}
+              accessibilityRole="button"
+              style={styles.selectorTopAction}>
+              <ThemedText type="bodySecondary">
+                {selectorPeriod === 'week' ? 'Toon week' : 'Toon maand'}
+              </ThemedText>
+            </Pressable>
+          </ThemedView>
+
+          <ThemedView style={styles.selectorBody}>
+            <ThemedText type="screenTitle" style={styles.selectorTitle}>
+              {selectorPeriod === 'week' ? 'Kies een week' : 'Kies een maand'}
+            </ThemedText>
+            <MetaText>
+              {selectorPeriod === 'week'
+                ? 'Overzicht van je recente weekreflecties.'
+                : 'Overzicht van je recente maandreflecties.'}
+            </MetaText>
+
+            {selectorRows.length === 0 ? (
+              <StateBlock
+                tone="empty"
+                message={`Nog geen ${periodTypeLabel(selectorPeriod).toLowerCase()}reflecties.`}
+                detail="Genereer eerst een reflectie om hier te kunnen kiezen."
+              />
+            ) : (
+              <ScrollView contentContainerStyle={styles.selectorList} showsVerticalScrollIndicator={false}>
+                {selectorRows.map((row) => {
+                  const isSelected = row.id === selectorSelectedId;
+                  const heading =
+                    selectorPeriod === 'week'
+                      ? weekHeading(row.period_start, row.period_end)
+                      : monthHeading(row.period_start);
+
+                  return (
+                    <Pressable
+                      key={row.id}
+                      onPress={() => selectReflection(row.id)}
+                      style={[
+                        styles.periodListItem,
+                        {
+                          borderColor: isSelected ? `${palette.primary}66` : `${palette.separator}88`,
+                          backgroundColor: isSelected ? palette.surfaceLow : palette.surfaceLowest,
+                        },
+                      ]}>
+                      <ThemedText type="defaultSemiBold" style={{ color: palette.text }}>
+                        {heading}
+                      </ThemedText>
+                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                        {formatPeriodRange(row.period_start, row.period_end)}
+                      </ThemedText>
+                      <ThemedText type="bodySecondary" numberOfLines={2} style={{ color: palette.muted }}>
+                        {shortSummary(row.summary_text)}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </ThemedView>
+        </ThemedView>
+      </Modal>
       </ScreenContainer>
       <ProcessingScreen visible={isProcessing} variant="reflection-generate" />
     </>
@@ -353,6 +545,19 @@ const styles = StyleSheet.create({
   readingCanvas: {
     gap: spacing.xl,
   },
+  choosePeriodButton: {
+    alignSelf: 'flex-start',
+    borderRadius: radius.pill,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  periodListItem: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.xxs,
+  },
   reflectHeader: {
     gap: spacing.xs,
   },
@@ -385,5 +590,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     gap: spacing.xs,
+  },
+  selectorScreen: {
+    flex: 1,
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.lg,
+  },
+  selectorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  selectorTopAction: {
+    paddingVertical: spacing.xs,
+  },
+  selectorBody: {
+    flex: 1,
+    gap: spacing.md,
+  },
+  selectorTitle: {
+    fontSize: 34,
+    lineHeight: 38,
+    letterSpacing: -0.6,
+  },
+  selectorList: {
+    gap: spacing.sm,
+    paddingBottom: spacing.xl,
   },
 });
