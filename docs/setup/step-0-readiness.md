@@ -15,16 +15,20 @@ Zie: docs/project/current-status.md
 - Activeer Node 24: `nvm use`.
 - Vul lokale env in op basis van `.env.example` (gebruik echte waarden, geen placeholders).
   - Kies actief target via `EXPO_PUBLIC_SUPABASE_TARGET` (`local` of `cloud`).
-- Login en link Supabase project lokaal:
+- Voor lokale Supabase stack:
+  - `npx supabase start`
+- Login en link Supabase project lokaal alleen als je cloud-acties wilt uitvoeren:
   - `npx supabase login`
   - `npx supabase init`
   - `npx supabase link --project-ref <jouw-project-ref>`
 - Regenerate DB types wanneer schema wijzigt:
   - `npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts`
 - Voor Edge Functions lokaal:
-  - `npm run dev` deployt eerst de lokale edge functions en start daarna Expo + de lokale functions runtime.
-  - Als je alleen de functions wilt serven: `npx supabase functions serve process-entry --env-file .env.local`
+  - `npm run dev` start lokale Supabase stack + lokale functions runtime + Expo.
+  - `npm run supabase:functions:serve` start alleen de lokale functions runtime.
+  - `npm run supabase:functions:restart` herstart de lokale functions runtime na function-codewijzigingen.
   - Gebruik geen custom function-env namen die met `SUPABASE_` beginnen in `.env.local`.
+- Productie deploy van Supabase Edge Functions loopt alleen via GitHub Actions (`.github/workflows/deploy.yml`), niet via `npm run dev`.
 - Voor lokale auth redirects gebruikt de Supabase config nu `http://localhost:8081` / `http://127.0.0.1:8081` voor Expo web.
 
 ## Smoke test commando's
@@ -45,5 +49,5 @@ npm run android
 ## Blokkades voordat stap 1 mag starten
 - `OPENAI_API_KEY`, `APP_SUPABASE_SERVICE_ROLE_KEY` en andere server-only secrets moeten alleen server-side gebruikt blijven.
 - `.env.local` moet volledig en correct zijn ingevuld; anders blijven server stubs in fallback-modus.
-- Supabase CLI moet gelinkt zijn aan het juiste project-ref voordat je schema/types betrouwbaar kunt synchroniseren.
+- Supabase CLI moet alleen voor cloud/synchronisatie-acties aan het juiste project-ref gelinkt zijn.
 - `lint` en `typecheck` moeten groen blijven op de branch waar stap 1 start.

@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "./scripts/dev.sh",
     "dev:stop": "./scripts/dev-stop.sh",
+    "supabase:local:start": "npx supabase start",
+    "supabase:local:stop": "npx supabase stop",
+    "supabase:functions:serve": "npx supabase functions serve --env-file .env.local",
+    "supabase:functions:restart": "./scripts/supabase-functions-restart.sh",
     "start": "npm run dev",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -18,7 +22,7 @@
     "verify:local-audio-flow": "./scripts/verify-local-audio-flow.sh",
     "verify:local-reflection-flow": "./scripts/verify-local-reflection-flow.sh",
     "verify:local-output-quality": "./scripts/verify-local-output-quality.sh",
-    "env:pull": "npx vercel env pull .env.local",
+    "env:pull:vercel": "npx vercel env pull .env.vercel.local",
     "docs:bundle": "node scripts/docs/build-chatgpt-project-context.mjs",
     "docs:bundle:verify": "node scripts/docs/build-chatgpt-project-context.mjs --check"
   },

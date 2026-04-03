@@ -69,7 +69,20 @@ Bij wijzigingen aan canonieke docs:
 - werk eerst de handmatige docs bij
 - draai daarna:
   - `npm run docs:bundle`
-  - `npm run docs:bundle:verify`
+- `npm run docs:bundle:verify`
+
+## Lokale restart/deploy beslisregel
+
+Na relevante wijzigingen expliciet melden welke extra stap nodig is:
+
+- alleen app/frontend gewijzigd -> meestal niets extra's of alleen app-restart
+- `supabase/functions/**` gewijzigd -> `npm run supabase:functions:restart`
+- `supabase/migrations/**` gewijzigd -> lokale `db push`/`db reset` + eventuele type-regeneratie
+- geen relevante runtime-impact -> expliciet melden dat niets extra's nodig is
+
+Regel:
+- `npm run dev` is lokaal-only en mag geen remote functions deploy doen.
+- productie deploy van Supabase Edge Functions loopt alleen via GitHub Actions.
 
 ## Security
 

@@ -15,4 +15,5 @@ if [ -f "$PID_FILE" ]; then
 fi
 
 pkill -f "$FUNCTION_CMD" 2>/dev/null || true
-echo "functions runtime stopped."
+
+echo "Functions runtime stopped. Local Supabase stack blijft draaien."
