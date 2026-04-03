@@ -142,13 +142,9 @@ export default function TodayScreen() {
         />
       ) : null}
       {!loading && !error && !summary ? (
-        <ThemedView
-          lightColor={colorTokens.light.surfaceLow}
-          darkColor={colorTokens.dark.surfaceLow}
-          style={styles.compactBlock}>
-          <ThemedText type="defaultSemiBold">Er is nog geen dagjournal voor vandaag.</ThemedText>
-          <ThemedText type="bodySecondary" style={[styles.compactText, { color: palette.muted }]}>
-            Leg je eerste notitie vast om je dag op te bouwen.
+        <ThemedView style={styles.dayOpeningBlock}>
+          <ThemedText type="bodySecondary" style={[styles.dayOpeningText, { color: palette.muted }]}>
+            Je dag is nog open. Er is ruimte voor de kleine momenten die later betekenis krijgen.
           </ThemedText>
         </ThemedView>
       ) : null}
@@ -349,6 +345,16 @@ const styles = StyleSheet.create({
   },
   compactText: {
     lineHeight: typography.roles.bodySecondary.lineHeight + 1,
+  },
+  dayOpeningBlock: {
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.xs,
+  },
+  dayOpeningText: {
+    fontSize: 23,
+    lineHeight: 34,
+    letterSpacing: -0.2,
   },
   recentBlock: {
     marginTop: spacing.lg,
