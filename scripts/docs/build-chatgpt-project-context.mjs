@@ -52,6 +52,11 @@ function extractBuildTimestamp(existingContent) {
   return match?.[1]?.trim() || null;
 }
 
+function extractSourceCommit(existingContent) {
+  const match = existingContent.match(/^Source Commit:\s*(.+)$/m);
+  return match?.[1]?.trim() || null;
+}
+
 function extractProjectCriticalAgentsSummary(agentsContent) {
   const allowedHeaders = new Set([
     'Canonieke projectbron',
@@ -167,17 +172,21 @@ function renderBundle({ buildTimestamp, commitHash, loadedSources, appendixSumma
 
 async function main() {
   const isCheckMode = process.argv.includes('--check');
-  const commitHash = getHeadCommitHash();
   const { loaded, appendixSummary } = await loadSources();
 
   let buildTimestamp = new Date().toISOString();
+  let commitHash = getHeadCommitHash();
 
   if (isCheckMode) {
     try {
       const existing = normalizeLf(await fs.readFile(outputPath, 'utf8'));
       const existingTimestamp = extractBuildTimestamp(existing);
+      const existingCommit = extractSourceCommit(existing);
       if (existingTimestamp) {
         buildTimestamp = existingTimestamp;
+      }
+      if (existingCommit) {
+        commitHash = existingCommit;
       }
     } catch {
       // Keep current timestamp if file does not exist; check will fail below.

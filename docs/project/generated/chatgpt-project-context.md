@@ -1,7 +1,7 @@
 # DO NOT EDIT — GENERATED FILE
 
-Build Timestamp (UTC): 2026-04-03T12:46:35.480Z
-Source Commit: b152f1d
+Build Timestamp (UTC): 2026-04-03T12:47:57.234Z
+Source Commit: 9e4ce59
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
