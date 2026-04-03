@@ -697,7 +697,7 @@ export default function DayDetailScreen() {
       </ScrollView>
 
       <QuickMenuBar
-        activeKey={menuRouteKey}
+        activeKey={menuRouteKey as 'today' | 'capture' | 'days' | 'reflections'}
         onSelect={(key) => {
           const targetPath = quickMenuPathFromKey(key);
           if (targetPath === '/capture') {

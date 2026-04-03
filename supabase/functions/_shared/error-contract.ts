@@ -1,4 +1,9 @@
-export type FlowName = 'process-entry' | 'generate-reflection' | 'regenerate-day-journal' | 'renormalize-entry';
+export type FlowName =
+  | 'process-entry'
+  | 'generate-reflection'
+  | 'regenerate-day-journal'
+  | 'renormalize-entry'
+  | 'import-chatgpt-markdown';
 
 export type FlowErrorCode =
   | 'AUTH_MISSING'

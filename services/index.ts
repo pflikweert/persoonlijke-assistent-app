@@ -17,9 +17,18 @@ export {
 export { submitAudioEntry, submitTextEntry } from './entries';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
 export {
+  importChatGptMarkdownPreview,
+  invokeChatGptMarkdownImport,
+  listPreviewDays,
+  parseChatGptMarkdownFile,
+  refreshImportedChatGptDerivedContent,
+  summarizePreviewDate,
+} from './import';
+export {
   fetchLatestReflection,
   hasReflectionForAnchorDate,
   fetchRecentReflections,
+  fetchRecentReflectionsByType,
   generateReflection,
   parseJsonStringArray,
 } from './reflections';

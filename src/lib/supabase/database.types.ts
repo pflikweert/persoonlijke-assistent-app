@@ -87,6 +87,10 @@ export type Database = {
           captured_at: string
           created_at: string
           id: string
+          import_external_message_id: string | null
+          import_file_name: string | null
+          import_source_ref: string | null
+          import_source_type: string | null
           raw_text: string | null
           source_type: string
           transcript_text: string | null
@@ -96,6 +100,10 @@ export type Database = {
           captured_at?: string
           created_at?: string
           id?: string
+          import_external_message_id?: string | null
+          import_file_name?: string | null
+          import_source_ref?: string | null
+          import_source_type?: string | null
           raw_text?: string | null
           source_type: string
           transcript_text?: string | null
@@ -105,6 +113,10 @@ export type Database = {
           captured_at?: string
           created_at?: string
           id?: string
+          import_external_message_id?: string | null
+          import_file_name?: string | null
+          import_source_ref?: string | null
+          import_source_type?: string | null
           raw_text?: string | null
           source_type?: string
           transcript_text?: string | null

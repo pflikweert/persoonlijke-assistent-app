@@ -9,7 +9,7 @@ import { signOutUser } from '@/services';
 import { colorTokens, radius, spacing, typography } from '@/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export type MainMenuRouteKey = 'today' | 'capture' | 'days' | 'reflections';
+export type MainMenuRouteKey = 'today' | 'capture' | 'days' | 'reflections' | 'settings';
 
 type MenuEntry = {
   key: MainMenuRouteKey | 'settings' | 'libium' | 'logout';
@@ -25,7 +25,7 @@ const MENU_ENTRIES: MenuEntry[] = [
   { key: 'capture', label: 'Vastleggen', icon: 'add-circle', visible: true, route: '/capture' },
   { key: 'days', label: 'Dagen', icon: 'calendar-today', visible: true, route: '/days' },
   { key: 'reflections', label: 'Reflecties', icon: 'menu-book', visible: true, route: '/reflections' },
-  { key: 'settings', label: 'Instellingen', icon: 'settings', visible: false },
+  { key: 'settings', label: 'Instellingen', icon: 'settings', visible: true, route: '/settings' },
   { key: 'libium', label: 'Bibliotheek', icon: 'book', visible: false },
   { key: 'logout', label: 'Uitloggen', icon: 'logout', visible: true, action: 'logout' },
 ];

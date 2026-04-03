@@ -10,7 +10,12 @@ export type FunctionErrorCode =
 
 export interface FunctionErrorPayload {
   status: 'error';
-  flow: 'process-entry' | 'generate-reflection' | 'regenerate-day-journal' | 'renormalize-entry';
+  flow:
+    | 'process-entry'
+    | 'generate-reflection'
+    | 'regenerate-day-journal'
+    | 'renormalize-entry'
+    | 'import-chatgpt-markdown';
   requestId: string;
   flowId: string;
   step: string;
@@ -30,7 +35,13 @@ export class FunctionFlowError extends Error {
 }
 
 export function createClientFlowId(
-  prefix: 'capture-text' | 'capture-audio' | 'reflection' | 'day-regenerate' | 'entry-renormalize'
+  prefix:
+    | 'capture-text'
+    | 'capture-audio'
+    | 'reflection'
+    | 'day-regenerate'
+    | 'entry-renormalize'
+    | 'import-chatgpt'
 ): string {
   const random = Math.random().toString(36).slice(2, 10);
   return `${prefix}-${Date.now()}-${random}`;

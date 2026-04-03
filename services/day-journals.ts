@@ -245,20 +245,24 @@ export async function fetchTodayJournal(todayDate = getUtcTodayDate()): Promise<
   return data;
 }
 
-export async function fetchRecentDayJournals(limit = 14): Promise<DayJournalSummary[]> {
+export async function fetchRecentDayJournals(input?: {
+  limit?: number;
+  offset?: number;
+}): Promise<DayJournalSummary[]> {
   const supabase = getSupabaseBrowserClient();
 
   if (!supabase) {
     throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
   }
 
-  const safeLimit = Math.max(1, Math.min(limit, 60));
+  const safeLimit = Math.max(1, Math.min(input?.limit ?? 14, 60));
+  const safeOffset = Math.max(0, input?.offset ?? 0);
 
   const { data, error } = await supabase
     .from('day_journals')
     .select('id, journal_date, summary, narrative_text, sections, updated_at')
     .order('journal_date', { ascending: false })
-    .limit(safeLimit);
+    .range(safeOffset, safeOffset + safeLimit - 1);
 
   if (error) {
     throw error;

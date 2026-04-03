@@ -9,6 +9,7 @@ import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
+  SecondaryButton,
   ScreenContainer,
   StateBlock,
 } from '@/components/ui/screen-primitives';
@@ -72,9 +73,12 @@ function buildSnippet(summary: string | null, sections: string[]): string {
 }
 
 export default function DaysScreen() {
+  const PAGE_SIZE = 21;
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [journals, setJournals] = useState<Awaited<ReturnType<typeof fetchRecentDayJournals>>>([]);
@@ -82,18 +86,51 @@ export default function DaysScreen() {
   const loadDays = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setLoadingMore(false);
+    setHasMore(false);
 
     try {
-      const rows = await fetchRecentDayJournals(21);
+      const rows = await fetchRecentDayJournals({
+        limit: PAGE_SIZE,
+        offset: 0,
+      });
       setJournals(rows);
+      setHasMore(rows.length === PAGE_SIZE);
     } catch (nextError) {
       const message = nextError instanceof Error ? nextError.message : 'Kon recente dagen niet laden.';
       setError(message);
       setJournals([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PAGE_SIZE]);
+
+  const loadMoreDays = useCallback(async () => {
+    if (loading || loadingMore || !hasMore) {
+      return;
+    }
+
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const rows = await fetchRecentDayJournals({
+        limit: PAGE_SIZE,
+        offset: journals.length,
+      });
+
+      const existing = new Set(journals.map((item) => item.id));
+      const merged = [...journals, ...rows.filter((row) => !existing.has(row.id))];
+      setJournals(merged);
+      setHasMore(rows.length === PAGE_SIZE);
+    } catch (nextError) {
+      const message = nextError instanceof Error ? nextError.message : 'Kon extra dagen niet laden.';
+      setError(message);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [PAGE_SIZE, hasMore, journals, loading, loadingMore]);
 
   useFocusEffect(
     useCallback(() => {
@@ -212,6 +249,16 @@ export default function DaysScreen() {
               </ThemedView>
             </ThemedView>
           ))}
+
+          {hasMore ? (
+            <ThemedView style={styles.loadMoreWrap}>
+              <SecondaryButton
+                label={loadingMore ? 'Meer dagen laden...' : 'Meer dagen laden'}
+                onPress={() => void loadMoreDays()}
+                disabled={loadingMore}
+              />
+            </ThemedView>
+          ) : null}
         </ThemedView>
       ) : null}
 
@@ -279,5 +326,8 @@ const styles = StyleSheet.create({
   },
   chevron: {
     opacity: 0.65,
+  },
+  loadMoreWrap: {
+    paddingTop: spacing.sm,
   },
 });

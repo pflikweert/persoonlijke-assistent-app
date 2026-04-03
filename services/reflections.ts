@@ -253,6 +253,37 @@ export async function fetchRecentReflections(limit = 20): Promise<ReflectionRow[
   }));
 }
 
+export async function fetchRecentReflectionsByType(input: {
+  periodType: PeriodType;
+  limit?: number;
+}): Promise<ReflectionRow[]> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const safeLimit = Math.max(1, Math.min(input.limit ?? 24, 100));
+
+  const { data, error } = await supabase
+    .from('period_reflections')
+    .select(
+      'id, period_type, period_start, period_end, summary_text, highlights_json, reflection_points_json, generated_at, model_version'
+    )
+    .eq('period_type', input.periodType)
+    .order('period_start', { ascending: false })
+    .limit(safeLimit);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((row) => ({
+    ...row,
+    period_type: ensurePeriodType(row.period_type),
+  }));
+}
+
 export async function hasReflectionForAnchorDate(input: {
   periodType: PeriodType;
   anchorDate: string;

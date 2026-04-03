@@ -1,5 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
@@ -60,7 +60,6 @@ export default function TodayScreen() {
     }, [loadToday])
   );
 
-  const reflectionPreview = summary ? summary.split('. ')[0]?.trim() ?? summary : null;
   const formattedDate = formatLongDate(todayDate);
   const statusLine = loading
     ? 'Wordt bijgewerkt'
@@ -69,6 +68,20 @@ export default function TodayScreen() {
       : summary || recentEntries.length > 0
         ? 'Vandaag bijgewerkt'
         : 'Klaar voor je eerste entry';
+
+  const recentGroups = useMemo(() => {
+    const grouped = new Map<string, typeof recentEntries>();
+    for (const entry of recentEntries) {
+      const bucket = grouped.get(entry.journal_date) ?? [];
+      bucket.push(entry);
+      grouped.set(entry.journal_date, bucket);
+    }
+
+    return Array.from(grouped.entries()).map(([journalDate, entries]) => ({
+      journalDate,
+      entries,
+    }));
+  }, [recentEntries]);
 
   return (
     <ScreenContainer
@@ -91,7 +104,6 @@ export default function TodayScreen() {
       }
       contentContainerStyle={styles.scrollContent}>
       <ThemedView style={styles.hero}>
-        <MetaText>START</MetaText>
         <ThemedText type="screenTitle" style={styles.heroTitle}>
           Leg iets vast
         </ThemedText>
@@ -130,57 +142,76 @@ export default function TodayScreen() {
         />
       ) : null}
       {!loading && !error && !summary ? (
-        <StateBlock
-          tone="empty"
-          message="Er is nog geen dagjournal voor vandaag."
-          detail="Leg je eerste notitie vast om je dag op te bouwen."
-        />
-      ) : null}
-
-      {!loading && !error && reflectionPreview ? (
         <ThemedView
-          lightColor={colorTokens.light.surfaceLowest}
+          lightColor={colorTokens.light.surfaceLow}
           darkColor={colorTokens.dark.surfaceLow}
-          style={[styles.compactBlock, styles.reflectionBlock]}>
-          <MetaText>Reflectie</MetaText>
-          <ThemedText type="bodySecondary" style={[styles.compactText, { color: palette.muted }]} numberOfLines={2}>
-            {reflectionPreview}
+          style={styles.compactBlock}>
+          <ThemedText type="defaultSemiBold">Er is nog geen dagjournal voor vandaag.</ThemedText>
+          <ThemedText type="bodySecondary" style={[styles.compactText, { color: palette.muted }]}>
+            Leg je eerste notitie vast om je dag op te bouwen.
           </ThemedText>
         </ThemedView>
       ) : null}
 
+      {!loading && !error && summary ? (
+        <Pressable onPress={() => router.push(`/day/${todayDate}`)}>
+          <ThemedView
+            lightColor={colorTokens.light.surfaceLowest}
+            darkColor={colorTokens.dark.surfaceLow}
+            style={[styles.compactBlock, styles.reflectionBlock]}>
+            <MetaText>Vandaag</MetaText>
+            <ThemedText
+              type="bodySecondary"
+              style={[styles.compactText, { color: palette.muted }]}
+              numberOfLines={3}>
+              {summary}
+            </ThemedText>
+          </ThemedView>
+        </Pressable>
+      ) : null}
+
       {!loading && !error && recentEntries.length > 0 ? (
         <ThemedView style={styles.recentBlock}>
-          <MetaText>Recent</MetaText>
+          <MetaText>Recente momenten</MetaText>
           <ThemedView style={styles.recentList}>
-            {recentEntries.map((entry) => (
-              <Pressable
-                key={entry.id}
-                onPress={() =>
-                  router.push({
-                    pathname: '/entry/[id]',
-                    params: { id: entry.id, source: 'today', date: entry.journal_date },
-                  })
-                }
-                style={[styles.recentRow, { borderBottomColor: `${palette.separator}66` }]}>
-                <ThemedView style={styles.recentMain}>
-                  <ThemedText
-                    type="defaultSemiBold"
-                    numberOfLines={1}
-                    style={[styles.recentTitle, { color: palette.text }]}>
-                    {entry.title?.trim() || 'Moment zonder titel'}
-                  </ThemedText>
-                  <ThemedText type="caption" style={[styles.recentMeta, { color: palette.mutedSoft }]}>
-                    {formatRecentMeta(entry.journal_date, entry.captured_at)}
-                  </ThemedText>
-                  <ThemedText
-                    type="bodySecondary"
-                    numberOfLines={1}
-                    style={[styles.recentText, { color: palette.muted }]}>
-                    {entry.summary_short?.trim() || summarizeSnippet(entry.body)}
-                  </ThemedText>
-                </ThemedView>
-              </Pressable>
+            {recentGroups.map((group, index) => (
+              <ThemedView
+                key={group.journalDate}
+                style={[
+                  styles.recentGroup,
+                  index > 0 ? [styles.recentGroupSpaced, { borderTopColor: `${palette.separator}88` }] : null,
+                ]}>
+                <MetaText>{formatRecentGroupLabel(group.journalDate, todayDate)}</MetaText>
+                {group.entries.map((entry) => (
+                  <Pressable
+                    key={entry.id}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/entry/[id]',
+                        params: { id: entry.id, source: 'today', date: entry.journal_date },
+                      })
+                    }
+                    style={[styles.recentRow, { borderBottomColor: `${palette.separator}66` }]}>
+                    <ThemedView style={styles.recentMain}>
+                      <ThemedText
+                        type="defaultSemiBold"
+                        numberOfLines={1}
+                        style={[styles.recentTitle, { color: palette.text }]}>
+                        {entry.title?.trim() || 'Moment zonder titel'}
+                      </ThemedText>
+                      <ThemedText type="caption" style={[styles.recentMeta, { color: palette.mutedSoft }]}>
+                        {formatTime(entry.captured_at)}
+                      </ThemedText>
+                      <ThemedText
+                        type="bodySecondary"
+                        numberOfLines={1}
+                        style={[styles.recentText, { color: palette.muted }]}>
+                        {entry.summary_short?.trim() || summarizeSnippet(entry.body)}
+                      </ThemedText>
+                    </ThemedView>
+                  </Pressable>
+                ))}
+              </ThemedView>
             ))}
           </ThemedView>
           <Pressable onPress={() => router.push(`/day/${todayDate}`)} style={styles.secondaryLink}>
@@ -191,7 +222,7 @@ export default function TodayScreen() {
         </ThemedView>
       ) : null}
 
-      {!loading && !error && !reflectionPreview && recentEntries.length === 0 ? (
+      {!loading && !error && !summary && recentEntries.length === 0 ? (
         <ThemedView style={styles.compactBlock}>
           <ThemedText type="bodySecondary" style={[styles.compactText, { color: palette.muted }]}>
             Zodra je iets vastlegt, verschijnt hier een rustig overzicht van vandaag.
@@ -240,12 +271,22 @@ function formatTime(isoValue: string): string {
   return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 }
 
-function formatRecentMeta(journalDate: string, capturedAt: string): string {
-  const [year, month, day] = journalDate.split('-');
-  if (!year || !month || !day) {
-    return formatTime(capturedAt);
+function formatRecentGroupLabel(journalDate: string, todayDate: string): string {
+  if (journalDate === todayDate) {
+    return 'Vandaag';
   }
-  return `${day}.${month} · ${formatTime(capturedAt)}`;
+
+  const parsed = new Date(`${journalDate}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return journalDate;
+  }
+
+  return parsed.toLocaleDateString('nl-NL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 const styles = StyleSheet.create({
@@ -266,7 +307,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xxs,
     paddingTop: spacing.xs,
-    paddingBottom: spacing.xs,
+    paddingBottom: 64,
   },
   heroTitle: {
     fontSize: 34,
@@ -279,7 +320,7 @@ const styles = StyleSheet.create({
   },
   heroCtaWrap: {
     width: '100%',
-    marginTop: spacing.xs,
+    paddingTop: 32,
   },
   statusRow: {
     flexDirection: 'row',
@@ -310,10 +351,18 @@ const styles = StyleSheet.create({
     lineHeight: typography.roles.bodySecondary.lineHeight + 1,
   },
   recentBlock: {
-    gap: spacing.sm,
+    marginTop: spacing.lg,
+    gap: spacing.lg,
   },
   recentList: {
-    gap: spacing.md,
+    gap: spacing.lg,
+  },
+  recentGroup: {
+    gap: spacing.sm,
+  },
+  recentGroupSpaced: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: spacing.lg,
   },
   recentRow: {
     flexDirection: 'row',

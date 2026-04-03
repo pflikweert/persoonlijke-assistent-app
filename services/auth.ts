@@ -54,7 +54,12 @@ function getExpectedIssuerFromPublicEnv(): string | null {
 
 export async function ensureAuthenticatedUserSession(args: {
   flowId: string;
-  source: 'process-entry' | 'generate-reflection' | 'regenerate-day-journal' | 'renormalize-entry';
+  source:
+    | 'process-entry'
+    | 'generate-reflection'
+    | 'regenerate-day-journal'
+    | 'renormalize-entry'
+    | 'import-chatgpt-markdown';
 }): Promise<{ userId: string }> {
   const supabase = getSupabaseBrowserClient();
 

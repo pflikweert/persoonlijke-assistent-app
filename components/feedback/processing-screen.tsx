@@ -33,6 +33,17 @@ const COPY_BY_VARIANT = {
     subtitle: 'Je reflectie wordt rustig opgebouwd en toegevoegd aan je overzicht.',
     statuses: ['Voorbereiden', 'Inzichten opbouwen', 'Reflectie afronden', 'Bijna klaar'],
   },
+  'chatgpt-import': {
+    title: 'We importeren je dagboekdata',
+    subtitle: 'Je ChatGPT user-berichten worden verwerkt en toegevoegd aan je dagboek.',
+    statuses: [
+      'Markdownbestand analyseren',
+      'User-berichten voorbereiden',
+      'Entries importeren',
+      'Dagboekdagen opbouwen',
+      'Week- en maandreflecties verversen',
+    ],
+  },
 } as const;
 
 export type ProcessingVariant = keyof typeof COPY_BY_VARIANT;
@@ -40,9 +51,11 @@ export type ProcessingVariant = keyof typeof COPY_BY_VARIANT;
 export function ProcessingScreen({
   visible,
   variant,
+  statusOverride,
 }: {
   visible: boolean;
   variant: ProcessingVariant;
+  statusOverride?: string | null;
 }) {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -57,7 +70,7 @@ export function ProcessingScreen({
   const statusTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const copy = COPY_BY_VARIANT[variant];
-  const status = copy.statuses[statusIndex] ?? copy.statuses[0];
+  const status = statusOverride?.trim() || copy.statuses[statusIndex] || copy.statuses[0];
   const backgroundSource = scheme === 'dark' ? LOGIN_BG_DARK : LOGIN_BG_LIGHT;
   const overlayColor = scheme === 'dark' ? 'rgba(8, 7, 6, 0.72)' : 'rgba(250, 244, 230, 0.76)';
   const cardColor = scheme === 'dark' ? 'rgba(43, 41, 37, 0.82)' : 'rgba(255, 255, 255, 0.8)';
