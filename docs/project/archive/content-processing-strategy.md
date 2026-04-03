@@ -1,3 +1,6 @@
+Status: Archive-only (niet leidend)
+Leidend vervangen door: `docs/project/content-processing-rules.md`
+
 # Narrative Processing Engine v1 — Persoonlijke Assistent App
 
 ## Doel van dit document

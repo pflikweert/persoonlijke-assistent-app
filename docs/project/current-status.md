@@ -1,102 +1,66 @@
-# Current Project Status
+# Current Status — Codegevalideerd
 
 ## Doel
-Huidige projectstatus op basis van validatie van bestaande docs tegen de actuele codebase.
+Dit document beschrijft de actuele werkelijkheid van het project op basis van:
+1. bestaande projectdocs (scope/planning)
+2. actuele codebase (bewijs van implementatie)
 
-## Huidige productkern (docs + code)
-- Capture via tekst en audio.
-- Server-side verwerking via `process-entry`.
-- Opslag in `entries_raw`, `entries_normalized`, `day_journals`.
-- UI voor Vandaag, Vastleggen, Dagen, Dagdetail en Reflecties.
-- Reflectiegeneratie via `generate-reflection` voor week en maand.
+## Auditbasis
+Gecontroleerd op:
+- `docs/**`, `README.md`, `docs/README.md`, `AGENTS.md`
+- `.agents/skills/**`
+- `app/**`, `components/**`, `services/**`
+- `supabase/functions/**`, `supabase/migrations/**`
+- `scripts/**`, `package.json`
 
-Bronnen:
-- `docs/project/docs/project/master-project.md`
+## Leidende documenten nu
+- `docs/project/master-project.md`
 - `docs/project/product-vision-mvp.md`
-- `app/**`, `services/**`, `supabase/functions/**`, `supabase/migrations/**`
+- `docs/project/current-status.md`
+- `docs/project/open-points.md`
+- `docs/project/content-processing-rules.md`
 
-## Validatie tegen codebase
-Gevalideerd in:
-- `app/**` (schermen + navigatie)
-- `services/**` (flows + data-aanroepen)
-- `supabase/functions/**` (process-entry, generate-reflection)
-- `supabase/migrations/**` en `src/lib/supabase/database.types.ts`
-- `scripts/**` en `package.json`
-
-### Reality matrix
-| Onderwerp | Docs-status | Code-status | Conclusie |
+## Bewijsmatrix (docsplan vs code)
+| Onderwerp | Oorspronkelijk plan | Code-status | Conclusie |
 |---|---|---|---|
-| Auth basis (magic link) | In scope / aanwezig | Aanwezig | `app/sign-in.tsx` + `services/auth.ts` + auth-gating in `app/_layout.tsx`. |
-| Capture text | In scope | Aanwezig | `submitTextEntry` + typing state in `app/(tabs)/capture.tsx`. |
-| Capture audio | In scope | Aanwezig | Recorder + submitAudioEntry + guards in `capture.tsx`/`services/entries.ts`. |
-| Process-entry flow | Kernflow release 1 | Aanwezig | Edge function `supabase/functions/process-entry/index.ts` actief gebruikt, plus aparte `renormalize-entry` stap voor edits. |
-| Entry normalisatie | Kernflow release 1 | Aanwezig | In `process-entry` (normalize stap + persist `entries_normalized.body` als opgeschoonde volledige tekst, met bronbehoud-guardrail) en `renormalize-entry` voor edit-hernormalisatie. |
-| Day journal opbouw | Kernflow release 1 | Aanwezig | In `process-entry` en extra client-regenerate helper in `services/day-journals.ts`; via edits/delete kan de dagjournal opnieuw opgebouwd worden. |
-| Vandaag/Home scherm | In scope | Aanwezig | `app/(tabs)/index.tsx`. |
-| Dagenlijst | In scope | Aanwezig | `app/(tabs)/days.tsx`. |
-| Dagdetail | In scope | Aanwezig | `app/day/[date].tsx`. |
-| Read modal op entries | Niet expliciet in hoofdscope, wel doorgevoerde UX | Aanwezig | In `app/day/[date].tsx` met `readingEntry` modal. |
-| Edit entry | In scope dagdetail entries | Aanwezig | `updateNormalizedEntryById` + edit modal in dagdetail. |
-| Delete entry | In scope dagdetail entries | Aanwezig | Delete via `deleteNormalizedEntryById` met raw+cascade pad. |
-| Regenerate day journal | Genoemd in docs als actie | Deels aanwezig | Functioneel aanwezig via service/helper; geen aparte zichtbare “Opnieuw samenvatten”-knop in huidige UI. |
-| Weekreflecties | In scope | Aanwezig | `generate-reflection` + UI generatie/fetch; hergeneratie wordt ook gebruikt na relevante entry-mutaties. |
-| Maandreflecties | In scope | Aanwezig | `generate-reflection` + UI generatie/fetch; hergeneratie wordt ook gebruikt na relevante entry-mutaties. |
-| Reflectiescherm | In scope | Aanwezig | `app/(tabs)/reflections.tsx` met week/maand switch + generatie. |
-| Export / backup | Gepland in Fase 1.2D | Niet aangetroffen | Geen export-feature in app/services/scripts gevonden. |
-| Reset flows (productniveau) | Gepland in Fase 1.2D | Niet aangetroffen | Alleen infra/db reset commando’s; geen product-resetflow. |
-| Logging / request tracing | Gepland in 1.2A | Aanwezig | `flowId/requestId` contract + `flow-logger.ts` in beide edge functions. |
-| Verify scripts | Gepland/benoemd | Aanwezig | `verify-local-flow`, `verify-local-audio-flow`, `verify-local-reflection-flow`, `verify-local-output-quality`. |
-| Smoke tests | Gepland in 1.2E | Deels aanwezig | Verify-scripts aanwezig; aparte UI smoke-testsuite niet aangetroffen. |
-| UX polish states | Gepland in 1.2C | Deels aanwezig | Veel loading/empty/error states via `StateBlock`; niet aantoonbaar uniform op alle schermen/flows. |
-| Design doorvoer 1.2.1 | Leidend designspoor | Deels aanwezig | Foundations + meerdere schermpasses zichtbaar; geen hard bewijs dat volledige 1.2.1-uitvoervolgorde compleet is. |
+| Auth (magic link) | In scope | **Aanwezig** | `app/sign-in.tsx`, `services/auth.ts`, auth-gating in `app/_layout.tsx`. |
+| Capture tekst | In scope | **Aanwezig** | `submitTextEntry` + capture UI in `app/(tabs)/capture.tsx`, `services/entries.ts`. |
+| Capture audio | In scope | **Aanwezig** | recorder + audio-submit + payload guards in capture/services. |
+| Intake flow | Kernflow | **Aanwezig** | `supabase/functions/process-entry/index.ts` + client invoke. |
+| Entry hernormalisatie bij edit | Hardening-onderdeel | **Aanwezig** | `renormalize-entry` function + dagdetail editpad. |
+| Day journal opbouw | Kernflow | **Aanwezig** | upsert in `process-entry` + `regenerate-day-journal` flow. |
+| Reflecties week/maand | Kernflow | **Aanwezig** | `generate-reflection` function + reflectie UI/service. |
+| Dagdetail mutaties | UX/hardening | **Aanwezig** | edit/delete + derived refresh in `app/day/[date].tsx` en `app/entry/[id].tsx`. |
+| “Opnieuw samenvatten” als zichtbare knop | Genoemd in oude beschrijving | **Deels aanwezig** | functionele heropbouw bestaat, maar geen expliciete knop met die naam in huidige UI. |
+| ChatGPT markdown import | Niet kern in oorspronkelijke scope | **Aanwezig (feature-flagged)** | `app/settings.tsx`, `services/import/*`, `import-chatgpt-markdown` function + migrationkolommen. |
+| Product-export voor gebruiker | Gepland in 1.2D | **Niet aangetroffen** | geen exportflow in app-UX/services voor eindgebruiker. |
+| Product-reset/delete-all | Gepland in 1.2D | **Niet aangetroffen** | geen gebruikersresetflow aangetroffen. |
+| Logging/tracing | Gepland 1.2A | **Aanwezig** | `requestId/flowId` contract + `_shared/flow-logger.ts`. |
+| Verify scripts lokaal | Gepland 1.2A/1.2E | **Aanwezig** | text/audio/reflection/output-quality scripts aanwezig. |
+| Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | `scripts/test-chatgpt-markdown-import.mjs` en `verify-local-chatgpt-import.sh` verwijzen naar ontbrekend `docs/dev/Dagboek voor gemoedstoestand.md`. |
+| Design 1.2.1 volledige doorvoer | Gepland designspoor | **Onzeker** | refs bestaan, maar complete implementatiedekking per scherm niet hard bewezen. |
 
-## Wat aantoonbaar al gedaan/besloten is
-- Release-1 kernschermen en kernservices zijn aanwezig.
-- Drie edge functions zijn aanwezig en gekoppeld aan app-services:
-  - `process-entry`
-  - `generate-reflection`
-  - `renormalize-entry`
-- Datamodel voor release-1 tabellen staat in migrations en types.
-- Lokale verify scripts voor text/audio/reflection/output-quality zijn aanwezig.
-- Dagdetail entry-actions zijn aanwezig (read/edit/delete) met herverwerking van dag + reflecties.
-- Entry-normalisatie is nu expliciet bronnabij gehouden: `entries_raw` blijft bron, `entries_normalized.body` blijft volledige opgeschoonde tekst, `summary_short` is preview-only, en quality-verify bevat een lange-entry regressiecheck.
+## Fase 1.2 status op code
+| Subfase | Status | Onderbouwing |
+|---|---|---|
+| 1.2A Stabiliteit/foutafhandeling | **Deels aanwezig** | tracing + verify aanwezig; geen harde afrondingsregistratie als complete subfase. |
+| 1.2B Outputkwaliteit | **Deels aanwezig** | contracts/guardrails/quality-script aanwezig; eindstatus “afgerond” niet hard vastgelegd. |
+| 1.2C UX-polish | **Deels aanwezig** | duidelijke polish in kernschermen; volledigheid over alle flows niet hard bewezen. |
+| 1.2D Export/reset vertrouwen | **Niet aangetroffen** | productniveau export/reset ontbreekt. |
+| 1.2E Private-beta readiness | **Deels aanwezig** | setup + verify aanwezig; complete smoke/release-checklist niet hard aangetroffen. |
 
-## Fases/subfases (herijkt op code)
-- Fase 0: Aanwezig (setupbasis, scripts, env-structuur).
-- Fase 1 kernlus: Aanwezig (auth + capture + processing + day journals + reflecties + schermen).
-- Fase 1.2A (stabiliteit/logging/verify): Deels aanwezig.
-- Fase 1.2B (outputkwaliteit): Deels aanwezig (quality script + guards aanwezig; volledige kwaliteitsset als “afgerond” niet aantoonbaar).
-- Fase 1.2C (UX-polish): Deels aanwezig.
-- Fase 1.2D (export/reset): Niet aangetroffen.
-- Fase 1.2E (beta readiness/smoke): Deels aanwezig.
-
-## Huidige MVP waarheid
-- In code aanwezig: capture (tekst/audio), normalisatie, day journal opbouw, week/maand reflecties, dagen/dagdetail/reflectiescherm.
-- Niet aangetroffen in code als productfeature: export/backup/reset flows.
+## Correcties op eerdere documentatieruis
+- Foutieve padverwijzing gecorrigeerd: `docs/project/docs/project/master-project.md` bestaat niet; correct is `docs/project/master-project.md`.
+- Verschil expliciet gemaakt tussen:
+  - productfeature
+  - dev tooling (bijv. dumps)
+  - verify tooling
+- Aanwezigheid van tooling is niet automatisch aanwezigheid van gebruikersfeature.
 
 ## Wat niet meer leidend is
-- `docs/design/archive/phase-1.3-design-direction.md` (historisch).
+- `docs/project/archive/**`
+- `docs/design/archive/**`
+- historische dumps in `docs/dev/archive/**`
 
-## Welke documenten leidend zijn
-- Product/scope:
-  - `docs/project/docs/project/master-project.md`
-  - `docs/project/product-vision-mvp.md`
-- Design:
-  - `docs/design/mvp-design-spec-1.2.1.md`
-  - `design_refs/1.2.1/ethos_ivory/DESIGN.md`
-  - `design_refs/1.2.1/*/code.html` en `design_refs/1.2.1/*/screen.png`
-- Setup:
-  - `README.md`
-  - `docs/setup/step-0-readiness.md`
-
-## Docs audit samenvatting
-- Leidend:
-  - `docs/project/master-project.md`, `docs/project/product-vision-mvp.md`, `docs/design/mvp-design-spec-1.2.1.md`, `design_refs/1.2.1/*`
-- Verouderd/historisch:
-  - `docs/design/archive/phase-1.3-design-direction.md`
-- Overlap:
-  - Setup info in zowel `README.md` als `docs/setup/step-0-readiness.md`
-  - Productrichting in zowel `docs/project/master-project.md` als `docs/project/product-vision-mvp.md` (aanvullend)
-- Aangepast in deze herijking:
-  - `docs/project/current-status.md`
-  - `docs/project/open-points.md`
+## Samenvatting
+De release-1 kernlus is aantoonbaar gebouwd. Fase 1.2 heeft duidelijke voortgang in A/B/C/E, maar D (export/reset als productfeature) is niet aangetroffen. Enkele claims blijven bewust onzeker tot hard bewijs beschikbaar is.

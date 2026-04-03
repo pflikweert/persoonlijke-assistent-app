@@ -7,6 +7,12 @@ Deze repository is de lokale basis voor een React Native / Expo app met Expo Rou
 De focus ligt op een stabiele ontwikkelomgeving met duidelijke scripts, configuratie en structuur.  
 Functionele productfeatures worden pas toegevoegd nadat de projectfundering lokaal op orde is.
 
+## Documentatie
+- Leidende projectdocs: `docs/project/README.md`
+- Generated uploadbundle voor ChatGPT Project: `docs/project/generated/chatgpt-project-context.md`
+- Build bundle: `npm run docs:bundle`
+- Verify bundle-sync: `npm run docs:bundle:verify`
+
 ## Lokale startcommando's
 ```bash
 npm install

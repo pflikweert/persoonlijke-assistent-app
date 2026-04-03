@@ -18,7 +18,9 @@
     "verify:local-audio-flow": "./scripts/verify-local-audio-flow.sh",
     "verify:local-reflection-flow": "./scripts/verify-local-reflection-flow.sh",
     "verify:local-output-quality": "./scripts/verify-local-output-quality.sh",
-    "env:pull": "npx vercel env pull .env.local"
+    "env:pull": "npx vercel env pull .env.local",
+    "docs:bundle": "node scripts/docs/build-chatgpt-project-context.mjs",
+    "docs:bundle:verify": "node scripts/docs/build-chatgpt-project-context.mjs --check"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
