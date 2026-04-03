@@ -18,6 +18,11 @@ Functionele productfeatures worden pas toegevoegd nadat de projectfundering loka
 npm install
 npm run dev
 npm run dev:stop
+npm run supabase:local:start
+npm run supabase:local:stop
+npm run supabase:functions:serve
+npm run supabase:functions:restart
+npm run supabase:functions:deploy
 npm run test:reflection-helpers
 npm run verify:local-flow
 npm run verify:local-audio-flow
@@ -30,8 +35,9 @@ npm run lint
 npm run typecheck
 ```
 
-`npm run dev` deployt eerst de lokale edge functions en start daarna Expo + lokale Supabase Functions runtime samen. Bij herstart wordt de oude runtime eerst opgeruimd, en bij `Ctrl+C` wordt hij automatisch gestopt.
-Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-functions.log`.
+`npm run dev` is lokaal-only: start/checkt lokale Supabase stack, start lokale functions runtime, en start daarna Expo.
+Er gebeurt geen remote Supabase deploy vanuit `npm run dev`.
+Los opruimen van de functions runtime kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-functions.log`.
 
 ## Env-overzicht
 - `.env.example`: template met verwachte variabelen en geen secrets.
@@ -52,7 +58,7 @@ Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-f
 - `OPENAI_API_KEY` blijft strikt server-side en mag nooit in Expo clientcode of `EXPO_PUBLIC_*` variabelen terechtkomen.
 - Voor Edge Functions lokaal geldt: `supabase functions serve --env-file ...` kan custom variabelen met prefix `SUPABASE_` overslaan. Gebruik daarom geen custom `SUPABASE_*` namen in `.env.local`.
 - Zet `EXPO_PUBLIC_SUPABASE_TARGET=local` voor lokaal testen en `cloud` voor remote Supabase.
-- Sync lokale env vanuit Vercel met: `npm run env:pull`.
+- Sync Vercel env apart met: `npm run env:pull:vercel` (schrijft naar `.env.vercel.local`, niet naar `.env.local`).
 
 ## Stap-0 checklist
 - [ ] Node `24` actief (via `.nvmrc`)
@@ -63,8 +69,25 @@ Los opruimen kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-f
 
 ## Supabase lokale workflow
 ```bash
+npx supabase start
+npm run supabase:functions:serve
+npm run supabase:functions:restart
+npm run dev:stop
+npx supabase stop
+```
+
+Deploy-only (remote project, start niets lokaal op):
+```bash
+SUPABASE_PROJECT_REF=<jouw-project-ref> npm run supabase:functions:deploy
+```
+
+Local-first gedrag:
+- bij `EXPO_PUBLIC_SUPABASE_TARGET=local` (default) doet `npm run supabase:functions:deploy` geen remote deploy en start niets.
+- bij `cloud` target voert hetzelfde commando een echte Supabase cloud deploy uit (met `SUPABASE_PROJECT_REF`).
+
+Cloud-only beheeracties (niet nodig voor dagelijkse lokale dev):
+```bash
 npx supabase login
-npx supabase init
 npx supabase link --project-ref <jouw-project-ref>
 npx supabase db push
 npx supabase db reset
@@ -75,7 +98,8 @@ npx supabase gen types typescript --linked --schema public > src/lib/supabase/da
 - Private user-bound functions: `process-entry`, `generate-reflection`, `regenerate-day-journal`.
 - Deze functies draaien met function-level auth check (`Authorization` header + `auth.getUser()` in function code).
 - JWT gateway verify staat expliciet op `false` per functie in `supabase/config.toml` voor compatibiliteit met huidige signing keys.
-- GitHub deploy secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`.
+- Productie deploy van Supabase Edge Functions gaat alleen via GitHub Actions (`.github/workflows/deploy.yml`).
+- GitHub deploy secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`.
 
 ## Supabase dashboard en mail
 - Lokaal dashboard: `http://127.0.0.1:54323`
@@ -92,7 +116,13 @@ npx supabase gen types typescript --linked --schema public > src/lib/supabase/da
 npm run dev
 
 # Edge Function runtime (als je alleen de functions wilt serven)
-npx supabase functions serve --env-file .env.local
+npm run supabase:functions:serve
+
+# Herstart na function-codewijzigingen
+npm run supabase:functions:restart
+
+# Deploy-only naar een Supabase project (zonder lokale start)
+SUPABASE_PROJECT_REF=<jouw-project-ref> npm run supabase:functions:deploy
 ```
 
 Voorbeeld lokale testcall:

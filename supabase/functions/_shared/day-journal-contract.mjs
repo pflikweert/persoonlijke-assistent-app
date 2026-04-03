@@ -1,5 +1,12 @@
-export const DAY_JOURNAL_PROMPT_VERSION = 'day-composition.v1.2.phase2.1';
-export const DAY_JOURNAL_REPAIR_PROMPT_VERSION = 'day-composition.v1.2.phase2.1.retry1';
+import {
+  DAY_JOURNAL_COMPOSE_PROMPT_VERSION as CENTRAL_DAY_JOURNAL_COMPOSE_PROMPT_VERSION,
+  DAY_JOURNAL_REPAIR_PROMPT_VERSION as CENTRAL_DAY_JOURNAL_REPAIR_PROMPT_VERSION,
+  buildDayJournalComposePromptSpec as buildCentralDayJournalComposePromptSpec,
+  buildDayJournalRepairPromptSpec as buildCentralDayJournalRepairPromptSpec,
+} from './prompt-specs.ts';
+
+export const DAY_JOURNAL_PROMPT_VERSION = CENTRAL_DAY_JOURNAL_COMPOSE_PROMPT_VERSION;
+export const DAY_JOURNAL_REPAIR_PROMPT_VERSION = CENTRAL_DAY_JOURNAL_REPAIR_PROMPT_VERSION;
 const DAY_SUMMARY_MAX_CHARS = 212;
 const DAY_INSIGHT_MAX_CHARS = 171;
 
@@ -623,17 +630,12 @@ export function buildDayJournalPromptSpec(input) {
     body: sanitizeNarrativeText(entry.body, 2400),
   }));
 
-  return {
-    promptVersion: DAY_JOURNAL_PROMPT_VERSION,
-    systemPrompt:
-      'Schrijf een rustige, brongetrouwe dagboekdag in natuurlijk Nederlands. Schrijf in ik-vorm en maak er een samenhangende dagtekst van. Gebruik bronvolgorde op hoofdlijn, maar niet als seriële entry-dump. Geef alleen JSON terug met summary, narrativeText en sections.',
-    userPrompt: JSON.stringify({
-      instruction:
-        `narrativeText: volledige verhalende dagtekst in ik-vorm met logische alinea’s, natuurlijke overgangen en actieve deduplicatie van inhoudelijk gelijke updates. Niet elke entry hoeft letterlijk benoemd te worden, maar geen betekenisvolle entry-cluster mag volledig verdwijnen: als een entry een duidelijk persoonlijk, relationeel, emotioneel of concreet gebeurtenismoment bevat, moet dat inhoudelijk herkenbaar terugkomen (desnoods kort geïntegreerd in 1-2 zinnen). Bundel vergelijkbare korte test/status entries in één passage en geef grotere persoonlijke momenten proportioneel meer ruimte. Blijf bronnabij, voeg geen nieuwe informatie of interpretatie toe. summary: compacte menselijke dagschets in natuurlijk Nederlands, concreet en niet dossierachtig, met een harde limiet van ${DAY_SUMMARY_MAX_CHARS} tekens. sections: korte kernblokken die de echte hoofdonderwerpen van de dag dekken, waarbij de eerste section verplicht een AI-inzicht is in exact dit format: "Inzicht: ...". Dat inzicht is 1 korte zin, dag-specifiek en brongetrouw, met een harde limiet van ${DAY_INSIGHT_MAX_CHARS} tekens (exclusief "Inzicht: "). Het inzicht is expliciet géén samenvatting van gebeurtenissen, maar benoemt wat er onder de gebeurtenissen opvalt (bijv. patroon, spanning, behoefte, terugkerend thema of verschuiving), in rustige menselijke taal zonder therapeutische of generieke AI-zinnen. Vermijd expliciet: seriële entry-opsomming, rapport-/archieftaal (zoals dagboeknotities over), quasi-concatenatie van entry bodies, losse technische metabrokken die samengevoegd kunnen worden, afkappen midden in een zin, therapietaal/diagnose en generieke AI-samenvattingstaal.`,
-      journalDate: input.journalDate,
-      entries: orderedEntries,
-    }),
-  };
+  return buildCentralDayJournalComposePromptSpec({
+    journalDate: input.journalDate,
+    entries: orderedEntries,
+    daySummaryMaxChars: DAY_SUMMARY_MAX_CHARS,
+    dayInsightMaxChars: DAY_INSIGHT_MAX_CHARS,
+  });
 }
 
 export function buildDayJournalRepairPromptSpec(input) {
@@ -642,17 +644,12 @@ export function buildDayJournalRepairPromptSpec(input) {
     body: sanitizeNarrativeText(entry.body, 2400),
   }));
 
-  return {
-    promptVersion: DAY_JOURNAL_REPAIR_PROMPT_VERSION,
-    systemPrompt:
-      'Herstel alleen de compositie van narrativeText zodat die volledig, verhalend en brongetrouw is. Geef alleen JSON terug met summary, narrativeText en sections.',
-    userPrompt: JSON.stringify({
-      instruction:
-        `NarrativeText is te compact of te geplakt. Herschrijf tot samenhangende dagtekst in ik-vorm met logische alinea’s. Behoud alle betekenisvolle momenten in bronvolgorde op hoofdlijn, bundel vergelijkbare korte updates, schrijf niet samenvattend en voeg geen nieuwe interpretatie toe. Houd summary compact en maximaal ${DAY_SUMMARY_MAX_CHARS} tekens, en zorg dat sections[0] het inzicht blijft in format "Inzicht: ..." met maximaal ${DAY_INSIGHT_MAX_CHARS} tekens (exclusief prefix).`,
-      journalDate: input.journalDate,
-      entries: orderedEntries,
-    }),
-  };
+  return buildCentralDayJournalRepairPromptSpec({
+    journalDate: input.journalDate,
+    entries: orderedEntries,
+    daySummaryMaxChars: DAY_SUMMARY_MAX_CHARS,
+    dayInsightMaxChars: DAY_INSIGHT_MAX_CHARS,
+  });
 }
 
 export function createFallbackDayJournal(entries) {

@@ -1,19 +1,21 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { getFunctionRuntimeEnv } from '../_shared/env.ts';
+import { getFunctionRuntimeEnv } from "../_shared/env.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.ts';
+import { createFlowError, type FlowErrorCode } from "../_shared/error-contract.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { logFlow } from '../_shared/flow-logger.ts';
+import { logFlow } from "../_shared/flow-logger.ts";
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { buildEntryNormalizationPromptSpec, buildEntryNormalizationRepairPromptSpec } from "../_shared/prompt-specs.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
 import {
-  buildDayJournalRepairPromptSpec,
   buildDayJournalPromptSpec,
+  buildDayJournalRepairPromptSpec,
   createFallbackDayJournal,
   finalizeDayJournalDraft,
   isLowContentDayEntry,
   orderDayJournalEntries,
-} from '../_shared/day-journal-contract.mjs';
+} from "../_shared/day-journal-contract.mjs";
 
 type ProcessEntryRequest = {
   rawText?: unknown;
@@ -23,15 +25,15 @@ type ProcessEntryRequest = {
 };
 
 type ProcessEntryResponse = {
-  status: 'ok';
-  flow: 'process-entry';
+  status: "ok";
+  flow: "process-entry";
   requestId: string;
   flowId: string;
   rawEntryId: string;
   normalizedEntryId: string;
   journalDate: string;
   dayJournalId: string;
-  sourceType: 'text' | 'audio';
+  sourceType: "text" | "audio";
 };
 
 type NormalizedEntry = {
@@ -52,57 +54,81 @@ type OpenAiJson = Record<string, unknown>;
 
 type ParsedSourceInput =
   | {
-      sourceType: 'text';
+      sourceType: "text";
       rawText: string;
     }
   | {
-      sourceType: 'audio';
+      sourceType: "audio";
       audioBase64: string;
       audioMimeType: string;
     };
 
 const CORS_BASE_HEADERS = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-flow-id',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-flow-id",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
-const FLOW = 'process-entry' as const;
-const NORMALIZATION_PROMPT_VERSION = 'entry-normalization.v1.2.phase2.1';
-const NORMALIZATION_REPAIR_PROMPT_VERSION = 'entry-normalization.v1.2.phase2.retry1';
+const FLOW = "process-entry" as const;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
-const NO_SPEECH_TRANSCRIPT = 'Geen spraak herkend in audio-opname.';
-const LOW_CONTENT_TITLE = 'Audio-opname zonder spraak';
-const LOW_CONTENT_BODY = 'Geen bruikbare spraakinhoud gevonden in de opname.';
-const LOW_CONTENT_SUMMARY_SHORT = 'Geen bruikbare spraakinhoud in deze opname.';
+const NO_SPEECH_TRANSCRIPT = "Geen spraak herkend in audio-opname.";
+const LOW_CONTENT_TITLE = "Audio-opname zonder spraak";
+const LOW_CONTENT_BODY = "Geen bruikbare spraakinhoud gevonden in de opname.";
+const LOW_CONTENT_SUMMARY_SHORT = "Geen bruikbare spraakinhoud in deze opname.";
 const SHORT_ENTRY_DRIFT_MAX_SOURCE_LENGTH = 280;
-const GENERIC_TITLES = new Set(['notitie', 'update', 'gedachte', 'dagboek', 'memo']);
+const GENERIC_TITLES = new Set([
+  "notitie",
+  "update",
+  "gedachte",
+  "dagboek",
+  "memo",
+]);
 const GENERIC_PREVIEW_PHRASES = [
-  'algemene samenvatting',
-  'korte samenvatting',
-  'samenvatting',
-  'overzicht van de notitie',
+  "algemene samenvatting",
+  "korte samenvatting",
+  "samenvatting",
+  "overzicht van de notitie",
 ];
-const META_PREVIEW_STARTS = ['de gebruiker', 'er wordt beschreven', 'de notitie gaat over', 'in deze notitie'];
+const META_PREVIEW_STARTS = [
+  "de gebruiker",
+  "er wordt beschreven",
+  "de notitie gaat over",
+  "in deze notitie",
+];
 const CLAIM_INJECTION_PHRASES = [
-  'dus ',
-  'daarom ',
-  'conclusie',
-  'het liet zien dat',
-  'dat maakte duidelijk dat',
-  'uiteindelijk bleek',
-  'ik realiseerde me',
+  "dus ",
+  "daarom ",
+  "conclusie",
+  "het liet zien dat",
+  "dat maakte duidelijk dat",
+  "uiteindelijk bleek",
+  "ik realiseerde me",
 ];
-const UNCERTAINTY_CUES = ['uh', 'eh', 'denk', 'volgens mij', 'of zo', 'misschien'];
-const ASSERTIVE_CUES = ['het is', 'dit is', 'blijkt', 'duidelijk', 'zeker', 'vast'];
+const UNCERTAINTY_CUES = [
+  "uh",
+  "eh",
+  "denk",
+  "volgens mij",
+  "of zo",
+  "misschien",
+];
+const ASSERTIVE_CUES = [
+  "het is",
+  "dit is",
+  "blijkt",
+  "duidelijk",
+  "zeker",
+  "vast",
+];
 
 function buildCorsHeaders(request: Request): Record<string, string> {
-  const origin = request.headers.get('origin') ?? '*';
+  const origin = request.headers.get("origin") ?? "*";
 
   return {
     ...CORS_BASE_HEADERS,
-    'Access-Control-Allow-Origin': origin,
-    Vary: 'Origin',
+    "Access-Control-Allow-Origin": origin,
+    Vary: "Origin",
   };
 }
 
@@ -111,7 +137,7 @@ function jsonResponse(request: Request, status: number, payload: unknown) {
     status,
     headers: {
       ...buildCorsHeaders(request),
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 }
@@ -137,12 +163,12 @@ function errorResponse(input: {
       code: input.code,
       message: input.message,
       ...(input.details ? { details: input.details } : {}),
-    })
+    }),
   );
 }
 
 function parseFlowId(request: Request, requestId: string): string {
-  const flowId = request.headers.get('x-flow-id')?.trim() ?? '';
+  const flowId = request.headers.get("x-flow-id")?.trim() ?? "";
   return flowId.length > 0 ? flowId : requestId;
 }
 
@@ -154,7 +180,7 @@ function parseCapturedAt(capturedAt?: string): string {
   const parsed = new Date(capturedAt);
 
   if (Number.isNaN(parsed.getTime())) {
-    throw new Error('Invalid capturedAt. Use ISO-8601 datetime.');
+    throw new Error("Invalid capturedAt. Use ISO-8601 datetime.");
   }
 
   return parsed.toISOString();
@@ -176,10 +202,10 @@ function dateBoundsUtc(journalDate: string): { start: string; end: string } {
 }
 
 function normalizeBodyParagraphs(value: string): string {
-  const normalizedLines = String(value ?? '')
-    .replace(/\r\n?/g, '\n')
-    .split('\n')
-    .map((line) => line.replace(/[ \t]+/g, ' ').trim());
+  const normalizedLines = String(value ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trim());
 
   const collapsed: string[] = [];
   let previousWasBlank = false;
@@ -187,7 +213,7 @@ function normalizeBodyParagraphs(value: string): string {
   for (const line of normalizedLines) {
     if (!line) {
       if (!previousWasBlank && collapsed.length > 0) {
-        collapsed.push('');
+        collapsed.push("");
       }
       previousWasBlank = true;
       continue;
@@ -197,21 +223,21 @@ function normalizeBodyParagraphs(value: string): string {
     previousWasBlank = false;
   }
 
-  while (collapsed[0] === '') {
+  while (collapsed[0] === "") {
     collapsed.shift();
   }
 
-  while (collapsed.length > 0 && collapsed[collapsed.length - 1] === '') {
+  while (collapsed.length > 0 && collapsed[collapsed.length - 1] === "") {
     collapsed.pop();
   }
 
-  return collapsed.join('\n');
+  return collapsed.join("\n");
 }
 
 function fallbackNormalization(rawText: string): NormalizedEntry {
   const clean = normalizeBodyParagraphs(rawText);
   const titleBase = clean.split(/[.!?\n]/)[0]?.trim() || clean;
-  const title = titleBase.slice(0, 80) || 'Notitie';
+  const title = titleBase.slice(0, 80) || "Notitie";
 
   return {
     title,
@@ -221,11 +247,13 @@ function fallbackNormalization(rawText: string): NormalizedEntry {
 }
 
 function parseString(value: unknown): string | null {
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : null;
 }
 
 function normalizeWhitespace(value: string): string {
-  return value.replace(/\s+/g, ' ').trim();
+  return value.replace(/\s+/g, " ").trim();
 }
 
 function sanitizeShortLine(value: string, maxLength: number): string {
@@ -241,8 +269,8 @@ function tokenize(value: string): string[] {
     new Set(
       normalizeForCompare(value)
         .split(/[^a-z0-9à-ÿ_-]+/i)
-        .filter((token) => token.length >= 3)
-    )
+        .filter((token) => token.length >= 3),
+    ),
   );
 }
 
@@ -257,7 +285,7 @@ function overlapRatio(source: string, target: string): number {
 }
 
 function extractSpecificTerms(value: string): string[] {
-  const matches = String(value ?? '').match(/[A-Za-zÀ-ÿ0-9_-]{3,}/g) ?? [];
+  const matches = String(value ?? "").match(/[A-Za-zÀ-ÿ0-9_-]{3,}/g) ?? [];
   const terms: string[] = [];
   for (const token of matches) {
     const clean = token.trim();
@@ -265,7 +293,8 @@ function extractSpecificTerms(value: string): string[] {
       continue;
     }
     const hasInternalUppercase = /[A-Z]/.test(clean.slice(1));
-    const hasAllCaps = clean.length >= 4 && clean === clean.toUpperCase() && /[A-Z]/.test(clean);
+    const hasAllCaps =
+      clean.length >= 4 && clean === clean.toUpperCase() && /[A-Z]/.test(clean);
     const isSpecific =
       /[0-9]/.test(clean) ||
       hasInternalUppercase ||
@@ -288,12 +317,19 @@ function containsAny(text: string, cues: string[]): boolean {
   return cues.some((cue) => normalized.includes(cue));
 }
 
-function detectNormalizationDrift(source: string, normalizedBody: string): string[] {
+function detectNormalizationDrift(
+  source: string,
+  normalizedBody: string,
+): string[] {
   const sourceClean = normalizeWhitespace(source);
   const bodyClean = normalizeWhitespace(normalizedBody);
   const reasons: string[] = [];
 
-  if (!sourceClean || !bodyClean || sourceClean.length > SHORT_ENTRY_DRIFT_MAX_SOURCE_LENGTH) {
+  if (
+    !sourceClean ||
+    !bodyClean ||
+    sourceClean.length > SHORT_ENTRY_DRIFT_MAX_SOURCE_LENGTH
+  ) {
     return reasons;
   }
 
@@ -301,29 +337,32 @@ function detectNormalizationDrift(source: string, normalizedBody: string): strin
   const bodyLower = normalizeForCompare(bodyClean);
 
   const addedClaim = CLAIM_INJECTION_PHRASES.some(
-    (phrase) => bodyLower.includes(phrase) && !sourceLower.includes(phrase)
+    (phrase) => bodyLower.includes(phrase) && !sourceLower.includes(phrase),
   );
   if (addedClaim) {
-    reasons.push('added_claim_short_entry');
+    reasons.push("added_claim_short_entry");
   }
 
   const specificTerms = extractSpecificTerms(sourceClean);
   if (specificTerms.length > 0) {
     const lostTerms = specificTerms.filter((term) => !bodyLower.includes(term));
     if (lostTerms.length > 0) {
-      reasons.push('specific_term_loss');
+      reasons.push("specific_term_loss");
     }
   }
 
   if (overlapRatio(sourceClean, bodyClean) < 0.45) {
-    reasons.push('over_rewrite');
+    reasons.push("over_rewrite");
   }
 
   const hadUncertainty = containsAny(sourceClean, UNCERTAINTY_CUES);
-  const removedUncertainty = hadUncertainty && !containsAny(bodyClean, UNCERTAINTY_CUES);
-  const introducedAssertive = containsAny(bodyClean, ASSERTIVE_CUES) && !containsAny(sourceClean, ASSERTIVE_CUES);
+  const removedUncertainty =
+    hadUncertainty && !containsAny(bodyClean, UNCERTAINTY_CUES);
+  const introducedAssertive =
+    containsAny(bodyClean, ASSERTIVE_CUES) &&
+    !containsAny(sourceClean, ASSERTIVE_CUES);
   if (removedUncertainty && introducedAssertive) {
-    reasons.push('speculative_correction');
+    reasons.push("speculative_correction");
   }
 
   return Array.from(new Set(reasons));
@@ -335,13 +374,15 @@ function looksGenericTitle(value: string): boolean {
 }
 
 function containsNoSpeechMarker(value: string): boolean {
-  return normalizeForCompare(value).includes(normalizeForCompare(NO_SPEECH_TRANSCRIPT));
+  return normalizeForCompare(value).includes(
+    normalizeForCompare(NO_SPEECH_TRANSCRIPT),
+  );
 }
 
 function cleanNormalizedTitle(value: string, fallback: string): string {
   const candidate = sanitizeShortLine(value, 80);
   if (!candidate || looksGenericTitle(candidate)) {
-    return sanitizeShortLine(fallback, 80) || 'Notitie';
+    return sanitizeShortLine(fallback, 80) || "Notitie";
   }
 
   return candidate;
@@ -356,7 +397,10 @@ function cleanNormalizedBody(value: string, fallback: string): string {
   return candidate;
 }
 
-function isSuspiciouslyCompressedNormalization(source: string, normalizedBody: string): boolean {
+function isSuspiciouslyCompressedNormalization(
+  source: string,
+  normalizedBody: string,
+): boolean {
   const sourceClean = normalizeWhitespace(source);
   const normalizedClean = normalizeWhitespace(normalizedBody);
 
@@ -370,7 +414,7 @@ function isSuspiciouslyCompressedNormalization(source: string, normalizedBody: s
 function trimPreviewForMobile(value: string, maxLength = 156): string {
   const normalized = normalizeWhitespace(value);
   if (!normalized) {
-    return '';
+    return "";
   }
 
   if (normalized.length <= maxLength) {
@@ -379,12 +423,15 @@ function trimPreviewForMobile(value: string, maxLength = 156): string {
 
   const sliced = normalized.slice(0, maxLength);
   const boundary = Math.max(
-    sliced.lastIndexOf('. '),
-    sliced.lastIndexOf('; '),
-    sliced.lastIndexOf(', '),
-    sliced.lastIndexOf(' ')
+    sliced.lastIndexOf(". "),
+    sliced.lastIndexOf("; "),
+    sliced.lastIndexOf(", "),
+    sliced.lastIndexOf(" "),
   );
-  const base = boundary > maxLength * 0.6 ? sliced.slice(0, boundary).trim() : sliced.trim();
+  const base =
+    boundary > maxLength * 0.6
+      ? sliced.slice(0, boundary).trim()
+      : sliced.trim();
   const safeBase = base || sliced.trim();
   return `${safeBase}...`;
 }
@@ -392,9 +439,9 @@ function trimPreviewForMobile(value: string, maxLength = 156): string {
 function finalizePreviewTone(value: string): string {
   const clean = value.trim();
   if (!clean) {
-    return '';
+    return "";
   }
-  if (clean.endsWith('?')) {
+  if (clean.endsWith("?")) {
     return `${clean.slice(0, -1).trimEnd()}.`;
   }
   return clean;
@@ -416,21 +463,24 @@ function looksGenericPreview(value: string): boolean {
 function createSummaryShortFromBody(body: string): string {
   const normalizedBody = normalizeWhitespace(body);
   if (!normalizedBody) {
-    return 'Korte preview niet beschikbaar.';
+    return "Korte preview niet beschikbaar.";
   }
 
-  const firstSentence = normalizedBody.split(/[.!?]/)[0]?.trim() ?? '';
+  const firstSentence = normalizedBody.split(/[.!?]/)[0]?.trim() ?? "";
   const source = firstSentence.length >= 24 ? firstSentence : normalizedBody;
   const preview = trimPreviewForMobile(source);
   return finalizePreviewTone(preview || trimPreviewForMobile(normalizedBody));
 }
 
-function cleanNormalizedSummaryShort(value: string | null, fallbackBody: string): string {
-  const candidate = trimPreviewForMobile(value ?? '');
+function cleanNormalizedSummaryShort(
+  value: string | null,
+  fallbackBody: string,
+): string {
+  const candidate = trimPreviewForMobile(value ?? "");
   if (!candidate) {
     return createSummaryShortFromBody(fallbackBody);
   }
-  if (candidate.endsWith('?')) {
+  if (candidate.endsWith("?")) {
     return createSummaryShortFromBody(fallbackBody);
   }
   if (looksMetaPreview(candidate) || looksGenericPreview(candidate)) {
@@ -440,8 +490,10 @@ function cleanNormalizedSummaryShort(value: string | null, fallbackBody: string)
   return finalizePreviewTone(candidate);
 }
 
-
-function parseSourceInput(body: ProcessEntryRequest): { value?: ParsedSourceInput; error?: string } {
+function parseSourceInput(body: ProcessEntryRequest): {
+  value?: ParsedSourceInput;
+  error?: string;
+} {
   const rawText = parseString(body.rawText);
   const audioBase64 = parseString(body.audioBase64);
   const audioMimeType = parseString(body.audioMimeType);
@@ -451,14 +503,14 @@ function parseSourceInput(body: ProcessEntryRequest): { value?: ParsedSourceInpu
 
   if (hasText === hasAudio) {
     return {
-      error: 'Provide exactly one input path: rawText or audioBase64.',
+      error: "Provide exactly one input path: rawText or audioBase64.",
     };
   }
 
   if (hasText && rawText) {
     return {
       value: {
-        sourceType: 'text',
+        sourceType: "text",
         rawText,
       },
     };
@@ -466,13 +518,13 @@ function parseSourceInput(body: ProcessEntryRequest): { value?: ParsedSourceInpu
 
   if (!audioMimeType) {
     return {
-      error: 'audioMimeType is required when audioBase64 is provided.',
+      error: "audioMimeType is required when audioBase64 is provided.",
     };
   }
 
   return {
     value: {
-      sourceType: 'audio',
+      sourceType: "audio",
       audioBase64: audioBase64 as string,
       audioMimeType,
     },
@@ -482,14 +534,14 @@ function parseSourceInput(body: ProcessEntryRequest): { value?: ParsedSourceInpu
 function sanitizeBase64(input: string): string {
   const trimmed = input.trim();
 
-  if (trimmed.startsWith('data:')) {
-    const commaIndex = trimmed.indexOf(',');
+  if (trimmed.startsWith("data:")) {
+    const commaIndex = trimmed.indexOf(",");
     if (commaIndex > -1) {
-      return trimmed.slice(commaIndex + 1).replace(/\s+/g, '');
+      return trimmed.slice(commaIndex + 1).replace(/\s+/g, "");
     }
   }
 
-  return trimmed.replace(/\s+/g, '');
+  return trimmed.replace(/\s+/g, "");
 }
 
 function decodeBase64ToBytes(input: string): Uint8Array | null {
@@ -510,27 +562,29 @@ function decodeBase64ToBytes(input: string): Uint8Array | null {
 }
 
 function normalizeAudioMimeType(value: string): string {
-  return value.split(';')[0]?.trim().toLowerCase() || 'application/octet-stream';
+  return (
+    value.split(";")[0]?.trim().toLowerCase() || "application/octet-stream"
+  );
 }
 
 function audioFileExtensionFromMimeType(mimeType: string): string {
   switch (mimeType) {
-    case 'audio/webm':
-      return 'webm';
-    case 'audio/wav':
-    case 'audio/x-wav':
-      return 'wav';
-    case 'audio/m4a':
-      return 'm4a';
-    case 'audio/mp4':
-      return 'mp4';
-    case 'audio/mpeg':
-    case 'audio/mp3':
-      return 'mp3';
-    case 'audio/ogg':
-      return 'ogg';
+    case "audio/webm":
+      return "webm";
+    case "audio/wav":
+    case "audio/x-wav":
+      return "wav";
+    case "audio/m4a":
+      return "m4a";
+    case "audio/mp4":
+      return "mp4";
+    case "audio/mpeg":
+    case "audio/mp3":
+      return "mp3";
+    case "audio/ogg":
+      return "ogg";
     default:
-      return 'bin';
+      return "bin";
   }
 }
 
@@ -543,34 +597,65 @@ async function transcribeAudio(args: {
   audioMimeType: string;
 }): Promise<string | null> {
   try {
+    const startedAt = Date.now();
     const normalizedMimeType = normalizeAudioMimeType(args.audioMimeType);
     const extension = audioFileExtensionFromMimeType(normalizedMimeType);
     const blobBytes = Uint8Array.from(args.audioBytes);
 
     const formData = new FormData();
     formData.append(
-      'file',
+      "file",
       new Blob([blobBytes], { type: normalizedMimeType }),
-      `capture.${extension}`
+      `capture.${extension}`,
     );
-    formData.append('model', args.model);
-
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${args.apiKey}`,
+    formData.append("model", args.model);
+    logFlow("info", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: "transcribed",
+      event: "api_call_start",
+      details: {
+        operation: "openai_audio_transcription",
+        provider: "openai",
+        model: args.model,
       },
-      body: formData,
     });
+
+    const response = await fetch(
+      "https://api.openai.com/v1/audio/transcriptions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${args.apiKey}`,
+        },
+        body: formData,
+      },
+    );
 
     if (!response.ok) {
       const errorBody = await response.text();
-      logFlow('error', {
+      const durationMs = Date.now() - startedAt;
+      logFlow("error", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'transcribed',
-        event: 'openai_transcription_failed',
+        step: "transcribed",
+        event: "api_call_error",
+        details: {
+          operation: "openai_audio_transcription",
+          provider: "openai",
+          model: args.model,
+          status: response.status,
+          durationMs,
+        },
+      });
+      logFlow("error", {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: "transcribed",
+        event: "openai_transcription_failed",
         details: {
           status: response.status,
           body: errorBody,
@@ -578,28 +663,55 @@ async function transcribeAudio(args: {
       });
       return null;
     }
+    const durationMs = Date.now() - startedAt;
+    logFlow("info", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: "transcribed",
+      event: "api_call_success",
+      details: {
+        operation: "openai_audio_transcription",
+        provider: "openai",
+        model: args.model,
+        durationMs,
+      },
+    });
 
     const data = (await response.json()) as { text?: unknown };
-    const transcript = typeof data.text === 'string' ? data.text.trim() : '';
+    const transcript = typeof data.text === "string" ? data.text.trim() : "";
 
     if (transcript.length === 0) {
-      logFlow('warn', {
+      logFlow("warn", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'transcribed',
-        event: 'openai_transcription_empty',
+        step: "transcribed",
+        event: "openai_transcription_empty",
       });
     }
 
     return transcript;
   } catch (error) {
-    logFlow('error', {
+    logFlow("error", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'transcribed',
-      event: 'openai_transcription_exception',
+      step: "transcribed",
+      event: "api_call_error",
+      details: {
+        operation: "openai_audio_transcription",
+        provider: "openai",
+        model: args.model,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+    logFlow("error", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: "transcribed",
+      event: "openai_transcription_exception",
       details: {
         error: error instanceof Error ? error.message : String(error),
       },
@@ -614,39 +726,68 @@ async function callOpenAiJson(args: {
   requestId: string;
   flowId: string;
   step: string;
+  operation: string;
   promptVersion: string;
   systemPrompt: string;
   userPrompt: string;
 }): Promise<OpenAiJson | null> {
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const startedAt = Date.now();
+    logFlow("info", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: "api_call_start",
+      details: {
+        operation: args.operation,
+        provider: "openai",
+        model: args.model,
+      },
+    });
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${args.apiKey}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: args.model,
         temperature: 0.2,
-        response_format: { type: 'json_object' },
+        response_format: { type: "json_object" },
         messages: [
           {
-            role: 'system',
+            role: "system",
             content: `${args.systemPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
           },
-          { role: 'user', content: args.userPrompt },
+          { role: "user", content: args.userPrompt },
         ],
       }),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      logFlow('error', {
+      const durationMs = Date.now() - startedAt;
+      logFlow("error", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
         step: args.step,
-        event: 'openai_call_failed',
+        event: "api_call_error",
+        details: {
+          operation: args.operation,
+          provider: "openai",
+          model: args.model,
+          status: response.status,
+          durationMs,
+        },
+      });
+      logFlow("error", {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: args.step,
+        event: "openai_call_failed",
         details: {
           status: response.status,
           body: errorBody,
@@ -654,9 +795,23 @@ async function callOpenAiJson(args: {
       });
       return null;
     }
+    const durationMs = Date.now() - startedAt;
+    logFlow("info", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: "api_call_success",
+      details: {
+        operation: args.operation,
+        provider: "openai",
+        model: args.model,
+        durationMs,
+      },
+    });
 
     const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string | null } }>;
+      choices?: { message?: { content?: string | null } }[];
     };
     const content = data.choices?.[0]?.message?.content;
 
@@ -667,12 +822,25 @@ async function callOpenAiJson(args: {
     const parsed = JSON.parse(content) as OpenAiJson;
     return parsed;
   } catch (error) {
-    logFlow('error', {
+    logFlow("error", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
       step: args.step,
-      event: 'openai_response_parse_failed',
+      event: "api_call_error",
+      details: {
+        operation: args.operation,
+        provider: "openai",
+        model: args.model,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+    logFlow("error", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: "openai_response_parse_failed",
       details: {
         error: error instanceof Error ? error.message : String(error),
       },
@@ -697,20 +865,19 @@ async function normalizeEntry(args: {
     };
   }
 
+  const normalizationPrompt = buildEntryNormalizationPromptSpec({
+    rawText: args.rawText,
+  });
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
     model: args.model,
     requestId: args.requestId,
     flowId: args.flowId,
-    step: 'normalized_persisted',
-    promptVersion: NORMALIZATION_PROMPT_VERSION,
-    systemPrompt:
-      'Normaliseer een persoonlijke notitie door licht te redigeren, niet te herschrijven. Body moet bronnabij en herkenbaar blijven in woordkeuze, volgorde, toon en cadans. Wel: zinsgrenzen, leestekens, evidente taalfouten, kleine grammaticale fouten, duidelijke stotter/spraakruis en betekenisloze dubbele herhaling opschonen. Niet: samenvatten, hervertellen, mooier formuleren, toon veranderen, conclusies/evaluaties/interpretaties toevoegen. Behoud specifieke termen, productnamen, eigennamen en ongebruikelijke woorden zoveel mogelijk letterlijk; bij twijfel origineel behouden. Behoud betekenisvolle alineascheiding uit de bron in body (bijv. chatblokken of dagboekalinea’s); sla die niet plat. Meerdere lege regels mag je terugbrengen naar maximaal één lege regel tussen alinea’s. summary_short mag compact zijn voor mobiele preview maar zonder nieuwe claims, interpretatie of toonlaag. Geef alleen JSON terug met title, body en summary_short.',
-    userPrompt: JSON.stringify({
-      instruction:
-        'Maak 1 concrete titel, 1 volledige licht-geredigeerde body en 1 compacte summary_short op basis van de bron. Body: redigeren, niet herschrijven; geen merkbare reductie of parafrase. Behoud bestaande alinea’s/lege regels waar betekenisvol; normaliseer 3+ lege regels naar maximaal één lege regel tussen alinea’s. summary_short: compacte preview voor mobiele lijsten (ongeveer 2 regels), natuurlijk Nederlands, niet-meta, niet-analytisch, geen vraagvorm en geen nieuwe claims.',
-      rawText: args.rawText,
-    }),
+    step: "normalized_persisted",
+    operation: "openai_normalize_entry",
+    promptVersion: normalizationPrompt.promptVersion,
+    systemPrompt: normalizationPrompt.systemPrompt,
+    userPrompt: normalizationPrompt.userPrompt,
   });
 
   const fallback = fallbackNormalization(args.rawText);
@@ -719,20 +886,35 @@ async function normalizeEntry(args: {
     return fallback;
   }
 
-  const nextTitle = cleanNormalizedTitle(parseString(aiResult.title) ?? fallback.title, fallback.title);
-  const nextBody = cleanNormalizedBody(parseString(aiResult.body) ?? fallback.body, fallback.body);
-  const compressionGuardTriggered = isSuspiciouslyCompressedNormalization(args.rawText, nextBody);
-  const body = compressionGuardTriggered && args.softQualityGuards ? fallback.body : nextBody;
-  const summaryShort = cleanNormalizedSummaryShort(parseString(aiResult.summary_short), body);
+  const nextTitle = cleanNormalizedTitle(
+    parseString(aiResult.title) ?? fallback.title,
+    fallback.title,
+  );
+  const nextBody = cleanNormalizedBody(
+    parseString(aiResult.body) ?? fallback.body,
+    fallback.body,
+  );
+  const compressionGuardTriggered = isSuspiciouslyCompressedNormalization(
+    args.rawText,
+    nextBody,
+  );
+  const body =
+    compressionGuardTriggered && args.softQualityGuards
+      ? fallback.body
+      : nextBody;
+  const summaryShort = cleanNormalizedSummaryShort(
+    parseString(aiResult.summary_short),
+    body,
+  );
   const driftReasons = detectNormalizationDrift(args.rawText, body);
 
   if (compressionGuardTriggered && args.softQualityGuards) {
-    logFlow('warn', {
+    logFlow("warn", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'normalized_persisted',
-      event: 'normalized_body_compression_guardrail_triggered',
+      step: "normalized_persisted",
+      event: "normalized_body_compression_guardrail_triggered",
       details: {
         sourceLength: normalizeWhitespace(args.rawText).length,
         normalizedLength: normalizeWhitespace(nextBody).length,
@@ -741,14 +923,14 @@ async function normalizeEntry(args: {
   }
 
   if (compressionGuardTriggered && !args.softQualityGuards) {
-    logFlow('info', {
+    logFlow("info", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'normalized_persisted',
-      event: 'normalized_soft_quality_not_enforced',
+      step: "normalized_persisted",
+      event: "normalized_soft_quality_not_enforced",
       details: {
-        reasons: ['compressed_normalized_body'],
+        reasons: ["compressed_normalized_body"],
         softGuardsEnabled: false,
       },
     });
@@ -756,12 +938,12 @@ async function normalizeEntry(args: {
 
   if (driftReasons.length > 0) {
     if (!args.softQualityGuards) {
-      logFlow('info', {
+      logFlow("info", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'normalized_persisted',
-        event: 'normalized_soft_quality_not_enforced',
+        step: "normalized_persisted",
+        event: "normalized_soft_quality_not_enforced",
         details: {
           reasons: driftReasons,
           softGuardsEnabled: false,
@@ -775,96 +957,104 @@ async function normalizeEntry(args: {
       };
     }
 
-    logFlow('warn', {
+    logFlow("warn", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'normalized_persisted',
-      event: 'normalized_drift_detected',
+      step: "normalized_persisted",
+      event: "normalized_drift_detected",
       details: {
         reasons: driftReasons,
       },
     });
 
-    logFlow('info', {
+    logFlow("info", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'normalized_persisted',
-      event: 'normalized_repair_attempted',
+      step: "normalized_persisted",
+      event: "normalized_repair_attempted",
       details: {
         reasons: driftReasons,
       },
     });
 
+    const repairPrompt = buildEntryNormalizationRepairPromptSpec({
+      rawText: args.rawText,
+      currentBody: body,
+    });
     const repairedAiResult = await callOpenAiJson({
       apiKey: args.apiKey,
       model: args.model,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'normalized_persisted',
-      promptVersion: NORMALIZATION_REPAIR_PROMPT_VERSION,
-      systemPrompt:
-        'Herstel de normalisatie door alleen licht te redigeren, niet te herschrijven. Behoud formulering, termen en stem van de gebruiker. Geen nieuwe claims of interpretatie. Geef alleen JSON terug met title, body en summary_short.',
-      userPrompt: JSON.stringify({
-        instruction:
-          'Body heeft drift. Redigeer conservatief: behoud bronformulering, corrigeer alleen leestekens/zinsgrenzen/evidente taalfouten/spraakruis. Niet samenvatten of hervertellen.',
-        rawText: args.rawText,
-        currentBody: body,
-      }),
+      step: "normalized_persisted",
+      operation: "openai_normalize_entry_repair",
+      promptVersion: repairPrompt.promptVersion,
+      systemPrompt: repairPrompt.systemPrompt,
+      userPrompt: repairPrompt.userPrompt,
     });
 
     if (repairedAiResult) {
       const repairedTitle = cleanNormalizedTitle(
         parseString(repairedAiResult.title) ?? nextTitle,
-        fallback.title
+        fallback.title,
       );
       const repairedBodyRaw = cleanNormalizedBody(
         parseString(repairedAiResult.body) ?? body,
-        fallback.body
+        fallback.body,
       );
-      const repairedBody = isSuspiciouslyCompressedNormalization(args.rawText, repairedBodyRaw)
+      const repairedBody = isSuspiciouslyCompressedNormalization(
+        args.rawText,
+        repairedBodyRaw,
+      )
         ? fallback.body
         : repairedBodyRaw;
-      const repairedDrift = detectNormalizationDrift(args.rawText, repairedBody);
+      const repairedDrift = detectNormalizationDrift(
+        args.rawText,
+        repairedBody,
+      );
       if (repairedDrift.length === 0) {
         return {
           title: repairedTitle,
           body: repairedBody,
-          summaryShort: cleanNormalizedSummaryShort(parseString(repairedAiResult.summary_short), repairedBody),
+          summaryShort: cleanNormalizedSummaryShort(
+            parseString(repairedAiResult.summary_short),
+            repairedBody,
+          ),
         };
       }
 
-      logFlow('warn', {
+      logFlow("warn", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'normalized_persisted',
-        event: 'normalized_repair_failed',
+        step: "normalized_persisted",
+        event: "normalized_repair_failed",
         details: {
           reasons: repairedDrift,
         },
       });
     } else {
-      logFlow('warn', {
+      logFlow("warn", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'normalized_persisted',
-        event: 'normalized_repair_failed',
+        step: "normalized_persisted",
+        event: "normalized_repair_failed",
         details: {
-          reasons: ['repair_model_output_missing'],
+          reasons: ["repair_model_output_missing"],
         },
       });
     }
 
     const conservative = fallbackNormalization(args.rawText);
-    logFlow('warn', {
+    logFlow("warn", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'normalized_persisted',
-      event: 'normalized_fallback_used',
+      step: "normalized_persisted",
+      event: "normalized_fallback_used",
       details: {
         reasons: driftReasons,
       },
@@ -895,11 +1085,12 @@ async function composeDayJournal(args: {
   normalizedEntries: NormalizedEntry[];
 }): Promise<DayJournalDraft> {
   const orderedEntries = orderDayJournalEntries(args.normalizedEntries);
-  const contentEntries = orderedEntries.filter((entry) =>
-    !isLowContentDayEntry(entry, {
-      noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
-      lowContentTitle: LOW_CONTENT_TITLE,
-    })
+  const contentEntries = orderedEntries.filter(
+    (entry) =>
+      !isLowContentDayEntry(entry, {
+        noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
+        lowContentTitle: LOW_CONTENT_TITLE,
+      }),
   );
 
   if (contentEntries.length === 0) {
@@ -925,7 +1116,8 @@ async function composeDayJournal(args: {
     model: args.model,
     requestId: args.requestId,
     flowId: args.flowId,
-    step: 'day_journal_upserted',
+    step: "day_journal_upserted",
+    operation: "openai_compose_day_journal",
     promptVersion: promptSpec.promptVersion,
     systemPrompt: promptSpec.systemPrompt,
     userPrompt: promptSpec.userPrompt,
@@ -943,12 +1135,12 @@ async function composeDayJournal(args: {
   });
 
   if (!args.softQualityGuards && finalized.softQualitySignals.length > 0) {
-    logFlow('info', {
+    logFlow("info", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'day_journal_upserted',
-      event: 'soft_quality_not_enforced',
+      step: "day_journal_upserted",
+      event: "soft_quality_not_enforced",
       details: {
         reasons: finalized.softQualitySignals,
         softGuardsEnabled: false,
@@ -956,18 +1148,27 @@ async function composeDayJournal(args: {
     });
   }
 
-  const narrativeRepairReasons = finalized.narrativeQualityReasons.filter((reason) =>
-    ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
+  const narrativeRepairReasons = finalized.narrativeQualityReasons.filter(
+    (reason) =>
+      [
+        "compressed_narrative",
+        "stitched_narrative",
+        "truncated_narrative",
+      ].includes(reason),
   );
   const narrativeNeedsRepair =
-    args.softQualityGuards && !finalized.usedFallback && narrativeRepairReasons.length > 0;
+    args.softQualityGuards &&
+    !finalized.usedFallback &&
+    narrativeRepairReasons.length > 0;
   if (narrativeNeedsRepair) {
-    logFlow('info', {
+    logFlow("info", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'day_journal_upserted',
-      event: narrativeRepairReasons.includes('compressed_narrative') ? 'compressed_detected' : 'narrative_quality_detected',
+      step: "day_journal_upserted",
+      event: narrativeRepairReasons.includes("compressed_narrative")
+        ? "compressed_detected"
+        : "narrative_quality_detected",
       details: {
         reasons: narrativeRepairReasons,
       },
@@ -978,14 +1179,14 @@ async function composeDayJournal(args: {
       entries: contentEntries,
     });
 
-    logFlow('info', {
+    logFlow("info", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'day_journal_upserted',
-      event: 'retry_attempted',
+      step: "day_journal_upserted",
+      event: "retry_attempted",
       details: {
-        reason: narrativeRepairReasons[0] ?? 'narrative_quality',
+        reason: narrativeRepairReasons[0] ?? "narrative_quality",
       },
     });
 
@@ -994,7 +1195,8 @@ async function composeDayJournal(args: {
       model: args.model,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'day_journal_upserted',
+      step: "day_journal_upserted",
+      operation: "openai_compose_day_journal_repair",
       promptVersion: repairPrompt.promptVersion,
       systemPrompt: repairPrompt.systemPrompt,
       userPrompt: repairPrompt.userPrompt,
@@ -1011,18 +1213,25 @@ async function composeDayJournal(args: {
       },
     });
 
-    const remainingNarrativeRepairReasons = repairedFinalized.narrativeQualityReasons.filter((reason) =>
-      ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
-    );
-    const retrySucceeded = !repairedFinalized.usedFallback && remainingNarrativeRepairReasons.length === 0;
+    const remainingNarrativeRepairReasons =
+      repairedFinalized.narrativeQualityReasons.filter((reason) =>
+        [
+          "compressed_narrative",
+          "stitched_narrative",
+          "truncated_narrative",
+        ].includes(reason),
+      );
+    const retrySucceeded =
+      !repairedFinalized.usedFallback &&
+      remainingNarrativeRepairReasons.length === 0;
 
     if (retrySucceeded) {
-      logFlow('info', {
+      logFlow("info", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'day_journal_upserted',
-        event: 'retry_succeeded',
+        step: "day_journal_upserted",
+        event: "retry_succeeded",
       });
 
       return {
@@ -1037,24 +1246,24 @@ async function composeDayJournal(args: {
       ? repairedFinalized.rejectionReasons
       : remainingNarrativeRepairReasons;
 
-    logFlow('warn', {
+    logFlow("warn", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'day_journal_upserted',
-      event: 'retry_failed',
+      step: "day_journal_upserted",
+      event: "retry_failed",
       details: {
         reasons: retryFailureReasons,
       },
     });
-    logFlow('warn', {
+    logFlow("warn", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'day_journal_upserted',
-      event: 'day_journal_fallback_used',
+      step: "day_journal_upserted",
+      event: "day_journal_fallback_used",
       details: {
-        dominantReason: retryFailureReasons[0] ?? 'narrative_quality',
+        dominantReason: retryFailureReasons[0] ?? "narrative_quality",
         reasons: retryFailureReasons,
       },
     });
@@ -1063,41 +1272,41 @@ async function composeDayJournal(args: {
   }
 
   if (finalized.usedFallback) {
-    logFlow('warn', {
+    logFlow("warn", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
-      step: 'day_journal_upserted',
-      event: 'day_journal_fallback_used',
+      step: "day_journal_upserted",
+      event: "day_journal_fallback_used",
       details: {
-        dominantReason: finalized.rejectionReasons[0] ?? 'unknown',
+        dominantReason: finalized.rejectionReasons[0] ?? "unknown",
         reasons: finalized.rejectionReasons,
       },
     });
   } else {
     if (finalized.usedFallbackSummary) {
-      logFlow('info', {
+      logFlow("info", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'day_journal_upserted',
-        event: 'day_journal_summary_fallback_used',
+        step: "day_journal_upserted",
+        event: "day_journal_summary_fallback_used",
         details: {
-          dominantReason: finalized.summaryFallbackReasons[0] ?? 'unknown',
+          dominantReason: finalized.summaryFallbackReasons[0] ?? "unknown",
           reasons: finalized.summaryFallbackReasons,
         },
       });
     }
 
     if (finalized.usedFallbackSections) {
-      logFlow('info', {
+      logFlow("info", {
         flow: FLOW,
         requestId: args.requestId,
         flowId: args.flowId,
-        step: 'day_journal_upserted',
-        event: 'day_journal_sections_fallback_used',
+        step: "day_journal_upserted",
+        event: "day_journal_sections_fallback_used",
         details: {
-          dominantReason: finalized.sectionFallbackReasons[0] ?? 'unknown',
+          dominantReason: finalized.sectionFallbackReasons[0] ?? "unknown",
           reasons: finalized.sectionFallbackReasons,
         },
       });
@@ -1112,7 +1321,7 @@ async function composeDayJournal(args: {
 }
 
 Deno.serve(async (request: Request) => {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
       headers: buildCorsHeaders(request),
@@ -1122,33 +1331,33 @@ Deno.serve(async (request: Request) => {
   const requestId = crypto.randomUUID();
   const flowId = parseFlowId(request, requestId);
 
-  if (request.method !== 'POST') {
+  if (request.method !== "POST") {
     return errorResponse({
       request,
       httpStatus: 405,
       requestId,
       flowId,
-      step: 'received',
-      code: 'INPUT_INVALID',
-      message: 'Method not allowed',
+      step: "received",
+      code: "INPUT_INVALID",
+      message: "Method not allowed",
       details: { method: request.method },
     });
   }
 
-  let step = 'received';
+  let step = "received";
   let rawEntryId: string | null = null;
 
   try {
-    logFlow('info', {
+    logFlow("info", {
       flow: FLOW,
       requestId,
       flowId,
       step,
-      event: 'start',
+      event: "start",
     });
 
     const runtimeEnv = getFunctionRuntimeEnv();
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get("Authorization");
 
     if (!authHeader) {
       return errorResponse({
@@ -1156,31 +1365,37 @@ Deno.serve(async (request: Request) => {
         httpStatus: 401,
         requestId,
         flowId,
-        step: 'authenticated',
-        code: 'AUTH_MISSING',
-        message: 'Missing Authorization header',
+        step: "authenticated",
+        code: "AUTH_MISSING",
+        message: "Missing Authorization header",
       });
     }
 
-    step = 'authenticated';
-    const supabase = createClient(runtimeEnv.supabaseUrl, runtimeEnv.supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: authHeader,
+    step = "authenticated";
+    const supabase = createClient(
+      runtimeEnv.supabaseUrl,
+      runtimeEnv.supabaseAnonKey,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
         },
       },
-    });
+    );
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
-      logFlow('warn', {
+      logFlow("warn", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: 'auth_failed',
+        event: "auth_failed",
         details: {
-          error: authError ? String(authError.message ?? authError) : 'missing user',
+          error: authError
+            ? String(authError.message ?? authError)
+            : "missing user",
         },
       });
       return errorResponse({
@@ -1189,8 +1404,8 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        code: 'AUTH_UNAUTHORIZED',
-        message: 'Unauthorized',
+        code: "AUTH_UNAUTHORIZED",
+        message: "Unauthorized",
       });
     }
 
@@ -1198,15 +1413,15 @@ Deno.serve(async (request: Request) => {
 
     try {
       const parsedBody = await request.json();
-      if (!parsedBody || typeof parsedBody !== 'object') {
+      if (!parsedBody || typeof parsedBody !== "object") {
         return errorResponse({
           request,
           httpStatus: 400,
           requestId,
           flowId,
-          step: 'validated',
-          code: 'INPUT_INVALID',
-          message: 'Invalid JSON body',
+          step: "validated",
+          code: "INPUT_INVALID",
+          message: "Invalid JSON body",
         });
       }
 
@@ -1217,13 +1432,13 @@ Deno.serve(async (request: Request) => {
         httpStatus: 400,
         requestId,
         flowId,
-        step: 'validated',
-        code: 'INPUT_INVALID',
-        message: 'Invalid JSON body',
+        step: "validated",
+        code: "INPUT_INVALID",
+        message: "Invalid JSON body",
       });
     }
 
-    step = 'validated';
+    step = "validated";
     const parsedSource = parseSourceInput(body);
 
     if (!parsedSource.value) {
@@ -1233,8 +1448,8 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        code: 'INPUT_INVALID',
-        message: parsedSource.error ?? 'Invalid input payload',
+        code: "INPUT_INVALID",
+        message: parsedSource.error ?? "Invalid input payload",
       });
     }
 
@@ -1248,19 +1463,19 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        code: 'INPUT_INVALID',
-        message: error instanceof Error ? error.message : 'Invalid capturedAt.',
+        code: "INPUT_INVALID",
+        message: error instanceof Error ? error.message : "Invalid capturedAt.",
       });
     }
 
     const journalDate = toJournalDate(capturedAt);
 
-    logFlow('info', {
+    logFlow("info", {
       flow: FLOW,
       requestId,
       flowId,
       step,
-      event: 'validated',
+      event: "validated",
       details: {
         userId: authData.user.id,
         journalDate,
@@ -1268,11 +1483,11 @@ Deno.serve(async (request: Request) => {
       },
     });
 
-    let sourceTextForNormalization = '';
+    let sourceTextForNormalization = "";
     let rawTextForPersist: string | null = null;
     let transcriptTextForPersist: string | null = null;
 
-    if (parsedSource.value.sourceType === 'text') {
+    if (parsedSource.value.sourceType === "text") {
       sourceTextForNormalization = parsedSource.value.rawText;
       rawTextForPersist = parsedSource.value.rawText;
     } else {
@@ -1285,8 +1500,8 @@ Deno.serve(async (request: Request) => {
           requestId,
           flowId,
           step,
-          code: 'INPUT_INVALID',
-          message: 'Invalid audioBase64 payload',
+          code: "INPUT_INVALID",
+          message: "Invalid audioBase64 payload",
         });
       }
 
@@ -1297,21 +1512,23 @@ Deno.serve(async (request: Request) => {
           requestId,
           flowId,
           step,
-          code: 'PAYLOAD_TOO_LARGE',
-          message: 'Audio payload too large. Keep raw audio below 5MB.',
+          code: "PAYLOAD_TOO_LARGE",
+          message: "Audio payload too large. Keep raw audio below 5MB.",
         });
       }
 
-      step = 'transcribed';
-      logFlow('info', {
+      step = "transcribed";
+      logFlow("info", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: 'transcription_start',
+        event: "transcription_start",
         details: {
           audioBytes: audioBytes.byteLength,
-          audioMimeType: normalizeAudioMimeType(parsedSource.value.audioMimeType),
+          audioMimeType: normalizeAudioMimeType(
+            parsedSource.value.audioMimeType,
+          ),
         },
       });
 
@@ -1331,20 +1548,20 @@ Deno.serve(async (request: Request) => {
           requestId,
           flowId,
           step,
-          code: 'UPSTREAM_UNAVAILABLE',
-          message: 'Failed to transcribe audio',
+          code: "UPSTREAM_UNAVAILABLE",
+          message: "Failed to transcribe audio",
         });
       }
 
       const transcriptText =
         transcript.length > 0 ? transcript : NO_SPEECH_TRANSCRIPT;
 
-      logFlow('info', {
+      logFlow("info", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: 'transcription_success',
+        event: "transcription_success",
         details: {
           transcriptLength: transcriptText.length,
         },
@@ -1354,9 +1571,9 @@ Deno.serve(async (request: Request) => {
       transcriptTextForPersist = transcriptText;
     }
 
-    step = 'raw_persisted';
+    step = "raw_persisted";
     const { data: rawEntry, error: rawError } = await supabase
-      .from('entries_raw')
+      .from("entries_raw")
       .insert({
         user_id: authData.user.id,
         source_type: parsedSource.value.sourceType,
@@ -1364,18 +1581,20 @@ Deno.serve(async (request: Request) => {
         transcript_text: transcriptTextForPersist,
         captured_at: capturedAt,
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (rawError || !rawEntry) {
-      logFlow('error', {
+      logFlow("error", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: 'insert_entries_raw_failed',
+        event: "insert_entries_raw_failed",
         details: {
-          error: rawError ? String(rawError.message ?? rawError) : 'missing row',
+          error: rawError
+            ? String(rawError.message ?? rawError)
+            : "missing row",
         },
       });
       return errorResponse({
@@ -1384,8 +1603,8 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        code: 'DB_WRITE_FAILED',
-        message: 'Failed to persist raw entry',
+        code: "DB_WRITE_FAILED",
+        message: "Failed to persist raw entry",
       });
     }
     rawEntryId = rawEntry.id;
@@ -1399,9 +1618,9 @@ Deno.serve(async (request: Request) => {
       rawText: sourceTextForNormalization,
     });
 
-    step = 'normalized_persisted';
+    step = "normalized_persisted";
     const { data: normalizedEntry, error: normalizedError } = await supabase
-      .from('entries_normalized')
+      .from("entries_normalized")
       .insert({
         raw_entry_id: rawEntry.id,
         user_id: authData.user.id,
@@ -1409,18 +1628,20 @@ Deno.serve(async (request: Request) => {
         body: normalized.body,
         summary_short: normalized.summaryShort,
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (normalizedError || !normalizedEntry) {
-      logFlow('error', {
+      logFlow("error", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: 'insert_entries_normalized_failed',
+        event: "insert_entries_normalized_failed",
         details: {
-          error: normalizedError ? String(normalizedError.message ?? normalizedError) : 'missing row',
+          error: normalizedError
+            ? String(normalizedError.message ?? normalizedError)
+            : "missing row",
           rawEntryId,
         },
       });
@@ -1430,29 +1651,29 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        code: 'DB_WRITE_FAILED',
-        message: 'Failed to persist normalized entry',
+        code: "DB_WRITE_FAILED",
+        message: "Failed to persist normalized entry",
         details: rawEntryId ? { rawEntryId } : undefined,
       });
     }
 
-    step = 'day_journal_upserted';
+    step = "day_journal_upserted";
     const bounds = dateBoundsUtc(journalDate);
     const { data: rawEntriesForDay, error: dayRawError } = await supabase
-      .from('entries_raw')
-      .select('id, captured_at')
-      .eq('user_id', authData.user.id)
-      .gte('captured_at', bounds.start)
-      .lt('captured_at', bounds.end)
-      .order('captured_at', { ascending: true });
+      .from("entries_raw")
+      .select("id, captured_at")
+      .eq("user_id", authData.user.id)
+      .gte("captured_at", bounds.start)
+      .lt("captured_at", bounds.end)
+      .order("captured_at", { ascending: true });
 
     if (dayRawError) {
-      logFlow('error', {
+      logFlow("error", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: 'select_entries_raw_for_day_failed',
+        event: "select_entries_raw_for_day_failed",
         details: {
           error: String(dayRawError.message ?? dayRawError),
           rawEntryId,
@@ -1464,29 +1685,32 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        code: 'DB_READ_FAILED',
-        message: 'Failed to load entries for day journal',
+        code: "DB_READ_FAILED",
+        message: "Failed to load entries for day journal",
         details: rawEntryId ? { rawEntryId } : undefined,
       });
     }
 
-    const rawIds = (rawEntriesForDay ?? []).map((entry: { id: string }) => entry.id);
+    const rawIds = (rawEntriesForDay ?? []).map(
+      (entry: { id: string }) => entry.id,
+    );
     const normalizedEntriesForDay: NormalizedEntry[] = [];
 
     if (rawIds.length > 0) {
-      const { data: dayNormalizedRows, error: dayNormalizedError } = await supabase
-        .from('entries_normalized')
-        .select('raw_entry_id, title, body, summary_short')
-        .eq('user_id', authData.user.id)
-        .in('raw_entry_id', rawIds);
+      const { data: dayNormalizedRows, error: dayNormalizedError } =
+        await supabase
+          .from("entries_normalized")
+          .select("raw_entry_id, title, body, summary_short")
+          .eq("user_id", authData.user.id)
+          .in("raw_entry_id", rawIds);
 
       if (dayNormalizedError) {
-        logFlow('error', {
+        logFlow("error", {
           flow: FLOW,
           requestId,
           flowId,
           step,
-          event: 'select_entries_normalized_for_day_failed',
+          event: "select_entries_normalized_for_day_failed",
           details: {
             error: String(dayNormalizedError.message ?? dayNormalizedError),
             rawEntryId,
@@ -1498,8 +1722,8 @@ Deno.serve(async (request: Request) => {
           requestId,
           flowId,
           step,
-          code: 'DB_READ_FAILED',
-          message: 'Failed to compose day journal',
+          code: "DB_READ_FAILED",
+          message: "Failed to compose day journal",
           details: rawEntryId ? { rawEntryId } : undefined,
         });
       }
@@ -1510,7 +1734,10 @@ Deno.serve(async (request: Request) => {
           rawEntryId: String(row.raw_entry_id),
           title: row.title,
           body: row.body,
-          summaryShort: cleanNormalizedSummaryShort(parseString(row.summary_short), row.body),
+          summaryShort: cleanNormalizedSummaryShort(
+            parseString(row.summary_short),
+            row.body,
+          ),
         });
       }
 
@@ -1539,7 +1766,7 @@ Deno.serve(async (request: Request) => {
     });
 
     const { data: dayJournal, error: dayJournalError } = await supabase
-      .from('day_journals')
+      .from("day_journals")
       .upsert(
         {
           user_id: authData.user.id,
@@ -1549,20 +1776,22 @@ Deno.serve(async (request: Request) => {
           sections: dayDraft.sections,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: 'user_id,journal_date' }
+        { onConflict: "user_id,journal_date" },
       )
-      .select('id')
+      .select("id")
       .single();
 
     if (dayJournalError || !dayJournal) {
-      logFlow('error', {
+      logFlow("error", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: 'upsert_day_journal_failed',
+        event: "upsert_day_journal_failed",
         details: {
-          error: dayJournalError ? String(dayJournalError.message ?? dayJournalError) : 'missing row',
+          error: dayJournalError
+            ? String(dayJournalError.message ?? dayJournalError)
+            : "missing row",
           rawEntryId,
         },
       });
@@ -1572,14 +1801,14 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        code: 'DB_WRITE_FAILED',
-        message: 'Failed to upsert day journal',
+        code: "DB_WRITE_FAILED",
+        message: "Failed to upsert day journal",
         details: rawEntryId ? { rawEntryId } : undefined,
       });
     }
 
     const response: ProcessEntryResponse = {
-      status: 'ok',
+      status: "ok",
       flow: FLOW,
       requestId,
       flowId,
@@ -1590,13 +1819,13 @@ Deno.serve(async (request: Request) => {
       sourceType: parsedSource.value.sourceType,
     };
 
-    step = 'completed';
-    logFlow('info', {
+    step = "completed";
+    logFlow("info", {
       flow: FLOW,
       requestId,
       flowId,
       step,
-      event: 'success',
+      event: "success",
       details: {
         rawEntryId: response.rawEntryId,
         normalizedEntryId: response.normalizedEntryId,
@@ -1608,12 +1837,12 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
-    logFlow('error', {
+    logFlow("error", {
       flow: FLOW,
       requestId,
       flowId,
       step,
-      event: 'fatal',
+      event: "fatal",
       details: {
         error: error instanceof Error ? error.message : String(error),
         ...(rawEntryId ? { rawEntryId } : {}),
@@ -1625,8 +1854,8 @@ Deno.serve(async (request: Request) => {
       requestId,
       flowId,
       step,
-      code: 'INTERNAL_UNEXPECTED',
-      message: 'Internal error',
+      code: "INTERNAL_UNEXPECTED",
+      message: "Internal error",
       details: rawEntryId ? { rawEntryId } : undefined,
     });
   }

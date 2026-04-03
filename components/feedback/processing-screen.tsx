@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, ImageBackground, StyleSheet, View } from 'react-native';
+import { Animated, ImageBackground, Platform, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -61,6 +61,7 @@ export function ProcessingScreen({
   const palette = colorTokens[scheme];
   const [mounted, setMounted] = useState(false);
   const [statusIndex, setStatusIndex] = useState(0);
+  const shouldUseNativeDriver = Platform.OS !== 'web';
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
@@ -99,12 +100,12 @@ export function ProcessingScreen({
         Animated.timing(pulseAnim, {
           toValue: 1,
           duration: 1800,
-          useNativeDriver: true,
+          useNativeDriver: shouldUseNativeDriver,
         }),
         Animated.timing(pulseAnim, {
           toValue: 0,
           duration: 1800,
-          useNativeDriver: true,
+          useNativeDriver: shouldUseNativeDriver,
         }),
       ])
     );
@@ -117,7 +118,7 @@ export function ProcessingScreen({
       pulseLoop.stop();
       pulseAnim.setValue(0);
     };
-  }, [mounted, pulseAnim]);
+  }, [mounted, pulseAnim, shouldUseNativeDriver]);
 
   useEffect(() => {
     if (statusTimerRef.current) {
@@ -159,7 +160,7 @@ export function ProcessingScreen({
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 220,
-          useNativeDriver: true,
+          useNativeDriver: shouldUseNativeDriver,
         }).start();
       }, SHOW_DELAY_MS);
       return;
@@ -175,7 +176,7 @@ export function ProcessingScreen({
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 180,
-        useNativeDriver: true,
+        useNativeDriver: shouldUseNativeDriver,
       }).start(({ finished }) => {
         if (finished) {
           setMounted(false);
@@ -192,7 +193,7 @@ export function ProcessingScreen({
         clearTimeout(hideTimerRef.current);
       }
     };
-  }, [visible, mounted, fadeAnim]);
+  }, [visible, mounted, fadeAnim, shouldUseNativeDriver]);
 
   if (!mounted) {
     return null;

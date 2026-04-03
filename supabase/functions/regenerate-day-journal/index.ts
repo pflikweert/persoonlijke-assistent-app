@@ -139,11 +139,25 @@ async function callOpenAiJson(args: {
   requestId: string;
   flowId: string;
   step: string;
+  operation: string;
   promptVersion: string;
   systemPrompt: string;
   userPrompt: string;
 }): Promise<OpenAiJson | null> {
   try {
+    const startedAt = Date.now();
+    logFlow('info', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'api_call_start',
+      details: {
+        operation: args.operation,
+        provider: 'openai',
+        model: args.model,
+      },
+    });
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -169,6 +183,21 @@ async function callOpenAiJson(args: {
 
     if (!response.ok) {
       const errorBody = await response.text();
+      const durationMs = Date.now() - startedAt;
+      logFlow('error', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: args.step,
+        event: 'api_call_error',
+        details: {
+          operation: args.operation,
+          provider: 'openai',
+          model: args.model,
+          status: response.status,
+          durationMs,
+        },
+      });
       logFlow('error', {
         flow: FLOW,
         requestId: args.requestId,
@@ -182,6 +211,20 @@ async function callOpenAiJson(args: {
       });
       return null;
     }
+    const durationMs = Date.now() - startedAt;
+    logFlow('info', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'api_call_success',
+      details: {
+        operation: args.operation,
+        provider: 'openai',
+        model: args.model,
+        durationMs,
+      },
+    });
 
     const data = (await response.json()) as {
       choices?: Array<{ message?: { content?: string | null } }>;
@@ -193,6 +236,19 @@ async function callOpenAiJson(args: {
 
     return JSON.parse(content) as OpenAiJson;
   } catch (error) {
+    logFlow('error', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'api_call_error',
+      details: {
+        operation: args.operation,
+        provider: 'openai',
+        model: args.model,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
     logFlow('error', {
       flow: FLOW,
       requestId: args.requestId,
@@ -249,6 +305,7 @@ async function composeDayJournal(args: {
     requestId: args.requestId,
     flowId: args.flowId,
     step: 'day_journal_upserted',
+    operation: 'openai_compose_day_journal',
     promptVersion: promptSpec.promptVersion,
     systemPrompt: promptSpec.systemPrompt,
     userPrompt: promptSpec.userPrompt,
@@ -318,6 +375,7 @@ async function composeDayJournal(args: {
       requestId: args.requestId,
       flowId: args.flowId,
       step: 'day_journal_upserted',
+      operation: 'openai_compose_day_journal_repair',
       promptVersion: repairPrompt.promptVersion,
       systemPrompt: repairPrompt.systemPrompt,
       userPrompt: repairPrompt.userPrompt,
@@ -461,6 +519,14 @@ Deno.serve(async (request: Request) => {
   let step = 'received';
 
   try {
+    logFlow('info', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'start',
+    });
+
     const runtimeEnv = getFunctionRuntimeEnv();
     const authHeader = request.headers.get('Authorization');
 
@@ -487,6 +553,16 @@ Deno.serve(async (request: Request) => {
 
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
+      logFlow('warn', {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: 'auth_failed',
+        details: {
+          error: authError ? String(authError.message ?? authError) : 'missing user',
+        },
+      });
       return errorResponse({
         request,
         httpStatus: 401,
@@ -539,6 +615,18 @@ Deno.serve(async (request: Request) => {
     }
 
     const bounds = dateBoundsUtc(journalDate);
+    step = 'validated';
+    logFlow('info', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'validated',
+      details: {
+        userId: authData.user.id,
+        journalDate,
+      },
+    });
 
     step = 'entries_loaded';
     const { data: rawEntriesForDay, error: dayRawError } = await supabase
@@ -656,8 +744,32 @@ Deno.serve(async (request: Request) => {
       updatedAt,
     };
 
+    step = 'completed';
+    logFlow('info', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'success',
+      details: {
+        userId: authData.user.id,
+        journalDate,
+        dayJournalId: response.dayJournalId,
+      },
+    });
+
     return jsonResponse(request, 200, response);
   } catch (error) {
+    logFlow('error', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'fatal',
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
     return errorResponse({
       request,
       httpStatus: 500,

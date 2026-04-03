@@ -5,6 +5,8 @@ import { getFunctionRuntimeEnv } from '../_shared/env.ts';
 import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { buildReflectionPromptSpec, REFLECTION_PROMPT_VERSION } from '../_shared/prompt-specs.ts';
 
 type GenerateReflectionRequest = {
   periodType?: unknown;
@@ -47,7 +49,6 @@ const CORS_BASE_HEADERS = {
 };
 
 const FLOW = 'generate-reflection' as const;
-const REFLECTION_PROMPT_VERSION = 'period-reflection.v1.phase2';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NO_SPEECH_MARKER = 'geen spraak herkend in audio-opname';
 
@@ -287,9 +288,25 @@ async function callOpenAiJson(args: {
   requestId: string;
   flowId: string;
   step: string;
+  operation: string;
+  promptVersion: string;
+  systemPrompt: string;
   userPrompt: string;
 }): Promise<OpenAiJson | null> {
   try {
+    const startedAt = Date.now();
+    logFlow('info', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'api_call_start',
+      details: {
+        operation: args.operation,
+        provider: 'openai',
+        model: args.model,
+      },
+    });
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -303,12 +320,11 @@ async function callOpenAiJson(args: {
         messages: [
           {
             role: 'system',
-            content:
-              'Maak een rustige periodereflectie op basis van dagjournals. Dit is geen takenlijst en geen platte samenvatting: geef synthese over de periode. Blijf feitelijk, compact, praktisch, nuchter en brongetrouw. Geen therapietaal, diagnose-taal, coachingtaal of zware psychologische interpretaties. Stel geen vragen in de output. Geef alleen JSON terug met summaryText, highlights, reflectionPoints.',
+            content: args.systemPrompt,
           },
           {
             role: 'user',
-            content: `${args.userPrompt}\nPromptVersion: ${REFLECTION_PROMPT_VERSION}\nRequestId: ${args.requestId}`,
+            content: `${args.userPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
           },
         ],
       }),
@@ -316,6 +332,21 @@ async function callOpenAiJson(args: {
 
     if (!response.ok) {
       const errorBody = await response.text();
+      const durationMs = Date.now() - startedAt;
+      logFlow('error', {
+        flow: FLOW,
+        requestId: args.requestId,
+        flowId: args.flowId,
+        step: args.step,
+        event: 'api_call_error',
+        details: {
+          operation: args.operation,
+          provider: 'openai',
+          model: args.model,
+          status: response.status,
+          durationMs,
+        },
+      });
       logFlow('error', {
         flow: FLOW,
         requestId: args.requestId,
@@ -329,6 +360,20 @@ async function callOpenAiJson(args: {
       });
       return null;
     }
+    const durationMs = Date.now() - startedAt;
+    logFlow('info', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'api_call_success',
+      details: {
+        operation: args.operation,
+        provider: 'openai',
+        model: args.model,
+        durationMs,
+      },
+    });
 
     const data = (await response.json()) as {
       choices?: Array<{ message?: { content?: string | null } }>;
@@ -341,6 +386,19 @@ async function callOpenAiJson(args: {
 
     return JSON.parse(content) as OpenAiJson;
   } catch (error) {
+    logFlow('error', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: 'api_call_error',
+      details: {
+        operation: args.operation,
+        provider: 'openai',
+        model: args.model,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
     logFlow('error', {
       flow: FLOW,
       requestId: args.requestId,
@@ -377,25 +435,22 @@ async function composeReflection(args: {
   dayJournals: DayJournalRow[];
 }): Promise<ReflectionDraft> {
   const fallback = fallbackReflection(args.periodType, args.dayJournals);
-  const periodSpecificGuidance =
-    args.periodType === 'week'
-      ? 'Weekreflectie: blijf dicht op concrete dagen, dagritme en opvallende weeklijnen. Benoem terugkerende lijnen die over meerdere dagen zichtbaar zijn.'
-      : 'Maandreflectie: zoom uit over meerdere weken, benoem bredere ontwikkeling en verschuivingen over de maand zonder vaag of managementachtig te worden.';
+  const reflectionPrompt = buildReflectionPromptSpec({
+    periodType: args.periodType,
+    periodStart: args.periodStart,
+    periodEnd: args.periodEnd,
+    dayJournals: args.dayJournals,
+  });
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
     model: args.model,
     requestId: args.requestId,
     flowId: args.flowId,
     step: 'reflection_upserted',
-    userPrompt: JSON.stringify({
-      instruction:
-        'Gebruik alleen de meegegeven day journals (summary, narrative_text, sections). Schrijf een periodereflexie die meer doet dan gebeurtenissen herhalen. summaryText: 2-4 zinnen met de kernlijn van de periode, concreet en rustig. highlights: selectieve concrete gebeurtenissen die de periode dragen, geen uitputtende takenopsomming. reflectionPoints: korte observaties of voorzichtige richtingen voor aandacht, geen todo-lijst, geen imperatieve actiepunten. Benoem minstens één terugkerend patroon, spanning, verschuiving of thema dat over meerdere dagen zichtbaar wordt. Geen aannames buiten de input, geen therapie/diepte-duiding, geen rapport-/managementtaal, geen generieke AI-samenvattingstaal, geen meta-zinnen over aantallen dagjournals, geen halve/afgebroken zinnen en geen vragen.',
-      periodGuidance: periodSpecificGuidance,
-      periodType: args.periodType,
-      periodStart: args.periodStart,
-      periodEnd: args.periodEnd,
-      dayJournals: args.dayJournals,
-    }),
+    operation: 'openai_generate_reflection',
+    promptVersion: reflectionPrompt.promptVersion,
+    systemPrompt: reflectionPrompt.systemPrompt,
+    userPrompt: reflectionPrompt.userPrompt,
   });
 
   if (!aiResult) {

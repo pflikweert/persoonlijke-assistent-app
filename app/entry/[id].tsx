@@ -138,7 +138,7 @@ export default function EntryCompletionScreen() {
       }
 
       setEntry(nextEntry);
-      setEditBody(nextEntry.full_text ?? nextEntry.body ?? '');
+      setEditBody(nextEntry.body ?? '');
     } catch (nextError) {
       const message = nextError instanceof Error ? nextError.message : 'Kon entry niet laden.';
       setError(message);
@@ -154,7 +154,7 @@ export default function EntryCompletionScreen() {
     }, [loadEntry])
   );
 
-  const sourceText = entry?.full_text ?? entry?.body ?? '';
+  const sourceText = entry?.body ?? '';
   const cleanedBody = useMemo(() => cleanEntryText(sourceText), [sourceText]);
   const summaryShortText = useMemo(
     () => entry?.summary_short?.trim() || buildSummary(sourceText),

@@ -437,6 +437,19 @@ Deno.serve(async (request: Request) => {
         message: 'Er zijn geen items om te importeren.',
       });
     }
+    logFlow('info', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'validated',
+      details: {
+        userId: authData.user.id,
+        sourceRef,
+        itemCount: items.length,
+        replaceExisting,
+      },
+    });
 
     const { data: existingRows, error: existingError } = await supabase
       .from('entries_raw')
@@ -576,7 +589,7 @@ Deno.serve(async (request: Request) => {
       requestId,
       flowId,
       step: 'completed',
-      event: 'completed',
+      event: 'success',
       details: {
         userId: authData.user.id,
         importedCount: items.length,
@@ -592,7 +605,7 @@ Deno.serve(async (request: Request) => {
       requestId,
       flowId,
       step,
-      event: 'unexpected_error',
+      event: 'fatal',
       details: {
         error: error instanceof Error ? error.message : String(error),
       },

@@ -36,7 +36,6 @@ export type NormalizedEntryDetail = Pick<
   source_type: 'text' | 'audio';
   captured_at: string;
   journal_date: string;
-  full_text: string;
 };
 
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -458,7 +457,7 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
 
   const { data: rawRow, error: rawError } = await supabase
     .from('entries_raw')
-    .select('source_type, captured_at, raw_text, transcript_text')
+    .select('source_type, captured_at')
     .eq('id', normalizedRow.raw_entry_id)
     .maybeSingle();
 
@@ -467,19 +466,11 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
   }
 
   const capturedAt = rawRow?.captured_at ?? normalizedRow.created_at;
-  const rawFullText =
-    (rawRow?.source_type === 'audio' ? rawRow.transcript_text : rawRow?.raw_text) ??
-    rawRow?.raw_text ??
-    rawRow?.transcript_text ??
-    null;
-  const fullText = typeof rawFullText === 'string' && rawFullText.trim().length > 0 ? rawFullText : normalizedRow.body;
-
   return {
     ...normalizedRow,
     source_type: (rawRow?.source_type as 'text' | 'audio' | undefined) ?? 'text',
     captured_at: capturedAt,
     journal_date: capturedAt.slice(0, 10),
-    full_text: fullText,
   };
 }
 
@@ -509,20 +500,6 @@ export async function updateNormalizedEntryById(input: { id: string; body: strin
   const rawEntryId = normalizedRow?.raw_entry_id ?? null;
   if (!rawEntryId) {
     throw new Error('Gekoppelde bron-entry ontbreekt.');
-  }
-
-  const { data: rawRow, error: rawSelectError } = await supabase
-    .from('entries_raw')
-    .select('source_type')
-    .eq('id', rawEntryId)
-    .maybeSingle();
-
-  if (rawSelectError) {
-    throw rawSelectError;
-  }
-
-  if (!rawRow) {
-    throw new Error('Kon bron-entry niet laden voor update.');
   }
 
   const flowId = createClientFlowId('entry-renormalize');
@@ -560,24 +537,13 @@ export async function updateNormalizedEntryById(input: { id: string; body: strin
       normalizeEntryWhitespace(normalizedData.summaryShort) || buildSummaryShortFromBody(normalizedBody),
   };
 
-  const normalizedUpdatePromise = supabase.from('entries_normalized').update(updates).eq('id', input.id);
-  const rawUpdates =
-    (rawRow.source_type as 'text' | 'audio') === 'audio'
-      ? { transcript_text: normalizedBody }
-      : { raw_text: normalizedBody };
-  const rawUpdatePromise = supabase.from('entries_raw').update(rawUpdates).eq('id', rawEntryId);
-
-  const [{ error: normalizedUpdateError }, { error: rawUpdateError }] = await Promise.all([
-    normalizedUpdatePromise,
-    rawUpdatePromise,
-  ]);
+  const { error: normalizedUpdateError } = await supabase
+    .from('entries_normalized')
+    .update(updates)
+    .eq('id', input.id);
 
   if (normalizedUpdateError) {
     throw normalizedUpdateError;
-  }
-
-  if (rawUpdateError) {
-    throw rawUpdateError;
   }
 }
 

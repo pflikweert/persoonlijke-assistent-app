@@ -9,6 +9,7 @@
     "supabase:local:stop": "npx supabase stop",
     "supabase:functions:serve": "npx supabase functions serve --env-file .env.local",
     "supabase:functions:restart": "./scripts/supabase-functions-restart.sh",
+    "supabase:functions:deploy": "./scripts/supabase-functions-deploy.sh",
     "start": "npm run dev",
     "android": "expo start --android",
     "ios": "expo start --ios",
