@@ -22,11 +22,8 @@ import { colorTokens, radius, spacing } from '@/theme';
 
 type RouteParams = {
   id?: string | string[];
-  source?: string | string[];
   date?: string | string[];
 };
-
-type EntrySource = 'capture' | 'day' | 'today' | 'direct';
 
 function resolveRouteValue(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? '' : value ?? '';
@@ -98,15 +95,8 @@ function buildSummary(value: string): string {
 export default function EntryCompletionScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
-  const { id, source, date } = useLocalSearchParams<RouteParams>();
+  const { id, date } = useLocalSearchParams<RouteParams>();
   const entryId = useMemo(() => resolveRouteValue(id), [id]);
-  const sourceContext = useMemo<EntrySource>(() => {
-    const value = resolveRouteValue(source);
-    if (value === 'capture' || value === 'day' || value === 'today' || value === 'direct') {
-      return value;
-    }
-    return 'direct';
-  }, [source]);
   const routeDate = useMemo(() => resolveRouteValue(date), [date]);
 
   const [loading, setLoading] = useState(true);
@@ -165,13 +155,9 @@ export default function EntryCompletionScreen() {
   const title = entry?.title?.trim() || 'Je entry';
   const dayDate = entry?.journal_date ?? routeDate;
 
-  function goToToday() {
-    router.replace('/(tabs)');
-  }
-
   function goToDayDetail(options?: { includeEntryFocus?: boolean }) {
     if (!dayDate) {
-      goToToday();
+      router.replace('/(tabs)');
       return;
     }
 
@@ -185,17 +171,7 @@ export default function EntryCompletionScreen() {
   }
 
   function handleBack() {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    if (sourceContext === 'day') {
-      goToDayDetail({ includeEntryFocus: true });
-      return;
-    }
-
-    goToToday();
+    goToDayDetail({ includeEntryFocus: true });
   }
 
   async function refreshDerivedAfterMutation(
@@ -303,7 +279,7 @@ export default function EntryCompletionScreen() {
               leftAction={
                 <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Terug"
+                accessibilityLabel="Terug naar deze dag"
                 onPress={handleBack}
                 style={[styles.topIconButton, { backgroundColor: palette.surfaceLow }]}>
                 <MaterialIcons name="arrow-back" size={18} color={palette.primary} />
@@ -356,22 +332,7 @@ export default function EntryCompletionScreen() {
           </ThemedView>
 
           <ThemedView style={styles.actionsBlock}>
-            {sourceContext === 'capture' ? (
-              <>
-                <PrimaryButton label="Nog iets vastleggen" onPress={() => router.replace('/capture')} />
-                <Pressable onPress={goToToday} style={styles.secondaryAction}>
-                  <ThemedText type="bodySecondary" style={[styles.secondaryActionLabel, { color: palette.mutedSoft }]}>
-                    Ga naar vandaag
-                  </ThemedText>
-                </Pressable>
-              </>
-            ) : null}
-
-            {sourceContext === 'day' || sourceContext === 'today' ? (
-              <PrimaryButton label="Terug naar deze dag" onPress={() => goToDayDetail({ includeEntryFocus: true })} />
-            ) : null}
-
-            {sourceContext === 'direct' ? <PrimaryButton label="Ga naar vandaag" onPress={goToToday} /> : null}
+            <PrimaryButton label="Terug naar deze dag" onPress={() => goToDayDetail({ includeEntryFocus: true })} />
 
             <Pressable onPress={handleDelete} disabled={isProcessing} style={styles.deleteAction}>
               <ThemedText type="caption" style={[styles.deleteActionLabel, { color: palette.mutedSoft }]}>

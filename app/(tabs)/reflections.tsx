@@ -1,5 +1,5 @@
-import { Tabs, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { Tabs, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 
@@ -25,6 +25,15 @@ import {
 import { buildReflectionCopyPayload } from '@/src/lib/copy-payloads';
 import type { PeriodType } from '@/services/reflections';
 import { colorTokens, radius, spacing, typography } from '@/theme';
+
+type RouteParams = {
+  period?: string | string[];
+};
+
+function parseRoutePeriod(value: string | string[] | undefined): PeriodType | null {
+  const parsed = Array.isArray(value) ? value[0] ?? '' : value ?? '';
+  return parsed === 'week' || parsed === 'month' ? parsed : null;
+}
 
 function periodTypeLabel(periodType: PeriodType): string {
   return periodType === 'week' ? 'Week' : 'Maand';
@@ -166,6 +175,8 @@ function selectCurrentPeriodId(
 export default function ReflectionsScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
+  const { period } = useLocalSearchParams<RouteParams>();
+  const requestedPeriod = useMemo(() => parseRoutePeriod(period), [period]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
     message: string;
@@ -183,6 +194,13 @@ export default function ReflectionsScreen() {
   const [selectorVisible, setSelectorVisible] = useState(false);
   const [selectorPeriod, setSelectorPeriod] = useState<PeriodType>('week');
   const isProcessing = generating !== null;
+
+  useEffect(() => {
+    if (!requestedPeriod) {
+      return;
+    }
+    setActivePeriod(requestedPeriod);
+  }, [requestedPeriod]);
 
   const loadReflections = useCallback(async () => {
     setLoading(true);

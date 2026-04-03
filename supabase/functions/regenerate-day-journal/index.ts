@@ -17,6 +17,7 @@ import {
 
 type RegenerateDayJournalRequest = {
   journalDate?: unknown;
+  timezoneOffsetMinutes?: unknown;
 };
 
 type RegenerateDayJournalResponse = {
@@ -119,6 +120,25 @@ function dateBoundsUtc(journalDate: string): { start: string; end: string } {
   };
 }
 
+function dateBoundsFromLocalDay(
+  journalDate: string,
+  timezoneOffsetMinutes: number
+): { start: string; end: string } {
+  const [yearRaw, monthRaw, dayRaw] = journalDate.split('-');
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const localMidnightUtcMs =
+    Date.UTC(year, month - 1, day, 0, 0, 0, 0) + timezoneOffsetMinutes * 60 * 1000;
+  const start = new Date(localMidnightUtcMs);
+  const end = new Date(localMidnightUtcMs + 24 * 60 * 60 * 1000);
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  };
+}
+
 function parseJournalDate(value: unknown): string | null {
   const parsed = parseString(value);
   if (!parsed || !DATE_PATTERN.test(parsed)) {
@@ -131,6 +151,19 @@ function parseJournalDate(value: unknown): string | null {
   }
 
   return parsed;
+}
+
+function parseTimezoneOffsetMinutes(value: unknown): number | null {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value)) {
+    throw new Error('Invalid timezoneOffsetMinutes. Use integer minutes.');
+  }
+  if (value < -840 || value > 840) {
+    throw new Error('Invalid timezoneOffsetMinutes range.');
+  }
+  return value;
 }
 
 async function callOpenAiJson(args: {
@@ -613,8 +646,25 @@ Deno.serve(async (request: Request) => {
         message: 'Invalid journalDate. Use YYYY-MM-DD.',
       });
     }
+    let timezoneOffsetMinutes: number | null = null;
+    try {
+      timezoneOffsetMinutes = parseTimezoneOffsetMinutes(body.timezoneOffsetMinutes);
+    } catch (error) {
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step: 'validated',
+        code: 'INPUT_INVALID',
+        message: error instanceof Error ? error.message : 'Invalid timezoneOffsetMinutes.',
+      });
+    }
 
-    const bounds = dateBoundsUtc(journalDate);
+    const bounds =
+      timezoneOffsetMinutes !== null
+        ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
+        : dateBoundsUtc(journalDate);
     step = 'validated';
     logFlow('info', {
       flow: FLOW,
@@ -625,6 +675,7 @@ Deno.serve(async (request: Request) => {
       details: {
         userId: authData.user.id,
         journalDate,
+        timezoneOffsetMinutes,
       },
     });
 

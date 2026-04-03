@@ -69,6 +69,8 @@ async function parseFunctionInvokeError(error: unknown): Promise<never> {
 export async function submitTextEntry(input: {
   rawText: string;
   capturedAt?: string;
+  journalDate?: string;
+  timezoneOffsetMinutes?: number;
 }): Promise<ProcessEntryResult> {
   const supabase = getSupabaseBrowserClient();
 
@@ -92,6 +94,8 @@ export async function submitTextEntry(input: {
     body: {
       rawText,
       capturedAt: input.capturedAt,
+      journalDate: input.journalDate,
+      timezoneOffsetMinutes: input.timezoneOffsetMinutes,
     },
   });
 
@@ -117,6 +121,8 @@ export async function submitAudioEntry(input: {
   audioBase64: string;
   audioMimeType: string;
   capturedAt?: string;
+  journalDate?: string;
+  timezoneOffsetMinutes?: number;
 }): Promise<ProcessEntryResult> {
   const supabase = getSupabaseBrowserClient();
 
@@ -150,6 +156,8 @@ export async function submitAudioEntry(input: {
       audioBase64,
       audioMimeType,
       capturedAt: input.capturedAt,
+      journalDate: input.journalDate,
+      timezoneOffsetMinutes: input.timezoneOffsetMinutes,
     },
   });
 

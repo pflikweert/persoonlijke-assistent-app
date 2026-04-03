@@ -61,7 +61,7 @@ interface RenormalizeEntryResult {
 }
 
 export function getUtcTodayDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalJournalDate(new Date());
 }
 
 export function isValidJournalDate(value: string): boolean {
@@ -222,6 +222,30 @@ function buildSummaryShortFromBody(body: string): string {
   const source = firstSentence.length >= 24 ? firstSentence : clean;
   const preview = trimEntryPreview(source);
   return finalizeEntryPreviewTone(preview || trimEntryPreview(clean));
+}
+
+function formatLocalJournalDate(value: Date): string {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function deriveJournalDateFromIsoLocal(isoValue: string): string {
+  const date = new Date(isoValue);
+  if (Number.isNaN(date.getTime())) {
+    return isoValue.slice(0, 10);
+  }
+
+  return formatLocalJournalDate(date);
+}
+
+function timezoneOffsetMinutesForJournalDate(journalDate: string): number {
+  const localMidday = new Date(`${journalDate}T12:00:00`);
+  if (Number.isNaN(localMidday.getTime())) {
+    return new Date().getTimezoneOffset();
+  }
+  return localMidday.getTimezoneOffset();
 }
 
 export async function fetchTodayJournal(todayDate = getUtcTodayDate()): Promise<DayJournalSummary | null> {
@@ -422,7 +446,7 @@ export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNor
         ...row,
         source_type: meta?.source_type ?? 'text',
         captured_at: capturedAt,
-        journal_date: capturedAt.slice(0, 10),
+        journal_date: deriveJournalDateFromIsoLocal(capturedAt),
       };
     })
     .sort((left, right) => new Date(right.captured_at).getTime() - new Date(left.captured_at).getTime())
@@ -470,7 +494,7 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
     ...normalizedRow,
     source_type: (rawRow?.source_type as 'text' | 'audio' | undefined) ?? 'text',
     captured_at: capturedAt,
-    journal_date: capturedAt.slice(0, 10),
+    journal_date: deriveJournalDateFromIsoLocal(capturedAt),
   };
 }
 
@@ -600,7 +624,10 @@ export async function regenerateDayJournalByDate(journalDate: string): Promise<D
       headers: {
         'x-flow-id': flowId,
       },
-      body: { journalDate },
+      body: {
+        journalDate,
+        timezoneOffsetMinutes: timezoneOffsetMinutesForJournalDate(journalDate),
+      },
     }
   );
 

@@ -65,7 +65,7 @@ export const spacing = {
   xxl: 32,
   xxxl: 40,
   page: 24,
-  section: 20,
+  section: 32,
   cluster: 12,
   inline: 8,
 } as const;

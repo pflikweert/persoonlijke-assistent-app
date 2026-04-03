@@ -22,6 +22,8 @@ type ProcessEntryRequest = {
   audioBase64?: unknown;
   audioMimeType?: unknown;
   capturedAt?: unknown;
+  journalDate?: unknown;
+  timezoneOffsetMinutes?: unknown;
 };
 
 type ProcessEntryResponse = {
@@ -72,6 +74,7 @@ const CORS_BASE_HEADERS = {
 
 const FLOW = "process-entry" as const;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NO_SPEECH_TRANSCRIPT = "Geen spraak herkend in audio-opname.";
 const LOW_CONTENT_TITLE = "Audio-opname zonder spraak";
 const LOW_CONTENT_BODY = "Geen bruikbare spraakinhoud gevonden in de opname.";
@@ -186,6 +189,36 @@ function parseCapturedAt(capturedAt?: string): string {
   return parsed.toISOString();
 }
 
+function parseJournalDateInput(value: unknown): string | null {
+  const parsed = parseString(value);
+  if (!parsed) {
+    return null;
+  }
+  if (!DATE_PATTERN.test(parsed)) {
+    throw new Error("Invalid journalDate. Use YYYY-MM-DD.");
+  }
+
+  const date = new Date(`${parsed}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== parsed) {
+    throw new Error("Invalid journalDate. Use YYYY-MM-DD.");
+  }
+
+  return parsed;
+}
+
+function parseTimezoneOffsetMinutes(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value) || !Number.isInteger(value)) {
+    throw new Error("Invalid timezoneOffsetMinutes. Use integer minutes.");
+  }
+  if (value < -840 || value > 840) {
+    throw new Error("Invalid timezoneOffsetMinutes range.");
+  }
+  return value;
+}
+
 function toJournalDate(capturedAtIso: string): string {
   return capturedAtIso.slice(0, 10);
 }
@@ -198,6 +231,25 @@ function dateBoundsUtc(journalDate: string): { start: string; end: string } {
   return {
     start,
     end: endDate.toISOString(),
+  };
+}
+
+function dateBoundsFromLocalDay(
+  journalDate: string,
+  timezoneOffsetMinutes: number,
+): { start: string; end: string } {
+  const [yearRaw, monthRaw, dayRaw] = journalDate.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const localMidnightUtcMs = Date.UTC(year, month - 1, day, 0, 0, 0, 0) +
+    timezoneOffsetMinutes * 60 * 1000;
+  const start = new Date(localMidnightUtcMs);
+  const end = new Date(localMidnightUtcMs + 24 * 60 * 60 * 1000);
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
   };
 }
 
@@ -1468,7 +1520,24 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const journalDate = toJournalDate(capturedAt);
+    let requestJournalDate: string | null = null;
+    let timezoneOffsetMinutes: number | null = null;
+    try {
+      requestJournalDate = parseJournalDateInput(body.journalDate);
+      timezoneOffsetMinutes = parseTimezoneOffsetMinutes(body.timezoneOffsetMinutes);
+    } catch (error) {
+      return errorResponse({
+        request,
+        httpStatus: 400,
+        requestId,
+        flowId,
+        step,
+        code: "INPUT_INVALID",
+        message: error instanceof Error ? error.message : "Invalid journalDate context.",
+      });
+    }
+
+    const journalDate = requestJournalDate ?? toJournalDate(capturedAt);
 
     logFlow("info", {
       flow: FLOW,
@@ -1479,6 +1548,8 @@ Deno.serve(async (request: Request) => {
       details: {
         userId: authData.user.id,
         journalDate,
+        journalDateSource: requestJournalDate ? "request_local_day" : "capturedAt_utc_day",
+        timezoneOffsetMinutes,
         sourceType: parsedSource.value.sourceType,
       },
     });
@@ -1658,7 +1729,9 @@ Deno.serve(async (request: Request) => {
     }
 
     step = "day_journal_upserted";
-    const bounds = dateBoundsUtc(journalDate);
+    const bounds = requestJournalDate !== null && timezoneOffsetMinutes !== null
+      ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
+      : dateBoundsUtc(journalDate);
     const { data: rawEntriesForDay, error: dayRawError } = await supabase
       .from("entries_raw")
       .select("id, captured_at")

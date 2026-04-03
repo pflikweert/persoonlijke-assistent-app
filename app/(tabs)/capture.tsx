@@ -24,6 +24,25 @@ const MAX_RECORDING_MS = 90_000;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 const MAX_AUDIO_BASE64_CHARS = Math.ceil((MAX_AUDIO_BYTES * 4) / 3);
 
+function toLocalJournalDate(value: Date): string {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function createCaptureContext(now = new Date()): {
+  capturedAt: string;
+  journalDate: string;
+  timezoneOffsetMinutes: number;
+} {
+  return {
+    capturedAt: now.toISOString(),
+    journalDate: toLocalJournalDate(now),
+    timezoneOffsetMinutes: now.getTimezoneOffset(),
+  };
+}
+
 function mimeTypeFromUri(uri: string): string {
   const normalized = uri.toLowerCase();
 
@@ -245,9 +264,12 @@ export default function CaptureScreen() {
     setProcessingVariant('text-entry');
 
     try {
+      const captureContext = createCaptureContext();
       const result = await submitTextEntry({
         rawText,
-        capturedAt: new Date().toISOString(),
+        capturedAt: captureContext.capturedAt,
+        journalDate: captureContext.journalDate,
+        timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
       });
 
       setRawText('');
@@ -285,6 +307,7 @@ export default function CaptureScreen() {
     setProcessingVariant('audio-entry');
 
     try {
+      const captureContext = createCaptureContext();
       const audioBase64 = await audioUriToBase64(audioUri);
 
       if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
@@ -294,7 +317,9 @@ export default function CaptureScreen() {
       const result = await submitAudioEntry({
         audioBase64,
         audioMimeType: mimeTypeFromUri(audioUri),
-        capturedAt: new Date().toISOString(),
+        capturedAt: captureContext.capturedAt,
+        journalDate: captureContext.journalDate,
+        timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
       });
 
       setAudioUri(null);
@@ -330,6 +355,7 @@ export default function CaptureScreen() {
       }
 
       try {
+        const captureContext = createCaptureContext();
         const audioBase64 = await audioUriToBase64(uri);
 
         if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
@@ -339,7 +365,9 @@ export default function CaptureScreen() {
         const result = await submitAudioEntry({
           audioBase64,
           audioMimeType: mimeTypeFromUri(uri),
-          capturedAt: new Date().toISOString(),
+          capturedAt: captureContext.capturedAt,
+          journalDate: captureContext.journalDate,
+          timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
         });
 
         setAudioUri(null);
