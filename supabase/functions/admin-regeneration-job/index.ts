@@ -1969,16 +1969,8 @@ Deno.serve(async (request: Request) => {
 
   try {
     const supabaseRuntimeEnv = getSupabaseRuntimeEnv();
-    const serviceRoleKey = getServiceRoleKey();
     const internalToken = getInternalToken();
     const adminAllowlist = getAdminAllowlist();
-
-    const adminClient = createClient(supabaseRuntimeEnv.supabaseUrl, serviceRoleKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
 
     let body: RequestBody;
     try {
@@ -2059,6 +2051,14 @@ Deno.serve(async (request: Request) => {
         userId,
       });
     }
+
+    const serviceRoleKey = getServiceRoleKey();
+    const adminClient = createClient(supabaseRuntimeEnv.supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
 
     if (action === 'start') {
       step = 'starting';
