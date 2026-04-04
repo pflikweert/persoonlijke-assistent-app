@@ -359,6 +359,31 @@ function getAdminAllowlist(): Set<string> {
   return parseAdminAllowlist(Deno.env.get('ADMIN_REGEN_ALLOWLIST_USER_IDS'));
 }
 
+function getSupabaseRuntimeEnv(): { supabaseUrl: string; supabaseAnonKey: string } {
+  const supabaseUrl =
+    Deno.env.get('SUPABASE_URL')?.trim() ??
+    Deno.env.get('EXPO_PUBLIC_SUPABASE_LOCAL_URL')?.trim() ??
+    Deno.env.get('EXPO_PUBLIC_SUPABASE_CLOUD_URL')?.trim() ??
+    Deno.env.get('EXPO_PUBLIC_SUPABASE_URL')?.trim() ??
+    '';
+  const supabaseAnonKey =
+    Deno.env.get('SUPABASE_ANON_KEY')?.trim() ??
+    Deno.env.get('EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY')?.trim() ??
+    Deno.env.get('EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY')?.trim() ??
+    Deno.env.get('EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY')?.trim() ??
+    '';
+
+  if (!supabaseUrl) {
+    throw new Error('Missing SUPABASE_URL / EXPO_PUBLIC_SUPABASE_*_URL for admin-regeneration-job.');
+  }
+
+  if (!supabaseAnonKey) {
+    throw new Error('Missing SUPABASE_ANON_KEY / EXPO_PUBLIC_SUPABASE_*_PUBLISHABLE_KEY for admin-regeneration-job.');
+  }
+
+  return { supabaseUrl, supabaseAnonKey };
+}
+
 function getFunctionInvokeUrl(supabaseUrl: string): string {
   return `${supabaseUrl.replace(/\/$/, '')}/functions/v1/admin-regeneration-job`;
 }
@@ -1943,12 +1968,12 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    const runtimeEnv = getFunctionRuntimeEnv();
+    const supabaseRuntimeEnv = getSupabaseRuntimeEnv();
     const serviceRoleKey = getServiceRoleKey();
     const internalToken = getInternalToken();
     const adminAllowlist = getAdminAllowlist();
 
-    const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
+    const adminClient = createClient(supabaseRuntimeEnv.supabaseUrl, serviceRoleKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
@@ -2004,8 +2029,8 @@ Deno.serve(async (request: Request) => {
       try {
         const authResult = await authenticateAdmin({
           request,
-          supabaseUrl: runtimeEnv.supabaseUrl,
-          supabaseAnonKey: runtimeEnv.supabaseAnonKey,
+          supabaseUrl: supabaseRuntimeEnv.supabaseUrl,
+          supabaseAnonKey: supabaseRuntimeEnv.supabaseAnonKey,
           allowlist: adminAllowlist,
         });
         userId = authResult.userId;
@@ -2037,6 +2062,7 @@ Deno.serve(async (request: Request) => {
 
     if (action === 'start') {
       step = 'starting';
+      const runtimeEnv = getFunctionRuntimeEnv();
 
       const selectedTypes = parseSelectedTypes((body as StartBody).selectedTypes);
       if (selectedTypes.length === 0) {
@@ -2147,8 +2173,8 @@ Deno.serve(async (request: Request) => {
 
       if (workerOutcome.needsFollowup) {
         await triggerWorkerTick({
-          supabaseUrl: runtimeEnv.supabaseUrl,
-          anonKey: runtimeEnv.supabaseAnonKey,
+          supabaseUrl: supabaseRuntimeEnv.supabaseUrl,
+          anonKey: supabaseRuntimeEnv.supabaseAnonKey,
           internalToken,
           jobId: jobRow.id,
         });
@@ -2230,6 +2256,7 @@ Deno.serve(async (request: Request) => {
       });
     }
 
+    const runtimeEnv = getFunctionRuntimeEnv();
     const outcome = await processJobTick({
       adminClient,
       apiKey: runtimeEnv.openAiApiKey,
@@ -2241,8 +2268,8 @@ Deno.serve(async (request: Request) => {
 
     if (outcome.needsFollowup && !outcome.done) {
       await triggerWorkerTick({
-        supabaseUrl: runtimeEnv.supabaseUrl,
-        anonKey: runtimeEnv.supabaseAnonKey,
+        supabaseUrl: supabaseRuntimeEnv.supabaseUrl,
+        anonKey: supabaseRuntimeEnv.supabaseAnonKey,
         internalToken,
         jobId,
       });
