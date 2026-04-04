@@ -1,34 +1,64 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   RecordingPresets,
   getRecordingPermissionsAsync,
   requestRecordingPermissionsAsync,
   useAudioRecorder,
   useAudioRecorderState,
-} from 'expo-audio';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { router } from 'expo-router';
-import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+} from "expo-audio";
+import { EncodingType, readAsStringAsync } from "expo-file-system/legacy";
+import { router } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform, Pressable, StyleSheet } from "react-native";
 
-import { ScreenHeader } from '@/components/layout/screen-header';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { ProcessingScreen, type ProcessingVariant } from '@/components/feedback/processing-screen';
-import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
-import { PrimaryButton, ScreenContainer, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { classifyUnknownError, submitAudioEntry, submitTextEntry } from '@/services';
-import { colorTokens, radius, shadows, spacing } from '@/theme';
+import {
+  ProcessingScreen,
+  type ProcessingVariant,
+} from "@/components/feedback/processing-screen";
+import { ScreenHeader } from "@/components/layout/screen-header";
+import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import {
+  PrimaryButton,
+  ScreenContainer,
+  StateBlock,
+  TextAreaField,
+} from "@/components/ui/screen-primitives";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import {
+  classifyUnknownError,
+  submitAudioEntry,
+  submitTextEntry,
+} from "@/services";
+import { colorTokens, radius, shadows, spacing } from "@/theme";
 
-const MAX_RECORDING_MS = 90_000;
+const MAX_RECORDING_MS = 180_000;
+const MAX_RECORDING_SECONDS = Math.floor(MAX_RECORDING_MS / 1000);
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 const MAX_AUDIO_BASE64_CHARS = Math.ceil((MAX_AUDIO_BYTES * 4) / 3);
+const WEB_AUDIO_MOTION = {
+  baseNoiseFloorRms: 0.02,
+  noiseTrackingMarginRms: 0.018,
+  noiseTrackingRate: 0.035,
+  maxRmsRange: 0.12,
+  speechGate: 0.08,
+  sensitivity: 1.85,
+  attackSmoothing: 0.24,
+  releaseSmoothing: 0.055,
+  idleCutoff: 0.022,
+} as const;
+
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
 
 function toLocalJournalDate(value: Date): string {
   const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -47,26 +77,26 @@ function createCaptureContext(now = new Date()): {
 function mimeTypeFromUri(uri: string): string {
   const normalized = uri.toLowerCase();
 
-  if (normalized.endsWith('.webm')) {
-    return 'audio/webm';
+  if (normalized.endsWith(".webm")) {
+    return "audio/webm";
   }
-  if (normalized.endsWith('.wav')) {
-    return 'audio/wav';
+  if (normalized.endsWith(".wav")) {
+    return "audio/wav";
   }
-  if (normalized.endsWith('.mp3')) {
-    return 'audio/mpeg';
+  if (normalized.endsWith(".mp3")) {
+    return "audio/mpeg";
   }
-  if (normalized.endsWith('.ogg')) {
-    return 'audio/ogg';
+  if (normalized.endsWith(".ogg")) {
+    return "audio/ogg";
   }
-  if (normalized.endsWith('.mp4')) {
-    return 'audio/mp4';
+  if (normalized.endsWith(".mp4")) {
+    return "audio/mp4";
   }
-  if (normalized.endsWith('.m4a')) {
-    return 'audio/m4a';
+  if (normalized.endsWith(".m4a")) {
+    return "audio/m4a";
   }
 
-  return Platform.OS === 'web' ? 'audio/webm' : 'audio/m4a';
+  return Platform.OS === "web" ? "audio/webm" : "audio/m4a";
 }
 
 function readWebBlobAsBase64(blob: Blob): Promise<string> {
@@ -74,17 +104,17 @@ function readWebBlobAsBase64(blob: Blob): Promise<string> {
     const reader = new FileReader();
 
     reader.onerror = () => {
-      reject(new Error('Kon web-opname niet lezen.'));
+      reject(new Error("Kon web-opname niet lezen."));
     };
 
     reader.onloadend = () => {
       const result = reader.result;
-      if (typeof result !== 'string') {
-        reject(new Error('Web-opname leverde geen geldige data op.'));
+      if (typeof result !== "string") {
+        reject(new Error("Web-opname leverde geen geldige data op."));
         return;
       }
 
-      const commaIndex = result.indexOf(',');
+      const commaIndex = result.indexOf(",");
       resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
     };
 
@@ -93,10 +123,10 @@ function readWebBlobAsBase64(blob: Blob): Promise<string> {
 }
 
 async function audioUriToBase64(uri: string): Promise<string> {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === "web") {
     const response = await fetch(uri);
     if (!response.ok) {
-      throw new Error('Kon web-opname niet ophalen.');
+      throw new Error("Kon web-opname niet ophalen.");
     }
 
     const blob = await response.blob();
@@ -106,22 +136,53 @@ async function audioUriToBase64(uri: string): Promise<string> {
   return readAsStringAsync(uri, { encoding: EncodingType.Base64 });
 }
 
-function getWaveformHeights(durationMillis: number): number[] {
+function normalizeMetering(metering?: number): number {
+  if (typeof metering !== "number" || Number.isNaN(metering)) {
+    return 0;
+  }
+
+  const floorDb = -60;
+  const clamped = Math.max(floorDb, Math.min(0, metering));
+  return (clamped - floorDb) / Math.abs(floorDb);
+}
+
+function calculateTimeDomainRms(samples: Uint8Array): number {
+  let sumSquares = 0;
+
+  for (let i = 0; i < samples.length; i += 1) {
+    const centered = (samples[i] - 128) / 128;
+    sumSquares += centered * centered;
+  }
+
+  return Math.sqrt(sumSquares / samples.length);
+}
+
+function getWaveformHeights(durationMillis: number, level: number): number[] {
   const seed = Math.floor(durationMillis / 250);
-  const base = [18, 30, 44, 56, 40, 28, 16];
+  const base = [14, 22, 32, 46, 62, 76, 84, 76, 62, 46, 32, 22, 14];
+  const lift = Math.round(level * 20);
+
   return base.map((height, index) => {
-    const pulse = ((seed + index * 3) % 6) - 3;
-    return Math.max(12, height + pulse * 3);
+    const pulse = ((seed + index * 2) % 7) - 3;
+    return Math.max(12, height + pulse * 3 + lift);
   });
 }
 
+function getFallbackWaveformHeights(durationMillis: number): number[] {
+  void durationMillis;
+  return [18, 34, 52, 34, 18];
+}
+
 export default function CaptureScreen() {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
   const recorderState = useAudioRecorderState(recorder, 250);
 
-  const [rawText, setRawText] = useState('');
+  const [rawText, setRawText] = useState("");
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [recordingActionBusy, setRecordingActionBusy] = useState(false);
@@ -133,21 +194,41 @@ export default function CaptureScreen() {
   const [status, setStatus] = useState<string | null>(null);
   const [isTypingFocused, setIsTypingFocused] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [processingVariant, setProcessingVariant] = useState<ProcessingVariant | null>(null);
+  const [processingVariant, setProcessingVariant] =
+    useState<ProcessingVariant | null>(null);
+  const [webLiveLevel, setWebLiveLevel] = useState(0);
+  const [webAnalyserReady, setWebAnalyserReady] = useState(true);
 
   const autoStopTriggeredRef = useRef(false);
 
   const isRecording = recorderState.isRecording;
   const recordingSeconds = Math.floor(recorderState.durationMillis / 1000);
+  const liveAudioLevel = isRecording
+    ? Platform.OS === "web"
+      ? webAnalyserReady
+        ? webLiveLevel
+        : 0
+      : normalizeMetering(recorderState.metering)
+    : 0;
+  const isWebLiveMotion =
+    Platform.OS === "web" && isRecording && webAnalyserReady;
+  const isWebFallbackMotion =
+    Platform.OS === "web" && isRecording && !webAnalyserReady;
+  const voiceMotionScale = 1 + liveAudioLevel * 0.065;
+  const voiceMotionOpacity = isRecording ? 0.8 + liveAudioLevel * 0.2 : 0.45;
   const hasTextDraft = rawText.trim().length > 0;
   const hasAudioDraft = Boolean(audioUri);
   const isBusy = submitting || recordingActionBusy;
 
-  const uiMode: 'idle' | 'voice' | 'typing' =
-    isRecording || hasAudioDraft ? 'voice' : isTypingFocused || hasTextDraft ? 'typing' : 'idle';
+  const uiMode: "idle" | "voice" | "typing" =
+    isRecording || hasAudioDraft
+      ? "voice"
+      : isTypingFocused || hasTextDraft
+        ? "typing"
+        : "idle";
 
   const handleStopRecording = useCallback(
-    async (source: 'manual' | 'auto'): Promise<string | null> => {
+    async (source: "manual" | "auto"): Promise<string | null> => {
       setRecordingActionBusy(true);
 
       try {
@@ -155,12 +236,14 @@ export default function CaptureScreen() {
         const uri = recorder.uri ?? recorderState.url;
 
         if (!uri) {
-          throw new Error('Opname is gestopt, maar bestand ontbreekt.');
+          throw new Error("Opname is gestopt, maar bestand ontbreekt.");
         }
 
         setAudioUri(uri);
-        if (source === 'auto') {
-          setStatus('Opname is automatisch gestopt na 90 seconden.');
+        if (source === "auto") {
+          setStatus(
+            `Opname is automatisch gestopt na ${MAX_RECORDING_SECONDS} seconden.`,
+          );
         }
         return uri;
       } catch (nextError) {
@@ -175,7 +258,7 @@ export default function CaptureScreen() {
         setRecordingActionBusy(false);
       }
     },
-    [recorder, recorderState.url]
+    [recorder, recorderState.url],
   );
 
   useEffect(() => {
@@ -192,8 +275,166 @@ export default function CaptureScreen() {
     }
 
     autoStopTriggeredRef.current = true;
-    void handleStopRecording('auto');
-  }, [handleStopRecording, isRecording, recorderState.durationMillis, recordingActionBusy]);
+    void handleStopRecording("auto");
+  }, [
+    handleStopRecording,
+    isRecording,
+    recorderState.durationMillis,
+    recordingActionBusy,
+  ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") {
+      setWebLiveLevel(0);
+      return;
+    }
+
+    if (!isRecording) {
+      setWebLiveLevel(0);
+      setWebAnalyserReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    let rafId: number | null = null;
+    let mediaStream: MediaStream | null = null;
+    let audioContext: {
+      close?: () => Promise<void>;
+      context?: {
+        state?: string;
+        resume?: () => Promise<void>;
+        createAnalyser?: () => {
+          fftSize: number;
+          getByteTimeDomainData: (array: Uint8Array) => void;
+        };
+        createMediaStreamSource?: (stream: MediaStream) => {
+          connect: (node: unknown) => void;
+          disconnect?: () => void;
+        };
+      };
+    } | null = null;
+    let sourceNode: {
+      connect: (node: unknown) => void;
+      disconnect?: () => void;
+    } | null = null;
+    let smoothedLevel = 0;
+    let ambientRms = WEB_AUDIO_MOTION.baseNoiseFloorRms;
+
+    const teardown = async () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      if (sourceNode && typeof sourceNode.disconnect === "function") {
+        sourceNode.disconnect();
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+      }
+      if (audioContext && typeof audioContext.close === "function") {
+        try {
+          await audioContext.close();
+        } catch {
+          // Ignore close failures during teardown.
+        }
+      }
+      setWebLiveLevel(0);
+    };
+
+    const startAnalyser = async () => {
+      try {
+        if (!globalThis.navigator?.mediaDevices?.getUserMedia) {
+          throw new Error("Web mediaDevices API niet beschikbaar");
+        }
+
+        const audioApi = await import("react-native-audio-api");
+        const AudioContextCtor = audioApi.AudioContext as unknown as {
+          new (): NonNullable<typeof audioContext>;
+        };
+        if (typeof AudioContextCtor !== "function") {
+          throw new Error("AudioContext ontbreekt");
+        }
+
+        mediaStream = await globalThis.navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        audioContext = new AudioContextCtor();
+        if (
+          !audioContext.context ||
+          typeof audioContext.context.createAnalyser !== "function" ||
+          typeof audioContext.context.createMediaStreamSource !== "function"
+        ) {
+          throw new Error("Analyser API ontbreekt");
+        }
+
+        if (
+          audioContext.context.state === "suspended" &&
+          typeof audioContext.context.resume === "function"
+        ) {
+          await audioContext.context.resume();
+        }
+
+        const createdAnalyser = audioContext.context.createAnalyser() as {
+          fftSize: number;
+          smoothingTimeConstant: number;
+          getByteTimeDomainData: (array: Uint8Array) => void;
+        };
+        createdAnalyser.fftSize = 256;
+        createdAnalyser.smoothingTimeConstant = 0.78;
+        sourceNode = audioContext.context.createMediaStreamSource(mediaStream);
+        sourceNode.connect(createdAnalyser);
+        setWebAnalyserReady(true);
+
+        const buffer = new Uint8Array(createdAnalyser.fftSize);
+
+        const frame = () => {
+          if (cancelled) {
+            return;
+          }
+
+          createdAnalyser.getByteTimeDomainData(buffer);
+          const rms = calculateTimeDomainRms(buffer);
+          if (rms < ambientRms + WEB_AUDIO_MOTION.noiseTrackingMarginRms) {
+            ambientRms +=
+              (rms - ambientRms) * WEB_AUDIO_MOTION.noiseTrackingRate;
+          }
+
+          const normalized = Math.max(
+            0,
+            Math.min(1, (rms - ambientRms) / WEB_AUDIO_MOTION.maxRmsRange),
+          );
+          const gated =
+            normalized < WEB_AUDIO_MOTION.speechGate
+              ? 0
+              : (normalized - WEB_AUDIO_MOTION.speechGate) /
+                (1 - WEB_AUDIO_MOTION.speechGate);
+          const boosted = Math.min(1, gated * WEB_AUDIO_MOTION.sensitivity);
+          const smoothing =
+            boosted > smoothedLevel
+              ? WEB_AUDIO_MOTION.attackSmoothing
+              : WEB_AUDIO_MOTION.releaseSmoothing;
+          smoothedLevel += (boosted - smoothedLevel) * smoothing;
+          setWebLiveLevel(
+            smoothedLevel < WEB_AUDIO_MOTION.idleCutoff ? 0 : smoothedLevel,
+          );
+          rafId = requestAnimationFrame(frame);
+        };
+
+        frame();
+      } catch {
+        if (!cancelled) {
+          setWebAnalyserReady(false);
+          setWebLiveLevel(0);
+        }
+      }
+    };
+
+    void startAnalyser();
+
+    return () => {
+      cancelled = true;
+      void teardown();
+    };
+  }, [isRecording]);
 
   async function handleStartRecording() {
     setError(null);
@@ -210,7 +451,7 @@ export default function CaptureScreen() {
       }
 
       if (!granted) {
-        throw new Error('Microfoontoegang is nodig om audio op te nemen.');
+        throw new Error("Microfoontoegang is nodig om audio op te nemen.");
       }
 
       await recorder.prepareToRecordAsync();
@@ -247,14 +488,14 @@ export default function CaptureScreen() {
     setAudioUri(null);
     setIsTypingFocused(false);
 
-    if (uiMode === 'typing') {
-      setRawText('');
+    if (uiMode === "typing") {
+      setRawText("");
     }
   }
 
   function handleBackFromCapture() {
-    if (uiMode === 'idle') {
-      router.replace('/');
+    if (uiMode === "idle") {
+      router.replace("/");
       return;
     }
     void handleCancelCurrentMode();
@@ -264,7 +505,7 @@ export default function CaptureScreen() {
     setSubmitting(true);
     setError(null);
     setStatus(null);
-    setProcessingVariant('text-entry');
+    setProcessingVariant("text-entry");
 
     try {
       const captureContext = createCaptureContext();
@@ -275,11 +516,15 @@ export default function CaptureScreen() {
         timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
       });
 
-      setRawText('');
+      setRawText("");
       setIsTypingFocused(false);
       router.replace({
-        pathname: '/entry/[id]',
-        params: { id: result.normalizedEntryId, source: 'capture', date: result.journalDate },
+        pathname: "/entry/[id]",
+        params: {
+          id: result.normalizedEntryId,
+          source: "capture",
+          date: result.journalDate,
+        },
       });
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -297,7 +542,7 @@ export default function CaptureScreen() {
   async function handleSubmitAudio() {
     if (!audioUri) {
       setError({
-        message: 'Neem eerst een opname op.',
+        message: "Neem eerst een opname op.",
         retryable: false,
         requestId: null,
       });
@@ -307,14 +552,14 @@ export default function CaptureScreen() {
     setSubmitting(true);
     setError(null);
     setStatus(null);
-    setProcessingVariant('audio-entry');
+    setProcessingVariant("audio-entry");
 
     try {
       const captureContext = createCaptureContext();
       const audioBase64 = await audioUriToBase64(audioUri);
 
       if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
-        throw new Error('Opname is te groot. Neem een kortere opname op.');
+        throw new Error("Opname is te groot. Neem een kortere opname op.");
       }
 
       const result = await submitAudioEntry({
@@ -327,8 +572,12 @@ export default function CaptureScreen() {
 
       setAudioUri(null);
       router.replace({
-        pathname: '/entry/[id]',
-        params: { id: result.normalizedEntryId, source: 'capture', date: result.journalDate },
+        pathname: "/entry/[id]",
+        params: {
+          id: result.normalizedEntryId,
+          source: "capture",
+          date: result.journalDate,
+        },
       });
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -347,9 +596,9 @@ export default function CaptureScreen() {
     if (isRecording) {
       setSubmitting(true);
       setError(null);
-      setStatus('Opname verwerken...');
-      setProcessingVariant('audio-entry');
-      const uri = await handleStopRecording('manual');
+      setStatus("Opname verwerken...");
+      setProcessingVariant("audio-entry");
+      const uri = await handleStopRecording("manual");
 
       if (!uri) {
         setSubmitting(false);
@@ -362,7 +611,7 @@ export default function CaptureScreen() {
         const audioBase64 = await audioUriToBase64(uri);
 
         if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
-          throw new Error('Opname is te groot. Neem een kortere opname op.');
+          throw new Error("Opname is te groot. Neem een kortere opname op.");
         }
 
         const result = await submitAudioEntry({
@@ -375,8 +624,12 @@ export default function CaptureScreen() {
 
         setAudioUri(null);
         router.replace({
-          pathname: '/entry/[id]',
-          params: { id: result.normalizedEntryId, source: 'capture', date: result.journalDate },
+          pathname: "/entry/[id]",
+          params: {
+            id: result.normalizedEntryId,
+            source: "capture",
+            date: result.journalDate,
+          },
         });
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
@@ -407,17 +660,26 @@ export default function CaptureScreen() {
               styles.topIconButton,
               { backgroundColor: palette.surfaceLow },
               recordingActionBusy && styles.topActionDisabled,
-            ]}>
-            <MaterialIcons name="arrow-back" size={18} color={palette.primary} />
+            ]}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={18}
+              color={palette.primary}
+            />
           </Pressable>
         }
         rightAction={
-          uiMode === 'idle' ? (
+          uiMode === "idle" ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Open menu"
               onPress={() => setMenuVisible(true)}
-              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+              style={[
+                styles.menuButton,
+                { backgroundColor: palette.surfaceLow },
+              ]}
+            >
               <MaterialIcons name="menu" size={20} color={palette.primary} />
             </Pressable>
           ) : (
@@ -432,28 +694,54 @@ export default function CaptureScreen() {
           message={error.message}
           detail={
             error.retryable
-              ? 'Tijdelijke fout. Probeer het zo opnieuw.'
-              : 'Controleer je invoer of login en probeer daarna opnieuw.'
+              ? "Tijdelijke fout. Probeer het zo opnieuw."
+              : "Controleer je invoer of login en probeer daarna opnieuw."
           }
           meta={error.requestId ? `Referentie: ${error.requestId}` : null}
         />
       ) : null}
 
-      {status && !error && uiMode === 'voice' && (isRecording || submitting) ? (
+      {status && !error && uiMode === "voice" && (isRecording || submitting) ? (
         <ThemedText type="caption" style={styles.statusText}>
           {status}
         </ThemedText>
       ) : null}
 
-      {uiMode === 'voice' ? (
+      {uiMode === "voice" ? (
         <ThemedView style={styles.voiceCanvas}>
-          <ThemedView style={styles.waveCluster}>
-            {getWaveformHeights(recorderState.durationMillis).map((height, index) => (
+          <ThemedView
+            style={[
+              isWebLiveMotion
+                ? styles.waveClusterLive
+                : styles.waveClusterFallback,
+              {
+                transform: [{ scale: isWebLiveMotion ? voiceMotionScale : 1 }],
+                opacity: isWebLiveMotion
+                  ? voiceMotionOpacity
+                  : isRecording
+                    ? 0.86
+                    : 0.45,
+              },
+            ]}
+          >
+            {(isWebFallbackMotion
+              ? getFallbackWaveformHeights(recorderState.durationMillis)
+              : getWaveformHeights(recorderState.durationMillis, liveAudioLevel)
+            ).map((height, index) => (
               <ThemedView
                 key={`wave-${index}`}
                 style={[
-                  styles.waveBar,
-                  { height, opacity: isRecording ? 1 : 0.45 },
+                  isWebFallbackMotion
+                    ? styles.waveBarFallback
+                    : styles.waveBarLive,
+                  {
+                    height,
+                    opacity: isWebFallbackMotion
+                      ? 0.88
+                      : isRecording
+                        ? 1
+                        : 0.45 + liveAudioLevel * 0.2,
+                  },
                 ]}
               />
             ))}
@@ -464,20 +752,34 @@ export default function CaptureScreen() {
           </ThemedText>
 
           <ThemedText type="bodySecondary" style={styles.voiceHint}>
-            Opname loopt: {recordingSeconds}s / 90s
+            Opname loopt: {formatDuration(recordingSeconds)} /{" "}
+            {formatDuration(MAX_RECORDING_SECONDS)}
           </ThemedText>
+          {Platform.OS === "web" && isRecording ? (
+            <ThemedText type="caption" style={styles.voiceModeHint}>
+              {isWebLiveMotion
+                ? "Live audio-reactie actief"
+                : "Standaard opname-animatie actief"}
+            </ThemedText>
+          ) : null}
 
           <ThemedView style={styles.voicePrimaryZone}>
             <PrimaryButton
               disabled={isBusy || (!isRecording && !hasAudioDraft)}
               onPress={() => void handleFinishVoice()}
-              label={isRecording ? 'Klaar' : submitting ? 'Opname verwerken...' : 'Opname opslaan'}
+              label={
+                isRecording
+                  ? "Klaar"
+                  : submitting
+                    ? "Opname verwerken..."
+                    : "Opname opslaan"
+              }
             />
           </ThemedView>
         </ThemedView>
       ) : (
         <ThemedView style={styles.idleTypingCanvas}>
-          {uiMode === 'idle' ? (
+          {uiMode === "idle" ? (
             <Pressable
               style={styles.idleTapCanvas}
               disabled={isBusy}
@@ -485,7 +787,8 @@ export default function CaptureScreen() {
                 setIsTypingFocused(true);
                 setError(null);
                 setStatus(null);
-              }}>
+              }}
+            >
               <ThemedView style={styles.idleCopy}>
                 <ThemedText type="screenTitle" style={styles.idleTitle}>
                   Wat houdt je bezig?
@@ -508,8 +811,14 @@ export default function CaptureScreen() {
                   styles.captureInputTyping,
                   {
                     color: palette.text,
-                    borderColor: scheme === 'dark' ? `${palette.primaryStrong}66` : `${palette.primaryStrong}7A`,
-                    backgroundColor: scheme === 'dark' ? 'transparent' : 'rgba(255,255,255,0.14)',
+                    borderColor:
+                      scheme === "dark"
+                        ? `${palette.primaryStrong}66`
+                        : `${palette.primaryStrong}7A`,
+                    backgroundColor:
+                      scheme === "dark"
+                        ? "transparent"
+                        : "rgba(255,255,255,0.14)",
                   },
                 ]}
               />
@@ -517,22 +826,27 @@ export default function CaptureScreen() {
                 <PrimaryButton
                   onPress={() => void handleSubmitText()}
                   disabled={isBusy || !hasTextDraft}
-                  label={submitting ? 'Moment bewaren...' : 'Moment bewaren'}
+                  label={submitting ? "Moment bewaren..." : "Moment bewaren"}
                 />
               </ThemedView>
             </ThemedView>
           )}
 
           <ThemedView style={styles.micZone}>
-            {uiMode === 'idle' ? (
+            {uiMode === "idle" ? (
               <Pressable
                 onPress={() => void handleStartRecording()}
                 disabled={isBusy}
-                style={[styles.micPrimary, isBusy && styles.micDisabled]}>
+                style={[styles.micPrimary, isBusy && styles.micDisabled]}
+              >
                 <MaterialIcons name="mic" size={34} color="#FFFFFF" />
               </Pressable>
             ) : (
-              <Pressable onPress={() => void handleCancelCurrentMode()} disabled={isBusy} style={styles.previousStepAction}>
+              <Pressable
+                onPress={() => void handleCancelCurrentMode()}
+                disabled={isBusy}
+                style={styles.previousStepAction}
+              >
                 <MaterialIcons name="mic" size={17} color={palette.mutedSoft} />
                 <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
                   Vorige stap
@@ -548,7 +862,10 @@ export default function CaptureScreen() {
         currentRouteKey="capture"
         onRequestClose={() => setMenuVisible(false)}
       />
-      <ProcessingScreen visible={Boolean(processingVariant)} variant={processingVariant ?? 'text-entry'} />
+      <ProcessingScreen
+        visible={Boolean(processingVariant)}
+        variant={processingVariant ?? "text-entry"}
+      />
     </ScreenContainer>
   );
 }
@@ -561,8 +878,8 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   topActionDisabled: {
     opacity: 0.45,
@@ -574,37 +891,37 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   statusText: {
     opacity: 0.8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   idleTypingCanvas: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingTop: spacing.md,
   },
   idleTapCanvas: {
     minHeight: 260,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   captureInput: {
     borderWidth: 1,
-    borderColor: 'transparent',
-    backgroundColor: 'transparent',
+    borderColor: "transparent",
+    backgroundColor: "transparent",
     minHeight: 240,
     fontSize: 32,
     lineHeight: 42,
     letterSpacing: -0.5,
-    textAlign: 'center',
+    textAlign: "center",
     paddingTop: spacing.lg,
     paddingHorizontal: spacing.md,
   },
   captureInputTyping: {
-    textAlign: 'left',
+    textAlign: "left",
     flex: 1,
     minHeight: 0,
     fontSize: 28,
@@ -613,31 +930,31 @@ const styles = StyleSheet.create({
     borderColor: `${colorTokens.light.primaryStrong}7A`,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: "rgba(255,255,255,0.14)",
   },
   typingCanvas: {
     flex: 1,
     gap: spacing.md,
   },
   typingActions: {
-    width: '100%',
+    width: "100%",
   },
   idleCopy: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing.xs,
   },
   idleTitle: {
     fontSize: 34,
     lineHeight: 40,
-    textAlign: 'center',
+    textAlign: "center",
   },
   guidanceText: {
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.7,
   },
   micZone: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingBottom: 64,
     marginTop: spacing.md,
   },
@@ -645,8 +962,8 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colorTokens.light.primaryStrong,
     ...shadows.cta,
   },
@@ -654,46 +971,66 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   previousStepAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.xs,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
   },
   voiceCanvas: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
     gap: spacing.lg,
   },
-  waveCluster: {
+  waveClusterLive: {
     height: 156,
-    width: '100%',
-    maxWidth: 300,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    maxWidth: 360,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.xs,
     borderRadius: radius.xl,
     backgroundColor: `${colorTokens.light.primary}08`,
   },
-  waveBar: {
+  waveClusterFallback: {
+    height: 116,
+    width: "100%",
+    maxWidth: 224,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    borderRadius: radius.xl,
+    backgroundColor: `${colorTokens.light.primary}05`,
+  },
+  waveBarLive: {
     width: 6,
     borderRadius: radius.pill,
     backgroundColor: colorTokens.light.primaryStrong,
   },
+  waveBarFallback: {
+    width: 9,
+    borderRadius: radius.pill,
+    backgroundColor: `${colorTokens.light.primaryStrong}B3`,
+  },
   voiceLead: {
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.9,
   },
   voiceHint: {
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.72,
   },
+  voiceModeHint: {
+    textAlign: "center",
+    opacity: 0.66,
+  },
   voicePrimaryZone: {
-    width: '100%',
+    width: "100%",
     marginTop: spacing.md,
     paddingBottom: spacing.sm,
   },
