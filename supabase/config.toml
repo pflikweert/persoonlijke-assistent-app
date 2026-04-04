@@ -385,6 +385,12 @@ verify_jwt = false
 [functions.import-chatgpt-markdown]
 verify_jwt = false
 
+[functions.renormalize-entry]
+verify_jwt = false
+
+[functions.admin-regeneration-job]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

@@ -150,6 +150,8 @@ a:focus-visible,
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="entry/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
+            <Stack.Screen name="settings-import" options={{ headerShown: false }} />
+            <Stack.Screen name="settings-regeneration" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
         </View>

@@ -3,7 +3,8 @@ export type FlowName =
   | 'generate-reflection'
   | 'regenerate-day-journal'
   | 'renormalize-entry'
-  | 'import-chatgpt-markdown';
+  | 'import-chatgpt-markdown'
+  | 'admin-regeneration-job';
 
 export type FlowErrorCode =
   | 'AUTH_MISSING'

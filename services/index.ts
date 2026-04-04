@@ -18,6 +18,10 @@ export { refreshDerivedAfterCaptureInBackground, submitAudioEntry, submitTextEnt
 export { isChatGptMarkdownImportEnabled } from './feature-flags';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
 export {
+  fetchAdminRegenerationJobStatus,
+  startAdminRegenerationJob,
+} from './admin-regeneration';
+export {
   importChatGptMarkdownPreview,
   invokeChatGptMarkdownImport,
   listPreviewDays,

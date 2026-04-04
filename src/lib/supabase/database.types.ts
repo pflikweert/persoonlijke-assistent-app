@@ -14,8 +14,180 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_regeneration_job_steps: {
+        Row: {
+          applied: number
+          candidate_keys: Json
+          cursor: number
+          failed: number
+          id: string
+          job_id: string
+          last_update_at: string
+          openai_completed: number
+          phase: string
+          queued: number
+          status: string
+          step_type: string
+          total: number
+        }
+        Insert: {
+          applied?: number
+          candidate_keys?: Json
+          cursor?: number
+          failed?: number
+          id?: string
+          job_id: string
+          last_update_at?: string
+          openai_completed?: number
+          phase?: string
+          queued?: number
+          status?: string
+          step_type: string
+          total?: number
+        }
+        Update: {
+          applied?: number
+          candidate_keys?: Json
+          cursor?: number
+          failed?: number
+          id?: string
+          job_id?: string
+          last_update_at?: string
+          openai_completed?: number
+          phase?: string
+          queued?: number
+          status?: string
+          step_type?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_regeneration_job_steps_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "admin_regeneration_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_regeneration_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          options: Json
+          selected_types: Json
+          started_at: string | null
+          status: string
+          summary: Json
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          options?: Json
+          selected_types?: Json
+          started_at?: string | null
+          status?: string
+          summary?: Json
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          options?: Json
+          selected_types?: Json
+          started_at?: string | null
+          status?: string
+          summary?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      admin_regeneration_step_batches: {
+        Row: {
+          attempt: number
+          created_at: string
+          error_file_id: string | null
+          id: string
+          input_file_id: string | null
+          job_id: string
+          openai_batch_id: string
+          output_file_id: string | null
+          prompt_tokens_est: number
+          request_count: number
+          requests_json: Json
+          retry_of: string | null
+          status: string
+          step_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          error_file_id?: string | null
+          id?: string
+          input_file_id?: string | null
+          job_id: string
+          openai_batch_id: string
+          output_file_id?: string | null
+          prompt_tokens_est?: number
+          request_count?: number
+          requests_json?: Json
+          retry_of?: string | null
+          status?: string
+          step_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          error_file_id?: string | null
+          id?: string
+          input_file_id?: string | null
+          job_id?: string
+          openai_batch_id?: string
+          output_file_id?: string | null
+          prompt_tokens_est?: number
+          request_count?: number
+          requests_json?: Json
+          retry_of?: string | null
+          status?: string
+          step_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_regeneration_step_batches_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "admin_regeneration_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_regeneration_step_batches_retry_of_fkey"
+            columns: ["retry_of"]
+            isOneToOne: false
+            referencedRelation: "admin_regeneration_step_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_regeneration_step_batches_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "admin_regeneration_job_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       day_journals: {
         Row: {
+          generation_meta: Json
           id: string
           journal_date: string
           narrative_text: string
@@ -25,6 +197,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          generation_meta?: Json
           id?: string
           journal_date: string
           narrative_text?: string
@@ -34,6 +207,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          generation_meta?: Json
           id?: string
           journal_date?: string
           narrative_text?: string
@@ -48,6 +222,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          generation_meta: Json
           id: string
           raw_entry_id: string
           summary_short: string | null
@@ -57,6 +232,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          generation_meta?: Json
           id?: string
           raw_entry_id: string
           summary_short?: string | null
@@ -66,6 +242,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          generation_meta?: Json
           id?: string
           raw_entry_id?: string
           summary_short?: string | null
@@ -130,6 +307,7 @@ export type Database = {
       period_reflections: {
         Row: {
           generated_at: string
+          generation_meta: Json
           highlights_json: Json
           id: string
           model_version: string
@@ -143,6 +321,7 @@ export type Database = {
         }
         Insert: {
           generated_at?: string
+          generation_meta?: Json
           highlights_json?: Json
           id?: string
           model_version?: string
@@ -156,6 +335,7 @@ export type Database = {
         }
         Update: {
           generated_at?: string
+          generation_meta?: Json
           highlights_json?: Json
           id?: string
           model_version?: string

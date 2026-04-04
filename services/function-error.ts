@@ -15,7 +15,8 @@ export interface FunctionErrorPayload {
     | 'generate-reflection'
     | 'regenerate-day-journal'
     | 'renormalize-entry'
-    | 'import-chatgpt-markdown';
+    | 'import-chatgpt-markdown'
+    | 'admin-regeneration-job';
   requestId: string;
   flowId: string;
   step: string;
@@ -42,6 +43,7 @@ export function createClientFlowId(
     | 'day-regenerate'
     | 'entry-renormalize'
     | 'import-chatgpt'
+    | 'admin-regeneration'
 ): string {
   const random = Math.random().toString(36).slice(2, 10);
   return `${prefix}-${Date.now()}-${random}`;
