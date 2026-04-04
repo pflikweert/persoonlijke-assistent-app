@@ -60,6 +60,15 @@ type StatusResponse = {
   job: AdminRegenerationJobView;
 };
 
+type AccessResponse = {
+  status: 'ok';
+  flow: 'admin-regeneration-job';
+  requestId: string;
+  flowId: string;
+  canAccess: boolean;
+  userId: string | null;
+};
+
 function parseFunctionMessage(parsed: unknown): string | null {
   if (!parsed || typeof parsed !== 'object') {
     return null;
@@ -208,4 +217,32 @@ export async function fetchAdminRegenerationJobStatus(input: {
   }
 
   return data.job;
+}
+
+export async function hasAdminRegenerationAccess(): Promise<boolean> {
+  const flowId = createClientFlowId('admin-regeneration');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-regeneration-job' });
+
+  try {
+    const data = await invokeAction<AccessResponse>({
+      flowId,
+      body: {
+        action: 'access',
+      },
+    });
+
+    return (
+      data.status === 'ok' &&
+      data.flow === 'admin-regeneration-job' &&
+      Boolean(data.requestId) &&
+      data.canAccess === true
+    );
+  } catch (error) {
+    if (error instanceof FunctionFlowError) {
+      if (error.payload.code === 'AUTH_UNAUTHORIZED' || error.payload.code === 'AUTH_MISSING') {
+        return false;
+      }
+    }
+    throw error;
+  }
 }

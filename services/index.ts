@@ -19,6 +19,7 @@ export { isChatGptMarkdownImportEnabled } from './feature-flags';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
 export {
   fetchAdminRegenerationJobStatus,
+  hasAdminRegenerationAccess,
   startAdminRegenerationJob,
 } from './admin-regeneration';
 export {

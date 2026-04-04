@@ -1,14 +1,15 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { ScreenContainer, SurfaceSection } from '@/components/ui/screen-primitives';
+import { ScreenContainer, StateBlock, SurfaceSection } from '@/components/ui/screen-primitives';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { hasAdminRegenerationAccess } from '@/services';
 import { colorTokens, radius, spacing } from '@/theme';
 
 type SettingsRoute = {
@@ -40,6 +41,42 @@ export default function SettingsScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
   const [menuVisible, setMenuVisible] = useState(false);
+  const [adminAccess, setAdminAccess] = useState<boolean | null>(null);
+  const [accessError, setAccessError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const allowed = await hasAdminRegenerationAccess();
+        if (!cancelled) {
+          setAdminAccess(allowed);
+          setAccessError(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Kon admin-rechten niet controleren.';
+          setAdminAccess(false);
+          setAccessError(message);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const visibleRoutes = useMemo(
+    () =>
+      SETTINGS_ROUTES.filter((item) =>
+        item.key === 'regeneration' ? adminAccess === true : true
+      ),
+    [adminAccess]
+  );
 
   return (
     <>
@@ -73,7 +110,7 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}>
         <SurfaceSection title="Submenu" subtitle="Kies een beheeronderdeel.">
           <ThemedView style={styles.menuList}>
-            {SETTINGS_ROUTES.map((item) => (
+            {visibleRoutes.map((item) => (
               <Pressable
                 key={item.key}
                 accessibilityRole="button"
@@ -96,6 +133,14 @@ export default function SettingsScreen() {
               </Pressable>
             ))}
           </ThemedView>
+
+          {accessError ? (
+            <StateBlock
+              tone="info"
+              message="Admin-check tijdelijk niet beschikbaar"
+              detail={accessError}
+            />
+          ) : null}
         </SurfaceSection>
 
         <FullscreenMenuOverlay

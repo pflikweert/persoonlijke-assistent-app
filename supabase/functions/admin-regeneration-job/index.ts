@@ -18,7 +18,7 @@ import {
 type StepType = 'entries_normalized' | 'day_journals' | 'week_reflections' | 'month_reflections';
 type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 
-type Action = 'start' | 'status' | 'worker_tick';
+type Action = 'start' | 'status' | 'worker_tick' | 'access';
 
 type StartBody = {
   action: 'start';
@@ -35,7 +35,11 @@ type WorkerBody = {
   jobId?: unknown;
 };
 
-type RequestBody = StartBody | StatusBody | WorkerBody;
+type AccessBody = {
+  action: 'access';
+};
+
+type RequestBody = StartBody | StatusBody | WorkerBody | AccessBody;
 
 type OpenAiBatchStatus =
   | 'validating'
@@ -1980,7 +1984,7 @@ Deno.serve(async (request: Request) => {
     }
 
     const action = parseString((body as { action?: unknown }).action) as Action | null;
-    if (!action || (action !== 'start' && action !== 'status' && action !== 'worker_tick')) {
+    if (!action || (action !== 'start' && action !== 'status' && action !== 'worker_tick' && action !== 'access')) {
       return errorResponse({
         request,
         httpStatus: 400,
@@ -1988,7 +1992,7 @@ Deno.serve(async (request: Request) => {
         flowId,
         step: 'validated',
         code: 'INPUT_INVALID',
-        message: 'Invalid action. Use start, status, worker_tick.',
+        message: 'Invalid action. Use start, status, worker_tick, access.',
       });
     }
 
@@ -1996,7 +2000,7 @@ Deno.serve(async (request: Request) => {
     const isInternal = internalToken.length > 0 && internalHeaderToken === internalToken;
 
     let userId: string | null = null;
-    if (!isInternal || action === 'start' || action === 'status') {
+    if (!isInternal || action === 'start' || action === 'status' || action === 'access') {
       try {
         const authResult = await authenticateAdmin({
           request,
@@ -2018,6 +2022,17 @@ Deno.serve(async (request: Request) => {
           message: message === 'Forbidden' ? 'You are not allowlisted for this action.' : message,
         });
       }
+    }
+
+    if (action === 'access') {
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        canAccess: true,
+        userId,
+      });
     }
 
     if (action === 'start') {

@@ -18,6 +18,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   classifyUnknownError,
   fetchAdminRegenerationJobStatus,
+  hasAdminRegenerationAccess,
   startAdminRegenerationJob,
 } from '@/services';
 import type {
@@ -114,6 +115,7 @@ export default function SettingsRegenerationScreen() {
   const [busy, setBusy] = useState(false);
   const [job, setJob] = useState<AdminRegenerationJobView | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adminAccess, setAdminAccess] = useState<boolean | null>(null);
 
   const [selection, setSelection] = useState<Record<AdminRegenerationStepType, boolean>>({
     entries_normalized: true,
@@ -128,6 +130,29 @@ export default function SettingsRegenerationScreen() {
   );
 
   const isRunning = job?.status === 'queued' || job?.status === 'running';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const allowed = await hasAdminRegenerationAccess();
+        if (!cancelled) {
+          setAdminAccess(allowed);
+        }
+      } catch {
+        if (!cancelled) {
+          setAdminAccess(false);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const stepByType = useMemo(() => {
     const map = new Map<AdminRegenerationStepType, AdminRegenerationStepView>();
@@ -182,7 +207,7 @@ export default function SettingsRegenerationScreen() {
   }, [job, isRunning]);
 
   async function handleStart() {
-    if (selectedTypes.length === 0 || busy || isRunning) {
+    if (adminAccess !== true || selectedTypes.length === 0 || busy || isRunning) {
       return;
     }
 
@@ -201,7 +226,7 @@ export default function SettingsRegenerationScreen() {
   }
 
   async function handleRefresh() {
-    if (!job || busy) {
+    if (adminAccess !== true || !job || busy) {
       return;
     }
 
@@ -254,69 +279,79 @@ export default function SettingsRegenerationScreen() {
           />
         }
         contentContainerStyle={styles.scrollContent}>
-        <SurfaceSection
-          title="Selecteer datatypes"
-          subtitle="Kies één of meer onderdelen die voor alle gebruikers opnieuw verwerkt worden.">
-          <ThemedView style={styles.selectionList}>
-            {STEP_OPTIONS.map((option) => {
-              const selected = selection[option.type];
-              return (
+        {adminAccess === false ? (
+          <StateBlock
+            tone="info"
+            message="Geen toegang"
+            detail="Deze pagina is alleen zichtbaar voor allowlisted admins."
+          />
+        ) : null}
+
+        {adminAccess !== false ? (
+          <SurfaceSection
+            title="Selecteer datatypes"
+            subtitle="Kies één of meer onderdelen die voor alle gebruikers opnieuw verwerkt worden.">
+            <ThemedView style={styles.selectionList}>
+              {STEP_OPTIONS.map((option) => {
+                const selected = selection[option.type];
+                return (
+                  <Pressable
+                    key={option.type}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.label}
+                    onPress={() => {
+                      setSelection((current) => ({
+                        ...current,
+                        [option.type]: !current[option.type],
+                      }));
+                    }}
+                    style={[
+                      styles.selectionRow,
+                      { borderColor: selected ? palette.primary : palette.separator },
+                    ]}>
+                    <ThemedView style={styles.selectionLeft}>
+                      <ThemedText type="defaultSemiBold">{option.label}</ThemedText>
+                      <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                        {option.description}
+                      </ThemedText>
+                    </ThemedView>
+                    <MaterialIcons
+                      name={selected ? 'check-circle' : 'radio-button-unchecked'}
+                      size={20}
+                      color={selected ? palette.primary : palette.mutedSoft}
+                    />
+                  </Pressable>
+                );
+              })}
+            </ThemedView>
+
+            <ThemedView style={styles.actions}>
+              <PrimaryButton
+                label={busy ? 'Starten...' : 'Start opnieuw verwerken'}
+                onPress={() => void handleStart()}
+                disabled={adminAccess !== true || busy || isRunning || selectedTypes.length === 0}
+              />
+              {job ? (
                 <Pressable
-                  key={option.type}
                   accessibilityRole="button"
-                  accessibilityLabel={option.label}
-                  onPress={() => {
-                    setSelection((current) => ({
-                      ...current,
-                      [option.type]: !current[option.type],
-                    }));
-                  }}
-                  style={[
-                    styles.selectionRow,
-                    { borderColor: selected ? palette.primary : palette.separator },
-                  ]}>
-                  <ThemedView style={styles.selectionLeft}>
-                    <ThemedText type="defaultSemiBold">{option.label}</ThemedText>
-                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                      {option.description}
-                    </ThemedText>
-                  </ThemedView>
-                  <MaterialIcons
-                    name={selected ? 'check-circle' : 'radio-button-unchecked'}
-                    size={20}
-                    color={selected ? palette.primary : palette.mutedSoft}
-                  />
+                  accessibilityLabel="Ververs status"
+                  onPress={() => void handleRefresh()}
+                  style={[styles.refreshButton, { borderColor: palette.separator }]}>
+                  <MaterialIcons name="refresh" size={18} color={palette.primary} />
+                  <ThemedText type="bodySecondary" style={{ color: palette.primary }}>
+                    Ververs status
+                  </ThemedText>
                 </Pressable>
-              );
-            })}
-          </ThemedView>
+              ) : null}
+            </ThemedView>
 
-          <ThemedView style={styles.actions}>
-            <PrimaryButton
-              label={busy ? 'Starten...' : 'Start opnieuw verwerken'}
-              onPress={() => void handleStart()}
-              disabled={busy || isRunning || selectedTypes.length === 0}
-            />
-            {job ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Ververs status"
-                onPress={() => void handleRefresh()}
-                style={[styles.refreshButton, { borderColor: palette.separator }]}>
-                <MaterialIcons name="refresh" size={18} color={palette.primary} />
-                <ThemedText type="bodySecondary" style={{ color: palette.primary }}>
-                  Ververs status
-                </ThemedText>
-              </Pressable>
-            ) : null}
-          </ThemedView>
-
-          <MetaText>Minimaal één datatype selecteren. Alleen allowlisted admins hebben toegang.</MetaText>
-        </SurfaceSection>
+            <MetaText>Minimaal één datatype selecteren. Alleen allowlisted admins hebben toegang.</MetaText>
+          </SurfaceSection>
+        ) : null}
 
         {error ? <StateBlock tone="error" message="Actie mislukt" detail={error} /> : null}
 
-        {job ? (
+        {job && adminAccess === true ? (
           <SurfaceSection
             title="Jobstatus"
             subtitle={`Job ${job.id.slice(0, 8)} · ${statusLabel(job.status)}`}>
