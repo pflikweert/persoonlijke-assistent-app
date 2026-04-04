@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { MomentsTimelineSection } from '@/components/journal/moments-timeline-section';
 import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
+import { ReflectionTeaserCard } from '@/components/journal/reflection-teaser-card';
 import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
@@ -22,7 +23,6 @@ import {
   fetchRecentNormalizedEntries,
   fetchTodayJournal,
   getUtcTodayDate,
-  parseJsonStringArray,
 } from '@/services';
 import { colorTokens, radius, spacing, typography } from '@/theme';
 
@@ -105,15 +105,6 @@ export default function TodayScreen() {
       : hasUsableTodaySummary || todayEntries.length > 0
         ? 'Vandaag bijgewerkt'
         : 'Klaar voor je eerste entry';
-  const weekTeaser = useMemo(
-    () => buildReflectionTeaser(latestWeekReflection),
-    [latestWeekReflection]
-  );
-  const monthTeaser = useMemo(
-    () => buildReflectionTeaser(latestMonthReflection),
-    [latestMonthReflection]
-  );
-
   return (
     <ScreenContainer
       scrollable
@@ -209,39 +200,30 @@ export default function TodayScreen() {
 
       {!loading && !error ? (
         <ThemedView style={styles.reflectTeaserBlock}>
-          <MetaText>Reflecties</MetaText>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: '/(tabs)/reflections',
-                params: { period: 'week' },
-              })
-            }
-            style={[styles.reflectTeaserItem, { borderTopColor: `${palette.separator}88` }]}>
-            <ThemedText type="defaultSemiBold">Wekelijkse reflectie</ThemedText>
-            <ThemedText type="bodySecondary" numberOfLines={2} style={{ color: palette.muted }}>
-              {weekTeaser}
-            </ThemedText>
-            <ThemedText type="caption" style={[styles.reflectTeaserCta, { color: palette.primary }]}>
-              Lees volledig inzicht
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: '/(tabs)/reflections',
-                params: { period: 'month' },
-              })
-            }
-            style={[styles.reflectTeaserItem, { borderTopColor: `${palette.separator}88` }]}>
-            <ThemedText type="defaultSemiBold">Maandelijkse reflectie</ThemedText>
-            <ThemedText type="bodySecondary" numberOfLines={2} style={{ color: palette.muted }}>
-              {monthTeaser}
-            </ThemedText>
-            <ThemedText type="caption" style={[styles.reflectTeaserCta, { color: palette.primary }]}>
-              Lees volledig inzicht
-            </ThemedText>
-          </Pressable>
+          <ThemedView style={styles.reflectTeaserFrame}>
+            <ReflectionTeaserCard
+              periodType="week"
+              reflection={latestWeekReflection}
+              onPress={() =>
+                router.push({
+                  pathname: '/(tabs)/reflections',
+                  params: { period: 'week' },
+                })
+              }
+              style={styles.reflectTeaserItem}
+            />
+            <ReflectionTeaserCard
+              periodType="month"
+              reflection={latestMonthReflection}
+              onPress={() =>
+                router.push({
+                  pathname: '/(tabs)/reflections',
+                  params: { period: 'month' },
+                })
+              }
+              style={styles.reflectTeaserItem}
+            />
+          </ThemedView>
         </ThemedView>
       ) : null}
 
@@ -288,31 +270,6 @@ function formatShortDate(utcDate: string): string {
     month: 'short',
     timeZone: 'UTC',
   });
-}
-
-function buildReflectionTeaser(
-  reflection: Awaited<ReturnType<typeof fetchLatestReflection>>
-): string {
-  if (!reflection) {
-    return 'Nog geen reflectie beschikbaar.';
-  }
-
-  const summary = reflection.summary_text?.trim() ?? '';
-  if (summary.length > 0) {
-    return summarizeSnippet(summary);
-  }
-
-  const firstHighlight = parseJsonStringArray(reflection.highlights_json)[0]?.trim() ?? '';
-  if (firstHighlight) {
-    return summarizeSnippet(firstHighlight);
-  }
-
-  const firstPoint = parseJsonStringArray(reflection.reflection_points_json)[0]?.trim() ?? '';
-  if (firstPoint) {
-    return summarizeSnippet(firstPoint);
-  }
-
-  return 'Nog geen reflectie beschikbaar.';
 }
 
 function isUsableTodaySummary(value: string | null): boolean {
@@ -408,16 +365,16 @@ const styles = StyleSheet.create({
   },
   reflectTeaserBlock: {
     marginTop: spacing.lg,
-    gap: spacing.xs,
+  },
+  reflectTeaserFrame: {
+    borderTopWidth: 1,
+    borderTopColor: '#D1C5AC',
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    paddingTop: spacing.md,
+    gap: spacing.md,
   },
   reflectTeaserItem: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: spacing.md,
     paddingBottom: spacing.sm,
-    gap: spacing.xs,
-  },
-  reflectTeaserCta: {
-    letterSpacing: 0.1,
-    textTransform: 'none',
   },
 });

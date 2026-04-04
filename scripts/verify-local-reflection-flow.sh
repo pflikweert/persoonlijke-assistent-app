@@ -175,13 +175,14 @@ if [ "$REUSE_STATUS_VALUE" != "ok" ] || [ "$REUSE_FLOW_VALUE" != "generate-refle
   exit 1
 fi
 
-curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,period_start,period_end,summary_text,highlights_json,reflection_points_json&user_id=eq.$USER_ID" \
+curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,period_start,period_end,summary_text,narrative_text,highlights_json,reflection_points_json&user_id=eq.$USER_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$REFLECTIONS_FILE"
 
 WEEK_COUNT="$(jq '[.[] | select(.period_type == "week")] | length' "$REFLECTIONS_FILE")"
 MONTH_COUNT="$(jq '[.[] | select(.period_type == "month")] | length' "$REFLECTIONS_FILE")"
 SUMMARY_COUNT="$(jq '[.[] | select((.summary_text // "") | length > 0)] | length' "$REFLECTIONS_FILE")"
+NARRATIVE_COUNT="$(jq '[.[] | select((.narrative_text // "") | length > 0)] | length' "$REFLECTIONS_FILE")"
 HIGHLIGHTS_COUNT="$(jq '[.[] | select((.highlights_json // []) | length > 0)] | length' "$REFLECTIONS_FILE")"
 POINTS_COUNT="$(jq '[.[] | select((.reflection_points_json // []) | length > 0)] | length' "$REFLECTIONS_FILE")"
 WEEK_ROW_JSON="$(jq -c --arg id "$WEEK_REFLECTION_ID" '.[] | select(.id == $id)' "$REFLECTIONS_FILE")"
@@ -193,8 +194,8 @@ if [ -z "$WEEK_ROW_JSON" ] || [ -z "$MONTH_ROW_JSON" ]; then
   exit 1
 fi
 
-WEEK_MARKER_LEAK_COUNT="$(printf '%s' "$WEEK_ROW_JSON" | jq '[.summary_text, ((.highlights_json // [])[]?), ((.reflection_points_json // [])[]?)] | map((. // "") | ascii_downcase) | map(select(contains("geen spraak herkend in audio-opname"))) | length')"
-MONTH_MARKER_LEAK_COUNT="$(printf '%s' "$MONTH_ROW_JSON" | jq '[.summary_text, ((.highlights_json // [])[]?), ((.reflection_points_json // [])[]?)] | map((. // "") | ascii_downcase) | map(select(contains("geen spraak herkend in audio-opname"))) | length')"
+WEEK_MARKER_LEAK_COUNT="$(printf '%s' "$WEEK_ROW_JSON" | jq '[.summary_text, .narrative_text, ((.highlights_json // [])[]?), ((.reflection_points_json // [])[]?)] | map((. // "") | ascii_downcase) | map(select(contains("geen spraak herkend in audio-opname"))) | length')"
+MONTH_MARKER_LEAK_COUNT="$(printf '%s' "$MONTH_ROW_JSON" | jq '[.summary_text, .narrative_text, ((.highlights_json // [])[]?), ((.reflection_points_json // [])[]?)] | map((. // "") | ascii_downcase) | map(select(contains("geen spraak herkend in audio-opname"))) | length')"
 
 if [ "$WEEK_MARKER_LEAK_COUNT" -ne 0 ] || [ "$MONTH_MARKER_LEAK_COUNT" -ne 0 ]; then
   echo "FAIL reflection-flow: no-speech/fallbackmarker lekt door in reflectie-output"
@@ -216,7 +217,7 @@ function parseRow(raw) {
 function reflectionText(row) {
   const highlights = Array.isArray(row.highlights_json) ? row.highlights_json : [];
   const points = Array.isArray(row.reflection_points_json) ? row.reflection_points_json : [];
-  const parts = [row.summary_text, ...highlights, ...points]
+  const parts = [row.summary_text, row.narrative_text, ...highlights, ...points]
     .map((value) => String(value ?? '').toLowerCase())
     .filter((value) => value.length > 0);
   return parts.join(' ');
@@ -253,6 +254,15 @@ MONTH_SOURCE_OVERLAP="$(printf '%s' "$SOURCE_OVERLAP_RESULT" | jq -r '.month')"
 if [ "$WEEK_SOURCE_OVERLAP" != "true" ] || [ "$MONTH_SOURCE_OVERLAP" != "true" ]; then
   echo "FAIL reflection-flow: reflection content lijkt onvoldoende brongebonden"
   echo "week_source_overlap=$WEEK_SOURCE_OVERLAP month_source_overlap=$MONTH_SOURCE_OVERLAP"
+  exit 1
+fi
+
+WEEK_NARRATIVE_LEN="$(printf '%s' "$WEEK_ROW_JSON" | jq -r '(.narrative_text // "") | length')"
+MONTH_NARRATIVE_LEN="$(printf '%s' "$MONTH_ROW_JSON" | jq -r '(.narrative_text // "") | length')"
+
+if [ "$WEEK_NARRATIVE_LEN" -le 0 ] || [ "$MONTH_NARRATIVE_LEN" -le 0 ]; then
+  echo "FAIL reflection-flow: narrative_text ontbreekt in week of maand reflectie"
+  echo "week_narrative_len=$WEEK_NARRATIVE_LEN month_narrative_len=$MONTH_NARRATIVE_LEN"
   exit 1
 fi
 
@@ -348,11 +358,12 @@ ACTUAL_WEEK_END="$(jq -r '.periodEnd // empty' "$WEEK_FILE")"
 ACTUAL_MONTH_START="$(jq -r '.periodStart // empty' "$MONTH_FILE")"
 ACTUAL_MONTH_END="$(jq -r '.periodEnd // empty' "$MONTH_FILE")"
 
-if [ "$WEEK_COUNT" -lt 1 ] || [ "$MONTH_COUNT" -lt 1 ] || [ "$SUMMARY_COUNT" -lt 2 ] || [ "$HIGHLIGHTS_COUNT" -lt 2 ] || [ "$POINTS_COUNT" -lt 2 ]; then
+if [ "$WEEK_COUNT" -lt 1 ] || [ "$MONTH_COUNT" -lt 1 ] || [ "$SUMMARY_COUNT" -lt 2 ] || [ "$NARRATIVE_COUNT" -lt 2 ] || [ "$HIGHLIGHTS_COUNT" -lt 2 ] || [ "$POINTS_COUNT" -lt 2 ]; then
   echo "FAIL reflection-flow: reflection counts mismatch"
   echo "week reflections: $WEEK_COUNT"
   echo "month reflections: $MONTH_COUNT"
   echo "non-empty summaries: $SUMMARY_COUNT"
+  echo "non-empty narratives: $NARRATIVE_COUNT"
   echo "rows with highlights: $HIGHLIGHTS_COUNT"
   echo "rows with reflection points: $POINTS_COUNT"
   echo "week response:"
@@ -377,5 +388,5 @@ if [ "$ACTUAL_MONTH_START" != "$EXPECTED_MONTH_START" ] || [ "$ACTUAL_MONTH_END"
 fi
 
 echo "PASS reflection-flow target=$TARGET weekRequestId=$WEEK_REQUEST_ID monthRequestId=$MONTH_REQUEST_ID"
-echo "week reflections=$WEEK_COUNT month reflections=$MONTH_COUNT summaries=$SUMMARY_COUNT highlights=$HIGHLIGHTS_COUNT points=$POINTS_COUNT"
+echo "week reflections=$WEEK_COUNT month reflections=$MONTH_COUNT summaries=$SUMMARY_COUNT narratives=$NARRATIVE_COUNT highlights=$HIGHLIGHTS_COUNT points=$POINTS_COUNT"
 echo "week_reuse_reflection_id=$REUSE_REFLECTION_ID"

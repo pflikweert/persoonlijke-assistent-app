@@ -7,7 +7,7 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import { EncodingType, readAsStringAsync } from "expo-file-system/legacy";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet } from "react-native";
 
@@ -15,6 +15,7 @@ import {
   ProcessingScreen,
   type ProcessingVariant,
 } from "@/components/feedback/processing-screen";
+import { CaptureIconButton } from "@/components/capture/capture-icon-button";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
@@ -22,21 +23,25 @@ import { ThemedView } from "@/components/themed-view";
 import {
   PrimaryButton,
   ScreenContainer,
+  SecondaryButton,
   StateBlock,
   TextAreaField,
 } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   classifyUnknownError,
+  refreshDerivedAfterCaptureInBackground,
+  isValidJournalDate,
   submitAudioEntry,
   submitTextEntry,
 } from "@/services";
-import { colorTokens, radius, shadows, spacing } from "@/theme";
+import { colorTokens, radius, spacing } from "@/theme";
 
 const MAX_RECORDING_MS = 180_000;
 const MAX_RECORDING_SECONDS = Math.floor(MAX_RECORDING_MS / 1000);
-const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+const MAX_AUDIO_BYTES = 7 * 1024 * 1024;
 const MAX_AUDIO_BASE64_CHARS = Math.ceil((MAX_AUDIO_BYTES * 4) / 3);
+const NEAR_END_TONE = "#D4A41D";
 const WEB_AUDIO_MOTION = {
   baseNoiseFloorRms: 0.02,
   noiseTrackingMarginRms: 0.018,
@@ -62,15 +67,42 @@ function toLocalJournalDate(value: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function createCaptureContext(now = new Date()): {
+function combineLocalDateWithCurrentTime(journalDate: string, now = new Date()): Date | null {
+  if (!isValidJournalDate(journalDate)) {
+    return null;
+  }
+
+  const [yearRaw, monthRaw, dayRaw] = journalDate.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  return new Date(
+    year,
+    month - 1,
+    day,
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+    now.getMilliseconds(),
+  );
+}
+
+function createCaptureContext(now = new Date(), journalDateOverride?: string): {
   capturedAt: string;
   journalDate: string;
   timezoneOffsetMinutes: number;
 } {
+  const captureDate = journalDateOverride ? combineLocalDateWithCurrentTime(journalDateOverride, now) : now;
+
   return {
-    capturedAt: now.toISOString(),
-    journalDate: toLocalJournalDate(now),
-    timezoneOffsetMinutes: now.getTimezoneOffset(),
+    capturedAt: (captureDate ?? now).toISOString(),
+    journalDate: journalDateOverride && isValidJournalDate(journalDateOverride) ? journalDateOverride : toLocalJournalDate(now),
+    timezoneOffsetMinutes: (captureDate ?? now).getTimezoneOffset(),
   };
 }
 
@@ -169,13 +201,20 @@ function getWaveformHeights(durationMillis: number, level: number): number[] {
 }
 
 function getFallbackWaveformHeights(durationMillis: number): number[] {
-  void durationMillis;
-  return [18, 34, 52, 34, 18];
+  const seed = Math.floor(durationMillis / 320);
+  const base = [14, 22, 32, 46, 62, 76, 84, 76, 62, 46, 32, 22, 14];
+  return base.map((height, index) => {
+    const pulse = ((seed + index * 3) % 7) - 3;
+    return Math.max(12, height + pulse * 2);
+  });
 }
 
 export default function CaptureScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const { date } = useLocalSearchParams<{ date?: string | string[] }>();
+  const routeJournalDate = Array.isArray(date) ? date[0] ?? "" : date ?? "";
+  const captureJournalDate = isValidJournalDate(routeJournalDate) ? routeJournalDate : null;
   const recorder = useAudioRecorder({
     ...RecordingPresets.HIGH_QUALITY,
     isMeteringEnabled: true,
@@ -191,18 +230,28 @@ export default function CaptureScreen() {
     retryable: boolean;
     requestId: string | null;
   } | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   const [isTypingFocused, setIsTypingFocused] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [processingVariant, setProcessingVariant] =
     useState<ProcessingVariant | null>(null);
   const [webLiveLevel, setWebLiveLevel] = useState(0);
   const [webAnalyserReady, setWebAnalyserReady] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isVoiceSessionActive, setIsVoiceSessionActive] = useState(false);
+  const [pausedVisualLevel, setPausedVisualLevel] = useState(0);
 
   const autoStopTriggeredRef = useRef(false);
 
   const isRecording = recorderState.isRecording;
+  const hasActiveRecordingSession = isRecording || isPaused || isVoiceSessionActive;
   const recordingSeconds = Math.floor(recorderState.durationMillis / 1000);
+  const remainingRecordingSeconds = Math.max(
+    0,
+    MAX_RECORDING_SECONDS - recordingSeconds,
+  );
+  const isNearRecordingEnd =
+    hasActiveRecordingSession && !isPaused && remainingRecordingSeconds <= 15;
   const liveAudioLevel = isRecording
     ? Platform.OS === "web"
       ? webAnalyserReady
@@ -214,14 +263,14 @@ export default function CaptureScreen() {
     Platform.OS === "web" && isRecording && webAnalyserReady;
   const isWebFallbackMotion =
     Platform.OS === "web" && isRecording && !webAnalyserReady;
-  const voiceMotionScale = 1 + liveAudioLevel * 0.065;
-  const voiceMotionOpacity = isRecording ? 0.8 + liveAudioLevel * 0.2 : 0.45;
+  const voiceMotionScale = 1 + liveAudioLevel * 0.07;
+  const voiceMotionOpacity = isRecording ? 0.76 + liveAudioLevel * 0.24 : 0.45;
   const hasTextDraft = rawText.trim().length > 0;
   const hasAudioDraft = Boolean(audioUri);
   const isBusy = submitting || recordingActionBusy;
 
   const uiMode: "idle" | "voice" | "typing" =
-    isRecording || hasAudioDraft
+    hasActiveRecordingSession || hasAudioDraft
       ? "voice"
       : isTypingFocused || hasTextDraft
         ? "typing"
@@ -240,11 +289,8 @@ export default function CaptureScreen() {
         }
 
         setAudioUri(uri);
-        if (source === "auto") {
-          setStatus(
-            `Opname is automatisch gestopt na ${MAX_RECORDING_SECONDS} seconden.`,
-          );
-        }
+        setIsPaused(false);
+        setIsVoiceSessionActive(false);
         return uri;
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
@@ -262,26 +308,11 @@ export default function CaptureScreen() {
   );
 
   useEffect(() => {
-    if (!isRecording || recordingActionBusy) {
-      return;
+    if (isRecording) {
+      setIsPaused(false);
+      setIsVoiceSessionActive(true);
     }
-
-    if (recorderState.durationMillis < MAX_RECORDING_MS) {
-      return;
-    }
-
-    if (autoStopTriggeredRef.current) {
-      return;
-    }
-
-    autoStopTriggeredRef.current = true;
-    void handleStopRecording("auto");
-  }, [
-    handleStopRecording,
-    isRecording,
-    recorderState.durationMillis,
-    recordingActionBusy,
-  ]);
+  }, [isRecording]);
 
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -438,7 +469,7 @@ export default function CaptureScreen() {
 
   async function handleStartRecording() {
     setError(null);
-    setStatus(null);
+    setMicPermissionDenied(false);
     setRecordingActionBusy(true);
 
     try {
@@ -451,15 +482,26 @@ export default function CaptureScreen() {
       }
 
       if (!granted) {
-        throw new Error("Microfoontoegang is nodig om audio op te nemen.");
+        setIsVoiceSessionActive(false);
+        setMicPermissionDenied(true);
+        setError({
+          message: "Microfoontoegang is nodig om audio op te nemen.",
+          retryable: true,
+          requestId: null,
+        });
+        return;
       }
 
       await recorder.prepareToRecordAsync();
       autoStopTriggeredRef.current = false;
       setAudioUri(null);
+      setIsPaused(false);
       recorder.record();
+      setIsVoiceSessionActive(true);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
+      setIsVoiceSessionActive(false);
+      setMicPermissionDenied(false);
       setError({
         message: parsed.message,
         retryable: parsed.retryable,
@@ -472,9 +514,8 @@ export default function CaptureScreen() {
 
   async function handleCancelCurrentMode() {
     setError(null);
-    setStatus(null);
 
-    if (isRecording) {
+    if (hasActiveRecordingSession) {
       setRecordingActionBusy(true);
       try {
         await recorder.stop();
@@ -486,7 +527,10 @@ export default function CaptureScreen() {
     }
 
     setAudioUri(null);
+    setIsPaused(false);
+    setIsVoiceSessionActive(false);
     setIsTypingFocused(false);
+    setMicPermissionDenied(false);
 
     if (uiMode === "typing") {
       setRawText("");
@@ -495,25 +539,28 @@ export default function CaptureScreen() {
 
   function handleBackFromCapture() {
     if (uiMode === "idle") {
-      router.replace("/");
+      router.replace(captureJournalDate ? `/day/${captureJournalDate}` : "/");
       return;
     }
-    void handleCancelCurrentMode();
+    void handleCancelCurrentMode().then(() => {
+      router.replace(captureJournalDate ? `/day/${captureJournalDate}` : "/");
+    });
   }
 
   async function handleSubmitText() {
     setSubmitting(true);
     setError(null);
-    setStatus(null);
+    setMicPermissionDenied(false);
     setProcessingVariant("text-entry");
 
     try {
-      const captureContext = createCaptureContext();
+      const captureContext = createCaptureContext(new Date(), captureJournalDate ?? undefined);
       const result = await submitTextEntry({
         rawText,
         capturedAt: captureContext.capturedAt,
         journalDate: captureContext.journalDate,
         timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
+        deferDerived: true,
       });
 
       setRawText("");
@@ -526,6 +573,7 @@ export default function CaptureScreen() {
           date: result.journalDate,
         },
       });
+      void refreshDerivedAfterCaptureInBackground(result.journalDate);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -551,11 +599,11 @@ export default function CaptureScreen() {
 
     setSubmitting(true);
     setError(null);
-    setStatus(null);
+    setMicPermissionDenied(false);
     setProcessingVariant("audio-entry");
 
     try {
-      const captureContext = createCaptureContext();
+      const captureContext = createCaptureContext(new Date(), captureJournalDate ?? undefined);
       const audioBase64 = await audioUriToBase64(audioUri);
 
       if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
@@ -568,6 +616,7 @@ export default function CaptureScreen() {
         capturedAt: captureContext.capturedAt,
         journalDate: captureContext.journalDate,
         timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
+        deferDerived: true,
       });
 
       setAudioUri(null);
@@ -579,6 +628,7 @@ export default function CaptureScreen() {
           date: result.journalDate,
         },
       });
+      void refreshDerivedAfterCaptureInBackground(result.journalDate);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -592,11 +642,93 @@ export default function CaptureScreen() {
     }
   }
 
+  const handleAutoFinishAtLimit = useCallback(async () => {
+    if (!isRecording) {
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    setMicPermissionDenied(false);
+    setProcessingVariant("audio-entry");
+
+    const uri = await handleStopRecording("auto");
+    if (!uri) {
+      setSubmitting(false);
+      setProcessingVariant(null);
+      return;
+    }
+
+    try {
+      const captureContext = createCaptureContext(
+        new Date(),
+        captureJournalDate ?? undefined,
+      );
+      const audioBase64 = await audioUriToBase64(uri);
+
+      if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
+        throw new Error("Opname is te groot. Neem een kortere opname op.");
+      }
+
+      const result = await submitAudioEntry({
+        audioBase64,
+        audioMimeType: mimeTypeFromUri(uri),
+        capturedAt: captureContext.capturedAt,
+        journalDate: captureContext.journalDate,
+        timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
+        deferDerived: true,
+      });
+
+      setAudioUri(null);
+      router.replace({
+        pathname: "/entry/[id]",
+        params: {
+          id: result.normalizedEntryId,
+          source: "capture",
+          date: result.journalDate,
+        },
+      });
+      void refreshDerivedAfterCaptureInBackground(result.journalDate);
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
+    } finally {
+      setSubmitting(false);
+      setProcessingVariant(null);
+    }
+  }, [captureJournalDate, handleStopRecording, isRecording]);
+
+  useEffect(() => {
+    if (!isRecording || recordingActionBusy) {
+      return;
+    }
+
+    if (recorderState.durationMillis < MAX_RECORDING_MS) {
+      return;
+    }
+
+    if (autoStopTriggeredRef.current) {
+      return;
+    }
+
+    autoStopTriggeredRef.current = true;
+    void handleAutoFinishAtLimit();
+  }, [
+    handleAutoFinishAtLimit,
+    isRecording,
+    recorderState.durationMillis,
+    recordingActionBusy,
+  ]);
+
   async function handleFinishVoice() {
     if (isRecording) {
       setSubmitting(true);
       setError(null);
-      setStatus("Opname verwerken...");
+      setMicPermissionDenied(false);
       setProcessingVariant("audio-entry");
       const uri = await handleStopRecording("manual");
 
@@ -607,7 +739,7 @@ export default function CaptureScreen() {
       }
 
       try {
-        const captureContext = createCaptureContext();
+        const captureContext = createCaptureContext(new Date(), captureJournalDate ?? undefined);
         const audioBase64 = await audioUriToBase64(uri);
 
         if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
@@ -620,6 +752,7 @@ export default function CaptureScreen() {
           capturedAt: captureContext.capturedAt,
           journalDate: captureContext.journalDate,
           timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
+          deferDerived: true,
         });
 
         setAudioUri(null);
@@ -631,6 +764,7 @@ export default function CaptureScreen() {
             date: result.journalDate,
           },
         });
+        void refreshDerivedAfterCaptureInBackground(result.journalDate);
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
         setError({
@@ -647,6 +781,34 @@ export default function CaptureScreen() {
     }
 
     await handleSubmitAudio();
+  }
+
+  async function handleTogglePauseResume() {
+    if (!hasActiveRecordingSession || isBusy) {
+      return;
+    }
+
+    setError(null);
+
+    try {
+      if (isPaused) {
+        recorder.record();
+        setIsPaused(false);
+        setIsVoiceSessionActive(true);
+        return;
+      }
+
+      setPausedVisualLevel(liveAudioLevel);
+      recorder.pause();
+      setIsPaused(true);
+      setIsVoiceSessionActive(true);
+    } catch {
+      // Keep the control silent on failure so the capture view does not jump.
+    }
+  }
+
+  async function handleRetryMicrophoneAccess() {
+    await handleStartRecording();
   }
 
   return (
@@ -689,33 +851,37 @@ export default function CaptureScreen() {
       />
 
       {error ? (
-        <StateBlock
-          tone="error"
-          message={error.message}
-          detail={
-            error.retryable
-              ? "Tijdelijke fout. Probeer het zo opnieuw."
-              : "Controleer je invoer of login en probeer daarna opnieuw."
-          }
-          meta={error.requestId ? `Referentie: ${error.requestId}` : null}
-        />
-      ) : null}
-
-      {status && !error && uiMode === "voice" && (isRecording || submitting) ? (
-        <ThemedText type="caption" style={styles.statusText}>
-          {status}
-        </ThemedText>
+        <ThemedView style={styles.errorStack}>
+          <StateBlock
+            tone="error"
+            message={error.message}
+            detail={
+              micPermissionDenied
+                ? "Geef microfoontoegang in je browser of apparaatinstellingen en probeer opnieuw."
+                : error.retryable
+                  ? "Tijdelijke fout. Probeer het zo opnieuw."
+                  : "Controleer je invoer of login en probeer daarna opnieuw."
+            }
+            meta={error.requestId ? `Referentie: ${error.requestId}` : null}
+          />
+          {micPermissionDenied ? (
+            <SecondaryButton
+              label={recordingActionBusy ? "Toegang controleren..." : "Vraag microfoontoegang opnieuw"}
+              onPress={() => void handleRetryMicrophoneAccess()}
+              disabled={recordingActionBusy || submitting}
+            />
+          ) : null}
+        </ThemedView>
       ) : null}
 
       {uiMode === "voice" ? (
         <ThemedView style={styles.voiceCanvas}>
           <ThemedView
             style={[
-              isWebLiveMotion
-                ? styles.waveClusterLive
-                : styles.waveClusterFallback,
+              styles.waveClusterLive,
+              isNearRecordingEnd ? styles.waveClusterNearEnd : null,
               {
-                transform: [{ scale: isWebLiveMotion ? voiceMotionScale : 1 }],
+                transform: [{ scale: isWebLiveMotion && !isPaused ? voiceMotionScale : 1 }],
                 opacity: isWebLiveMotion
                   ? voiceMotionOpacity
                   : isRecording
@@ -724,7 +890,12 @@ export default function CaptureScreen() {
               },
             ]}
           >
-            {(isWebFallbackMotion
+            {(isPaused
+              ? getWaveformHeights(
+                  recorderState.durationMillis,
+                  Math.max(0.12, pausedVisualLevel),
+                )
+              : isWebFallbackMotion
               ? getFallbackWaveformHeights(recorderState.durationMillis)
               : getWaveformHeights(recorderState.durationMillis, liveAudioLevel)
             ).map((height, index) => (
@@ -747,34 +918,47 @@ export default function CaptureScreen() {
             ))}
           </ThemedView>
 
-          <ThemedText type="bodySecondary" style={styles.voiceLead}>
-            Aan het luisteren...
-          </ThemedText>
-
-          <ThemedText type="bodySecondary" style={styles.voiceHint}>
-            Opname loopt: {formatDuration(recordingSeconds)} /{" "}
-            {formatDuration(MAX_RECORDING_SECONDS)}
-          </ThemedText>
-          {Platform.OS === "web" && isRecording ? (
-            <ThemedText type="caption" style={styles.voiceModeHint}>
-              {isWebLiveMotion
-                ? "Live audio-reactie actief"
-                : "Standaard opname-animatie actief"}
+          <ThemedView style={styles.voiceTextCluster}>
+            <ThemedText type="bodySecondary" style={styles.voiceLead}>
+              Leg je moment vast.
+            </ThemedText>
+            <ThemedText
+              type="bodySecondary"
+              style={[styles.voiceHint, isNearRecordingEnd ? styles.voiceHintNearEnd : null]}>
+              {formatDuration(recordingSeconds)} / {formatDuration(MAX_RECORDING_SECONDS)}
+            </ThemedText>
+          </ThemedView>
+          {isNearRecordingEnd ? (
+            <ThemedText type="caption" style={styles.voiceNearEndHint}>
+              Bijna einde opname
             </ThemedText>
           ) : null}
 
           <ThemedView style={styles.voicePrimaryZone}>
-            <PrimaryButton
-              disabled={isBusy || (!isRecording && !hasAudioDraft)}
-              onPress={() => void handleFinishVoice()}
-              label={
-                isRecording
-                  ? "Klaar"
-                  : submitting
-                    ? "Opname verwerken..."
-                    : "Opname opslaan"
-              }
-            />
+            <ThemedView style={styles.voiceActionsRow}>
+              {hasActiveRecordingSession ? (
+                <CaptureIconButton
+                  icon={isPaused ? "play-arrow" : "pause"}
+                  onPress={() => void handleTogglePauseResume()}
+                  disabled={isBusy}
+                  size="md"
+                  tone={isNearRecordingEnd ? "warning" : isPaused ? "paused" : "surface"}
+                />
+              ) : null}
+              <ThemedView style={styles.voicePrimaryButtonWrap}>
+                <PrimaryButton
+                  disabled={isBusy || (!hasActiveRecordingSession && !hasAudioDraft)}
+                  onPress={() => void handleFinishVoice()}
+                  label={
+                    hasActiveRecordingSession
+                      ? "Klaar"
+                      : submitting
+                        ? "Opname verwerken..."
+                        : "Opname opslaan"
+                  }
+                />
+              </ThemedView>
+            </ThemedView>
           </ThemedView>
         </ThemedView>
       ) : (
@@ -786,7 +970,6 @@ export default function CaptureScreen() {
               onPress={() => {
                 setIsTypingFocused(true);
                 setError(null);
-                setStatus(null);
               }}
             >
               <ThemedView style={styles.idleCopy}>
@@ -834,13 +1017,13 @@ export default function CaptureScreen() {
 
           <ThemedView style={styles.micZone}>
             {uiMode === "idle" ? (
-              <Pressable
+              <CaptureIconButton
+                icon="mic"
                 onPress={() => void handleStartRecording()}
                 disabled={isBusy}
-                style={[styles.micPrimary, isBusy && styles.micDisabled]}
-              >
-                <MaterialIcons name="mic" size={34} color="#FFFFFF" />
-              </Pressable>
+                size="lg"
+                tone="primary"
+              />
             ) : (
               <Pressable
                 onPress={() => void handleCancelCurrentMode()}
@@ -874,6 +1057,9 @@ const styles = StyleSheet.create({
   screen: {
     gap: spacing.page,
   },
+  errorStack: {
+    gap: spacing.sm,
+  },
   topIconButton: {
     width: 34,
     height: 34,
@@ -893,10 +1079,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
-  },
-  statusText: {
-    opacity: 0.8,
-    textAlign: "center",
   },
   idleTypingCanvas: {
     flex: 1,
@@ -958,18 +1140,6 @@ const styles = StyleSheet.create({
     paddingBottom: 64,
     marginTop: spacing.md,
   },
-  micPrimary: {
-    width: 88,
-    height: 88,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colorTokens.light.primaryStrong,
-    ...shadows.cta,
-  },
-  micDisabled: {
-    opacity: 0.5,
-  },
   previousStepAction: {
     flexDirection: "row",
     alignItems: "center",
@@ -1007,15 +1177,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     backgroundColor: `${colorTokens.light.primary}05`,
   },
+  waveClusterNearEnd: {
+    backgroundColor: `${NEAR_END_TONE}1A`,
+  },
   waveBarLive: {
     width: 6,
     borderRadius: radius.pill,
     backgroundColor: colorTokens.light.primaryStrong,
   },
   waveBarFallback: {
-    width: 9,
+    width: 6,
     borderRadius: radius.pill,
     backgroundColor: `${colorTokens.light.primaryStrong}B3`,
+  },
+  voiceTextCluster: {
+    alignItems: "center",
+    gap: 4,
   },
   voiceLead: {
     textAlign: "center",
@@ -1025,13 +1202,26 @@ const styles = StyleSheet.create({
     textAlign: "center",
     opacity: 0.72,
   },
-  voiceModeHint: {
+  voiceHintNearEnd: {
+    color: NEAR_END_TONE,
+    opacity: 0.88,
+  },
+  voiceNearEndHint: {
     textAlign: "center",
-    opacity: 0.66,
+    color: NEAR_END_TONE,
+    opacity: 0.82,
   },
   voicePrimaryZone: {
     width: "100%",
     marginTop: spacing.md,
     paddingBottom: spacing.sm,
+  },
+  voiceActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  voicePrimaryButtonWrap: {
+    flex: 1,
   },
 });

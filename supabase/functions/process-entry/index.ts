@@ -24,6 +24,7 @@ type ProcessEntryRequest = {
   capturedAt?: unknown;
   journalDate?: unknown;
   timezoneOffsetMinutes?: unknown;
+  deferDerived?: unknown;
 };
 
 type ProcessEntryResponse = {
@@ -319,6 +320,18 @@ function parseString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
     : null;
+}
+
+function parseBoolean(value: unknown): boolean | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return null;
 }
 
 function normalizeWhitespace(value: string): string {
@@ -1539,6 +1552,7 @@ Deno.serve(async (request: Request) => {
 
     let requestJournalDate: string | null = null;
     let timezoneOffsetMinutes: number | null = null;
+    const deferDerived = parseBoolean(body.deferDerived) ?? false;
     try {
       requestJournalDate = parseJournalDateInput(body.journalDate);
       timezoneOffsetMinutes = parseTimezoneOffsetMinutes(body.timezoneOffsetMinutes);
@@ -1566,6 +1580,7 @@ Deno.serve(async (request: Request) => {
       details: {
         userId: authData.user.id,
         journalDate,
+        deferDerived,
         journalDateSource: requestJournalDate
           ? "request_local_day"
           : timezoneOffsetMinutes !== null
@@ -1672,6 +1687,7 @@ Deno.serve(async (request: Request) => {
         source_type: parsedSource.value.sourceType,
         raw_text: rawTextForPersist,
         transcript_text: transcriptTextForPersist,
+        journal_date: journalDate,
         captured_at: capturedAt,
       })
       .select("id")
@@ -1750,19 +1766,47 @@ Deno.serve(async (request: Request) => {
       });
     }
 
+    if (deferDerived) {
+      const response: ProcessEntryResponse = {
+        status: "ok",
+        flow: FLOW,
+        requestId,
+        flowId,
+        rawEntryId: rawEntry.id,
+        normalizedEntryId: normalizedEntry.id,
+        journalDate,
+        dayJournalId: "",
+        sourceType: parsedSource.value.sourceType,
+      };
+
+      step = "completed";
+      logFlow("info", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "success",
+        details: {
+          rawEntryId: response.rawEntryId,
+          normalizedEntryId: response.normalizedEntryId,
+          dayJournalDeferred: true,
+          journalDate: response.journalDate,
+          sourceType: response.sourceType,
+        },
+      });
+
+      return jsonResponse(request, 200, response);
+    }
+
     step = "day_journal_upserted";
-    const bounds = timezoneOffsetMinutes !== null
-      ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
-      : dateBoundsUtc(journalDate);
-    const { data: rawEntriesForDay, error: dayRawError } = await supabase
+    const { data: rawEntriesForJournalDate, error: rawEntriesForJournalDateError } = await supabase
       .from("entries_raw")
       .select("id, captured_at")
       .eq("user_id", authData.user.id)
-      .gte("captured_at", bounds.start)
-      .lt("captured_at", bounds.end)
+      .eq("journal_date", journalDate)
       .order("captured_at", { ascending: true });
 
-    if (dayRawError) {
+    if (rawEntriesForJournalDateError) {
       logFlow("error", {
         flow: FLOW,
         requestId,
@@ -1770,7 +1814,10 @@ Deno.serve(async (request: Request) => {
         step,
         event: "select_entries_raw_for_day_failed",
         details: {
-          error: String(dayRawError.message ?? dayRawError),
+          error: String(
+            rawEntriesForJournalDateError.message ??
+              rawEntriesForJournalDateError,
+          ),
           rawEntryId,
         },
       });
@@ -1785,6 +1832,56 @@ Deno.serve(async (request: Request) => {
         details: rawEntryId ? { rawEntryId } : undefined,
       });
     }
+
+    const fallbackBounds = timezoneOffsetMinutes !== null
+      ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
+      : dateBoundsUtc(journalDate);
+    const { data: legacyRawEntriesForDay, error: legacyRawEntriesForDayError } =
+      await supabase
+        .from("entries_raw")
+        .select("id, captured_at")
+        .eq("user_id", authData.user.id)
+        .is("journal_date", null)
+        .gte("captured_at", fallbackBounds.start)
+        .lt("captured_at", fallbackBounds.end)
+        .order("captured_at", { ascending: true });
+
+    if (legacyRawEntriesForDayError) {
+      logFlow("error", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "select_entries_raw_for_day_failed",
+        details: {
+          error: String(
+            legacyRawEntriesForDayError.message ?? legacyRawEntriesForDayError,
+          ),
+          rawEntryId,
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: "DB_READ_FAILED",
+        message: "Failed to load entries for day journal",
+        details: rawEntryId ? { rawEntryId } : undefined,
+      });
+    }
+
+    const rawEntriesForDay = [
+      ...(rawEntriesForJournalDate ?? []),
+      ...(legacyRawEntriesForDay ?? []),
+    ]
+      .filter((entry, index, all) =>
+        all.findIndex((candidate) => candidate.id === entry.id) === index
+      )
+      .sort((left, right) =>
+        new Date(left.captured_at).getTime() - new Date(right.captured_at).getTime()
+      );
 
     const rawIds = (rawEntriesForDay ?? []).map(
       (entry: { id: string }) => entry.id,

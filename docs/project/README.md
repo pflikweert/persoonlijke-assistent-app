@@ -8,6 +8,7 @@ Deze map bevat de actieve projectwaarheid voor scope, richting en status.
 3. `docs/project/current-status.md`
 4. `docs/project/open-points.md`
 5. `docs/project/content-processing-rules.md`
+6. `docs/project/copy-instructions.md`
 
 ## 2) Generated document (afgeleid, niet leidend)
 - `docs/project/generated/chatgpt-project-context.md`

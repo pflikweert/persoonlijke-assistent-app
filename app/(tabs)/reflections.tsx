@@ -7,13 +7,15 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
 import { ProcessingScreen } from '@/components/feedback/processing-screen';
+import { ArchiveGroupedList, type ArchiveGroupedListSection } from '@/components/journal/archive-grouped-list';
+import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
+import { EditorialNarrativeBlock } from '@/components/journal/editorial-narrative-block';
 import { CopyIconButton } from '@/components/ui/copy-icon-button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
-  PrimaryButton,
   ScreenContainer,
   StateBlock,
 } from '@/components/ui/screen-primitives';
@@ -26,7 +28,7 @@ import {
 } from '@/services';
 import { buildReflectionCopyPayload } from '@/src/lib/copy-payloads';
 import type { PeriodType } from '@/services/reflections';
-import { colorTokens, radius, spacing, typography } from '@/theme';
+import { colorTokens, radius, spacing } from '@/theme';
 
 type RouteParams = {
   period?: string | string[];
@@ -41,8 +43,8 @@ function periodTypeLabel(periodType: PeriodType): string {
   return periodType === 'week' ? 'Week' : 'Maand';
 }
 
-function periodHeading(periodType: PeriodType): string {
-  return periodType === 'week' ? 'Deze week' : 'Deze maand';
+function narrativeHeading(periodType: PeriodType): string {
+  return periodType === 'week' ? 'Weekverhaal' : 'Maandverhaal';
 }
 
 function monthHeading(periodStart: string): string {
@@ -59,26 +61,14 @@ function monthHeading(periodStart: string): string {
   return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${year}`;
 }
 
-function weekHeading(periodStart: string, periodEnd: string): string {
+function weekHeading(periodStart: string): string {
   const startDate = new Date(`${periodStart}T12:00:00.000Z`);
-  const endDate = new Date(`${periodEnd}T12:00:00.000Z`);
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-    return `Week ${periodStart} – ${periodEnd}`;
+  if (Number.isNaN(startDate.getTime())) {
+    return `Week ${periodStart}`;
   }
-
-  const dayStart = String(startDate.getUTCDate()).padStart(2, '0');
-  const monthStart = startDate.toLocaleDateString('nl-NL', {
-    month: 'short',
-    timeZone: 'UTC',
-  });
-  const dayEnd = String(endDate.getUTCDate()).padStart(2, '0');
-  const monthEnd = endDate.toLocaleDateString('nl-NL', {
-    month: 'short',
-    timeZone: 'UTC',
-  });
-  const year = endDate.getUTCFullYear();
-
-  return `Week ${dayStart} ${monthStart} – ${dayEnd} ${monthEnd} ${year}`;
+  const weekNumber = getIsoWeekNumber(startDate);
+  const shortYear = String(startDate.getUTCFullYear()).slice(-2);
+  return `Week ${weekNumber} ${shortYear}`;
 }
 
 function shortSummary(value: string): string {
@@ -87,35 +77,6 @@ function shortSummary(value: string): string {
     return clean;
   }
   return `${clean.slice(0, 107).trimEnd()}...`;
-}
-
-function formatPeriodRange(start: string, end: string): string {
-  const startDate = new Date(`${start}T12:00:00.000Z`);
-  const endDate = new Date(`${end}T12:00:00.000Z`);
-
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-    return `${start} – ${end}`;
-  }
-
-  const sameMonth =
-    startDate.getUTCMonth() === endDate.getUTCMonth() &&
-    startDate.getUTCFullYear() === endDate.getUTCFullYear();
-
-  const startDay = String(startDate.getUTCDate()).padStart(2, '0');
-  const endDay = String(endDate.getUTCDate()).padStart(2, '0');
-  const startMonth = startDate
-    .toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' })
-    .toUpperCase();
-  const endMonth = endDate
-    .toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' })
-    .toUpperCase();
-  const endYear = endDate.getUTCFullYear();
-
-  if (sameMonth) {
-    return `${startDay} – ${endDay} ${endMonth} ${endYear}`;
-  }
-
-  return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${endYear}`;
 }
 
 function capitalizeFirst(value: string): string {
@@ -166,6 +127,27 @@ function localDayStringNow(): string {
   return getUtcTodayDate();
 }
 
+function selectorYearLabel(periodStart: string): string {
+  const date = new Date(`${periodStart}T12:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) {
+    return periodStart.slice(0, 4);
+  }
+  return String(date.getUTCFullYear());
+}
+
+function monthLeftLabel(periodStart: string): { top: string; bottom: string } {
+  const date = new Date(`${periodStart}T12:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) {
+    return { top: '--', bottom: '--' };
+  }
+  const top = date.toLocaleDateString('nl-NL', {
+    month: 'short',
+    timeZone: 'UTC',
+  });
+  const bottom = String(date.getUTCMonth() + 1).padStart(2, '0');
+  return { top, bottom };
+}
+
 function selectCurrentPeriodId(
   rows: Awaited<ReturnType<typeof fetchRecentReflectionsByType>>,
   day: string = localDayStringNow()
@@ -175,6 +157,7 @@ function selectCurrentPeriodId(
 }
 
 export default function ReflectionsScreen() {
+  const PAGE_SIZE = 20;
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
   const { period } = useLocalSearchParams<RouteParams>();
@@ -191,6 +174,9 @@ export default function ReflectionsScreen() {
   const [activePeriod, setActivePeriod] = useState<PeriodType>('week');
   const [weekReflections, setWeekReflections] = useState<Awaited<ReturnType<typeof fetchRecentReflectionsByType>>>([]);
   const [monthReflections, setMonthReflections] = useState<Awaited<ReturnType<typeof fetchRecentReflectionsByType>>>([]);
+  const [weekHasMore, setWeekHasMore] = useState(false);
+  const [monthHasMore, setMonthHasMore] = useState(false);
+  const [loadingMorePeriod, setLoadingMorePeriod] = useState<PeriodType | null>(null);
   const [selectedWeekId, setSelectedWeekId] = useState<string | null>(null);
   const [selectedMonthId, setSelectedMonthId] = useState<string | null>(null);
   const [selectorVisible, setSelectorVisible] = useState(false);
@@ -210,12 +196,14 @@ export default function ReflectionsScreen() {
 
     try {
       const [weekRows, monthRows] = await Promise.all([
-        fetchRecentReflectionsByType({ periodType: 'week', limit: 20 }),
-        fetchRecentReflectionsByType({ periodType: 'month', limit: 20 }),
+        fetchRecentReflectionsByType({ periodType: 'week', limit: PAGE_SIZE, offset: 0 }),
+        fetchRecentReflectionsByType({ periodType: 'month', limit: PAGE_SIZE, offset: 0 }),
       ]);
 
       setWeekReflections(weekRows);
       setMonthReflections(monthRows);
+      setWeekHasMore(weekRows.length === PAGE_SIZE);
+      setMonthHasMore(monthRows.length === PAGE_SIZE);
       setSelectedWeekId((current) =>
         current && weekRows.some((row) => row.id === current)
           ? current
@@ -235,12 +223,14 @@ export default function ReflectionsScreen() {
       });
       setWeekReflections([]);
       setMonthReflections([]);
+      setWeekHasMore(false);
+      setMonthHasMore(false);
       setSelectedWeekId(null);
       setSelectedMonthId(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PAGE_SIZE]);
 
   useFocusEffect(
     useCallback(() => {
@@ -259,9 +249,10 @@ export default function ReflectionsScreen() {
     setGenerating(periodType);
 
     try {
+      const anchorDate = activeReflection?.period_end ?? getUtcTodayDate();
       await generateReflection({
         periodType,
-        anchorDate: getUtcTodayDate(),
+        anchorDate,
         forceRegenerate: true,
       });
       setStatus(`${periodTypeLabel(periodType)}reflectie gegenereerd.`);
@@ -286,6 +277,7 @@ export default function ReflectionsScreen() {
   );
   const selectorRows = selectorPeriod === 'week' ? weekReflections : monthReflections;
   const selectorSelectedId = selectorPeriod === 'week' ? selectedWeekId : selectedMonthId;
+  const selectorHasMore = selectorPeriod === 'week' ? weekHasMore : monthHasMore;
   const highlights = activeReflection ? parseJsonStringArray(activeReflection.highlights_json) : [];
   const reflectionPoints = activeReflection
     ? parseJsonStringArray(activeReflection.reflection_points_json)
@@ -308,10 +300,101 @@ export default function ReflectionsScreen() {
     return buildReflectionCopyPayload({
       periodRange: title,
       summaryText: activeReflection.summary_text,
+      narrativeText: activeReflection.narrative_text,
       highlights: cleanHighlights,
       reflectionPoints: cleanReflectionPoints,
     });
   }, [activePeriod, activeReflection, cleanHighlights, cleanReflectionPoints]);
+
+  const headerTitle = useMemo(() => {
+    if (!activeReflection) {
+      return activePeriod === 'week' ? 'Week' : 'Maand';
+    }
+    return activePeriod === 'week'
+      ? weekHeading(activeReflection.period_start)
+      : monthHeading(activeReflection.period_start);
+  }, [activePeriod, activeReflection]);
+
+  const selectorSections = useMemo<ArchiveGroupedListSection[]>(() => {
+    const grouped = new Map<string, ArchiveGroupedListSection>();
+    for (const row of selectorRows) {
+      const yearKey = selectorYearLabel(row.period_start);
+      const existing = grouped.get(yearKey);
+      const summary = shortSummary(row.summary_text ?? '');
+      const monthLabels = monthLeftLabel(row.period_start);
+      const weekDate = new Date(`${row.period_start}T12:00:00.000Z`);
+      const weekNumber = Number.isNaN(weekDate.getTime()) ? '--' : String(getIsoWeekNumber(weekDate));
+      const item = {
+        key: row.id,
+        leftTop: selectorPeriod === 'week' ? 'week' : monthLabels.top,
+        leftBottom: selectorPeriod === 'week' ? weekNumber : monthLabels.bottom,
+        snippet: summary.length > 0 ? summary : 'Nog geen samenvatting beschikbaar.',
+        selected: row.id === selectorSelectedId,
+        onPress: () => {
+          if (selectorPeriod === 'week') {
+            setSelectedWeekId(row.id);
+            setActivePeriod('week');
+          } else {
+            setSelectedMonthId(row.id);
+            setActivePeriod('month');
+          }
+          closeSelector();
+        },
+      };
+      if (existing) {
+        existing.items.push(item);
+      } else {
+        grouped.set(yearKey, {
+          key: yearKey,
+          title: yearKey,
+          items: [item],
+        });
+      }
+    }
+    return Array.from(grouped.values());
+  }, [selectorRows, selectorPeriod, selectorSelectedId]);
+
+  const loadMoreSelector = useCallback(async () => {
+    if (loading || loadingMorePeriod || !selectorHasMore) {
+      return;
+    }
+    setLoadingMorePeriod(selectorPeriod);
+    setError(null);
+    try {
+      const currentRows = selectorPeriod === 'week' ? weekReflections : monthReflections;
+      const nextRows = await fetchRecentReflectionsByType({
+        periodType: selectorPeriod,
+        limit: PAGE_SIZE,
+        offset: currentRows.length,
+      });
+      const existing = new Set(currentRows.map((row) => row.id));
+      const merged = [...currentRows, ...nextRows.filter((row) => !existing.has(row.id))];
+      if (selectorPeriod === 'week') {
+        setWeekReflections(merged);
+        setWeekHasMore(nextRows.length === PAGE_SIZE);
+      } else {
+        setMonthReflections(merged);
+        setMonthHasMore(nextRows.length === PAGE_SIZE);
+      }
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
+    } finally {
+      setLoadingMorePeriod(null);
+    }
+  }, [
+    PAGE_SIZE,
+    loading,
+    loadingMorePeriod,
+    selectorHasMore,
+    selectorPeriod,
+    weekReflections,
+    monthReflections,
+  ]);
 
   function openSelector(periodType: PeriodType) {
     setSelectorPeriod(periodType);
@@ -320,17 +403,6 @@ export default function ReflectionsScreen() {
 
   function closeSelector() {
     setSelectorVisible(false);
-  }
-
-  function selectReflection(id: string) {
-    if (selectorPeriod === 'week') {
-      setSelectedWeekId(id);
-      setActivePeriod('week');
-    } else {
-      setSelectedMonthId(id);
-      setActivePeriod('month');
-    }
-    closeSelector();
   }
 
   return (
@@ -363,49 +435,78 @@ export default function ReflectionsScreen() {
         contentContainerStyle={styles.scrollContent}>
       {!isProcessing ? (
         <>
-      <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
-        <Pressable
-          onPress={() => {
-            setActivePeriod('week');
-            if (!selectedWeekId) {
-              setSelectedWeekId(selectCurrentPeriodId(weekReflections));
-            }
-          }}
-          style={[
-            styles.periodButton,
-            activePeriod === 'week' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
-          ]}>
-          <ThemedText
-            type="caption"
+      <ThemedView style={styles.periodTopRow}>
+        <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
+          <Pressable
+            onPress={() => {
+              setActivePeriod('week');
+              if (!selectedWeekId) {
+                setSelectedWeekId(selectCurrentPeriodId(weekReflections));
+              }
+            }}
             style={[
-              styles.periodButtonLabel,
-              { color: palette.mutedSoft },
-              activePeriod === 'week' && [styles.periodButtonLabelActive, { color: palette.primary }],
+              styles.periodButton,
+              activePeriod === 'week' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
             ]}>
-            Week
-          </ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            setActivePeriod('month');
-            if (!selectedMonthId) {
-              setSelectedMonthId(selectCurrentPeriodId(monthReflections));
-            }
-          }}
-          style={[
-            styles.periodButton,
-            activePeriod === 'month' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
-          ]}>
-          <ThemedText
-            type="caption"
+            <ThemedText
+              type="caption"
+              style={[
+                styles.periodButtonLabel,
+                { color: palette.mutedSoft },
+                activePeriod === 'week' && [styles.periodButtonLabelActive, { color: palette.primary }],
+              ]}>
+              Week
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setActivePeriod('month');
+              if (!selectedMonthId) {
+                setSelectedMonthId(selectCurrentPeriodId(monthReflections));
+              }
+            }}
             style={[
-              styles.periodButtonLabel,
-              { color: palette.mutedSoft },
-              activePeriod === 'month' && [styles.periodButtonLabelActive, { color: palette.primary }],
+              styles.periodButton,
+              activePeriod === 'month' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
             ]}>
-            Maand
-          </ThemedText>
-        </Pressable>
+            <ThemedText
+              type="caption"
+              style={[
+                styles.periodButtonLabel,
+                { color: palette.mutedSoft },
+                activePeriod === 'month' && [styles.periodButtonLabelActive, { color: palette.primary }],
+              ]}>
+              Maand
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
+        <ThemedView style={styles.periodInlineActions}>
+          {activeRows.length > 0 ? (
+            <Pressable
+              onPress={() => openSelector(activePeriod)}
+              accessibilityRole="button"
+              style={[styles.periodInlineButton, { backgroundColor: palette.surfaceLow }]}>
+              <ThemedText type="caption" style={{ color: palette.primary }}>
+                {activePeriod === 'week' ? 'Kies andere week' : 'Kies andere maand'}
+              </ThemedText>
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={() => void handleGenerate(activePeriod)}
+            disabled={isProcessing}
+            accessibilityRole="button"
+            style={[
+              styles.periodInlineButton,
+              { backgroundColor: palette.surfaceLow, opacity: isProcessing ? 0.6 : 1 },
+            ]}>
+            <ThemedView style={styles.regenerateInlineContent}>
+              <MaterialIcons name="autorenew" size={16} color={palette.primary} />
+              <ThemedText type="caption" style={{ color: palette.primary }}>
+                {generating === activePeriod ? 'Genereren...' : 'Hergenereer'}
+              </ThemedText>
+            </ThemedView>
+          </Pressable>
+        </ThemedView>
       </ThemedView>
 
       {loading ? (
@@ -430,25 +531,13 @@ export default function ReflectionsScreen() {
 
       {!loading ? (
         <ThemedView style={styles.readingCanvas}>
-          {activeRows.length > 0 ? (
-            <Pressable
-              onPress={() => openSelector(activePeriod)}
-              accessibilityRole="button"
-              style={[styles.choosePeriodButton, { backgroundColor: palette.surfaceLow }]}>
-              <ThemedText type="caption" style={{ color: palette.primary }}>
-                {activePeriod === 'week' ? 'Kies andere week' : 'Kies andere maand'}
-              </ThemedText>
-            </Pressable>
-          ) : null}
-
           {activeReflection ? (
             <>
               <ThemedView style={styles.reflectHeaderWrap}>
                 <ThemedView style={styles.reflectHeader}>
                   <ThemedText type="screenTitle" style={styles.reflectTitle}>
-                    {periodHeading(activePeriod)}
+                    {headerTitle}
                   </ThemedText>
-                  <MetaText>{formatPeriodRange(activeReflection.period_start, activeReflection.period_end)}</MetaText>
                 </ThemedView>
                 <CopyIconButton
                   payload={reflectionCopyPayload}
@@ -457,18 +546,23 @@ export default function ReflectionsScreen() {
                 />
               </ThemedView>
 
-              <ThemedView
-                lightColor={colorTokens.light.surfaceLowest}
-                darkColor={colorTokens.dark.surfaceLow}
-                style={[styles.summaryInset, { borderLeftColor: `${palette.primary}55` }]}>
-                <ThemedText type="bodySecondary" style={styles.summaryInsetText}>
-                  {activeReflection.summary_text}
-                </ThemedText>
-              </ThemedView>
+              <DayEditorialPanel text={activeReflection.summary_text} />
+
+              {activeReflection.narrative_text?.trim() ? (
+                <EditorialNarrativeBlock
+                  title={narrativeHeading(activePeriod)}
+                  text={activeReflection.narrative_text}
+                />
+              ) : null}
 
               {cleanHighlights.length > 0 ? (
                 <ThemedView style={styles.highlightList}>
-                  <MetaText>Belangrijkste gebeurtenissen</MetaText>
+                  <ThemedView style={styles.sectionTitleRow}>
+                    <MaterialIcons name="auto-awesome" size={16} color={palette.primary} />
+                    <ThemedText type="meta" style={{ color: palette.primary }}>
+                      Belangrijkste gebeurtenissen
+                    </ThemedText>
+                  </ThemedView>
                   {cleanHighlights.map((item, index) => (
                     <ThemedView
                       key={`${item}-${index}`}
@@ -483,7 +577,12 @@ export default function ReflectionsScreen() {
 
               {cleanReflectionPoints.length > 0 ? (
                 <ThemedView style={styles.highlightList}>
-                  <MetaText>Reflectiepunten</MetaText>
+                  <ThemedView style={styles.sectionTitleRow}>
+                    <MaterialIcons name="auto-awesome" size={16} color={palette.primary} />
+                    <ThemedText type="meta" style={{ color: palette.primary }}>
+                      Reflectiepunten
+                    </ThemedText>
+                  </ThemedView>
                   {cleanReflectionPoints.map((item, index) => (
                     <ThemedView
                       key={`${item}-${index}`}
@@ -503,15 +602,6 @@ export default function ReflectionsScreen() {
               detail="Genereer een reflectie om hier je inzichten terug te lezen."
             />
           )}
-          <PrimaryButton
-            onPress={() => void handleGenerate(activePeriod)}
-            disabled={isProcessing}
-            label={
-              generating === activePeriod
-                ? 'Genereren...'
-                : `Genereer ${periodTypeLabel(activePeriod).toLowerCase()}reflectie`
-            }
-          />
         </ThemedView>
       ) : null}
         </>
@@ -559,36 +649,14 @@ export default function ReflectionsScreen() {
               />
             ) : (
               <ScrollView contentContainerStyle={styles.selectorList} showsVerticalScrollIndicator={false}>
-                {selectorRows.map((row) => {
-                  const isSelected = row.id === selectorSelectedId;
-                  const heading =
-                    selectorPeriod === 'week'
-                      ? weekHeading(row.period_start, row.period_end)
-                      : monthHeading(row.period_start);
-
-                  return (
-                    <Pressable
-                      key={row.id}
-                      onPress={() => selectReflection(row.id)}
-                      style={[
-                        styles.periodListItem,
-                        {
-                          borderColor: isSelected ? `${palette.primary}66` : `${palette.separator}88`,
-                          backgroundColor: isSelected ? palette.surfaceLow : palette.surfaceLowest,
-                        },
-                      ]}>
-                      <ThemedText type="defaultSemiBold" style={{ color: palette.text }}>
-                        {heading}
-                      </ThemedText>
-                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                        {formatPeriodRange(row.period_start, row.period_end)}
-                      </ThemedText>
-                      <ThemedText type="bodySecondary" numberOfLines={2} style={{ color: palette.muted }}>
-                        {shortSummary(row.summary_text)}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
+                <ArchiveGroupedList
+                  sections={selectorSections}
+                  styleVariant="compact"
+                  hasMore={selectorHasMore}
+                  loadingMore={loadingMorePeriod === selectorPeriod}
+                  loadMoreLabel={selectorPeriod === 'week' ? 'Meer weken laden' : 'Meer maanden laden'}
+                  onLoadMore={() => void loadMoreSelector()}
+                />
               </ScrollView>
             )}
           </ThemedView>
@@ -613,10 +681,32 @@ const styles = StyleSheet.create({
   },
   periodSwitch: {
     flexDirection: 'row',
-    alignSelf: 'flex-start',
     borderRadius: radius.pill,
     padding: 3,
+    gap: spacing.xxs,
+  },
+  periodTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
     marginBottom: spacing.lg,
+  },
+  periodInlineActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  periodInlineButton: {
+    borderRadius: radius.pill,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  regenerateInlineContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.xxs,
   },
   periodButton: {
@@ -635,19 +725,6 @@ const styles = StyleSheet.create({
   readingCanvas: {
     gap: spacing.xl,
   },
-  choosePeriodButton: {
-    alignSelf: 'flex-start',
-    borderRadius: radius.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  periodListItem: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.xxs,
-  },
   reflectHeader: {
     gap: spacing.xs,
   },
@@ -662,24 +739,13 @@ const styles = StyleSheet.create({
     lineHeight: 46,
     letterSpacing: -1,
   },
-  summaryInset: {
-    borderLeftWidth: 2,
-    borderTopRightRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-  },
-  summaryInsetText: {
-    fontStyle: 'italic',
-    lineHeight: typography.roles.bodySecondary.lineHeight + 3,
-  },
-  narrativeText: {
-    lineHeight: 34,
-    fontSize: 21,
-    letterSpacing: -0.1,
-  },
   highlightList: {
     gap: spacing.sm,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   highlightItem: {
     borderRadius: radius.lg,
@@ -712,7 +778,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
   },
   selectorList: {
-    gap: spacing.sm,
     paddingBottom: spacing.xl,
   },
 });

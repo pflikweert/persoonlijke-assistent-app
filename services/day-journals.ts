@@ -333,18 +333,33 @@ export async function fetchNormalizedEntriesByDate(journalDate: string): Promise
 
   const bounds = getLocalDateBounds(journalDate);
 
-  const { data: rawRows, error: rawError } = await supabase
+  const { data: rawRowsForJournalDate, error: rawRowsForJournalDateError } = await supabase
     .from('entries_raw')
-    .select('id, source_type, captured_at')
+    .select('id, source_type, captured_at, journal_date')
+    .eq('journal_date', journalDate)
+    .order('captured_at', { ascending: true });
+
+  if (rawRowsForJournalDateError) {
+    throw rawRowsForJournalDateError;
+  }
+
+  const { data: legacyRawRowsForJournalDate, error: legacyRawRowsForJournalDateError } = await supabase
+    .from('entries_raw')
+    .select('id, source_type, captured_at, journal_date')
+    .is('journal_date', null)
     .gte('captured_at', bounds.start)
     .lt('captured_at', bounds.end)
     .order('captured_at', { ascending: true });
 
-  if (rawError) {
-    throw rawError;
+  if (legacyRawRowsForJournalDateError) {
+    throw legacyRawRowsForJournalDateError;
   }
 
-  const rawIds = (rawRows ?? []).map((row) => row.id);
+  const rawRows = [...(rawRowsForJournalDate ?? []), ...(legacyRawRowsForJournalDate ?? [])]
+    .filter((entry, index, all) => all.findIndex((candidate) => candidate.id === entry.id) === index)
+    .sort((left, right) => new Date(left.captured_at).getTime() - new Date(right.captured_at).getTime());
+
+  const rawIds = rawRows.map((row) => row.id);
 
   if (rawIds.length === 0) {
     return [];
@@ -366,13 +381,15 @@ export async function fetchNormalizedEntriesByDate(journalDate: string): Promise
     {
       source_type: 'text' | 'audio';
       captured_at: string;
+      journal_date: string | null;
     }
   >(
-    (rawRows ?? []).map((row) => [
+    rawRows.map((row) => [
       row.id,
       {
         source_type: row.source_type as 'text' | 'audio',
         captured_at: row.captured_at,
+        journal_date: row.journal_date,
       },
     ])
   );
@@ -405,7 +422,7 @@ export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNor
 
   const { data: rawRows, error: rawError } = await supabase
     .from('entries_raw')
-    .select('id, source_type, captured_at')
+    .select('id, source_type, captured_at, journal_date')
     .order('captured_at', { ascending: false })
     .limit(rawFetchLimit);
 
@@ -432,6 +449,7 @@ export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNor
     {
       source_type: 'text' | 'audio';
       captured_at: string;
+      journal_date: string | null;
     }
   >(
     (rawRows ?? []).map((row) => [
@@ -439,6 +457,7 @@ export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNor
       {
         source_type: row.source_type as 'text' | 'audio',
         captured_at: row.captured_at,
+        journal_date: row.journal_date,
       },
     ])
   );
@@ -452,7 +471,7 @@ export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNor
         ...row,
         source_type: meta?.source_type ?? 'text',
         captured_at: capturedAt,
-        journal_date: deriveJournalDateFromIsoLocal(capturedAt),
+        journal_date: meta?.journal_date ?? deriveJournalDateFromIsoLocal(capturedAt),
       };
     })
     .sort((left, right) => new Date(right.captured_at).getTime() - new Date(left.captured_at).getTime())
@@ -487,7 +506,7 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
 
   const { data: rawRow, error: rawError } = await supabase
     .from('entries_raw')
-    .select('source_type, captured_at')
+    .select('source_type, captured_at, journal_date')
     .eq('id', normalizedRow.raw_entry_id)
     .maybeSingle();
 
@@ -500,7 +519,7 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
     ...normalizedRow,
     source_type: (rawRow?.source_type as 'text' | 'audio' | undefined) ?? 'text',
     captured_at: capturedAt,
-    journal_date: deriveJournalDateFromIsoLocal(capturedAt),
+    journal_date: rawRow?.journal_date ?? deriveJournalDateFromIsoLocal(capturedAt),
   };
 }
 

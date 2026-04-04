@@ -36,6 +36,7 @@ type DayJournalRow = {
 
 type ReflectionDraft = {
   summaryText: string;
+  narrativeText: string;
   highlights: string[];
   reflectionPoints: string[];
 };
@@ -146,6 +147,18 @@ function cleanReflectionSummary(summary: string): string {
   return sanitizeSummaryLine(summary);
 }
 
+function cleanReflectionNarrative(value: string): string {
+  const normalized = value
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return normalized;
+}
+
 function cleanReflectionList(values: string[], maxItems: number): string[] {
   const cleaned = values
     .map((value) => sanitizeLine(value))
@@ -249,6 +262,10 @@ function fallbackReflection(periodType: 'week' | 'month', dayJournals: DayJourna
         periodType === 'week'
           ? 'Geen dagjournals gevonden voor deze week. Leg eerst een notitie vast.'
           : 'Geen dagjournals gevonden voor deze maand. Leg eerst een notitie vast.',
+      narrativeText:
+        periodType === 'week'
+          ? 'Er waren in deze week nog geen dagjournals beschikbaar om een periodereflectie op te bouwen.'
+          : 'Er waren in deze maand nog geen dagjournals beschikbaar om een periodereflectie op te bouwen.',
       highlights: [],
       reflectionPoints: [],
     };
@@ -273,10 +290,22 @@ function fallbackReflection(periodType: 'week' | 'month', dayJournals: DayJourna
             : 'In deze maand was een bredere verschuiving zichtbaar over meerdere weken.',
         ];
 
+  const narrativePool = dedupeLines(
+    dayJournals
+      .map((row) => cleanReflectionNarrative(parseString(row.narrative_text) ?? ''))
+      .filter((value) => value.length > 0)
+  );
+
+  const fallbackNarrative =
+    narrativePool.slice(0, 2).join('\n\n') ||
+    firstSummary ||
+    `Deze ${periodType === 'week' ? 'week' : 'maand'} laat een herkenbare lijn zien op basis van ${journalCount} dagjournals.`;
+
   return {
     summaryText:
       firstSummary ||
       `Overzicht voor deze ${periodType === 'week' ? 'week' : 'maand'} op basis van ${journalCount} concrete dagjournals.`,
+    narrativeText: fallbackNarrative,
     highlights: highlightPool,
     reflectionPoints: points,
   };
@@ -458,19 +487,23 @@ async function composeReflection(args: {
   }
 
   const summaryRaw = parseString(aiResult.summaryText);
+  const narrativeRaw = parseString(aiResult.narrativeText);
   const highlightsRaw = parseStringArray(aiResult.highlights);
   const reflectionPointsRaw = parseStringArray(aiResult.reflectionPoints);
 
   const summaryText = summaryRaw ? cleanReflectionSummary(summaryRaw) : '';
+  const narrativeText =
+    narrativeRaw && !containsNoSpeechMarker(narrativeRaw) ? cleanReflectionNarrative(narrativeRaw) : '';
   const highlights = cleanReflectionList(highlightsRaw, 3);
   const reflectionPoints = cleanReflectionList(reflectionPointsRaw, 3);
 
-  if (!summaryText || highlights.length === 0 || reflectionPoints.length === 0) {
+  if (!summaryText || !narrativeText || highlights.length === 0 || reflectionPoints.length === 0) {
     return fallback;
   }
 
   return {
     summaryText,
+    narrativeText,
     highlights,
     reflectionPoints,
   };
@@ -750,6 +783,7 @@ Deno.serve(async (request: Request) => {
           period_start: bounds.periodStart,
           period_end: bounds.periodEnd,
           summary_text: reflection.summaryText,
+          narrative_text: reflection.narrativeText,
           highlights_json: reflection.highlights,
           reflection_points_json: reflection.reflectionPoints,
           generated_at: generatedAt,

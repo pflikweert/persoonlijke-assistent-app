@@ -661,10 +661,6 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const bounds =
-      timezoneOffsetMinutes !== null
-        ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
-        : dateBoundsUtc(journalDate);
     step = 'validated';
     logFlow('info', {
       flow: FLOW,
@@ -680,15 +676,14 @@ Deno.serve(async (request: Request) => {
     });
 
     step = 'entries_loaded';
-    const { data: rawEntriesForDay, error: dayRawError } = await supabase
+    const { data: rawEntriesForJournalDate, error: rawEntriesForJournalDateError } = await supabase
       .from('entries_raw')
       .select('id, captured_at')
       .eq('user_id', authData.user.id)
-      .gte('captured_at', bounds.start)
-      .lt('captured_at', bounds.end)
+      .eq('journal_date', journalDate)
       .order('captured_at', { ascending: true });
 
-    if (dayRawError) {
+    if (rawEntriesForJournalDateError) {
       return errorResponse({
         request,
         httpStatus: 500,
@@ -699,6 +694,38 @@ Deno.serve(async (request: Request) => {
         message: 'Failed to load entries for day journal',
       });
     }
+
+    const bounds =
+      timezoneOffsetMinutes !== null
+        ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
+        : dateBoundsUtc(journalDate);
+    const { data: legacyRawEntriesForDay, error: legacyRawEntriesForDayError } = await supabase
+      .from('entries_raw')
+      .select('id, captured_at')
+      .eq('user_id', authData.user.id)
+      .is('journal_date', null)
+      .gte('captured_at', bounds.start)
+      .lt('captured_at', bounds.end)
+      .order('captured_at', { ascending: true });
+
+    if (legacyRawEntriesForDayError) {
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'DB_READ_FAILED',
+        message: 'Failed to load entries for day journal',
+      });
+    }
+
+    const rawEntriesForDay = [
+      ...(rawEntriesForJournalDate ?? []),
+      ...(legacyRawEntriesForDay ?? []),
+    ]
+      .filter((entry, index, all) => all.findIndex((candidate) => candidate.id === entry.id) === index)
+      .sort((left, right) => new Date(left.captured_at).getTime() - new Date(right.captured_at).getTime());
 
     const rawIds = (rawEntriesForDay ?? []).map((entry: { id: string }) => entry.id);
     const normalizedEntriesForDay: NormalizedEntry[] = [];

@@ -117,11 +117,11 @@ fi
 WEEK_REFLECTION_ID="$(jq -r '.reflectionId // empty' "$WEEK_FILE")"
 MONTH_REFLECTION_ID="$(jq -r '.reflectionId // empty' "$MONTH_FILE")"
 
-curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,summary_text,highlights_json,reflection_points_json&user_id=eq.$USER_ID&id=eq.$WEEK_REFLECTION_ID" \
+curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,summary_text,narrative_text,highlights_json,reflection_points_json&user_id=eq.$USER_ID&id=eq.$WEEK_REFLECTION_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$WEEK_ROW_FILE"
 
-curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,summary_text,highlights_json,reflection_points_json&user_id=eq.$USER_ID&id=eq.$MONTH_REFLECTION_ID" \
+curl -sS "$API_URL/rest/v1/period_reflections?select=id,period_type,summary_text,narrative_text,highlights_json,reflection_points_json&user_id=eq.$USER_ID&id=eq.$MONTH_REFLECTION_ID" \
   -H "apikey: $API_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN" >"$MONTH_ROW_FILE"
 
@@ -207,12 +207,47 @@ function hasHeavy(value) {
   return heavy.some((phrase) => phrase && text.includes(phrase));
 }
 
+function countSentenceLikeParts(value) {
+  const text = rawText(value).trim();
+  if (!text) {
+    return 0;
+  }
+
+  return text
+    .split(/[.!?]+(?:\s+|$)/)
+    .map(norm)
+    .filter(Boolean).length;
+}
+
 function looksGeneric(value) {
   const text = norm(value);
   if (text.length < 12) {
     return true;
   }
   return generic.some((phrase) => phrase && text.includes(phrase));
+}
+
+function looksReflectionRecapOpener(value) {
+  const text = norm(value);
+  const patterns = [
+    /^de (week|maand) draaide (vooral )?om\b/,
+    /^er was veel aandacht voor\b/,
+    /^naast\b.+\bwas er ook\b/,
+    /^in (deze|de) (week|maand)\b/,
+  ];
+
+  return patterns.some((pattern) => pattern.test(text));
+}
+
+function looksChronologicalReflectionBullet(value) {
+  const text = norm(value);
+  const patterns = [
+    /^op (maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\b/,
+    /^op \d{1,2}\b/,
+    /^(aan het begin|later in|tegen het einde) van de (week|maand)\b/,
+  ];
+
+  return patterns.some((pattern) => pattern.test(text));
 }
 
 function looksMetaPreview(value) {
@@ -711,15 +746,20 @@ function reviewReflection(rows, label) {
   }
 
   const summary = norm(row.summary_text);
+  const narrative = norm(row.narrative_text);
   const highlights = Array.isArray(row.highlights_json) ? row.highlights_json.map(norm).filter(Boolean) : [];
   const points = Array.isArray(row.reflection_points_json)
     ? row.reflection_points_json.map(norm).filter(Boolean)
     : [];
   const todoLikePointPatterns = [/^(doe|plan|maak|ga|probeer|zorg|hou|houd|zet|schrijf|werk)\b/i, /\bto[- ]?do\b/i, /\bactiepunt\b/i];
+  const adviceLikePointPatterns = [/^het helpt om\b/i, /^het kan helpen om\b/i, /^goed om\b/i, /\bkan helpen om\b/i];
   const patternSignals = ['terugker', 'patroon', 'thema', 'verschuiving', 'spanning', 'ritme', 'lijn'];
 
   if (!summary) {
     add('FAIL', label, 'Summary_text is leeg.');
+  }
+  if (!narrative) {
+    add('FAIL', label, 'Narrative_text is leeg.');
   }
   if (highlights.length === 0) {
     add('WARN', label, 'Geen highlights gevonden.');
@@ -728,21 +768,24 @@ function reviewReflection(rows, label) {
     add('WARN', label, 'Geen reflection points gevonden.');
   }
 
-  const todoLikePoints = points.filter((point) => todoLikePointPatterns.some((pattern) => pattern.test(point)));
-  if (points.length > 0 && todoLikePoints.length >= Math.ceil(points.length * 0.6)) {
-    add('FAIL', label, 'Reflection points lijken te veel op todo/actiepunten.');
+  const actionLikePoints = points.filter((point) =>
+    todoLikePointPatterns.some((pattern) => pattern.test(point)) ||
+    adviceLikePointPatterns.some((pattern) => pattern.test(point))
+  );
+  if (points.length > 0 && actionLikePoints.length >= Math.ceil(points.length * 0.6)) {
+    add('FAIL', label, 'Reflection points lijken te veel op advies/checklisttoon.');
   }
 
-  const combined = [summary, ...highlights, ...points].join(' ');
+  const combined = [summary, narrative, ...highlights, ...points].join(' ');
   const hasPatternSignal = patternSignals.some((signal) => combined.includes(signal));
   if (!hasPatternSignal) {
     add('WARN', label, 'Reflectie benoemt weinig expliciete patroon-/verschuivingssignalen.');
   }
 
-  const heavyHit = [summary, ...highlights, ...points].some(hasHeavy);
+  const heavyHit = [summary, narrative, ...highlights, ...points].some(hasHeavy);
   const markerLeak =
     audioMarker &&
-    [summary, ...highlights, ...points].some((value) => value.includes(audioMarker));
+    [summary, narrative, ...highlights, ...points].some((value) => value.includes(audioMarker));
 
   if (markerLeak) {
     add('FAIL', label, 'No-speech/fallbackmarker lekt door in reflectie-output.');
@@ -751,10 +794,26 @@ function reviewReflection(rows, label) {
 
   if (heavyHit) {
     add('FAIL', label, 'Zware/therapeutische formulering gevonden.');
+  } else if (looksReflectionRecapOpener(summary)) {
+    add('FAIL', label, 'Reflection summary opent als generieke recap of rapportzin.');
   } else if (looksGeneric(summary)) {
     add('WARN', label, 'Summary lijkt generiek of vaag.');
   } else {
     add('PASS', label, 'Reflection summary/points bruikbaar en rustig.');
+  }
+
+  const chronologicalHighlights = highlights.filter((item) => looksChronologicalReflectionBullet(item));
+  if (highlights.length > 1 && chronologicalHighlights.length >= Math.ceil(highlights.length * 0.6)) {
+    add('WARN', label, 'Highlights ogen te chronologisch of logboekachtig.');
+  }
+
+  const crowdedBullets = [...highlights, ...points].filter((item) => item.length > 220 || countSentenceLikeParts(item) > 2);
+  if (crowdedBullets.length > 0) {
+    add('WARN', label, 'Highlights of reflection points zijn te vol of recap-achtig.');
+  }
+
+  if (narrative && looksGeneric(narrative)) {
+    add('WARN', label, 'Narrative_text lijkt generiek of te vlak.');
   }
 }
 

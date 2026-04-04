@@ -14,7 +14,7 @@ export {
   regenerateDayJournalByDate,
   updateNormalizedEntryById,
 } from './day-journals';
-export { submitAudioEntry, submitTextEntry } from './entries';
+export { refreshDerivedAfterCaptureInBackground, submitAudioEntry, submitTextEntry } from './entries';
 export { isChatGptMarkdownImportEnabled } from './feature-flags';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
 export {
@@ -27,6 +27,7 @@ export {
 } from './import';
 export {
   fetchLatestReflection,
+  fetchReflectionForAnchorDate,
   hasReflectionForAnchorDate,
   fetchRecentReflections,
   fetchRecentReflectionsByType,

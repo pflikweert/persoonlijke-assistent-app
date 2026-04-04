@@ -89,6 +89,7 @@ export type Database = {
           id: string
           import_external_message_id: string | null
           import_file_name: string | null
+          journal_date: string | null
           import_source_ref: string | null
           import_source_type: string | null
           raw_text: string | null
@@ -102,6 +103,7 @@ export type Database = {
           id?: string
           import_external_message_id?: string | null
           import_file_name?: string | null
+          journal_date?: string | null
           import_source_ref?: string | null
           import_source_type?: string | null
           raw_text?: string | null
@@ -115,6 +117,7 @@ export type Database = {
           id?: string
           import_external_message_id?: string | null
           import_file_name?: string | null
+          journal_date?: string | null
           import_source_ref?: string | null
           import_source_type?: string | null
           raw_text?: string | null
@@ -130,6 +133,7 @@ export type Database = {
           highlights_json: Json
           id: string
           model_version: string
+          narrative_text: string
           period_end: string
           period_start: string
           period_type: string
@@ -142,6 +146,7 @@ export type Database = {
           highlights_json?: Json
           id?: string
           model_version?: string
+          narrative_text?: string
           period_end: string
           period_start: string
           period_type: string
@@ -154,6 +159,7 @@ export type Database = {
           highlights_json?: Json
           id?: string
           model_version?: string
+          narrative_text?: string
           period_end?: string
           period_start?: string
           period_type?: string

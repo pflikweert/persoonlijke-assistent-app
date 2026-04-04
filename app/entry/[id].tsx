@@ -11,7 +11,13 @@ import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MetaText, PrimaryButton, ScreenContainer, StateBlock } from '@/components/ui/screen-primitives';
+import {
+  MetaText,
+  PrimaryButton,
+  SecondaryButton,
+  ScreenContainer,
+  StateBlock,
+} from '@/components/ui/screen-primitives';
 import {
   deleteNormalizedEntryById,
   fetchNormalizedEntryById,
@@ -349,6 +355,10 @@ export default function EntryCompletionScreen() {
 
           <ThemedView style={styles.actionsBlock}>
             <PrimaryButton label={dayActionLabel} onPress={() => goToDayDetail({ includeEntryFocus: true })} />
+            <SecondaryButton
+              label="Nog een moment opnemen"
+              onPress={() => router.push({ pathname: '/capture', params: { date: dayDate } })}
+            />
 
             <Pressable onPress={handleDelete} disabled={isProcessing} style={styles.deleteAction}>
               <ThemedText type="caption" style={[styles.deleteActionLabel, { color: palette.mutedSoft }]}>

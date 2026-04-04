@@ -18,6 +18,7 @@ export type ReflectionRow = Omit<
     | 'period_start'
     | 'period_end'
     | 'summary_text'
+    | 'narrative_text'
     | 'highlights_json'
     | 'reflection_points_json'
     | 'generated_at'
@@ -195,6 +196,47 @@ export async function generateReflection(input: {
   return data;
 }
 
+export async function fetchReflectionForAnchorDate(input: {
+  periodType: PeriodType;
+  anchorDate: string;
+}): Promise<ReflectionRow | null> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  if (!JOURNAL_DATE_PATTERN.test(input.anchorDate)) {
+    return null;
+  }
+
+  const bounds = computePeriodBounds(input.periodType, input.anchorDate);
+  const { data, error } = await supabase
+    .from('period_reflections')
+    .select(
+      'id, period_type, period_start, period_end, summary_text, narrative_text, highlights_json, reflection_points_json, generated_at, model_version'
+    )
+    .eq('period_type', input.periodType)
+    .eq('period_start', bounds.periodStart)
+    .eq('period_end', bounds.periodEnd)
+    .order('generated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    ...data,
+    period_type: ensurePeriodType(data.period_type),
+  };
+}
+
 export async function fetchLatestReflection(periodType: PeriodType): Promise<ReflectionRow | null> {
   const supabase = getSupabaseBrowserClient();
 
@@ -205,7 +247,7 @@ export async function fetchLatestReflection(periodType: PeriodType): Promise<Ref
   const { data, error } = await supabase
     .from('period_reflections')
     .select(
-      'id, period_type, period_start, period_end, summary_text, highlights_json, reflection_points_json, generated_at, model_version'
+      'id, period_type, period_start, period_end, summary_text, narrative_text, highlights_json, reflection_points_json, generated_at, model_version'
     )
     .eq('period_type', periodType)
     .order('period_start', { ascending: false })
@@ -238,7 +280,7 @@ export async function fetchRecentReflections(limit = 20): Promise<ReflectionRow[
   const { data, error } = await supabase
     .from('period_reflections')
     .select(
-      'id, period_type, period_start, period_end, summary_text, highlights_json, reflection_points_json, generated_at, model_version'
+      'id, period_type, period_start, period_end, summary_text, narrative_text, highlights_json, reflection_points_json, generated_at, model_version'
     )
     .order('generated_at', { ascending: false })
     .limit(safeLimit);
@@ -256,6 +298,7 @@ export async function fetchRecentReflections(limit = 20): Promise<ReflectionRow[
 export async function fetchRecentReflectionsByType(input: {
   periodType: PeriodType;
   limit?: number;
+  offset?: number;
 }): Promise<ReflectionRow[]> {
   const supabase = getSupabaseBrowserClient();
 
@@ -264,15 +307,16 @@ export async function fetchRecentReflectionsByType(input: {
   }
 
   const safeLimit = Math.max(1, Math.min(input.limit ?? 24, 100));
+  const safeOffset = Math.max(0, Math.floor(input.offset ?? 0));
 
   const { data, error } = await supabase
     .from('period_reflections')
     .select(
-      'id, period_type, period_start, period_end, summary_text, highlights_json, reflection_points_json, generated_at, model_version'
+      'id, period_type, period_start, period_end, summary_text, narrative_text, highlights_json, reflection_points_json, generated_at, model_version'
     )
     .eq('period_type', input.periodType)
     .order('period_start', { ascending: false })
-    .limit(safeLimit);
+    .range(safeOffset, safeOffset + safeLimit - 1);
 
   if (error) {
     throw error;

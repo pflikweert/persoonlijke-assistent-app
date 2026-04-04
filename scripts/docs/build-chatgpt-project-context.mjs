@@ -35,6 +35,10 @@ const canonicalSources = [
     path: 'docs/project/content-processing-rules.md',
     title: 'Content / Narrative Processing Regels',
   },
+  {
+    path: 'docs/project/copy-instructions.md',
+    title: 'Copy Instructions',
+  },
 ];
 
 const appendixSource = 'AGENTS.md';
@@ -60,6 +64,7 @@ function extractSourceCommit(existingContent) {
 function extractProjectCriticalAgentsSummary(agentsContent) {
   const allowedHeaders = new Set([
     'Canonieke projectbron',
+    'Canonieke projectdocs',
     'Canonieke designbronnen (MVP 1.2.1)',
     'Security',
     'Kwaliteit',
@@ -95,6 +100,7 @@ function extractProjectCriticalAgentsSummary(agentsContent) {
 
   const orderedHeaders = [
     'Canonieke projectbron',
+    'Canonieke projectdocs',
     'Canonieke designbronnen (MVP 1.2.1)',
     'Security',
     'Kwaliteit',

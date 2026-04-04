@@ -61,6 +61,13 @@ Deze fase blijft hardening en is geen verbreding van productscope.
 4. Geen nieuwe app-architectuur binnen deze fase.
 5. Twijfelgevallen worden niet als waarheid vastgezet zonder bewijs.
 
+## Copykader (bindend)
+Voor productcopy, microcopy en UX-tekst is leidend:
+- `docs/project/copy-instructions.md`
+
+Regel:
+- copybeslissingen volgen dit document naast de productkaders in dit masterdocument.
+
 ## Post-MVP
 Mogelijke vervolgsporen na afronding van 1.2:
 - retrieval/Q&A over archief

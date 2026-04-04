@@ -8,6 +8,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MomentsTimelineSection } from '@/components/journal/moments-timeline-section';
 import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
+import { EditorialNarrativeBlock } from '@/components/journal/editorial-narrative-block';
+import { ReflectionTeaserCard } from '@/components/journal/reflection-teaser-card';
 import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
 import { ProcessingScreen } from '@/components/feedback/processing-screen';
 import { TextEditorModal } from '@/components/feedback/text-editor-modal';
@@ -16,11 +18,13 @@ import { QuickMenuBar, quickMenuPathFromKey } from '@/components/navigation/quic
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   StateBlock,
+  SecondaryButton,
 } from '@/components/ui/screen-primitives';
 import { CopyIconButton } from '@/components/ui/copy-icon-button';
 import {
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
+  fetchReflectionForAnchorDate,
   generateReflection,
   getUtcTodayDate,
   isValidJournalDate,
@@ -180,6 +184,8 @@ export default function DayDetailScreen() {
   const [narrativeText, setNarrativeText] = useState<string | null>(null);
   const [sections, setSections] = useState<string[]>([]);
   const [entries, setEntries] = useState<DayEntry[]>([]);
+  const [weekReflection, setWeekReflection] = useState<Awaited<ReturnType<typeof fetchReflectionForAnchorDate>>>(null);
+  const [monthReflection, setMonthReflection] = useState<Awaited<ReturnType<typeof fetchReflectionForAnchorDate>>>(null);
   const [entryOffsets, setEntryOffsets] = useState<Record<string, number>>({});
   const [focusedEntryId, setFocusedEntryId] = useState<string | null>(null);
   const [pendingFocusEntryId, setPendingFocusEntryId] = useState<string | null>(null);
@@ -200,6 +206,8 @@ export default function DayDetailScreen() {
       setNarrativeText(null);
       setSections([]);
       setEntries([]);
+      setWeekReflection(null);
+      setMonthReflection(null);
       return;
     }
 
@@ -217,6 +225,14 @@ export default function DayDetailScreen() {
       setSections(journal ? parseJournalSections(journal.sections) : []);
       setEntryOffsets({});
       setEntries(normalizedEntries);
+
+      const [weekResult, monthResult] = await Promise.allSettled([
+        fetchReflectionForAnchorDate({ periodType: 'week', anchorDate: journalDate }),
+        fetchReflectionForAnchorDate({ periodType: 'month', anchorDate: journalDate }),
+      ]);
+
+      setWeekReflection(weekResult.status === 'fulfilled' ? weekResult.value : null);
+      setMonthReflection(monthResult.status === 'fulfilled' ? monthResult.value : null);
     } catch (nextError) {
       const message = nextError instanceof Error ? nextError.message : 'Kon dagdetail niet laden.';
       setError(message);
@@ -224,6 +240,8 @@ export default function DayDetailScreen() {
       setNarrativeText(null);
       setSections([]);
       setEntries([]);
+      setWeekReflection(null);
+      setMonthReflection(null);
     } finally {
       setLoading(false);
     }
@@ -274,7 +292,7 @@ export default function DayDetailScreen() {
         .sort((left, right) => {
           const leftTime = new Date(left.captured_at).getTime();
           const rightTime = new Date(right.captured_at).getTime();
-          return rightTime - leftTime;
+          return leftTime - rightTime;
         }),
     [entries]
   );
@@ -502,21 +520,17 @@ export default function DayDetailScreen() {
       {!loading && !error && summary ? <DayEditorialPanel text={summary} /> : null}
 
       {!loading && !error && narrativeText ? (
-        <ThemedView style={styles.narrativeBlock}>
-          <ThemedView style={styles.narrativeHeaderRow}>
-            <ThemedText type="meta" style={[styles.narrativeTitle, { color: palette.primary }]}>
-              Dagverhaal
-            </ThemedText>
+        <EditorialNarrativeBlock
+          title="Dagverhaal"
+          text={narrativeText}
+          action={
             <CopyIconButton
               payload={dayJournalCopyPayload}
               copyLabel="Kopieer dagjournaal"
               copiedLabel="Dagjournaal gekopieerd"
             />
-          </ThemedView>
-          <ThemedText type="body" style={[styles.editorialBody, { color: palette.text }]}>
-            {narrativeText}
-          </ThemedText>
-        </ThemedView>
+          }
+        />
       ) : null}
 
       {!loading && !error && insightText ? (
@@ -589,12 +603,40 @@ export default function DayDetailScreen() {
       <ProcessingScreen visible={showEditProcessing} variant="entry-edit" />
 
       <ThemedView style={styles.bottomActionWrap}>
-        <Pressable onPress={() => router.push('/capture')} style={styles.bottomAction}>
-          <ThemedText type="caption" style={[styles.bottomActionText, { color: palette.mutedSoft }]}>
-            Nieuwe entry vastleggen
-          </ThemedText>
-        </Pressable>
+        <SecondaryButton
+          label="Nieuw moment vastleggen"
+          onPress={() => router.push({ pathname: '/capture', params: { date: journalDate } })}
+        />
       </ThemedView>
+
+      {!loading && !error && (weekReflection || monthReflection) ? (
+        <ThemedView style={styles.reflectionCardsBlock}>
+          {weekReflection ? (
+            <ReflectionTeaserCard
+              periodType="week"
+              reflection={weekReflection}
+              onPress={() =>
+                router.push({
+                  pathname: '/(tabs)/reflections',
+                  params: { period: 'week' },
+                })
+              }
+            />
+          ) : null}
+          {monthReflection ? (
+            <ReflectionTeaserCard
+              periodType="month"
+              reflection={monthReflection}
+              onPress={() =>
+                router.push({
+                  pathname: '/(tabs)/reflections',
+                  params: { period: 'month' },
+                })
+              }
+            />
+          ) : null}
+        </ThemedView>
+      ) : null}
 
       </ScrollView>
 
@@ -649,24 +691,6 @@ const styles = StyleSheet.create({
   },
   processedText: {
   },
-  narrativeBlock: {
-    gap: spacing.sm,
-  },
-  narrativeHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  narrativeTitle: {
-    letterSpacing: 0.4,
-  },
-  editorialBody: {
-    fontSize: 20,
-    lineHeight: 34,
-    marginBottom: spacing.xl,
-    letterSpacing: -0.2,
-  },
   insightBlock: {
     borderRadius: 24,
     paddingLeft: 16,
@@ -716,19 +740,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   momentsBlock: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   bottomActionWrap: {
     alignItems: 'center',
-    marginTop: spacing.xl,
+    marginTop: spacing.sm,
     marginBottom: spacing.xs,
   },
-  bottomAction: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  bottomActionText: {
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
+  reflectionCardsBlock: {
+    gap: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
   },
 });

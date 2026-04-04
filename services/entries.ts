@@ -1,10 +1,12 @@
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
 import { ensureAuthenticatedUserSession } from './auth';
+import { regenerateDayJournalByDate } from './day-journals';
 import {
   createClientFlowId,
   FunctionFlowError,
   isFunctionErrorPayload,
 } from './function-error';
+import { generateReflection } from './reflections';
 
 export interface ProcessEntryResult {
   status: 'ok';
@@ -71,6 +73,7 @@ export async function submitTextEntry(input: {
   capturedAt?: string;
   journalDate?: string;
   timezoneOffsetMinutes?: number;
+  deferDerived?: boolean;
 }): Promise<ProcessEntryResult> {
   const supabase = getSupabaseBrowserClient();
 
@@ -96,6 +99,7 @@ export async function submitTextEntry(input: {
       capturedAt: input.capturedAt,
       journalDate: input.journalDate,
       timezoneOffsetMinutes: input.timezoneOffsetMinutes,
+      deferDerived: input.deferDerived ?? false,
     },
   });
 
@@ -123,6 +127,7 @@ export async function submitAudioEntry(input: {
   capturedAt?: string;
   journalDate?: string;
   timezoneOffsetMinutes?: number;
+  deferDerived?: boolean;
 }): Promise<ProcessEntryResult> {
   const supabase = getSupabaseBrowserClient();
 
@@ -158,6 +163,7 @@ export async function submitAudioEntry(input: {
       capturedAt: input.capturedAt,
       journalDate: input.journalDate,
       timezoneOffsetMinutes: input.timezoneOffsetMinutes,
+      deferDerived: input.deferDerived ?? false,
     },
   });
 
@@ -174,4 +180,27 @@ export async function submitAudioEntry(input: {
   }
 
   return data;
+}
+
+export async function refreshDerivedAfterCaptureInBackground(
+  journalDate: string
+): Promise<void> {
+  try {
+    await regenerateDayJournalByDate(journalDate);
+  } catch (error) {
+    console.warn('[capture-background] day journal refresh failed', error);
+    return;
+  }
+
+  try {
+    await generateReflection({ periodType: 'week', anchorDate: journalDate });
+  } catch (error) {
+    console.warn('[capture-background] week reflection refresh failed', error);
+  }
+
+  try {
+    await generateReflection({ periodType: 'month', anchorDate: journalDate });
+  } catch (error) {
+    console.warn('[capture-background] month reflection refresh failed', error);
+  }
 }

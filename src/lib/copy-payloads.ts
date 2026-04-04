@@ -11,6 +11,7 @@ type DayJournalCopyInput = {
 type ReflectionCopyInput = {
   periodRange: string;
   summaryText: string;
+  narrativeText?: string | null;
   highlights: string[];
   reflectionPoints: string[];
 };
@@ -115,6 +116,7 @@ export function buildDayJournalCopyPayload(input: DayJournalCopyInput): Clipboar
 export function buildReflectionCopyPayload(input: ReflectionCopyInput): ClipboardCopyPayload {
   const periodRange = input.periodRange.trim();
   const summary = input.summaryText.trim();
+  const narrative = (input.narrativeText ?? '').trim();
   const highlights = input.highlights.map((item) => item.trim()).filter((item) => item.length > 0);
   const points = input.reflectionPoints.map((item) => item.trim()).filter((item) => item.length > 0);
 
@@ -124,6 +126,9 @@ export function buildReflectionCopyPayload(input: ReflectionCopyInput): Clipboar
   }
   if (summary) {
     pushPlainBlock(plain, summary);
+  }
+  if (narrative) {
+    pushPlainBlock(plain, narrative);
   }
   if (highlights.length > 0) {
     pushPlainBlock(
@@ -145,6 +150,12 @@ export function buildReflectionCopyPayload(input: ReflectionCopyInput): Clipboar
     pushHtmlSection(
       html,
       ...asParagraphs(summary).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    );
+  }
+  if (narrative) {
+    pushHtmlSection(
+      html,
+      ...asParagraphs(narrative).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
     );
   }
   if (highlights.length > 0) {

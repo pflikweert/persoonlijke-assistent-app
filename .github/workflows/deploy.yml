@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - "supabase/migrations/**"
       - "supabase/functions/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
@@ -17,6 +18,7 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
     steps:
       - name: Checkout repository
@@ -36,9 +38,16 @@ jobs:
         run: |
           [ -n "$SUPABASE_ACCESS_TOKEN" ] || (echo "Missing secret: SUPABASE_ACCESS_TOKEN" && exit 1)
           [ -n "$SUPABASE_PROJECT_REF" ] || (echo "Missing secret: SUPABASE_PROJECT_REF" && exit 1)
+          [ -n "$SUPABASE_DB_PASSWORD" ] || (echo "Missing secret: SUPABASE_DB_PASSWORD" && exit 1)
 
       - name: Log Supabase CLI version
         run: npx supabase@latest --version
+
+      - name: Link Supabase project
+        run: npx supabase@latest link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Apply database migrations
+        run: npx supabase@latest db push --linked --include-all
 
       - name: Log functions to deploy
         shell: bash

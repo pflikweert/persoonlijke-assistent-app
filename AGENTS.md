@@ -22,6 +22,7 @@ Gebruik deze docs als actieve projectwaarheid:
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
 - `docs/project/content-processing-rules.md`
+- `docs/project/copy-instructions.md`
 
 Regels:
 
@@ -30,6 +31,7 @@ Regels:
 - `current-status.md` = enige statuswaarheid voor code-realiteit
 - `open-points.md` = resterende gaps en onzekerheden
 - `content-processing-rules.md` = canonieke inhouds- en outputregels
+- `copy-instructions.md` = canonieke copy-, tone-of-voice- en microcopyregels
 
 ## Canonieke designbronnen (MVP 1.2.1)
 
