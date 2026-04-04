@@ -75,7 +75,9 @@ function parseHeaderTimestamp(headerLine: string): string {
   const day = Number(match[2]);
   const year = Number(match[3]);
 
-  return new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
+  // Header timestamps in markdown are wall-clock values without explicit timezone.
+  // Interpret them in the current local timezone to keep imported day grouping consistent.
+  return new Date(year, month, day, hour, minute, second).toISOString();
 }
 
 function normalizeQuotedContent(lines: string[]): string {
@@ -160,6 +162,18 @@ function buildSourceRef(metadata: Record<string, string>, messages: ChatGptMarkd
   return hashString(fingerprint);
 }
 
+function toLocalJournalDate(isoValue: string): string {
+  const date = new Date(isoValue);
+  if (Number.isNaN(date.getTime())) {
+    return isoValue.slice(0, 10);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function parseChatGptMarkdownFile(input: {
   fileName: string;
   markdown: string;
@@ -235,7 +249,7 @@ export function parseChatGptMarkdownFile(input: {
   }
 
   const sorted = [...messages].sort((left, right) => left.capturedAt.localeCompare(right.capturedAt));
-  const uniqueDays = new Set(sorted.map((message) => message.capturedAt.slice(0, 10)));
+  const uniqueDays = new Set(sorted.map((message) => toLocalJournalDate(message.capturedAt)));
 
   return {
     fileName: input.fileName,
@@ -271,5 +285,5 @@ export function summarizePreviewDate(isoValue: string | null): string {
 }
 
 export function listPreviewDays(preview: ChatGptMarkdownPreview): string[] {
-  return [...new Set(preview.messages.map((message) => message.capturedAt.slice(0, 10)))].sort();
+  return [...new Set(preview.messages.map((message) => toLocalJournalDate(message.capturedAt)))].sort();
 }

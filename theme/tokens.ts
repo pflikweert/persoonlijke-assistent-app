@@ -49,9 +49,9 @@ export const colorTokens = {
     info: '#A7C8FF',
     success: '#A3F69C',
     error: '#FFB4AB',
-    destructiveSoftBackground: '#F6E8E5',
-    destructiveSoftText: '#C62929',
-    destructiveSoftBorder: '#ECC1BF',
+    destructiveSoftBackground: '#4B2D2B',
+    destructiveSoftText: '#FFB4AB',
+    destructiveSoftBorder: '#7E5A56',
   },
 } as const;
 

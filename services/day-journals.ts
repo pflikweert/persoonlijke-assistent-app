@@ -128,17 +128,23 @@ async function parseFunctionInvokeError(
   }
 }
 
-function getUtcDateBounds(journalDate: string): { start: string; end: string } {
+function getLocalDateBounds(journalDate: string): { start: string; end: string } {
   if (!isValidJournalDate(journalDate)) {
     throw new Error('Ongeldige datum. Gebruik formaat YYYY-MM-DD.');
   }
 
-  const start = `${journalDate}T00:00:00.000Z`;
-  const startDate = new Date(start);
-  const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+  const timezoneOffsetMinutes = timezoneOffsetMinutesForJournalDate(journalDate);
+  const [yearRaw, monthRaw, dayRaw] = journalDate.split('-');
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const localMidnightUtcMs =
+    Date.UTC(year, month - 1, day, 0, 0, 0, 0) + timezoneOffsetMinutes * 60 * 1000;
+  const startDate = new Date(localMidnightUtcMs);
+  const endDate = new Date(localMidnightUtcMs + 24 * 60 * 60 * 1000);
 
   return {
-    start,
+    start: startDate.toISOString(),
     end: endDate.toISOString(),
   };
 }
@@ -325,7 +331,7 @@ export async function fetchNormalizedEntriesByDate(journalDate: string): Promise
     throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
   }
 
-  const bounds = getUtcDateBounds(journalDate);
+  const bounds = getLocalDateBounds(journalDate);
 
   const { data: rawRows, error: rawError } = await supabase
     .from('entries_raw')

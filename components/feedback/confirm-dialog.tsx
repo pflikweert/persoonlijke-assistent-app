@@ -59,7 +59,6 @@ export function ConfirmDialog({
                 styles.actionBase,
                 styles.confirmAction,
                 {
-                  backgroundColor: palette.destructiveSoftBackground,
                   borderColor: palette.destructiveSoftBorder,
                 },
                 processing && styles.actionDisabled,
@@ -114,10 +113,12 @@ const styles = StyleSheet.create({
   },
   cancelAction: {
     borderWidth: 1,
+    backgroundColor: 'transparent',
   },
   confirmAction: {
     minWidth: 124,
     borderWidth: 1,
+    backgroundColor: 'transparent',
   },
   actionDisabled: {
     opacity: 0.7,

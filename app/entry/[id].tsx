@@ -1,10 +1,13 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, TextInput } from 'react-native';
+import { Alert, Pressable, StyleSheet } from 'react-native';
 
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog';
 import { ProcessingScreen } from '@/components/feedback/processing-screen';
+import { TextEditorModal } from '@/components/feedback/text-editor-modal';
+import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
+import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -92,6 +95,26 @@ function buildSummary(value: string): string {
   return clean.length > 120 ? `${clean.slice(0, 119).trimEnd()}...` : clean;
 }
 
+function formatDayActionLabel(value: string): string {
+  if (!value) {
+    return 'Ga naar deze dag';
+  }
+
+  const parsed = new Date(`${value}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return 'Ga naar deze dag';
+  }
+
+  const label = parsed.toLocaleDateString('nl-NL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+  });
+
+  return `Ga naar ${label}`;
+}
+
 export default function EntryCompletionScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -154,6 +177,7 @@ export default function EntryCompletionScreen() {
   const capturedAtLabel = useMemo(() => formatCapturedAtLabel(entry?.captured_at ?? ''), [entry?.captured_at]);
   const title = entry?.title?.trim() || 'Je entry';
   const dayDate = entry?.journal_date ?? routeDate;
+  const dayActionLabel = useMemo(() => formatDayActionLabel(dayDate), [dayDate]);
 
   function goToDayDetail(options?: { includeEntryFocus?: boolean }) {
     if (!dayDate) {
@@ -303,7 +327,7 @@ export default function EntryCompletionScreen() {
         contentContainerStyle={styles.scrollContent}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {loading ? <StateBlock tone="loading" message="Entry laden..." detail="Even geduld, we halen je moment op." /> : null}
+      {loading ? <InlineLoadingOverlay message="Entry laden..." detail="Even geduld, we halen je moment op." /> : null}
       {!loading && error ? <StateBlock tone="error" message="Entry kon niet geladen worden." detail={error} /> : null}
 
       {!isProcessing && !loading && !error && entry ? (
@@ -315,15 +339,7 @@ export default function EntryCompletionScreen() {
             <MetaText>{capturedAtLabel}</MetaText>
           </ThemedView>
 
-          <ThemedView
-            lightColor={colorTokens.light.surfaceLow}
-            darkColor={colorTokens.dark.surfaceLow}
-            style={styles.summaryBlock}>
-            <MetaText>Samenvatting</MetaText>
-            <ThemedText type="bodySecondary" style={[styles.summaryText, { color: palette.muted }]}>
-              {summaryShortText}
-            </ThemedText>
-          </ThemedView>
+          <DayEditorialPanel text={summaryShortText} />
 
           <ThemedView style={styles.bodyBlock}>
             <ThemedText type="body" style={[styles.bodyText, { color: palette.text }]}>
@@ -332,7 +348,7 @@ export default function EntryCompletionScreen() {
           </ThemedView>
 
           <ThemedView style={styles.actionsBlock}>
-            <PrimaryButton label="Terug naar deze dag" onPress={() => goToDayDetail({ includeEntryFocus: true })} />
+            <PrimaryButton label={dayActionLabel} onPress={() => goToDayDetail({ includeEntryFocus: true })} />
 
             <Pressable onPress={handleDelete} disabled={isProcessing} style={styles.deleteAction}>
               <ThemedText type="caption" style={[styles.deleteActionLabel, { color: palette.mutedSoft }]}>
@@ -343,42 +359,18 @@ export default function EntryCompletionScreen() {
         </>
       ) : null}
 
-        <Modal visible={editVisible} animationType="slide" onRequestClose={() => !isProcessing && setEditVisible(false)}>
-        <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.modalScreen}>
-          <ThemedView style={styles.modalTopBar}>
-            <Pressable onPress={() => setEditVisible(false)} disabled={isProcessing} style={styles.modalTopAction}>
-              <ThemedText type="bodySecondary">Annuleer</ThemedText>
-            </Pressable>
-            <ThemedText type="sectionTitle">Entry bewerken</ThemedText>
-            <Pressable
-              onPress={() => void handleSaveEdit()}
-              disabled={isProcessing}
-              style={[styles.modalTopAction, styles.modalTopActionPrimary, { backgroundColor: palette.primaryStrong }]}>
-              <ThemedText type="defaultSemiBold" lightColor={colorTokens.light.primaryOn} darkColor={colorTokens.dark.primaryOn}>
-                {saving ? 'Opslaan...' : 'Opslaan'}
-              </ThemedText>
-            </Pressable>
-          </ThemedView>
-
-          <TextInput
-            multiline
-            autoFocus
-            value={editBody}
-            onChangeText={setEditBody}
-            textAlignVertical="top"
-            style={[
-              styles.modalInputFull,
-              {
-                color: palette.text,
-                backgroundColor: `${palette.surfaceLowest}D6`,
-                borderColor: `${palette.separator}CC`,
-              },
-            ]}
-            placeholder="Typ de inhoud van je entry..."
-            placeholderTextColor={palette.mutedSoft}
-          />
-        </ThemedView>
-        </Modal>
+      <TextEditorModal
+        visible={editVisible}
+        title="Entry bewerken"
+        value={editBody}
+        placeholder="Wat houdt je bezig?"
+        submitLabel="Moment bewaren"
+        processingLabel="Moment bewaren..."
+        processing={isProcessing}
+        onCancel={() => setEditVisible(false)}
+        onChange={setEditBody}
+        onSubmit={() => void handleSaveEdit()}
+      />
       </ScreenContainer>
       <ConfirmDialog
         visible={deleteConfirmVisible}
@@ -423,16 +415,6 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     letterSpacing: -0.3,
   },
-  summaryBlock: {
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  summaryText: {
-    fontStyle: 'italic',
-    lineHeight: 24,
-  },
   bodyBlock: {
     marginBottom: spacing.xxxl,
   },
@@ -460,39 +442,5 @@ const styles = StyleSheet.create({
   deleteActionLabel: {
     letterSpacing: 2,
     textTransform: 'uppercase',
-  },
-  modalScreen: {
-    flex: 1,
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.page,
-    paddingBottom: spacing.page,
-    gap: spacing.md,
-  },
-  modalTopBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
-    minHeight: 40,
-  },
-  modalTopAction: {
-    minWidth: 84,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  modalTopActionPrimary: {
-    alignItems: 'center',
-  },
-  modalInputFull: {
-    flex: 1,
-    minHeight: 340,
-    fontSize: 24,
-    lineHeight: 34,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    textAlign: 'left',
   },
 });

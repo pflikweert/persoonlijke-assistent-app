@@ -17,6 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ProcessingScreen, type ProcessingVariant } from '@/components/feedback/processing-screen';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { PrimaryButton, ScreenContainer, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { classifyUnknownError, submitAudioEntry, submitTextEntry } from '@/services';
 import { colorTokens, radius, shadows, spacing } from '@/theme';
 
@@ -115,6 +116,8 @@ function getWaveformHeights(durationMillis: number): number[] {
 }
 
 export default function CaptureScreen() {
+  const scheme = useColorScheme() ?? 'light';
+  const palette = colorTokens[scheme];
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 250);
 
@@ -400,26 +403,22 @@ export default function CaptureScreen() {
           <Pressable
             onPress={handleBackFromCapture}
             disabled={recordingActionBusy}
-            style={[styles.topAction, recordingActionBusy && styles.topActionDisabled]}>
-            <MaterialIcons name="arrow-back" size={18} color={colorTokens.light.primary} />
-            <ThemedText type="bodySecondary">{uiMode === 'idle' ? 'Terug' : 'Annuleer'}</ThemedText>
+            style={[
+              styles.topIconButton,
+              { backgroundColor: palette.surfaceLow },
+              recordingActionBusy && styles.topActionDisabled,
+            ]}>
+            <MaterialIcons name="arrow-back" size={18} color={palette.primary} />
           </Pressable>
         }
         rightAction={
-          uiMode === 'typing' ? (
-            <Pressable
-              onPress={() => void handleSubmitText()}
-              disabled={isBusy || !hasTextDraft}
-              style={[styles.topAction, styles.topPrimaryAction, (isBusy || !hasTextDraft) && styles.topActionDisabled]}>
-              <ThemedText type="defaultSemiBold">{submitting ? 'Opslaan...' : 'Klaar'}</ThemedText>
-            </Pressable>
-          ) : uiMode === 'idle' ? (
+          uiMode === 'idle' ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Open menu"
               onPress={() => setMenuVisible(true)}
-              style={[styles.menuButton, { backgroundColor: colorTokens.light.surfaceLow }]}>
-              <MaterialIcons name="menu" size={20} color={colorTokens.light.primary} />
+              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+              <MaterialIcons name="menu" size={20} color={palette.primary} />
             </Pressable>
           ) : (
             <ThemedView style={styles.topBarSpacer} />
@@ -497,30 +496,49 @@ export default function CaptureScreen() {
               </ThemedView>
             </Pressable>
           ) : (
-            <TextAreaField
-              onChangeText={setRawText}
-              placeholder="Wat houdt je bezig?"
-              value={rawText}
-              autoFocus
-              editable={!isBusy}
-              style={[styles.captureInput, styles.captureInputTyping]}
-            />
+            <ThemedView style={styles.typingCanvas}>
+              <TextAreaField
+                onChangeText={setRawText}
+                placeholder="Wat houdt je bezig?"
+                value={rawText}
+                autoFocus
+                editable={!isBusy}
+                style={[
+                  styles.captureInput,
+                  styles.captureInputTyping,
+                  {
+                    color: palette.text,
+                    borderColor: scheme === 'dark' ? `${palette.primaryStrong}66` : `${palette.primaryStrong}7A`,
+                    backgroundColor: scheme === 'dark' ? 'transparent' : 'rgba(255,255,255,0.14)',
+                  },
+                ]}
+              />
+              <ThemedView style={styles.typingActions}>
+                <PrimaryButton
+                  onPress={() => void handleSubmitText()}
+                  disabled={isBusy || !hasTextDraft}
+                  label={submitting ? 'Moment bewaren...' : 'Moment bewaren'}
+                />
+              </ThemedView>
+            </ThemedView>
           )}
 
           <ThemedView style={styles.micZone}>
-            <Pressable
-              onPress={() => void handleStartRecording()}
-              disabled={isBusy}
-              style={[
-                uiMode === 'idle' ? styles.micPrimary : styles.micSecondary,
-                isBusy && styles.micDisabled,
-              ]}>
-              <MaterialIcons
-                name="mic"
-                size={uiMode === 'idle' ? 34 : 21}
-                color={uiMode === 'idle' ? '#FFFFFF' : colorTokens.light.primary}
-              />
-            </Pressable>
+            {uiMode === 'idle' ? (
+              <Pressable
+                onPress={() => void handleStartRecording()}
+                disabled={isBusy}
+                style={[styles.micPrimary, isBusy && styles.micDisabled]}>
+                <MaterialIcons name="mic" size={34} color="#FFFFFF" />
+              </Pressable>
+            ) : (
+              <Pressable onPress={() => void handleCancelCurrentMode()} disabled={isBusy} style={styles.previousStepAction}>
+                <MaterialIcons name="mic" size={17} color={palette.mutedSoft} />
+                <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                  Vorige stap
+                </ThemedText>
+              </Pressable>
+            )}
           </ThemedView>
         </ThemedView>
       )}
@@ -537,19 +555,14 @@ export default function CaptureScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    paddingBottom: spacing.md,
-    gap: spacing.md,
+    gap: spacing.page,
   },
-  topAction: {
-    flexDirection: 'row',
+  topIconButton: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.pill,
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.md,
-  },
-  topPrimaryAction: {
-    backgroundColor: `${colorTokens.light.primary}12`,
+    justifyContent: 'center',
   },
   topActionDisabled: {
     opacity: 0.45,
@@ -592,14 +605,22 @@ const styles = StyleSheet.create({
   },
   captureInputTyping: {
     textAlign: 'left',
-    minHeight: 340,
-    fontSize: 24,
-    lineHeight: 34,
-    borderColor: `${colorTokens.light.separator}CC`,
+    flex: 1,
+    minHeight: 0,
+    fontSize: 28,
+    lineHeight: 38,
     borderRadius: radius.lg,
+    borderColor: `${colorTokens.light.primaryStrong}7A`,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    backgroundColor: `${colorTokens.light.surfaceLowest}D6`,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  typingCanvas: {
+    flex: 1,
+    gap: spacing.md,
+  },
+  typingActions: {
+    width: '100%',
   },
   idleCopy: {
     alignItems: 'center',
@@ -617,7 +638,7 @@ const styles = StyleSheet.create({
   micZone: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: spacing.md,
+    paddingBottom: 64,
     marginTop: spacing.md,
   },
   micPrimary: {
@@ -629,16 +650,15 @@ const styles = StyleSheet.create({
     backgroundColor: colorTokens.light.primaryStrong,
     ...shadows.cta,
   },
-  micSecondary: {
-    width: 50,
-    height: 50,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: `${colorTokens.light.primary}10`,
-  },
   micDisabled: {
     opacity: 0.5,
+  },
+  previousStepAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
   },
   voiceCanvas: {
     flex: 1,

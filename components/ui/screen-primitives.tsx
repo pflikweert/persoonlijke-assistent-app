@@ -38,6 +38,11 @@ export function ScreenContainer({
 
   if (scrollable) {
     const flattenedContentStyle = StyleSheet.flatten([styles.scrollContent, contentContainerStyle]);
+    const currentPaddingTop =
+      typeof flattenedContentStyle?.paddingTop === 'number'
+        ? flattenedContentStyle.paddingTop
+        : styles.scrollContent.paddingTop;
+    const nextPaddingTop = fixedHeader ? Math.max(currentPaddingTop, spacing.page) : currentPaddingTop;
     const nextPaddingBottom =
       (typeof flattenedContentStyle?.paddingBottom === 'number' ? flattenedContentStyle.paddingBottom : 0) +
       styles.scrollContent.paddingBottom;
@@ -51,6 +56,7 @@ export function ScreenContainer({
           contentContainerStyle={[
             flattenedContentStyle,
             {
+              paddingTop: nextPaddingTop,
               paddingBottom: nextPaddingBottom,
             },
           ]}>

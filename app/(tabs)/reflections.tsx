@@ -5,6 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
 import { ProcessingScreen } from '@/components/feedback/processing-screen';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
@@ -20,6 +21,7 @@ import {
   classifyUnknownError,
   fetchRecentReflectionsByType,
   generateReflection,
+  getUtcTodayDate,
   parseJsonStringArray,
 } from '@/services';
 import { buildReflectionCopyPayload } from '@/src/lib/copy-payloads';
@@ -160,13 +162,13 @@ function formatMonthCopyTitle(periodStart: string): string {
   return `${capitalizeFirst(month)} ${year}`;
 }
 
-function utcDayStringNow(): string {
-  return new Date().toISOString().slice(0, 10);
+function localDayStringNow(): string {
+  return getUtcTodayDate();
 }
 
 function selectCurrentPeriodId(
   rows: Awaited<ReturnType<typeof fetchRecentReflectionsByType>>,
-  day: string = utcDayStringNow()
+  day: string = localDayStringNow()
 ): string | null {
   const current = rows.find((row) => row.period_start <= day && row.period_end >= day);
   return current?.id ?? rows[0]?.id ?? null;
@@ -259,6 +261,7 @@ export default function ReflectionsScreen() {
     try {
       await generateReflection({
         periodType,
+        anchorDate: getUtcTodayDate(),
         forceRegenerate: true,
       });
       setStatus(`${periodTypeLabel(periodType)}reflectie gegenereerd.`);
@@ -406,8 +409,7 @@ export default function ReflectionsScreen() {
       </ThemedView>
 
       {loading ? (
-        <StateBlock
-          tone="loading"
+        <InlineLoadingOverlay
           message="Reflecties laden..."
           detail="We halen je laatste week- en maandreflecties op."
         />

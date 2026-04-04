@@ -6,6 +6,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
+import { MomentsTimelineSection } from '@/components/journal/moments-timeline-section';
+import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
+import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
@@ -160,7 +163,7 @@ export default function TodayScreen() {
       </ThemedView>
 
       {loading ? (
-        <StateBlock tone="loading" message="Vandaag laden..." detail="Even geduld, we halen je dagjournal op." />
+        <InlineLoadingOverlay message="Vandaag laden..." detail="Even geduld, we halen je dagjournal op." />
       ) : null}
       {!loading && error ? (
         <StateBlock
@@ -170,66 +173,27 @@ export default function TodayScreen() {
         />
       ) : null}
       {!loading && !error && !hasUsableTodaySummary ? (
-        <ThemedView style={styles.dayEditorialBlock}>
-          <ThemedText type="bodySecondary" style={[styles.dayOpeningText, { color: palette.muted }]}>
-            {'"Je dag is nog een leeg canvas. Er is ruimte voor de kleine dingen die later betekenis krijgen."'}
-          </ThemedText>
-        </ThemedView>
+        <DayEditorialPanel text={'"Je dag is nog een leeg canvas. Er is ruimte voor de kleine dingen die later betekenis krijgen."'} />
       ) : null}
 
       {!loading && !error && hasUsableTodaySummary ? (
-        <Pressable onPress={() => router.push(`/day/${todayDate}`)}>
-          <ThemedView style={styles.dayEditorialBlock}>
-            <ThemedText
-              type="bodySecondary"
-              style={[styles.dayOpeningText, { color: palette.muted }]}
-              numberOfLines={4}>
-              {summary?.trim()}
-            </ThemedText>
-          </ThemedView>
-        </Pressable>
+        <DayEditorialPanel text={summary?.trim() ?? ''} numberOfLines={4} onPress={() => router.push(`/day/${todayDate}`)} />
       ) : null}
 
       {!loading && !error && todayEntries.length > 0 ? (
-        <ThemedView style={styles.recentBlock}>
-          <ThemedView style={styles.recentHeader}>
-            <MetaText>Recent moments</MetaText>
-            <MetaText>Vandaag</MetaText>
-          </ThemedView>
-          <ThemedView style={styles.timelineList}>
-            {todayEntries.map((entry, index) => (
-              <Pressable
-                key={entry.id}
-                onPress={() =>
-                  router.push({
-                    pathname: '/entry/[id]',
-                    params: { id: entry.id, source: 'today', date: entry.journal_date },
-                  })
-                }
-                style={styles.timelineRow}>
-                <ThemedView style={styles.timelineTimeCol}>
-                  <ThemedText type="caption" style={[styles.timelineTimeText, { color: palette.mutedSoft }]}>
-                    {formatTime(entry.captured_at)}
-                  </ThemedText>
-                </ThemedView>
-                <ThemedView style={styles.timelineTrackCol}>
-                  <ThemedView style={[styles.timelineDot, { backgroundColor: palette.primary }]} />
-                  {index < todayEntries.length - 1 ? (
-                    <ThemedView style={[styles.timelineLine, { backgroundColor: `${palette.separator}88` }]} />
-                  ) : null}
-                </ThemedView>
-                <ThemedView style={styles.timelineContentCol}>
-                  <ThemedText type="defaultSemiBold" numberOfLines={1} style={{ color: palette.text }}>
-                    {entry.title?.trim() || 'Moment zonder titel'}
-                  </ThemedText>
-                  <ThemedText type="bodySecondary" numberOfLines={2} style={{ color: palette.muted }}>
-                    {entry.summary_short?.trim() || summarizeSnippet(entry.body)}
-                  </ThemedText>
-                </ThemedView>
-              </Pressable>
-            ))}
-          </ThemedView>
-        </ThemedView>
+        <MomentsTimelineSection
+          title="Recente momenten"
+          rightLabel="Vandaag"
+          entries={todayEntries}
+          style={styles.recentBlock}
+          onEntryPress={(entry) =>
+            router.push({
+              pathname: '/entry/[id]',
+              params: { id: entry.id, source: 'today', date: todayDate },
+            })
+          }
+          previewText={(entry) => entry.summary_short?.trim() || summarizeSnippet(entry.body)}
+        />
       ) : null}
 
       {!loading && !error && todayEntries.length === 0 && latestPreviousJournal ? (
@@ -368,15 +332,6 @@ function isUsableTodaySummary(value: string | null): boolean {
   return true;
 }
 
-function formatTime(isoValue: string): string {
-  const date = new Date(isoValue);
-  if (Number.isNaN(date.getTime())) {
-    return '--:--';
-  }
-
-  return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-}
-
 const styles = StyleSheet.create({
   screen: {
     gap: spacing.xl,
@@ -437,58 +392,8 @@ const styles = StyleSheet.create({
   compactText: {
     lineHeight: typography.roles.bodySecondary.lineHeight + 1,
   },
-  dayEditorialBlock: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.xs,
-  },
-  dayOpeningText: {
-    fontSize: 31,
-    lineHeight: 40,
-    letterSpacing: -0.35,
-    fontStyle: 'italic',
-    fontWeight: '300',
-  },
   recentBlock: {
     marginTop: spacing.lg,
-    gap: spacing.md,
-  },
-  recentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  timelineList: {
-    gap: spacing.xs,
-  },
-  timelineRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: spacing.sm,
-    minHeight: 72,
-  },
-  timelineTimeCol: {
-    width: 52,
-    alignItems: 'flex-end',
-    paddingTop: 2,
-  },
-  timelineTimeText: {
-    letterSpacing: 0.2,
-  },
-  timelineTrackCol: {
-    width: 14,
-    alignItems: 'center',
-    paddingTop: 3,
-  },
-  timelineDot: {
-    width: 6,
-    height: 6,
-    borderRadius: radius.pill,
-  },
-  timelineLine: {
-    width: StyleSheet.hairlineWidth,
-    flex: 1,
-    marginTop: spacing.xs,
   },
   timelineContentCol: {
     flex: 1,

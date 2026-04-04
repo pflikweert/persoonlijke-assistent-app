@@ -1,22 +1,24 @@
 import { Stack, router, useFocusEffect, useLocalSearchParams, useRootNavigationState } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { MomentsTimelineSection } from '@/components/journal/moments-timeline-section';
+import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
+import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
 import { ProcessingScreen } from '@/components/feedback/processing-screen';
+import { TextEditorModal } from '@/components/feedback/text-editor-modal';
 import { FullscreenMenuOverlay, type MainMenuRouteKey } from '@/components/navigation/fullscreen-menu-overlay';
 import { QuickMenuBar, quickMenuPathFromKey } from '@/components/navigation/quick-menu-bar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
-  MetaText,
   StateBlock,
 } from '@/components/ui/screen-primitives';
 import { CopyIconButton } from '@/components/ui/copy-icon-button';
 import {
-  deleteNormalizedEntryById,
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
   generateReflection,
@@ -311,7 +313,6 @@ export default function DayDetailScreen() {
 
     return 'today';
   }, [previousTabName]);
-  const showInlineEntryActions = false;
   const dayJournalCopyPayload = useMemo(
     () =>
       buildDayJournalCopyPayload({
@@ -361,22 +362,6 @@ export default function DayDetailScreen() {
       return { ...current, [id]: y };
     });
   }, []);
-
-  function formatTime(isoValue: string): string {
-    const date = new Date(isoValue);
-    if (Number.isNaN(date.getTime())) {
-      return '--:--';
-    }
-    return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  function openEditModal(entry: DayEntry) {
-    if (mutationBusy) {
-      return;
-    }
-    setEditingEntry(entry);
-    setEditBody(entry.body ?? '');
-  }
 
   function closeEditModal() {
     if (mutationBusy) {
@@ -451,41 +436,6 @@ export default function DayDetailScreen() {
     }
   }
 
-  function handleDeleteEntry(id: string) {
-    if (mutationBusy) {
-      return;
-    }
-
-    Alert.alert('Moment verwijderen?', 'Weet je zeker dat je dit individuele moment wilt verwijderen?', [
-      { text: 'Annuleer', style: 'cancel' },
-      {
-        text: 'Verwijderen',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            setMutationBusy(true);
-            try {
-              await deleteNormalizedEntryById(id);
-              const reflectionRefreshError = await refreshDerivedContentAfterEntryMutation();
-              if (reflectionRefreshError) {
-                Alert.alert(
-                  'Moment verwijderd',
-                  `Dagdetail is bijgewerkt, maar reflecties konden niet direct worden vernieuwd.\n\n${reflectionRefreshError}`
-                );
-              }
-            } catch (nextError) {
-              const message =
-                nextError instanceof Error ? nextError.message : 'Kon entry niet verwijderen.';
-              Alert.alert('Verwijderen mislukt', message);
-            } finally {
-              setMutationBusy(false);
-            }
-          })();
-        },
-      },
-    ]);
-  }
-
   function handleBackPress() {
     const fromCapture = showProcessedBanner || previousTabName === 'capture';
     if (fromCapture) {
@@ -535,7 +485,7 @@ export default function DayDetailScreen() {
       ) : null}
 
       {loading ? (
-        <StateBlock tone="loading" message="Dagdetail laden..." detail="Even geduld, we halen de dag op." />
+        <InlineLoadingOverlay message="Dagdetail laden..." detail="Even geduld, we halen de dag op." />
       ) : null}
       {!loading && error ? (
         <StateBlock tone="error" message="Dagdetail kon niet geladen worden." detail={error} />
@@ -549,25 +499,7 @@ export default function DayDetailScreen() {
         />
       ) : null}
 
-      {!loading && !error && summary ? (
-        <ThemedView
-          lightColor={colorTokens.light.surfaceLow}
-          darkColor={colorTokens.dark.surfaceLow}
-          style={[styles.heroVisual, { borderColor: palette.separator }]}>
-          <MaterialIcons
-            name="auto-awesome"
-            size={24}
-            color={palette.primary}
-            style={styles.heroVisualIcon}
-          />
-          <ThemedView lightColor="transparent" darkColor="transparent" style={styles.heroSummaryContent}>
-            <MetaText>Samenvatting</MetaText>
-            <ThemedText type="bodySecondary" style={[styles.heroSummaryText, { color: palette.text, backgroundColor: 'transparent' }]}>
-              {summary}
-            </ThemedText>
-          </ThemedView>
-        </ThemedView>
-      ) : null}
+      {!loading && !error && summary ? <DayEditorialPanel text={summary} /> : null}
 
       {!loading && !error && narrativeText ? (
         <ThemedView style={styles.narrativeBlock}>
@@ -626,108 +558,35 @@ export default function DayDetailScreen() {
       ) : null}
 
       {!loading && !error && visibleEntries.length > 0 ? (
-        <ThemedView style={styles.momentsBlock}>
-          <ThemedText type="meta" style={[styles.blockLabelMuted, { color: palette.mutedSoft }]}>
-            Individuele momenten
-          </ThemedText>
-          <ThemedView style={styles.entriesList}>
-            {visibleEntries.map((entry) => (
-              <ThemedView
-                key={entry.id}
-                onLayout={(event) => handleEntryLayout(entry.id, event.nativeEvent.layout.y)}
-                lightColor="transparent"
-                darkColor="transparent"
-                style={[
-                  styles.entryItem,
-                  { borderBottomColor: palette.separator },
-                  focusedEntryId === entry.id ? styles.entryFocused : null,
-                  focusedEntryId === entry.id ? { backgroundColor: palette.surfaceLow, borderColor: palette.primary } : null,
-                ]}>
-                <ThemedView style={styles.entryHead}>
-                  <Pressable
-                    onPress={() =>
-                      router.push({
-                        pathname: '/entry/[id]',
-                        params: { id: entry.id, source: 'day', date: journalDate },
-                      })
-                    }
-                    disabled={mutationBusy}
-                    style={styles.entryContentTap}>
-                    <ThemedText type="defaultSemiBold" numberOfLines={1} style={[styles.entryTitle, { color: palette.text }]}>
-                      {entry.title?.trim() || 'Moment zonder titel'}
-                    </ThemedText>
-                    <ThemedView style={styles.entryMeta}>
-                      <MaterialIcons
-                        name={entry.source_type === 'audio' ? 'mic' : 'edit-note'}
-                        size={14}
-                        color={palette.primary}
-                      />
-                      <ThemedText type="caption" style={[styles.entryType, { color: palette.mutedSoft }]}>
-                        {entry.source_type === 'audio' ? 'Audio' : 'Tekst'}
-                      </ThemedText>
-                      <ThemedText type="caption" style={[styles.entryTime, { color: palette.mutedSoft }]}>
-                        • {formatTime(entry.captured_at)}
-                      </ThemedText>
-                    </ThemedView>
-                    <ThemedText type="bodySecondary" numberOfLines={3} style={[styles.entryPreview, { color: palette.muted }]}>
-                      {entry.summary_short || entry.body}
-                    </ThemedText>
-                  </Pressable>
-
-                  {showInlineEntryActions ? (
-                    <ThemedView style={styles.entryActions}>
-                      <Pressable onPress={() => openEditModal(entry)} disabled={mutationBusy} style={styles.iconAction}>
-                        <MaterialIcons name="edit" size={15} color={palette.mutedSoft} />
-                      </Pressable>
-                      <Pressable onPress={() => handleDeleteEntry(entry.id)} disabled={mutationBusy} style={styles.iconAction}>
-                        <MaterialIcons name="delete-outline" size={15} color={palette.mutedSoft} />
-                      </Pressable>
-                    </ThemedView>
-                  ) : null}
-                </ThemedView>
-              </ThemedView>
-            ))}
-          </ThemedView>
-        </ThemedView>
+        <MomentsTimelineSection
+          title="Individuele momenten"
+          entries={visibleEntries}
+          style={styles.momentsBlock}
+          focusedEntryId={focusedEntryId}
+          onEntryLayout={handleEntryLayout}
+          onEntryPress={(entry) =>
+            router.push({
+              pathname: '/entry/[id]',
+              params: { id: entry.id, source: 'day', date: journalDate },
+            })
+          }
+          previewText={(entry) => entry.summary_short || entry.body}
+        />
       ) : null}
 
-      <Modal visible={Boolean(editingEntry)} animationType="slide" onRequestClose={closeEditModal}>
-        <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.modalScreen}>
-          <ThemedView style={styles.modalTopBar}>
-            <Pressable onPress={closeEditModal} disabled={mutationBusy} style={styles.modalTopAction}>
-              <ThemedText type="bodySecondary">Annuleer</ThemedText>
-            </Pressable>
-            <ThemedText type="sectionTitle">Moment bewerken</ThemedText>
-            <Pressable
-              onPress={() => void handleSaveEdit()}
-              disabled={mutationBusy}
-              style={[styles.modalTopAction, styles.modalTopActionPrimary, { backgroundColor: palette.primaryStrong }]}>
-              <ThemedText type="defaultSemiBold" lightColor={colorTokens.light.primaryOn} darkColor={colorTokens.dark.primaryOn}>
-                {mutationBusy ? 'Opslaan...' : 'Opslaan'}
-              </ThemedText>
-            </Pressable>
-          </ThemedView>
-
-          <TextInput
-            multiline
-            autoFocus
-            value={editBody}
-            onChangeText={setEditBody}
-            textAlignVertical="top"
-            style={[
-              styles.modalInputFull,
-              {
-                color: palette.text,
-                backgroundColor: `${palette.surfaceLowest}D6`,
-                borderColor: `${palette.separator}CC`,
-              },
-            ]}
-            placeholder="Typ de inhoud van dit moment..."
-            placeholderTextColor={palette.mutedSoft}
-          />
-          <ProcessingScreen visible={showEditProcessing} variant="entry-edit" />
-        </ThemedView>
-      </Modal>
+      <TextEditorModal
+        visible={Boolean(editingEntry)}
+        title="Moment bewerken"
+        value={editBody}
+        placeholder="Wat houdt je bezig?"
+        submitLabel="Moment bewaren"
+        processingLabel="Moment bewaren..."
+        processing={mutationBusy}
+        onCancel={closeEditModal}
+        onChange={setEditBody}
+        onSubmit={() => void handleSaveEdit()}
+      />
+      <ProcessingScreen visible={showEditProcessing} variant="entry-edit" />
 
       <ThemedView style={styles.bottomActionWrap}>
         <Pressable onPress={() => router.push('/capture')} style={styles.bottomAction}>
@@ -766,6 +625,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.page,
+    paddingTop: spacing.page,
     gap: spacing.section,
     paddingBottom: spacing.xxxl + spacing.xxl + spacing.xxl,
   },
@@ -788,33 +648,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   processedText: {
-  },
-  heroVisual: {
-    borderRadius: 32,
-    minHeight: 152,
-    marginTop: 24,
-    marginBottom: spacing.xl,
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    borderWidth: 1,
-    overflow: 'hidden',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 20,
-    position: 'relative',
-  },
-  heroVisualIcon: {
-    position: 'absolute',
-    right: 18,
-    top: 16,
-  },
-  heroSummaryContent: {
-    gap: spacing.xs,
-    width: '100%',
-    zIndex: 1,
-  },
-  heroSummaryText: {
-    lineHeight: 26,
   },
   narrativeBlock: {
     gap: spacing.sm,
@@ -865,9 +698,6 @@ const styles = StyleSheet.create({
   },
   blockLabel: {
   },
-  blockLabelMuted: {
-    marginLeft: spacing.xs,
-  },
   keyPointsList: {
     gap: spacing.md,
   },
@@ -886,93 +716,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   momentsBlock: {
-    gap: spacing.md,
     marginBottom: spacing.xl,
-  },
-  entriesList: {
-    gap: spacing.xs,
-  },
-  entryItem: {
-    borderRadius: 16,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
-    gap: spacing.inline,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  entryFocused: {
-    borderWidth: 1,
-  },
-  entryHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  entryContentTap: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  entryTitle: {
-  },
-  entryMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  entryType: {
-  },
-  entryTime: {
-  },
-  entryActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: 1,
-  },
-  iconAction: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.pill,
-    backgroundColor: 'transparent',
-  },
-  entryPreview: {
-    lineHeight: 23,
-  },
-  modalScreen: {
-    flex: 1,
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.page,
-    paddingBottom: spacing.page,
-    gap: spacing.md,
-  },
-  modalTopBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
-    minHeight: 40,
-  },
-  modalTopAction: {
-    minWidth: 84,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  modalTopActionPrimary: {
-    alignItems: 'center',
-  },
-  modalInputFull: {
-    flex: 1,
-    minHeight: 340,
-    fontSize: 24,
-    lineHeight: 34,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    textAlign: 'left',
   },
   bottomActionWrap: {
     alignItems: 'center',

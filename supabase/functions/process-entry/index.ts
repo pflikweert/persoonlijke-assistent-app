@@ -219,8 +219,25 @@ function parseTimezoneOffsetMinutes(value: unknown): number | null {
   return value;
 }
 
-function toJournalDate(capturedAtIso: string): string {
-  return capturedAtIso.slice(0, 10);
+function toJournalDate(
+  capturedAtIso: string,
+  timezoneOffsetMinutes: number | null,
+): string {
+  if (timezoneOffsetMinutes === null) {
+    return capturedAtIso.slice(0, 10);
+  }
+
+  const capturedAtDate = new Date(capturedAtIso);
+  if (Number.isNaN(capturedAtDate.getTime())) {
+    return capturedAtIso.slice(0, 10);
+  }
+
+  const localMs = capturedAtDate.getTime() - timezoneOffsetMinutes * 60 * 1000;
+  const localDate = new Date(localMs);
+  const year = localDate.getUTCFullYear();
+  const month = String(localDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(localDate.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function dateBoundsUtc(journalDate: string): { start: string; end: string } {
@@ -1537,7 +1554,8 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const journalDate = requestJournalDate ?? toJournalDate(capturedAt);
+    const journalDate = requestJournalDate ??
+      toJournalDate(capturedAt, timezoneOffsetMinutes);
 
     logFlow("info", {
       flow: FLOW,
@@ -1548,7 +1566,11 @@ Deno.serve(async (request: Request) => {
       details: {
         userId: authData.user.id,
         journalDate,
-        journalDateSource: requestJournalDate ? "request_local_day" : "capturedAt_utc_day",
+        journalDateSource: requestJournalDate
+          ? "request_local_day"
+          : timezoneOffsetMinutes !== null
+          ? "capturedAt_with_client_offset"
+          : "capturedAt_utc_day",
         timezoneOffsetMinutes,
         sourceType: parsedSource.value.sourceType,
       },
@@ -1729,7 +1751,7 @@ Deno.serve(async (request: Request) => {
     }
 
     step = "day_journal_upserted";
-    const bounds = requestJournalDate !== null && timezoneOffsetMinutes !== null
+    const bounds = timezoneOffsetMinutes !== null
       ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
       : dateBoundsUtc(journalDate);
     const { data: rawEntriesForDay, error: dayRawError } = await supabase

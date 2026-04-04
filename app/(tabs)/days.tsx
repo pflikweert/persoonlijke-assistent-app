@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
+import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   SecondaryButton,
@@ -179,7 +180,7 @@ export default function DaysScreen() {
       }
       contentContainerStyle={styles.scrollContent}>
       {loading ? (
-        <StateBlock tone="loading" message="Archief laden..." detail="We halen je recente dagen op." />
+        <InlineLoadingOverlay message="Archief laden..." detail="We halen je recente dagen op." />
       ) : null}
       {!loading && error ? (
         <StateBlock
