@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useState } from 'react';
-import { Image, ImageBackground, Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { sendMagicLink } from '@/services';
@@ -9,7 +9,6 @@ import { colorTokens, radius, shadows, spacing, typography } from '@/theme';
 
 const LOGIN_BG_LIGHT = require('../assets/images/login/login-bg-light-mode.png');
 const LOGIN_BG_DARK = require('../assets/images/login/login-bg-dark-mode.png');
-const LOGIN_BRAND_ICON = require('../assets/images/icon.png');
 
 export default function SignInScreen() {
   const { height: viewportHeight, width: viewportWidth } = useWindowDimensions();
@@ -135,10 +134,6 @@ export default function SignInScreen() {
             </View>
           ) : (
               <View style={styles.formWrap}>
-              <View style={styles.brandMark}>
-                <Image source={LOGIN_BRAND_ICON} style={styles.brandMarkImage} resizeMode="contain" />
-              </View>
-
               <View style={styles.hero}>
                 <ThemedText type="screenTitle" style={[styles.headline, isCompactViewport && styles.headlineCompact]}>
                   Vang je dag in woorden
@@ -292,17 +287,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  brandMark: {
-    width: 82,
-    height: 82,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  brandMarkImage: {
-    width: '100%',
-    height: '100%',
   },
   hero: {
     width: '100%',
