@@ -16,6 +16,7 @@ import { CopyIconButton } from '@/components/ui/copy-icon-button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
+  SecondaryButton,
   ScreenContainer,
   StateBlock,
 } from '@/components/ui/screen-primitives';
@@ -43,10 +44,6 @@ function periodTypeLabel(periodType: PeriodType): string {
   return periodType === 'week' ? 'Week' : 'Maand';
 }
 
-function narrativeHeading(periodType: PeriodType): string {
-  return periodType === 'week' ? 'Weekverhaal' : 'Maandverhaal';
-}
-
 function monthHeading(periodStart: string): string {
   const date = new Date(`${periodStart}T12:00:00.000Z`);
   if (Number.isNaN(date.getTime())) {
@@ -67,8 +64,26 @@ function weekHeading(periodStart: string): string {
     return `Week ${periodStart}`;
   }
   const weekNumber = getIsoWeekNumber(startDate);
-  const shortYear = String(startDate.getUTCFullYear()).slice(-2);
-  return `Week ${weekNumber} ${shortYear}`;
+  const year = startDate.getUTCFullYear();
+  return `Week ${weekNumber} · ${year}`;
+}
+
+function formatDateLabel(dateValue: string): string {
+  const date = new Date(`${dateValue}T12:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) {
+    return dateValue;
+  }
+
+  const day = String(date.getUTCDate());
+  const month = date.toLocaleDateString('nl-NL', {
+    month: 'long',
+    timeZone: 'UTC',
+  });
+  return `${day} ${month}`;
+}
+
+function formatNarrativeTitle(periodStart: string, periodEnd: string): string {
+  return `${formatDateLabel(periodStart)} – ${formatDateLabel(periodEnd)}`;
 }
 
 function shortSummary(value: string): string {
@@ -315,6 +330,19 @@ export default function ReflectionsScreen() {
       : monthHeading(activeReflection.period_start);
   }, [activePeriod, activeReflection]);
 
+  const headerActionLabel = activePeriod === 'week' ? 'Kies week' : 'Kies maand';
+  const bottomGenerateLabel =
+    activeReflection !== null
+      ? activePeriod === 'week'
+        ? 'Hergenereer weekreflectie'
+        : 'Hergenereer maandreflectie'
+      : activePeriod === 'week'
+        ? 'Genereer weekreflectie'
+        : 'Genereer maandreflectie';
+  const narrativeTitle = activeReflection
+    ? formatNarrativeTitle(activeReflection.period_start, activeReflection.period_end)
+    : null;
+
   const selectorSections = useMemo<ArchiveGroupedListSection[]>(() => {
     const grouped = new Map<string, ArchiveGroupedListSection>();
     for (const row of selectorRows) {
@@ -417,9 +445,22 @@ export default function ReflectionsScreen() {
         fixedHeader={
           isProcessing ? null : (
             <ScreenHeader
-              title="Reflecties"
+              title={headerTitle}
               titleType="screenTitle"
               subtitle="Rustige inzichten op basis van je dagjournals."
+              titleAlign="center"
+              leftAction={
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={headerActionLabel}
+                  onPress={() => openSelector(activePeriod)}
+                  style={[styles.headerActionButton, { backgroundColor: palette.surfaceLow }]}>
+                  <MaterialIcons name="calendar-month" size={18} color={palette.primary} />
+                  <ThemedText type="caption" style={[styles.headerActionLabel, { color: palette.primary }]}>
+                    {headerActionLabel}
+                  </ThemedText>
+                </Pressable>
+              }
               rightAction={
                 <Pressable
                   accessibilityRole="button"
@@ -435,80 +476,6 @@ export default function ReflectionsScreen() {
         contentContainerStyle={styles.scrollContent}>
       {!isProcessing ? (
         <>
-      <ThemedView style={styles.periodTopRow}>
-        <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
-          <Pressable
-            onPress={() => {
-              setActivePeriod('week');
-              if (!selectedWeekId) {
-                setSelectedWeekId(selectCurrentPeriodId(weekReflections));
-              }
-            }}
-            style={[
-              styles.periodButton,
-              activePeriod === 'week' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
-            ]}>
-            <ThemedText
-              type="caption"
-              style={[
-                styles.periodButtonLabel,
-                { color: palette.mutedSoft },
-                activePeriod === 'week' && [styles.periodButtonLabelActive, { color: palette.primary }],
-              ]}>
-              Week
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setActivePeriod('month');
-              if (!selectedMonthId) {
-                setSelectedMonthId(selectCurrentPeriodId(monthReflections));
-              }
-            }}
-            style={[
-              styles.periodButton,
-              activePeriod === 'month' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
-            ]}>
-            <ThemedText
-              type="caption"
-              style={[
-                styles.periodButtonLabel,
-                { color: palette.mutedSoft },
-                activePeriod === 'month' && [styles.periodButtonLabelActive, { color: palette.primary }],
-              ]}>
-              Maand
-            </ThemedText>
-          </Pressable>
-        </ThemedView>
-        <ThemedView style={styles.periodInlineActions}>
-          {activeRows.length > 0 ? (
-            <Pressable
-              onPress={() => openSelector(activePeriod)}
-              accessibilityRole="button"
-              style={[styles.periodInlineButton, { backgroundColor: palette.surfaceLow }]}>
-              <ThemedText type="caption" style={{ color: palette.primary }}>
-                {activePeriod === 'week' ? 'Kies andere week' : 'Kies andere maand'}
-              </ThemedText>
-            </Pressable>
-          ) : null}
-          <Pressable
-            onPress={() => void handleGenerate(activePeriod)}
-            disabled={isProcessing}
-            accessibilityRole="button"
-            style={[
-              styles.periodInlineButton,
-              { backgroundColor: palette.surfaceLow, opacity: isProcessing ? 0.6 : 1 },
-            ]}>
-            <ThemedView style={styles.regenerateInlineContent}>
-              <MaterialIcons name="autorenew" size={16} color={palette.primary} />
-              <ThemedText type="caption" style={{ color: palette.primary }}>
-                {generating === activePeriod ? 'Genereren...' : 'Hergenereer'}
-              </ThemedText>
-            </ThemedView>
-          </Pressable>
-        </ThemedView>
-      </ThemedView>
-
       {loading ? (
         <InlineLoadingOverlay
           message="Reflecties laden..."
@@ -535,8 +502,8 @@ export default function ReflectionsScreen() {
             <>
               <ThemedView style={styles.reflectHeaderWrap}>
                 <ThemedView style={styles.reflectHeader}>
-                  <ThemedText type="screenTitle" style={styles.reflectTitle}>
-                    {headerTitle}
+                  <ThemedText type="meta" style={[styles.reflectLabel, { color: palette.primary }]}>
+                    {activePeriod === 'week' ? 'Weekverhaal' : 'Maandverhaal'}
                   </ThemedText>
                 </ThemedView>
                 <CopyIconButton
@@ -550,7 +517,7 @@ export default function ReflectionsScreen() {
 
               {activeReflection.narrative_text?.trim() ? (
                 <EditorialNarrativeBlock
-                  title={narrativeHeading(activePeriod)}
+                  title={narrativeTitle ?? undefined}
                   text={activeReflection.narrative_text}
                 />
               ) : null}
@@ -602,6 +569,14 @@ export default function ReflectionsScreen() {
               detail="Genereer een reflectie om hier je inzichten terug te lezen."
             />
           )}
+
+          <ThemedView style={styles.bottomActionWrap}>
+            <SecondaryButton
+              label={isProcessing ? 'Hergenereert...' : bottomGenerateLabel}
+              onPress={() => void handleGenerate(activePeriod)}
+              disabled={isProcessing}
+            />
+          </ThemedView>
         </ThemedView>
       ) : null}
         </>
@@ -672,55 +647,24 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
+  headerActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+    borderRadius: radius.pill,
+    minHeight: 34,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  headerActionLabel: {
+    textTransform: 'none',
+  },
   menuButton: {
     width: 40,
     height: 40,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  periodSwitch: {
-    flexDirection: 'row',
-    borderRadius: radius.pill,
-    padding: 3,
-    gap: spacing.xxs,
-  },
-  periodTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  periodInlineActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  periodInlineButton: {
-    borderRadius: radius.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    minHeight: 36,
-    justifyContent: 'center',
-  },
-  regenerateInlineContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
-  },
-  periodButton: {
-    borderRadius: radius.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  periodButtonActive: {
-  },
-  periodButtonLabel: {
-    textTransform: 'uppercase',
-    letterSpacing: 0.9,
-  },
-  periodButtonLabelActive: {
   },
   readingCanvas: {
     gap: spacing.xl,
@@ -734,10 +678,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  reflectTitle: {
-    fontSize: 42,
-    lineHeight: 46,
-    letterSpacing: -1,
+  reflectLabel: {
+    letterSpacing: 0.5,
   },
   highlightList: {
     gap: spacing.sm,
@@ -779,5 +721,8 @@ const styles = StyleSheet.create({
   },
   selectorList: {
     paddingBottom: spacing.xl,
+  },
+  bottomActionWrap: {
+    marginTop: spacing.xs,
   },
 });

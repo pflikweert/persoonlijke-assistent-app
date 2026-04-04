@@ -7,11 +7,13 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, spacing } from '@/theme';
 
 type HeaderTitleType = 'sectionTitle' | 'screenTitle';
+type HeaderTitleAlign = 'left' | 'center';
 
 export function ScreenHeader({
   title,
   subtitle,
   titleType = 'sectionTitle',
+  titleAlign = 'left',
   leftAction,
   rightAction,
   style,
@@ -19,6 +21,7 @@ export function ScreenHeader({
   title?: string;
   subtitle?: string;
   titleType?: HeaderTitleType;
+  titleAlign?: HeaderTitleAlign;
   leftAction?: ReactNode;
   rightAction?: ReactNode;
   style?: ViewStyle;
@@ -41,9 +44,15 @@ export function ScreenHeader({
         <ThemedView style={[styles.side, !hasLeftAction ? styles.sideEmpty : null]}>{leftAction}</ThemedView>
 
         {title || subtitle ? (
-          <ThemedView style={[styles.titleBlock, styles.titleBlockLeft]}>
+          <ThemedView
+            style={[
+              styles.titleBlock,
+              titleAlign === 'center' ? styles.titleBlockCenter : styles.titleBlockLeft,
+            ]}>
             {title ? (
-              <ThemedText type={titleType} style={styles.title}>
+              <ThemedText
+                type={titleType}
+                style={[styles.title, titleAlign === 'center' ? styles.titleCenter : null]}>
                 {title}
               </ThemedText>
             ) : null}
@@ -53,7 +62,7 @@ export function ScreenHeader({
                 style={[
                   styles.subtitle,
                   { color: colorTokens[scheme].muted },
-                  styles.subtitleLeft,
+                  titleAlign === 'center' ? styles.subtitleCenter : styles.subtitleLeft,
                 ]}>
                 {subtitle}
               </ThemedText>
@@ -108,14 +117,24 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingHorizontal: 0,
   },
+  titleBlockCenter: {
+    alignItems: 'center',
+    paddingHorizontal: 0,
+  },
   title: {
     fontSize: 24,
     lineHeight: 30,
     textAlign: 'left',
   },
+  titleCenter: {
+    textAlign: 'center',
+  },
   subtitle: {
   },
   subtitleLeft: {
     textAlign: 'left',
+  },
+  subtitleCenter: {
+    textAlign: 'center',
   },
 });

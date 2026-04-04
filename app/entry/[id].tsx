@@ -87,18 +87,29 @@ function cleanEntryText(value: string): string {
   return collapsed.join('\n');
 }
 
-function buildSummary(value: string): string {
-  const clean = value.replace(/\s+/g, ' ').trim();
+function sanitizeAssistantCopy(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function shouldRenderAssistantCopy(value: string): boolean {
+  const clean = sanitizeAssistantCopy(value);
   if (!clean) {
-    return 'Je entry is toegevoegd aan je dag.';
+    return false;
   }
 
-  const sentence = clean.split(/[.!?]/)[0]?.trim() ?? '';
-  if (sentence.length >= 18) {
-    return sentence.endsWith('.') ? sentence : `${sentence}.`;
+  if (clean.length < 24) {
+    return false;
   }
 
-  return clean.length > 120 ? `${clean.slice(0, 119).trimEnd()}...` : clean;
+  const genericPatterns = [
+    /^je entry is toegevoegd/i,
+    /^entry toegevoegd/i,
+    /^moment opgeslagen/i,
+    /^notitie opgeslagen/i,
+    /^vandaag bijgewerkt/i,
+  ];
+
+  return !genericPatterns.some((pattern) => pattern.test(clean));
 }
 
 function formatDayActionLabel(value: string): string {
@@ -175,10 +186,8 @@ export default function EntryCompletionScreen() {
 
   const sourceText = entry?.body ?? '';
   const cleanedBody = useMemo(() => cleanEntryText(sourceText), [sourceText]);
-  const summaryShortText = useMemo(
-    () => entry?.summary_short?.trim() || buildSummary(sourceText),
-    [entry?.summary_short, sourceText]
-  );
+  const summaryShortText = useMemo(() => sanitizeAssistantCopy(entry?.summary_short ?? ''), [entry?.summary_short]);
+  const showAssistantCopy = useMemo(() => shouldRenderAssistantCopy(summaryShortText), [summaryShortText]);
   const isProcessing = saving || deleting;
   const capturedAtLabel = useMemo(() => formatCapturedAtLabel(entry?.captured_at ?? ''), [entry?.captured_at]);
   const title = entry?.title?.trim() || 'Je entry';
@@ -345,7 +354,7 @@ export default function EntryCompletionScreen() {
             <MetaText>{capturedAtLabel}</MetaText>
           </ThemedView>
 
-          <DayEditorialPanel text={summaryShortText} />
+          {showAssistantCopy ? <DayEditorialPanel text={summaryShortText} /> : null}
 
           <ThemedView style={styles.bodyBlock}>
             <ThemedText type="body" style={[styles.bodyText, { color: palette.text }]}>
