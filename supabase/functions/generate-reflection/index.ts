@@ -41,6 +41,23 @@ type ReflectionDraft = {
   reflectionPoints: string[];
 };
 
+type ReflectionComposeFailureReason =
+  | 'no_ai_result'
+  | 'parse_incomplete'
+  | 'empty_field_after_cleanup'
+  | 'invalid_shape';
+
+type ReflectionComposeResult =
+  | {
+      ok: true;
+      draft: ReflectionDraft;
+    }
+  | {
+      ok: false;
+      reason: ReflectionComposeFailureReason;
+      details?: Record<string, unknown>;
+    };
+
 type OpenAiJson = Record<string, unknown>;
 
 const CORS_BASE_HEADERS = {
@@ -52,6 +69,9 @@ const CORS_BASE_HEADERS = {
 const FLOW = 'generate-reflection' as const;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NO_SPEECH_MARKER = 'geen spraak herkend in audio-opname';
+const FORBIDDEN_REFLECTION_PHRASES = ['dit thema kwam meerdere keren terug'];
+const FORBIDDEN_REFLECTION_PREFIX =
+  /^(inzicht|ochtend|middag|avond|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s*:?\b/i;
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') ?? '*';
@@ -159,13 +179,59 @@ function cleanReflectionNarrative(value: string): string {
   return normalized;
 }
 
-function cleanReflectionList(values: string[], maxItems: number): string[] {
+function countWords(value: string): number {
+  return normalizeWhitespace(value)
+    .split(' ')
+    .filter((token) => token.length > 0).length;
+}
+
+function startsForbiddenReflectionPrefix(value: string): boolean {
+  return FORBIDDEN_REFLECTION_PREFIX.test(value.trim());
+}
+
+function containsForbiddenReflectionPhrase(value: string): boolean {
+  const normalized = normalizeForCompare(value);
+  return FORBIDDEN_REFLECTION_PHRASES.some((phrase) => normalized.includes(phrase));
+}
+
+function looksTruncatedReflectionLine(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return false;
+  }
+  if (/[.!?]$/.test(trimmed)) {
+    return false;
+  }
+  if (/[,;:]$/.test(trimmed)) {
+    return true;
+  }
+  const tail = normalizeForCompare(trimmed.slice(-36));
+  return [' en', ' maar', ' omdat', ' terwijl', ' toen', ' dat', ' die', ' dus', ' waardoor', ' waarna', ' zodat']
+    .some((suffix) => tail.endsWith(suffix));
+}
+
+function cleanReflectionList(
+  values: string[],
+  options: {
+    minItems: number;
+    maxItems: number;
+    maxWords: number;
+  }
+): string[] {
   const cleaned = values
     .map((value) => sanitizeLine(value))
     .filter((value) => value.length > 0)
-    .filter((value) => !containsNoSpeechMarker(value));
+    .filter((value) => !containsNoSpeechMarker(value))
+    .filter((value) => !startsForbiddenReflectionPrefix(value))
+    .filter((value) => !containsForbiddenReflectionPhrase(value))
+    .filter((value) => !looksTruncatedReflectionLine(value))
+    .filter((value) => countWords(value) <= options.maxWords);
 
-  return dedupeLines(cleaned).slice(0, maxItems);
+  const deduped = dedupeLines(cleaned).slice(0, options.maxItems);
+  if (deduped.length < options.minItems) {
+    return [];
+  }
+  return deduped;
 }
 
 function parseStringArray(value: unknown): string[] {
@@ -251,63 +317,6 @@ function computePeriodBounds(periodType: 'week' | 'month', anchorDate: string): 
   return {
     periodStart: toDayStringUtc(monthStart),
     periodEnd: toDayStringUtc(monthEnd),
-  };
-}
-
-function fallbackReflection(periodType: 'week' | 'month', dayJournals: DayJournalRow[]): ReflectionDraft {
-  const journalCount = dayJournals.length;
-  if (journalCount === 0) {
-    return {
-      summaryText:
-        periodType === 'week'
-          ? 'Geen dagjournals gevonden voor deze week. Leg eerst een notitie vast.'
-          : 'Geen dagjournals gevonden voor deze maand. Leg eerst een notitie vast.',
-      narrativeText:
-        periodType === 'week'
-          ? 'Er waren in deze week nog geen dagjournals beschikbaar om een periodereflectie op te bouwen.'
-          : 'Er waren in deze maand nog geen dagjournals beschikbaar om een periodereflectie op te bouwen.',
-      highlights: [],
-      reflectionPoints: [],
-    };
-  }
-
-  const firstSummary = dayJournals
-    .map((row) => sanitizeSummaryLine(parseString(row.summary) ?? ''))
-    .find((value) => value.length > 0);
-  const highlightPool = dedupeLines(
-    dayJournals
-      .flatMap((row) => (Array.isArray(row.sections) ? row.sections : []))
-      .map((item) => sanitizeLine(parseString(item) ?? ''))
-      .filter((value) => value.length > 0)
-  ).slice(0, 3);
-
-  const points =
-    highlightPool.length > 0
-      ? highlightPool.slice(0, 2).map((item) => `Dit thema kwam meerdere keren terug: ${item}.`)
-      : [
-          periodType === 'week'
-            ? 'In deze week was een terugkerende lijn zichtbaar in hoe de dagen zich opbouwden.'
-            : 'In deze maand was een bredere verschuiving zichtbaar over meerdere weken.',
-        ];
-
-  const narrativePool = dedupeLines(
-    dayJournals
-      .map((row) => cleanReflectionNarrative(parseString(row.narrative_text) ?? ''))
-      .filter((value) => value.length > 0)
-  );
-
-  const fallbackNarrative =
-    narrativePool.slice(0, 2).join('\n\n') ||
-    firstSummary ||
-    `Deze ${periodType === 'week' ? 'week' : 'maand'} laat een herkenbare lijn zien op basis van ${journalCount} dagjournals.`;
-
-  return {
-    summaryText:
-      firstSummary ||
-      `Overzicht voor deze ${periodType === 'week' ? 'week' : 'maand'} op basis van ${journalCount} concrete dagjournals.`,
-    narrativeText: fallbackNarrative,
-    highlights: highlightPool,
-    reflectionPoints: points,
   };
 }
 
@@ -462,8 +471,15 @@ async function composeReflection(args: {
   periodStart: string;
   periodEnd: string;
   dayJournals: DayJournalRow[];
-}): Promise<ReflectionDraft> {
-  const fallback = fallbackReflection(args.periodType, args.dayJournals);
+}): Promise<ReflectionComposeResult> {
+  if (args.dayJournals.length === 0) {
+    return {
+      ok: false,
+      reason: 'invalid_shape',
+      details: { dayJournalCount: 0 },
+    };
+  }
+
   const reflectionPrompt = buildReflectionPromptSpec({
     periodType: args.periodType,
     periodStart: args.periodStart,
@@ -483,7 +499,7 @@ async function composeReflection(args: {
   });
 
   if (!aiResult) {
-    return fallback;
+    return { ok: false, reason: 'no_ai_result' };
   }
 
   const summaryRaw = parseString(aiResult.summaryText);
@@ -491,21 +507,63 @@ async function composeReflection(args: {
   const highlightsRaw = parseStringArray(aiResult.highlights);
   const reflectionPointsRaw = parseStringArray(aiResult.reflectionPoints);
 
-  const summaryText = summaryRaw ? cleanReflectionSummary(summaryRaw) : '';
-  const narrativeText =
-    narrativeRaw && !containsNoSpeechMarker(narrativeRaw) ? cleanReflectionNarrative(narrativeRaw) : '';
-  const highlights = cleanReflectionList(highlightsRaw, 3);
-  const reflectionPoints = cleanReflectionList(reflectionPointsRaw, 3);
+  if (!summaryRaw || !narrativeRaw || highlightsRaw.length === 0 || reflectionPointsRaw.length === 0) {
+    return {
+      ok: false,
+      reason: 'parse_incomplete',
+      details: {
+        hasSummary: Boolean(summaryRaw),
+        hasNarrative: Boolean(narrativeRaw),
+        highlightCount: highlightsRaw.length,
+        reflectionPointCount: reflectionPointsRaw.length,
+      },
+    };
+  }
 
-  if (!summaryText || !narrativeText || highlights.length === 0 || reflectionPoints.length === 0) {
-    return fallback;
+  const summaryText = cleanReflectionSummary(summaryRaw);
+  const narrativeText =
+    !containsNoSpeechMarker(narrativeRaw) ? cleanReflectionNarrative(narrativeRaw) : '';
+  const highlights = cleanReflectionList(highlightsRaw, {
+    minItems: 2,
+    maxItems: 6,
+    maxWords: 25,
+  });
+  const reflectionPoints = cleanReflectionList(reflectionPointsRaw, {
+    minItems: 2,
+    maxItems: 5,
+    maxWords: 30,
+  });
+
+  if (!summaryText || !narrativeText) {
+    return {
+      ok: false,
+      reason: 'empty_field_after_cleanup',
+      details: {
+        hasSummary: Boolean(summaryText),
+        hasNarrative: Boolean(narrativeText),
+      },
+    };
+  }
+
+  if (highlights.length < 2 || reflectionPoints.length < 2) {
+    return {
+      ok: false,
+      reason: 'invalid_shape',
+      details: {
+        highlightCount: highlights.length,
+        reflectionPointCount: reflectionPoints.length,
+      },
+    };
   }
 
   return {
-    summaryText,
-    narrativeText,
-    highlights,
-    reflectionPoints,
+    ok: true,
+    draft: {
+      summaryText,
+      narrativeText,
+      highlights,
+      reflectionPoints,
+    },
   };
 }
 
@@ -760,7 +818,7 @@ Deno.serve(async (request: Request) => {
     const safeDayJournals = sanitizeDayJournalRows((dayJournals ?? []) as DayJournalRow[]);
 
     step = 'reflection_upserted';
-    const reflection = await composeReflection({
+    const reflectionResult = await composeReflection({
       apiKey: runtimeEnv.openAiApiKey,
       model: runtimeEnv.openAiModel,
       requestId,
@@ -770,6 +828,34 @@ Deno.serve(async (request: Request) => {
       periodEnd: bounds.periodEnd,
       dayJournals: safeDayJournals,
     });
+
+    if (!reflectionResult.ok) {
+      logFlow('warn', {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: 'reflection_fallback_used',
+        details: {
+          reason: reflectionResult.reason,
+          ...(reflectionResult.details ?? {}),
+        },
+      });
+
+      return errorResponse({
+        request,
+        httpStatus: 502,
+        requestId,
+        flowId,
+        step,
+        code: 'UPSTREAM_UNAVAILABLE',
+        message: 'Reflection generation failed quality gate',
+        details: {
+          reason: reflectionResult.reason,
+          ...(reflectionResult.details ?? {}),
+        },
+      });
+    }
 
     const generatedAt = new Date().toISOString();
     const modelVersion = `${runtimeEnv.openAiModel}:${REFLECTION_PROMPT_VERSION}`;
@@ -782,10 +868,10 @@ Deno.serve(async (request: Request) => {
           period_type: periodType,
           period_start: bounds.periodStart,
           period_end: bounds.periodEnd,
-          summary_text: reflection.summaryText,
-          narrative_text: reflection.narrativeText,
-          highlights_json: reflection.highlights,
-          reflection_points_json: reflection.reflectionPoints,
+          summary_text: reflectionResult.draft.summaryText,
+          narrative_text: reflectionResult.draft.narrativeText,
+          highlights_json: reflectionResult.draft.highlights,
+          reflection_points_json: reflectionResult.draft.reflectionPoints,
           generated_at: generatedAt,
           model_version: modelVersion,
         },

@@ -12,7 +12,6 @@ import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
 import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { EditorialNarrativeBlock } from '@/components/journal/editorial-narrative-block';
-import { CopyIconButton } from '@/components/ui/copy-icon-button';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   MetaText,
@@ -27,13 +26,16 @@ import {
   getUtcTodayDate,
   parseJsonStringArray,
 } from '@/services';
-import { buildReflectionCopyPayload } from '@/src/lib/copy-payloads';
 import type { PeriodType } from '@/services/reflections';
 import { colorTokens, radius, spacing } from '@/theme';
 
 type RouteParams = {
   period?: string | string[];
 };
+
+const FORBIDDEN_REFLECTION_PHRASES = ['dit thema kwam meerdere keren terug'];
+const FORBIDDEN_REFLECTION_PREFIX =
+  /^(inzicht|ochtend|middag|avond|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s*:?\b/i;
 
 function parseRoutePeriod(value: string | string[] | undefined): PeriodType | null {
   const parsed = Array.isArray(value) ? value[0] ?? '' : value ?? '';
@@ -87,18 +89,83 @@ function formatNarrativeTitle(periodStart: string, periodEnd: string): string {
 }
 
 function shortSummary(value: string): string {
-  const clean = (value ?? '').replace(/\s+/g, ' ').trim();
-  if (clean.length <= 110) {
-    return clean;
-  }
-  return `${clean.slice(0, 107).trimEnd()}...`;
+  return (value ?? '').replace(/\s+/g, ' ').trim();
 }
 
-function capitalizeFirst(value: string): string {
-  if (!value) {
-    return value;
+function splitHighlightText(value: string): { title: string; detail: string | null } {
+  const cleaned = value.replace(/\s+/g, ' ').trim();
+  if (cleaned.length === 0) {
+    return { title: '', detail: null };
   }
-  return value.charAt(0).toUpperCase() + value.slice(1);
+
+  const sentenceMatch = cleaned.match(/^(.+?[.!?])\s+(.+)$/);
+  if (sentenceMatch) {
+    return {
+      title: sentenceMatch[1].trim(),
+      detail: sentenceMatch[2].trim(),
+    };
+  }
+
+  const colonIndex = cleaned.indexOf(':');
+  if (colonIndex > 8 && colonIndex < cleaned.length - 8) {
+    return {
+      title: cleaned.slice(0, colonIndex).trim(),
+      detail: cleaned.slice(colonIndex + 1).trim(),
+    };
+  }
+
+  return { title: cleaned, detail: null };
+}
+
+function normalizeForReflection(value: string): string {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function looksTruncatedReflectionLine(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return false;
+  }
+  if (/[.!?]$/.test(trimmed)) {
+    return false;
+  }
+  if (/[,;:]$/.test(trimmed)) {
+    return true;
+  }
+  const tail = normalizeForReflection(trimmed.slice(-36));
+  return [' en', ' maar', ' omdat', ' terwijl', ' toen', ' dat', ' die', ' dus', ' waardoor', ' waarna', ' zodat']
+    .some((suffix) => tail.endsWith(suffix));
+}
+
+function hasForbiddenReflectionPhrase(value: string): boolean {
+  const normalized = normalizeForReflection(value);
+  return FORBIDDEN_REFLECTION_PHRASES.some((phrase) => normalized.includes(phrase));
+}
+
+function hasForbiddenReflectionPrefix(value: string): boolean {
+  return FORBIDDEN_REFLECTION_PREFIX.test(value.trim());
+}
+
+function isDegradedReflectionRow(input: {
+  summary: string;
+  narrative: string;
+  highlights: string[];
+  reflectionPoints: string[];
+}): boolean {
+  if (!input.summary.trim() || !input.narrative.trim()) {
+    return true;
+  }
+  if (input.highlights.length === 0 || input.reflectionPoints.length === 0) {
+    return true;
+  }
+
+  const lines = [...input.highlights, ...input.reflectionPoints];
+  return lines.some(
+    (line) =>
+      hasForbiddenReflectionPhrase(line) ||
+      hasForbiddenReflectionPrefix(line) ||
+      looksTruncatedReflectionLine(line)
+  );
 }
 
 function getIsoWeekNumber(date: Date): number {
@@ -107,35 +174,6 @@ function getIsoWeekNumber(date: Date): number {
   utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
   return Math.ceil(((utcDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-}
-
-function formatWeekCopyTitle(periodStart: string, periodEnd: string): string {
-  const startDate = new Date(`${periodStart}T12:00:00.000Z`);
-  const endDate = new Date(`${periodEnd}T12:00:00.000Z`);
-
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-    return `Week · ${periodStart} – ${periodEnd}`;
-  }
-
-  const weekNumber = getIsoWeekNumber(startDate);
-  const startDay = String(startDate.getUTCDate()).padStart(2, '0');
-  const startMonth = startDate.toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' });
-  const endDay = String(endDate.getUTCDate()).padStart(2, '0');
-  const endMonth = endDate.toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' });
-  const year = endDate.getUTCFullYear();
-
-  return `Week ${weekNumber} · ${startDay} ${startMonth} – ${endDay} ${endMonth} ${year}`;
-}
-
-function formatMonthCopyTitle(periodStart: string): string {
-  const date = new Date(`${periodStart}T12:00:00.000Z`);
-  if (Number.isNaN(date.getTime())) {
-    return periodStart;
-  }
-
-  const month = date.toLocaleDateString('nl-NL', { month: 'long', timeZone: 'UTC' });
-  const year = date.getUTCFullYear();
-  return `${capitalizeFirst(month)} ${year}`;
 }
 
 function localDayStringNow(): string {
@@ -302,25 +340,14 @@ export default function ReflectionsScreen() {
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
     .slice(0, 3);
-  const reflectionCopyPayload = useMemo(() => {
-    if (!activeReflection) {
-      return null;
-    }
-
-    const title =
-      activePeriod === 'week'
-        ? formatWeekCopyTitle(activeReflection.period_start, activeReflection.period_end)
-        : formatMonthCopyTitle(activeReflection.period_start);
-
-    return buildReflectionCopyPayload({
-      periodRange: title,
-      summaryText: activeReflection.summary_text,
-      narrativeText: activeReflection.narrative_text,
-      highlights: cleanHighlights,
-      reflectionPoints: cleanReflectionPoints,
-    });
-  }, [activePeriod, activeReflection, cleanHighlights, cleanReflectionPoints]);
-
+  const degradedReflection = activeReflection
+    ? isDegradedReflectionRow({
+        summary: activeReflection.summary_text ?? '',
+        narrative: activeReflection.narrative_text ?? '',
+        highlights: cleanHighlights,
+        reflectionPoints: cleanReflectionPoints,
+      })
+    : false;
   const headerTitle = useMemo(() => {
     if (!activeReflection) {
       return activePeriod === 'week' ? 'Week' : 'Maand';
@@ -447,18 +474,14 @@ export default function ReflectionsScreen() {
             <ScreenHeader
               title={headerTitle}
               titleType="screenTitle"
-              subtitle="Rustige inzichten op basis van je dagjournals."
               titleAlign="center"
               leftAction={
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={headerActionLabel}
                   onPress={() => openSelector(activePeriod)}
-                  style={[styles.headerActionButton, { backgroundColor: palette.surfaceLow }]}>
-                  <MaterialIcons name="calendar-month" size={18} color={palette.primary} />
-                  <ThemedText type="caption" style={[styles.headerActionLabel, { color: palette.primary }]}>
-                    {headerActionLabel}
-                  </ThemedText>
+                  style={[styles.headerIconButton, { backgroundColor: palette.surfaceLow }]}>
+                  <MaterialIcons name="calendar-month" size={20} color={palette.primary} />
                 </Pressable>
               }
               rightAction={
@@ -476,6 +499,51 @@ export default function ReflectionsScreen() {
         contentContainerStyle={styles.scrollContent}>
       {!isProcessing ? (
         <>
+      <ThemedView lightColor={colorTokens.light.surfaceLow} darkColor={colorTokens.dark.surfaceLow} style={styles.periodSwitch}>
+        <Pressable
+          onPress={() => {
+            setActivePeriod('week');
+            if (!selectedWeekId) {
+              setSelectedWeekId(selectCurrentPeriodId(weekReflections));
+            }
+          }}
+          style={[
+            styles.periodButton,
+            activePeriod === 'week' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
+          ]}>
+          <ThemedText
+            type="caption"
+            style={[
+              styles.periodButtonLabel,
+              { color: palette.mutedSoft },
+              activePeriod === 'week' && [styles.periodButtonLabelActive, { color: palette.primary }],
+            ]}>
+            Week
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            setActivePeriod('month');
+            if (!selectedMonthId) {
+              setSelectedMonthId(selectCurrentPeriodId(monthReflections));
+            }
+          }}
+          style={[
+            styles.periodButton,
+            activePeriod === 'month' && [styles.periodButtonActive, { backgroundColor: palette.surfaceLowest }],
+          ]}>
+          <ThemedText
+            type="caption"
+            style={[
+              styles.periodButtonLabel,
+              { color: palette.mutedSoft },
+              activePeriod === 'month' && [styles.periodButtonLabelActive, { color: palette.primary }],
+            ]}>
+            Maand
+          </ThemedText>
+        </Pressable>
+      </ThemedView>
+
       {loading ? (
         <InlineLoadingOverlay
           message="Reflecties laden..."
@@ -499,20 +567,14 @@ export default function ReflectionsScreen() {
       {!loading ? (
         <ThemedView style={styles.readingCanvas}>
           {activeReflection ? (
+            degradedReflection ? (
+              <StateBlock
+                tone="error"
+                message="Deze reflectie is niet betrouwbaar opgebouwd."
+                detail="Genereer opnieuw om een volledige week- of maandreflectie te tonen."
+              />
+            ) : (
             <>
-              <ThemedView style={styles.reflectHeaderWrap}>
-                <ThemedView style={styles.reflectHeader}>
-                  <ThemedText type="meta" style={[styles.reflectLabel, { color: palette.primary }]}>
-                    {activePeriod === 'week' ? 'Weekverhaal' : 'Maandverhaal'}
-                  </ThemedText>
-                </ThemedView>
-                <CopyIconButton
-                  payload={reflectionCopyPayload}
-                  copyLabel="Kopieer reflectie"
-                  copiedLabel="Reflectie gekopieerd"
-                />
-              </ThemedView>
-
               <DayEditorialPanel text={activeReflection.summary_text} />
 
               {activeReflection.narrative_text?.trim() ? (
@@ -530,15 +592,41 @@ export default function ReflectionsScreen() {
                       Belangrijkste gebeurtenissen
                     </ThemedText>
                   </ThemedView>
-                  {cleanHighlights.map((item, index) => (
-                    <ThemedView
-                      key={`${item}-${index}`}
-                      lightColor={colorTokens.light.surfaceLow}
-                      darkColor={colorTokens.dark.surfaceLow}
-                      style={styles.highlightItem}>
-                      <ThemedText type="bodySecondary">{item}</ThemedText>
+                  {cleanHighlights.map((item, index) => {
+                    const split = splitHighlightText(item);
+                    return (
+                    <ThemedView key={`${item}-${index}`} style={styles.highlightEditorialRow}>
+                      <ThemedView style={styles.highlightIndexCol}>
+                        <ThemedText type="screenTitle" style={[styles.highlightIndex, { color: `${palette.primary}CC` }]}>
+                          {String(index + 1).padStart(2, '0')}
+                        </ThemedText>
+                      </ThemedView>
+                      <ThemedView style={styles.highlightTrackCol}>
+                        <ThemedView
+                          style={[
+                            styles.highlightTrackDot,
+                            { borderColor: `${palette.primary}CC`, backgroundColor: `${palette.primary}1F` },
+                          ]}
+                        />
+                        {index < cleanHighlights.length - 1 ? (
+                          <ThemedView style={[styles.highlightTrackLine, { backgroundColor: `${palette.separator}88` }]} />
+                        ) : null}
+                      </ThemedView>
+                      <ThemedView style={styles.highlightEditorialContent}>
+                        <ThemedText
+                          type="bodySecondary"
+                          style={[styles.highlightTitle, { color: palette.text }]}>
+                          {split.title}
+                        </ThemedText>
+                        {split.detail ? (
+                          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                            {split.detail}
+                          </ThemedText>
+                        ) : null}
+                      </ThemedView>
                     </ThemedView>
-                  ))}
+                    );
+                  })}
                 </ThemedView>
               ) : null}
 
@@ -550,18 +638,29 @@ export default function ReflectionsScreen() {
                       Reflectiepunten
                     </ThemedText>
                   </ThemedView>
-                  {cleanReflectionPoints.map((item, index) => (
-                    <ThemedView
-                      key={`${item}-${index}`}
-                      lightColor={colorTokens.light.surfaceLow}
-                      darkColor={colorTokens.dark.surfaceLow}
-                      style={styles.highlightItem}>
-                      <ThemedText type="bodySecondary">{item}</ThemedText>
-                    </ThemedView>
-                  ))}
+                  <ThemedView
+                    style={styles.reflectionPointsCard}>
+                    {cleanReflectionPoints.map((item, index) => (
+                      <ThemedView key={`${item}-${index}`} style={styles.reflectionPointItem}>
+                        <ThemedText
+                          type="body"
+                          style={[styles.reflectionPointText, { color: palette.text }]}>
+                          {item}
+                        </ThemedText>
+                        <ThemedView
+                          style={[
+                            styles.reflectionPointAccent,
+                            { backgroundColor: `${palette.primary}99` },
+                          ]}
+                        />
+                        {index < cleanReflectionPoints.length - 1 ? <ThemedView style={styles.reflectionPointGap} /> : null}
+                      </ThemedView>
+                    ))}
+                  </ThemedView>
                 </ThemedView>
               ) : null}
             </>
+            )
           ) : (
             <StateBlock
               tone="empty"
@@ -647,17 +746,32 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  headerActionButton: {
+  periodSwitch: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
+    alignSelf: 'flex-start',
     borderRadius: radius.pill,
-    minHeight: 34,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    padding: 3,
+    gap: spacing.xxs,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
   },
-  headerActionLabel: {
-    textTransform: 'none',
+  periodButton: {
+    borderRadius: radius.pill,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  periodButtonActive: {},
+  periodButtonLabel: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+  },
+  periodButtonLabelActive: {},
+  headerIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menuButton: {
     width: 40,
@@ -669,31 +783,77 @@ const styles = StyleSheet.create({
   readingCanvas: {
     gap: spacing.xl,
   },
-  reflectHeader: {
-    gap: spacing.xs,
-  },
-  reflectHeaderWrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  reflectLabel: {
-    letterSpacing: 0.5,
-  },
   highlightList: {
-    gap: spacing.sm,
+    gap: spacing.lg,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
-  highlightItem: {
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.xs,
+  highlightEditorialRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: spacing.md,
+  },
+  highlightIndexCol: {
+    width: 52,
+    alignItems: 'flex-start',
+  },
+  highlightIndex: {
+    fontSize: 42,
+    lineHeight: 42,
+    fontWeight: '300',
+    fontStyle: 'italic',
+    letterSpacing: 0.2,
+  },
+  highlightTrackCol: {
+    width: 12,
+    alignItems: 'center',
+    paddingTop: 7,
+  },
+  highlightTrackDot: {
+    width: 7,
+    height: 7,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  highlightTrackLine: {
+    width: StyleSheet.hairlineWidth,
+    flex: 1,
+    marginTop: spacing.xs,
+  },
+  highlightEditorialContent: {
+    flex: 1,
+    gap: spacing.xxs,
+    paddingBottom: spacing.md,
+  },
+  highlightTitle: {
+    fontWeight: '400',
+    lineHeight: 24,
+  },
+  reflectionPointsCard: {
+    backgroundColor: 'transparent',
+    gap: spacing.lg,
+  },
+  reflectionPointItem: {
+    gap: spacing.md,
+    backgroundColor: 'transparent',
+  },
+  reflectionPointAccent: {
+    width: 36,
+    height: 2,
+    borderRadius: radius.pill,
+  },
+  reflectionPointGap: {
+    height: spacing.sm,
+  },
+  reflectionPointText: {
+    fontStyle: 'italic',
+    fontSize: 20,
+    lineHeight: 34,
+    letterSpacing: -0.2,
+    fontWeight: '400',
   },
   selectorScreen: {
     flex: 1,

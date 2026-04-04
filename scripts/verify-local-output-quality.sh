@@ -219,6 +219,10 @@ function countSentenceLikeParts(value) {
     .filter(Boolean).length;
 }
 
+function countWords(value) {
+  return norm(value).split(' ').filter(Boolean).length;
+}
+
 function looksGeneric(value) {
   const text = norm(value);
   if (text.length < 12) {
@@ -248,6 +252,32 @@ function looksChronologicalReflectionBullet(value) {
   ];
 
   return patterns.some((pattern) => pattern.test(text));
+}
+
+function hasForbiddenReflectionPrefix(value) {
+  const text = norm(value);
+  return /^(inzicht|ochtend|middag|avond|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s*:?\b/i.test(text);
+}
+
+function hasFallbackLikeReflectionPhrase(value) {
+  const text = norm(value);
+  return text.includes('dit thema kwam meerdere keren terug');
+}
+
+function looksTruncatedReflectionBullet(value) {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) {
+    return false;
+  }
+  if (/[.!?]$/.test(trimmed)) {
+    return false;
+  }
+  if (/[,;:]$/.test(trimmed)) {
+    return true;
+  }
+  const tail = norm(trimmed.slice(-36));
+  return [' en', ' maar', ' omdat', ' terwijl', ' toen', ' dat', ' die', ' dus', ' waardoor', ' waarna', ' zodat']
+    .some((suffix) => tail.endsWith(suffix));
 }
 
 function looksMetaPreview(value) {
@@ -762,10 +792,20 @@ function reviewReflection(rows, label) {
     add('FAIL', label, 'Narrative_text is leeg.');
   }
   if (highlights.length === 0) {
-    add('WARN', label, 'Geen highlights gevonden.');
+    add('FAIL', label, 'Geen highlights gevonden.');
   }
   if (points.length === 0) {
-    add('WARN', label, 'Geen reflection points gevonden.');
+    add('FAIL', label, 'Geen reflection points gevonden.');
+  }
+
+  const prefixedBullets = [...highlights, ...points].filter((item) => hasForbiddenReflectionPrefix(item));
+  if (prefixedBullets.length > 0) {
+    add('FAIL', label, 'Section-prefix of daglabel lekt door in highlights/reflection points.');
+  }
+
+  const fallbackLikeBullets = [...highlights, ...points].filter((item) => hasFallbackLikeReflectionPhrase(item));
+  if (fallbackLikeBullets.length > 0) {
+    add('FAIL', label, 'Fallback-achtige zin lekt door in reflection-output.');
   }
 
   const actionLikePoints = points.filter((point) =>
@@ -810,6 +850,26 @@ function reviewReflection(rows, label) {
   const crowdedBullets = [...highlights, ...points].filter((item) => item.length > 220 || countSentenceLikeParts(item) > 2);
   if (crowdedBullets.length > 0) {
     add('WARN', label, 'Highlights of reflection points zijn te vol of recap-achtig.');
+  }
+
+  const longHighlights = highlights.filter((item) => countWords(item) > 25);
+  if (longHighlights.length > 0) {
+    add('WARN', label, 'Een of meer highlights zijn langer dan 25 woorden.');
+  }
+
+  const longPoints = points.filter((item) => countWords(item) > 30);
+  if (longPoints.length > 0) {
+    add('WARN', label, 'Een of meer reflection points zijn langer dan 30 woorden.');
+  }
+
+  const truncatedBullets = [...highlights, ...points].filter((item) => looksTruncatedReflectionBullet(item));
+  if (truncatedBullets.length > 0) {
+    add('WARN', label, 'Een of meer highlights/reflection points lijken afgekapt of half afgebroken.');
+  }
+
+  const overlapPoints = points.filter((point) => hasStrongOverlap(summary, point));
+  if (summary && points.length > 0 && overlapPoints.length >= Math.ceil(points.length * 0.6)) {
+    add('WARN', label, 'Summary en reflectionPoints overlappen te sterk.');
   }
 
   if (narrative && looksGeneric(narrative)) {
