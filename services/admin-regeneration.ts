@@ -60,6 +60,14 @@ type StatusResponse = {
   job: AdminRegenerationJobView;
 };
 
+type LatestResponse = {
+  status: 'ok';
+  flow: 'admin-regeneration-job';
+  requestId: string;
+  flowId: string;
+  job: AdminRegenerationJobView | null;
+};
+
 type AccessResponse = {
   status: 'ok';
   flow: 'admin-regeneration-job';
@@ -245,4 +253,22 @@ export async function hasAdminRegenerationAccess(): Promise<boolean> {
     }
     throw error;
   }
+}
+
+export async function fetchLatestAdminRegenerationJob(): Promise<AdminRegenerationJobView | null> {
+  const flowId = createClientFlowId('admin-regeneration');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-regeneration-job' });
+
+  const data = await invokeAction<LatestResponse>({
+    flowId,
+    body: {
+      action: 'latest',
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-regeneration-job' || !data.requestId) {
+    throw new Error('Ongeldige response van admin-regeneration-job latest.');
+  }
+
+  return data.job ?? null;
 }

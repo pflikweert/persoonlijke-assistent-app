@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { ScreenHeader } from '@/components/layout/screen-header';
@@ -18,6 +18,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   classifyUnknownError,
   fetchAdminRegenerationJobStatus,
+  fetchLatestAdminRegenerationJob,
   hasAdminRegenerationAccess,
   startAdminRegenerationJob,
 } from '@/services';
@@ -131,6 +132,20 @@ export default function SettingsRegenerationScreen() {
 
   const isRunning = job?.status === 'queued' || job?.status === 'running';
 
+  const loadLatestJob = useCallback(async () => {
+    if (adminAccess !== true) {
+      return;
+    }
+
+    try {
+      const latest = await fetchLatestAdminRegenerationJob();
+      setJob(latest);
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError(parsed.message);
+    }
+  }, [adminAccess]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -153,6 +168,16 @@ export default function SettingsRegenerationScreen() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    void loadLatestJob();
+  }, [loadLatestJob]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadLatestJob();
+    }, [loadLatestJob])
+  );
 
   const stepByType = useMemo(() => {
     const map = new Map<AdminRegenerationStepType, AdminRegenerationStepView>();

@@ -18,7 +18,7 @@ import {
 type StepType = 'entries_normalized' | 'day_journals' | 'week_reflections' | 'month_reflections';
 type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 
-type Action = 'start' | 'status' | 'worker_tick' | 'access';
+type Action = 'start' | 'status' | 'worker_tick' | 'access' | 'latest';
 
 type StartBody = {
   action: 'start';
@@ -39,7 +39,11 @@ type AccessBody = {
   action: 'access';
 };
 
-type RequestBody = StartBody | StatusBody | WorkerBody | AccessBody;
+type LatestBody = {
+  action: 'latest';
+};
+
+type RequestBody = StartBody | StatusBody | WorkerBody | AccessBody | LatestBody;
 
 type OpenAiBatchStatus =
   | 'validating'
@@ -2001,7 +2005,7 @@ Deno.serve(async (request: Request) => {
     }
 
     const action = parseString((body as { action?: unknown }).action) as Action | null;
-    if (!action || (action !== 'start' && action !== 'status' && action !== 'worker_tick' && action !== 'access')) {
+    if (!action || (action !== 'start' && action !== 'status' && action !== 'worker_tick' && action !== 'access' && action !== 'latest')) {
       return errorResponse({
         request,
         httpStatus: 400,
@@ -2009,7 +2013,7 @@ Deno.serve(async (request: Request) => {
         flowId,
         step: 'validated',
         code: 'INPUT_INVALID',
-        message: 'Invalid action. Use start, status, worker_tick, access.',
+        message: 'Invalid action. Use start, status, worker_tick, access, latest.',
       });
     }
 
@@ -2017,7 +2021,7 @@ Deno.serve(async (request: Request) => {
     const isInternal = internalToken.length > 0 && internalHeaderToken === internalToken;
 
     let userId: string | null = null;
-    if (!isInternal || action === 'start' || action === 'status' || action === 'access') {
+    if (!isInternal || action === 'start' || action === 'status' || action === 'access' || action === 'latest') {
       try {
         const authResult = await authenticateAdmin({
           request,
@@ -2059,6 +2063,61 @@ Deno.serve(async (request: Request) => {
         autoRefreshToken: false,
       },
     });
+
+    if (action === 'latest') {
+      step = 'latest';
+
+      const { data: latestJob, error: latestJobError } = await adminClient
+        .from('admin_regeneration_jobs')
+        .select('id')
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (latestJobError) {
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: 'DB_READ_FAILED',
+          message: 'Failed to load latest job.',
+        });
+      }
+
+      if (!latestJob?.id) {
+        return jsonResponse(request, 200, {
+          status: 'ok',
+          flow: FLOW,
+          requestId,
+          flowId,
+          job: null,
+        });
+      }
+
+      const view = await loadJobView({ adminClient, jobId: latestJob.id });
+      if (view.created_by !== userId) {
+        return errorResponse({
+          request,
+          httpStatus: 403,
+          requestId,
+          flowId,
+          step,
+          code: 'AUTH_UNAUTHORIZED',
+          message: 'Not allowed to view this job.',
+        });
+      }
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        job: view,
+      });
+    }
 
     if (action === 'start') {
       step = 'starting';
