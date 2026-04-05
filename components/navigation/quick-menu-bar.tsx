@@ -12,14 +12,13 @@ export type QuickMenuKey = 'today' | 'capture' | 'days' | 'reflections';
 export const QUICK_MENU_ITEMS: {
   key: QuickMenuKey;
   label: string;
-  icon: 'house.fill' | 'square.and.pencil' | 'calendar' | 'sparkles';
+  icon: 'house.fill' | 'mic.fill' | 'sparkles';
   routeName: 'index' | 'capture' | 'days' | 'reflections';
   routePath: '/(tabs)' | '/capture' | '/days' | '/reflections';
 }[] = [
   { key: 'today', label: 'Vandaag', icon: 'house.fill', routeName: 'index', routePath: '/(tabs)' },
-  { key: 'capture', label: 'Vastleggen', icon: 'square.and.pencil', routeName: 'capture', routePath: '/capture' },
-  { key: 'days', label: 'Dagen', icon: 'calendar', routeName: 'days', routePath: '/days' },
-  { key: 'reflections', label: 'Reflecties', icon: 'sparkles', routeName: 'reflections', routePath: '/reflections' },
+  { key: 'capture', label: 'Leg vast', icon: 'mic.fill', routeName: 'capture', routePath: '/capture' },
+  { key: 'reflections', label: 'Terugblik', icon: 'sparkles', routeName: 'reflections', routePath: '/reflections' },
 ];
 
 export function quickMenuKeyFromRouteName(routeName: string | undefined): QuickMenuKey {
@@ -37,11 +36,19 @@ export function quickMenuKeyFromRouteName(routeName: string | undefined): QuickM
 }
 
 export function quickMenuPathFromKey(key: QuickMenuKey): '/(tabs)' | '/capture' | '/days' | '/reflections' {
+  if (key === 'days') {
+    return '/days';
+  }
+
   const match = QUICK_MENU_ITEMS.find((item) => item.key === key);
   return match?.routePath ?? '/(tabs)';
 }
 
 export function quickMenuRouteNameFromKey(key: QuickMenuKey): 'index' | 'capture' | 'days' | 'reflections' {
+  if (key === 'days') {
+    return 'days';
+  }
+
   const match = QUICK_MENU_ITEMS.find((item) => item.key === key);
   return match?.routeName ?? 'index';
 }
@@ -72,6 +79,13 @@ export function QuickMenuBar({
       ]}>
       {QUICK_MENU_ITEMS.map((item) => {
         const active = item.key === activeKey;
+        const isPrimaryCapture = item.key === 'capture';
+        const activeBackground =
+          scheme === 'light' ? 'rgba(221, 156, 30, 0.14)' : 'rgba(233, 188, 95, 0.18)';
+        const captureBackground = scheme === 'light' ? palette.primaryStrong : '#D9A638';
+        const captureTextColor = scheme === 'light' ? palette.primaryOn : '#191611';
+        const defaultTextColor = active ? palette.tabActive : palette.tabInactive;
+
         return (
           <Pressable
             key={item.key}
@@ -80,18 +94,20 @@ export function QuickMenuBar({
             onPress={() => onSelect(item.key)}
             style={[
               styles.item,
-              active
-                ? { backgroundColor: scheme === 'light' ? 'rgba(221, 156, 30, 0.14)' : 'rgba(233, 188, 95, 0.18)' }
-                : null,
+              isPrimaryCapture
+                ? [styles.captureItem, { backgroundColor: active ? captureBackground : `${captureBackground}E6` }]
+                : active
+                  ? { backgroundColor: activeBackground }
+                  : null,
             ]}>
             <IconSymbol
-              size={sizing.iconMd}
+              size={isPrimaryCapture ? sizing.iconLg : sizing.iconMd}
               name={item.icon}
-              color={active ? palette.tabActive : palette.tabInactive}
+              color={isPrimaryCapture ? captureTextColor : defaultTextColor}
             />
             <ThemedText
               type="caption"
-              style={[styles.label, { color: active ? palette.tabActive : palette.tabInactive }]}>
+              style={[styles.label, isPrimaryCapture ? styles.captureLabel : null, { color: isPrimaryCapture ? captureTextColor : defaultTextColor }]}>
               {item.label}
             </ThemedText>
           </Pressable>
@@ -131,11 +147,21 @@ const styles = StyleSheet.create({
     gap: spacing.xxs,
     flex: 1,
   },
+  captureItem: {
+    minHeight: 56,
+    borderRadius: radius.pill,
+    marginTop: -8,
+    marginHorizontal: spacing.xs,
+    ...shadows.surface,
+  },
   label: {
     fontFamily: typography.families.sans,
     fontSize: typography.roles.caption.size,
     lineHeight: typography.roles.caption.lineHeight,
     fontWeight: typography.roles.caption.weight,
     letterSpacing: typography.roles.caption.letterSpacing,
+  },
+  captureLabel: {
+    fontWeight: '700',
   },
 });

@@ -13,14 +13,21 @@ import { hasAdminRegenerationAccess } from '@/services';
 import { colorTokens, radius, spacing } from '@/theme';
 
 type SettingsRoute = {
-  key: 'import' | 'regeneration';
+  key: 'export' | 'import' | 'regeneration';
   label: string;
   description: string;
   icon: keyof typeof MaterialIcons.glyphMap;
-  route: '/settings-import' | '/settings-regeneration';
+  route: '/settings-export' | '/settings-import' | '/settings-regeneration';
 };
 
 const SETTINGS_ROUTES: SettingsRoute[] = [
+  {
+    key: 'export',
+    label: 'Archief downloaden',
+    description: 'Download een leesbaar bestand van je archief.',
+    icon: 'download',
+    route: '/settings-export',
+  },
   {
     key: 'import',
     label: 'Import',

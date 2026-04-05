@@ -113,6 +113,15 @@ export default function TodayScreen() {
         <ScreenHeader
           title="Vandaag"
           subtitle={formattedDate}
+          leftAction={
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Kies dag"
+              onPress={() => router.push('/days')}
+              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+              <MaterialIcons name="calendar-today" size={18} color={palette.primary} />
+            </Pressable>
+          }
           rightAction={
             <Pressable
               accessibilityRole="button"

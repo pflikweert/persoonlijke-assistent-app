@@ -482,13 +482,22 @@ export default function DayDetailScreen() {
           </Pressable>
         }
         rightAction={
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.topBarIconButton, { backgroundColor: palette.surfaceLow }]}>
-            <MaterialIcons name="menu" size={20} color={palette.primary} />
-          </Pressable>
+          <ThemedView style={styles.headerActions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Kies dag"
+              onPress={() => router.push('/days')}
+              style={[styles.topBarIconButton, { backgroundColor: palette.surfaceLow }]}>
+              <MaterialIcons name="calendar-today" size={18} color={palette.primary} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open menu"
+              onPress={() => setMenuVisible(true)}
+              style={[styles.topBarIconButton, { backgroundColor: palette.surfaceLow }]}>
+              <MaterialIcons name="menu" size={20} color={palette.primary} />
+            </Pressable>
+          </ThemedView>
         }
       />
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
@@ -677,6 +686,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   processedRow: {
     flexDirection: 'row',

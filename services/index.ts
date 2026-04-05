@@ -17,6 +17,7 @@ export {
 export { refreshDerivedAfterCaptureInBackground, submitAudioEntry, submitTextEntry } from './entries';
 export { isChatGptMarkdownImportEnabled } from './feature-flags';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
+export { downloadUserArchive } from './export';
 export {
   fetchAdminRegenerationJobStatus,
   fetchLatestAdminRegenerationJob,

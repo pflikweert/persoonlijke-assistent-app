@@ -60,7 +60,8 @@ export async function ensureAuthenticatedUserSession(args: {
     | 'regenerate-day-journal'
     | 'renormalize-entry'
     | 'import-chatgpt-markdown'
-    | 'admin-regeneration-job';
+    | 'admin-regeneration-job'
+    | 'export-archive';
 }): Promise<{ userId: string }> {
   const supabase = getSupabaseBrowserClient();
 
