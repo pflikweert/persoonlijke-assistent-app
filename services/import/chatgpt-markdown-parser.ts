@@ -54,26 +54,46 @@ function parseFrontmatter(input: string): { metadata: Record<string, string>; re
 
 function parseHeaderTimestamp(headerLine: string): string {
   const raw = headerLine.slice(USER_HEADER_PREFIX.length).trim();
-  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2}):(\d{2}) (AM|PM)$/i);
+  const amPmMatch = raw.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2}):(\d{2}) (AM|PM)$/i
+  );
+  const twentyFourHourMatch = raw.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2}):(\d{2})$/i
+  );
 
-  if (!match) {
+  let year = 0;
+  let month = 0;
+  let day = 0;
+  let hour = 0;
+  let minute = 0;
+  let second = 0;
+
+  if (amPmMatch) {
+    year = Number(amPmMatch[3]);
+    // Backward compatibility: legacy exporter format used month/day with AM/PM.
+    month = Number(amPmMatch[1]) - 1;
+    day = Number(amPmMatch[2]);
+    hour = Number(amPmMatch[4]);
+    minute = Number(amPmMatch[5]);
+    second = Number(amPmMatch[6]);
+
+    const meridiem = amPmMatch[7].toUpperCase();
+    if (meridiem === 'AM' && hour === 12) {
+      hour = 0;
+    } else if (meridiem === 'PM' && hour < 12) {
+      hour += 12;
+    }
+  } else if (twentyFourHourMatch) {
+    year = Number(twentyFourHourMatch[3]);
+    // Newer exporter format: day/month with 24h clock.
+    day = Number(twentyFourHourMatch[1]);
+    month = Number(twentyFourHourMatch[2]) - 1;
+    hour = Number(twentyFourHourMatch[4]);
+    minute = Number(twentyFourHourMatch[5]);
+    second = Number(twentyFourHourMatch[6]);
+  } else {
     throw new Error(`Onbekende datum in importblok: ${raw}`);
   }
-
-  let hour = Number(match[4]);
-  const minute = Number(match[5]);
-  const second = Number(match[6]);
-  const meridiem = match[7].toUpperCase();
-
-  if (meridiem === 'AM' && hour === 12) {
-    hour = 0;
-  } else if (meridiem === 'PM' && hour < 12) {
-    hour += 12;
-  }
-
-  const month = Number(match[1]) - 1;
-  const day = Number(match[2]);
-  const year = Number(match[3]);
 
   // Header timestamps in markdown are wall-clock values without explicit timezone.
   // Interpret them in the current local timezone to keep imported day grouping consistent.
