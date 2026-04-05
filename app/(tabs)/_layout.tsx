@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { BottomTabBar } from '@/components/navigation/bottom-tab-bar';
+import { BottomTabBar } from '@/components/navigation/BottomTabBar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens } from '@/theme';
 

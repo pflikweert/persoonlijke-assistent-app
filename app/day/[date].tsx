@@ -14,7 +14,7 @@ import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overl
 import { ProcessingScreen } from '@/components/feedback/processing-screen';
 import { TextEditorModal } from '@/components/feedback/text-editor-modal';
 import { FullscreenMenuOverlay, type MainMenuRouteKey } from '@/components/navigation/fullscreen-menu-overlay';
-import { QuickMenuBar, quickMenuPathFromKey } from '@/components/navigation/quick-menu-bar';
+import { BottomTabBarStandalone } from '@/components/navigation/BottomTabBar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   StateBlock,
@@ -649,15 +649,24 @@ export default function DayDetailScreen() {
 
       </ScrollView>
 
-      <QuickMenuBar
-        activeKey={menuRouteKey as 'today' | 'capture' | 'days' | 'reflections'}
+      <BottomTabBarStandalone
+        activeKey={
+          menuRouteKey === 'capture'
+            ? 'capture'
+            : menuRouteKey === 'reflections'
+              ? 'reflections'
+              : 'today'
+        }
         onSelect={(key) => {
-          const targetPath = quickMenuPathFromKey(key);
-          if (targetPath === '/capture') {
+          if (key === 'capture') {
             router.push('/capture');
             return;
           }
-          router.replace(targetPath);
+          if (key === 'reflections') {
+            router.replace('/reflections');
+            return;
+          }
+          router.replace('/(tabs)');
         }}
       />
 
