@@ -1,11 +1,15 @@
 # Persoonlijke Assistent App
-Status: Setup referentie
+Status: MVP 1.2 in uitvoering
 Zie: docs/project/current-status.md
 
 ## Projectdoel
-Deze repository is de lokale basis voor een React Native / Expo app met Expo Router.  
-De focus ligt op een stabiele ontwikkelomgeving met duidelijke scripts, configuratie en structuur.  
-Functionele productfeatures worden pas toegevoegd nadat de projectfundering lokaal op orde is.
+Deze repository bevat een React Native / Expo app met Supabase backend voor:
+- magic-link auth
+- capture (tekst en audio)
+- verwerking naar genormaliseerde entries en dagjournals
+- week/maandreflecties
+- import van ChatGPT-markdown (instellingen)
+- admin-only globale herverwerking via OpenAI Batch API (instellingen)
 
 ## Documentatie
 - Leidende projectdocs: `docs/project/README.md`
@@ -27,6 +31,7 @@ npm run test:reflection-helpers
 npm run verify:local-flow
 npm run verify:local-audio-flow
 npm run verify:local-reflection-flow
+npm run verify:local-chatgpt-import
 npm run verify:local-output-quality
 npm run ios
 npm run android
@@ -50,6 +55,9 @@ Los opruimen van de functions runtime kan met `npm run dev:stop`. Function logs 
   - `EXPO_PUBLIC_APP_ENV`
 - Server-only app var: `APP_SUPABASE_SERVICE_ROLE_KEY` (alleen voor server utilities, nooit in clientcode).
 - Edge Function vars: `OPENAI_API_KEY` (vereist), `OPENAI_MODEL` (optioneel, default `gpt-5.4-mini`), `OPENAI_TRANSCRIPTION_MODEL` (optioneel, default `gpt-4o-mini-transcribe`).
+- Admin regeneratie vars:
+  - `ADMIN_REGEN_ALLOWLIST_USER_IDS` (comma-separated user ids met toegang tot Data opnieuw verwerken)
+  - `ADMIN_REGEN_INTERNAL_TOKEN` (server-side token voor interne `worker_tick` chaining)
 - Feature flags (Vercel-managed env vars, lokaal via `.env.local`):
   - `VERCEL_FLAG_DAY_JOURNAL_SOFT_QUALITY_GUARDS` (default `false`): zet zachte quality-guards voor day-journal post-checks aan/uit.
   - `VERCEL_FLAG_DAY_JOURNAL_STRICT_VALIDATION` (default `false`): zet striktere day-journal validatie aan/uit.
@@ -98,8 +106,18 @@ npx supabase gen types typescript --linked --schema public > src/lib/supabase/da
 - Private user-bound functions: `process-entry`, `generate-reflection`, `regenerate-day-journal`.
 - Deze functies draaien met function-level auth check (`Authorization` header + `auth.getUser()` in function code).
 - JWT gateway verify staat expliciet op `false` per functie in `supabase/config.toml` voor compatibiliteit met huidige signing keys.
+- Admin functie: `admin-regeneration-job` is server-side afgeschermd met allowlist + auth checks.
 - Productie deploy van Supabase Edge Functions gaat alleen via GitHub Actions (`.github/workflows/deploy.yml`).
 - GitHub deploy secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`.
+
+## Instellingen-submenu
+- Route: `app/settings.tsx`
+- Submenu-items:
+  - `Import` (algemeen beschikbaar)
+  - `Data opnieuw verwerken` (alleen zichtbaar voor admins)
+- Regeneratiepagina (`app/settings-regeneration.tsx`) toont live jobstatus met per-type tellers:
+  - `total`, `queued`, `openai_completed`, `applied`, `failed`, `remaining`, `phase`.
+- Jobs draaien server-side verder via chained `worker_tick` calls; status blijft opvraagbaar bij terugkomst op de pagina.
 
 ## Supabase dashboard en mail
 - Lokaal dashboard: `http://127.0.0.1:54323`

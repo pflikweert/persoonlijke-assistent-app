@@ -7,6 +7,7 @@ Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis v
 1. Export van dagboeklaag voor eindgebruiker (1.2D).
 2. Export van reflecties voor eindgebruiker (1.2D).
 3. Eenvoudige gebruikersreset/delete-all flow (1.2D).
+4. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
 
 Toelichting:
 - bestaande dump/export scripts zijn developer tooling, geen gebruikersfeature.

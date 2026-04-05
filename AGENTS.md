@@ -69,9 +69,14 @@ Regels:
 Bij wijzigingen aan canonieke docs:
 
 - werk eerst de handmatige docs bij
+- houd ook root `README.md` synchroon met actuele runtime/feature-realiteit
 - draai daarna:
   - `npm run docs:bundle`
 - `npm run docs:bundle:verify`
+
+Bij wijzigingen in admin-regeneratie:
+- documenteer altijd zichtbaarheidsregel (admin-only) en allowlist-mechanisme
+- documenteer relevante env-vars (`ADMIN_REGEN_ALLOWLIST_USER_IDS`, `ADMIN_REGEN_INTERNAL_TOKEN`)
 
 ## Lokale restart/deploy beslisregel
 
