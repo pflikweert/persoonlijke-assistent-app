@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { QuickMenuTabBar } from '@/components/navigation/quick-menu-tabbar';
+import { BottomTabBar } from '@/components/navigation/bottom-tab-bar';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens } from '@/theme';
 
@@ -11,7 +11,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      tabBar={(props) => <QuickMenuTabBar {...props} />}
+      tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: palette.background },
