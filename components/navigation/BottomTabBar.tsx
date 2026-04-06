@@ -1,31 +1,30 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, radius, spacing, typography } from '@/theme';
 
 type BottomTabKey = 'today' | 'capture' | 'reflections';
 
 type VisibleTab = {
   key: BottomTabKey;
-  routeName: 'index' | 'capture' | 'reflections';
+  routeName?: 'index' | 'reflections';
   label: 'Vandaag' | 'Leg vast' | 'Terugblik';
   icon: keyof typeof MaterialIcons.glyphMap;
 };
 
 const TABS: VisibleTab[] = [
   { key: 'today', routeName: 'index', label: 'Vandaag', icon: 'home' },
-  { key: 'capture', routeName: 'capture', label: 'Leg vast', icon: 'mic' },
+  { key: 'capture', label: 'Leg vast', icon: 'mic' },
   { key: 'reflections', routeName: 'reflections', label: 'Terugblik', icon: 'history' },
 ];
 
 function resolveActiveTab(routeName: string | undefined): BottomTabKey {
-  if (routeName === 'capture') {
-    return 'capture';
-  }
   if (routeName === 'reflections') {
     return 'reflections';
   }
@@ -35,13 +34,16 @@ function resolveActiveTab(routeName: string | undefined): BottomTabKey {
 function TabBarContent({
   activeKey,
   onSelect,
+  onCapturePress,
   safeInsetBottom,
 }: {
   activeKey: BottomTabKey;
   onSelect: (key: BottomTabKey) => void;
+  onCapturePress: () => void;
   safeInsetBottom: number;
 }) {
-  const palette = colorTokens.dark;
+  const colorScheme = useColorScheme() ?? 'light';
+  const palette = colorTokens[colorScheme];
   const totalHeight = 72 + safeInsetBottom;
 
   return (
@@ -66,7 +68,7 @@ function TabBarContent({
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={tab.label}
-                  onPress={() => onSelect(tab.key)}
+                  onPress={onCapturePress}
                   style={styles.centerPressable}>
                   <View style={[styles.centerButton, { backgroundColor: palette.primary }]}>
                     <MaterialIcons name={tab.icon} size={26} color={palette.primaryOn} />
@@ -86,14 +88,14 @@ function TabBarContent({
                 <MaterialIcons
                   name={tab.icon}
                   size={22}
-                  color={isActive ? palette.text : palette.tabInactive}
+                  color={isActive ? palette.tabActive : palette.tabInactive}
                 />
                 <ThemedText
                   type="meta"
                   style={[
                     styles.metaLabel,
                     {
-                      color: isActive ? palette.text : palette.tabInactive,
+                      color: isActive ? palette.tabActive : palette.tabInactive,
                     },
                   ]}>
                   {tab.label}
@@ -115,7 +117,14 @@ export function BottomTabBarStandalone({
   onSelect: (key: BottomTabKey) => void;
 }) {
   const insets = useSafeAreaInsets();
-  return <TabBarContent activeKey={activeKey} onSelect={onSelect} safeInsetBottom={Math.max(0, insets.bottom)} />;
+  return (
+    <TabBarContent
+      activeKey={activeKey}
+      onSelect={onSelect}
+      onCapturePress={() => onSelect('capture')}
+      safeInsetBottom={Math.max(0, insets.bottom)}
+    />
+  );
 }
 
 export function BottomTabBar({ state, navigation, descriptors }: BottomTabBarProps) {
@@ -132,6 +141,10 @@ export function BottomTabBar({ state, navigation, descriptors }: BottomTabBarPro
 
   function handleSelect(key: BottomTabKey) {
     const routeName = TABS.find((tab) => tab.key === key)?.routeName ?? 'index';
+    if (key === 'capture') {
+      router.push('/capture');
+      return;
+    }
     const targetRoute = state.routes.find((route) => route.name === routeName);
     if (!targetRoute) {
       return;
@@ -152,6 +165,7 @@ export function BottomTabBar({ state, navigation, descriptors }: BottomTabBarPro
     <TabBarContent
       activeKey={resolveActiveTab(activeRouteName)}
       onSelect={handleSelect}
+      onCapturePress={() => router.push('/capture')}
       safeInsetBottom={Math.max(0, insets.bottom)}
     />
   );

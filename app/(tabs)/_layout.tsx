@@ -23,12 +23,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="capture"
-        options={{
-          title: 'Leg vast',
-        }}
-      />
-      <Tabs.Screen
         name="days"
         options={{
           title: 'Dagen',
