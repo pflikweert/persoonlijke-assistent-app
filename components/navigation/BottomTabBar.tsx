@@ -1,34 +1,39 @@
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { router } from 'expo-router';
-import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { router } from "expo-router";
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colorTokens, radius, spacing, typography } from '@/theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { colorTokens, radius, spacing, typography } from "@/theme";
 
-type BottomTabKey = 'today' | 'capture' | 'reflections';
+type BottomTabKey = "today" | "capture" | "reflections";
 
 type VisibleTab = {
   key: BottomTabKey;
-  routeName?: 'index' | 'reflections';
-  label: 'Vandaag' | 'Leg vast' | 'Terugblik';
+  routeName?: "index" | "reflections";
+  label: "Vandaag" | "Leg vast" | "Terugblik";
   icon: keyof typeof MaterialIcons.glyphMap;
 };
 
 const TABS: VisibleTab[] = [
-  { key: 'today', routeName: 'index', label: 'Vandaag', icon: 'home' },
-  { key: 'capture', label: 'Leg vast', icon: 'mic' },
-  { key: 'reflections', routeName: 'reflections', label: 'Terugblik', icon: 'history' },
+  { key: "today", routeName: "index", label: "Vandaag", icon: "home" },
+  { key: "capture", label: "Leg vast", icon: "mic" },
+  {
+    key: "reflections",
+    routeName: "reflections",
+    label: "Terugblik",
+    icon: "history",
+  },
 ];
 
 function resolveActiveTab(routeName: string | undefined): BottomTabKey {
-  if (routeName === 'reflections') {
-    return 'reflections';
+  if (routeName === "reflections") {
+    return "reflections";
   }
-  return 'today';
+  return "today";
 }
 
 function TabBarContent({
@@ -42,7 +47,7 @@ function TabBarContent({
   onCapturePress: () => void;
   safeInsetBottom: number;
 }) {
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const palette = colorTokens[colorScheme];
   const totalHeight = 72 + safeInsetBottom;
 
@@ -56,11 +61,12 @@ function TabBarContent({
           paddingBottom: spacing.md + safeInsetBottom,
           backgroundColor: palette.tabBarBackground,
         },
-      ]}>
+      ]}
+    >
       <View style={styles.row}>
         {TABS.map((tab) => {
           const isActive = activeKey === tab.key;
-          const isCenter = tab.key === 'capture';
+          const isCenter = tab.key === "capture";
 
           if (isCenter) {
             return (
@@ -69,9 +75,19 @@ function TabBarContent({
                   accessibilityRole="button"
                   accessibilityLabel={tab.label}
                   onPress={onCapturePress}
-                  style={styles.centerPressable}>
-                  <View style={[styles.centerButton, { backgroundColor: palette.primary }]}>
-                    <MaterialIcons name={tab.icon} size={26} color={palette.primaryOn} />
+                  style={styles.centerPressable}
+                >
+                  <View
+                    style={[
+                      styles.centerButton,
+                      { backgroundColor: palette.primary },
+                    ]}
+                  >
+                    <MaterialIcons
+                      name={tab.icon}
+                      size={26}
+                      color={palette.primaryOn}
+                    />
                   </View>
                 </Pressable>
               </View>
@@ -84,7 +100,8 @@ function TabBarContent({
                 accessibilityRole="button"
                 accessibilityLabel={tab.label}
                 onPress={() => onSelect(tab.key)}
-                style={styles.sidePressable}>
+                style={styles.sidePressable}
+              >
                 <MaterialIcons
                   name={tab.icon}
                   size={22}
@@ -97,7 +114,8 @@ function TabBarContent({
                     {
                       color: isActive ? palette.tabActive : palette.tabInactive,
                     },
-                  ]}>
+                  ]}
+                >
                   {tab.label}
                 </ThemedText>
               </Pressable>
@@ -121,28 +139,33 @@ export function BottomTabBarStandalone({
     <TabBarContent
       activeKey={activeKey}
       onSelect={onSelect}
-      onCapturePress={() => onSelect('capture')}
+      onCapturePress={() => onSelect("capture")}
       safeInsetBottom={Math.max(0, insets.bottom)}
     />
   );
 }
 
-export function BottomTabBar({ state, navigation, descriptors }: BottomTabBarProps) {
+export function BottomTabBar({
+  state,
+  navigation,
+  descriptors,
+}: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const activeRoute = state.routes[state.index];
   const activeRouteName = activeRoute?.name;
   const activeOptions = descriptors[activeRoute.key]?.options;
   const flattenedTabBarStyle = StyleSheet.flatten(activeOptions?.tabBarStyle);
-  const tabBarDisplay = (flattenedTabBarStyle as ViewStyle | undefined)?.display;
+  const tabBarDisplay = (flattenedTabBarStyle as ViewStyle | undefined)
+    ?.display;
 
-  if (tabBarDisplay === 'none') {
+  if (tabBarDisplay === "none") {
     return null;
   }
 
   function handleSelect(key: BottomTabKey) {
-    const routeName = TABS.find((tab) => tab.key === key)?.routeName ?? 'index';
-    if (key === 'capture') {
-      router.push('/capture');
+    const routeName = TABS.find((tab) => tab.key === key)?.routeName ?? "index";
+    if (key === "capture") {
+      router.push("/capture");
       return;
     }
     const targetRoute = state.routes.find((route) => route.name === routeName);
@@ -151,7 +174,7 @@ export function BottomTabBar({ state, navigation, descriptors }: BottomTabBarPro
     }
 
     const event = navigation.emit({
-      type: 'tabPress',
+      type: "tabPress",
       target: targetRoute.key,
       canPreventDefault: true,
     });
@@ -165,7 +188,7 @@ export function BottomTabBar({ state, navigation, descriptors }: BottomTabBarPro
     <TabBarContent
       activeKey={resolveActiveTab(activeRouteName)}
       onSelect={handleSelect}
-      onCapturePress={() => router.push('/capture')}
+      onCapturePress={() => router.push("/capture")}
       safeInsetBottom={Math.max(0, insets.bottom)}
     />
   );
@@ -173,28 +196,28 @@ export function BottomTabBar({ state, navigation, descriptors }: BottomTabBarPro
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
   },
   row: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   tabSlot: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   sidePressable: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.xs,
     minHeight: 44,
   },
   centerPressable: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 0,
     minHeight: 64,
   },
@@ -202,13 +225,13 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   metaLabel: {
     fontSize: 11,
     lineHeight: typography.roles.meta.lineHeight,
     letterSpacing: typography.roles.meta.letterSpacing,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
