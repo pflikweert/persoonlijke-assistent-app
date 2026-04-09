@@ -2,28 +2,115 @@
 set -eu
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+ENV_FILE="$ROOT_DIR/.env.local"
 
-if [ -f "$ROOT_DIR/.env.local" ]; then
-  # Load local env for target selection and keys.
-  set -a
-  . "$ROOT_DIR/.env.local"
-  set +a
+log() {
+  echo "[verify-local-flow] $1"
+}
+
+fail() {
+  echo "FAIL verify-local-flow: $1" >&2
+  exit 1
+}
+
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    fail "required command not found: $1"
+  fi
+}
+
+read_env_file_value() {
+  file="$1"
+  key="$2"
+
+  awk -v key="$key" '
+    /^[[:space:]]*#/ { next }
+    {
+      line=$0
+      sub(/\r$/, "", line)
+
+      prefixed="^[[:space:]]*export[[:space:]]+" key "="
+      plain="^[[:space:]]*" key "="
+
+      if (line ~ prefixed) {
+        sub(prefixed, "", line)
+        print line
+        exit
+      }
+
+      if (line ~ plain) {
+        sub(plain, "", line)
+        print line
+        exit
+      }
+    }
+  ' "$file"
+}
+
+normalize_env_value() {
+  value="$1"
+  case "$value" in
+    \"*\")
+      value="${value#\"}"
+      value="${value%\"}"
+      ;;
+    \''*\')
+      value="${value#\'}"
+      value="${value%\'}"
+      ;;
+  esac
+  printf '%s' "$value"
+}
+
+resolve_env_value() {
+  current_value="$1"
+  key="$2"
+
+  if [ -n "$current_value" ]; then
+    printf '%s' "$current_value"
+    return
+  fi
+
+  if [ ! -f "$ENV_FILE" ]; then
+    printf ''
+    return
+  fi
+
+  raw_value="$(read_env_file_value "$ENV_FILE" "$key")"
+  normalize_env_value "$raw_value"
+}
+
+require_cmd curl
+require_cmd jq
+require_cmd mktemp
+
+if [ -f "$ENV_FILE" ]; then
+  log "Gebruik .env.local parsing (safe mode, geen shell source)."
+else
+  log "Geen .env.local gevonden, gebruik huidige environment/defaults."
 fi
 
-TARGET="${EXPO_PUBLIC_SUPABASE_TARGET:-local}"
+TARGET="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_TARGET:-}" "EXPO_PUBLIC_SUPABASE_TARGET")"
+TARGET="${TARGET:-local}"
 
 if [ "$TARGET" = "local" ]; then
-  API_URL="${EXPO_PUBLIC_SUPABASE_LOCAL_URL:-http://127.0.0.1:54321}"
-  API_KEY="${EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY:-}"
+  API_URL="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_LOCAL_URL:-}" "EXPO_PUBLIC_SUPABASE_LOCAL_URL")"
+  API_URL="${API_URL:-http://127.0.0.1:54321}"
+  API_KEY="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY:-}" "EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY")"
 else
-  API_URL="${EXPO_PUBLIC_SUPABASE_CLOUD_URL:-}"
-  API_KEY="${EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY:-}"
+  API_URL="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_CLOUD_URL:-}" "EXPO_PUBLIC_SUPABASE_CLOUD_URL")"
+  API_KEY="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY:-}" "EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY")"
 fi
 
-if [ -z "$API_URL" ] || [ -z "$API_KEY" ]; then
-  echo "Missing Supabase API URL or publishable key for target: $TARGET"
-  exit 1
+if [ -z "$API_URL" ]; then
+  fail "missing API URL for target=$TARGET (check .env.local or shell env)"
 fi
+
+if [ -z "$API_KEY" ]; then
+  fail "missing publishable key for target=$TARGET (check .env.local or shell env)"
+fi
+
+log "Start smoke verify target=$TARGET api_url=$API_URL"
 
 SIGNUP_FILE="$(mktemp)"
 FUNCTION_FILE="$(mktemp)"
@@ -50,6 +137,8 @@ fail_with_context() {
 EMAIL="verify.$(date +%s)@example.com"
 PASSWORD="Passw0rd!123"
 
+log "Stap 1/4: signup test user"
+
 curl -sS "$API_URL/auth/v1/signup" \
   -H "apikey: $API_KEY" \
   -H "Content-Type: application/json" \
@@ -59,10 +148,12 @@ ACCESS_TOKEN="$(jq -r '.access_token // empty' "$SIGNUP_FILE")"
 USER_ID="$(jq -r '.user.id // empty' "$SIGNUP_FILE")"
 
 if [ -z "$ACCESS_TOKEN" ] || [ -z "$USER_ID" ]; then
-  echo "Signup failed."
+  echo "FAIL verify-local-flow: signup failed"
   cat "$SIGNUP_FILE"
   exit 1
 fi
+
+log "Stap 2/4: run process-entry flow"
 
 FUNCTION_STATUS="$(curl -sS -o "$FUNCTION_FILE" -w "%{http_code}" "$API_URL/functions/v1/process-entry" \
   -H "apikey: $API_KEY" \
@@ -91,6 +182,8 @@ fi
 if [ "$SOURCE_TYPE" != "text" ] || [ -z "$RAW_ENTRY_ID" ] || [ -z "$NORMALIZED_ENTRY_ID" ] || [ -z "$DAY_JOURNAL_ID" ] || [ -z "$JOURNAL_DATE" ]; then
   fail_with_context "response mist kernvelden voor text flow"
 fi
+
+log "Stap 3/4: verify database invariants"
 
 curl -sS "$API_URL/rest/v1/entries_raw?select=id,raw_text,transcript_text&user_id=eq.$USER_ID&id=eq.$RAW_ENTRY_ID" \
   -H "apikey: $API_KEY" \
@@ -125,5 +218,6 @@ if [ "$RAW_COUNT" -lt 1 ] || [ "$RAW_TEXT_COUNT" -lt 1 ] || [ "$TRANSCRIPT_COUNT
   exit 1
 fi
 
+log "Stap 4/4: success summary"
 echo "PASS text-flow target=$TARGET requestId=$REQUEST_ID flowId=$FLOW_ID journalDate=$JOURNAL_DATE"
 echo "entries_raw=$RAW_COUNT raw_text_rows=$RAW_TEXT_COUNT entries_normalized=$NORMALIZED_COUNT day_journals=$DAY_COUNT"

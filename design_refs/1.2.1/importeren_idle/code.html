@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Importeren - Quiet Curator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#002204",
+                    "background": "#faf9f6",
+                    "surface-container-highest": "#e3e2df",
+                    "on-primary-fixed-variant": "#574400",
+                    "outline": "#807660",
+                    "secondary-fixed-dim": "#a7c8ff",
+                    "on-primary-fixed": "#241a00",
+                    "on-primary-container": "#5e4a00",
+                    "on-surface-variant": "#4e4633",
+                    "secondary": "#395f94",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#faf9f6",
+                    "surface-tint": "#745b00",
+                    "primary-container": "#e6b800",
+                    "surface-container-low": "#f4f3f0",
+                    "surface-container-high": "#e9e8e5",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#9ec2fe",
+                    "tertiary": "#1b6d24",
+                    "on-secondary-fixed": "#001c3b",
+                    "inverse-primary": "#f0c115",
+                    "surface-variant": "#e3e2df",
+                    "primary-fixed-dim": "#f0c115",
+                    "surface": "#faf9f6",
+                    "primary-fixed": "#ffe08a",
+                    "tertiary-fixed": "#a3f69c",
+                    "tertiary-container": "#7fd07a",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#88d982",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-container": "#005914",
+                    "on-secondary-container": "#284f83",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#1e477b",
+                    "surface-container": "#efeeeb",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#d1c5ac",
+                    "secondary-fixed": "#d5e3ff",
+                    "surface-dim": "#dbdad7",
+                    "on-tertiary-fixed-variant": "#005312",
+                    "inverse-surface": "#2f312f",
+                    "on-background": "#1b1c1a",
+                    "primary": "#745b00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .gold-gradient {
+        background: linear-gradient(45deg, #745b00 0%, #e6b800 100%);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+<header class="w-full sticky top-0 bg-[#faf9f6] dark:bg-stone-950 flex items-center justify-between px-6 py-4 w-full z-50">
+<div class="flex items-center gap-4">
+<button class="p-2 -ml-2 text-stone-500 dark:text-stone-400 hover:bg-stone-200/50 dark:hover:bg-stone-800/50 transition-colors active:scale-95 transition-transform duration-200 rounded-full">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Inter'] font-semibold tracking-tight text-stone-900 dark:text-stone-50">Settings</h1>
+</div>
+<div class="text-lg font-bold text-stone-900 dark:text-stone-50">
+            Importeren
+        </div>
+<div class="w-10"></div>
+</header>
+<main class="max-w-2xl mx-auto px-6 py-12 md:py-20 flex flex-col items-center text-center">
+<div class="mb-12">
+<div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-surface-container mb-8">
+<span class="material-symbols-outlined text-4xl text-primary" data-icon="upload_file">upload_file</span>
+</div>
+<h2 class="text-3xl md:text-4xl font-headline font-bold tracking-tight text-on-surface mb-4">
+                Importeren
+            </h2>
+<p class="text-lg text-on-surface-variant max-w-md mx-auto leading-relaxed">
+                Importeer eerder geschreven bestanden. Geef je archief een nieuw thuis in een rustige omgeving.
+            </p>
+</div>
+<div class="w-full max-w-lg aspect-[16/10] relative group">
+<div class="absolute inset-0 bg-surface-container rounded-3xl transition-colors duration-300 group-hover:bg-surface-container-high flex flex-col items-center justify-center border-2 border-dashed border-outline-variant p-8 cursor-pointer">
+<div class="mb-6 flex flex-col items-center gap-2">
+<span class="material-symbols-outlined text-5xl text-outline mb-2" data-icon="folder_open">folder_open</span>
+<span class="text-on-surface font-medium">Sleep je bestanden hierheen</span>
+<span class="text-sm text-on-surface-variant">of klik om te bladeren</span>
+</div>
+<button class="gold-gradient text-white px-8 py-4 rounded-full font-semibold shadow-lg shadow-primary/20 flex items-center gap-3 active:scale-95 transition-transform duration-200 hover:brightness-110">
+<span class="material-symbols-outlined text-xl" data-icon="add" style="font-variation-settings: 'FILL' 1;">add</span>
+                    Kies bestanden
+                </button>
+</div>
+</div>
+<div class="mt-12 w-full max-w-lg flex items-center justify-center gap-3 px-6 py-4 bg-surface-container-low rounded-2xl">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="info">info</span>
+<p class="text-sm text-on-surface-variant font-medium">
+                Markdownbestanden worden toegevoegd aan je archief.
+            </p>
+</div>
+<section class="mt-24 w-full grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+<div class="p-6 bg-surface-container rounded-2xl">
+<h3 class="font-headline font-bold text-on-surface mb-2">Behoud je structuur</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                    Alle koppen, lijsten en links blijven intact tijdens de import van je Markdown-bestanden.
+                </p>
+</div>
+<div class="p-6 bg-surface-container rounded-2xl">
+<h3 class="font-headline font-bold text-on-surface mb-2">Metadata Behoud</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                    Datums en labels in je bestanden worden automatisch vertaald naar ons archiefsysteem.
+                </p>
+</div>
+</section>
+</main>
+<div class="fixed bottom-0 left-0 right-0 h-32 pointer-events-none bg-gradient-to-t from-background to-transparent md:hidden"></div>
+<div class="hidden">
+<div class="h-64 w-full" data-alt="Soft morning sunlight hitting a minimalist wooden desk with a stack of clean linen paper and a single brass pen" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDXpNzPsxYIt6c8Y45AW_c70DVgArtwXYLDY5ifBZHYgunsNfhnGLvpa34XclZA5wBRDk2n3-ZFIHCD8pWQOfQnpb5Uxpc30ADHcFD50ZDL4gYyTHW9rgeY1xUWKUj6SKV0WMaWfi5U2R4w0H39ZWX84fCWK_WoU5IbcUjT60q-BHzuRYxz4vJi40D63GJZGRuFDewHhz40p9nNTUwmlZeht-KgtTSdCs0jJPj1plCGK-17i8Zt4MrMUD2ZamzsBnAKCvZCztXQfwHW');"></div>
+</div>
+</body></html>

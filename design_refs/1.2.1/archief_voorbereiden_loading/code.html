@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#002204",
+                    "background": "#faf9f6",
+                    "surface-container-highest": "#e3e2df",
+                    "on-primary-fixed-variant": "#574400",
+                    "outline": "#807660",
+                    "secondary-fixed-dim": "#a7c8ff",
+                    "on-primary-fixed": "#241a00",
+                    "on-primary-container": "#5e4a00",
+                    "on-surface-variant": "#4e4633",
+                    "secondary": "#395f94",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#faf9f6",
+                    "surface-tint": "#745b00",
+                    "primary-container": "#e6b800",
+                    "surface-container-low": "#f4f3f0",
+                    "surface-container-high": "#e9e8e5",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#9ec2fe",
+                    "tertiary": "#1b6d24",
+                    "on-secondary-fixed": "#001c3b",
+                    "inverse-primary": "#f0c115",
+                    "surface-variant": "#e3e2df",
+                    "primary-fixed-dim": "#f0c115",
+                    "surface": "#faf9f6",
+                    "primary-fixed": "#ffe08a",
+                    "tertiary-fixed": "#a3f69c",
+                    "tertiary-container": "#7fd07a",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#88d982",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-container": "#005914",
+                    "on-secondary-container": "#284f83",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#1e477b",
+                    "surface-container": "#efeeeb",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#d1c5ac",
+                    "secondary-fixed": "#d5e3ff",
+                    "surface-dim": "#dbdad7",
+                    "on-tertiary-fixed-variant": "#005312",
+                    "inverse-surface": "#2f312f",
+                    "on-background": "#1b1c1a",
+                    "primary": "#745b00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 0.4; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        .animate-subtle-pulse {
+            animation: subtle-pulse 3s ease-in-out infinite;
+        }
+        @keyframes slow-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-slow-spin {
+            animation: slow-spin 8s linear infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body antialiased min-h-screen flex flex-col">
+<header class="w-full sticky top-0 bg-[#faf9f6] dark:bg-stone-950 flex items-center justify-between px-6 py-4 z-50">
+<div class="flex items-center gap-4">
+<button class="hover:bg-stone-200/50 dark:hover:bg-stone-800/50 transition-colors p-2 rounded-full active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-stone-900 dark:text-stone-50">arrow_back</span>
+</button>
+<h1 class="font-headline font-semibold tracking-tight text-stone-900 dark:text-stone-50 text-xl">Settings</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-label tracking-widest text-stone-500 uppercase">ARCHIVE</span>
+</div>
+</header>
+<main class="flex-grow flex flex-col items-center justify-center px-8 relative overflow-hidden">
+<div class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-primary/10 to-transparent rounded-full blur-3xl"></div>
+</div>
+<div class="w-full max-w-md flex flex-col items-center text-center relative z-10">
+<div class="relative mb-12 flex items-center justify-center">
+<div class="absolute w-40 h-40 border border-primary/10 rounded-full animate-slow-spin"></div>
+<div class="absolute w-32 h-32 border border-primary/20 rounded-full animate-subtle-pulse"></div>
+<div class="relative w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary text-4xl animate-subtle-pulse" style="font-variation-settings: 'wght' 200;">download</span>
+</div>
+</div>
+<h2 class="text-3xl font-headline font-bold tracking-tight text-on-surface mb-3">Archief downloaden</h2>
+<div class="flex flex-col gap-1 items-center">
+<div class="flex items-center gap-2 text-primary font-medium tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span>Bestand wordt voorbereid</span>
+</div>
+<p class="text-on-surface-variant text-lg font-light tracking-tight">Een moment geduld.</p>
+</div>
+<div class="mt-16 w-full p-8 bg-surface-container rounded-[2rem] flex flex-col items-center gap-6">
+<div class="flex flex-col gap-4 w-full">
+<div class="flex items-center gap-4 group">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-xl">folder_zip</span>
+</div>
+<div class="text-left">
+<div class="text-sm font-label text-on-surface-variant font-medium">Type</div>
+<div class="text-on-surface font-semibold">Persoonlijk Archief (.zip)</div>
+</div>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<div class="flex items-center gap-4 group">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-xl">database</span>
+</div>
+<div class="text-left">
+<div class="text-sm font-label text-on-surface-variant font-medium">Inhoud</div>
+<div class="text-on-surface font-semibold">Alle reflecties en media</div>
+</div>
+</div>
+</div>
+</div>
+<p class="mt-12 text-xs text-outline font-label tracking-wider uppercase text-center px-4">
+                We stellen je data veilig samen. Verlaat deze pagina niet voor een optimale downloadervaring.
+            </p>
+</div>
+</main>
+<footer class="p-8 flex justify-center">
+<button class="px-12 py-4 rounded-full border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all active:scale-95 font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">close</span>
+            Annuleren
+        </button>
+</footer>
+</body></html>

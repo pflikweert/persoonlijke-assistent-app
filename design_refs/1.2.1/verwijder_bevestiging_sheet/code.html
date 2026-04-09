@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#002204",
+                    "background": "#faf9f6",
+                    "surface-container-highest": "#e3e2df",
+                    "on-primary-fixed-variant": "#574400",
+                    "outline": "#807660",
+                    "secondary-fixed-dim": "#a7c8ff",
+                    "on-primary-fixed": "#241a00",
+                    "on-primary-container": "#5e4a00",
+                    "on-surface-variant": "#4e4633",
+                    "secondary": "#395f94",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#faf9f6",
+                    "surface-tint": "#745b00",
+                    "primary-container": "#e6b800",
+                    "surface-container-low": "#f4f3f0",
+                    "surface-container-high": "#e9e8e5",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#9ec2fe",
+                    "tertiary": "#1b6d24",
+                    "on-secondary-fixed": "#001c3b",
+                    "inverse-primary": "#f0c115",
+                    "surface-variant": "#e3e2df",
+                    "primary-fixed-dim": "#f0c115",
+                    "surface": "#faf9f6",
+                    "primary-fixed": "#ffe08a",
+                    "tertiary-fixed": "#a3f69c",
+                    "tertiary-container": "#7fd07a",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#88d982",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-container": "#005914",
+                    "on-secondary-container": "#284f83",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#1e477b",
+                    "surface-container": "#efeeeb",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#d1c5ac",
+                    "secondary-fixed": "#d5e3ff",
+                    "surface-dim": "#dbdad7",
+                    "on-tertiary-fixed-variant": "#005312",
+                    "inverse-surface": "#2f312f",
+                    "on-background": "#1b1c1a",
+                    "primary": "#745b00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen relative overflow-hidden">
+<!-- Settings Hub Background (Simulated) -->
+<header class="w-full sticky top-0 flex items-center justify-between px-6 py-4 bg-[#faf9f6] z-10">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#745b00]">arrow_back</span>
+<h1 class="font-headline font-semibold tracking-tight text-stone-900 text-lg">Settings</h1>
+</div>
+</header>
+<main class="px-6 py-4 space-y-8">
+<!-- Profile Section -->
+<div class="flex items-center gap-4 py-4">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Soft portrait of a woman with gentle lighting and a calm expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_-kBx-NbNN0KHWoEM1dYr6im3Z9xcWI2fwf-w7CpgT4ARJWXkLtlPgjNlmbmVspvqQdNYCpDXomSd4c2FAtbOY53Jm9ew0q_2_Qxcsz3KIn8gdBlv8qpkAYbluWkJenEw6HG0TGUeRcUsMdjrb5cbnoS-LBldSyWJxPgwUDGKJDUP_k5rmhXlu5wZx745fDQZhqmZT9masFd8QMbYjgF9QrxtOg8Ykyhu4jQace7cPL2t8y1szR5EBVzKx64LLosBkHMS51k-Spmy"/>
+</div>
+<div>
+<h2 class="text-lg font-semibold">Anna de Vries</h2>
+<p class="text-on-surface-variant text-sm">anna.devries@example.com</p>
+</div>
+</div>
+<!-- Settings Groups -->
+<div class="space-y-6">
+<section>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">Account</h3>
+<div class="space-y-1">
+<div class="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">person</span>
+<span class="font-medium">Persoonlijke gegevens</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<div class="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="font-medium">Meldingen</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3">Privacy &amp; Data</h3>
+<div class="space-y-1">
+<div class="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">lock</span>
+<span class="font-medium">Privacyinstellingen</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<div class="flex items-center justify-between py-3 px-4 rounded-xl bg-error-container/20 text-error transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">delete_forever</span>
+<span class="font-medium">Verwijder alles</span>
+</div>
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Scrim/Overlay -->
+<div class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-40 transition-opacity"></div>
+<!-- Bottom Sheet -->
+<div class="fixed bottom-0 left-0 right-0 z-50 transform transition-transform duration-300">
+<div class="bg-surface-container-lowest rounded-t-[2.5rem] px-8 pt-4 pb-10 shadow-2xl max-w-2xl mx-auto border-t border-surface-container-highest/10">
+<!-- Drag Handle -->
+<div class="flex justify-center mb-8">
+<div class="w-10 h-1.5 bg-surface-container-highest rounded-full"></div>
+</div>
+<!-- Content -->
+<div class="space-y-4 mb-10 text-center md:text-left">
+<h2 class="text-2xl font-headline font-bold text-on-surface tracking-tight leading-tight">
+                    Weet je zeker dat je alles wilt verwijderen?
+                </h2>
+<p class="text-on-surface-variant font-body leading-relaxed max-w-md">
+                    Je momenten, dagen en reflecties worden verwijderd. Dit kun je niet ongedaan maken.
+                </p>
+</div>
+<!-- Actions -->
+<div class="flex flex-col-reverse md:flex-row md:items-center md:justify-end gap-3">
+<button class="w-full md:w-auto px-8 py-4 rounded-full font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200">
+                    Annuleren
+                </button>
+<button class="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gradient-to-br from-red-600 to-red-700 text-white font-semibold shadow-lg shadow-red-500/20 active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">delete_forever</span>
+                    Verwijder alles
+                </button>
+</div>
+</div>
+</div>
+</body></html>

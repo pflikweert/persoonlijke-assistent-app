@@ -40,8 +40,8 @@ Gecontroleerd op:
 | Voortgang/status per datatype | Vereiste voor transparantie | **Aanwezig** | teller- en fasevelden (`total/queued/openai_completed/applied/failed/remaining/phase`) in job-steps + UI. |
 | Metadata generatie-info (`generation_meta`) | Gevraagd voor gerichte re-run | **Aanwezig** | migration `20260404201500_*` + writes vanuit `admin-regeneration-job` op entries/day/period. |
 | Admin-only afscherming regen-pagina | Vereiste security | **Aanwezig** | route verborgen voor niet-admin in `app/settings.tsx` + server-side allowlist checks in function. |
-| Product-export voor gebruiker | Gepland in 1.2D | **Niet aangetroffen** | geen exportflow in app-UX/services voor eindgebruiker. |
-| Product-reset/delete-all | Gepland in 1.2D | **Niet aangetroffen** | geen gebruikersresetflow aangetroffen. |
+| Product-export voor gebruiker | Gepland in 1.2D | **Deels aanwezig** | route/UI aanwezig in `app/settings.tsx` + `app/settings-export.tsx`; data-bron en exportlogica aanwezig via `downloadUserArchive`. Hard runtime-bewijs voor complete downloadpad (incl. web/native bestandsactie) is nog niet volledig vastgelegd. |
+| Product-reset/delete-all | Gepland in 1.2D | **Deels aanwezig** | delete-sheet flow aanwezig in `app/settings.tsx` met `confirm/loading/success/error`; runtime-bewijs toont dat relevante user-data-tabellen leeg raken (`period_reflections`, `day_journals`, `entries_normalized`, `entries_raw`). |
 | Logging/tracing | Gepland 1.2A | **Aanwezig** | `requestId/flowId` contract + `_shared/flow-logger.ts`. |
 | Verify scripts lokaal | Gepland 1.2A/1.2E | **Aanwezig** | text/audio/reflection/output-quality scripts aanwezig. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
@@ -53,7 +53,7 @@ Gecontroleerd op:
 | 1.2A Stabiliteit/foutafhandeling | **Deels aanwezig** | tracing + verify aanwezig; geen harde afrondingsregistratie als complete subfase. |
 | 1.2B Outputkwaliteit | **Deels aanwezig** | contracts/guardrails/quality-checks aanwezig; eindstatus “afgerond” niet hard vastgelegd. |
 | 1.2C UX-polish | **Deels aanwezig** | duidelijke polish in kernschermen; volledigheid over alle flows niet hard bewezen. |
-| 1.2D Vertrouwen (export/reset) | **Niet aangetroffen** | productniveau export/reset ontbreekt. |
+| 1.2D Vertrouwen (export/reset) | **Deels aanwezig** | settings/export/import/reset flows zijn in code aanwezig; reset en import/replace zijn runtime aangetoond, maar volledige end-to-end bewijsvoering van alle export UI-downloadpaden ontbreekt nog. |
 | 1.2E Private-beta readiness | **Deels aanwezig** | setup + verify aanwezig; complete smoke/release-checklist niet hard aangetroffen. |
 
 ## Correcties op eerdere ruis
@@ -62,4 +62,4 @@ Gecontroleerd op:
 - Tooling-aanwezigheid telt niet automatisch als gebruikersfeature.
 
 ## Samenvatting
-De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only settingspad toegevoegd voor globale herverwerking via OpenAI Batch API, inclusief persistente jobstatus en per-type voortgang. Fase 1.2 heeft voortgang in A/B/C/E, terwijl 1.2D als productfeature niet is aangetroffen. Onvoldoende bewezen claims blijven expliciet onzeker.
+De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only settingspad toegevoegd voor globale herverwerking via OpenAI Batch API, inclusief persistente jobstatus en per-type voortgang. Voor 1.2D zijn settings/export/import/reset nu aantoonbaar deels aanwezig in code en deels runtime-gevalideerd (reset + import/replace), maar niet alle export UI-downloadpaden zijn hard end-to-end bewezen. Onvoldoende bewezen claims blijven expliciet onzeker.

@@ -20,6 +20,7 @@ import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import {
   PrimaryButton,
   ScreenContainer,
+  SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
 import {
@@ -27,6 +28,10 @@ import {
   refreshDerivedAfterCaptureInBackground,
   submitTextEntry,
 } from "@/services";
+import type {
+  DerivedRefreshResult,
+  ProcessEntryResult,
+} from "@/services/entries";
 import { colorTokens, spacing, typography } from "@/theme";
 
 import {
@@ -45,7 +50,12 @@ export default function CaptureTypeScreen() {
   const returnParams = buildCaptureParams(journalDate);
   const [rawText, setRawText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [retryingDerived, setRetryingDerived] = useState(false);
   const [discardVisible, setDiscardVisible] = useState(false);
+  const [savedEntry, setSavedEntry] = useState<ProcessEntryResult | null>(null);
+  const [derivedResult, setDerivedResult] = useState<DerivedRefreshResult | null>(
+    null,
+  );
   const [error, setError] = useState<{
     message: string;
     retryable: boolean;
@@ -53,6 +63,9 @@ export default function CaptureTypeScreen() {
   } | null>(null);
 
   const hasTextDraft = rawText.trim().length > 0;
+  const derivedNeedsAttention = Boolean(
+    savedEntry && derivedResult && derivedResult.status !== "success",
+  );
 
   function goBackToStart() {
     if (router.canGoBack()) {
@@ -77,7 +90,7 @@ export default function CaptureTypeScreen() {
   }
 
   async function handleSubmit() {
-    if (!hasTextDraft || submitting) {
+    if (!hasTextDraft || submitting || retryingDerived || derivedNeedsAttention) {
       return;
     }
 
@@ -98,15 +111,24 @@ export default function CaptureTypeScreen() {
       });
 
       setRawText("");
-      router.replace({
-        pathname: "/entry/[id]",
-        params: {
-          id: result.normalizedEntryId,
-          source: "capture",
-          date: result.journalDate,
-        },
-      });
-      void refreshDerivedAfterCaptureInBackground(result.journalDate);
+      setSavedEntry(result);
+      const refreshResult = await refreshDerivedAfterCaptureInBackground(
+        result.journalDate,
+      );
+
+      if (refreshResult.status === "success") {
+        router.replace({
+          pathname: "/entry/[id]",
+          params: {
+            id: result.normalizedEntryId,
+            source: "capture",
+            date: result.journalDate,
+          },
+        });
+        return;
+      }
+
+      setDerivedResult(refreshResult);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError({
@@ -116,6 +138,38 @@ export default function CaptureTypeScreen() {
       });
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function goToSavedEntry() {
+    if (!savedEntry) {
+      return;
+    }
+
+    router.replace({
+      pathname: "/entry/[id]",
+      params: {
+        id: savedEntry.normalizedEntryId,
+        source: "capture",
+        date: savedEntry.journalDate,
+      },
+    });
+  }
+
+  async function handleRetryDerived() {
+    if (!savedEntry || retryingDerived || submitting) {
+      return;
+    }
+
+    setRetryingDerived(true);
+    const nextResult = await refreshDerivedAfterCaptureInBackground(
+      savedEntry.journalDate,
+    );
+    setDerivedResult(nextResult);
+    setRetryingDerived(false);
+
+    if (nextResult.status === "success") {
+      goToSavedEntry();
     }
   }
 
@@ -186,11 +240,34 @@ export default function CaptureTypeScreen() {
               />
             </View>
           ) : null}
+          {derivedNeedsAttention && derivedResult ? (
+            <View style={styles.errorBlock}>
+              <StateBlock
+                tone={derivedResult.status === "failed" ? "error" : "info"}
+                message={buildDerivedStatusMessage(derivedResult)}
+                detail="Je moment is wel opgeslagen."
+              />
+              <View style={styles.derivedActions}>
+                <PrimaryButton
+                  label={
+                    retryingDerived ? "Opnieuw proberen..." : "Opnieuw proberen"
+                  }
+                  onPress={() => void handleRetryDerived()}
+                  disabled={submitting || retryingDerived}
+                />
+                <SecondaryButton
+                  label="Ga naar je moment"
+                  onPress={goToSavedEntry}
+                  disabled={submitting || retryingDerived}
+                />
+              </View>
+            </View>
+          ) : null}
 
           <TextInput
             multiline
             autoFocus
-            editable={!submitting}
+            editable={!submitting && !retryingDerived && !derivedNeedsAttention}
             value={rawText}
             onChangeText={setRawText}
             placeholder="Wat wil je vastleggen?"
@@ -204,7 +281,12 @@ export default function CaptureTypeScreen() {
           <PrimaryButton
             label="Leg vast"
             onPress={() => void handleSubmit()}
-            disabled={submitting || !hasTextDraft}
+            disabled={
+              submitting ||
+              retryingDerived ||
+              derivedNeedsAttention ||
+              !hasTextDraft
+            }
           />
         </View>
 
@@ -222,10 +304,31 @@ export default function CaptureTypeScreen() {
             goBackToStart();
           }}
         />
-        <ProcessingScreen visible={submitting} variant="text-entry" />
+        <ProcessingScreen
+          visible={submitting || retryingDerived}
+          variant="text-entry"
+          statusOverride={
+            retryingDerived ? "Je dag wordt opnieuw bijgewerkt." : undefined
+          }
+        />
       </KeyboardAvoidingView>
     </ScreenContainer>
   );
+}
+
+function buildDerivedStatusMessage(result: DerivedRefreshResult): string {
+  if (result.dayJournal.status === "failed") {
+    return "Je tekst is opgeslagen, maar je dag is nog niet bijgewerkt.";
+  }
+
+  if (
+    result.weekReflection.status === "failed" ||
+    result.monthReflection.status === "failed"
+  ) {
+    return "Je tekst is opgeslagen, maar het bijwerken van je reflecties is niet gelukt.";
+  }
+
+  return "Je tekst is opgeslagen, maar het bijwerken is nog niet afgerond.";
 }
 
 const styles = StyleSheet.create({
@@ -244,6 +347,10 @@ const styles = StyleSheet.create({
   },
   errorBlock: {
     marginTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  derivedActions: {
+    gap: spacing.sm,
   },
   input: {
     flex: 1,

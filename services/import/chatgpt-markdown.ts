@@ -10,10 +10,17 @@ import { generateReflection } from '@/services/reflections';
 import {
   listPreviewDays,
   parseChatGptMarkdownFile,
+  parseImportMarkdownFile,
   summarizePreviewDate,
 } from './chatgpt-markdown-parser';
-export type { ChatGptMarkdownMessage, ChatGptMarkdownPreview } from './chatgpt-markdown-parser';
-import type { ChatGptMarkdownPreview } from './chatgpt-markdown-parser';
+export type {
+  ChatGptMarkdownMessage,
+  ChatGptMarkdownPreview,
+  ImportedMarkdownMessage,
+  ImportedMarkdownPreview,
+  MarkdownImportFormat,
+} from './chatgpt-markdown-parser';
+import type { ImportedMarkdownPreview } from './chatgpt-markdown-parser';
 
 type ImportResponse =
   | {
@@ -42,7 +49,7 @@ type ImportResponse =
 
 export type ChatGptImportRefreshProgress =
   | 'markdownbestand analyseren'
-  | 'user-berichten voorbereiden'
+  | 'importbestand voorbereiden'
   | 'entries importeren'
   | 'dagboekdagen opbouwen'
   | 'weekreflecties verversen'
@@ -107,8 +114,14 @@ function computeWeekStart(anchorDate: string): string {
   return weekStart.toISOString().slice(0, 10);
 }
 
-export async function invokeChatGptMarkdownImport(input: {
-  preview: ChatGptMarkdownPreview;
+function importSourceTypeFromPreview(preview: ImportedMarkdownPreview): string {
+  return preview.format === 'journal_archive'
+    ? 'journal_archive_import'
+    : 'chatgpt_markdown_import';
+}
+
+export async function invokeMarkdownImport(input: {
+  preview: ImportedMarkdownPreview;
   replaceExisting?: boolean;
 }): Promise<ImportResponse> {
   const supabase = getSupabaseBrowserClient();
@@ -118,7 +131,7 @@ export async function invokeChatGptMarkdownImport(input: {
   }
 
   if (input.preview.messages.length === 0) {
-    throw new Error('Er zijn geen user-berichten gevonden om te importeren.');
+    throw new Error('Er zijn geen importeerbare entries gevonden in dit markdownbestand.');
   }
 
   const flowId = createClientFlowId('import-chatgpt');
@@ -134,11 +147,13 @@ export async function invokeChatGptMarkdownImport(input: {
       sourceConversationId: input.preview.sourceConversationId,
       conversationTitle: input.preview.conversationTitle,
       conversationAlias: input.preview.conversationAlias,
+      importSourceType: importSourceTypeFromPreview(input.preview),
       replaceExisting: input.replaceExisting ?? false,
       items: input.preview.messages.map((message) => ({
         capturedAt: message.capturedAt,
         rawText: message.rawText,
         externalMessageId: message.externalMessageId,
+        sourceType: message.sourceType,
       })),
     },
   });
@@ -152,6 +167,13 @@ export async function invokeChatGptMarkdownImport(input: {
   }
 
   return data;
+}
+
+export async function invokeChatGptMarkdownImport(input: {
+  preview: ImportedMarkdownPreview;
+  replaceExisting?: boolean;
+}): Promise<ImportResponse> {
+  return invokeMarkdownImport(input);
 }
 
 export async function refreshImportedChatGptDerivedContent(input: {
@@ -210,15 +232,15 @@ export async function refreshImportedChatGptDerivedContent(input: {
 }
 
 export async function importChatGptMarkdownPreview(input: {
-  preview: ChatGptMarkdownPreview;
+  preview: ImportedMarkdownPreview;
   replaceExisting?: boolean;
   onProgress?: (status: ChatGptImportRefreshProgress, current: number, total: number) => void;
 }): Promise<ImportResponse & { refreshWarnings: string[] }> {
   input.onProgress?.('markdownbestand analyseren', 1, 5);
-  input.onProgress?.('user-berichten voorbereiden', 2, 5);
+  input.onProgress?.('importbestand voorbereiden', 2, 5);
   input.onProgress?.('entries importeren', 3, 5);
 
-  const data = await invokeChatGptMarkdownImport(input);
+  const data = await invokeMarkdownImport(input);
 
   if (data.requiresReplaceConfirmation) {
     return {
@@ -238,4 +260,9 @@ export async function importChatGptMarkdownPreview(input: {
   };
 }
 
-export { listPreviewDays, parseChatGptMarkdownFile, summarizePreviewDate };
+export {
+  listPreviewDays,
+  parseChatGptMarkdownFile,
+  parseImportMarkdownFile,
+  summarizePreviewDate,
+};

@@ -32,6 +32,10 @@ import {
   refreshDerivedAfterCaptureInBackground,
   submitAudioEntry,
 } from "@/services";
+import type {
+  DerivedRefreshResult,
+  ProcessEntryResult,
+} from "@/services/entries";
 import { colorTokens, radius, spacing, typography } from "@/theme";
 
 import {
@@ -117,7 +121,12 @@ export default function CaptureRecordScreen() {
 
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [retryingDerived, setRetryingDerived] = useState(false);
   const [recordingActionBusy, setRecordingActionBusy] = useState(false);
+  const [savedEntry, setSavedEntry] = useState<ProcessEntryResult | null>(null);
+  const [derivedResult, setDerivedResult] = useState<DerivedRefreshResult | null>(
+    null,
+  );
   const [discardVisible, setDiscardVisible] = useState(false);
   const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   const [error, setError] = useState<{
@@ -140,7 +149,10 @@ export default function CaptureRecordScreen() {
   const hasActiveRecordingSession =
     isRecording || isPaused || isVoiceSessionActive;
   const hasAudioDraft = Boolean(audioUri);
-  const isBusy = submitting || recordingActionBusy;
+  const isBusy = submitting || recordingActionBusy || retryingDerived;
+  const derivedNeedsAttention = Boolean(
+    savedEntry && derivedResult && derivedResult.status !== "success",
+  );
   const recordingSeconds = Math.floor(recorderState.durationMillis / 1000);
   const remainingRecordingSeconds = Math.max(
     0,
@@ -265,15 +277,24 @@ export default function CaptureRecordScreen() {
         });
 
         setAudioUri(null);
-        router.replace({
-          pathname: "/entry/[id]",
-          params: {
-            id: result.normalizedEntryId,
-            source: "capture",
-            date: result.journalDate,
-          },
-        });
-        void refreshDerivedAfterCaptureInBackground(result.journalDate);
+        setSavedEntry(result);
+        const refreshResult = await refreshDerivedAfterCaptureInBackground(
+          result.journalDate,
+        );
+
+        if (refreshResult.status === "success") {
+          router.replace({
+            pathname: "/entry/[id]",
+            params: {
+              id: result.normalizedEntryId,
+              source: "capture",
+              date: result.journalDate,
+            },
+          });
+          return;
+        }
+
+        setDerivedResult(refreshResult);
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
         setError({
@@ -519,6 +540,40 @@ export default function CaptureRecordScreen() {
     }
   }
 
+  function goToSavedEntry() {
+    if (!savedEntry) {
+      return;
+    }
+
+    router.replace({
+      pathname: "/entry/[id]",
+      params: {
+        id: savedEntry.normalizedEntryId,
+        source: "capture",
+        date: savedEntry.journalDate,
+      },
+    });
+  }
+
+  async function handleRetryDerived() {
+    if (!savedEntry || retryingDerived || submitting || recordingActionBusy) {
+      return;
+    }
+
+    setRetryingDerived(true);
+    setProcessingVariant("audio-entry");
+    const nextResult = await refreshDerivedAfterCaptureInBackground(
+      savedEntry.journalDate,
+    );
+    setDerivedResult(nextResult);
+    setRetryingDerived(false);
+    setProcessingVariant(null);
+
+    if (nextResult.status === "success") {
+      goToSavedEntry();
+    }
+  }
+
   async function handleTogglePauseResume() {
     if (!hasActiveRecordingSession || isBusy) {
       return;
@@ -648,6 +703,25 @@ export default function CaptureRecordScreen() {
           ) : null}
         </View>
       ) : null}
+      {derivedNeedsAttention && derivedResult ? (
+        <View style={styles.errorBlock}>
+          <StateBlock
+            tone={derivedResult.status === "failed" ? "error" : "info"}
+            message={buildDerivedStatusMessage(derivedResult)}
+            detail="Je opname is wel opgeslagen."
+          />
+          <PrimaryButton
+            label={retryingDerived ? "Opnieuw proberen..." : "Opnieuw proberen"}
+            onPress={() => void handleRetryDerived()}
+            disabled={isBusy}
+          />
+          <SecondaryButton
+            label="Ga naar je moment"
+            onPress={goToSavedEntry}
+            disabled={isBusy}
+          />
+        </View>
+      ) : null}
 
       <View
         style={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]}
@@ -728,7 +802,9 @@ export default function CaptureRecordScreen() {
               label="Stop"
               onPress={() => void handleStop()}
               disabled={
-                isBusy || (!hasActiveRecordingSession && !hasAudioDraft)
+                isBusy ||
+                derivedNeedsAttention ||
+                (!hasActiveRecordingSession && !hasAudioDraft)
               }
             />
           </View>
@@ -746,11 +822,29 @@ export default function CaptureRecordScreen() {
         onConfirm={() => void handleConfirmDiscard()}
       />
       <ProcessingScreen
-        visible={Boolean(processingVariant)}
+        visible={Boolean(processingVariant) || retryingDerived}
         variant={processingVariant ?? "audio-entry"}
+        statusOverride={
+          retryingDerived ? "Je dag wordt opnieuw bijgewerkt." : undefined
+        }
       />
     </ScreenContainer>
   );
+}
+
+function buildDerivedStatusMessage(result: DerivedRefreshResult): string {
+  if (result.dayJournal.status === "failed") {
+    return "Je opname is opgeslagen, maar je dag is nog niet bijgewerkt.";
+  }
+
+  if (
+    result.weekReflection.status === "failed" ||
+    result.monthReflection.status === "failed"
+  ) {
+    return "Je opname is opgeslagen, maar het bijwerken van je reflecties is niet gelukt.";
+  }
+
+  return "Je opname is opgeslagen, maar het bijwerken is nog niet afgerond.";
 }
 
 const styles = StyleSheet.create({

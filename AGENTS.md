@@ -71,6 +71,9 @@ Regels:
 - Per taak: max 1 screen + noodzakelijke shared component-aanpassing.
 - Bij styling-taken is check tegen `design_refs/1.2.1/**` verplicht.
 - Geen redesign zonder expliciete opdracht.
+- Plain text wrappers zijn standaard transparant; zet geen achtergrondfill op containers die alleen title/subtitle/body copy groeperen.
+- Voeg geen extra content fill toe achter plain text in cards, rows, modals, sheets, dialogs, popups of state blocks.
+- Alleen functionele componenten mogen een eigen fill hebben: chip, badge, input, button, textarea, alert, toast of tagged status surface.
 
 ## Kosten- en inputregels
 

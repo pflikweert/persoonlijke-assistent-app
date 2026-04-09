@@ -2,16 +2,29 @@ const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---\n?/;
 const USER_HEADER_PREFIX = '>[!nexus_user] **User** - ';
 const ASSISTANT_HEADER_PREFIX = '>[!nexus_agent] **Assistant** - ';
 const UID_PATTERN = /^<!--\s*UID:\s*(.*?)\s*-->$/i;
+const JOURNAL_ARCHIVE_SOURCE_REF = 'journal-archive';
+const JOURNAL_ARCHIVE_HEADER = '# Mijn archief';
+const JOURNAL_ARCHIVE_DAYS_HEADER = '## Dagen';
+const JOURNAL_DATE_HEADER_PATTERN = /^###\s+(\d{4}-\d{2}-\d{2})$/;
+const ENTRY_HEADER_PATTERN = /^####\s+Entry\s+\d+\s+·\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+·\s+(tekst|spraak)$/i;
+const LOOSE_ENTRY_HEADER_PATTERN = /^###\s+Losse entry\s+\d+\s+·\s+/i;
+const LOOSE_ENTRY_META_PATTERN = /^Vastgelegd:\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+·\s+(tekst|spraak)$/i;
+const EXPORT_DATE_PATTERN = /^Exportdatum:\s*(\d{4}-\d{2}-\d{2})$/i;
 
-export type ChatGptMarkdownMessage = {
+export type MarkdownImportFormat = 'chatgpt_markdown' | 'journal_archive';
+export type ImportedMessageSourceType = 'text' | 'audio';
+
+export type ImportedMarkdownMessage = {
   capturedAt: string;
   rawText: string;
   externalMessageId: string | null;
-  sourceHeader: string;
+  sourceHeader: string | null;
+  sourceType: ImportedMessageSourceType;
 };
 
-export type ChatGptMarkdownPreview = {
+export type ImportedMarkdownPreview = {
   fileName: string;
+  format: MarkdownImportFormat;
   conversationTitle: string | null;
   conversationAlias: string | null;
   sourceRef: string;
@@ -21,8 +34,11 @@ export type ChatGptMarkdownPreview = {
   lastDate: string | null;
   uniqueDayCount: number;
   exampleEntries: string[];
-  messages: ChatGptMarkdownMessage[];
+  messages: ImportedMarkdownMessage[];
 };
+
+export type ChatGptMarkdownMessage = ImportedMarkdownMessage;
+export type ChatGptMarkdownPreview = ImportedMarkdownPreview;
 
 function parseFrontmatter(input: string): { metadata: Record<string, string>; rest: string } {
   const match = input.match(FRONTMATTER_PATTERN);
@@ -70,7 +86,6 @@ function parseHeaderTimestamp(headerLine: string): string {
 
   if (amPmMatch) {
     year = Number(amPmMatch[3]);
-    // Backward compatibility: legacy exporter format used month/day with AM/PM.
     month = Number(amPmMatch[1]) - 1;
     day = Number(amPmMatch[2]);
     hour = Number(amPmMatch[4]);
@@ -85,7 +100,6 @@ function parseHeaderTimestamp(headerLine: string): string {
     }
   } else if (twentyFourHourMatch) {
     year = Number(twentyFourHourMatch[3]);
-    // Newer exporter format: day/month with 24h clock.
     day = Number(twentyFourHourMatch[1]);
     month = Number(twentyFourHourMatch[2]) - 1;
     hour = Number(twentyFourHourMatch[4]);
@@ -95,9 +109,22 @@ function parseHeaderTimestamp(headerLine: string): string {
     throw new Error(`Onbekende datum in importblok: ${raw}`);
   }
 
-  // Header timestamps in markdown are wall-clock values without explicit timezone.
-  // Interpret them in the current local timezone to keep imported day grouping consistent.
   return new Date(year, month, day, hour, minute, second).toISOString();
+}
+
+function parseArchiveTimestamp(raw: string): string {
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})$/);
+  if (!match) {
+    throw new Error(`Onbekende datum in archiefentry: ${raw}`);
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+
+  return new Date(year, month, day, hour, minute, 0).toISOString();
 }
 
 function normalizeQuotedContent(lines: string[]): string {
@@ -145,6 +172,36 @@ function normalizeQuotedContent(lines: string[]): string {
   return collapsed.join('\n').trim();
 }
 
+function normalizeBlockContent(lines: string[]): string {
+  const stripped = lines.map((line) => line.replace(/\r/g, '').trimEnd());
+
+  while (stripped.length > 0 && stripped[0].trim() === '') {
+    stripped.shift();
+  }
+
+  while (stripped.length > 0 && stripped[stripped.length - 1].trim() === '') {
+    stripped.pop();
+  }
+
+  const collapsed: string[] = [];
+  let previousBlank = false;
+
+  for (const line of stripped) {
+    if (line.trim() === '') {
+      if (!previousBlank && collapsed.length > 0) {
+        collapsed.push('');
+      }
+      previousBlank = true;
+      continue;
+    }
+
+    collapsed.push(line);
+    previousBlank = false;
+  }
+
+  return collapsed.join('\n').trim();
+}
+
 function previewSnippet(value: string): string {
   const clean = value.replace(/\s+/g, ' ').trim();
   if (clean.length <= 140) {
@@ -165,7 +222,7 @@ function hashString(value: string): string {
   return `fallback-${(hash >>> 0).toString(16)}`;
 }
 
-function buildSourceRef(metadata: Record<string, string>, messages: ChatGptMarkdownMessage[]): string {
+function buildSourceRef(metadata: Record<string, string>, messages: ImportedMarkdownMessage[]): string {
   const conversationId = metadata.conversation_id?.trim();
   if (conversationId) {
     return conversationId;
@@ -194,14 +251,39 @@ function toLocalJournalDate(isoValue: string): string {
   return `${year}-${month}-${day}`;
 }
 
-export function parseChatGptMarkdownFile(input: {
+function finalizePreview(input: {
   fileName: string;
-  markdown: string;
-}): ChatGptMarkdownPreview {
+  format: MarkdownImportFormat;
+  conversationTitle: string | null;
+  conversationAlias: string | null;
+  sourceRef: string;
+  sourceConversationId: string | null;
+  messages: ImportedMarkdownMessage[];
+}): ImportedMarkdownPreview {
+  const sorted = [...input.messages].sort((left, right) => left.capturedAt.localeCompare(right.capturedAt));
+  const uniqueDays = new Set(sorted.map((message) => toLocalJournalDate(message.capturedAt)));
+
+  return {
+    fileName: input.fileName,
+    format: input.format,
+    conversationTitle: input.conversationTitle,
+    conversationAlias: input.conversationAlias,
+    sourceRef: input.sourceRef,
+    sourceConversationId: input.sourceConversationId,
+    userEntryCount: sorted.length,
+    firstDate: sorted[0]?.capturedAt ?? null,
+    lastDate: sorted[sorted.length - 1]?.capturedAt ?? null,
+    uniqueDayCount: uniqueDays.size,
+    exampleEntries: sorted.slice(0, 3).map((message) => previewSnippet(message.rawText)),
+    messages: sorted,
+  };
+}
+
+function parseChatGptBlocks(input: { fileName: string; markdown: string }): ImportedMarkdownPreview {
   const markdown = String(input.markdown ?? '').replace(/\r\n?/g, '\n');
   const { metadata, rest } = parseFrontmatter(markdown);
   const lines = rest.split('\n');
-  const messages: ChatGptMarkdownMessage[] = [];
+  const messages: ImportedMarkdownMessage[] = [];
 
   let index = 0;
   while (index < lines.length) {
@@ -265,25 +347,214 @@ export function parseChatGptMarkdownFile(input: {
       rawText,
       externalMessageId,
       sourceHeader,
+      sourceType: 'text',
     });
   }
 
-  const sorted = [...messages].sort((left, right) => left.capturedAt.localeCompare(right.capturedAt));
-  const uniqueDays = new Set(sorted.map((message) => toLocalJournalDate(message.capturedAt)));
-
-  return {
+  return finalizePreview({
     fileName: input.fileName,
+    format: 'chatgpt_markdown',
     conversationTitle: metadata.title?.trim() || null,
     conversationAlias: metadata.aliases?.trim() || null,
-    sourceRef: buildSourceRef(metadata, sorted),
+    sourceRef: buildSourceRef(metadata, messages),
     sourceConversationId: metadata.conversation_id?.trim() || null,
-    userEntryCount: sorted.length,
-    firstDate: sorted[0]?.capturedAt ?? null,
-    lastDate: sorted[sorted.length - 1]?.capturedAt ?? null,
-    uniqueDayCount: uniqueDays.size,
-    exampleEntries: sorted.slice(0, 3).map((message) => previewSnippet(message.rawText)),
-    messages: sorted,
+    messages,
+  });
+}
+
+function isJournalArchiveMarkdown(markdown: string): boolean {
+  const normalized = String(markdown ?? '').replace(/\r\n?/g, '\n');
+  return (
+    normalized.includes(JOURNAL_ARCHIVE_HEADER) &&
+    normalized.includes(JOURNAL_ARCHIVE_DAYS_HEADER) &&
+    normalized.includes('Exportdatum:')
+  );
+}
+
+function isDaySectionHeader(line: string): boolean {
+  return JOURNAL_DATE_HEADER_PATTERN.test(line);
+}
+
+function isLooseEntrySectionHeader(line: string): boolean {
+  return LOOSE_ENTRY_HEADER_PATTERN.test(line);
+}
+
+function isEntryHeader(line: string): boolean {
+  return ENTRY_HEADER_PATTERN.test(line);
+}
+
+function isTopLevelSectionHeader(line: string): boolean {
+  return line.startsWith('## ');
+}
+
+function startsNewArchiveSection(line: string): boolean {
+  return (
+    isEntryHeader(line) ||
+    isDaySectionHeader(line) ||
+    isLooseEntrySectionHeader(line) ||
+    isTopLevelSectionHeader(line)
+  );
+}
+
+function parseArchiveEntryHeader(line: string): { capturedAt: string; sourceType: ImportedMessageSourceType } | null {
+  const match = line.match(ENTRY_HEADER_PATTERN);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    capturedAt: parseArchiveTimestamp(match[1]),
+    sourceType: match[2].toLowerCase() === 'spraak' ? 'audio' : 'text',
   };
+}
+
+function parseLooseEntryMeta(line: string): { capturedAt: string; sourceType: ImportedMessageSourceType } | null {
+  const match = line.match(LOOSE_ENTRY_META_PATTERN);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    capturedAt: parseArchiveTimestamp(match[1]),
+    sourceType: match[2].toLowerCase() === 'spraak' ? 'audio' : 'text',
+  };
+}
+
+function collectEntryBody(lines: string[], startIndex: number): { body: string; nextIndex: number } {
+  const bodyLines: string[] = [];
+  let index = startIndex;
+
+  while (index < lines.length) {
+    const current = lines[index] ?? '';
+    const trimmed = current.trim();
+    if (startsNewArchiveSection(trimmed)) {
+      break;
+    }
+
+    bodyLines.push(current);
+    index += 1;
+  }
+
+  return {
+    body: normalizeBlockContent(bodyLines),
+    nextIndex: index,
+  };
+}
+
+function parseJournalArchiveFile(input: { fileName: string; markdown: string }): ImportedMarkdownPreview {
+  const markdown = String(input.markdown ?? '').replace(/\r\n?/g, '\n');
+  const lines = markdown.split('\n');
+  const messages: ImportedMarkdownMessage[] = [];
+
+  const exportDateLine = lines.find((line) => EXPORT_DATE_PATTERN.test(line.trim()));
+  const exportDate = exportDateLine?.trim().match(EXPORT_DATE_PATTERN)?.[1] ?? null;
+
+  let index = 0;
+  while (index < lines.length) {
+    const line = lines[index]?.trim() ?? '';
+
+    if (isDaySectionHeader(line)) {
+      index += 1;
+      while (index < lines.length) {
+        const current = lines[index]?.trim() ?? '';
+        if (isEntryHeader(current) || isDaySectionHeader(current) || isLooseEntrySectionHeader(current) || isTopLevelSectionHeader(current)) {
+          break;
+        }
+        index += 1;
+      }
+
+      while (index < lines.length) {
+        const current = lines[index]?.trim() ?? '';
+        const parsedHeader = parseArchiveEntryHeader(current);
+        if (!parsedHeader) {
+          if (isDaySectionHeader(current) || isLooseEntrySectionHeader(current) || isTopLevelSectionHeader(current)) {
+            break;
+          }
+          index += 1;
+          continue;
+        }
+
+        const { body, nextIndex } = collectEntryBody(lines, index + 1);
+        if (body) {
+          messages.push({
+            capturedAt: parsedHeader.capturedAt,
+            rawText: body,
+            externalMessageId: null,
+            sourceHeader: current,
+            sourceType: parsedHeader.sourceType,
+          });
+        }
+        index = nextIndex;
+      }
+      continue;
+    }
+
+    if (isLooseEntrySectionHeader(line)) {
+      let metaIndex = index + 1;
+      let meta: { capturedAt: string; sourceType: ImportedMessageSourceType } | null = null;
+
+      while (metaIndex < lines.length) {
+        const current = lines[metaIndex]?.trim() ?? '';
+        if (isDaySectionHeader(current) || isLooseEntrySectionHeader(current) || isTopLevelSectionHeader(current)) {
+          break;
+        }
+        meta = parseLooseEntryMeta(current);
+        if (meta) {
+          metaIndex += 1;
+          break;
+        }
+        metaIndex += 1;
+      }
+
+      if (!meta) {
+        index += 1;
+        continue;
+      }
+
+      const { body, nextIndex } = collectEntryBody(lines, metaIndex);
+      if (body) {
+        messages.push({
+          capturedAt: meta.capturedAt,
+          rawText: body,
+          externalMessageId: null,
+          sourceHeader: line,
+          sourceType: meta.sourceType,
+        });
+      }
+      index = nextIndex;
+      continue;
+    }
+
+    index += 1;
+  }
+
+  return finalizePreview({
+    fileName: input.fileName,
+    format: 'journal_archive',
+    conversationTitle: 'Mijn archief',
+    conversationAlias: exportDate ? `Export ${exportDate}` : 'App-export',
+    sourceRef: JOURNAL_ARCHIVE_SOURCE_REF,
+    sourceConversationId: null,
+    messages,
+  });
+}
+
+export function parseImportMarkdownFile(input: {
+  fileName: string;
+  markdown: string;
+}): ImportedMarkdownPreview {
+  if (isJournalArchiveMarkdown(input.markdown)) {
+    return parseJournalArchiveFile(input);
+  }
+
+  return parseChatGptBlocks(input);
+}
+
+export function parseChatGptMarkdownFile(input: {
+  fileName: string;
+  markdown: string;
+}): ChatGptMarkdownPreview {
+  return parseChatGptBlocks(input);
 }
 
 export function summarizePreviewDate(isoValue: string | null): string {
@@ -304,6 +575,6 @@ export function summarizePreviewDate(isoValue: string | null): string {
   });
 }
 
-export function listPreviewDays(preview: ChatGptMarkdownPreview): string[] {
+export function listPreviewDays(preview: ImportedMarkdownPreview): string[] {
   return [...new Set(preview.messages.map((message) => toLocalJournalDate(message.capturedAt)))].sort();
 }

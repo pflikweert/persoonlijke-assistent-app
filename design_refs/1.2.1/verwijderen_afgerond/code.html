@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Status: Alles is verwijderd</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#002204",
+                    "background": "#faf9f6",
+                    "surface-container-highest": "#e3e2df",
+                    "on-primary-fixed-variant": "#574400",
+                    "outline": "#807660",
+                    "secondary-fixed-dim": "#a7c8ff",
+                    "on-primary-fixed": "#241a00",
+                    "on-primary-container": "#5e4a00",
+                    "on-surface-variant": "#4e4633",
+                    "secondary": "#395f94",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#faf9f6",
+                    "surface-tint": "#745b00",
+                    "primary-container": "#e6b800",
+                    "surface-container-low": "#f4f3f0",
+                    "surface-container-high": "#e9e8e5",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#9ec2fe",
+                    "tertiary": "#1b6d24",
+                    "on-secondary-fixed": "#001c3b",
+                    "inverse-primary": "#f0c115",
+                    "surface-variant": "#e3e2df",
+                    "primary-fixed-dim": "#f0c115",
+                    "surface": "#faf9f6",
+                    "primary-fixed": "#ffe08a",
+                    "tertiary-fixed": "#a3f69c",
+                    "tertiary-container": "#7fd07a",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1b1c1a",
+                    "tertiary-fixed-dim": "#88d982",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-container": "#005914",
+                    "on-secondary-container": "#284f83",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#1e477b",
+                    "surface-container": "#efeeeb",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#d1c5ac",
+                    "secondary-fixed": "#d5e3ff",
+                    "surface-dim": "#dbdad7",
+                    "on-tertiary-fixed-variant": "#005312",
+                    "inverse-surface": "#2f312f",
+                    "on-background": "#1b1c1a",
+                    "primary": "#745b00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- Top Navigation Anchor -->
+<header class="w-full sticky top-0 bg-[#faf9f6] dark:bg-stone-950 flex items-center justify-between px-6 py-4 z-50">
+<div class="flex items-center gap-4">
+<button class="text-stone-500 hover:bg-stone-200/50 transition-colors p-2 rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline font-semibold tracking-tight text-stone-900 dark:text-stone-50 text-lg">Settings</h1>
+</div>
+<div class="w-10"></div> <!-- Spacer for symmetry -->
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-8 text-center">
+<!-- Success Visual Section -->
+<div class="mb-12 relative">
+<!-- Subtle background glow for the icon -->
+<div class="absolute inset-0 bg-primary-container/20 blur-3xl rounded-full scale-150"></div>
+<div class="relative flex flex-col items-center">
+<!-- Iconic confirmation -->
+<div class="w-24 h-24 rounded-full bg-surface-container flex items-center justify-center mb-8">
+<span class="material-symbols-outlined text-primary text-5xl" data-icon="check_circle_outline">check_circle_outline</span>
+</div>
+<!-- Status Text Hierarchy -->
+<h2 class="text-2xl font-headline font-bold text-on-surface mb-3 tracking-tight">Alles is verwijderd.</h2>
+<p class="text-on-surface-variant max-w-xs mx-auto leading-relaxed">
+                    Je persoonlijke gegevens en reflecties zijn veilig en definitief gewist uit onze database.
+                </p>
+</div>
+</div>
+<!-- Feedback & Next Steps -->
+<div class="w-full max-w-sm space-y-4">
+<div class="p-6 bg-surface-container-low rounded-xl">
+<div class="flex items-start gap-4 text-left">
+<span class="material-symbols-outlined text-on-surface-variant mt-0.5" data-icon="info">info</span>
+<div class="space-y-1">
+<p class="text-sm font-semibold text-on-surface">Wat gebeurt er nu?</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">Je account blijft behouden, maar alle opgeslagen content is nu leeg. Je kunt op elk moment opnieuw beginnen.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Action Zone (Primary CTA) -->
+<footer class="p-8 flex flex-col items-center justify-center gap-6">
+<!-- The Signature Primary CTA -->
+<button class="group relative px-12 py-4 rounded-full bg-gradient-to-r from-[#745b00] to-[#e6b800] text-white font-semibold text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all duration-200 flex items-center gap-3">
+<span>Klaar</span>
+<span class="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1" data-icon="done">done</span>
+</button>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant/60 font-medium">Voltooid op 24 Okt, 2023</p>
+</footer>
+<!-- Decorative Image Layer (Editorial Calm) -->
+<div class="fixed bottom-0 left-0 w-full h-1/4 pointer-events-none opacity-20 overflow-hidden">
+<img alt="Calm aesthetic" class="w-full h-full object-cover" data-alt="Soft abstract macro shot of clean white paper textures with subtle shadows and minimalist mineral tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkUk_mf0CNe1CsptiTvLZEgdIBLADN12vmlKLT6OnDgB1JhBkIKjFKE7qhJRMsjjfoW2eDASRkCkM54KdNGgOBQsnaUCYl0Zs5W89zXE4eOdJdr5XIPYfuZAycJVBIWDwrofkg0i3d-2Bgfvpzc0wxQR_ol4Nmtm3oyXolEIox-iUg2mptSo0_h3cqtZvRFrAgehZApChtP08b9Wzx6S_3pN8y5fo1WIFbCBU-YyjpNdfCtKdbTnW3O3lRb1dOpPByqP8gaHMaZobj"/>
+</div>
+</body></html>

@@ -8,6 +8,7 @@ type ImportRequestItem = {
   capturedAt?: unknown;
   rawText?: unknown;
   externalMessageId?: unknown;
+  sourceType?: unknown;
 };
 
 type ImportRequest = {
@@ -16,6 +17,7 @@ type ImportRequest = {
   sourceConversationId?: unknown;
   conversationTitle?: unknown;
   conversationAlias?: unknown;
+  importSourceType?: unknown;
   replaceExisting?: unknown;
   items?: unknown;
 };
@@ -24,6 +26,7 @@ type PersistedImportItem = {
   capturedAt: string;
   rawText: string;
   externalMessageId: string | null;
+  sourceType: 'text' | 'audio';
 };
 
 type ImportResponse =
@@ -141,6 +144,18 @@ function parseString(value: unknown): string | null {
 
 function parseBoolean(value: unknown): boolean {
   return value === true;
+}
+
+function parseImportSourceType(value: unknown): 'chatgpt_markdown_import' | 'journal_archive_import' {
+  if (value === 'journal_archive_import') {
+    return 'journal_archive_import';
+  }
+
+  return 'chatgpt_markdown_import';
+}
+
+function parseSourceType(value: unknown): 'text' | 'audio' {
+  return value === 'audio' ? 'audio' : 'text';
 }
 
 function parseCapturedAt(value: unknown): string {
@@ -272,6 +287,7 @@ function parseItems(value: unknown): PersistedImportItem[] {
       capturedAt: parseCapturedAt(candidate.capturedAt),
       rawText,
       externalMessageId: parseString(candidate.externalMessageId),
+      sourceType: parseSourceType(candidate.sourceType),
     };
   });
 }
@@ -393,6 +409,7 @@ Deno.serve(async (request: Request) => {
     step = 'validated';
     const sourceRef = parseString(body.sourceRef);
     const fileName = parseString(body.fileName);
+    const importSourceType = parseImportSourceType(body.importSourceType);
     const replaceExisting = parseBoolean(body.replaceExisting);
 
     if (!sourceRef) {
@@ -454,6 +471,7 @@ Deno.serve(async (request: Request) => {
       details: {
         userId: authData.user.id,
         sourceRef,
+        importSourceType,
         itemCount: items.length,
         replaceExisting,
       },
@@ -463,7 +481,7 @@ Deno.serve(async (request: Request) => {
       .from('entries_raw')
       .select('id, captured_at')
       .eq('user_id', authData.user.id)
-      .eq('import_source_type', 'chatgpt_markdown_import')
+      .eq('import_source_type', importSourceType)
       .eq('import_source_ref', sourceRef);
 
     if (existingError) {
@@ -509,7 +527,7 @@ Deno.serve(async (request: Request) => {
         .from('entries_raw')
         .delete()
         .eq('user_id', authData.user.id)
-        .eq('import_source_type', 'chatgpt_markdown_import')
+        .eq('import_source_type', importSourceType)
         .eq('import_source_ref', sourceRef);
 
       if (deleteError) {
@@ -527,11 +545,11 @@ Deno.serve(async (request: Request) => {
 
     const rawPayload = items.map((item) => ({
       user_id: authData.user.id,
-      source_type: 'text',
+      source_type: item.sourceType,
       raw_text: item.rawText,
       transcript_text: null,
       captured_at: item.capturedAt,
-      import_source_type: 'chatgpt_markdown_import',
+      import_source_type: importSourceType,
       import_source_ref: sourceRef,
       import_file_name: fileName,
       import_external_message_id: item.externalMessageId,

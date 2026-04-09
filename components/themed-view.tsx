@@ -8,7 +8,17 @@ export type ThemedViewProps = ViewProps & {
 };
 
 export function ThemedView({ style, lightColor, darkColor, ...otherProps }: ThemedViewProps) {
-  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+  const hasExplicitBackground = typeof lightColor === 'string' || typeof darkColor === 'string';
+  const backgroundColor = useThemeColor(
+    { light: lightColor, dark: darkColor },
+    'background'
+  );
 
-  return <View style={[{ backgroundColor }, style]} {...otherProps} />;
+  return (
+    <View
+      // Layout wrappers stay transparent by default. Only opt into a fill for real surfaces.
+      style={[hasExplicitBackground ? { backgroundColor } : null, style]}
+      {...otherProps}
+    />
+  );
 }

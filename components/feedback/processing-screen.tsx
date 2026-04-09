@@ -35,10 +35,10 @@ const COPY_BY_VARIANT = {
   },
   'chatgpt-import': {
     title: 'We importeren je dagboekdata',
-    subtitle: 'Je ChatGPT user-berichten worden verwerkt en toegevoegd aan je dagboek.',
+    subtitle: 'Je importbestand wordt verwerkt en toegevoegd aan je dagboek.',
     statuses: [
       'Markdownbestand analyseren',
-      'User-berichten voorbereiden',
+      'Importbestand voorbereiden',
       'Entries importeren',
       'Dagboekdagen opbouwen',
       'Week- en maandreflecties verversen',
@@ -52,10 +52,20 @@ export function ProcessingScreen({
   visible,
   variant,
   statusOverride,
+  progressCurrent,
+  progressTotal,
+  detailProgressCurrent,
+  detailProgressTotal,
+  detailProgressLabel,
 }: {
   visible: boolean;
   variant: ProcessingVariant;
   statusOverride?: string | null;
+  progressCurrent?: number | null;
+  progressTotal?: number | null;
+  detailProgressCurrent?: number | null;
+  detailProgressTotal?: number | null;
+  detailProgressLabel?: string | null;
 }) {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -72,6 +82,39 @@ export function ProcessingScreen({
 
   const copy = COPY_BY_VARIANT[variant];
   const status = statusOverride?.trim() || copy.statuses[statusIndex] || copy.statuses[0];
+  const normalizedProgressTotal =
+    typeof progressTotal === 'number' && Number.isFinite(progressTotal) && progressTotal > 0
+      ? Math.max(1, Math.round(progressTotal))
+      : null;
+  const normalizedProgressCurrent =
+    normalizedProgressTotal && typeof progressCurrent === 'number' && Number.isFinite(progressCurrent)
+      ? Math.min(normalizedProgressTotal, Math.max(1, Math.round(progressCurrent)))
+      : null;
+  const progressRatio =
+    normalizedProgressTotal && normalizedProgressCurrent
+      ? normalizedProgressCurrent / normalizedProgressTotal
+      : null;
+  const progressLabel =
+    normalizedProgressTotal && normalizedProgressCurrent
+      ? `Stap ${normalizedProgressCurrent} van ${normalizedProgressTotal}`
+      : null;
+  const normalizedDetailTotal =
+    typeof detailProgressTotal === 'number' &&
+    Number.isFinite(detailProgressTotal) &&
+    detailProgressTotal > 0
+      ? Math.max(1, Math.round(detailProgressTotal))
+      : null;
+  const normalizedDetailCurrent =
+    normalizedDetailTotal &&
+    typeof detailProgressCurrent === 'number' &&
+    Number.isFinite(detailProgressCurrent)
+      ? Math.min(normalizedDetailTotal, Math.max(0, Math.round(detailProgressCurrent)))
+      : null;
+  const detailProgressRatio =
+    normalizedDetailTotal && normalizedDetailCurrent !== null
+      ? Math.max(0, normalizedDetailCurrent) / normalizedDetailTotal
+      : null;
+  const nextDetailLabel = detailProgressLabel?.trim() || null;
   const backgroundSource = scheme === 'dark' ? LOGIN_BG_DARK : LOGIN_BG_LIGHT;
   const overlayColor = scheme === 'dark' ? 'rgba(8, 7, 6, 0.72)' : 'rgba(250, 244, 230, 0.76)';
   const cardColor = scheme === 'dark' ? 'rgba(43, 41, 37, 0.82)' : 'rgba(255, 255, 255, 0.8)';
@@ -236,6 +279,56 @@ export function ProcessingScreen({
           <ThemedText type="caption" style={[styles.status, { color: palette.mutedSoft }]}>
             {status}
           </ThemedText>
+          {progressLabel ? (
+            <View style={styles.progressWrap}>
+              <View
+                style={[
+                  styles.progressTrack,
+                  {
+                    backgroundColor:
+                      scheme === 'dark' ? 'rgba(244, 241, 232, 0.12)' : 'rgba(116, 91, 0, 0.10)',
+                  },
+                ]}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      backgroundColor: palette.primaryStrong,
+                      width: `${Math.max(8, Math.round((progressRatio ?? 0) * 100))}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <ThemedText type="caption" style={[styles.progressLabel, { color: palette.mutedSoft }]}>
+                {progressLabel}
+              </ThemedText>
+              {nextDetailLabel && normalizedDetailTotal ? (
+                <View style={styles.detailProgressWrap}>
+                  <View
+                    style={[
+                      styles.detailProgressTrack,
+                      {
+                        backgroundColor:
+                          scheme === 'dark' ? 'rgba(244, 241, 232, 0.10)' : 'rgba(116, 91, 0, 0.08)',
+                      },
+                    ]}>
+                    <View
+                      style={[
+                        styles.detailProgressFill,
+                        {
+                          backgroundColor: `${palette.primaryStrong}B3`,
+                          width: `${Math.max(4, Math.round((detailProgressRatio ?? 0) * 100))}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <ThemedText type="caption" style={[styles.detailProgressLabel, { color: palette.mutedSoft }]}>
+                    {nextDetailLabel}
+                  </ThemedText>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
     </Animated.View>
@@ -304,5 +397,40 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     letterSpacing: 0.3,
     textTransform: 'none',
+  },
+  progressWrap: {
+    width: '100%',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  progressTrack: {
+    width: '100%',
+    height: 8,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: radius.pill,
+  },
+  progressLabel: {
+    textAlign: 'center',
+  },
+  detailProgressWrap: {
+    width: '100%',
+    gap: spacing.xs,
+  },
+  detailProgressTrack: {
+    width: '100%',
+    height: 5,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
+  detailProgressFill: {
+    height: '100%',
+    borderRadius: radius.pill,
+  },
+  detailProgressLabel: {
+    textAlign: 'center',
   },
 });

@@ -20,6 +20,21 @@ export interface ProcessEntryResult {
   sourceType?: 'text' | 'audio';
 }
 
+export type DerivedRefreshStepStatus = 'success' | 'failed';
+export type DerivedRefreshStatus = 'success' | 'partial' | 'failed';
+
+export interface DerivedRefreshStepResult {
+  status: DerivedRefreshStepStatus;
+  message: string;
+}
+
+export interface DerivedRefreshResult {
+  status: DerivedRefreshStatus;
+  dayJournal: DerivedRefreshStepResult;
+  weekReflection: DerivedRefreshStepResult;
+  monthReflection: DerivedRefreshStepResult;
+}
+
 async function parseFunctionInvokeError(error: unknown): Promise<never> {
   const fallback =
     error instanceof Error ? error.message : 'Verwerken van notitie mislukt door onbekende fout.';
@@ -184,23 +199,75 @@ export async function submitAudioEntry(input: {
 
 export async function refreshDerivedAfterCaptureInBackground(
   journalDate: string
-): Promise<void> {
+): Promise<DerivedRefreshResult> {
+  const dayJournalFailedMessage = 'Je dag is nog niet bijgewerkt.';
+  const reflectionFailedMessage = 'Je reflecties zijn nog niet bijgewerkt.';
+  const reflectionBlockedByDayMessage =
+    'Je reflecties worden bijgewerkt zodra je dag weer is bijgewerkt.';
+
+  let dayJournal: DerivedRefreshStepResult = {
+    status: 'success',
+    message: 'Je dag is bijgewerkt.',
+  };
+  let weekReflection: DerivedRefreshStepResult = {
+    status: 'success',
+    message: 'Je weekreflectie is bijgewerkt.',
+  };
+  let monthReflection: DerivedRefreshStepResult = {
+    status: 'success',
+    message: 'Je maandreflectie is bijgewerkt.',
+  };
+
+  let dayJournalUpdated = false;
   try {
     await regenerateDayJournalByDate(journalDate);
-  } catch (error) {
-    console.warn('[capture-background] day journal refresh failed', error);
-    return;
+    dayJournalUpdated = true;
+  } catch {
+    dayJournal = {
+      status: 'failed',
+      message: dayJournalFailedMessage,
+    };
   }
 
-  try {
-    await generateReflection({ periodType: 'week', anchorDate: journalDate });
-  } catch (error) {
-    console.warn('[capture-background] week reflection refresh failed', error);
+  if (!dayJournalUpdated) {
+    weekReflection = {
+      status: 'failed',
+      message: reflectionBlockedByDayMessage,
+    };
+    monthReflection = {
+      status: 'failed',
+      message: reflectionBlockedByDayMessage,
+    };
+  } else {
+    try {
+      await generateReflection({ periodType: 'week', anchorDate: journalDate });
+    } catch {
+      weekReflection = {
+        status: 'failed',
+        message: reflectionFailedMessage,
+      };
+    }
+
+    try {
+      await generateReflection({ periodType: 'month', anchorDate: journalDate });
+    } catch {
+      monthReflection = {
+        status: 'failed',
+        message: reflectionFailedMessage,
+      };
+    }
   }
 
-  try {
-    await generateReflection({ periodType: 'month', anchorDate: journalDate });
-  } catch (error) {
-    console.warn('[capture-background] month reflection refresh failed', error);
-  }
+  const successCount = [dayJournal, weekReflection, monthReflection].filter(
+    (step) => step.status === 'success'
+  ).length;
+  const status: DerivedRefreshStatus =
+    successCount === 3 ? 'success' : successCount === 0 ? 'failed' : 'partial';
+
+  return {
+    status,
+    dayJournal,
+    weekReflection,
+    monthReflection,
+  };
 }

@@ -45,7 +45,14 @@ export function ConfirmDialog({
               accessibilityRole="button"
               disabled={processing}
               onPress={onCancel}
-              style={[styles.actionBase, styles.cancelAction, { borderColor: `${palette.separator}CC` }]}>
+              style={[
+                styles.actionBase,
+                styles.cancelAction,
+                {
+                  borderColor: `${palette.separator}CC`,
+                  backgroundColor: colorTokens.light.surfaceLowest,
+                },
+              ]}>
               <ThemedText type="defaultSemiBold" style={{ color: palette.mutedSoft }}>
                 {cancelLabel}
               </ThemedText>
@@ -60,6 +67,7 @@ export function ConfirmDialog({
                 styles.confirmAction,
                 {
                   borderColor: palette.destructiveSoftBorder,
+                  backgroundColor: colorTokens.light.surfaceLowest,
                 },
                 processing && styles.actionDisabled,
               ]}>
@@ -103,6 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: spacing.sm,
     marginTop: spacing.xs,
+    backgroundColor: 'transparent',
   },
   actionBase: {
     minHeight: 42,

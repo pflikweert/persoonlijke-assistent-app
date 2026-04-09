@@ -1,39 +1,41 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import * as DocumentPicker from 'expo-document-picker';
-import { readAsStringAsync } from 'expo-file-system/legacy';
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import * as DocumentPicker from "expo-document-picker";
+import { readAsStringAsync } from "expo-file-system/legacy";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
+import { Pressable, StyleSheet } from "react-native";
 
-import { ConfirmDialog } from '@/components/feedback/confirm-dialog';
-import { ProcessingScreen } from '@/components/feedback/processing-screen';
-import { ScreenHeader } from '@/components/layout/screen-header';
-import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
+import { ProcessingScreen } from "@/components/feedback/processing-screen";
+import { ScreenHeader } from "@/components/layout/screen-header";
+import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 import {
-  MetaText,
-  PrimaryButton,
-  ScreenContainer,
-  SecondaryButton,
-  StateBlock,
-  SurfaceSection,
-} from '@/components/ui/screen-primitives';
+    MetaText,
+    PrimaryButton,
+    ScreenContainer,
+    SecondaryButton,
+    SurfaceSection,
+} from "@/components/ui/screen-primitives";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
-  isChatGptMarkdownImportEnabled,
-  invokeChatGptMarkdownImport,
-  parseChatGptMarkdownFile,
-  refreshImportedChatGptDerivedContent,
-  summarizePreviewDate,
-} from '@/services';
-import type { ChatGptImportRefreshProgress, ChatGptMarkdownPreview } from '@/services/import';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colorTokens, radius, spacing } from '@/theme';
+    invokeMarkdownImport,
+    isChatGptMarkdownImportEnabled,
+    parseImportMarkdownFile,
+    refreshImportedChatGptDerivedContent,
+    summarizePreviewDate,
+} from "@/services";
+import type {
+    ChatGptImportRefreshProgress,
+    ImportedMarkdownPreview,
+} from "@/services/import";
+import { colorTokens, radius, spacing } from "@/theme";
 
-type FlowStep = 'pick' | 'preview' | 'result';
+type FlowState = "idle" | "selected" | "loading" | "success" | "error";
 
-type FlowStatus = {
-  tone: 'success' | 'error' | 'info';
+type ResultStatus = {
+  tone: "success" | "info" | "error";
   message: string;
   detail?: string;
 };
@@ -42,13 +44,20 @@ type ImportProgressState = {
   status: ChatGptImportRefreshProgress;
   current: number;
   total: number;
+  detailCurrent?: number | null;
+  detailTotal?: number | null;
+  detailLabel?: string | null;
 };
 
 async function readImportedMarkdown(uri: string): Promise<string> {
-  if (uri.startsWith('data:') || uri.startsWith('blob:') || uri.startsWith('http')) {
+  if (
+    uri.startsWith("data:") ||
+    uri.startsWith("blob:") ||
+    uri.startsWith("http")
+  ) {
     const response = await fetch(uri);
     if (!response.ok) {
-      throw new Error('Kon het gekozen bestand niet lezen.');
+      throw new Error("Kon het gekozen bestand niet lezen.");
     }
 
     return response.text();
@@ -57,38 +66,119 @@ async function readImportedMarkdown(uri: string): Promise<string> {
   return readAsStringAsync(uri);
 }
 
-function formatRange(preview: ChatGptMarkdownPreview | null): string {
+function formatRange(preview: ImportedMarkdownPreview | null): string {
   if (!preview?.firstDate || !preview.lastDate) {
-    return '-';
+    return "-";
   }
 
   return `${summarizePreviewDate(preview.firstDate)} t/m ${summarizePreviewDate(preview.lastDate)}`;
 }
 
-function formatImportStatus(progress: ImportProgressState | null): string {
-  if (!progress) {
-    return 'Markdownbestand analyseren';
+function formatTypeLabel(preview: ImportedMarkdownPreview | null): string {
+  if (!preview) {
+    return "-";
   }
 
-  const label = progress.status.charAt(0).toUpperCase() + progress.status.slice(1);
-  if (progress.total <= 1) {
-    return label;
-  }
-
-  return `${label} (${progress.current}/${progress.total})`;
+  return preview.format === "journal_archive" ? "App-archief" : "Nexus ChatGPT";
 }
 
-export default function SettingsScreen() {
-  const scheme = useColorScheme() ?? 'light';
+function formatEntryLabel(preview: ImportedMarkdownPreview | null): string {
+  if (!preview) {
+    return "Entries";
+  }
+
+  return preview.format === "journal_archive" ? "Entries" : "Berichten";
+}
+
+function formatProgressLabel(
+  progress: ImportProgressState | null,
+): string | null {
+  if (!progress) {
+    return null;
+  }
+
+  const first = progress.status.charAt(0).toUpperCase();
+  return `${first}${progress.status.slice(1)}`;
+}
+
+function toDisplayProgress(
+  status: ChatGptImportRefreshProgress,
+  current?: number,
+  total?: number,
+): ImportProgressState {
+  const safeTotal =
+    typeof total === "number" && Number.isFinite(total) && total > 0
+      ? Math.max(1, Math.round(total))
+      : null;
+  const safeCurrent =
+    safeTotal && typeof current === "number" && Number.isFinite(current)
+      ? Math.min(safeTotal, Math.max(0, Math.round(current)))
+      : null;
+
+  if (status === "markdownbestand analyseren") {
+    return { status, current: 1, total: 5 };
+  }
+
+  if (status === "importbestand voorbereiden") {
+    return { status, current: 2, total: 5 };
+  }
+
+  if (status === "entries importeren") {
+    return { status, current: 3, total: 5 };
+  }
+
+  if (status === "dagboekdagen opbouwen") {
+    return {
+      status,
+      current: 4,
+      total: 5,
+      detailCurrent: safeCurrent,
+      detailTotal: safeTotal,
+      detailLabel:
+        safeCurrent !== null && safeTotal !== null
+          ? `Dag ${safeCurrent} van ${safeTotal}`
+          : null,
+    };
+  }
+
+  if (status === "weekreflecties verversen") {
+    return {
+      status,
+      current: 5,
+      total: 5,
+      detailCurrent: safeCurrent,
+      detailTotal: safeTotal,
+      detailLabel:
+        safeCurrent !== null && safeTotal !== null
+          ? `Weekreflectie ${safeCurrent} van ${safeTotal}`
+          : null,
+    };
+  }
+
+  return {
+    status,
+    current: 5,
+    total: 5,
+    detailCurrent: safeCurrent,
+    detailTotal: safeTotal,
+    detailLabel:
+      safeCurrent !== null && safeTotal !== null
+        ? `Maandreflectie ${safeCurrent} van ${safeTotal}`
+        : null,
+  };
+}
+
+export default function SettingsImportScreen() {
+  const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const [menuVisible, setMenuVisible] = useState(false);
-  const [flowStep, setFlowStep] = useState<FlowStep>('pick');
-  const [preview, setPreview] = useState<ChatGptMarkdownPreview | null>(null);
+  const [flowState, setFlowState] = useState<FlowState>("idle");
+  const [preview, setPreview] = useState<ImportedMarkdownPreview | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [replaceConfirmVisible, setReplaceConfirmVisible] = useState(false);
-  const [status, setStatus] = useState<FlowStatus | null>(null);
-  const [importProgress, setImportProgress] = useState<ImportProgressState | null>(null);
+  const [resultStatus, setResultStatus] = useState<ResultStatus | null>(null);
+  const [progressState, setProgressState] = useState<ImportProgressState | null>(null);
+
   const importEnabled = isChatGptMarkdownImportEnabled();
 
   const previewTitle = useMemo(() => {
@@ -96,33 +186,38 @@ export default function SettingsScreen() {
       return null;
     }
 
-    return preview.conversationTitle || preview.conversationAlias || 'Onbekende conversatie';
+    return (
+      preview.conversationTitle ||
+      preview.conversationAlias ||
+      "Onbekende conversatie"
+    );
   }, [preview]);
 
-  function resetToPickStep() {
-    setFlowStep('pick');
+  function resetToIdle() {
+    setFlowState("idle");
     setPreview(null);
-    setStatus(null);
+    setResultStatus(null);
     setReplaceConfirmVisible(false);
+    setProgressState(null);
   }
 
   async function handlePickFile() {
     if (!importEnabled) {
-      setStatus({
-        tone: 'info',
-        message: 'Import is uitgeschakeld.',
-        detail: 'Deze feature staat nu niet aan in deze omgeving.',
+      setFlowState("error");
+      setResultStatus({
+        tone: "error",
+        message: "Importeren is hier niet beschikbaar.",
       });
       return;
     }
 
     setLoadingPreview(true);
-    setStatus(null);
+    setResultStatus(null);
     setReplaceConfirmVisible(false);
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['text/markdown', 'text/plain'],
+        type: ["text/markdown", "text/plain"],
         multiple: false,
         copyToCacheDirectory: true,
       });
@@ -133,28 +228,28 @@ export default function SettingsScreen() {
 
       const asset = result.assets[0];
       if (!asset?.uri || !asset.name) {
-        throw new Error('Het gekozen bestand bevat geen leesbare data.');
+        throw new Error("Het gekozen bestand bevat geen leesbare data.");
       }
 
       const markdown = await readImportedMarkdown(asset.uri);
-      const nextPreview = parseChatGptMarkdownFile({
+      const nextPreview = parseImportMarkdownFile({
         fileName: asset.name,
         markdown,
       });
 
       if (nextPreview.messages.length === 0) {
-        throw new Error('Geen user-berichten gevonden in dit markdownbestand.');
+        throw new Error("Geen importeerbare entries gevonden in dit markdownbestand.");
       }
 
       setPreview(nextPreview);
-      setFlowStep('preview');
+      setFlowState("selected");
     } catch (error) {
       setPreview(null);
-      setFlowStep('pick');
-      setStatus({
-        tone: 'error',
-        message: 'Preview kon niet worden geladen.',
-        detail: error instanceof Error ? error.message : 'Onbekende fout.',
+      setFlowState("error");
+      setResultStatus({
+        tone: "error",
+        message: "Er ging iets mis. Probeer het opnieuw.",
+        detail: error instanceof Error ? error.message : "Onbekende fout.",
       });
     } finally {
       setLoadingPreview(false);
@@ -166,76 +261,56 @@ export default function SettingsScreen() {
       return;
     }
 
-    setImporting(true);
-    setStatus(null);
+    setFlowState("loading");
+    setResultStatus(null);
     setReplaceConfirmVisible(false);
-    setImportProgress({
-      status: 'markdownbestand analyseren',
-      current: 1,
-      total: 5,
-    });
+    setProgressState(toDisplayProgress("markdownbestand analyseren"));
 
     try {
-      setImportProgress({
-        status: 'user-berichten voorbereiden',
-        current: 2,
-        total: 5,
-      });
+      setProgressState(toDisplayProgress("importbestand voorbereiden"));
+      setProgressState(toDisplayProgress("entries importeren"));
 
-      setImportProgress({
-        status: 'entries importeren',
-        current: 3,
-        total: 5,
-      });
-
-      const result = await invokeChatGptMarkdownImport({
+      const result = await invokeMarkdownImport({
         preview,
         replaceExisting,
       });
 
       if (result.requiresReplaceConfirmation) {
         setReplaceConfirmVisible(true);
-        setImportProgress(null);
+        setFlowState("selected");
+        setProgressState(null);
         return;
       }
 
       const refreshWarnings = await refreshImportedChatGptDerivedContent({
         impactedDates: result.impactedDates,
         onProgress: (nextStatus, current, total) => {
-          const mappedCurrent =
-            nextStatus === 'dagboekdagen opbouwen'
-              ? 4
-              : 5;
-          setImportProgress({
-            status: nextStatus,
-            current: Math.max(mappedCurrent, current),
-            total: Math.max(5, total),
-          });
+          setProgressState(toDisplayProgress(nextStatus, current, total));
         },
       });
 
-      setStatus({
-        tone: refreshWarnings.length > 0 ? 'info' : 'success',
+      const tone = refreshWarnings.length > 0 ? "info" : "success";
+      setResultStatus({
+        tone,
         message:
           result.removedCount > 0
-            ? `Import vervangen. ${result.importedCount} berichten opnieuw toegevoegd.`
-            : `Import voltooid. ${result.importedCount} berichten toegevoegd.`,
+            ? `Import vervangen. ${result.importedCount} entries toegevoegd.`
+            : `Importeren gelukt. ${result.importedCount} entries toegevoegd.`,
         detail:
           refreshWarnings.length > 0
-            ? refreshWarnings.join('\n')
-            : 'Wil je nog een bestand importeren?',
+            ? `${refreshWarnings.length} aandachtspunt(en) bij naverwerking.`
+            : undefined,
       });
-      setFlowStep('result');
+      setFlowState("success");
     } catch (error) {
-      setStatus({
-        tone: 'error',
-        message: 'Import mislukt.',
-        detail: error instanceof Error ? error.message : 'Onbekende fout.',
+      setResultStatus({
+        tone: "error",
+        message: "Er ging iets mis. Probeer het opnieuw.",
+        detail: error instanceof Error ? error.message : "Onbekende fout.",
       });
-      setFlowStep('result');
+      setFlowState("error");
     } finally {
-      setImporting(false);
-      setImportProgress(null);
+      setProgressState(null);
     }
   }
 
@@ -245,16 +320,24 @@ export default function SettingsScreen() {
         scrollable
         fixedHeader={
           <ScreenHeader
-            title="Import"
+            title="Importeren"
             titleType="screenTitle"
-            subtitle="Importeer een ChatGPT markdown-export."
+            subtitle="Importeer een markdownbestand."
             leftAction={
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Ga terug"
                 onPress={() => router.back()}
-                style={[styles.iconButton, { backgroundColor: palette.surfaceLow }]}>
-                <MaterialIcons name="arrow-back" size={20} color={palette.primary} />
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: palette.surfaceLow },
+                ]}
+              >
+                <MaterialIcons
+                  name="arrow-back"
+                  size={20}
+                  color={palette.primary}
+                />
               </Pressable>
             }
             rightAction={
@@ -262,125 +345,228 @@ export default function SettingsScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Open menu"
                 onPress={() => setMenuVisible(true)}
-                style={[styles.iconButton, { backgroundColor: palette.surfaceLow }]}>
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: palette.surfaceLow },
+                ]}
+              >
                 <MaterialIcons name="menu" size={20} color={palette.primary} />
               </Pressable>
             }
           />
         }
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         {!importEnabled ? (
           <SurfaceSection
-            title="Importeer ChatGPT markdown"
-            subtitle="Deze importfeature staat standaard uit in productie.">
-            <StateBlock
-              tone="info"
-              message="Import is momenteel niet beschikbaar."
-              detail="In lokale development blijft deze flow wel zichtbaar voor testen."
-            />
+            title="Importeren"
+            subtitle="Importeren is in deze omgeving uitgeschakeld."
+          >
+            <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+              Deze flow blijft lokaal beschikbaar voor testen.
+            </ThemedText>
           </SurfaceSection>
         ) : null}
 
-        {importEnabled && flowStep === 'pick' ? (
+        {importEnabled && flowState === "idle" ? (
           <SurfaceSection
-            title="Importeer ChatGPT markdown"
-            subtitle="Laad één Nexus/ChatGPT markdown-export in als dagboekentries.">
-            <ThemedView style={styles.copyBlock}>
-              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                Alleen jouw eigen berichten worden geïmporteerd.
-              </ThemedText>
-              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                Reacties van ChatGPT worden niet opgeslagen in je dagboek.
-              </ThemedText>
-              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                Bestaande data kan bij opnieuw importeren worden vervangen.
-              </ThemedText>
-              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                Je kunt dezelfde export opnieuw importeren en de eerdere import overschrijven.
-              </ThemedText>
-            </ThemedView>
+            title="Importeren"
+            subtitle="Kies een Nexus ChatGPT-export of een app-archief."
+          >
+            <ThemedView style={styles.stateBody}>
+              <ThemedView
+                style={[
+                  styles.iconWrap,
+                  { backgroundColor: palette.surfaceLow },
+                ]}
+              >
+                <MaterialIcons
+                  name="upload-file"
+                  size={30}
+                  color={palette.primary}
+                />
+              </ThemedView>
 
-            <ThemedView style={styles.actions}>
               <PrimaryButton
-                label={loadingPreview ? 'Bestand laden...' : 'Kies markdownbestand'}
+                label={loadingPreview ? "Bestand laden..." : "Kies bestand"}
                 onPress={() => void handlePickFile()}
-                disabled={loadingPreview || importing}
+                disabled={loadingPreview}
               />
-            </ThemedView>
 
-            {status ? <StateBlock tone={status.tone} message={status.message} detail={status.detail} /> : null}
+              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                We detecteren automatisch het juiste importformaat.
+              </ThemedText>
+            </ThemedView>
           </SurfaceSection>
         ) : null}
 
-        {importEnabled && flowStep === 'preview' && preview ? (
+        {importEnabled && flowState === "selected" && preview ? (
           <SurfaceSection
-            title="Preview"
-            subtitle="Controleer eerst wat er wordt toegevoegd aan je dagboek.">
-            <ThemedView style={[styles.previewCard, { borderColor: palette.separator }]}>
+            title="Klaar voor import"
+            subtitle="Controleer kort wat er wordt toegevoegd."
+          >
+            <ThemedView
+              style={[styles.previewCard, { borderColor: palette.separator }]}
+            >
+              <ThemedView style={styles.previewGroup}>
+                <MetaText>Type</MetaText>
+                <ThemedText type="defaultSemiBold">
+                  {formatTypeLabel(preview)}
+                </ThemedText>
+              </ThemedView>
+
               <ThemedView style={styles.previewGroup}>
                 <MetaText>Bestand</MetaText>
-                <ThemedText type="defaultSemiBold">{preview.fileName}</ThemedText>
-                <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                  {previewTitle}
+                <ThemedText type="defaultSemiBold">
+                  {preview.fileName}
                 </ThemedText>
+                {previewTitle ? (
+                  <ThemedText
+                    type="bodySecondary"
+                    style={{ color: palette.muted }}
+                  >
+                    {previewTitle}
+                  </ThemedText>
+                ) : null}
               </ThemedView>
 
               <ThemedView style={styles.metaGrid}>
                 <ThemedView style={styles.metaItem}>
-                  <MetaText>User-entries</MetaText>
-                  <ThemedText type="defaultSemiBold">{String(preview.userEntryCount)}</ThemedText>
+                  <MetaText>{formatEntryLabel(preview)}</MetaText>
+                  <ThemedText type="defaultSemiBold">
+                    {String(preview.userEntryCount)}
+                  </ThemedText>
                 </ThemedView>
                 <ThemedView style={styles.metaItem}>
-                  <MetaText>Unieke dagen</MetaText>
-                  <ThemedText type="defaultSemiBold">{String(preview.uniqueDayCount)}</ThemedText>
+                  <MetaText>Dagen</MetaText>
+                  <ThemedText type="defaultSemiBold">
+                    {String(preview.uniqueDayCount)}
+                  </ThemedText>
                 </ThemedView>
               </ThemedView>
 
               <ThemedView style={styles.previewGroup}>
                 <MetaText>Datumrange</MetaText>
-                <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                <ThemedText
+                  type="bodySecondary"
+                  style={{ color: palette.muted }}
+                >
                   {formatRange(preview)}
                 </ThemedText>
               </ThemedView>
 
-              <ThemedView style={styles.previewGroup}>
-                <MetaText>Eerste 3 voorbeeldentries</MetaText>
-                <ThemedView style={styles.examples}>
-                  {preview.exampleEntries.map((entry, index) => (
-                    <ThemedView
-                      key={`${index}-${entry}`}
-                      lightColor={colorTokens.light.surfaceLow}
-                      darkColor={colorTokens.dark.surfaceLow}
-                      style={styles.exampleCard}>
-                      <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                        {entry}
-                      </ThemedText>
-                    </ThemedView>
-                  ))}
+              {preview.exampleEntries.length > 0 ? (
+                <ThemedView style={styles.previewGroup}>
+                  <MetaText>Voorbeeld</MetaText>
+                  <ThemedView style={styles.examples}>
+                    {preview.exampleEntries.slice(0, 2).map((entry, index) => (
+                      <ThemedView
+                        key={`${index}-${entry}`}
+                        lightColor={colorTokens.light.surfaceLow}
+                        darkColor={colorTokens.dark.surfaceLow}
+                        style={styles.exampleCard}
+                      >
+                        <ThemedText
+                          type="bodySecondary"
+                          style={{ color: palette.muted }}
+                        >
+                          {entry}
+                        </ThemedText>
+                      </ThemedView>
+                    ))}
+                  </ThemedView>
                 </ThemedView>
-              </ThemedView>
+              ) : null}
             </ThemedView>
 
             <ThemedView style={styles.actions}>
-              <PrimaryButton label="Start import" onPress={() => void runImport(false)} disabled={importing} />
-              <SecondaryButton label="Terug naar bestand kiezen" onPress={resetToPickStep} disabled={importing} />
+              <PrimaryButton
+                label="Importeer bestanden"
+                onPress={() => void runImport(false)}
+              />
+              <SecondaryButton
+                label="Andere bestanden kiezen"
+                onPress={resetToIdle}
+              />
             </ThemedView>
           </SurfaceSection>
         ) : null}
 
-        {importEnabled && flowStep === 'result' && status ? (
+        {importEnabled &&
+        (flowState === "success" || flowState === "error") &&
+        resultStatus ? (
           <SurfaceSection
-            title={status.tone === 'error' ? 'Import mislukt' : 'Gelukt'}
+            title="Importeren"
             subtitle={
-              status.tone === 'error'
-                ? 'Er ging iets mis tijdens het importeren.'
-                : 'De import is afgerond.'
-            }>
-            <StateBlock tone={status.tone} message={status.message} detail={status.detail} />
+              resultStatus.tone === "success"
+                ? "Je bestand is verwerkt."
+                : resultStatus.tone === "info"
+                  ? "Niet alles is zonder aandachtspunt verwerkt."
+                  : "Niet alles kon worden geïmporteerd."
+            }
+          >
+            <ThemedView style={styles.stateBody}>
+              <ThemedView
+                style={[
+                  styles.iconWrap,
+                  {
+                    backgroundColor:
+                      resultStatus.tone === "success"
+                        ? palette.surfaceLow
+                        : resultStatus.tone === "info"
+                          ? palette.surfaceLow
+                        : palette.destructiveSoftBackground,
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name={
+                    resultStatus.tone === "success"
+                      ? "check-circle-outline"
+                      : resultStatus.tone === "info"
+                        ? "info-outline"
+                      : "warning-amber"
+                  }
+                  size={30}
+                  color={
+                    resultStatus.tone === "success"
+                      ? palette.primary
+                      : resultStatus.tone === "info"
+                      ? palette.primary
+                      : palette.destructiveSoftText
+                  }
+                />
+              </ThemedView>
 
-            <ThemedView style={styles.actions}>
-              <PrimaryButton label="Nog een bestand importeren" onPress={resetToPickStep} />
-              <SecondaryButton label="Klaar" onPress={() => router.back()} />
+              <ThemedText type="defaultSemiBold">
+                {resultStatus.tone === "error"
+                  ? "Importeren niet gelukt"
+                  : "Importeren gelukt"}
+              </ThemedText>
+
+              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                {resultStatus.message}
+              </ThemedText>
+
+              {resultStatus.detail ? (
+                <ThemedText
+                  type="bodySecondary"
+                  style={{ color: palette.muted }}
+                >
+                  {resultStatus.detail}
+                </ThemedText>
+              ) : null}
+
+              <ThemedView style={styles.actions}>
+                <PrimaryButton
+                  label="Nog een bestand importeren"
+                  onPress={resetToIdle}
+                />
+                <SecondaryButton
+                  label="Terug naar Instellingen"
+                  onPress={() => router.back()}
+                />
+              </ThemedView>
             </ThemedView>
           </SurfaceSection>
         ) : null}
@@ -393,20 +579,25 @@ export default function SettingsScreen() {
 
         <ConfirmDialog
           visible={importEnabled && replaceConfirmVisible}
-          title="Vervang eerdere import?"
-          message="Voor dit bestand zijn al entries geïmporteerd. Wil je de eerdere import vervangen?"
-          cancelLabel="Nee"
+          title="Eerdere import vervangen?"
+          message="Voor deze importbron is al een import gedaan. Wil je die vervangen?"
+          cancelLabel="Annuleren"
           confirmLabel="Vervangen"
-          processing={importing}
+          processing={flowState === "loading"}
           onCancel={() => setReplaceConfirmVisible(false)}
           onConfirm={() => void runImport(true)}
         />
       </ScreenContainer>
 
       <ProcessingScreen
-        visible={importEnabled && importing}
+        visible={importEnabled && flowState === "loading"}
         variant="chatgpt-import"
-        statusOverride={formatImportStatus(importProgress)}
+        statusOverride={formatProgressLabel(progressState)}
+        progressCurrent={progressState?.current ?? null}
+        progressTotal={progressState?.total ?? null}
+        detailProgressCurrent={progressState?.detailCurrent ?? null}
+        detailProgressTotal={progressState?.detailTotal ?? null}
+        detailProgressLabel={progressState?.detailLabel ?? null}
       />
     </>
   );
@@ -420,13 +611,22 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  copyBlock: {
-    gap: spacing.sm,
+  stateBody: {
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  iconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
   },
   actions: {
+    width: "100%",
     gap: spacing.sm,
   },
   previewCard: {
@@ -439,7 +639,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   metaGrid: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
   },
   metaItem: {
