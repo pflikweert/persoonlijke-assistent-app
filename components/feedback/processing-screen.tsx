@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, ImageBackground, Platform, StyleSheet, View } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { AppBackground } from '@/components/ui/app-background';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, radius, shadows, spacing, typography } from '@/theme';
-
-const LOGIN_BG_LIGHT = require('../../assets/images/login/login-bg-light-mode.png');
-const LOGIN_BG_DARK = require('../../assets/images/login/login-bg-dark-mode.png');
 
 const SHOW_DELAY_MS = 220;
 const MIN_VISIBLE_MS = 520;
@@ -115,8 +113,7 @@ export function ProcessingScreen({
       ? Math.max(0, normalizedDetailCurrent) / normalizedDetailTotal
       : null;
   const nextDetailLabel = detailProgressLabel?.trim() || null;
-  const backgroundSource = scheme === 'dark' ? LOGIN_BG_DARK : LOGIN_BG_LIGHT;
-  const overlayColor = scheme === 'dark' ? 'rgba(8, 7, 6, 0.72)' : 'rgba(250, 244, 230, 0.76)';
+  const overlayColor = scheme === 'dark' ? 'rgba(8, 7, 6, 0.56)' : 'rgba(8, 7, 6, 0.40)';
   const cardColor = scheme === 'dark' ? 'rgba(43, 41, 37, 0.82)' : 'rgba(255, 255, 255, 0.8)';
 
   const pulseScale = useMemo(
@@ -243,7 +240,7 @@ export function ProcessingScreen({
 
   return (
     <Animated.View style={[styles.root, { opacity: fadeAnim }]}>
-      <ImageBackground source={backgroundSource} resizeMode="cover" style={styles.background} />
+      <AppBackground />
       <View style={[styles.overlay, { backgroundColor: overlayColor }]} />
 
       <View style={styles.contentWrap}>
@@ -341,9 +338,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-  },
-  background: {
-    ...StyleSheet.absoluteFillObject,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

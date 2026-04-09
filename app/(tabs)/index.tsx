@@ -116,8 +116,6 @@ export default function TodayScreen() {
       scrollable
       fixedHeader={
         <ScreenHeader
-          title="Vandaag"
-          titleAlign="center"
           leftAction={
             <HeaderIconButton
               accessibilityRole="button"
@@ -146,7 +144,7 @@ export default function TodayScreen() {
     >
       <ThemedView style={styles.hero}>
         <ThemedText type="screenTitle" style={styles.heroTitle}>
-          Leg iets vast
+          Vandaag
         </ThemedText>
         <ThemedText
           type="bodySecondary"

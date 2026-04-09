@@ -76,7 +76,7 @@ export function InlineLoadingOverlay({
   }, [pulseAnim, rotateAnim, shouldUseNativeDriver]);
 
   return (
-    <ThemedView style={[styles.wrap, { backgroundColor: palette.background }]}>
+    <ThemedView style={styles.wrap}>
       <ThemedView style={[styles.orb, { backgroundColor: `${palette.primaryStrong}1F`, borderColor: `${palette.primaryStrong}66` }]}>
         <Animated.View style={[styles.spinnerRing, { borderColor: `${palette.primaryStrong}66`, borderTopColor: palette.primaryStrong, transform: [{ rotate }] }]} />
         <Animated.View style={[styles.spinnerCore, { backgroundColor: palette.primaryStrong, transform: [{ scale: pulseScale }] }]} />

@@ -214,7 +214,40 @@ Not allowed:
 
 ---
 
-## 10. Implementation Order
+## 10. Implementation Guardrails
+
+### Clean-first
+- Default UI is clean-first.
+- Use spacing, hierarchy, typography and tonal contrast before extra containers.
+- Section labels sit on the page background unless a design ref explicitly shows a surface.
+- Rows and cards stay light; avoid excessive height, padding and visual mass.
+- Decorative borders, extra inner fills and nested surfaces are opt-in, not default.
+
+### Dark Mode
+- Dark mode preserves the structure and calm of the light design ref.
+- Do not solve dark mode by adding extra mass, extra panels or heavier containers.
+- Shift tone and contrast; keep composition lightweight.
+
+### Header + Hero
+- Top navigation is navigation only.
+- Page titles and supporting copy belong in a hero below the topnav by default.
+- Use two header modes: main-screen header and detail-screen header.
+- Do not press titles next to back buttons unless a design ref explicitly shows it.
+
+### Surfaces + Auth
+- Destructive treatments may use accent, but stay calm and no heavier than needed.
+- Shared primitives must not introduce default borders, fills or heavy surfaces.
+- Auth atmosphere may come from background layering and spacing.
+- Avoid heavy enclosing auth cards unless a design ref explicitly requires them.
+- Prefer code-based gradients over image backgrounds when they are calmer and more consistent.
+
+### Proof-first
+- A design implementation is not “done” on code shape alone.
+- Verify against relevant `design_refs/1.2.1/**` and runtime behavior before calling it finished.
+
+---
+
+## 11. Implementation Order
 
 1. Foundations
 2. Today

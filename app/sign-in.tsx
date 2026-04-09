@@ -1,14 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useState } from "react";
-import {
-  ImageBackground,
-  Pressable,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
+import { AppBackground } from "@/components/ui/app-background";
+import { NoticeCard } from "@/components/ui/notice-card";
 import {
   InputField,
   PrimaryButton,
@@ -16,10 +12,7 @@ import {
 } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { sendMagicLink } from "@/services";
-import { colorTokens, radius, shadows, spacing, typography } from "@/theme";
-
-const LOGIN_BG_LIGHT = require("../assets/images/login/login-bg-light-mode.png");
-const LOGIN_BG_DARK = require("../assets/images/login/login-bg-dark-mode.png");
+import { colorTokens, radius, spacing, typography } from "@/theme";
 
 export default function SignInScreen() {
   const { height: viewportHeight, width: viewportWidth } =
@@ -28,11 +21,6 @@ export default function SignInScreen() {
   const palette = colorTokens[scheme];
   const isCompactViewport = viewportHeight < 900 || viewportWidth < 390;
   const shellMaxHeight = Math.max(520, viewportHeight - spacing.lg * 2);
-  const loginBackground = scheme === "dark" ? LOGIN_BG_DARK : LOGIN_BG_LIGHT;
-  const overlayColor =
-    scheme === "dark" ? "rgba(9, 8, 7, 0.52)" : "rgba(250, 249, 246, 0.52)";
-  const contentShellBackground =
-    scheme === "dark" ? "rgba(43, 41, 37, 0.72)" : "rgba(255, 255, 255, 0.78)";
   const [email, setEmail] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -77,22 +65,15 @@ export default function SignInScreen() {
   }
 
   return (
-    <ImageBackground
-      source={loginBackground}
-      resizeMode="cover"
-      style={styles.background}
-      imageStyle={styles.backgroundImage}
-    >
-      <View style={[styles.overlay, { backgroundColor: overlayColor }]}>
+    <View style={styles.background}>
+      <AppBackground />
+      <View style={styles.overlay}>
         <View style={styles.container}>
           <View
             style={[
               styles.contentShell,
               isCompactViewport && styles.contentShellCompact,
               { maxHeight: shellMaxHeight },
-              {
-                backgroundColor: contentShellBackground,
-              },
             ]}
           >
             {uiState === "success" ? (
@@ -194,77 +175,65 @@ export default function SignInScreen() {
                     Voor momenten, gedachten en gebeurtenissen die je niet kwijt
                     wilt raken.
                   </ThemedText>
-                  <ThemedText
-                    type="bodySecondary"
-                    style={[
-                      styles.formLead,
-                      isCompactViewport && styles.formLeadCompact,
-                      { color: palette.muted },
-                    ]}
-                  >
-                    Vul je e-mailadres in. We sturen je een link waarmee je
-                    direct kunt inloggen.
-                  </ThemedText>
                 </View>
 
                 {uiState === "error" && errorMessage ? (
                   <StateBlock tone="error" message={errorMessage} />
                 ) : null}
 
-                <InputField
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  onBlur={() => setIsInputFocused(false)}
-                  onChangeText={(value) => {
-                    setEmail(value);
-                    if (errorMessage) {
-                      setErrorMessage(null);
+                <View style={styles.formControls}>
+                  <InputField
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    onBlur={() => setIsInputFocused(false)}
+                    onChangeText={(value) => {
+                      setEmail(value);
+                      if (errorMessage) {
+                        setErrorMessage(null);
+                      }
+                    }}
+                    onFocus={() => setIsInputFocused(true)}
+                    placeholder="Je e-mailadres"
+                    placeholderTextColor={palette.mutedSoft}
+                    style={[
+                      styles.input,
+                      {
+                        color: palette.text,
+                        backgroundColor: `${palette.surfaceLow}E8`,
+                        borderColor: `${palette.separator}88`,
+                      },
+                      isInputActive && {
+                        backgroundColor: `${palette.surfaceLowest}F4`,
+                        borderColor:
+                          uiState === "error"
+                            ? `${palette.error}66`
+                            : `${palette.primaryStrong}88`,
+                      },
+                    ]}
+                    textContentType="emailAddress"
+                    value={email}
+                  />
+
+                  <PrimaryButton
+                    label={
+                      submitting ? "Bezig met verzenden..." : "Ontvang inloglink"
                     }
-                  }}
-                  onFocus={() => setIsInputFocused(true)}
-                  placeholder="Je e-mailadres"
-                  placeholderTextColor={palette.mutedSoft}
-                  style={[
-                    styles.input,
-                    {
-                      color: palette.text,
-                      backgroundColor: `${palette.surfaceLow}E8`,
-                      borderColor: `${palette.separator}88`,
-                    },
-                    isInputActive && {
-                      backgroundColor: `${palette.surfaceLowest}F4`,
-                      borderColor:
-                        uiState === "error"
-                          ? `${palette.error}66`
-                          : `${palette.primaryStrong}88`,
-                    },
-                  ]}
-                  textContentType="emailAddress"
-                  value={email}
-                />
+                    onPress={() => void handleSendMagicLink()}
+                    disabled={submitting || !hasTypedEmail}
+                  />
+                </View>
 
-                <PrimaryButton
-                  label={
-                    submitting ? "Bezig met verzenden..." : "Ontvang inloglink"
-                  }
-                  onPress={() => void handleSendMagicLink()}
-                  disabled={submitting || !hasTypedEmail}
+                <NoticeCard
+                  compact
+                  body="We sturen je een eenmalige link om in te loggen."
                 />
-
-                <ThemedText
-                  type="caption"
-                  style={[styles.footnote, { color: palette.mutedSoft }]}
-                >
-                  We sturen je een e-mail met een link waarmee je veilig verder
-                  kunt.
-                </ThemedText>
               </View>
             )}
           </View>
         </View>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
@@ -302,10 +271,6 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: "hidden",
   },
-  backgroundImage: {
-    width: "100%",
-    height: "100%",
-  },
   overlay: {
     flex: 1,
     overflow: "hidden",
@@ -322,11 +287,9 @@ const styles = StyleSheet.create({
   contentShell: {
     width: "100%",
     maxWidth: 430,
-    borderRadius: radius.xl,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
     justifyContent: "center",
-    ...shadows.surface,
   },
   contentShellCompact: {
     paddingHorizontal: spacing.lg,
@@ -335,12 +298,16 @@ const styles = StyleSheet.create({
   formWrap: {
     width: "100%",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.xxl,
   },
   hero: {
     width: "100%",
     alignItems: "center",
     gap: spacing.sm,
+  },
+  formControls: {
+    width: "100%",
+    gap: spacing.lg,
   },
   headline: {
     textAlign: "center",
@@ -361,22 +328,8 @@ const styles = StyleSheet.create({
   subtitleCompact: {
     lineHeight: typography.roles.body.lineHeight + 1,
   },
-  formLead: {
-    textAlign: "center",
-    maxWidth: "100%",
-    fontSize: typography.roles.body.size + 1,
-    lineHeight: typography.roles.body.lineHeight + 3,
-    marginTop: spacing.md,
-  },
-  formLeadCompact: {
-    marginTop: spacing.sm,
-  },
   input: {
     width: "100%",
-  },
-  footnote: {
-    textAlign: "center",
-    maxWidth: "100%",
   },
   successWrap: {
     width: "100%",

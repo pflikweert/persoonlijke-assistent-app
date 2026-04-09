@@ -15,6 +15,7 @@ import { ScreenHeader } from "@/components/layout/screen-header";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { AppBackground } from "@/components/ui/app-background";
 import {
   HeaderIconButton,
   HeaderTextAction,
@@ -56,28 +57,28 @@ function periodTypeLabel(periodType: PeriodType): string {
   return periodType === "week" ? "Week" : "Maand";
 }
 
-function monthHeading(periodStart: string): string {
+function weekHero(periodStart: string): { title: string; subtitle: string } {
+  const startDate = new Date(`${periodStart}T12:00:00.000Z`);
+  if (Number.isNaN(startDate.getTime())) {
+    return { title: "Week", subtitle: periodStart.slice(0, 4) || "" };
+  }
+  const weekNumber = getIsoWeekNumber(startDate);
+  return { title: `Week ${weekNumber}`, subtitle: String(startDate.getUTCFullYear()) };
+}
+
+function monthHero(periodStart: string): { title: string; subtitle: string } {
   const date = new Date(`${periodStart}T12:00:00.000Z`);
   if (Number.isNaN(date.getTime())) {
-    return periodStart;
+    return { title: "Maand", subtitle: periodStart.slice(0, 4) || "" };
   }
-
   const month = date.toLocaleDateString("nl-NL", {
     month: "long",
     timeZone: "UTC",
   });
-  const year = date.getUTCFullYear();
-  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${year}`;
-}
-
-function weekHeading(periodStart: string): string {
-  const startDate = new Date(`${periodStart}T12:00:00.000Z`);
-  if (Number.isNaN(startDate.getTime())) {
-    return `Week ${periodStart}`;
-  }
-  const weekNumber = getIsoWeekNumber(startDate);
-  const year = startDate.getUTCFullYear();
-  return `Week ${weekNumber} · ${year}`;
+  return {
+    title: `${month.charAt(0).toUpperCase()}${month.slice(1)}`,
+    subtitle: String(date.getUTCFullYear()),
+  };
 }
 
 function formatDateLabel(dateValue: string): string {
@@ -404,13 +405,14 @@ export default function ReflectionsScreen() {
         reflectionPoints: cleanReflectionPoints,
       })
     : false;
-  const headerTitle = useMemo(() => {
+  const heroHeading = useMemo(() => {
     if (!activeReflection) {
-      return activePeriod === "week" ? "Week" : "Maand";
+      const now = getUtcTodayDate();
+      return activePeriod === "week" ? weekHero(now) : monthHero(now);
     }
     return activePeriod === "week"
-      ? weekHeading(activeReflection.period_start)
-      : monthHeading(activeReflection.period_start);
+      ? weekHero(activeReflection.period_start)
+      : monthHero(activeReflection.period_start);
   }, [activePeriod, activeReflection]);
 
   const headerActionLabel =
@@ -539,9 +541,6 @@ export default function ReflectionsScreen() {
         fixedHeader={
           isProcessing ? null : (
             <ScreenHeader
-              title={headerTitle}
-              titleType="screenTitle"
-              titleAlign="center"
               leftAction={
                 <HeaderIconButton
                   accessibilityRole="button"
@@ -575,6 +574,13 @@ export default function ReflectionsScreen() {
       >
         {!isProcessing ? (
           <>
+            <ThemedView style={styles.hero}>
+              <ThemedText type="screenTitle">{heroHeading.title}</ThemedText>
+              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                {heroHeading.subtitle}
+              </ThemedText>
+            </ThemedView>
+
             <PeriodSegmentedControl
               style={styles.periodSwitch}
               options={[
@@ -807,7 +813,18 @@ export default function ReflectionsScreen() {
           onRequestClose={closeSelector}
         >
           <ThemedView style={styles.selectorScreen}>
-            <ThemedView style={styles.selectorHeader}>
+            <AppBackground />
+            <ThemedView
+              style={[
+                styles.selectorHeader,
+                {
+                  backgroundColor:
+                    scheme === "dark"
+                      ? "rgba(18, 17, 15, 0.96)"
+                      : "rgba(250, 249, 244, 0.94)",
+                },
+              ]}
+            >
               <HeaderTextAction label="Sluiten" onPress={closeSelector} />
               <HeaderTextAction
                 label={selectorPeriod === "week" ? "Toon week" : "Toon maand"}
@@ -866,8 +883,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
+  hero: {
+    gap: spacing.xs,
+  },
   periodSwitch: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     marginBottom: spacing.lg,
   },
   readingCanvas: {
@@ -951,11 +971,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
+    overflow: "hidden",
   },
   selectorHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: -spacing.xl,
+    marginHorizontal: -spacing.lg,
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   selectorBody: {
     flex: 1,

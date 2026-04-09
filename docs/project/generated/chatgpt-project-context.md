@@ -1,7 +1,7 @@
 # DO NOT EDIT — GENERATED FILE
 
-Build Timestamp (UTC): 2026-04-09T20:08:05.597Z
-Source Commit: 155d3ae
+Build Timestamp (UTC): 2026-04-09T22:16:10.457Z
+Source Commit: d2c6ff7
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs.
 Upload standaard samen met docs/design/mvp-design-spec-1.2.1.md voor volledige MVP-designwaarheid.
@@ -657,6 +657,10 @@ Reflecties zijn ondersteunend, niet leidend.
 - geen dubbele uitleg
 - geen herhaling van hetzelfde in andere woorden
 - vermijd bijvoeglijke naamwoorden
+- schermen met één primaire actie volgen bij voorkeur: hero + actie + compacte notice
+- zet niet dezelfde uitleg boven én onder een formulier of CTA
+- notice-copy is ondersteunend, kort en niet technisch
+- auth- en settings-copy blijft compact, menselijk en rustig
 
 ✔ Rustig terugzien  
 ✖ Gemakkelijk en overzichtelijk terugkijken

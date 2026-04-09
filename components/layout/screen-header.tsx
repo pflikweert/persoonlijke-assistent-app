@@ -9,6 +9,11 @@ import { colorTokens, spacing } from "@/theme";
 type HeaderTitleType = "sectionTitle" | "screenTitle";
 type HeaderTitleAlign = "left" | "center";
 
+const HEADER_SURFACE = {
+  light: "rgba(250, 249, 244, 0.94)",
+  dark: "rgba(18, 17, 15, 0.96)",
+} as const;
+
 export function ScreenHeader({
   title,
   subtitle,
@@ -30,8 +35,6 @@ export function ScreenHeader({
 }) {
   const scheme = useColorScheme() ?? "light";
   const hasLeftAction = Boolean(leftAction);
-  const headerBackground =
-    scheme === "light" ? "rgba(250, 249, 244, 0.84)" : "rgba(23, 23, 23, 0.76)";
   const webBlurStyle: ViewStyle =
     Platform.OS === "web"
       ? ({
@@ -45,7 +48,7 @@ export function ScreenHeader({
       <ThemedView
         style={[
           styles.blurLayer,
-          { backgroundColor: headerBackground },
+          { backgroundColor: HEADER_SURFACE[scheme] },
           webBlurStyle,
         ]}
       />

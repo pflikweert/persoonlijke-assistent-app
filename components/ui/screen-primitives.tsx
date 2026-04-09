@@ -11,6 +11,7 @@ import {
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { AppBackground } from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   borders,
@@ -43,9 +44,6 @@ export function ScreenContainer({
   scrollRef?: RefObject<ScrollView | null>;
   stickyHeaderIndices?: number[];
 }) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-
   if (scrollable) {
     const flattenedContentStyle = StyleSheet.flatten([
       styles.scrollContent,
@@ -66,13 +64,9 @@ export function ScreenContainer({
     return (
       <ThemedView
         className={className}
-        style={[
-          styles.screenContainer,
-          styles.scrollHost,
-          style,
-          { backgroundColor: palette.background },
-        ]}
+        style={[styles.screenContainer, styles.scrollHost, style]}
       >
+        <AppBackground />
         {fixedHeader}
         <ScrollView
           ref={scrollRef}
@@ -94,12 +88,9 @@ export function ScreenContainer({
   return (
     <ThemedView
       className={className}
-      style={[
-        styles.screenContainer,
-        style,
-        { backgroundColor: palette.background },
-      ]}
+      style={[styles.screenContainer, style]}
     >
+      <AppBackground />
       {fixedHeader}
       {children}
     </ThemedView>

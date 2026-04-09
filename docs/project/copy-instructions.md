@@ -167,6 +167,10 @@ Reflecties zijn ondersteunend, niet leidend.
 - geen dubbele uitleg
 - geen herhaling van hetzelfde in andere woorden
 - vermijd bijvoeglijke naamwoorden
+- schermen met één primaire actie volgen bij voorkeur: hero + actie + compacte notice
+- zet niet dezelfde uitleg boven én onder een formulier of CTA
+- notice-copy is ondersteunend, kort en niet technisch
+- auth- en settings-copy blijft compact, menselijk en rustig
 
 ✔ Rustig terugzien  
 ✖ Gemakkelijk en overzichtelijk terugkijken

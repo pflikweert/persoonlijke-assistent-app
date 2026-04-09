@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Platform, Pressable, StyleSheet, type ViewStyle } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
+import { AppBackground } from "@/components/ui/app-background";
 import { spacing } from "@/theme";
 
 type ModalBackdropLayout = "center" | "bottom";
@@ -34,6 +35,7 @@ export function ModalBackdrop({
         layout === "bottom" ? styles.rootBottom : styles.rootCenter,
       ]}
     >
+      <AppBackground />
       <ThemedView style={[styles.scrim, webBlurStyle]} />
       {onPressOutside ? (
         <Pressable

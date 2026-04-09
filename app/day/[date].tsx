@@ -29,6 +29,7 @@ import {
 } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { AppBackground } from "@/components/ui/app-background";
 import { CopyIconButton } from "@/components/ui/copy-icon-button";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { SecondaryButton, StateBlock } from "@/components/ui/screen-primitives";
@@ -549,13 +550,10 @@ export default function DayDetailScreen() {
   }
 
   return (
-    <ThemedView
-      style={[styles.screen, { backgroundColor: palette.background }]}
-    >
+    <ThemedView style={styles.screen}>
+      <AppBackground />
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
-        title={dayHeading}
-        subtitle={readableDate}
         leftAction={
           <HeaderIconButton onPress={handleBackPress}>
             <MaterialIcons
@@ -588,6 +586,12 @@ export default function DayDetailScreen() {
           </ThemedView>
         }
       />
+      <ThemedView style={styles.detailHero}>
+        <ThemedText type="screenTitle">{dayHeading}</ThemedText>
+        <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+          {readableDate}
+        </ThemedText>
+      </ThemedView>
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
         {showProcessedBanner ? (
           <ThemedView style={styles.processedRow}>
@@ -817,6 +821,12 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.xs,
+  },
+  detailHero: {
+    paddingHorizontal: spacing.page,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
     gap: spacing.xs,
   },
   processedRow: {

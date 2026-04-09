@@ -12,6 +12,7 @@ import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 
+import { AppBackground } from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCurrentSession, onAuthStateChange } from "@/services";
 import { colorTokens } from "@/theme";
@@ -136,26 +137,10 @@ a:focus-visible,
 
   if (!authReady) {
     return (
-      <View
-        style={[
-          styles.rootShell,
-          styles.webBackdrop,
-          { backgroundColor: palette.surfaceLow },
-        ]}
-      >
-        <View
-          style={[
-            styles.rootShell,
-            styles.webAppShell,
-            { backgroundColor: palette.background },
-          ]}
-        >
-          <View
-            style={[
-              styles.loadingContainer,
-              { backgroundColor: palette.background },
-            ]}
-          >
+      <View style={[styles.rootShell, styles.webBackdrop]}>
+        <View style={[styles.rootShell, styles.webAppShell]}>
+          <AppBackground />
+          <View style={styles.loadingContainer}>
             <ActivityIndicator color={palette.primary} />
           </View>
         </View>
@@ -165,20 +150,9 @@ a:focus-visible,
 
   return (
     <ThemeProvider value={appTheme}>
-      <View
-        style={[
-          styles.rootShell,
-          styles.webBackdrop,
-          { backgroundColor: palette.surfaceLow },
-        ]}
-      >
-        <View
-          style={[
-            styles.rootShell,
-            styles.webAppShell,
-            { backgroundColor: palette.background },
-          ]}
-        >
+      <View style={[styles.rootShell, styles.webBackdrop]}>
+        <View style={[styles.rootShell, styles.webAppShell]}>
+          <AppBackground />
           <Stack>
             <Stack.Screen name="sign-in" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -206,7 +180,7 @@ a:focus-visible,
       </View>
       <StatusBar
         style={colorScheme === "dark" ? "light" : "dark"}
-        backgroundColor={palette.background}
+        backgroundColor="#11110F"
       />
       {Platform.OS === "web" ? <Analytics /> : null}
     </ThemeProvider>
@@ -219,6 +193,7 @@ const styles = StyleSheet.create({
   },
   webBackdrop: {
     width: "100%",
+    backgroundColor: "#11110F",
     ...(Platform.OS === "web"
       ? {
           alignItems: "center",
@@ -227,6 +202,7 @@ const styles = StyleSheet.create({
   },
   webAppShell: {
     width: "100%",
+    overflow: "hidden",
     ...(Platform.OS === "web"
       ? {
           maxWidth: WEB_APP_SHELL_MAX_WIDTH,

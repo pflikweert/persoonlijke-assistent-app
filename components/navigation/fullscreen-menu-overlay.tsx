@@ -5,6 +5,7 @@ import { Modal, Pressable, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { AppBackground } from "@/components/ui/app-background";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { signOutUser } from "@/services";
@@ -134,9 +135,8 @@ export function FullscreenMenuOverlay({
       animationType="fade"
       onRequestClose={onRequestClose}
     >
-      <ThemedView
-        style={[styles.overlay, { backgroundColor: palette.background }]}
-      >
+      <ThemedView style={styles.overlay}>
+        <AppBackground />
         <ThemedView style={styles.topBar}>
           <ThemedText type="sectionTitle">Persoonlijke Assistent</ThemedText>
           <HeaderIconButton

@@ -2,6 +2,7 @@ import { Modal, StyleSheet, TextInput } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { AppBackground } from "@/components/ui/app-background";
 import { HeaderTextAction } from "@/components/ui/header-icon-button";
 import { PrimaryButton } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -41,11 +42,8 @@ export function TextEditorModal({
       animationType="slide"
       onRequestClose={() => !processing && onCancel()}
     >
-      <ThemedView
-        lightColor={colorTokens.light.background}
-        darkColor={colorTokens.dark.background}
-        style={styles.screen}
-      >
+      <ThemedView style={styles.screen}>
+        <AppBackground />
         <ThemedView style={styles.topBar}>
           <HeaderTextAction
             label="Annuleer"
