@@ -1,33 +1,34 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Pressable, StyleSheet } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { ScreenHeader } from '@/components/layout/screen-header';
-import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
-import { MomentsTimelineSection } from '@/components/journal/moments-timeline-section';
-import { DayEditorialPanel } from '@/components/journal/day-editorial-panel';
-import { ReflectionTeaserCard } from '@/components/journal/reflection-teaser-card';
-import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
+import { DayEditorialPanel } from "@/components/journal/day-editorial-panel";
+import { MomentsTimelineSection } from "@/components/journal/moments-timeline-section";
+import { ReflectionTeaserCard } from "@/components/journal/reflection-teaser-card";
+import { ScreenHeader } from "@/components/layout/screen-header";
+import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import {
   MetaText,
   PrimaryButton,
   ScreenContainer,
   StateBlock,
-} from '@/components/ui/screen-primitives';
+} from "@/components/ui/screen-primitives";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   fetchLatestReflection,
   fetchRecentDayJournals,
   fetchRecentNormalizedEntries,
   fetchTodayJournal,
   getUtcTodayDate,
-} from '@/services';
-import { colorTokens, radius, spacing, typography } from '@/theme';
+} from "@/services";
+import { colorTokens, radius, spacing, typography } from "@/theme";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { Pressable, StyleSheet } from "react-native";
 
 export default function TodayScreen() {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +40,10 @@ export default function TodayScreen() {
   const [recentJournals, setRecentJournals] = useState<
     Awaited<ReturnType<typeof fetchRecentDayJournals>>
   >([]);
-  const [latestWeekReflection, setLatestWeekReflection] = useState<
-    Awaited<ReturnType<typeof fetchLatestReflection>>
-  >(null);
-  const [latestMonthReflection, setLatestMonthReflection] = useState<
-    Awaited<ReturnType<typeof fetchLatestReflection>>
-  >(null);
+  const [latestWeekReflection, setLatestWeekReflection] =
+    useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
+  const [latestMonthReflection, setLatestMonthReflection] =
+    useState<Awaited<ReturnType<typeof fetchLatestReflection>>>(null);
   const todayDate = getUtcTodayDate();
 
   const loadToday = useCallback(async () => {
@@ -52,13 +51,14 @@ export default function TodayScreen() {
     setError(null);
 
     try {
-      const [journal, recent, recentDayRows, weekReflection, monthReflection] = await Promise.all([
-        fetchTodayJournal(todayDate),
-        fetchRecentNormalizedEntries(5),
-        fetchRecentDayJournals({ limit: 14 }),
-        fetchLatestReflection('week'),
-        fetchLatestReflection('month'),
-      ]);
+      const [journal, recent, recentDayRows, weekReflection, monthReflection] =
+        await Promise.all([
+          fetchTodayJournal(todayDate),
+          fetchRecentNormalizedEntries(5),
+          fetchRecentDayJournals({ limit: 14 }),
+          fetchLatestReflection("week"),
+          fetchLatestReflection("month"),
+        ]);
       setSummary(journal?.summary?.trim() ? journal.summary : null);
       setRecentEntries(recent);
       setRecentJournals(recentDayRows);
@@ -66,7 +66,9 @@ export default function TodayScreen() {
       setLatestMonthReflection(monthReflection);
     } catch (nextError) {
       const message =
-        nextError instanceof Error ? nextError.message : 'Kon vandaag niet laden.';
+        nextError instanceof Error
+          ? nextError.message
+          : "Kon vandaag niet laden.";
       setError(message);
       setSummary(null);
       setRecentEntries([]);
@@ -81,68 +83,82 @@ export default function TodayScreen() {
   useFocusEffect(
     useCallback(() => {
       loadToday();
-    }, [loadToday])
+    }, [loadToday]),
   );
 
   const todayEntries = useMemo(
     () => recentEntries.filter((entry) => entry.journal_date === todayDate),
-    [recentEntries, todayDate]
+    [recentEntries, todayDate],
   );
   const latestPreviousJournal = useMemo(
     () =>
       recentJournals.find(
-        (journal) => journal.journal_date !== todayDate && Boolean(journal.summary?.trim())
+        (journal) =>
+          journal.journal_date !== todayDate &&
+          Boolean(journal.summary?.trim()),
       ) ?? null,
-    [recentJournals, todayDate]
+    [recentJournals, todayDate],
   );
 
-  const formattedDate = formatLongDate(todayDate);
-  const hasUsableTodaySummary = useMemo(() => isUsableTodaySummary(summary), [summary]);
+  const hasUsableTodaySummary = useMemo(
+    () => isUsableTodaySummary(summary),
+    [summary],
+  );
   const statusLine = loading
-    ? 'Wordt bijgewerkt'
+    ? "Wordt bijgewerkt"
     : error
-      ? 'Update tijdelijk niet beschikbaar'
+      ? "Update tijdelijk niet beschikbaar"
       : hasUsableTodaySummary || todayEntries.length > 0
-        ? 'Vandaag bijgewerkt'
-        : 'Klaar voor je eerste entry';
+        ? "Vandaag bijgewerkt"
+        : "Klaar voor je eerste entry";
   return (
     <ScreenContainer
       scrollable
-      style={styles.screen}
       fixedHeader={
         <ScreenHeader
           title="Vandaag"
-          subtitle={formattedDate}
+          titleAlign="center"
           leftAction={
-            <Pressable
+            <HeaderIconButton
               accessibilityRole="button"
               accessibilityLabel="Kies dag"
-              onPress={() => router.push('/days')}
-              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
-              <MaterialIcons name="calendar-today" size={18} color={palette.primary} />
-            </Pressable>
+              onPress={() => router.push("/days")}
+            >
+              <MaterialIcons
+                name="calendar-today"
+                size={18}
+                color={palette.primary}
+              />
+            </HeaderIconButton>
           }
           rightAction={
-            <Pressable
+            <HeaderIconButton
               accessibilityRole="button"
               accessibilityLabel="Open menu"
               onPress={() => setMenuVisible(true)}
-              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+            >
               <MaterialIcons name="menu" size={20} color={palette.primary} />
-            </Pressable>
+            </HeaderIconButton>
           }
         />
       }
-      contentContainerStyle={styles.scrollContent}>
+      contentContainerStyle={styles.scrollContent}
+    >
       <ThemedView style={styles.hero}>
         <ThemedText type="screenTitle" style={styles.heroTitle}>
           Leg iets vast
         </ThemedText>
-        <ThemedText type="bodySecondary" style={[styles.heroCopy, { color: palette.muted }]}>
+        <ThemedText
+          type="bodySecondary"
+          style={[styles.heroCopy, { color: palette.muted }]}
+        >
           Spreek iets in of schrijf iets op voor je dagboek.
         </ThemedText>
         <ThemedView style={styles.heroCtaWrap}>
-          <PrimaryButton label="Spreek of schrijf iets" onPress={() => router.push('/capture')} />
+          <PrimaryButton
+            label="Spreek of schrijf iets"
+            onPress={() => router.push("/capture")}
+          />
         </ThemedView>
         <ThemedView style={styles.statusRow}>
           <ThemedView
@@ -156,14 +172,21 @@ export default function TodayScreen() {
                   : { backgroundColor: palette.success },
             ]}
           />
-          <ThemedText type="caption" style={[styles.statusText, { color: palette.mutedSoft }]} numberOfLines={1}>
+          <ThemedText
+            type="caption"
+            style={[styles.statusText, { color: palette.mutedSoft }]}
+            numberOfLines={1}
+          >
             {statusLine}
           </ThemedText>
         </ThemedView>
       </ThemedView>
 
       {loading ? (
-        <InlineLoadingOverlay message="Vandaag laden..." detail="Even geduld, we halen je dagjournal op." />
+        <InlineLoadingOverlay
+          message="Vandaag laden..."
+          detail="Even geduld, we halen je dagjournal op."
+        />
       ) : null}
       {!loading && error ? (
         <StateBlock
@@ -173,11 +196,19 @@ export default function TodayScreen() {
         />
       ) : null}
       {!loading && !error && !hasUsableTodaySummary ? (
-        <DayEditorialPanel text={'"Je dag is nog een leeg canvas. Er is ruimte voor de kleine dingen die later betekenis krijgen."'} />
+        <DayEditorialPanel
+          text={
+            '"Je dag is nog een leeg canvas. Er is ruimte voor de kleine dingen die later betekenis krijgen."'
+          }
+        />
       ) : null}
 
       {!loading && !error && hasUsableTodaySummary ? (
-        <DayEditorialPanel text={summary?.trim() ?? ''} numberOfLines={4} onPress={() => router.push(`/day/${todayDate}`)} />
+        <DayEditorialPanel
+          text={summary?.trim() ?? ""}
+          numberOfLines={4}
+          onPress={() => router.push(`/day/${todayDate}`)}
+        />
       ) : null}
 
       {!loading && !error && todayEntries.length > 0 ? (
@@ -188,19 +219,35 @@ export default function TodayScreen() {
           style={styles.recentBlock}
           onEntryPress={(entry) =>
             router.push({
-              pathname: '/entry/[id]',
-              params: { id: entry.id, source: 'today', date: todayDate },
+              pathname: "/entry/[id]",
+              params: { id: entry.id, source: "today", date: todayDate },
             })
           }
-          previewText={(entry) => entry.summary_short?.trim() || summarizeSnippet(entry.body)}
+          previewText={(entry) =>
+            entry.summary_short?.trim() || summarizeSnippet(entry.body)
+          }
         />
       ) : null}
 
-      {!loading && !error && todayEntries.length === 0 && latestPreviousJournal ? (
-        <Pressable onPress={() => router.push(`/day/${latestPreviousJournal.journal_date}`)}>
+      {!loading &&
+      !error &&
+      todayEntries.length === 0 &&
+      latestPreviousJournal ? (
+        <Pressable
+          onPress={() =>
+            router.push(`/day/${latestPreviousJournal.journal_date}`)
+          }
+        >
           <ThemedView style={styles.previousSummaryBlock}>
-            <MetaText>Laatste dag · {formatShortDate(latestPreviousJournal.journal_date)}</MetaText>
-            <ThemedText type="bodySecondary" style={[styles.compactText, { color: palette.muted }]} numberOfLines={3}>
+            <MetaText>
+              Laatste dag ·{" "}
+              {formatShortDate(latestPreviousJournal.journal_date)}
+            </MetaText>
+            <ThemedText
+              type="bodySecondary"
+              style={[styles.compactText, { color: palette.muted }]}
+              numberOfLines={3}
+            >
               {latestPreviousJournal.summary}
             </ThemedText>
           </ThemedView>
@@ -209,14 +256,19 @@ export default function TodayScreen() {
 
       {!loading && !error ? (
         <ThemedView style={styles.reflectTeaserBlock}>
-          <ThemedView style={styles.reflectTeaserFrame}>
+          <ThemedView
+            style={[
+              styles.reflectTeaserFrame,
+              { borderTopColor: palette.border },
+            ]}
+          >
             <ReflectionTeaserCard
               periodType="week"
               reflection={latestWeekReflection}
               onPress={() =>
                 router.push({
-                  pathname: '/(tabs)/reflections',
-                  params: { period: 'week' },
+                  pathname: "/(tabs)/reflections",
+                  params: { period: "week" },
                 })
               }
               style={styles.reflectTeaserItem}
@@ -226,8 +278,8 @@ export default function TodayScreen() {
               reflection={latestMonthReflection}
               onPress={() =>
                 router.push({
-                  pathname: '/(tabs)/reflections',
-                  params: { period: 'month' },
+                  pathname: "/(tabs)/reflections",
+                  params: { period: "month" },
                 })
               }
               style={styles.reflectTeaserItem}
@@ -245,24 +297,10 @@ export default function TodayScreen() {
   );
 }
 
-function formatLongDate(utcDate: string): string {
-  const parsed = new Date(`${utcDate}T12:00:00.000Z`);
-  if (Number.isNaN(parsed.getTime())) {
-    return utcDate;
-  }
-
-  return parsed.toLocaleDateString('nl-NL', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-}
-
 function summarizeSnippet(value: string): string {
-  const clean = value.replace(/\s+/g, ' ').trim();
+  const clean = value.replace(/\s+/g, " ").trim();
   if (!clean) {
-    return 'Geen korte samenvatting beschikbaar.';
+    return "Geen korte samenvatting beschikbaar.";
   }
 
   return clean.length > 96 ? `${clean.slice(0, 95).trimEnd()}...` : clean;
@@ -274,23 +312,23 @@ function formatShortDate(utcDate: string): string {
     return utcDate;
   }
 
-  return parsed.toLocaleDateString('nl-NL', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
+  return parsed.toLocaleDateString("nl-NL", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
   });
 }
 
 function isUsableTodaySummary(value: string | null): boolean {
-  const clean = value?.trim() ?? '';
+  const clean = value?.trim() ?? "";
   if (!clean) {
     return false;
   }
 
   const normalized = clean.toLowerCase();
   if (
-    normalized === 'nog geen bruikbare notitie voor deze dag.' ||
-    normalized === 'nog geen bruikbare notities voor deze dag.'
+    normalized === "nog geen bruikbare notitie voor deze dag." ||
+    normalized === "nog geen bruikbare notities voor deze dag."
   ) {
     return false;
   }
@@ -299,40 +337,25 @@ function isUsableTodaySummary(value: string | null): boolean {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    gap: spacing.xl,
-  },
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  menuButton: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   hero: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing.xxs,
     paddingTop: spacing.xs,
   },
-  heroTitle: {
-    fontSize: 34,
-    lineHeight: 38,
-    letterSpacing: -0.45,
-    textAlign: 'center',
-  },
+  heroTitle: { textAlign: "center" },
   heroCopy: {
-    textAlign: 'center',
+    textAlign: "center",
   },
   heroCtaWrap: {
-    width: '100%',
+    width: "100%",
     paddingTop: 32,
   },
   statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.inline,
   },
   statusDot: {
@@ -341,30 +364,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   statusText: {
-    textTransform: 'none',
+    textTransform: "none",
     letterSpacing: 0.2,
     flexShrink: 1,
-  },
-  compactBlock: {
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  reflectionBlock: {
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
   },
   compactText: {
     lineHeight: typography.roles.bodySecondary.lineHeight + 1,
   },
   recentBlock: {
     marginTop: spacing.lg,
-  },
-  timelineContentCol: {
-    flex: 1,
-    gap: spacing.xxs,
-    paddingBottom: spacing.md,
   },
   previousSummaryBlock: {
     marginTop: spacing.sm,
@@ -377,7 +385,6 @@ const styles = StyleSheet.create({
   },
   reflectTeaserFrame: {
     borderTopWidth: 1,
-    borderTopColor: '#D1C5AC',
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     paddingTop: spacing.md,

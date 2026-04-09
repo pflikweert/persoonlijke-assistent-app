@@ -1,19 +1,20 @@
-import { router, useFocusEffect } from 'expo-router';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { StyleSheet } from "react-native";
 
-import { ScreenHeader } from '@/components/layout/screen-header';
-import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
-import { InlineLoadingOverlay } from '@/components/feedback/inline-loading-overlay';
-import { ArchiveGroupedList, type ArchiveGroupedListSection } from '@/components/journal/archive-grouped-list';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
 import {
-  ScreenContainer,
-  StateBlock,
-} from '@/components/ui/screen-primitives';
-import { fetchRecentDayJournals, parseJournalSections } from '@/services';
-import { colorTokens, spacing } from '@/theme';
+  ArchiveGroupedList,
+  type ArchiveGroupedListSection,
+} from "@/components/journal/archive-grouped-list";
+import { ScreenHeader } from "@/components/layout/screen-header";
+import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { HeaderIconButton } from "@/components/ui/header-icon-button";
+import { ScreenContainer, StateBlock } from "@/components/ui/screen-primitives";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { fetchRecentDayJournals, parseJournalSections } from "@/services";
+import { colorTokens, spacing } from "@/theme";
 
 type MonthGroup = {
   key: string;
@@ -29,34 +30,34 @@ function parseJournalDate(dateValue: string): Date | null {
 function formatMonthLabel(dateValue: string): string {
   const parsed = parseJournalDate(dateValue);
   if (!parsed) {
-    return 'Onbekende maand';
+    return "Onbekende maand";
   }
-  return parsed.toLocaleDateString('nl-NL', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
+  return parsed.toLocaleDateString("nl-NL", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
   });
 }
 
 function formatWeekdayShort(dateValue: string): string {
   const parsed = parseJournalDate(dateValue);
   if (!parsed) {
-    return '--';
+    return "--";
   }
   return parsed
-    .toLocaleDateString('nl-NL', {
-      weekday: 'short',
-      timeZone: 'UTC',
+    .toLocaleDateString("nl-NL", {
+      weekday: "short",
+      timeZone: "UTC",
     })
-    .replace('.', '');
+    .replace(".", "");
 }
 
 function formatDayNumber(dateValue: string): string {
   const parsed = parseJournalDate(dateValue);
   if (!parsed) {
-    return '--';
+    return "--";
   }
-  return String(parsed.getUTCDate()).padStart(2, '0');
+  return String(parsed.getUTCDate()).padStart(2, "0");
 }
 
 function buildSnippet(summary: string | null, sections: string[]): string {
@@ -68,19 +69,21 @@ function buildSnippet(summary: string | null, sections: string[]): string {
   if (fromSection) {
     return fromSection.trim();
   }
-  return 'Nog geen samenvatting voor deze dag.';
+  return "Nog geen samenvatting voor deze dag.";
 }
 
 export default function DaysScreen() {
   const PAGE_SIZE = 21;
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [journals, setJournals] = useState<Awaited<ReturnType<typeof fetchRecentDayJournals>>>([]);
+  const [journals, setJournals] = useState<
+    Awaited<ReturnType<typeof fetchRecentDayJournals>>
+  >([]);
 
   const loadDays = useCallback(async () => {
     setLoading(true);
@@ -96,7 +99,10 @@ export default function DaysScreen() {
       setJournals(rows);
       setHasMore(rows.length === PAGE_SIZE);
     } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : 'Kon recente dagen niet laden.';
+      const message =
+        nextError instanceof Error
+          ? nextError.message
+          : "Kon recente dagen niet laden.";
       setError(message);
       setJournals([]);
       setHasMore(false);
@@ -120,11 +126,17 @@ export default function DaysScreen() {
       });
 
       const existing = new Set(journals.map((item) => item.id));
-      const merged = [...journals, ...rows.filter((row) => !existing.has(row.id))];
+      const merged = [
+        ...journals,
+        ...rows.filter((row) => !existing.has(row.id)),
+      ];
       setJournals(merged);
       setHasMore(rows.length === PAGE_SIZE);
     } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : 'Kon extra dagen niet laden.';
+      const message =
+        nextError instanceof Error
+          ? nextError.message
+          : "Kon extra dagen niet laden.";
       setError(message);
     } finally {
       setLoadingMore(false);
@@ -134,7 +146,7 @@ export default function DaysScreen() {
   useFocusEffect(
     useCallback(() => {
       loadDays();
-    }, [loadDays])
+    }, [loadDays]),
   );
 
   const sections = useMemo<ArchiveGroupedListSection[]>(() => {
@@ -167,7 +179,7 @@ export default function DaysScreen() {
           snippet,
           onPress: () =>
             router.push({
-              pathname: '/day/[date]',
+              pathname: "/day/[date]",
               params: { date: journal.journal_date },
             }),
         };
@@ -184,19 +196,23 @@ export default function DaysScreen() {
           titleType="screenTitle"
           subtitle="Persoonlijk archief om rustig terug te lezen."
           rightAction={
-            <Pressable
+            <HeaderIconButton
               accessibilityRole="button"
               accessibilityLabel="Open menu"
               onPress={() => setMenuVisible(true)}
-              style={[styles.menuButton, { backgroundColor: palette.surfaceLow }]}>
+            >
               <MaterialIcons name="menu" size={20} color={palette.primary} />
-            </Pressable>
+            </HeaderIconButton>
           }
         />
       }
-      contentContainerStyle={styles.scrollContent}>
+      contentContainerStyle={styles.scrollContent}
+    >
       {loading ? (
-        <InlineLoadingOverlay message="Archief laden..." detail="We halen je recente dagen op." />
+        <InlineLoadingOverlay
+          message="Archief laden..."
+          detail="We halen je recente dagen op."
+        />
       ) : null}
       {!loading && error ? (
         <StateBlock
@@ -235,12 +251,5 @@ export default function DaysScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
-  },
-  menuButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

@@ -1,30 +1,35 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, router, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
-import { Analytics } from '@vercel/analytics/react';
-import 'react-native-reanimated';
-import type { Session } from '@supabase/supabase-js';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import type { Session } from "@supabase/supabase-js";
+import { Analytics } from "@vercel/analytics/react";
+import { Stack, router, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import "react-native-reanimated";
+import "../global.css";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { getCurrentSession, onAuthStateChange } from '@/services';
-import { colorTokens } from '@/theme';
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { getCurrentSession, onAuthStateChange } from "@/services";
+import { colorTokens } from "@/theme";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 const WEB_APP_SHELL_MAX_WIDTH = 460;
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme() ?? 'light';
+  const colorScheme = useColorScheme() ?? "light";
   const segments = useSegments();
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const palette = colorTokens[colorScheme];
 
-  const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+  const navigationTheme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
   const appTheme = {
     ...navigationTheme,
     colors: {
@@ -39,16 +44,16 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || typeof document === 'undefined') {
+    if (Platform.OS !== "web" || typeof document === "undefined") {
       return;
     }
 
-    const styleId = 'pa-web-focus-outline-reset';
+    const styleId = "pa-web-focus-outline-reset";
     if (document.getElementById(styleId)) {
       return;
     }
 
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.id = styleId;
     style.textContent = `
 button:focus,
@@ -117,23 +122,40 @@ a:focus-visible,
       return;
     }
 
-    const inAuthRoute = segments[0] === 'sign-in';
+    const inAuthRoute = segments[0] === "sign-in";
 
     if (!session && !inAuthRoute) {
-      router.replace('/sign-in');
+      router.replace("/sign-in");
       return;
     }
 
     if (session && inAuthRoute) {
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     }
   }, [authReady, session, segments]);
 
   if (!authReady) {
     return (
-      <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.surfaceLow }]}>
-        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
-          <View style={[styles.loadingContainer, { backgroundColor: palette.background }]}>
+      <View
+        style={[
+          styles.rootShell,
+          styles.webBackdrop,
+          { backgroundColor: palette.surfaceLow },
+        ]}
+      >
+        <View
+          style={[
+            styles.rootShell,
+            styles.webAppShell,
+            { backgroundColor: palette.background },
+          ]}
+        >
+          <View
+            style={[
+              styles.loadingContainer,
+              { backgroundColor: palette.background },
+            ]}
+          >
             <ActivityIndicator color={palette.primary} />
           </View>
         </View>
@@ -143,23 +165,50 @@ a:focus-visible,
 
   return (
     <ThemeProvider value={appTheme}>
-      <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.surfaceLow }]}>
-        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
+      <View
+        style={[
+          styles.rootShell,
+          styles.webBackdrop,
+          { backgroundColor: palette.surfaceLow },
+        ]}
+      >
+        <View
+          style={[
+            styles.rootShell,
+            styles.webAppShell,
+            { backgroundColor: palette.background },
+          ]}
+        >
           <Stack>
             <Stack.Screen name="sign-in" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="capture" options={{ headerShown: false }} />
             <Stack.Screen name="entry/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
-            <Stack.Screen name="settings-export" options={{ headerShown: false }} />
-            <Stack.Screen name="settings-import" options={{ headerShown: false }} />
-            <Stack.Screen name="settings-regeneration" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            <Stack.Screen
+              name="settings-export"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="settings-import"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="settings-regeneration"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="modal"
+              options={{ presentation: "modal", title: "Modal" }}
+            />
           </Stack>
         </View>
       </View>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} backgroundColor={palette.background} />
-      {Platform.OS === 'web' ? <Analytics /> : null}
+      <StatusBar
+        style={colorScheme === "dark" ? "light" : "dark"}
+        backgroundColor={palette.background}
+      />
+      {Platform.OS === "web" ? <Analytics /> : null}
     </ThemeProvider>
   );
 }
@@ -169,16 +218,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   webBackdrop: {
-    width: '100%',
-    ...(Platform.OS === 'web'
+    width: "100%",
+    ...(Platform.OS === "web"
       ? {
-          alignItems: 'center',
+          alignItems: "center",
         }
       : {}),
   },
   webAppShell: {
-    width: '100%',
-    ...(Platform.OS === 'web'
+    width: "100%",
+    ...(Platform.OS === "web"
       ? {
           maxWidth: WEB_APP_SHELL_MAX_WIDTH,
         }
@@ -186,7 +235,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

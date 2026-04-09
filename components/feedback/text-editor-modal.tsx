@@ -1,10 +1,11 @@
-import { Modal, Pressable, StyleSheet, TextInput } from 'react-native';
+import { Modal, StyleSheet, TextInput } from "react-native";
 
-import { PrimaryButton } from '@/components/ui/screen-primitives';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colorTokens, radius, spacing, typography } from '@/theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { HeaderTextAction } from "@/components/ui/header-icon-button";
+import { PrimaryButton } from "@/components/ui/screen-primitives";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { colorTokens, radius, spacing, typography } from "@/theme";
 
 type TextEditorModalProps = {
   visible: boolean;
@@ -31,18 +32,26 @@ export function TextEditorModal({
   onCancel,
   onSubmit,
 }: TextEditorModalProps) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={() => !processing && onCancel()}>
-      <ThemedView lightColor={colorTokens.light.background} darkColor={colorTokens.dark.background} style={styles.screen}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      onRequestClose={() => !processing && onCancel()}
+    >
+      <ThemedView
+        lightColor={colorTokens.light.background}
+        darkColor={colorTokens.dark.background}
+        style={styles.screen}
+      >
         <ThemedView style={styles.topBar}>
-          <Pressable onPress={onCancel} disabled={processing} style={styles.topAction}>
-            <ThemedText type="bodySecondary" style={{ color: palette.mutedSoft }}>
-              Annuleer
-            </ThemedText>
-          </Pressable>
+          <HeaderTextAction
+            label="Annuleer"
+            onPress={onCancel}
+            disabled={processing}
+          />
           <ThemedText type="sectionTitle">{title}</ThemedText>
           <ThemedView style={styles.topSpacer} />
         </ThemedView>
@@ -60,8 +69,12 @@ export function TextEditorModal({
             styles.input,
             {
               color: palette.text,
-              borderColor: scheme === 'dark' ? `${palette.primaryStrong}66` : `${palette.primaryStrong}7A`,
-              backgroundColor: scheme === 'dark' ? 'transparent' : 'rgba(255,255,255,0.14)',
+              borderColor:
+                scheme === "dark"
+                  ? `${palette.primaryStrong}66`
+                  : `${palette.primaryStrong}7A`,
+              backgroundColor:
+                scheme === "dark" ? "transparent" : "rgba(255,255,255,0.14)",
             },
           ]}
         />
@@ -87,17 +100,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.xs,
     minHeight: 40,
-  },
-  topAction: {
-    minWidth: 84,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
   },
   topSpacer: {
     minWidth: 84,
@@ -112,10 +119,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    textAlign: 'left',
+    textAlign: "left",
   },
   bottomZone: {
-    width: '100%',
+    width: "100%",
     paddingBottom: spacing.sm,
   },
 });

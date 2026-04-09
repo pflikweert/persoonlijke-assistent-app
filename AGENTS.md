@@ -59,6 +59,19 @@ Regels:
 - Werk met 1 taak per prompt.
 - Gebruik plan mode alleen bij bugs, multi-file wijzigingen of migraties.
 
+## UI-guardrails (NativeWind / component-first)
+
+- Screens in `app/**` zijn assembly-only.
+- Voeg geen nieuwe grote `StyleSheet.create` patronen toe in `app/**`.
+- Introduceer geen nieuwe visuele patronen in screens.
+- Plaats styling eerst in `components/ui/**` of `components/layout/**`.
+- `theme/tokens.ts` is de enige tokenbron.
+- Tailwind/NativeWind config is afgeleid en nooit leidend.
+- Voorkom className-chaos in screens; varianten horen in shared components.
+- Per taak: max 1 screen + noodzakelijke shared component-aanpassing.
+- Bij styling-taken is check tegen `design_refs/1.2.1/**` verplicht.
+- Geen redesign zonder expliciete opdracht.
+
 ## Kosten- en inputregels
 
 - Gebruik het lichtste model dat de taak aankan.
@@ -75,6 +88,7 @@ Bij wijzigingen aan canonieke docs:
 - `npm run docs:bundle:verify`
 
 Bij wijzigingen in admin-regeneratie:
+
 - documenteer altijd zichtbaarheidsregel (admin-only) en allowlist-mechanisme
 - documenteer relevante env-vars (`ADMIN_REGEN_ALLOWLIST_USER_IDS`, `ADMIN_REGEN_INTERNAL_TOKEN`)
 
@@ -88,6 +102,7 @@ Na relevante wijzigingen expliciet melden welke extra stap nodig is:
 - geen relevante runtime-impact -> expliciet melden dat niets extra's nodig is
 
 Regel:
+
 - `npm run dev` is lokaal-only en mag geen remote functions deploy doen.
 - productie deploy van Supabase Edge Functions loopt alleen via GitHub Actions.
 
@@ -103,3 +118,14 @@ Voer na relevante wijzigingen uit:
 
 - `npm run lint`
 - `npm run typecheck`
+
+# Dev server policy
+
+- Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask.
+- Assume the local dev server is already running.
+- Never prefix local dev-server commands with `CI=1`.
+- For validation, use one-shot commands only, such as:
+  - `npm run lint`
+  - `npm run typecheck`
+  - project verify scripts
+- If a live server is required, tell me the exact command to run manually instead of running it yourself (example: `npx expo start --web --localhost`).

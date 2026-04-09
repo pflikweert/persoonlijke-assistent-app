@@ -1,39 +1,49 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { StatusBar } from 'expo-status-bar';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   TextInput,
+  useColorScheme,
   View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ConfirmDialog } from '@/components/feedback/confirm-dialog';
-import { ProcessingScreen } from '@/components/feedback/processing-screen';
-import { ThemedText } from '@/components/themed-text';
-import { PrimaryButton, StateBlock } from '@/components/ui/screen-primitives';
-import { classifyUnknownError, refreshDerivedAfterCaptureInBackground, submitTextEntry } from '@/services';
-import { colorTokens, radius, sizing, spacing, typography } from '@/theme';
+import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
+import { ProcessingScreen } from "@/components/feedback/processing-screen";
+import { ScreenHeader } from "@/components/layout/screen-header";
+import { ThemedText } from "@/components/themed-text";
+import { HeaderIconButton } from "@/components/ui/header-icon-button";
+import {
+  PrimaryButton,
+  ScreenContainer,
+  StateBlock,
+} from "@/components/ui/screen-primitives";
+import {
+  classifyUnknownError,
+  refreshDerivedAfterCaptureInBackground,
+  submitTextEntry,
+} from "@/services";
+import { colorTokens, spacing, typography } from "@/theme";
 
 import {
   buildCaptureParams,
   createCaptureContext,
   resolveCaptureJournalDate,
   type CaptureRouteParams,
-} from './_shared';
-
-const palette = colorTokens.dark;
+} from "./_shared";
 
 export default function CaptureTypeScreen() {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
   const insets = useSafeAreaInsets();
   const { date } = useLocalSearchParams<CaptureRouteParams>();
   const journalDate = resolveCaptureJournalDate(date);
   const returnParams = buildCaptureParams(journalDate);
-  const [rawText, setRawText] = useState('');
+  const [rawText, setRawText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [discardVisible, setDiscardVisible] = useState(false);
   const [error, setError] = useState<{
@@ -50,7 +60,7 @@ export default function CaptureTypeScreen() {
       return;
     }
 
-    router.replace({ pathname: '/capture', params: returnParams });
+    router.replace({ pathname: "/capture", params: returnParams });
   }
 
   function handleBack() {
@@ -75,7 +85,10 @@ export default function CaptureTypeScreen() {
     setError(null);
 
     try {
-      const captureContext = createCaptureContext(new Date(), journalDate ?? undefined);
+      const captureContext = createCaptureContext(
+        new Date(),
+        journalDate ?? undefined,
+      );
       const result = await submitTextEntry({
         rawText,
         capturedAt: captureContext.capturedAt,
@@ -84,12 +97,12 @@ export default function CaptureTypeScreen() {
         deferDerived: true,
       });
 
-      setRawText('');
+      setRawText("");
       router.replace({
-        pathname: '/entry/[id]',
+        pathname: "/entry/[id]",
         params: {
           id: result.normalizedEntryId,
-          source: 'capture',
+          source: "capture",
           date: result.journalDate,
         },
       });
@@ -107,106 +120,124 @@ export default function CaptureTypeScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.screen, { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg }]}>
-      <StatusBar style="light" />
+    <ScreenContainer
+      fixedHeader={
+        <ScreenHeader
+          style={{
+            paddingHorizontal: 0,
+            paddingTop: insets.top,
+            paddingBottom: 0,
+          }}
+          leftAction={
+            <HeaderIconButton
+              accessibilityRole="button"
+              accessibilityLabel="Terug"
+              onPress={handleBack}
+            >
+              <MaterialIcons
+                name="arrow-back"
+                size={18}
+                color={palette.primary}
+              />
+            </HeaderIconButton>
+          }
+        />
+      }
+    >
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
 
-      <View style={styles.headerRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Terug" onPress={handleBack} style={styles.backButton}>
-          <MaterialIcons name="arrow-back" size={18} color={palette.primary} />
-        </Pressable>
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={[
+          styles.keyboardHost,
+          { paddingBottom: insets.bottom + spacing.lg },
+        ]}
+      >
+        <View style={styles.content}>
+          <View style={styles.copyBlock}>
+            <ThemedText
+              type="screenTitle"
+              lightColor={palette.text}
+              darkColor={palette.text}
+            >
+              Wat houdt je bezig?
+            </ThemedText>
+            <ThemedText
+              type="bodySecondary"
+              lightColor={palette.muted}
+              darkColor={palette.muted}
+              style={styles.subtitle}
+            >
+              Schrijf op wat je wilt vastleggen
+            </ThemedText>
+          </View>
 
-      <View style={styles.content}>
-        <View style={styles.copyBlock}>
-          <ThemedText type="screenTitle" lightColor={palette.text} darkColor={palette.text} style={styles.title}>
-            Wat houdt je bezig?
-          </ThemedText>
-          <ThemedText
-            type="bodySecondary"
-            lightColor={palette.muted}
-            darkColor={palette.muted}
-            style={styles.subtitle}>
-            Schrijf op wat je wilt vastleggen
-          </ThemedText>
+          {error ? (
+            <View style={styles.errorBlock}>
+              <StateBlock
+                tone="error"
+                message={error.message}
+                detail={
+                  error.retryable
+                    ? "Probeer het zo opnieuw."
+                    : "Controleer je tekst en probeer het daarna opnieuw."
+                }
+                meta={error.requestId ? `Referentie: ${error.requestId}` : null}
+              />
+            </View>
+          ) : null}
+
+          <TextInput
+            multiline
+            autoFocus
+            editable={!submitting}
+            value={rawText}
+            onChangeText={setRawText}
+            placeholder="Wat wil je vastleggen?"
+            placeholderTextColor={palette.mutedSoft}
+            textAlignVertical="top"
+            style={[styles.input, { color: palette.text }]}
+          />
         </View>
 
-        {error ? (
-          <View style={styles.errorBlock}>
-            <StateBlock
-              tone="error"
-              message={error.message}
-              detail={error.retryable ? 'Probeer het zo opnieuw.' : 'Controleer je tekst en probeer het daarna opnieuw.'}
-              meta={error.requestId ? `Referentie: ${error.requestId}` : null}
-            />
-          </View>
-        ) : null}
+        <View style={styles.footer}>
+          <PrimaryButton
+            label="Leg vast"
+            onPress={() => void handleSubmit()}
+            disabled={submitting || !hasTextDraft}
+          />
+        </View>
 
-        <TextInput
-          multiline
-          autoFocus
-          editable={!submitting}
-          value={rawText}
-          onChangeText={setRawText}
-          placeholder="Wat wil je vastleggen?"
-          placeholderTextColor={palette.mutedSoft}
-          textAlignVertical="top"
-          style={styles.input}
+        <ConfirmDialog
+          visible={discardVisible}
+          title="Tekst niet opslaan?"
+          message="Deze tekst is nog niet vastgelegd."
+          cancelLabel="Blijf hier"
+          confirmLabel="Niet opslaan"
+          onCancel={() => setDiscardVisible(false)}
+          onConfirm={() => {
+            setDiscardVisible(false);
+            setRawText("");
+            setError(null);
+            goBackToStart();
+          }}
         />
-      </View>
-
-      <View style={styles.footer}>
-        <PrimaryButton label="Leg vast" onPress={() => void handleSubmit()} disabled={submitting || !hasTextDraft} />
-      </View>
-
-      <ConfirmDialog
-        visible={discardVisible}
-        title="Tekst niet opslaan?"
-        message="Deze tekst is nog niet vastgelegd."
-        cancelLabel="Blijf hier"
-        confirmLabel="Niet opslaan"
-        onCancel={() => setDiscardVisible(false)}
-        onConfirm={() => {
-          setDiscardVisible(false);
-          setRawText('');
-          setError(null);
-          goBackToStart();
-        }}
-      />
-      <ProcessingScreen visible={submitting} variant="text-entry" />
-    </KeyboardAvoidingView>
+        <ProcessingScreen visible={submitting} variant="text-entry" />
+      </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  keyboardHost: {
     flex: 1,
-    backgroundColor: palette.background,
-    paddingHorizontal: spacing.page,
-  },
-  headerRow: {
-    alignItems: 'flex-start',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceHigh,
   },
   content: {
     flex: 1,
-    paddingTop: 36,
+    paddingTop: spacing.xxxl - spacing.xs,
   },
   copyBlock: {
     gap: spacing.sm,
-  },
-  title: {
-    fontSize: typography.roles.screenTitle.size,
-    lineHeight: typography.roles.screenTitle.lineHeight,
-    letterSpacing: typography.roles.screenTitle.letterSpacing,
   },
   subtitle: {
     maxWidth: 280,
@@ -217,9 +248,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     marginTop: spacing.xl,
-    color: palette.text,
-    fontSize: 18,
-    lineHeight: 30,
+    fontSize: typography.roles.sectionTitle.size,
+    lineHeight: typography.roles.sectionTitle.lineHeight,
     paddingVertical: 0,
     paddingHorizontal: 0,
     minHeight: 0,
@@ -227,8 +257,5 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: spacing.lg,
     paddingBottom: spacing.xs,
-  },
-  footerButton: {
-    height: sizing.ctaHeight,
   },
 });
