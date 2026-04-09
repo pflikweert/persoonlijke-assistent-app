@@ -1,7 +1,7 @@
 # DO NOT EDIT — GENERATED FILE
 
-Build Timestamp (UTC): 2026-04-05T11:37:12.022Z
-Source Commit: 7a34cc9
+Build Timestamp (UTC): 2026-04-09T20:08:05.597Z
+Source Commit: 155d3ae
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs.
 Upload standaard samen met docs/design/mvp-design-spec-1.2.1.md voor volledige MVP-designwaarheid.
@@ -245,14 +245,14 @@ Gecontroleerd op:
 | Dagdetail mutaties | UX/hardening | **Aanwezig** | edit/delete + derived refresh in `app/day/[date].tsx` en `app/entry/[id].tsx`. |
 | “Opnieuw samenvatten” als zichtbare knop | Genoemd in documentatie | **Deels aanwezig** | heropbouw bestaat functioneel, expliciete zichtbare knop niet hard aangetroffen. |
 | ChatGPT markdown import | Niet kern in oorspronkelijke scope | **Aanwezig (feature-flagged)** | `app/settings.tsx`, `services/import/*`, `import-chatgpt-markdown` function + migrationkolommen. |
-| Instellingen-submenu | Gevraagd in beheerflow | **Aanwezig** | `app/settings.tsx` toont submenu met `Import` en admin-only `Data opnieuw verwerken`. |
+| Instellingen-submenu | Gevraagd in beheerflow | **Aanwezig** | `app/settings.tsx` toont submenu met `Archief downloaden`, `Importeren`, `Verwijder alles` en admin-only `Data opnieuw verwerken`. |
 | Admin globale regeneratiejob | Gevraagd in beheerflow | **Aanwezig** | `app/settings-regeneration.tsx`, `services/admin-regeneration.ts`, `supabase/functions/admin-regeneration-job/index.ts`. |
 | OpenAI Batch API verwerking | Vereiste voor schaal/efficiëntie | **Aanwezig** | batch-upload + create/poll/apply + retry-pad op `error_file_id` in `admin-regeneration-job`. |
 | Voortgang/status per datatype | Vereiste voor transparantie | **Aanwezig** | teller- en fasevelden (`total/queued/openai_completed/applied/failed/remaining/phase`) in job-steps + UI. |
 | Metadata generatie-info (`generation_meta`) | Gevraagd voor gerichte re-run | **Aanwezig** | migration `20260404201500_*` + writes vanuit `admin-regeneration-job` op entries/day/period. |
 | Admin-only afscherming regen-pagina | Vereiste security | **Aanwezig** | route verborgen voor niet-admin in `app/settings.tsx` + server-side allowlist checks in function. |
-| Product-export voor gebruiker | Gepland in 1.2D | **Niet aangetroffen** | geen exportflow in app-UX/services voor eindgebruiker. |
-| Product-reset/delete-all | Gepland in 1.2D | **Niet aangetroffen** | geen gebruikersresetflow aangetroffen. |
+| Product-export voor gebruiker | Gepland in 1.2D | **Aanwezig** | productflow aanwezig in `app/settings.tsx` + `app/settings-export.tsx` op `downloadUserArchive`; handmatige settings-tests bevestigen werkende exportflow, en runtime/API-check bevestigt aanwezige exportbrondata. |
+| Product-reset/delete-all | Gepland in 1.2D | **Aanwezig** | delete-sheet flow aanwezig in `app/settings.tsx` met `confirm/loading/success/error`; handmatige settings-tests bevestigen de gebruikersflow en runtime/API-check toont leegmaken van `period_reflections`, `day_journals`, `entries_normalized`, `entries_raw`. |
 | Logging/tracing | Gepland 1.2A | **Aanwezig** | `requestId/flowId` contract + `_shared/flow-logger.ts`. |
 | Verify scripts lokaal | Gepland 1.2A/1.2E | **Aanwezig** | text/audio/reflection/output-quality scripts aanwezig. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
@@ -264,7 +264,7 @@ Gecontroleerd op:
 | 1.2A Stabiliteit/foutafhandeling | **Deels aanwezig** | tracing + verify aanwezig; geen harde afrondingsregistratie als complete subfase. |
 | 1.2B Outputkwaliteit | **Deels aanwezig** | contracts/guardrails/quality-checks aanwezig; eindstatus “afgerond” niet hard vastgelegd. |
 | 1.2C UX-polish | **Deels aanwezig** | duidelijke polish in kernschermen; volledigheid over alle flows niet hard bewezen. |
-| 1.2D Vertrouwen (export/reset) | **Niet aangetroffen** | productniveau export/reset ontbreekt. |
+| 1.2D Vertrouwen (export/reset) | **Aanwezig** | settings export/import/delete zijn functioneel geland; handmatige tests bevestigen gebruikersflows en runtime/API-checks bevestigen service- en data-effecten. |
 | 1.2E Private-beta readiness | **Deels aanwezig** | setup + verify aanwezig; complete smoke/release-checklist niet hard aangetroffen. |
 
 ## Correcties op eerdere ruis
@@ -273,7 +273,7 @@ Gecontroleerd op:
 - Tooling-aanwezigheid telt niet automatisch als gebruikersfeature.
 
 ## Samenvatting
-De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only settingspad toegevoegd voor globale herverwerking via OpenAI Batch API, inclusief persistente jobstatus en per-type voortgang. Fase 1.2 heeft voortgang in A/B/C/E, terwijl 1.2D als productfeature niet is aangetroffen. Onvoldoende bewezen claims blijven expliciet onzeker.
+De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only settingspad toegevoegd voor globale herverwerking via OpenAI Batch API, inclusief persistente jobstatus en per-type voortgang. Voor 1.2D zijn settings export/import/delete nu functioneel bewezen binnen deze afgesloten scope (handmatige flow-validatie + runtime/API-bewijs van service- en data-effecten). Onvoldoende bewezen claims buiten deze scope blijven expliciet onzeker.
 
 ---
 
@@ -285,13 +285,11 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
 ## Echt open (niet aangetroffen in code als productfeature)
-1. Export van dagboeklaag voor eindgebruiker (1.2D).
-2. Export van reflecties voor eindgebruiker (1.2D).
-3. Eenvoudige gebruikersreset/delete-all flow (1.2D).
-4. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
+1. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
 
 Toelichting:
 - bestaande dump/export scripts zijn developer tooling, geen gebruikersfeature.
+- settings export/import/delete zijn functioneel aanwezig en voor deze scope bewezen.
 
 ## Deels open (nog niet hard afgerond)
 1. 1.2A stabiliteit/foutafhandeling als complete afgeronde subfase.
@@ -303,16 +301,53 @@ Toelichting:
 1. Volledige implementatiedekking van designrefs 1.2.1 per scherm.
 2. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
 3. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
+4. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
 
 ## Prioriteit
-1. Sluit 1.2D productgaps (export/reset).
-2. Maak completion-criteria voor 1.2A/1.2B/1.2C/1.2E expliciet en toetsbaar.
-3. Los onzekerheden op met hard bewijs; anders onzeker laten.
+1. Maak completion-criteria voor 1.2A/1.2B/1.2C/1.2E expliciet en toetsbaar.
+2. Los onzekerheden op met hard bewijs; anders onzeker laten.
 
 ## Risico’s
 1. Scope-creep richting brede assistent.
 2. Verwarring tussen tooling en productfeature.
 3. Te snelle status-upgrade van onbewezen claims.
+
+## Later project — import volledig laten doorlopen op de achtergrond
+
+### Status
+Later onderzoeken. Niet voor huidige fase.
+
+### Waarom
+Het echte importeren van entries draait server-side zodra de request loopt.
+De naverwerking daarna is nu nog afhankelijk van het open importscherm of actieve app-sessie.
+Daardoor is dit nog geen volledige fire-and-forget achtergrondtaak.
+
+### Gewenste eindrichting
+Import moet volledig server-side kunnen doorlopen, ook als:
+- de gebruiker het scherm sluit
+- de app naar de achtergrond gaat
+- de verbinding kort wegvalt na het starten
+
+### Doel
+Een robuustere importflow waarbij:
+- entry-import start via één gebruikersactie
+- afgeleide verwerking daarna zelfstandig doorloopt
+- dagboekdagen, weekreflecties en maandreflecties niet meer afhankelijk zijn van actieve client-state
+
+### Buiten scope nu
+Niet in fase 1.2.
+Dit raakt architectuur, job-afhandeling en betrouwbaarheid van achtergrondverwerking.
+
+### Waarom later waardevol
+- betrouwbaardere importervaring
+- minder afhankelijkheid van open scherm of actieve app
+- logisch vervolg op importfeature zodra MVP/hardening stabiel is
+
+### Open vragen voor later
+- server-side jobmodel of queue
+- statusopvolging voor gebruiker
+- retry-gedrag bij mislukte naverwerking
+- hoe en wanneer de UI importstatus terughaalt
 
 ---
 
@@ -695,3 +730,11 @@ Hij helpt je rustig je dag vast te leggen.
 ### Kwaliteit
 - `npm run lint`
 - `npm run typecheck`
+- Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask.
+- Assume the local dev server is already running.
+- Never prefix local dev-server commands with `CI=1`.
+- For validation, use one-shot commands only, such as:
+- `npm run lint`
+- `npm run typecheck`
+- project verify scripts
+- If a live server is required, tell me the exact command to run manually instead of running it yourself (example: `npx expo start --web --localhost`).
