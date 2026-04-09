@@ -3,13 +3,12 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet } from "react-native";
 
-import { ScreenHeader } from "@/components/layout/screen-header";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 import {
     ScreenContainer,
-    SurfaceSection,
 } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -48,7 +47,7 @@ const ARCHIVE_ROUTES: SettingsRoute[] = [
   {
     key: "import",
     label: "Importeren",
-    description: "Importeer een markdownbestand.",
+    description: "Importeer eerder geschreven bestanden.",
     icon: "file-upload",
     route: "/settings-import",
   },
@@ -89,34 +88,17 @@ function SettingsRow({
       style={[
         styles.menuRow,
         {
-          borderColor: item.destructive
-            ? palette.destructiveSoftBorder
-            : palette.separator,
-          backgroundColor: item.destructive
-            ? palette.destructiveSoftBackground
-            : palette.surfaceLow,
+          backgroundColor: palette.surfaceLow,
         },
       ]}
     >
       <ThemedView style={styles.menuRowLeft}>
-        <ThemedView
-          style={[
-            styles.menuIconWrap,
-            {
-              backgroundColor: item.destructive
-                ? palette.destructiveSoftBorder
-                : palette.surface,
-            },
-          ]}
-        >
-          <MaterialIcons
-            name={item.icon}
-            size={18}
-            color={
-              item.destructive ? palette.destructiveSoftText : palette.primary
-            }
-          />
-        </ThemedView>
+        <MaterialIcons
+          name={item.icon}
+          size={18}
+          style={styles.menuRowIcon}
+          color={item.destructive ? palette.destructiveSoftText : palette.primary}
+        />
 
         <ThemedView style={styles.menuTextWrap}>
           <ThemedText
@@ -137,7 +119,8 @@ function SettingsRow({
 
       <MaterialIcons
         name="chevron-right"
-        size={20}
+        size={18}
+        style={styles.menuRowChevron}
         color={
           item.destructive ? palette.destructiveSoftText : palette.mutedSoft
         }
@@ -229,49 +212,38 @@ export default function SettingsScreen() {
     <>
       <ScreenContainer
         scrollable
-        fixedHeader={
-          <ScreenHeader
-            title="Instellingen"
-            titleType="screenTitle"
-            subtitle="Beheer je archief en gegevens."
-            leftAction={
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Ga terug"
-                onPress={() => router.back()}
-                style={[
-                  styles.iconButton,
-                  { backgroundColor: palette.surfaceLow },
-                ]}
-              >
-                <MaterialIcons
-                  name="arrow-back"
-                  size={20}
-                  color={palette.primary}
-                />
-              </Pressable>
-            }
-            rightAction={
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Open menu"
-                onPress={() => setMenuVisible(true)}
-                style={[
-                  styles.iconButton,
-                  { backgroundColor: palette.surfaceLow },
-                ]}
-              >
-                <MaterialIcons name="menu" size={20} color={palette.primary} />
-              </Pressable>
-            }
-          />
-        }
         contentContainerStyle={styles.scrollContent}
       >
-        <SurfaceSection
-          title="Archief"
-          subtitle="Download of importeer je archief."
-        >
+        <ThemedView style={styles.topBar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ga terug"
+            onPress={() => router.back()}
+            style={[styles.iconButton, { backgroundColor: palette.surface }]}
+          >
+            <MaterialIcons name="arrow-back" size={20} color={palette.primary} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            onPress={() => setMenuVisible(true)}
+            style={[styles.iconButton, { backgroundColor: palette.surface }]}
+          >
+            <MaterialIcons name="menu" size={20} color={palette.primary} />
+          </Pressable>
+        </ThemedView>
+
+        <ThemedView style={styles.hero}>
+          <ThemedText type="screenTitle">Instellingen</ThemedText>
+          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+            Beheer je archief en gegevens.
+          </ThemedText>
+        </ThemedView>
+
+        <ThemedView style={styles.sectionGroup}>
+          <ThemedText type="meta" style={{ color: palette.mutedSoft }}>
+            Archief
+          </ThemedText>
           <ThemedView style={styles.menuList}>
             {ARCHIVE_ROUTES.map((item) => (
               <SettingsRow
@@ -281,23 +253,23 @@ export default function SettingsScreen() {
               />
             ))}
           </ThemedView>
-        </SurfaceSection>
+        </ThemedView>
 
-        <SurfaceSection
-          title="Gegevens verwijderen"
-          subtitle="Verwijder je opgeslagen momenten, dagen en reflecties."
-        >
+        <ThemedView style={styles.sectionGroup}>
+          <ThemedText type="meta" style={{ color: palette.mutedSoft }}>
+            Gegevens verwijderen
+          </ThemedText>
           <SettingsRow
             item={DELETE_ROW}
             onPress={() => setDeleteSheetState("confirm")}
           />
-        </SurfaceSection>
+        </ThemedView>
 
         {adminRoutes.length > 0 ? (
-          <SurfaceSection
-            title="Beheer"
-            subtitle="Alleen zichtbaar voor adminrechten."
-          >
+          <ThemedView style={styles.sectionGroup}>
+            <ThemedText type="meta" style={{ color: palette.mutedSoft }}>
+              Beheer
+            </ThemedText>
             <ThemedView style={styles.menuList}>
               {adminRoutes.map((item) => (
                 <SettingsRow
@@ -307,18 +279,15 @@ export default function SettingsScreen() {
                 />
               ))}
             </ThemedView>
-          </SurfaceSection>
+          </ThemedView>
         ) : null}
 
         {accessError ? (
-          <SurfaceSection
-            title="Beheer"
-            subtitle="Admin-check tijdelijk niet beschikbaar."
-          >
+          <ThemedView style={styles.sectionGroup}>
             <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
               {accessError}
             </ThemedText>
-          </SurfaceSection>
+          </ThemedView>
         ) : null}
 
         <FullscreenMenuOverlay
@@ -334,17 +303,15 @@ export default function SettingsScreen() {
         animationType="fade"
         onRequestClose={closeDeleteSheet}
       >
-        <ThemedView style={styles.sheetBackdrop}>
-          <Pressable
-            style={styles.sheetBackdropTouch}
-            onPress={closeDeleteSheet}
-            disabled={!canCloseDeleteSheet}
-          />
-
+        <ModalBackdrop
+          layout="bottom"
+          onPressOutside={closeDeleteSheet}
+          outsidePressDisabled={!canCloseDeleteSheet}
+        >
           <ThemedView
             lightColor={colorTokens.light.surfaceLowest}
             darkColor={colorTokens.dark.surface}
-            style={[styles.sheetCard, { borderColor: palette.separator }]}
+            style={styles.sheetCard}
           >
             <ThemedView
               style={[
@@ -371,10 +338,7 @@ export default function SettingsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Annuleren"
                     onPress={closeDeleteSheet}
-                    style={[
-                      styles.sheetSecondaryButton,
-                      { borderColor: palette.separator },
-                    ]}
+                    style={styles.sheetSecondaryButton}
                   >
                     <ThemedText
                       type="defaultSemiBold"
@@ -391,8 +355,7 @@ export default function SettingsScreen() {
                     style={[
                       styles.sheetDangerButton,
                       {
-                        borderColor: palette.destructiveSoftBorder,
-                        backgroundColor: palette.destructiveSoftBackground,
+                        backgroundColor: palette.surfaceLow,
                       },
                     ]}
                   >
@@ -420,7 +383,7 @@ export default function SettingsScreen() {
                 <ThemedText type="sectionTitle">Verwijderen</ThemedText>
                 <ThemedText
                   type="bodySecondary"
-                  style={{ color: palette.muted }}
+                  style={[styles.stateTextCenter, { color: palette.muted }]}
                 >
                   Je gegevens worden verwijderd. Dit kan een moment duren.
                 </ThemedText>
@@ -446,7 +409,7 @@ export default function SettingsScreen() {
                 </ThemedText>
                 <ThemedText
                   type="bodySecondary"
-                  style={{ color: palette.muted }}
+                  style={[styles.stateTextCenter, { color: palette.muted }]}
                 >
                   Je gegevens zijn verwijderd. Je kunt opnieuw beginnen wanneer
                   je wilt.
@@ -491,7 +454,7 @@ export default function SettingsScreen() {
                 </ThemedText>
                 <ThemedText
                   type="bodySecondary"
-                  style={{ color: palette.muted }}
+                  style={[styles.stateTextCenter, { color: palette.muted }]}
                 >
                   Er ging iets mis. Probeer het opnieuw.
                 </ThemedText>
@@ -509,10 +472,7 @@ export default function SettingsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Sluiten"
                     onPress={closeDeleteSheet}
-                    style={[
-                      styles.sheetSecondaryButton,
-                      { borderColor: palette.separator },
-                    ]}
+                    style={styles.sheetSecondaryButton}
                   >
                     <ThemedText
                       type="defaultSemiBold"
@@ -543,7 +503,7 @@ export default function SettingsScreen() {
               </>
             ) : null}
           </ThemedView>
-        </ThemedView>
+        </ModalBackdrop>
       </Modal>
     </>
   );
@@ -552,56 +512,57 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
+    gap: spacing.content,
   },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  hero: {
+    gap: spacing.sm,
+  },
+  sectionGroup: {
+    gap: spacing.sm,
   },
   menuList: {
     gap: spacing.sm,
   },
   menuRow: {
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.lg,
-    minHeight: 72,
+    minHeight: 62,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: 10,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
   },
   menuRowLeft: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.sm,
     flex: 1,
   },
-  menuIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    alignItems: "center",
-    justifyContent: "center",
+  menuRowIcon: {
+    marginTop: 2,
   },
   menuTextWrap: {
     gap: spacing.xxs,
     flex: 1,
   },
-  sheetBackdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(14, 13, 11, 0.38)",
-  },
-  sheetBackdropTouch: {
-    ...StyleSheet.absoluteFillObject,
+  menuRowChevron: {
+    marginTop: 2,
   },
   sheetCard: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,
@@ -620,15 +581,13 @@ const styles = StyleSheet.create({
   sheetSecondaryButton: {
     minHeight: 46,
     borderRadius: radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.lg,
   },
   sheetDangerButton: {
-    minHeight: 46,
+    minHeight: 44,
     borderRadius: radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -657,5 +616,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
+  },
+  stateTextCenter: {
+    textAlign: "center",
   },
 });

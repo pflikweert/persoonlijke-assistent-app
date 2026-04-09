@@ -69,7 +69,11 @@ export function MomentsTimelineSection({
             style={[
               styles.row,
               focusedEntryId === entry.id
-                ? { backgroundColor: palette.surfaceLow, borderColor: palette.primary }
+                ? {
+                    backgroundColor: palette.surfaceLow,
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: palette.primary,
+                  }
                 : null,
             ]}>
             <ThemedView style={styles.timeCol}>
@@ -140,8 +144,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     minHeight: 72,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: 'transparent',
   },
   timeCol: {
     width: 48,

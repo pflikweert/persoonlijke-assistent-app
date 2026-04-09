@@ -33,8 +33,6 @@ export default function SignInScreen() {
     scheme === "dark" ? "rgba(9, 8, 7, 0.52)" : "rgba(250, 249, 246, 0.52)";
   const contentShellBackground =
     scheme === "dark" ? "rgba(43, 41, 37, 0.72)" : "rgba(255, 255, 255, 0.78)";
-  const contentShellBorder =
-    scheme === "dark" ? "rgba(244, 241, 232, 0.14)" : "rgba(116, 91, 0, 0.1)";
   const [email, setEmail] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +92,6 @@ export default function SignInScreen() {
               { maxHeight: shellMaxHeight },
               {
                 backgroundColor: contentShellBackground,
-                borderColor: contentShellBorder,
               },
             ]}
           >
@@ -120,7 +117,6 @@ export default function SignInScreen() {
                       isCompactViewport && styles.successBadgeCompact,
                       {
                         backgroundColor: palette.surfaceLowest,
-                        borderColor: `${palette.primaryStrong}66`,
                       },
                     ]}
                   >
@@ -327,7 +323,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 430,
     borderRadius: radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
     justifyContent: "center",
@@ -411,7 +406,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
   },

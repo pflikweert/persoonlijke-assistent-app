@@ -60,7 +60,6 @@ export function ArchiveGroupedList({
                 style={[
                   styles.row,
                   {
-                    borderBottomColor: `${palette.separator}88`,
                     borderColor: item.selected ? `${palette.primary}66` : 'transparent',
                     borderWidth: item.selected ? StyleSheet.hairlineWidth : 0,
                   },
@@ -74,7 +73,7 @@ export function ArchiveGroupedList({
                   </ThemedText>
                 </View>
 
-                <ThemedView style={[styles.snippetColumn, { borderLeftColor: palette.separator }]}>
+                <ThemedView style={styles.snippetColumn}>
                   <ThemedText numberOfLines={2} type="bodySecondary" style={[styles.snippet, { color: palette.muted }]}>
                     {item.snippet}
                   </ThemedText>
@@ -121,7 +120,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
     borderRadius: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   dateColumn: {
     width: 44,
@@ -139,7 +137,6 @@ const styles = StyleSheet.create({
   dayNumber: {},
   snippetColumn: {
     flex: 1,
-    borderLeftWidth: 1,
     paddingLeft: spacing.md,
     justifyContent: 'center',
   },
@@ -151,4 +148,3 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
 });
-

@@ -332,7 +332,13 @@ export default function SettingsRegenerationScreen() {
                     }}
                     style={[
                       styles.selectionRow,
-                      { borderColor: selected ? palette.primary : palette.separator },
+                      selected
+                        ? {
+                            backgroundColor: palette.surfaceLow,
+                            borderWidth: StyleSheet.hairlineWidth,
+                            borderColor: palette.primary,
+                          }
+                        : null,
                     ]}>
                     <ThemedView style={styles.selectionLeft}>
                       <ThemedText type="defaultSemiBold">{option.label}</ThemedText>
@@ -361,7 +367,7 @@ export default function SettingsRegenerationScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Ververs status"
                   onPress={() => void handleRefresh()}
-                  style={[styles.refreshButton, { borderColor: palette.separator }]}>
+                  style={styles.refreshButton}>
                   <MaterialIcons name="refresh" size={18} color={palette.primary} />
                   <ThemedText type="bodySecondary" style={{ color: palette.primary }}>
                     Ververs status
@@ -403,7 +409,7 @@ export default function SettingsRegenerationScreen() {
                 const phase = step?.phase ?? 'niet geselecteerd';
 
                 return (
-                  <ThemedView key={option.type} style={[styles.stepCard, { borderColor: palette.separator }]}>
+                  <ThemedView key={option.type} style={styles.stepCard}>
                     <ThemedView style={styles.stepHeader}>
                       <ThemedText type="defaultSemiBold">{stepLabel(option.type)}</ThemedText>
                       <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
@@ -463,7 +469,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   selectionRow: {
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.lg,
     minHeight: 72,
     paddingHorizontal: spacing.md,
@@ -482,7 +487,6 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     minHeight: 42,
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.pill,
     flexDirection: 'row',
     alignItems: 'center',
@@ -497,7 +501,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   stepCard: {
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,

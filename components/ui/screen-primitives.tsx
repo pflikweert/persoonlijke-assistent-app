@@ -138,15 +138,12 @@ export function SurfaceSection({
   style?: ViewStyle;
   className?: string;
 }) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-
   return (
     <ThemedView
       className={className}
       lightColor={colorTokens.light.surface}
       darkColor={colorTokens.dark.surface}
-      style={[styles.section, { borderColor: palette.separator }, style]}
+      style={[styles.section, style]}
     >
       {title ? <ThemedText type="sectionTitle">{title}</ThemedText> : null}
       {subtitle ? <MetaText>{subtitle}</MetaText> : null}
@@ -215,10 +212,7 @@ export function SecondaryButton({
       className={className}
       style={[
         styles.secondaryButton,
-        {
-          borderColor: palette.separator,
-          backgroundColor: palette.surfaceLowest,
-        },
+        { backgroundColor: palette.surfaceLowest },
         disabled && styles.buttonDisabled,
       ]}
     >
@@ -308,15 +302,12 @@ export function StateBlock({
   meta?: string | null;
   className?: string;
 }) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-
   return (
     <ThemedView
       className={className}
       lightColor={colorTokens.light.surfaceLow}
       darkColor={colorTokens.dark.surfaceLow}
-      style={[styles.stateBlock, { borderColor: palette.separator }]}
+      style={styles.stateBlock}
     >
       <MetaText>{toneLabel(tone)}</MetaText>
       <ThemedText type="defaultSemiBold">{message}</ThemedText>
@@ -364,7 +355,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.page,
     paddingVertical: spacing.page,
-    gap: spacing.section,
+    gap: spacing.content,
   },
   scrollHost: {
     paddingHorizontal: 0,
@@ -372,21 +363,20 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   scrollContent: {
-    gap: spacing.section,
+    gap: spacing.content,
     paddingHorizontal: spacing.page,
     paddingTop: spacing.page,
     paddingBottom: spacing.xxxl + spacing.xxl + spacing.xxl,
   },
   section: {
     borderRadius: radius.lg,
-    borderWidth: borders.subtle,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    gap: spacing.cluster,
+    gap: spacing.content,
     ...shadows.surface,
   },
   sectionBody: {
-    gap: spacing.cluster,
+    gap: spacing.content,
   },
   sectionFooter: {
     marginTop: spacing.xs,
@@ -402,7 +392,6 @@ const styles = StyleSheet.create({
   secondaryButton: {
     minHeight: sizing.ctaCompactHeight,
     borderRadius: radius.pill,
-    borderWidth: borders.subtle,
     paddingHorizontal: spacing.lg,
     alignItems: "center",
     justifyContent: "center",
@@ -427,7 +416,6 @@ const styles = StyleSheet.create({
   },
   stateBlock: {
     borderRadius: radius.md,
-    borderWidth: borders.subtle,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     gap: spacing.inline,

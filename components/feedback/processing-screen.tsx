@@ -118,7 +118,6 @@ export function ProcessingScreen({
   const backgroundSource = scheme === 'dark' ? LOGIN_BG_DARK : LOGIN_BG_LIGHT;
   const overlayColor = scheme === 'dark' ? 'rgba(8, 7, 6, 0.72)' : 'rgba(250, 244, 230, 0.76)';
   const cardColor = scheme === 'dark' ? 'rgba(43, 41, 37, 0.82)' : 'rgba(255, 255, 255, 0.8)';
-  const cardBorderColor = scheme === 'dark' ? 'rgba(244, 241, 232, 0.18)' : 'rgba(116, 91, 0, 0.12)';
 
   const pulseScale = useMemo(
     () =>
@@ -253,7 +252,6 @@ export function ProcessingScreen({
             styles.card,
             {
               backgroundColor: cardColor,
-              borderColor: cardBorderColor,
             },
           ]}>
           <Animated.View
@@ -358,7 +356,6 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     borderRadius: radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xl,
     alignItems: 'center',

@@ -2,6 +2,7 @@ import { Modal, Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { ModalBackdrop } from '@/components/ui/modal-backdrop';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, radius, shadows, spacing } from '@/theme';
 
@@ -29,12 +30,11 @@ export function ConfirmDialog({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={() => !processing && onCancel()}>
-      <ThemedView style={styles.backdrop}>
-        <Pressable style={styles.backdropTouch} disabled={processing} onPress={onCancel} />
+      <ModalBackdrop onPressOutside={onCancel} outsidePressDisabled={processing} contentStyle={styles.dialogWrap}>
         <ThemedView
           lightColor={colorTokens.light.surfaceLowest}
           darkColor={colorTokens.dark.surface}
-          style={[styles.card, { borderColor: `${palette.separator}CC` }]}>
+          style={styles.card}>
           <ThemedText type="sectionTitle">{title}</ThemedText>
           <ThemedText type="bodySecondary" style={[styles.message, { color: palette.muted }]}>
             {message}
@@ -49,7 +49,6 @@ export function ConfirmDialog({
                 styles.actionBase,
                 styles.cancelAction,
                 {
-                  borderColor: `${palette.separator}CC`,
                   backgroundColor: colorTokens.light.surfaceLowest,
                 },
               ]}>
@@ -66,7 +65,6 @@ export function ConfirmDialog({
                 styles.actionBase,
                 styles.confirmAction,
                 {
-                  borderColor: palette.destructiveSoftBorder,
                   backgroundColor: colorTokens.light.surfaceLowest,
                 },
                 processing && styles.actionDisabled,
@@ -77,27 +75,19 @@ export function ConfirmDialog({
             </Pressable>
           </ThemedView>
         </ThemedView>
-      </ThemedView>
+      </ModalBackdrop>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.page,
-    backgroundColor: 'rgba(14, 13, 11, 0.38)',
-  },
-  backdropTouch: {
-    ...StyleSheet.absoluteFillObject,
+  dialogWrap: {
+    width: '100%',
+    maxWidth: 420,
   },
   card: {
     width: '100%',
-    maxWidth: 420,
     borderRadius: radius.xl,
-    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     gap: spacing.md,
@@ -121,12 +111,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   cancelAction: {
-    borderWidth: 1,
     backgroundColor: 'transparent',
   },
   confirmAction: {
     minWidth: 124,
-    borderWidth: 1,
     backgroundColor: 'transparent',
   },
   actionDisabled: {

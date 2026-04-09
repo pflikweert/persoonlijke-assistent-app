@@ -7,7 +7,6 @@ import { Pressable, StyleSheet } from "react-native";
 
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
-import { ScreenHeader } from "@/components/layout/screen-header";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -318,50 +317,36 @@ export default function SettingsImportScreen() {
     <>
       <ScreenContainer
         scrollable
-        fixedHeader={
-          <ScreenHeader
-            title="Importeren"
-            titleType="screenTitle"
-            subtitle="Importeer een markdownbestand."
-            leftAction={
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Ga terug"
-                onPress={() => router.back()}
-                style={[
-                  styles.iconButton,
-                  { backgroundColor: palette.surfaceLow },
-                ]}
-              >
-                <MaterialIcons
-                  name="arrow-back"
-                  size={20}
-                  color={palette.primary}
-                />
-              </Pressable>
-            }
-            rightAction={
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Open menu"
-                onPress={() => setMenuVisible(true)}
-                style={[
-                  styles.iconButton,
-                  { backgroundColor: palette.surfaceLow },
-                ]}
-              >
-                <MaterialIcons name="menu" size={20} color={palette.primary} />
-              </Pressable>
-            }
-          />
-        }
         contentContainerStyle={styles.scrollContent}
       >
-        {!importEnabled ? (
-          <SurfaceSection
-            title="Importeren"
-            subtitle="Importeren is in deze omgeving uitgeschakeld."
+        <ThemedView style={styles.topBar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ga terug"
+            onPress={() => router.back()}
+            style={[styles.iconButton, { backgroundColor: palette.surface }]}
           >
+            <MaterialIcons name="arrow-back" size={20} color={palette.primary} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            onPress={() => setMenuVisible(true)}
+            style={[styles.iconButton, { backgroundColor: palette.surface }]}
+          >
+            <MaterialIcons name="menu" size={20} color={palette.primary} />
+          </Pressable>
+        </ThemedView>
+
+        <ThemedView style={styles.hero}>
+          <ThemedText type="screenTitle">Importeren</ThemedText>
+          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+            Importeer eerder geschreven bestanden.
+          </ThemedText>
+        </ThemedView>
+
+        {!importEnabled ? (
+          <SurfaceSection title="Importeren is in deze omgeving uitgeschakeld.">
             <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
               Deze flow blijft lokaal beschikbaar voor testen.
             </ThemedText>
@@ -370,7 +355,7 @@ export default function SettingsImportScreen() {
 
         {importEnabled && flowState === "idle" ? (
           <SurfaceSection
-            title="Importeren"
+            title="Kies een bestand"
             subtitle="Kies een Nexus ChatGPT-export of een app-archief."
           >
             <ThemedView style={styles.stateBody}>
@@ -406,7 +391,7 @@ export default function SettingsImportScreen() {
             subtitle="Controleer kort wat er wordt toegevoegd."
           >
             <ThemedView
-              style={[styles.previewCard, { borderColor: palette.separator }]}
+              style={styles.previewCard}
             >
               <ThemedView style={styles.previewGroup}>
                 <MetaText>Type</MetaText>
@@ -608,32 +593,39 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl,
   },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  hero: {
+    gap: spacing.sm,
+  },
   stateBody: {
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.xl,
   },
   iconWrap: {
-    width: 72,
-    height: 72,
+    width: 64,
+    height: 64,
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
   actions: {
     width: "100%",
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   previewCard: {
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   previewGroup: {
     gap: spacing.xs,
