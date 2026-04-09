@@ -43,7 +43,7 @@ export function TextEditorModal({
       onRequestClose={() => !processing && onCancel()}
     >
       <ThemedView style={styles.screen}>
-        <AppBackground />
+        <AppBackground tone="flat" />
         <ThemedView style={styles.topBar}>
           <HeaderTextAction
             label="Annuleer"

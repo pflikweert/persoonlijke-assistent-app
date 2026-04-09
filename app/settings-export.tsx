@@ -76,6 +76,7 @@ export default function SettingsExportScreen() {
     <>
       <ScreenContainer
         scrollable
+        backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
       >
         <ThemedView style={styles.topBar}>

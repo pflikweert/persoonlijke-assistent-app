@@ -212,6 +212,7 @@ export default function SettingsScreen() {
     <>
       <ScreenContainer
         scrollable
+        backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
       >
         <ThemedView style={styles.topBar}>

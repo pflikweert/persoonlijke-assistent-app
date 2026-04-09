@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { AppBackground } from '@/components/ui/app-background';
+import { AppBackground, type AppBackgroundTone } from '@/components/ui/app-background';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, radius, shadows, spacing, typography } from '@/theme';
 
@@ -55,6 +55,7 @@ export function ProcessingScreen({
   detailProgressCurrent,
   detailProgressTotal,
   detailProgressLabel,
+  backgroundTone = 'ambient',
 }: {
   visible: boolean;
   variant: ProcessingVariant;
@@ -64,6 +65,7 @@ export function ProcessingScreen({
   detailProgressCurrent?: number | null;
   detailProgressTotal?: number | null;
   detailProgressLabel?: string | null;
+  backgroundTone?: AppBackgroundTone;
 }) {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -240,7 +242,7 @@ export function ProcessingScreen({
 
   return (
     <Animated.View style={[styles.root, { opacity: fadeAnim }]}>
-      <AppBackground />
+      <AppBackground tone={backgroundTone} />
       <View style={[styles.overlay, { backgroundColor: overlayColor }]} />
 
       <View style={styles.contentWrap}>

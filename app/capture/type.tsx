@@ -175,6 +175,7 @@ export default function CaptureTypeScreen() {
 
   return (
     <ScreenContainer
+      backgroundTone="flat"
       fixedHeader={
         <ScreenHeader
           style={{
@@ -307,6 +308,7 @@ export default function CaptureTypeScreen() {
         <ProcessingScreen
           visible={submitting || retryingDerived}
           variant="text-entry"
+          backgroundTone="ambient"
           statusOverride={
             retryingDerived ? "Je dag wordt opnieuw bijgewerkt." : undefined
           }

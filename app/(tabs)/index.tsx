@@ -114,6 +114,7 @@ export default function TodayScreen() {
   return (
     <ScreenContainer
       scrollable
+      backgroundTone="subtle"
       fixedHeader={
         <ScreenHeader
           leftAction={

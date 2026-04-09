@@ -228,6 +228,16 @@ Not allowed:
 - Do not solve dark mode by adding extra mass, extra panels or heavier containers.
 - Shift tone and contrast; keep composition lightweight.
 
+### Background Modes
+- Warm dark page atmosphere is selective, not global.
+- Use three background modes:
+  - `ambient`: auth, splash/loaders, processing states, Today, hero-first and empty states.
+  - `subtle`: supporting overlays and screens that need light warmth without visible atmosphere.
+  - `flat`: capture screens and content-heavy/utility/detail screens.
+- Capture screens (`idle`, `voice`, `typing`) prioritize clarity; avoid visible ambient gradients.
+- Content-heavy screens (day detail, week/month detail, settings-like utility flows) stay flatter.
+- Header and footer remain calmer than page content and never carry decorative ambient gradients.
+
 ### Header + Hero
 - Top navigation is navigation only.
 - Page titles and supporting copy belong in a hero below the topnav by default.

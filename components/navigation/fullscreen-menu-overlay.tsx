@@ -136,7 +136,7 @@ export function FullscreenMenuOverlay({
       onRequestClose={onRequestClose}
     >
       <ThemedView style={styles.overlay}>
-        <AppBackground />
+        <AppBackground tone="subtle" />
         <ThemedView style={styles.topBar}>
           <ThemedText type="sectionTitle">Persoonlijke Assistent</ThemedText>
           <HeaderIconButton

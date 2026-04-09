@@ -35,7 +35,7 @@ export function ModalBackdrop({
         layout === "bottom" ? styles.rootBottom : styles.rootCenter,
       ]}
     >
-      <AppBackground />
+      <AppBackground tone="subtle" />
       <ThemedView style={[styles.scrim, webBlurStyle]} />
       {onPressOutside ? (
         <Pressable

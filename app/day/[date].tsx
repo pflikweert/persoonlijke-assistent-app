@@ -551,7 +551,7 @@ export default function DayDetailScreen() {
 
   return (
     <ThemedView style={styles.screen}>
-      <AppBackground />
+      <AppBackground tone="flat" />
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         leftAction={

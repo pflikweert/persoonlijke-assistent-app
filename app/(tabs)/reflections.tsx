@@ -538,6 +538,7 @@ export default function ReflectionsScreen() {
       />
       <ScreenContainer
         scrollable
+        backgroundTone="flat"
         fixedHeader={
           isProcessing ? null : (
             <ScreenHeader
@@ -813,7 +814,7 @@ export default function ReflectionsScreen() {
           onRequestClose={closeSelector}
         >
           <ThemedView style={styles.selectorScreen}>
-            <AppBackground />
+            <AppBackground tone="flat" />
             <ThemedView
               style={[
                 styles.selectorHeader,

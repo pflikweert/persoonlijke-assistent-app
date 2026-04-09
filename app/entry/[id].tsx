@@ -350,6 +350,7 @@ export default function EntryCompletionScreen() {
     <>
       <ScreenContainer
         scrollable
+        backgroundTone="flat"
         fixedHeader={
           isProcessing ? null : (
             <ScreenHeader

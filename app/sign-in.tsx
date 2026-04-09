@@ -66,7 +66,7 @@ export default function SignInScreen() {
 
   return (
     <View style={styles.background}>
-      <AppBackground />
+      <AppBackground tone="ambient" />
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View

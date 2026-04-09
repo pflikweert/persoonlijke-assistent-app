@@ -190,6 +190,7 @@ export default function DaysScreen() {
   return (
     <ScreenContainer
       scrollable
+      backgroundTone="flat"
       fixedHeader={
         <ScreenHeader
           title="Dagen"

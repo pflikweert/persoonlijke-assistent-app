@@ -278,6 +278,7 @@ export default function SettingsRegenerationScreen() {
     <>
       <ScreenContainer
         scrollable
+        backgroundTone="flat"
         fixedHeader={
           <ScreenHeader
             title="Data opnieuw verwerken"

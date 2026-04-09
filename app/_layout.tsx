@@ -139,7 +139,7 @@ a:focus-visible,
     return (
       <View style={[styles.rootShell, styles.webBackdrop]}>
         <View style={[styles.rootShell, styles.webAppShell]}>
-          <AppBackground />
+          <AppBackground tone="ambient" />
           <View style={styles.loadingContainer}>
             <ActivityIndicator color={palette.primary} />
           </View>
@@ -152,7 +152,7 @@ a:focus-visible,
     <ThemeProvider value={appTheme}>
       <View style={[styles.rootShell, styles.webBackdrop]}>
         <View style={[styles.rootShell, styles.webAppShell]}>
-          <AppBackground />
+          <AppBackground tone="flat" />
           <Stack>
             <Stack.Screen name="sign-in" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

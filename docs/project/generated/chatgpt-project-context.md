@@ -1,7 +1,7 @@
 # DO NOT EDIT — GENERATED FILE
 
-Build Timestamp (UTC): 2026-04-09T22:16:10.457Z
-Source Commit: d2c6ff7
+Build Timestamp (UTC): 2026-04-09T22:43:39.217Z
+Source Commit: 3f13344
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs.
 Upload standaard samen met docs/design/mvp-design-spec-1.2.1.md voor volledige MVP-designwaarheid.

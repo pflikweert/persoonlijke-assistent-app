@@ -35,6 +35,7 @@ export default function CaptureStartScreen() {
 
   return (
     <ScreenContainer
+      backgroundTone="flat"
       fixedHeader={
         <ScreenHeader
           style={{

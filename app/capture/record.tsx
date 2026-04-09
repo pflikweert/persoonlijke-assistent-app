@@ -651,6 +651,7 @@ export default function CaptureRecordScreen() {
 
   return (
     <ScreenContainer
+      backgroundTone="flat"
       fixedHeader={
         <ScreenHeader
           style={{
@@ -824,6 +825,7 @@ export default function CaptureRecordScreen() {
       <ProcessingScreen
         visible={Boolean(processingVariant) || retryingDerived}
         variant={processingVariant ?? "audio-entry"}
+        backgroundTone="ambient"
         statusOverride={
           retryingDerived ? "Je dag wordt opnieuw bijgewerkt." : undefined
         }

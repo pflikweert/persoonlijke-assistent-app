@@ -317,6 +317,7 @@ export default function SettingsImportScreen() {
     <>
       <ScreenContainer
         scrollable
+        backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
       >
         <ThemedView style={styles.topBar}>
