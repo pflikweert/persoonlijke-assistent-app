@@ -12,6 +12,7 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 - admin-only globale herverwerking via OpenAI Batch API (instellingen)
 
 ## Documentatie
+- Cline-instructies: `.clinerules`
 - Leidende projectdocs: `docs/project/README.md`
 - Generated uploadbundle voor ChatGPT Project: `docs/project/generated/chatgpt-project-context.md`
 - Build bundle: `npm run docs:bundle`

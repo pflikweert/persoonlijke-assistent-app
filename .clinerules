@@ -1,0 +1,59 @@
+# Cline Project Instructions
+
+## Bronnen van waarheid
+- Gebruik altijd eerst `AGENTS.md`.
+- Voor projectscope, richting en status:
+  - `docs/project/README.md`
+  - `docs/project/master-project.md`
+  - `docs/project/product-vision-mvp.md`
+  - `docs/project/current-status.md`
+  - `docs/project/open-points.md`
+  - `docs/project/content-processing-rules.md`
+  - `docs/project/copy-instructions.md`
+- Voor MVP-designbeslissingen:
+  - `docs/design/mvp-design-spec-1.2.1.md`
+  - `design_refs/1.2.1/ethos_ivory/DESIGN.md`
+  - `design_refs/1.2.1/*/code.html`
+  - `design_refs/1.2.1/*/screen.png`
+
+## Scope en werkwijze
+- Herbeslis geen bestaande keuzes uit de canonieke projectdocs.
+- Werk cheap-first: kleinste werkende wijziging eerst.
+- Houd elke taak klein en scherp afgebakend.
+- Geen feature creep buiten de vastgelegde scope.
+- Gebruik bestaande patronen in de repo vóór nieuwe patronen.
+- Gebruik minimale context per prompt.
+- Werk met 1 taak per prompt.
+- Gebruik plan mode alleen bij bugs, multi-file wijzigingen of migraties.
+
+## Skills
+- Gebruik `scope-guard` bij elke taak met scope-uitloop- of over-architectuurrisico.
+- Gebruik `expo-rn-screen-workflow` voor Expo/React Native schermen, routes en UI-structuur.
+- Gebruik `openai-server-flow-workflow` voor server-side OpenAI-verwerking.
+- Gebruik `supabase-schema-types-workflow` voor expliciete Supabase schemawijzigingen, migrations en types.
+- Gebruik `stitch-redesign-execution` voor scherm-redesigns op basis van `design_refs/...`.
+
+## Productregels
+- Capture-first blijft leidend.
+- De dagboeklaag blijft canoniek.
+- Geen brede chat/coach/agent-ervaring als default.
+- Directe assistentie rond capture blijft kort en ondersteunend.
+- Copy en microcopy volgen altijd `docs/project/copy-instructions.md`.
+- Contentverwerking volgt altijd `docs/project/content-processing-rules.md`.
+
+## Security
+- `OPENAI_API_KEY` blijft server-side.
+- Commit nooit secrets, tokens of lokale env-bestanden.
+- Bouw geen client-side OpenAI-calls met geheime sleutels.
+
+## Validatie
+- Na relevante wijzigingen run:
+  - `npm run lint`
+  - `npm run typecheck`
+- Wijzig je canonieke docs, run daarna:
+  - `npm run docs:bundle`
+  - `npm run docs:bundle:verify`
+- Wijzig je `supabase/functions/**`, meld dat `npm run supabase:functions:restart` nodig is.
+- Wijzig je `supabase/migrations/**`, meld dat lokale `db push`/`db reset` en eventuele type-regeneratie nodig zijn.
+- `npm run dev` is lokaal-only en mag geen remote deploy doen.
+
