@@ -1,17 +1,24 @@
 import {
   getRecordingPermissionsAsync,
+  type RecordingOptions,
   RecordingPresets,
   requestRecordingPermissionsAsync,
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Platform, StyleSheet, useColorScheme, View } from "react-native";
+import {
+  AppState,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CaptureIconButton } from "@/components/capture/capture-icon-button";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import {
   ProcessingScreen,
@@ -30,8 +37,17 @@ import {
 } from "@/components/ui/screen-primitives";
 import {
   classifyUnknownError,
+  checkCaptureProcessingSession,
+  clearCaptureProcessingSession,
+  createCaptureProcessingSession,
+  createClientProcessingId,
+  loadCaptureProcessingSession,
+  logCaptureProcessing,
   refreshDerivedAfterCaptureInBackground,
+  resumeCaptureEntryProcessing,
+  saveCaptureProcessingSession,
   submitAudioEntry,
+  updateCaptureProcessingSession,
 } from "@/services";
 import type {
   DerivedRefreshResult,
@@ -49,11 +65,24 @@ import {
   type CaptureRouteParams,
 } from "./_shared";
 
-const MAX_RECORDING_MS = 180_000;
+const CAPTURE_AUDIO_BIT_RATE = 64_000;
+const MAX_RECORDING_MS = 300_000;
 const MAX_RECORDING_SECONDS = Math.floor(MAX_RECORDING_MS / 1000);
-const MAX_AUDIO_BYTES = 7 * 1024 * 1024;
+const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 const MAX_AUDIO_BASE64_CHARS = Math.ceil((MAX_AUDIO_BYTES * 4) / 3);
+const RECOVERY_PENDING_GRACE_MS = 30_000;
+const RECOVERY_RECHECK_MS = 3_000;
 const NEAR_END_TONE = "#D4A41D";
+const AUDIO_CAPTURE_RECORDING_OPTIONS = {
+  ...RecordingPresets.HIGH_QUALITY,
+  numberOfChannels: 1,
+  bitRate: CAPTURE_AUDIO_BIT_RATE,
+  isMeteringEnabled: true,
+  web: {
+    ...RecordingPresets.HIGH_QUALITY.web,
+    bitsPerSecond: CAPTURE_AUDIO_BIT_RATE,
+  },
+} satisfies RecordingOptions;
 const WEB_AUDIO_MOTION = {
   baseNoiseFloorRms: 0.02,
   noiseTrackingMarginRms: 0.018,
@@ -114,10 +143,7 @@ export default function CaptureRecordScreen() {
   const { date } = useLocalSearchParams<CaptureRouteParams>();
   const journalDate = resolveCaptureJournalDate(date);
   const returnParams = buildCaptureParams(journalDate);
-  const recorder = useAudioRecorder({
-    ...RecordingPresets.HIGH_QUALITY,
-    isMeteringEnabled: true,
-  });
+  const recorder = useAudioRecorder(AUDIO_CAPTURE_RECORDING_OPTIONS);
   const recorderState = useAudioRecorderState(recorder, 250);
 
   const [audioUri, setAudioUri] = useState<string | null>(null);
@@ -137,20 +163,28 @@ export default function CaptureRecordScreen() {
   } | null>(null);
   const [processingVariant, setProcessingVariant] =
     useState<ProcessingVariant | null>(null);
+  const [recoveryStatus, setRecoveryStatus] = useState<string | null>(null);
   const [webLiveLevel, setWebLiveLevel] = useState(0);
   const [webAnalyserReady, setWebAnalyserReady] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [isVoiceSessionActive, setIsVoiceSessionActive] = useState(false);
   const [pausedVisualLevel, setPausedVisualLevel] = useState(0);
+  const [pauseResumeIssue, setPauseResumeIssue] = useState<string | null>(null);
+  const [pauseResumeDisabled, setPauseResumeDisabled] = useState(false);
 
   const hasStartedRef = useRef(false);
   const autoStopTriggeredRef = useRef(false);
+  const recoveryInFlightRef = useRef(false);
+  const recoveryRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const isRecording = recorderState.isRecording;
   const hasActiveRecordingSession =
     isRecording || isPaused || isVoiceSessionActive;
   const hasAudioDraft = Boolean(audioUri);
-  const isBusy = submitting || recordingActionBusy || retryingDerived;
+  const isBusy =
+    submitting || recordingActionBusy || retryingDerived || Boolean(recoveryStatus);
   const derivedNeedsAttention = Boolean(
     savedEntry && derivedResult && derivedResult.status !== "success",
   );
@@ -191,6 +225,8 @@ export default function CaptureRecordScreen() {
       setAudioUri(uri);
       setIsPaused(false);
       setIsVoiceSessionActive(false);
+      setPausedVisualLevel(0);
+      setPauseResumeIssue(null);
       return uri;
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -234,6 +270,9 @@ export default function CaptureRecordScreen() {
       autoStopTriggeredRef.current = false;
       setAudioUri(null);
       setIsPaused(false);
+      setPausedVisualLevel(0);
+      setPauseResumeIssue(null);
+      setPauseResumeDisabled(false);
       recorder.record();
       setIsVoiceSessionActive(true);
     } catch (nextError) {
@@ -250,11 +289,170 @@ export default function CaptureRecordScreen() {
     }
   }, [recorder]);
 
+  const goToEntry = useCallback((entryId: string, nextJournalDate: string) => {
+    router.replace({
+      pathname: "/entry/[id]",
+      params: {
+        id: entryId,
+        source: "capture",
+        date: nextJournalDate,
+      },
+    });
+  }, []);
+
+  const refreshDerivedQuietly = useCallback(
+    (nextJournalDate: string, clientProcessingId: string) => {
+      void refreshDerivedAfterCaptureInBackground(nextJournalDate)
+        .then((result) => {
+          logCaptureProcessing("completion", {
+            clientProcessingId,
+            journalDate: nextJournalDate,
+            derivedStatus: result.status,
+          });
+        })
+        .catch((nextError) => {
+          logCaptureProcessing("terminal_failure", {
+            clientProcessingId,
+            journalDate: nextJournalDate,
+            reason:
+              nextError instanceof Error
+                ? nextError.message
+                : "Derived refresh failed.",
+          });
+        });
+    },
+    [],
+  );
+
+  const recoverCaptureProcessing = useCallback(
+    async (reason: string) => {
+      if (
+        submitting ||
+        retryingDerived ||
+        recordingActionBusy ||
+        recoveryInFlightRef.current
+      ) {
+        return;
+      }
+
+      const session = loadCaptureProcessingSession();
+      if (!session || session.sourceType !== "audio") {
+        return;
+      }
+
+      recoveryInFlightRef.current = true;
+      setError(null);
+      setRecoveryStatus("We halen je moment terug.");
+      setProcessingVariant("audio-entry");
+
+      try {
+        const check = await checkCaptureProcessingSession(session);
+
+        if (check.status === "completed") {
+          updateCaptureProcessingSession({
+            phase: "server_acknowledged",
+            rawEntryId: check.rawEntryId,
+            normalizedEntryId: check.normalizedEntryId,
+          });
+          logCaptureProcessing("recovery_completed", {
+            reason,
+            clientProcessingId: session.clientProcessingId,
+            rawEntryId: check.rawEntryId,
+            normalizedEntryId: check.normalizedEntryId,
+          });
+          setRecoveryStatus("Je moment is opgeslagen.");
+          clearCaptureProcessingSession(session.clientProcessingId);
+          goToEntry(check.normalizedEntryId, check.journalDate);
+          refreshDerivedQuietly(check.journalDate, session.clientProcessingId);
+          return;
+        }
+
+        if (check.status === "raw-only") {
+          const nextSession =
+            updateCaptureProcessingSession({
+              phase: "submitting",
+              rawEntryId: check.rawEntryId,
+              retryCount: session.retryCount + 1,
+            }) ?? session;
+          logCaptureProcessing("retry", {
+            reason,
+            clientProcessingId: session.clientProcessingId,
+            rawEntryId: check.rawEntryId,
+          });
+          const result = await resumeCaptureEntryProcessing({
+            clientProcessingId: nextSession.clientProcessingId,
+            sourceType: nextSession.sourceType,
+            capturedAt: nextSession.capturedAt,
+            journalDate: nextSession.journalDate,
+            timezoneOffsetMinutes: nextSession.timezoneOffsetMinutes,
+            deferDerived: true,
+          });
+          updateCaptureProcessingSession({
+            phase: "server_acknowledged",
+            rawEntryId: result.rawEntryId,
+            normalizedEntryId: result.normalizedEntryId,
+          });
+          setRecoveryStatus("Je moment is opgeslagen.");
+          clearCaptureProcessingSession(session.clientProcessingId);
+          goToEntry(result.normalizedEntryId, result.journalDate);
+          refreshDerivedQuietly(result.journalDate, session.clientProcessingId);
+          return;
+        }
+
+        const updatedAtMs = new Date(session.updatedAt).getTime();
+        if (
+          Number.isFinite(updatedAtMs) &&
+          Date.now() - updatedAtMs < RECOVERY_PENDING_GRACE_MS
+        ) {
+          if (recoveryRetryTimeoutRef.current) {
+            clearTimeout(recoveryRetryTimeoutRef.current);
+          }
+          recoveryRetryTimeoutRef.current = setTimeout(() => {
+            void recoverCaptureProcessing("pending");
+          }, RECOVERY_RECHECK_MS);
+          return;
+        }
+
+        updateCaptureProcessingSession({
+          phase: "failed",
+          failureReason: "not_found",
+        });
+        clearCaptureProcessingSession(session.clientProcessingId);
+        setRecoveryStatus(null);
+        setProcessingVariant(null);
+        setError({
+          message: "Deze opname is niet veilig verstuurd. Neem opnieuw op.",
+          retryable: true,
+          requestId: null,
+        });
+      } catch (nextError) {
+        const parsed = classifyUnknownError(nextError);
+        setRecoveryStatus(null);
+        setProcessingVariant(null);
+        setError({
+          message: parsed.message,
+          retryable: parsed.retryable,
+          requestId: parsed.requestId,
+        });
+      } finally {
+        recoveryInFlightRef.current = false;
+      }
+    },
+    [
+      goToEntry,
+      recordingActionBusy,
+      refreshDerivedQuietly,
+      retryingDerived,
+      submitting,
+    ],
+  );
+
   const submitCapturedAudio = useCallback(
     async (uri: string) => {
       setSubmitting(true);
       setError(null);
       setMicPermissionDenied(false);
+      setRecoveryStatus(null);
       setProcessingVariant("audio-entry");
 
       try {
@@ -262,6 +460,23 @@ export default function CaptureRecordScreen() {
           new Date(),
           journalDate ?? undefined,
         );
+        const clientProcessingId = createClientProcessingId("audio");
+        const session = saveCaptureProcessingSession({
+          ...createCaptureProcessingSession({
+            clientProcessingId,
+            sourceType: "audio",
+            capturedAt: captureContext.capturedAt,
+            journalDate: captureContext.journalDate,
+            timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
+          }),
+          phase: "submitting",
+        });
+        logCaptureProcessing("submit_start", {
+          clientProcessingId: session.clientProcessingId,
+          sourceType: session.sourceType,
+          journalDate: session.journalDate,
+        });
+
         const audioBase64 = await audioUriToBase64(uri);
 
         if (audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
@@ -275,29 +490,30 @@ export default function CaptureRecordScreen() {
           journalDate: captureContext.journalDate,
           timezoneOffsetMinutes: captureContext.timezoneOffsetMinutes,
           deferDerived: true,
+          clientProcessingId,
         });
 
+        updateCaptureProcessingSession({
+          phase: "server_acknowledged",
+          rawEntryId: result.rawEntryId,
+          normalizedEntryId: result.normalizedEntryId,
+        });
+        logCaptureProcessing("server_ack", {
+          clientProcessingId,
+          rawEntryId: result.rawEntryId,
+          normalizedEntryId: result.normalizedEntryId,
+        });
         setAudioUri(null);
         setSavedEntry(result);
-        const refreshResult = await refreshDerivedAfterCaptureInBackground(
-          result.journalDate,
-        );
-
-        if (refreshResult.status === "success") {
-          router.replace({
-            pathname: "/entry/[id]",
-            params: {
-              id: result.normalizedEntryId,
-              source: "capture",
-              date: result.journalDate,
-            },
-          });
-          return;
-        }
-
-        setDerivedResult(refreshResult);
+        clearCaptureProcessingSession(clientProcessingId);
+        goToEntry(result.normalizedEntryId, result.journalDate);
+        refreshDerivedQuietly(result.journalDate, clientProcessingId);
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
+        updateCaptureProcessingSession({
+          phase: "failed",
+          failureReason: parsed.code ?? parsed.message,
+        });
         setError({
           message: parsed.message,
           retryable: parsed.retryable,
@@ -308,11 +524,67 @@ export default function CaptureRecordScreen() {
         setProcessingVariant(null);
       }
     },
-    [journalDate],
+    [goToEntry, journalDate, refreshDerivedQuietly],
   );
 
   useEffect(() => {
+    void recoverCaptureProcessing("mount");
+
+    return () => {
+      if (recoveryRetryTimeoutRef.current) {
+        clearTimeout(recoveryRetryTimeoutRef.current);
+      }
+    };
+  }, [recoverCaptureProcessing]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void recoverCaptureProcessing("focus");
+    }, [recoverCaptureProcessing]),
+  );
+
+  useEffect(() => {
+    const appStateSubscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        void recoverCaptureProcessing("appstate");
+      }
+    });
+
+    if (Platform.OS !== "web") {
+      return () => appStateSubscription.remove();
+    }
+
+    const handleFocus = () => {
+      void recoverCaptureProcessing("window_focus");
+    };
+    const handleVisibilityChange = () => {
+      if (globalThis.document?.visibilityState === "visible") {
+        void recoverCaptureProcessing("visibilitychange");
+      }
+    };
+
+    globalThis.window?.addEventListener("focus", handleFocus);
+    globalThis.document?.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange,
+    );
+
+    return () => {
+      appStateSubscription.remove();
+      globalThis.window?.removeEventListener("focus", handleFocus);
+      globalThis.document?.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange,
+      );
+    };
+  }, [recoverCaptureProcessing]);
+
+  useEffect(() => {
     if (hasStartedRef.current) {
+      return;
+    }
+
+    if (loadCaptureProcessingSession()?.sourceType === "audio") {
       return;
     }
 
@@ -527,7 +799,7 @@ export default function CaptureRecordScreen() {
       return;
     }
 
-    if (isRecording) {
+    if (hasActiveRecordingSession) {
       const uri = await stopRecorderAndStoreUri();
       if (!uri) {
         return;
@@ -576,11 +848,12 @@ export default function CaptureRecordScreen() {
   }
 
   async function handleTogglePauseResume() {
-    if (!hasActiveRecordingSession || isBusy) {
+    if (!hasActiveRecordingSession || isBusy || pauseResumeDisabled) {
       return;
     }
 
     setError(null);
+    setPauseResumeIssue(null);
 
     try {
       if (isPaused) {
@@ -595,7 +868,12 @@ export default function CaptureRecordScreen() {
       setIsPaused(true);
       setIsVoiceSessionActive(true);
     } catch {
-      // Keep this silent so the recording view stays calm.
+      setPauseResumeDisabled(true);
+      setPauseResumeIssue(
+        isPaused
+          ? "Verdergaan lukt hier niet. Rond de opname af of annuleer."
+          : "Pauzeren lukt hier niet. Je kunt de opname afronden of annuleren.",
+      );
     }
   }
 
@@ -636,6 +914,10 @@ export default function CaptureRecordScreen() {
       setAudioUri(null);
       setIsPaused(false);
       setIsVoiceSessionActive(false);
+      setPausedVisualLevel(0);
+      setPauseResumeIssue(null);
+      setPauseResumeDisabled(false);
+      autoStopTriggeredRef.current = false;
       setError(null);
       goBackToStart();
     }
@@ -680,6 +962,12 @@ export default function CaptureRecordScreen() {
                   ? "Toegang controleren..."
                   : "Vraag microfoontoegang opnieuw"
               }
+              onPress={() => void startRecording()}
+              disabled={isBusy}
+            />
+          ) : error.retryable && !hasActiveRecordingSession && !hasAudioDraft ? (
+            <SecondaryButton
+              label="Opnieuw opnemen"
               onPress={() => void startRecording()}
               disabled={isBusy}
             />
@@ -755,7 +1043,7 @@ export default function CaptureRecordScreen() {
             darkColor={palette.muted}
             style={styles.voiceLead}
           >
-            Leg je moment vast.
+            {isPaused ? "Opname gepauzeerd." : "Leg je moment vast."}
           </ThemedText>
           <ThemedText
             type="sectionTitle"
@@ -768,29 +1056,68 @@ export default function CaptureRecordScreen() {
           </ThemedText>
         </View>
 
-        <View style={styles.controlsRow}>
-          <CaptureIconButton
-            icon={isPaused ? "play-arrow" : "pause"}
-            size="control"
-            tone="surface"
-            accessibilityRole="button"
-            accessibilityLabel={isPaused ? "Hervat opname" : "Pauzeer opname"}
-            onPress={() => void handleTogglePauseResume()}
-            disabled={isBusy || !hasActiveRecordingSession}
-            style={{ backgroundColor: palette.surfaceHigh }}
+        {pauseResumeIssue ? (
+          <View style={styles.pauseIssue}>
+            <ThemedText
+              type="caption"
+              lightColor={palette.mutedSoft}
+              darkColor={palette.mutedSoft}
+              style={styles.pauseIssueText}
+            >
+              {pauseResumeIssue}
+            </ThemedText>
+          </View>
+        ) : null}
+
+        <View style={styles.controlsStack}>
+          <PrimaryButton
+            label={isPaused ? "Verder" : "Klaar"}
+            className="w-full"
+            onPress={() =>
+              void (isPaused ? handleTogglePauseResume() : handleStop())
+            }
+            disabled={
+              isPaused
+                ? isBusy || !hasActiveRecordingSession || pauseResumeDisabled
+                : isBusy ||
+                  derivedNeedsAttention ||
+                  (!hasActiveRecordingSession && !hasAudioDraft)
+            }
           />
 
-          <View style={styles.stopButtonWrap}>
-            <PrimaryButton
-              label="Stop"
-              onPress={() => void handleStop()}
-              disabled={
-                isBusy ||
-                derivedNeedsAttention ||
-                (!hasActiveRecordingSession && !hasAudioDraft)
-              }
-            />
-          </View>
+          <SecondaryButton
+            label={isPaused ? "Klaar" : "Pauze"}
+            className="w-full"
+            onPress={() =>
+              void (isPaused ? handleStop() : handleTogglePauseResume())
+            }
+            disabled={
+              isPaused
+                ? isBusy ||
+                  derivedNeedsAttention ||
+                  (!hasActiveRecordingSession && !hasAudioDraft)
+                : isBusy ||
+                  !hasActiveRecordingSession ||
+                  pauseResumeDisabled
+            }
+          />
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Annuleer opname"
+            onPress={handleBack}
+            disabled={isBusy}
+            style={[styles.cancelAction, isBusy ? styles.cancelDisabled : null]}
+          >
+            <ThemedText
+              type="caption"
+              lightColor={palette.destructiveSoftText}
+              darkColor={palette.destructiveSoftText}
+              style={styles.cancelActionLabel}
+            >
+              Annuleer
+            </ThemedText>
+          </Pressable>
         </View>
       </View>
 
@@ -805,11 +1132,12 @@ export default function CaptureRecordScreen() {
         onConfirm={() => void handleConfirmDiscard()}
       />
       <ProcessingScreen
-        visible={Boolean(processingVariant) || retryingDerived}
+        visible={Boolean(processingVariant) || retryingDerived || Boolean(recoveryStatus)}
         variant={processingVariant ?? "audio-entry"}
         backgroundTone="ambient"
         statusOverride={
-          retryingDerived ? "Je dag wordt opnieuw bijgewerkt." : undefined
+          recoveryStatus ??
+          (retryingDerived ? "Je dag wordt opnieuw bijgewerkt." : undefined)
         }
       />
     </ScreenContainer>
@@ -870,14 +1198,31 @@ const styles = StyleSheet.create({
     lineHeight: typography.roles.sectionTitle.lineHeight,
     textAlign: "center",
   },
-  controlsRow: {
+  controlsStack: {
     width: "100%",
     marginTop: spacing.xl,
-    flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
   },
-  stopButtonWrap: {
-    flex: 1,
+  pauseIssue: {
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  pauseIssueText: {
+    textAlign: "center",
+  },
+  cancelAction: {
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  cancelDisabled: {
+    opacity: 0.5,
+  },
+  cancelActionLabel: {
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
   },
 });
