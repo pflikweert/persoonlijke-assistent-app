@@ -262,6 +262,7 @@ export type Database = {
       entries_raw: {
         Row: {
           captured_at: string
+          client_processing_id: string | null
           created_at: string
           id: string
           import_external_message_id: string | null
@@ -276,6 +277,7 @@ export type Database = {
         }
         Insert: {
           captured_at?: string
+          client_processing_id?: string | null
           created_at?: string
           id?: string
           import_external_message_id?: string | null
@@ -290,6 +292,7 @@ export type Database = {
         }
         Update: {
           captured_at?: string
+          client_processing_id?: string | null
           created_at?: string
           id?: string
           import_external_message_id?: string | null
