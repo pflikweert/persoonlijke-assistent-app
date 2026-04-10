@@ -193,6 +193,7 @@ Allowed:
 
 Not allowed:
 - flashy animations
+- Interactieve elementen (zoals buttons en inputs) mogen nooit meebewegen met decoratieve motion
 
 ---
 
@@ -248,6 +249,7 @@ Not allowed:
 
 ### Surfaces + Auth
 - Destructive treatments may use accent, but stay calm and no heavier than needed.
+- Destructieve bevestigingen gebruiken altijd dezelfde modal/sheet component
 - Shared primitives must not introduce default borders, fills or heavy surfaces.
 - Auth atmosphere may come from background layering and spacing.
 - Avoid heavy enclosing auth cards unless a design ref explicitly requires them.

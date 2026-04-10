@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Platform, Pressable, StyleSheet, type ViewStyle } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
-import { AppBackground } from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { spacing } from "@/theme";
 
@@ -37,7 +36,6 @@ export function ModalBackdrop({
         layout === "bottom" ? styles.rootBottom : styles.rootCenter,
       ]}
     >
-      <AppBackground tone="flat" />
       <ThemedView
         style={[
           styles.scrim,

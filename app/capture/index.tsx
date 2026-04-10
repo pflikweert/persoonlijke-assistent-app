@@ -13,7 +13,7 @@ import {
   buildCaptureParams,
   resolveCaptureJournalDate,
   type CaptureRouteParams,
-} from "./_shared";
+} from "@/src/lib/capture-shared";
 
 export default function CaptureStartScreen() {
   const scheme = useColorScheme() ?? "light";

@@ -193,6 +193,14 @@ Reflecties zijn ondersteunend, niet leidend.
 ✖ Begin hier  
 ✖ Ga verder
 
+### Te vaag (CTA’s)
+
+✖ Verder  
+✖ Ga door  
+✖ Start  
+
+✔ Gebruik altijd een concrete actie die beschrijft wat er gebeurt
+
 ---
 
 ## Check voor elke tekst

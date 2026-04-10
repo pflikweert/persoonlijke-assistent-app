@@ -128,3 +128,13 @@ Primair geraakt door:
 - nieuwe AI-flowarchitectuur
 - stijlclone-engine
 - extra tabellen of migrations voor deze regels
+
+## Capture Audio — State Guardrails
+
+- Opname is pas actief wanneer de recorder technisch gestart is
+- Init/preparing state moet zichtbaar zijn vóór actieve opname
+- Annuleren-modal pauzeert actieve opname direct
+- Sluiten van modal herstelt de pre-modal state correct
+- Annuleren (bevestigd) reset alle capture state volledig naar idle
+- Annuleren start nooit verwerking en slaat niets op
+- State-transities zijn expliciet, nooit impliciet

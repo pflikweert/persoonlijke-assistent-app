@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
+import { DestructiveConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import {
   ProcessingScreen,
   type ProcessingVariant,
@@ -63,7 +63,7 @@ import {
   mimeTypeFromUri,
   resolveCaptureJournalDate,
   type CaptureRouteParams,
-} from "./_shared";
+} from "@/src/lib/capture-shared";
 
 const CAPTURE_AUDIO_BIT_RATE = 64_000;
 const MAX_RECORDING_MS = 300_000;
@@ -73,6 +73,7 @@ const MAX_AUDIO_BASE64_CHARS = Math.ceil((MAX_AUDIO_BYTES * 4) / 3);
 const RECOVERY_PENDING_GRACE_MS = 30_000;
 const RECOVERY_RECHECK_MS = 3_000;
 const NEAR_END_TONE = "#D4A41D";
+const WAVEFORM_MAX_BAR_HEIGHT = 88;
 const AUDIO_CAPTURE_RECORDING_OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
   numberOfChannels: 1,
@@ -123,7 +124,10 @@ function getWaveformHeights(durationMillis: number, level: number): number[] {
 
   return base.map((height, index) => {
     const pulse = ((seed + index * 2) % 7) - 3;
-    return Math.max(12, height + pulse * 3 + lift);
+    return Math.min(
+      WAVEFORM_MAX_BAR_HEIGHT,
+      Math.max(12, height + pulse * 3 + lift),
+    );
   });
 }
 
@@ -132,8 +136,17 @@ function getFallbackWaveformHeights(durationMillis: number): number[] {
   const base = [14, 22, 32, 46, 62, 76, 84, 76, 62, 46, 32, 22, 14];
   return base.map((height, index) => {
     const pulse = ((seed + index * 3) % 7) - 3;
-    return Math.max(12, height + pulse * 2);
+    return Math.min(
+      WAVEFORM_MAX_BAR_HEIGHT,
+      Math.max(12, height + pulse * 2),
+    );
   });
+}
+
+function revokeAudioObjectUrl(uri: string | null | undefined) {
+  if (Platform.OS === "web" && uri?.startsWith("blob:")) {
+    URL.revokeObjectURL(uri);
+  }
 }
 
 export default function CaptureRecordScreen() {
@@ -150,6 +163,7 @@ export default function CaptureRecordScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [retryingDerived, setRetryingDerived] = useState(false);
   const [recordingActionBusy, setRecordingActionBusy] = useState(false);
+  const [isPreparingRecording, setIsPreparingRecording] = useState(false);
   const [savedEntry, setSavedEntry] = useState<ProcessEntryResult | null>(null);
   const [derivedResult, setDerivedResult] = useState<DerivedRefreshResult | null>(
     null,
@@ -169,10 +183,13 @@ export default function CaptureRecordScreen() {
   const [isPaused, setIsPaused] = useState(false);
   const [isVoiceSessionActive, setIsVoiceSessionActive] = useState(false);
   const [pausedVisualLevel, setPausedVisualLevel] = useState(0);
-  const [pauseResumeIssue, setPauseResumeIssue] = useState<string | null>(null);
-  const [pauseResumeDisabled, setPauseResumeDisabled] = useState(false);
+  const [pausedDurationMillis, setPausedDurationMillis] = useState(0);
 
   const hasStartedRef = useRef(false);
+  const startAttemptIdRef = useRef(0);
+  const discardOriginRef = useRef<
+    "recording" | "paused" | "preparing" | "draft" | null
+  >(null);
   const autoStopTriggeredRef = useRef(false);
   const recoveryInFlightRef = useRef(false);
   const recoveryRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -183,12 +200,17 @@ export default function CaptureRecordScreen() {
   const hasActiveRecordingSession =
     isRecording || isPaused || isVoiceSessionActive;
   const hasAudioDraft = Boolean(audioUri);
+  const isProcessingBusy =
+    submitting || retryingDerived || Boolean(recoveryStatus);
   const isBusy =
-    submitting || recordingActionBusy || retryingDerived || Boolean(recoveryStatus);
+    isProcessingBusy || (recordingActionBusy && !isPreparingRecording);
   const derivedNeedsAttention = Boolean(
     savedEntry && derivedResult && derivedResult.status !== "success",
   );
   const recordingSeconds = Math.floor(recorderState.durationMillis / 1000);
+  const displayRecordingSeconds = isPaused
+    ? Math.floor(pausedDurationMillis / 1000)
+    : recordingSeconds;
   const remainingRecordingSeconds = Math.max(
     0,
     MAX_RECORDING_SECONDS - recordingSeconds,
@@ -208,6 +230,17 @@ export default function CaptureRecordScreen() {
     Platform.OS === "web" && isRecording && !webAnalyserReady;
   const voiceMotionScale = 1 + liveAudioLevel * 0.07;
   const voiceMotionOpacity = isRecording ? 0.76 + liveAudioLevel * 0.24 : 0.45;
+  const canTogglePauseResume = isPaused || isRecording;
+
+  const cancelPreparingRecording = useCallback(() => {
+    startAttemptIdRef.current += 1;
+    setIsPreparingRecording(false);
+    setRecordingActionBusy(false);
+    setIsVoiceSessionActive(false);
+    void recorder.stop().catch(() => {
+      // Best effort: preparing may not have initialized the recorder yet.
+    });
+  }, [recorder]);
 
   const stopRecorderAndStoreUri = useCallback(async (): Promise<
     string | null
@@ -223,10 +256,11 @@ export default function CaptureRecordScreen() {
       }
 
       setAudioUri(uri);
+      setIsPreparingRecording(false);
       setIsPaused(false);
       setIsVoiceSessionActive(false);
       setPausedVisualLevel(0);
-      setPauseResumeIssue(null);
+      setPausedDurationMillis(0);
       return uri;
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -242,8 +276,11 @@ export default function CaptureRecordScreen() {
   }, [recorder, recorderState.url]);
 
   const startRecording = useCallback(async () => {
+    const attemptId = startAttemptIdRef.current + 1;
+    startAttemptIdRef.current = attemptId;
     setError(null);
     setMicPermissionDenied(false);
+    setIsPreparingRecording(true);
     setRecordingActionBusy(true);
 
     try {
@@ -256,6 +293,7 @@ export default function CaptureRecordScreen() {
       }
 
       if (!granted) {
+        setIsPreparingRecording(false);
         setIsVoiceSessionActive(false);
         setMicPermissionDenied(true);
         setError({
@@ -266,17 +304,29 @@ export default function CaptureRecordScreen() {
         return;
       }
 
+      if (startAttemptIdRef.current !== attemptId) {
+        return;
+      }
+
       await recorder.prepareToRecordAsync();
+
+      if (startAttemptIdRef.current !== attemptId) {
+        await recorder.stop().catch(() => {
+          // Best effort: cancel can race with recorder preparation.
+        });
+        return;
+      }
+
       autoStopTriggeredRef.current = false;
       setAudioUri(null);
       setIsPaused(false);
       setPausedVisualLevel(0);
-      setPauseResumeIssue(null);
-      setPauseResumeDisabled(false);
+      setPausedDurationMillis(0);
       recorder.record();
       setIsVoiceSessionActive(true);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
+      setIsPreparingRecording(false);
       setIsVoiceSessionActive(false);
       setMicPermissionDenied(false);
       setError({
@@ -285,9 +335,46 @@ export default function CaptureRecordScreen() {
         requestId: parsed.requestId,
       });
     } finally {
-      setRecordingActionBusy(false);
+      if (startAttemptIdRef.current !== attemptId || !recorderState.isRecording) {
+        setRecordingActionBusy(false);
+      }
     }
-  }, [recorder]);
+  }, [recorder, recorderState.isRecording]);
+
+  const resetCaptureAudioState = useCallback(async () => {
+    const existingAudioUri = audioUri;
+    let stoppedAudioUri: string | null = null;
+
+    try {
+      if (hasActiveRecordingSession) {
+        await recorder.stop();
+        stoppedAudioUri = recorder.uri ?? recorderState.url;
+      }
+    } catch {
+      // Best effort: cancel should leave the UI clean even if the recorder is already stopped.
+    }
+
+    revokeAudioObjectUrl(existingAudioUri);
+    revokeAudioObjectUrl(stoppedAudioUri);
+
+    setAudioUri(null);
+    setSavedEntry(null);
+    setDerivedResult(null);
+    startAttemptIdRef.current += 1;
+    discardOriginRef.current = null;
+    setIsPreparingRecording(false);
+    setIsPaused(false);
+    setIsVoiceSessionActive(false);
+    setPausedVisualLevel(0);
+    setPausedDurationMillis(0);
+    setWebLiveLevel(0);
+    setWebAnalyserReady(true);
+    setMicPermissionDenied(false);
+    setError(null);
+    setProcessingVariant(null);
+    setRecoveryStatus(null);
+    autoStopTriggeredRef.current = false;
+  }, [audioUri, hasActiveRecordingSession, recorder, recorderState.url]);
 
   const goToEntry = useCallback((entryId: string, nextJournalDate: string) => {
     router.replace({
@@ -347,6 +434,13 @@ export default function CaptureRecordScreen() {
 
       try {
         const check = await checkCaptureProcessingSession(session);
+
+        if (check.status === "recovery-unavailable") {
+          clearCaptureProcessingSession(session.clientProcessingId);
+          setRecoveryStatus(null);
+          setProcessingVariant(null);
+          return;
+        }
 
         if (check.status === "completed") {
           updateCaptureProcessingSession({
@@ -594,6 +688,8 @@ export default function CaptureRecordScreen() {
 
   useEffect(() => {
     if (isRecording) {
+      setIsPreparingRecording(false);
+      setRecordingActionBusy(false);
       setIsPaused(false);
       setIsVoiceSessionActive(true);
     }
@@ -751,13 +847,11 @@ export default function CaptureRecordScreen() {
 
   useEffect(() => {
     return () => {
-      if (recorderState.isRecording) {
-        void recorder.stop().catch(() => {
-          // Ignore teardown race conditions when recorder is not fully initialized.
-        });
-      }
+      void recorder.stop().catch(() => {
+        // Ignore teardown race conditions when recorder is not fully initialized.
+      });
     };
-  }, [recorder, recorderState.isRecording]);
+  }, [recorder]);
 
   const handleAutoFinishAtLimit = useCallback(async () => {
     if (!isRecording) {
@@ -848,32 +942,102 @@ export default function CaptureRecordScreen() {
   }
 
   async function handleTogglePauseResume() {
-    if (!hasActiveRecordingSession || isBusy || pauseResumeDisabled) {
+    if (isBusy || !canTogglePauseResume) {
       return;
     }
 
     setError(null);
-    setPauseResumeIssue(null);
 
     try {
       if (isPaused) {
         recorder.record();
         setIsPaused(false);
         setIsVoiceSessionActive(true);
+        setPausedVisualLevel(0);
         return;
       }
 
       setPausedVisualLevel(liveAudioLevel);
+      setPausedDurationMillis(recorderState.durationMillis);
       recorder.pause();
       setIsPaused(true);
       setIsVoiceSessionActive(true);
-    } catch {
-      setPauseResumeDisabled(true);
-      setPauseResumeIssue(
-        isPaused
-          ? "Verdergaan lukt hier niet. Rond de opname af of annuleer."
-          : "Pauzeren lukt hier niet. Je kunt de opname afronden of annuleren.",
-      );
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError({
+        message: parsed.message,
+        retryable: parsed.retryable,
+        requestId: parsed.requestId,
+      });
+    }
+  }
+
+  async function openDiscardSheet() {
+    if (isProcessingBusy || (recordingActionBusy && !isPreparingRecording)) {
+      return;
+    }
+
+    setError(null);
+
+    if (isRecording) {
+      discardOriginRef.current = "recording";
+      setPausedVisualLevel(liveAudioLevel);
+      setPausedDurationMillis(recorderState.durationMillis);
+
+      try {
+        recorder.pause();
+        setIsPaused(true);
+        setIsVoiceSessionActive(true);
+      } catch (nextError) {
+        const parsed = classifyUnknownError(nextError);
+        setError({
+          message: parsed.message,
+          retryable: parsed.retryable,
+          requestId: parsed.requestId,
+        });
+        discardOriginRef.current = null;
+        return;
+      }
+    } else if (isPaused) {
+      discardOriginRef.current = "paused";
+    } else if (isPreparingRecording) {
+      discardOriginRef.current = "preparing";
+      cancelPreparingRecording();
+    } else {
+      discardOriginRef.current = "draft";
+    }
+
+    setDiscardVisible(true);
+  }
+
+  async function restoreAfterDiscardCancel() {
+    if (recordingActionBusy) {
+      return;
+    }
+
+    const origin = discardOriginRef.current;
+    discardOriginRef.current = null;
+    setDiscardVisible(false);
+
+    if (origin === "recording") {
+      try {
+        recorder.record();
+        setIsPaused(false);
+        setIsVoiceSessionActive(true);
+        setPausedVisualLevel(0);
+      } catch (nextError) {
+        const parsed = classifyUnknownError(nextError);
+        setError({
+          message: parsed.message,
+          retryable: parsed.retryable,
+          requestId: parsed.requestId,
+        });
+      }
+      return;
+    }
+
+    if (origin === "preparing" && !hasAudioDraft && !hasActiveRecordingSession) {
+      void startRecording();
     }
   }
 
@@ -887,12 +1051,12 @@ export default function CaptureRecordScreen() {
   }
 
   function handleBack() {
-    if (isBusy) {
+    if (isProcessingBusy || (recordingActionBusy && !isPreparingRecording)) {
       return;
     }
 
-    if (hasActiveRecordingSession || hasAudioDraft) {
-      setDiscardVisible(true);
+    if (hasActiveRecordingSession || hasAudioDraft || isPreparingRecording) {
+      void openDiscardSheet();
       return;
     }
 
@@ -904,33 +1068,25 @@ export default function CaptureRecordScreen() {
     setRecordingActionBusy(true);
 
     try {
-      if (hasActiveRecordingSession) {
-        await recorder.stop();
-      }
-    } catch {
-      // Best effort on exit.
+      await resetCaptureAudioState();
     } finally {
       setRecordingActionBusy(false);
-      setAudioUri(null);
-      setIsPaused(false);
-      setIsVoiceSessionActive(false);
-      setPausedVisualLevel(0);
-      setPauseResumeIssue(null);
-      setPauseResumeDisabled(false);
-      autoStopTriggeredRef.current = false;
-      setError(null);
       goBackToStart();
     }
   }
 
+  const displayDurationMillis = isPaused
+    ? pausedDurationMillis
+    : recorderState.durationMillis;
+
   const waveformHeights = isPaused
     ? getWaveformHeights(
-        recorderState.durationMillis,
+        displayDurationMillis,
         Math.max(0.12, pausedVisualLevel),
       )
     : isWebFallbackMotion
-      ? getFallbackWaveformHeights(recorderState.durationMillis)
-      : getWaveformHeights(recorderState.durationMillis, liveAudioLevel);
+      ? getFallbackWaveformHeights(displayDurationMillis)
+      : getWaveformHeights(displayDurationMillis, liveAudioLevel);
 
   return (
     <ScreenContainer
@@ -1003,111 +1159,130 @@ export default function CaptureRecordScreen() {
             isNearRecordingEnd ? styles.waveCardNearEnd : null,
             {
               backgroundColor: palette.surface,
-              transform: [
-                { scale: isWebLiveMotion && !isPaused ? voiceMotionScale : 1 },
-              ],
-              opacity: isWebLiveMotion
-                ? voiceMotionOpacity
-                : isRecording
-                  ? 0.92
-                  : 0.78,
             },
           ]}
         >
-          {waveformHeights.map((height, index) => (
-            <View
-              key={`wave-${index}`}
-              style={[
-                styles.waveBar,
-                isWebFallbackMotion ? styles.waveBarFallback : null,
-                {
-                  backgroundColor: isWebFallbackMotion
-                    ? `${palette.primary}B8`
-                    : palette.primary,
-                  height,
-                  opacity: isWebFallbackMotion
-                    ? 0.88
-                    : isRecording
-                      ? 1
-                      : 0.58 + liveAudioLevel * 0.2,
-                },
-              ]}
-            />
-          ))}
+          <View
+            style={[
+              styles.waveMotionLayer,
+              {
+                transform: [
+                  {
+                    scale:
+                      isWebLiveMotion && !isPaused ? voiceMotionScale : 1,
+                  },
+                ],
+                opacity: isWebLiveMotion
+                  ? voiceMotionOpacity
+                  : isRecording
+                    ? 0.92
+                    : 0.78,
+              },
+            ]}
+          >
+            {waveformHeights.map((height, index) => (
+              <View
+                key={`wave-${index}`}
+                style={[
+                  styles.waveBar,
+                  isWebFallbackMotion ? styles.waveBarFallback : null,
+                  {
+                    backgroundColor: isWebFallbackMotion
+                      ? `${palette.primary}B8`
+                      : palette.primary,
+                    height,
+                    opacity: isWebFallbackMotion
+                      ? 0.88
+                      : isRecording
+                        ? 1
+                        : 0.58 + liveAudioLevel * 0.2,
+                  },
+                ]}
+              />
+            ))}
+          </View>
         </View>
 
         <View style={styles.timerBlock}>
-          <ThemedText
-            type="bodySecondary"
-            lightColor={palette.muted}
-            darkColor={palette.muted}
-            style={styles.voiceLead}
-          >
-            {isPaused ? "Opname gepauzeerd." : "Leg je moment vast."}
-          </ThemedText>
-          <ThemedText
-            type="sectionTitle"
-            lightColor={palette.muted}
-            darkColor={palette.muted}
-            style={styles.timerText}
-          >
-            {formatDuration(recordingSeconds)} /{" "}
-            {formatDuration(MAX_RECORDING_SECONDS)}
-          </ThemedText>
+          {isPreparingRecording ? (
+            <>
+              <ThemedText
+                type="sectionTitle"
+                lightColor={palette.muted}
+                darkColor={palette.muted}
+                style={styles.voiceLead}
+              >
+                Opname starten
+              </ThemedText>
+              <ThemedText
+                type="bodySecondary"
+                lightColor={palette.muted}
+                darkColor={palette.muted}
+                style={styles.voiceLead}
+              >
+                Je kunt zo beginnen met praten.
+              </ThemedText>
+            </>
+          ) : (
+            <>
+              <ThemedText
+                type="bodySecondary"
+                lightColor={palette.muted}
+                darkColor={palette.muted}
+                style={styles.voiceLead}
+              >
+                {isPaused
+                  ? "Opname gepauzeerd."
+                  : isRecording
+                    ? "Je opname loopt."
+                    : "Leg je moment vast."}
+              </ThemedText>
+              <ThemedText
+                type="sectionTitle"
+                lightColor={palette.muted}
+                darkColor={palette.muted}
+                style={styles.timerText}
+              >
+                {formatDuration(displayRecordingSeconds)} /{" "}
+                {formatDuration(MAX_RECORDING_SECONDS)}
+              </ThemedText>
+            </>
+          )}
         </View>
-
-        {pauseResumeIssue ? (
-          <View style={styles.pauseIssue}>
-            <ThemedText
-              type="caption"
-              lightColor={palette.mutedSoft}
-              darkColor={palette.mutedSoft}
-              style={styles.pauseIssueText}
-            >
-              {pauseResumeIssue}
-            </ThemedText>
-          </View>
-        ) : null}
 
         <View style={styles.controlsStack}>
           <PrimaryButton
-            label={isPaused ? "Verder" : "Klaar"}
+            label="Opname afronden"
             className="w-full"
-            onPress={() =>
-              void (isPaused ? handleTogglePauseResume() : handleStop())
-            }
+            onPress={() => void handleStop()}
             disabled={
-              isPaused
-                ? isBusy || !hasActiveRecordingSession || pauseResumeDisabled
-                : isBusy ||
-                  derivedNeedsAttention ||
-                  (!hasActiveRecordingSession && !hasAudioDraft)
+              isBusy ||
+              isPreparingRecording ||
+              derivedNeedsAttention ||
+              (!hasActiveRecordingSession && !hasAudioDraft)
             }
           />
 
           <SecondaryButton
-            label={isPaused ? "Klaar" : "Pauze"}
+            label={isPaused ? "Opname hervatten" : "Pauze"}
             className="w-full"
-            onPress={() =>
-              void (isPaused ? handleStop() : handleTogglePauseResume())
-            }
-            disabled={
-              isPaused
-                ? isBusy ||
-                  derivedNeedsAttention ||
-                  (!hasActiveRecordingSession && !hasAudioDraft)
-                : isBusy ||
-                  !hasActiveRecordingSession ||
-                  pauseResumeDisabled
-            }
+            onPress={() => void handleTogglePauseResume()}
+            disabled={isBusy || isPreparingRecording || !canTogglePauseResume}
           />
 
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Annuleer opname"
             onPress={handleBack}
-            disabled={isBusy}
-            style={[styles.cancelAction, isBusy ? styles.cancelDisabled : null]}
+            disabled={
+              isProcessingBusy || (recordingActionBusy && !isPreparingRecording)
+            }
+            style={[
+              styles.cancelAction,
+              isProcessingBusy || (recordingActionBusy && !isPreparingRecording)
+                ? styles.cancelDisabled
+                : null,
+            ]}
           >
             <ThemedText
               type="caption"
@@ -1121,14 +1296,14 @@ export default function CaptureRecordScreen() {
         </View>
       </View>
 
-      <ConfirmDialog
+      <DestructiveConfirmSheet
         visible={discardVisible}
-        title="Opname niet opslaan?"
-        message="Deze opname is nog niet vastgelegd."
-        cancelLabel="Blijf hier"
-        confirmLabel="Niet opslaan"
+        title="Opname verwijderen?"
+        message="Deze opname is nog niet vastgelegd. Als je nu stopt, wordt ze verwijderd."
+        secondaryLabel="Doorgaan met opnemen"
+        confirmLabel="Opname verwijderen"
         processing={recordingActionBusy}
-        onCancel={() => setDiscardVisible(false)}
+        onCancel={() => void restoreAfterDiscardCancel()}
         onConfirm={() => void handleConfirmDiscard()}
       />
       <ProcessingScreen
@@ -1172,8 +1347,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     paddingHorizontal: 32,
     paddingVertical: 32,
-    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  waveMotionLayer: {
+    height: WAVEFORM_MAX_BAR_HEIGHT,
+    flexDirection: "row",
+    alignItems: "flex-end",
     justifyContent: "center",
     gap: spacing.xs,
   },
@@ -1203,13 +1383,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     alignItems: "center",
     gap: spacing.md,
-  },
-  pauseIssue: {
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  pauseIssueText: {
-    textAlign: "center",
   },
   cancelAction: {
     minHeight: 36,
