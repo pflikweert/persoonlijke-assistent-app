@@ -14,7 +14,9 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 ## Documentatie
 - Cline-instructies: `.clinerules`
 - Leidende projectdocs: `docs/project/README.md`
-- Generated uploadbundle voor ChatGPT Project: `docs/project/generated/chatgpt-project-context.md`
+- Generated uploadset voor ChatGPT Project en Stitch: `docs/upload/**`
+- Generated ChatGPT Project context: `docs/project/generated/chatgpt-project-context.md`
+- Generated Stitch design context: `docs/design/generated/stitch-design-context.md`
 - Build bundle: `npm run docs:bundle`
 - Verify bundle-sync: `npm run docs:bundle:verify`
 

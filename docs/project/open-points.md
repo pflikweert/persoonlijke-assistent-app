@@ -11,16 +11,13 @@ Toelichting:
 - settings export/import/delete zijn functioneel aanwezig en voor deze scope bewezen.
 
 ## Deels open (nog niet hard afgerond)
-1. 1.2A stabiliteit/foutafhandeling als complete afgeronde subfase.
-2. 1.2B outputkwaliteit als complete afgeronde kwaliteitsset.
-3. 1.2C UX-polish over alle kernflows.
-4. 1.2E private-beta readiness met expliciete releasechecklist.
+1. 1.2B outputkwaliteit als complete afgeronde kwaliteitsset.
+2. 1.2E private-beta readiness met volledige runtime-doorloop van de releasechecklist in light + dark mode.
 
 ## Onzeker
-1. Volledige implementatiedekking van designrefs 1.2.1 per scherm.
-2. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
-3. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
-4. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
+1. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
+2. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
+3. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
 
 ## Prioriteit
 1. Maak completion-criteria voor 1.2A/1.2B/1.2C/1.2E expliciet en toetsbaar.

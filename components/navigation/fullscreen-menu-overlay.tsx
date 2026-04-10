@@ -136,7 +136,7 @@ export function FullscreenMenuOverlay({
       onRequestClose={onRequestClose}
     >
       <ThemedView style={styles.overlay}>
-        <AppBackground tone="subtle" />
+        <AppBackground tone="flat" />
         <ThemedView style={styles.topBar}>
           <ThemedText type="sectionTitle">Persoonlijke Assistent</ThemedText>
           <HeaderIconButton
@@ -186,9 +186,7 @@ export function FullscreenMenuOverlay({
         </ThemedView>
 
         {logoutEntry ? (
-          <ThemedView
-            style={[styles.footer, { borderTopColor: palette.separator }]}
-          >
+          <ThemedView style={styles.footer}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={logoutEntry.label}
@@ -224,7 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.xxxl,
+    marginBottom: spacing.xxl,
   },
   listWrap: {
     gap: spacing.xl,
@@ -255,7 +253,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: "auto",
-    borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: spacing.lg,
   },
   logoutButton: {

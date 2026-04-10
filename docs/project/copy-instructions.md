@@ -1,4 +1,4 @@
-# Budio Copy Guidelines
+# Persoonlijke Assistent App — Copy Instructions
 
 ## Doel
 

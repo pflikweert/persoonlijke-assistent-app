@@ -1,4 +1,3 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   getRecordingPermissionsAsync,
   RecordingPresets,
@@ -18,9 +17,11 @@ import {
   ProcessingScreen,
   type ProcessingVariant,
 } from "@/components/feedback/processing-screen";
-import { ScreenHeader } from "@/components/layout/screen-header";
+import {
+  CaptureBackHeader,
+  CaptureErrorStack,
+} from "@/components/ui/capture-screen-primitives";
 import { ThemedText } from "@/components/themed-text";
-import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import {
   PrimaryButton,
   ScreenContainer,
@@ -653,32 +654,13 @@ export default function CaptureRecordScreen() {
     <ScreenContainer
       backgroundTone="flat"
       fixedHeader={
-        <ScreenHeader
-          style={{
-            paddingHorizontal: 0,
-            paddingTop: insets.top,
-            paddingBottom: 0,
-          }}
-          leftAction={
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Terug"
-              onPress={handleBack}
-            >
-              <MaterialIcons
-                name="arrow-back"
-                size={18}
-                color={palette.primary}
-              />
-            </HeaderIconButton>
-          }
-        />
+        <CaptureBackHeader topInset={insets.top} onBack={handleBack} />
       }
     >
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
 
       {error ? (
-        <View style={styles.errorBlock}>
+        <CaptureErrorStack>
           <StateBlock
             tone="error"
             message={error.message}
@@ -702,10 +684,10 @@ export default function CaptureRecordScreen() {
               disabled={isBusy}
             />
           ) : null}
-        </View>
+        </CaptureErrorStack>
       ) : null}
       {derivedNeedsAttention && derivedResult ? (
-        <View style={styles.errorBlock}>
+        <CaptureErrorStack>
           <StateBlock
             tone={derivedResult.status === "failed" ? "error" : "info"}
             message={buildDerivedStatusMessage(derivedResult)}
@@ -721,7 +703,7 @@ export default function CaptureRecordScreen() {
             onPress={goToSavedEntry}
             disabled={isBusy}
           />
-        </View>
+        </CaptureErrorStack>
       ) : null}
 
       <View
@@ -850,10 +832,6 @@ function buildDerivedStatusMessage(result: DerivedRefreshResult): string {
 }
 
 const styles = StyleSheet.create({
-  errorBlock: {
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-  },
   content: {
     flex: 1,
     paddingTop: 88,

@@ -1,4 +1,3 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Platform, Pressable, Share, StyleSheet } from "react-native";
@@ -12,6 +11,11 @@ import {
   ScreenContainer,
   SurfaceSection,
 } from "@/components/ui/screen-primitives";
+import {
+  SettingsScreenHeader,
+  SettingsStateBody,
+  SettingsStateIcon,
+} from "@/components/ui/settings-screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { classifyUnknownError, downloadUserArchive } from "@/services";
 import { colorTokens, radius, spacing } from "@/theme";
@@ -79,54 +83,28 @@ export default function SettingsExportScreen() {
         backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
       >
-        <ThemedView style={styles.topBar}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Ga terug"
-            onPress={() => router.back()}
-            style={[styles.iconButton, { backgroundColor: palette.surface }]}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={palette.primary} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.iconButton, { backgroundColor: palette.surface }]}
-          >
-            <MaterialIcons name="menu" size={20} color={palette.primary} />
-          </Pressable>
-        </ThemedView>
-
-        <ThemedView style={styles.hero}>
-          <ThemedText type="screenTitle">Archief downloaden</ThemedText>
-          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-            Bewaar een leesbaar bestand van je archief.
-          </ThemedText>
-        </ThemedView>
+        <SettingsScreenHeader
+          title="Archief downloaden"
+          subtitle="Bewaar een leesbaar bestand van je archief."
+          onBack={() => router.back()}
+          onMenu={() => setMenuVisible(true)}
+        />
 
         {state === "idle" ? (
           <ThemedView style={styles.idleStack}>
             <SurfaceSection>
-              <ThemedView style={styles.stateBody}>
-                <ThemedView
-                  style={[
-                    styles.iconWrap,
-                    { backgroundColor: palette.surfaceLow },
-                  ]}
-                >
-                  <MaterialIcons
-                    name="download"
-                    size={30}
-                    color={palette.primary}
-                  />
-                </ThemedView>
+              <SettingsStateBody>
+                <SettingsStateIcon
+                  icon="download"
+                  iconColor={palette.primary}
+                  backgroundColor={palette.surfaceLow}
+                />
 
                 <PrimaryButton
                   label="Download archief"
                   onPress={() => void handleDownload()}
                 />
-              </ThemedView>
+              </SettingsStateBody>
             </SurfaceSection>
 
             <NoticeCard
@@ -140,24 +118,17 @@ export default function SettingsExportScreen() {
             title="Archief downloaden"
             subtitle="Bestand wordt voorbereid"
           >
-            <ThemedView style={styles.stateBody}>
-              <ThemedView
-                style={[
-                  styles.iconWrap,
-                  { backgroundColor: palette.surfaceLow },
-                ]}
-              >
-                <MaterialIcons
-                  name="hourglass-empty"
-                  size={30}
-                  color={palette.primary}
-                />
-              </ThemedView>
+            <SettingsStateBody>
+              <SettingsStateIcon
+                icon="hourglass-empty"
+                iconColor={palette.primary}
+                backgroundColor={palette.surfaceLow}
+              />
 
               <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
                 Een moment geduld.
               </ThemedText>
-            </ThemedView>
+            </SettingsStateBody>
           </SurfaceSection>
         ) : null}
 
@@ -166,19 +137,12 @@ export default function SettingsExportScreen() {
             title="Download klaar"
             subtitle="Je archief staat voor je klaar."
           >
-            <ThemedView style={styles.stateBody}>
-              <ThemedView
-                style={[
-                  styles.iconWrap,
-                  { backgroundColor: palette.surfaceLow },
-                ]}
-              >
-                <MaterialIcons
-                  name="check-circle-outline"
-                  size={30}
-                  color={palette.primary}
-                />
-              </ThemedView>
+            <SettingsStateBody>
+              <SettingsStateIcon
+                icon="check-circle-outline"
+                iconColor={palette.primary}
+                backgroundColor={palette.surfaceLow}
+              />
 
               <PrimaryButton
                 label="Download opnieuw"
@@ -195,7 +159,7 @@ export default function SettingsExportScreen() {
                   <ThemedText type="defaultSemiBold">Open delen</ThemedText>
                 </Pressable>
               ) : null}
-            </ThemedView>
+            </SettingsStateBody>
           </SurfaceSection>
         ) : null}
 
@@ -204,19 +168,12 @@ export default function SettingsExportScreen() {
             title="Archief downloaden"
             subtitle="Er ging iets mis. Probeer het opnieuw."
           >
-            <ThemedView style={styles.stateBody}>
-              <ThemedView
-                style={[
-                  styles.iconWrap,
-                  { backgroundColor: palette.destructiveSoftBackground },
-                ]}
-              >
-                <MaterialIcons
-                  name="warning-amber"
-                  size={30}
-                  color={palette.destructiveSoftText}
-                />
-              </ThemedView>
+            <SettingsStateBody>
+              <SettingsStateIcon
+                icon="warning-amber"
+                iconColor={palette.destructiveSoftText}
+                backgroundColor={palette.destructiveSoftBackground}
+              />
 
               {errorMessage ? (
                 <ThemedText
@@ -231,7 +188,7 @@ export default function SettingsExportScreen() {
                 label="Download archief"
                 onPress={() => void handleDownload()}
               />
-            </ThemedView>
+            </SettingsStateBody>
           </SurfaceSection>
         ) : null}
 
@@ -249,37 +206,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  hero: {
-    gap: spacing.sm,
-  },
   actions: {
     gap: spacing.content,
   },
-  stateBody: {
-    alignItems: "center",
-    gap: spacing.xl,
-  },
   idleStack: {
     gap: spacing.xl,
-  },
-  iconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
   },
   secondaryButton: {
     minHeight: 44,

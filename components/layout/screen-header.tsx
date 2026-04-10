@@ -8,11 +8,7 @@ import { colorTokens, spacing } from "@/theme";
 
 type HeaderTitleType = "sectionTitle" | "screenTitle";
 type HeaderTitleAlign = "left" | "center";
-
-const HEADER_SURFACE = {
-  light: "rgba(246, 242, 234, 0.96)",
-  dark: "rgba(18, 17, 15, 0.96)",
-} as const;
+type HeaderSurface = "default" | "transparent";
 
 export function ScreenHeader({
   title,
@@ -21,6 +17,7 @@ export function ScreenHeader({
   titleAlign = "left",
   leftAction,
   rightAction,
+  surface = "default",
   style,
   className,
 }: {
@@ -30,10 +27,12 @@ export function ScreenHeader({
   titleAlign?: HeaderTitleAlign;
   leftAction?: ReactNode;
   rightAction?: ReactNode;
+  surface?: HeaderSurface;
   style?: ViewStyle;
   className?: string;
 }) {
   const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
   const hasLeftAction = Boolean(leftAction);
   const webBlurStyle: ViewStyle =
     Platform.OS === "web"
@@ -45,13 +44,15 @@ export function ScreenHeader({
 
   return (
     <ThemedView className={className} style={[styles.header, style]}>
-      <ThemedView
-        style={[
-          styles.blurLayer,
-          { backgroundColor: HEADER_SURFACE[scheme] },
-          webBlurStyle,
-        ]}
-      />
+      {surface === "default" ? (
+        <ThemedView
+          style={[
+            styles.blurLayer,
+            { backgroundColor: palette.tabBarBackground },
+            webBlurStyle,
+          ]}
+        />
+      ) : null}
       <ThemedView style={styles.topRow}>
         <ThemedView
           style={[styles.side, !hasLeftAction ? styles.sideEmpty : null]}
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 20,
     paddingHorizontal: 24,
-    paddingBottom: 8,
+    paddingBottom: 6,
     zIndex: 2,
     position: "relative",
   },

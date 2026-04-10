@@ -31,6 +31,10 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { AppBackground } from "@/components/ui/app-background";
 import { CopyIconButton } from "@/components/ui/copy-icon-button";
+import {
+  DetailScreenHero,
+  SectionLabelRow,
+} from "@/components/ui/detail-screen-primitives";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { SecondaryButton, StateBlock } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -586,12 +590,11 @@ export default function DayDetailScreen() {
           </ThemedView>
         }
       />
-      <ThemedView style={styles.detailHero}>
-        <ThemedText type="screenTitle">{dayHeading}</ThemedText>
-        <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-          {readableDate}
-        </ThemedText>
-      </ThemedView>
+      <DetailScreenHero
+        title={dayHeading}
+        subtitle={readableDate}
+        style={styles.detailHero}
+      />
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
         {showProcessedBanner ? (
           <ThemedView style={styles.processedRow}>
@@ -653,19 +656,14 @@ export default function DayDetailScreen() {
             darkColor="transparent"
             style={[styles.insightBlock, { borderLeftColor: palette.primary }]}
           >
-            <ThemedView style={styles.insightHeader}>
-              <MaterialIcons
-                name="auto-awesome"
-                size={14}
-                color={palette.primary}
-              />
-              <ThemedText
-                type="caption"
-                style={[styles.insightLabel, { color: palette.primary }]}
-              >
-                INZICHT
-              </ThemedText>
-            </ThemedView>
+            <SectionLabelRow
+              icon="auto-awesome"
+              iconSize={14}
+              label="INZICHT"
+              textType="caption"
+              color={palette.primary}
+              labelStyle={styles.insightLabel}
+            />
             <ThemedText
               type="bodySecondary"
               style={[styles.insightText, { color: palette.muted }]}
@@ -827,7 +825,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.page,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
-    gap: spacing.xs,
   },
   processedRow: {
     flexDirection: "row",
@@ -848,11 +845,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     marginBottom: spacing.xl,
     borderLeftWidth: 2,
-    gap: spacing.xs,
-  },
-  insightHeader: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: spacing.xs,
   },
   insightLabel: {

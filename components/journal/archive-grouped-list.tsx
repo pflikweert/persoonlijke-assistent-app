@@ -31,6 +31,7 @@ type ArchiveGroupedListProps = {
   loadMoreLabel?: string;
   onLoadMore?: () => void;
   styleVariant?: 'default' | 'compact';
+  snippetLines?: number;
 };
 
 export function ArchiveGroupedList({
@@ -40,10 +41,12 @@ export function ArchiveGroupedList({
   loadMoreLabel = 'Meer laden',
   onLoadMore,
   styleVariant = 'default',
+  snippetLines,
 }: ArchiveGroupedListProps) {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
   const isCompact = styleVariant === 'compact';
+  const resolvedSnippetLines = snippetLines ?? (isCompact ? 2 : 1);
 
   return (
     <ThemedView style={styles.list}>
@@ -74,7 +77,7 @@ export function ArchiveGroupedList({
                 </View>
 
                 <ThemedView style={styles.snippetColumn}>
-                  <ThemedText numberOfLines={2} type="bodySecondary" style={[styles.snippet, { color: palette.muted }]}>
+                  <ThemedText numberOfLines={resolvedSnippetLines} type="bodySecondary" style={[styles.snippet, { color: palette.muted }]}>
                     {item.snippet}
                   </ThemedText>
                 </ThemedView>

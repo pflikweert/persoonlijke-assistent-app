@@ -29,14 +29,9 @@ const TABS: VisibleTab[] = [
   },
 ];
 
-const TAB_BAR_SURFACE = {
-  light: "rgba(245, 241, 233, 0.97)",
-  dark: "rgba(17, 16, 14, 0.98)",
-} as const;
-
-const TAB_BAR_TOP_GLOW = {
+const TAB_BAR_TOP_TONE = {
   light: "rgba(116, 91, 0, 0.06)",
-  dark: "rgba(224, 180, 58, 0.12)",
+  dark: "rgba(224, 180, 58, 0.10)",
 } as const;
 
 function resolveActiveTab(routeName: string | undefined): BottomTabKey {
@@ -69,15 +64,15 @@ function TabBarContent({
           height: totalHeight,
           paddingTop: spacing.sm,
           paddingBottom: spacing.md + safeInsetBottom,
-          backgroundColor: TAB_BAR_SURFACE[colorScheme],
+          backgroundColor: palette.tabBarBackground,
         },
       ]}
     >
       <View
         pointerEvents="none"
         style={[
-          styles.topGlow,
-          { backgroundColor: TAB_BAR_TOP_GLOW[colorScheme] },
+          styles.topTone,
+          { backgroundColor: TAB_BAR_TOP_TONE[colorScheme] },
         ]}
       />
       <View style={styles.row}>
@@ -216,12 +211,12 @@ const styles = StyleSheet.create({
     width: "100%",
     position: "relative",
   },
-  topGlow: {
+  topTone: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: StyleSheet.hairlineWidth,
+    height: 6,
   },
   row: {
     flex: 1,

@@ -17,6 +17,10 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { AppBackground } from "@/components/ui/app-background";
 import {
+  DetailScreenHero,
+  SectionLabelRow,
+} from "@/components/ui/detail-screen-primitives";
+import {
   HeaderIconButton,
   HeaderTextAction,
 } from "@/components/ui/header-icon-button";
@@ -575,12 +579,10 @@ export default function ReflectionsScreen() {
       >
         {!isProcessing ? (
           <>
-            <ThemedView style={styles.hero}>
-              <ThemedText type="screenTitle">{heroHeading.title}</ThemedText>
-              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                {heroHeading.subtitle}
-              </ThemedText>
-            </ThemedView>
+            <DetailScreenHero
+              title={heroHeading.title}
+              subtitle={heroHeading.subtitle}
+            />
 
             <PeriodSegmentedControl
               style={styles.periodSwitch}
@@ -654,19 +656,11 @@ export default function ReflectionsScreen() {
 
                       {cleanHighlights.length > 0 ? (
                         <ThemedView style={styles.highlightList}>
-                          <ThemedView style={styles.sectionTitleRow}>
-                            <MaterialIcons
-                              name="auto-awesome"
-                              size={16}
-                              color={palette.primary}
-                            />
-                            <ThemedText
-                              type="meta"
-                              style={{ color: palette.primary }}
-                            >
-                              Belangrijkste gebeurtenissen
-                            </ThemedText>
-                          </ThemedView>
+                          <SectionLabelRow
+                            icon="auto-awesome"
+                            label="Belangrijkste gebeurtenissen"
+                            color={palette.primary}
+                          />
                           {cleanHighlights.map((item, index) => {
                             const split = splitHighlightText(item);
                             return (
@@ -735,19 +729,11 @@ export default function ReflectionsScreen() {
 
                       {cleanReflectionPoints.length > 0 ? (
                         <ThemedView style={styles.highlightList}>
-                          <ThemedView style={styles.sectionTitleRow}>
-                            <MaterialIcons
-                              name="auto-awesome"
-                              size={16}
-                              color={palette.primary}
-                            />
-                            <ThemedText
-                              type="meta"
-                              style={{ color: palette.primary }}
-                            >
-                              Reflectiepunten
-                            </ThemedText>
-                          </ThemedView>
+                          <SectionLabelRow
+                            icon="auto-awesome"
+                            label="Reflectiepunten"
+                            color={palette.primary}
+                          />
                           <ThemedView style={styles.reflectionPointsCard}>
                             {cleanReflectionPoints.map((item, index) => (
                               <ThemedView
@@ -884,9 +870,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  hero: {
-    gap: spacing.xs,
-  },
   periodSwitch: {
     marginTop: spacing.sm,
     marginBottom: spacing.lg,
@@ -896,11 +879,6 @@ const styles = StyleSheet.create({
   },
   highlightList: {
     gap: spacing.lg,
-  },
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
   },
   highlightEditorialRow: {
     flexDirection: "row",

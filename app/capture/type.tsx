@@ -1,4 +1,3 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
@@ -14,9 +13,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
-import { ScreenHeader } from "@/components/layout/screen-header";
-import { ThemedText } from "@/components/themed-text";
-import { HeaderIconButton } from "@/components/ui/header-icon-button";
+import {
+  CaptureBackHeader,
+  CaptureErrorStack,
+  CaptureIntro,
+} from "@/components/ui/capture-screen-primitives";
 import {
   PrimaryButton,
   ScreenContainer,
@@ -177,26 +178,7 @@ export default function CaptureTypeScreen() {
     <ScreenContainer
       backgroundTone="flat"
       fixedHeader={
-        <ScreenHeader
-          style={{
-            paddingHorizontal: 0,
-            paddingTop: insets.top,
-            paddingBottom: 0,
-          }}
-          leftAction={
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Terug"
-              onPress={handleBack}
-            >
-              <MaterialIcons
-                name="arrow-back"
-                size={18}
-                color={palette.primary}
-              />
-            </HeaderIconButton>
-          }
-        />
+        <CaptureBackHeader topInset={insets.top} onBack={handleBack} />
       }
     >
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
@@ -209,26 +191,15 @@ export default function CaptureTypeScreen() {
         ]}
       >
         <View style={styles.content}>
-          <View style={styles.copyBlock}>
-            <ThemedText
-              type="screenTitle"
-              lightColor={palette.text}
-              darkColor={palette.text}
-            >
-              Wat houdt je bezig?
-            </ThemedText>
-            <ThemedText
-              type="bodySecondary"
-              lightColor={palette.muted}
-              darkColor={palette.muted}
-              style={styles.subtitle}
-            >
-              Schrijf op wat je wilt vastleggen
-            </ThemedText>
-          </View>
+          <CaptureIntro
+            title="Wat houdt je bezig?"
+            subtitle="Schrijf op wat je wilt vastleggen"
+            style={styles.copyBlock}
+            subtitleStyle={styles.subtitle}
+          />
 
           {error ? (
-            <View style={styles.errorBlock}>
+            <CaptureErrorStack>
               <StateBlock
                 tone="error"
                 message={error.message}
@@ -239,10 +210,10 @@ export default function CaptureTypeScreen() {
                 }
                 meta={error.requestId ? `Referentie: ${error.requestId}` : null}
               />
-            </View>
+            </CaptureErrorStack>
           ) : null}
           {derivedNeedsAttention && derivedResult ? (
-            <View style={styles.errorBlock}>
+            <CaptureErrorStack>
               <StateBlock
                 tone={derivedResult.status === "failed" ? "error" : "info"}
                 message={buildDerivedStatusMessage(derivedResult)}
@@ -262,7 +233,7 @@ export default function CaptureTypeScreen() {
                   disabled={submitting || retryingDerived}
                 />
               </View>
-            </View>
+            </CaptureErrorStack>
           ) : null}
 
           <TextInput
@@ -342,14 +313,10 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxxl - spacing.xs,
   },
   copyBlock: {
-    gap: spacing.sm,
+    alignItems: "flex-start",
   },
   subtitle: {
     maxWidth: 280,
-  },
-  errorBlock: {
-    marginTop: spacing.lg,
-    gap: spacing.sm,
   },
   derivedActions: {
     gap: spacing.sm,

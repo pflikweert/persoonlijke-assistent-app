@@ -37,15 +37,15 @@ export function ModalBackdrop({
         layout === "bottom" ? styles.rootBottom : styles.rootCenter,
       ]}
     >
-      <AppBackground tone="subtle" />
+      <AppBackground tone="flat" />
       <ThemedView
         style={[
           styles.scrim,
           {
             backgroundColor:
               scheme === "dark"
-                ? "rgba(14, 13, 11, 0.38)"
-                : "rgba(27, 28, 26, 0.14)",
+                ? "rgba(14, 13, 11, 0.42)"
+                : "rgba(27, 28, 26, 0.18)",
           },
           webBlurStyle,
         ]}

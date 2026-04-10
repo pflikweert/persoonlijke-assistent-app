@@ -1,9 +1,8 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as DocumentPicker from "expo-document-picker";
 import { readAsStringAsync } from "expo-file-system/legacy";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
@@ -17,6 +16,11 @@ import {
     SecondaryButton,
     SurfaceSection,
 } from "@/components/ui/screen-primitives";
+import {
+  SettingsScreenHeader,
+  SettingsStateBody,
+  SettingsStateIcon,
+} from "@/components/ui/settings-screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
     invokeMarkdownImport,
@@ -320,31 +324,12 @@ export default function SettingsImportScreen() {
         backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
       >
-        <ThemedView style={styles.topBar}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Ga terug"
-            onPress={() => router.back()}
-            style={[styles.iconButton, { backgroundColor: palette.surface }]}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={palette.primary} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.iconButton, { backgroundColor: palette.surface }]}
-          >
-            <MaterialIcons name="menu" size={20} color={palette.primary} />
-          </Pressable>
-        </ThemedView>
-
-        <ThemedView style={styles.hero}>
-          <ThemedText type="screenTitle">Importeren</ThemedText>
-          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-            Importeer eerder geschreven bestanden.
-          </ThemedText>
-        </ThemedView>
+        <SettingsScreenHeader
+          title="Importeren"
+          subtitle="Importeer eerder geschreven bestanden."
+          onBack={() => router.back()}
+          onMenu={() => setMenuVisible(true)}
+        />
 
         {!importEnabled ? (
           <SurfaceSection title="Importeren is in deze omgeving uitgeschakeld.">
@@ -359,19 +344,12 @@ export default function SettingsImportScreen() {
             title="Kies een bestand"
             subtitle="Kies een Nexus ChatGPT-export of een app-archief."
           >
-            <ThemedView style={styles.stateBody}>
-              <ThemedView
-                style={[
-                  styles.iconWrap,
-                  { backgroundColor: palette.surfaceLow },
-                ]}
-              >
-                <MaterialIcons
-                  name="upload-file"
-                  size={30}
-                  color={palette.primary}
-                />
-              </ThemedView>
+            <SettingsStateBody>
+              <SettingsStateIcon
+                icon="upload-file"
+                iconColor={palette.primary}
+                backgroundColor={palette.surfaceLow}
+              />
 
               <PrimaryButton
                 label={loadingPreview ? "Bestand laden..." : "Kies bestand"}
@@ -382,7 +360,7 @@ export default function SettingsImportScreen() {
               <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
                 We detecteren automatisch het juiste importformaat.
               </ThemedText>
-            </ThemedView>
+            </SettingsStateBody>
           </SurfaceSection>
         ) : null}
 
@@ -491,38 +469,26 @@ export default function SettingsImportScreen() {
                   : "Niet alles kon worden geïmporteerd."
             }
           >
-            <ThemedView style={styles.stateBody}>
-              <ThemedView
-                style={[
-                  styles.iconWrap,
-                  {
-                    backgroundColor:
-                      resultStatus.tone === "success"
-                        ? palette.surfaceLow
-                        : resultStatus.tone === "info"
-                          ? palette.surfaceLow
-                        : palette.destructiveSoftBackground,
-                  },
-                ]}
-              >
-                <MaterialIcons
-                  name={
-                    resultStatus.tone === "success"
-                      ? "check-circle-outline"
-                      : resultStatus.tone === "info"
-                        ? "info-outline"
+            <SettingsStateBody>
+              <SettingsStateIcon
+                icon={
+                  resultStatus.tone === "success"
+                    ? "check-circle-outline"
+                    : resultStatus.tone === "info"
+                      ? "info-outline"
                       : "warning-amber"
-                  }
-                  size={30}
-                  color={
-                    resultStatus.tone === "success"
-                      ? palette.primary
-                      : resultStatus.tone === "info"
-                      ? palette.primary
-                      : palette.destructiveSoftText
-                  }
-                />
-              </ThemedView>
+                }
+                iconColor={
+                  resultStatus.tone === "success" || resultStatus.tone === "info"
+                    ? palette.primary
+                    : palette.destructiveSoftText
+                }
+                backgroundColor={
+                  resultStatus.tone === "error"
+                    ? palette.destructiveSoftBackground
+                    : palette.surfaceLow
+                }
+              />
 
               <ThemedText type="defaultSemiBold">
                 {resultStatus.tone === "error"
@@ -553,7 +519,7 @@ export default function SettingsImportScreen() {
                   onPress={() => router.back()}
                 />
               </ThemedView>
-            </ThemedView>
+            </SettingsStateBody>
           </SurfaceSection>
         ) : null}
 
@@ -592,32 +558,6 @@ export default function SettingsImportScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
-  },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  hero: {
-    gap: spacing.sm,
-  },
-  stateBody: {
-    alignItems: "center",
-    gap: spacing.xl,
-  },
-  iconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
   },
   actions: {
     width: "100%",

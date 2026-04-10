@@ -4,9 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ScreenHeader } from "@/components/layout/screen-header";
+import { CaptureIntro, CaptureBackHeader } from "@/components/ui/capture-screen-primitives";
 import { ThemedText } from "@/components/themed-text";
-import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { ScreenContainer } from "@/components/ui/screen-primitives";
 import { colorTokens, spacing } from "@/theme";
 
@@ -37,26 +36,7 @@ export default function CaptureStartScreen() {
     <ScreenContainer
       backgroundTone="flat"
       fixedHeader={
-        <ScreenHeader
-          style={{
-            paddingHorizontal: 0,
-            paddingTop: insets.top,
-            paddingBottom: 0,
-          }}
-          leftAction={
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Terug"
-              onPress={handleClose}
-            >
-              <MaterialIcons
-                name="arrow-back"
-                size={18}
-                color={palette.primary}
-              />
-            </HeaderIconButton>
-          }
-        />
+        <CaptureBackHeader topInset={insets.top} onBack={handleClose} />
       }
     >
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
@@ -64,15 +44,7 @@ export default function CaptureStartScreen() {
       <View
         style={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]}
       >
-        <View style={styles.copyBlock}>
-          <ThemedText
-            type="screenTitle"
-            lightColor={palette.text}
-            darkColor={palette.text}
-          >
-            Leg iets vast
-          </ThemedText>
-        </View>
+        <CaptureIntro title="Leg iets vast" style={styles.copyBlock} />
 
         <View style={styles.actions}>
           <Pressable
@@ -115,7 +87,6 @@ const styles = StyleSheet.create({
   },
   copyBlock: {
     alignItems: "center",
-    gap: spacing.xxs,
     paddingTop: spacing.xs,
   },
   actions: {

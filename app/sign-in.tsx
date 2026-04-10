@@ -3,7 +3,12 @@ import { useState } from "react";
 import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { AppBackground } from "@/components/ui/app-background";
+import {
+  AuthAmbientShell,
+  AuthFormStack,
+  AuthHero,
+  AuthTextSubtitle,
+} from "@/components/ui/auth-screen-primitives";
 import { NoticeCard } from "@/components/ui/notice-card";
 import {
   InputField,
@@ -12,7 +17,7 @@ import {
 } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { sendMagicLink } from "@/services";
-import { colorTokens, radius, spacing, typography } from "@/theme";
+import { colorTokens, radius, spacing } from "@/theme";
 
 export default function SignInScreen() {
   const { height: viewportHeight, width: viewportWidth } =
@@ -65,19 +70,12 @@ export default function SignInScreen() {
   }
 
   return (
-    <View style={styles.background}>
-      <AppBackground tone="ambient" />
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <View
-            style={[
-              styles.contentShell,
-              isCompactViewport && styles.contentShellCompact,
-              { maxHeight: shellMaxHeight },
-            ]}
-          >
-            {uiState === "success" ? (
-              <View style={styles.successWrap}>
+    <AuthAmbientShell
+      compactViewport={isCompactViewport}
+      maxHeight={shellMaxHeight}
+    >
+      {uiState === "success" ? (
+        <View style={styles.successWrap}>
                 <View style={styles.successIconCluster}>
                   <View
                     style={[
@@ -119,17 +117,15 @@ export default function SignInScreen() {
                   >
                     De link is onderweg
                   </ThemedText>
-                  <ThemedText
-                    type="bodySecondary"
+                  <AuthTextSubtitle
+                    compactViewport={isCompactViewport}
                     style={[
-                      styles.subtitle,
-                      isCompactViewport && styles.subtitleCompact,
                       { color: palette.muted },
                     ]}
                   >
                     We hebben een inloglink gestuurd. Open de mail in je inbox
                     om direct verder te gaan.
-                  </ThemedText>
+                  </AuthTextSubtitle>
                 </View>
 
                 <StateBlock
@@ -152,88 +148,66 @@ export default function SignInScreen() {
                   </ThemedText>
                 </Pressable>
               </View>
-            ) : (
-              <View style={styles.formWrap}>
-                <View style={styles.hero}>
-                  <ThemedText
-                    type="screenTitle"
-                    style={[
-                      styles.headline,
-                      isCompactViewport && styles.headlineCompact,
-                    ]}
-                  >
-                    Vang je dag in woorden
-                  </ThemedText>
-                  <ThemedText
-                    type="bodySecondary"
-                    style={[
-                      styles.subtitle,
-                      isCompactViewport && styles.subtitleCompact,
-                      { color: palette.muted },
-                    ]}
-                  >
-                    Voor momenten, gedachten en gebeurtenissen die je niet kwijt
-                    wilt raken.
-                  </ThemedText>
-                </View>
+      ) : (
+        <View style={styles.formWrap}>
+          <AuthHero
+            title="Vang je dag in woorden"
+            subtitle="Voor momenten, gedachten en gebeurtenissen die je niet kwijt wilt raken."
+            compactViewport={isCompactViewport}
+          />
 
-                {uiState === "error" && errorMessage ? (
-                  <StateBlock tone="error" message={errorMessage} />
-                ) : null}
+          {uiState === "error" && errorMessage ? (
+            <StateBlock tone="error" message={errorMessage} />
+          ) : null}
 
-                <View style={styles.formControls}>
-                  <InputField
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    keyboardType="email-address"
-                    onBlur={() => setIsInputFocused(false)}
-                    onChangeText={(value) => {
-                      setEmail(value);
-                      if (errorMessage) {
-                        setErrorMessage(null);
-                      }
-                    }}
-                    onFocus={() => setIsInputFocused(true)}
-                    placeholder="Je e-mailadres"
-                    placeholderTextColor={palette.mutedSoft}
-                    style={[
-                      styles.input,
-                      {
-                        color: palette.text,
-                        backgroundColor: `${palette.surfaceLow}E8`,
-                        borderColor: `${palette.separator}88`,
-                      },
-                      isInputActive && {
-                        backgroundColor: `${palette.surfaceLowest}F4`,
-                        borderColor:
-                          uiState === "error"
-                            ? `${palette.error}66`
-                            : `${palette.primaryStrong}88`,
-                      },
-                    ]}
-                    textContentType="emailAddress"
-                    value={email}
-                  />
+          <AuthFormStack>
+            <InputField
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              onBlur={() => setIsInputFocused(false)}
+              onChangeText={(value) => {
+                setEmail(value);
+                if (errorMessage) {
+                  setErrorMessage(null);
+                }
+              }}
+              onFocus={() => setIsInputFocused(true)}
+              placeholder="Je e-mailadres"
+              placeholderTextColor={palette.mutedSoft}
+              style={[
+                styles.input,
+                {
+                  color: palette.text,
+                  backgroundColor: `${palette.surfaceLow}E8`,
+                  borderColor: `${palette.separator}88`,
+                },
+                isInputActive && {
+                  backgroundColor: `${palette.surfaceLowest}F4`,
+                  borderColor:
+                    uiState === "error"
+                      ? `${palette.error}66`
+                      : `${palette.primaryStrong}88`,
+                },
+              ]}
+              textContentType="emailAddress"
+              value={email}
+            />
 
-                  <PrimaryButton
-                    label={
-                      submitting ? "Bezig met verzenden..." : "Ontvang inloglink"
-                    }
-                    onPress={() => void handleSendMagicLink()}
-                    disabled={submitting || !hasTypedEmail}
-                  />
-                </View>
+            <PrimaryButton
+              label={submitting ? "Bezig met verzenden..." : "Ontvang inloglink"}
+              onPress={() => void handleSendMagicLink()}
+              disabled={submitting || !hasTypedEmail}
+            />
+          </AuthFormStack>
 
-                <NoticeCard
-                  compact
-                  body="We sturen je een eenmalige link om in te loggen."
-                />
-              </View>
-            )}
-          </View>
+          <NoticeCard
+            compact
+            body="We sturen je een eenmalige link om in te loggen."
+          />
         </View>
-      </View>
-    </View>
+      )}
+    </AuthAmbientShell>
   );
 }
 
@@ -267,47 +241,10 @@ function mapSignInError(error: unknown): string {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    overflow: "hidden",
-  },
-  overlay: {
-    flex: 1,
-    overflow: "hidden",
-  },
-  container: {
-    flex: 1,
-    width: "100%",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  contentShell: {
-    width: "100%",
-    maxWidth: 430,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    justifyContent: "center",
-  },
-  contentShellCompact: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
   formWrap: {
     width: "100%",
     alignItems: "center",
     gap: spacing.xxl,
-  },
-  hero: {
-    width: "100%",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  formControls: {
-    width: "100%",
-    gap: spacing.lg,
   },
   headline: {
     textAlign: "center",
@@ -318,15 +255,6 @@ const styles = StyleSheet.create({
   headlineCompact: {
     fontSize: 34,
     lineHeight: 38,
-  },
-  subtitle: {
-    textAlign: "center",
-    maxWidth: "100%",
-    fontSize: typography.roles.body.size + 1,
-    lineHeight: typography.roles.body.lineHeight + 3,
-  },
-  subtitleCompact: {
-    lineHeight: typography.roles.body.lineHeight + 1,
   },
   input: {
     width: "100%",

@@ -25,8 +25,8 @@
     "verify:local-reflection-flow": "./scripts/verify-local-reflection-flow.sh",
     "verify:local-output-quality": "./scripts/verify-local-output-quality.sh",
     "env:pull:vercel": "npx vercel env pull .env.vercel.local",
-    "docs:bundle": "node scripts/docs/build-chatgpt-project-context.mjs",
-    "docs:bundle:verify": "node scripts/docs/build-chatgpt-project-context.mjs --check"
+    "docs:bundle": "node scripts/docs/build-docs-bundles.mjs",
+    "docs:bundle:verify": "node scripts/docs/build-docs-bundles.mjs --check"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

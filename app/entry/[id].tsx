@@ -6,7 +6,7 @@ import {
   useLocalSearchParams,
 } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
@@ -15,13 +15,17 @@ import { TextEditorModal } from "@/components/feedback/text-editor-modal";
 import { DayEditorialPanel } from "@/components/journal/day-editorial-panel";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import {
+  DetailActionStack,
+  DetailReadingBlock,
+  DetailScreenHero,
+  DetailTertiaryAction,
+} from "@/components/ui/detail-screen-primitives";
 import {
   HeaderIconButton,
   HeaderTextAction,
 } from "@/components/ui/header-icon-button";
 import {
-  MetaText,
   PrimaryButton,
   ScreenContainer,
   SecondaryButton,
@@ -399,24 +403,25 @@ export default function EntryCompletionScreen() {
 
         {!isProcessing && !loading && !error && entry ? (
           <>
-            <ThemedView style={styles.titleBlock}>
-              <ThemedText type="screenTitle" style={{ color: palette.text }}>
-                {title}
-              </ThemedText>
-              <MetaText>{capturedAtLabel}</MetaText>
-            </ThemedView>
+            <DetailScreenHero
+              title={title}
+              subtitle={capturedAtLabel}
+              subtitleType="meta"
+              style={styles.titleBlock}
+              titleStyle={{ color: palette.text }}
+            />
 
             {showAssistantCopy ? (
               <DayEditorialPanel text={summaryShortText} />
             ) : null}
 
-            <ThemedView style={styles.bodyBlock}>
+            <DetailReadingBlock>
               <ThemedText type="body" style={{ color: palette.text }}>
                 {cleanedBody || "Deze entry bevat nog geen tekst."}
               </ThemedText>
-            </ThemedView>
+            </DetailReadingBlock>
 
-            <ThemedView style={styles.actionsBlock}>
+            <DetailActionStack>
               <PrimaryButton
                 label={dayActionLabel}
                 onPress={() => goToDayDetail({ includeEntryFocus: true })}
@@ -431,22 +436,12 @@ export default function EntryCompletionScreen() {
                 }
               />
 
-              <Pressable
+              <DetailTertiaryAction
                 onPress={handleDelete}
                 disabled={isProcessing}
-                style={styles.deleteAction}
-              >
-                <ThemedText
-                  type="caption"
-                  style={[
-                    styles.deleteActionLabel,
-                    { color: palette.mutedSoft },
-                  ]}
-                >
-                  {deleting ? "VERWIJDEREN..." : "VERWIJDEREN"}
-                </ThemedText>
-              </Pressable>
-            </ThemedView>
+                label={deleting ? "VERWIJDEREN..." : "VERWIJDEREN"}
+              />
+            </DetailActionStack>
           </>
         ) : null}
 
@@ -483,23 +478,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl,
   },
   titleBlock: {
-    gap: spacing.xs,
     marginBottom: spacing.lg,
-  },
-  bodyBlock: {
-    marginBottom: spacing.xxxl,
-  },
-  actionsBlock: {
-    alignItems: "center",
-    gap: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  deleteAction: {
-    marginTop: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  deleteActionLabel: {
-    letterSpacing: 2,
-    textTransform: "uppercase",
   },
 });

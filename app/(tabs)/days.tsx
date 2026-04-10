@@ -10,6 +10,7 @@ import {
 } from "@/components/journal/archive-grouped-list";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { DetailScreenHero } from "@/components/ui/detail-screen-primitives";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { ScreenContainer, StateBlock } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -193,9 +194,6 @@ export default function DaysScreen() {
       backgroundTone="flat"
       fixedHeader={
         <ScreenHeader
-          title="Dagen"
-          titleType="screenTitle"
-          subtitle="Persoonlijk archief om rustig terug te lezen."
           rightAction={
             <HeaderIconButton
               accessibilityRole="button"
@@ -209,6 +207,11 @@ export default function DaysScreen() {
       }
       contentContainerStyle={styles.scrollContent}
     >
+      <DetailScreenHero
+        title="Dagen"
+        subtitle="Persoonlijk archief om rustig terug te lezen."
+      />
+
       {loading ? (
         <InlineLoadingOverlay
           message="Archief laden..."

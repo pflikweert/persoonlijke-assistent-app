@@ -7,6 +7,7 @@ import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-o
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
+import { SettingsScreenHeader } from "@/components/ui/settings-screen-primitives";
 import {
     ScreenContainer,
 } from "@/components/ui/screen-primitives";
@@ -215,31 +216,12 @@ export default function SettingsScreen() {
         backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
       >
-        <ThemedView style={styles.topBar}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Ga terug"
-            onPress={() => router.back()}
-            style={[styles.iconButton, { backgroundColor: palette.surface }]}
-          >
-            <MaterialIcons name="arrow-back" size={20} color={palette.primary} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-            onPress={() => setMenuVisible(true)}
-            style={[styles.iconButton, { backgroundColor: palette.surface }]}
-          >
-            <MaterialIcons name="menu" size={20} color={palette.primary} />
-          </Pressable>
-        </ThemedView>
-
-        <ThemedView style={styles.hero}>
-          <ThemedText type="screenTitle">Instellingen</ThemedText>
-          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-            Beheer je archief en gegevens.
-          </ThemedText>
-        </ThemedView>
+        <SettingsScreenHeader
+          title="Instellingen"
+          subtitle="Beheer je archief en gegevens."
+          onBack={() => router.back()}
+          onMenu={() => setMenuVisible(true)}
+        />
 
         <ThemedView style={styles.sectionGroup}>
           <ThemedText type="meta" style={{ color: palette.mutedSoft }}>
@@ -514,21 +496,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
     gap: spacing.content,
-  },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  hero: {
-    gap: spacing.sm,
   },
   sectionGroup: {
     gap: spacing.sm,

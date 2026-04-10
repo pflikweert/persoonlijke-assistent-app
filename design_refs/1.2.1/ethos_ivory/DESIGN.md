@@ -1,178 +1,173 @@
-Design System Strategy: The Quiet Curator (Refined MVP)
-1. Overview & Creative North Star
-This design system is built on the "Quiet Curator" philosophy.
-We design a product that treats personal reflections as high-quality content — not UI output.
-However:
-This is not a static editorial product. It is a living tool.
-Core shift (critical):
+# Design System Strategy: The Quiet Curator
 
-The app is capture-first, not reflection-first
-The Today screen is an entry point, not a reading experience
-The system must balance:
+## 1. Creative North Star
 
-editorial calm
-product clarity
-immediate usability
-2. Product Hierarchy Rules (NEW — CRITICAL)
-Today Screen Rules
+This product is a capture-first personal thinking tool.
 
-The Today screen is dominated by one primary action
-Primary CTA = most important visual element on screen
-No competing primary actions allowed
-Reflection content is always secondary
-Recent entries must be lightweight and scannable
-Visual Priority Model
+It treats personal reflections as high-quality content, but it is not a static editorial product, a dashboard, a coach, or a chat interface.
 
-Hero + CTA → 70% attention
-Recent context → 20%
-Reflection preview → 10%
-Principle
-“The user must feel: I can start immediately.”
-3. Color & Tonal Architecture
-The palette remains warm, mineral, and paper-like.
-Core Surfaces
+The user should feel: I can start immediately, and the app will keep the rest calm.
 
-surface: #faf9f6
-surface_container_low: #f4f3f0
-surface_container: #efeeeb
-surface_container_lowest: #ffffff
-Primary Action (Signature Element)
+## 2. Operational Guardrails
 
-Gradient: #745b00 → #e6b800 (45°)
-Used ONLY for:
+These rules are part of the foundation, not just implementation notes.
 
-primary CTA
-key interaction moments
-Rule (NEW):
-The primary color is reserved and powerful, never overused.
-The No-Line Rule (kept)
+- Clean-first is the default: use spacing, hierarchy, typography and tonal contrast before adding containers.
+- Borders, strokes, outlines, extra fills and nested surfaces are opt-in only.
+- Plain text wrappers stay transparent by default.
+- Top navigation is navigation only; title and supporting copy live in the hero below the nav by default.
+- Header, page and footer form one coherent theme hierarchy per mode.
+- Dark and light mode share the same composition; dark mode must not become the implicit source of truth.
+- Background modes are mode-aware and selective: `ambient`, `subtle` and `flat`.
+- Auth atmosphere comes from code-based page background and spacing, not heavy enclosing cards.
+- Design refs remain binding per screen; if a screen ref folder has a `.md` note, use it next to `code.html` and `screen.png`.
 
-No 1px borders
-Separation via tonal shifts only
-4. Typography: Editorial, but Functional
-Font: Inter
-Headlines
+## 3. Product Hierarchy
 
-Tight (-0.02em)
-Strong but not dominant over CTA
-Body
+Today is the main entry point.
 
-Comfortable reading (line-height ≥ 1.6)
-But avoid long text on Today screen
-Labels
+- Primary CTA gets the strongest visual priority.
+- Recent context is lightweight and scannable.
+- Reflection previews are secondary.
+- No competing primary actions on one screen/state.
+- Capture screens prioritize obvious affordances over atmosphere.
 
-Slight tracking (+0.05em)
-Used sparingly
-NEW RULE
-On entry screens: clarity > reading experience
-5. Layout & Spacing
-Core Principle
-We design in flow, not stacked cards. The overall feel is compact to support immediate usability.
-Avoid
+Visual attention model:
 
-vertical card stacking patterns
-equal-weight blocks
-Use instead
+- Hero + CTA: about 70%.
+- Recent context: about 20%.
+- Reflection preview: about 10%.
 
-hero section
-breathing space
-light content zones
-Whitespace Rule (UPDATED)
+## 4. Tokens And Tonal Architecture
 
-whitespace must support hierarchy, not just aesthetics
-avoid “empty but meaningless” space
-6. Elevation & Depth
-Tonal layering (kept)
+`theme/tokens.ts` is the only implementation token source.
 
-surfaces define structure
-Shadows
+Core light surfaces:
 
-ultra soft only
-used sparingly
-NEW RULE
-Depth is used to support interaction, not decoration
-7. Components
-Primary CTA (Signature Component)
-This is the most important UI element in the entire product.
+- `background`: `#FAF9F4`
+- `surfaceLow`: `#F4F3F0`
+- `surface`: `#EFEEEB`
+- `surfaceLowest`: `#FFFFFF`
+- `surfaceHigh`: `#E9E8E5`
 
-shape: pill-shaped (maximum roundedness)
-gradient: gold
-tactile feeling required
-includes subtle icon
-must feel:
+Core dark surfaces:
 
-pressable
-premium
-warm
-inviting
-RULE
-Only ONE primary CTA per screen
-Secondary Actions
+- `background`: `#171714`
+- `surface`: `#201F1C`
+- `surfaceLow`: `#2B2925`
+- `surfaceLowest`: `#34322D`
+- `surfaceHigh`: `#262521`
 
-low visual weight
-never compete with primary CTA
-Cards
-Cards are NOT the default layout system.
-Use cards only when:
+Primary action:
 
-grouping is required
-content needs containment
-Avoid
+- Light CTA gradient: `#F0C115` → `#E6B800`
+- Dark CTA gradient: `#F3C53A` → `#D7A91B`
+- Primary color is reserved for the main action and key interaction moments.
 
-stacking multiple similar cards
-Lists
+Destructive soft treatment:
 
-prefer lightweight list style over cards
-prioritize scanability
-short previews only
-Reflection Preview
+- Light: `#F6E8E5`, text `#C62929`, border `#ECC1BF`
+- Dark: `#4B2D2B`, text `#FFB4AB`, border `#7E5A56`
 
-compact
-editorial tone
-secondary importance
-RULE (NEW)
-Reflection is not the hero on Today
-Input / Capture
+Tab bar:
 
-minimal friction
-no visual noise
-typing and voice handled in next screen
-8. Motion & Interaction
-Purpose
-Motion should:
+- Light base token: `#FAF9F6EE`
+- Dark base token: `#171714EE`
+- Implementation may use slightly tuned translucent surfaces, but must stay mode-aware.
 
-guide attention
-reinforce hierarchy
-create subtle delight
-Use
+## 5. Background Hierarchy
 
-soft transitions
-micro feedback on CTA
-gentle state changes
-Avoid
+Page atmosphere is selective, not global.
 
-flashy animations
-unnecessary motion
-9. Do’s and Don’ts
-Do
+- `ambient`: auth, splash/loaders, processing states, hero-first and empty states.
+- `subtle`: screens that need warmth without visible atmosphere.
+- `flat`: capture and content-heavy/utility/detail screens.
 
-prioritize one clear action
-design for calm + clarity
-use whitespace intentionally
-treat CTA as brand object
-reduce UI noise aggressively
-Don’t
+Header and footer are structural anchors. They stay calmer than the page background and must not carry decorative ambient gradients.
 
-don’t create dashboard layouts
-don’t stack cards by default
-don’t create multiple primary actions
-don’t overload the Today screen
-don’t let reflection dominate entry screens
-10. Final Principle
-This is not a journaling app UI. This is a personal thinking tool.
+Dark mode is not the implicit visual truth. Light and dark mode share composition; only tone, contrast and surface values shift.
+
+## 6. Header And Hero System
+
+Top navigation is navigation only.
+
+- Main-screen header: nav row with primary icon/menu, hero below.
+- Detail-screen header: back/menu row, compact hero below.
+- Page title and supporting copy belong in the hero by default.
+- Do not press titles next to back buttons unless the screen ref explicitly shows it.
+- Header, page and footer must form one coherent theme hierarchy per mode.
+
+## 7. Layout And Spacing
+
+Use flow, not stacked cards.
+
+- Standard content gap: `32px` (`spacing.content`).
+- Section labels sit on the page background unless a screen ref explicitly shows a section surface.
+- Whitespace supports hierarchy and clarity, not decoration.
+- Avoid equal-weight blocks that make every element feel equally important.
+
+## 8. Component Weight Rules
+
+Cards are not the default layout system.
+
+Use cards only when grouping or interaction containment is required.
+
+- Rows/cards stay compact and light.
+- No default decorative borders, strokes or outlines.
+- No extra fills behind plain text wrappers.
+- No nested surfaces unless the design ref explicitly shows them.
+- Separation comes first from spacing, tonal contrast, typography and hierarchy.
+- Destructive rows may use accent, but should remain calm and no heavier than needed.
+
+Allowed functional fills include chips, badges, buttons, inputs, textareas, alerts, toasts and tagged status surfaces.
+
+## 9. Auth And Modal Rules
+
+Auth screens may use page-level atmosphere from code-based background layering and spacing.
+
+- Avoid heavy enclosing auth cards unless a design ref explicitly requires one.
+- Prefer code-based gradients over image backgrounds when they are calmer and more consistent.
+- Copy should be compact: hero + action + small notice is preferred over repeated explanation.
+
+Modals, sheets, dialogs and popups use the shared backdrop standard. Do not create ad hoc backdrop treatments per screen.
+
+## 10. Typography
+
+Use the implementation roles from `theme/tokens.ts`.
+
+Key roles:
+
+- `screenTitle`: 34 / 40, weight 700
+- `sectionTitle`: 20 / 26, weight 600
+- `body`: 16 / 26, weight 400
+- `bodySecondary`: 15 / 24, weight 400
+- `caption`: 12 / 18, weight 500
+- `meta`: 11 / 16, weight 600
+- `ctaLabel`: 16 / 20, weight 700
+
+Typography should feel calm and readable. Labels are used sparingly.
+
+## 11. Motion
+
+Motion guides attention and reinforces hierarchy.
+
+Use:
+
+- soft transitions
+- micro feedback on the primary CTA
+- subtle completion feedback
+
+Avoid:
+
+- flashy animation
+- motion that competes with capture clarity
+
+## Final Principle
+
 Every screen must answer:
 
-what should the user do now?
-is that instantly obvious?
-does it feel calm and premium?
+- What should the user do now?
+- Is that instantly obvious?
+- Does it feel calm, coherent and premium in both light and dark mode?
+
 If not: simplify further.

@@ -38,6 +38,7 @@ Regels:
 - `docs/design/mvp-design-spec-1.2.1.md` is leidend voor MVP-designbeslissingen.
 - `design_refs/1.2.1/ethos_ivory/DESIGN.md` is leidend voor foundations.
 - `design_refs/1.2.1/*/code.html` en `design_refs/1.2.1/*/screen.png` zijn leidend per scherm.
+- Als een schermmap in `design_refs/1.2.1/**` een `.md` design-note heeft, gebruik die ook als aanvullende per-scherm designinput.
 - `docs/design/archive/phase-1.3-design-direction.md` is verouderd en niet leidend.
 
 ## Werkwijze
@@ -111,6 +112,8 @@ Bij wijzigingen aan canonieke docs:
 - draai daarna:
   - `npm run docs:bundle`
 - `npm run docs:bundle:verify`
+- `docs/upload/**` is generated uploadoutput voor de gebruiker; gebruik deze map niet als canonieke agentbron.
+- Standaard uploadset staat in `docs/upload/upload-manifest.md` en bevat ChatGPT Project context, MVP design spec en Stitch design context.
 
 Bij wijzigingen in admin-regeneratie:
 

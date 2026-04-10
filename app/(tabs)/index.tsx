@@ -8,6 +8,11 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import {
+  HomeHeroIntro,
+  HomeReflectionPreviewFrame,
+  HomeStatusLine,
+} from "@/components/ui/home-screen-primitives";
+import {
   MetaText,
   PrimaryButton,
   ScreenContainer,
@@ -21,7 +26,7 @@ import {
   fetchTodayJournal,
   getUtcTodayDate,
 } from "@/services";
-import { colorTokens, radius, spacing, typography } from "@/theme";
+import { colorTokens, spacing, typography } from "@/theme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -111,6 +116,7 @@ export default function TodayScreen() {
       : hasUsableTodaySummary || todayEntries.length > 0
         ? "Vandaag bijgewerkt"
         : "Klaar voor je eerste entry";
+  const statusTone = loading ? "idle" : error ? "error" : "success";
   return (
     <ScreenContainer
       scrollable
@@ -143,43 +149,17 @@ export default function TodayScreen() {
       }
       contentContainerStyle={styles.scrollContent}
     >
-      <ThemedView style={styles.hero}>
-        <ThemedText type="screenTitle" style={styles.heroTitle}>
-          Vandaag
-        </ThemedText>
-        <ThemedText
-          type="bodySecondary"
-          style={[styles.heroCopy, { color: palette.muted }]}
-        >
-          Spreek iets in of schrijf iets op voor je dagboek.
-        </ThemedText>
-        <ThemedView style={styles.heroCtaWrap}>
+      <HomeHeroIntro
+        title="Vandaag"
+        subtitle="Spreek iets in of schrijf iets op voor je dagboek."
+        cta={
           <PrimaryButton
             label="Spreek of schrijf iets"
             onPress={() => router.push("/capture")}
           />
-        </ThemedView>
-        <ThemedView style={styles.statusRow}>
-          <ThemedView
-            style={[
-              styles.statusDot,
-              { backgroundColor: palette.success },
-              loading
-                ? { backgroundColor: palette.mutedSoft }
-                : error
-                  ? { backgroundColor: palette.error }
-                  : { backgroundColor: palette.success },
-            ]}
-          />
-          <ThemedText
-            type="caption"
-            style={[styles.statusText, { color: palette.mutedSoft }]}
-            numberOfLines={1}
-          >
-            {statusLine}
-          </ThemedText>
-        </ThemedView>
-      </ThemedView>
+        }
+        status={<HomeStatusLine text={statusLine} tone={statusTone} />}
+      />
 
       {loading ? (
         <InlineLoadingOverlay
@@ -255,12 +235,7 @@ export default function TodayScreen() {
 
       {!loading && !error ? (
         <ThemedView style={styles.reflectTeaserBlock}>
-          <ThemedView
-            style={[
-              styles.reflectTeaserFrame,
-              { borderTopColor: palette.border },
-            ]}
-          >
+          <HomeReflectionPreviewFrame>
             <ReflectionTeaserCard
               periodType="week"
               reflection={latestWeekReflection}
@@ -283,7 +258,7 @@ export default function TodayScreen() {
               }
               style={styles.reflectTeaserItem}
             />
-          </ThemedView>
+          </HomeReflectionPreviewFrame>
         </ThemedView>
       ) : null}
 
@@ -339,34 +314,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  hero: {
-    alignItems: "center",
-    gap: spacing.xxs,
-    paddingTop: spacing.xs,
-  },
-  heroTitle: { textAlign: "center" },
-  heroCopy: {
-    textAlign: "center",
-  },
-  heroCtaWrap: {
-    width: "100%",
-    paddingTop: 32,
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.inline,
-  },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: radius.pill,
-  },
-  statusText: {
-    textTransform: "none",
-    letterSpacing: 0.2,
-    flexShrink: 1,
-  },
   compactText: {
     lineHeight: typography.roles.bodySecondary.lineHeight + 1,
   },
@@ -381,13 +328,6 @@ const styles = StyleSheet.create({
   },
   reflectTeaserBlock: {
     marginTop: spacing.lg,
-  },
-  reflectTeaserFrame: {
-    borderTopWidth: 1,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    paddingTop: spacing.md,
-    gap: spacing.md,
   },
   reflectTeaserItem: {
     paddingBottom: spacing.sm,

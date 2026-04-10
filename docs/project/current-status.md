@@ -45,16 +45,50 @@ Gecontroleerd op:
 | Logging/tracing | Gepland 1.2A | **Aanwezig** | `requestId/flowId` contract + `_shared/flow-logger.ts`. |
 | Verify scripts lokaal | Gepland 1.2A/1.2E | **Aanwezig** | text/audio/reflection/output-quality scripts aanwezig. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
-| Design 1.2.1 volledige doorvoer | Gepland designspoor | **Onzeker** | refs bestaan, maar volledige implementatiedekking per scherm niet hard bewezen. |
+| Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
 
 ## Fase 1.2 status
 | Subfase | Status | Onderbouwing |
 |---|---|---|
-| 1.2A Stabiliteit/foutafhandeling | **Deels aanwezig** | tracing + verify aanwezig; geen harde afrondingsregistratie als complete subfase. |
+| 1.2A Stabiliteit/foutafhandeling | **Aanwezig** | tracing, foutafhandeling en verify-commando’s zijn aanwezig en actief gebruikt in hardening-passes. |
 | 1.2B Outputkwaliteit | **Deels aanwezig** | contracts/guardrails/quality-checks aanwezig; eindstatus “afgerond” niet hard vastgelegd. |
-| 1.2C UX-polish | **Deels aanwezig** | duidelijke polish in kernschermen; volledigheid over alle flows niet hard bewezen. |
+| 1.2C UX-polish | **Aanwezig** | kernflows en shared shell/primitives zijn gepolijst met bron-first fixes en mode-aware guardrails. |
 | 1.2D Vertrouwen (export/reset) | **Aanwezig** | settings export/import/delete zijn functioneel geland; handmatige tests bevestigen gebruikersflows en runtime/API-checks bevestigen service- en data-effecten. |
-| 1.2E Private-beta readiness | **Deels aanwezig** | setup + verify aanwezig; complete smoke/release-checklist niet hard aangetroffen. |
+| 1.2E Private-beta readiness | **Deels aanwezig** | setup + verify aanwezig; smoke/release-checklist is nu vastgelegd, maar volledige light/dark runtime-doorloop per kernflow blijft bewijsafhankelijk. |
+
+## Private-beta smoke checklist (1.2E)
+
+Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met runtime-bewijs (light + dark) en check tegen relevante `design_refs/1.2.1/**`.
+
+### Kernflow-routes
+- [ ] Auth/login: route opent zonder layoutbreuk; copy compact; geen zware enclosing card.
+- [ ] Today: primaire CTA visueel dominant; statusregel compact; recente context secundair.
+- [ ] Capture (idle/voice/typing): affordance direct duidelijk; geen toolbars/live transcript/pause-uitbreiding.
+- [ ] Post-entry: completion-feel rustig; narrative leesbaar; bewerkactie klein; delete niet dominant.
+- [ ] Day detail: reading-hiërarchie helder; geen visuele card-stapeling.
+- [ ] Entry detail: terugkoppeling naar juiste dag; narrative/result rustig; acties functioneel compact.
+- [ ] Days overview: list-not-cards; per maand gegroepeerd; datum + scanbare samenvatting.
+- [ ] Week overview: insight-not-analytics; korte summary + narrative + subtiele highlights.
+- [ ] Month overview: insight-not-analytics; korte summary + narrative + subtiele highlights.
+- [ ] Settings hub: nav/hero/rows consistent; destructive row rustig.
+- [ ] Export: hero/action/notice hiërarchie helder; copy compact.
+- [ ] Import: hero/action/result-states helder; voortgang begrijpelijk.
+- [ ] Delete/reset flow: confirm/loading/success/error begrijpelijk en rustig.
+- [ ] Fullscreen menu/shell/tab bar: header/page/footer coherent; menu/backdrop rustig.
+
+### Theming en shell
+- [ ] Light/dark delen dezelfde compositie; dark mode voegt geen extra massa/lagen toe.
+- [ ] Header en footer rustiger dan page background; geen decoratieve shell-randen als default.
+- [ ] Background modes zijn selectief en mode-aware (`ambient`, `subtle`, `flat`).
+- [ ] Content-heavy screens blijven `flat` en clean-first.
+
+### Copy en UX-guardrails
+- [ ] Copy is kort, menselijk, direct; geen AI/coach/productivity-taal.
+- [ ] Geen dubbele uitleg rond dezelfde primaire actie.
+- [ ] Geen dashboardisering/assistentdrift in overview- en reflection-flows.
+
+### Evidence-regel
+- [ ] Werk wordt pas “klaar” genoemd na: routecheck + light/dark runtime-check + vergelijking met relevante design refs.
 
 ## Correcties op eerdere ruis
 - Foutieve padverwijzing gecorrigeerd: `docs/project/docs/project/master-project.md` bestaat niet; correct is `docs/project/master-project.md`.
