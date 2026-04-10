@@ -20,10 +20,12 @@ Lees alleen wat nodig is:
 4. Houd dark mode structureel even licht als de design ref.
 5. Houd topnav navigation-only; titel en ondersteunende copy horen in de hero.
 6. Houd copy compact: liever hero + action + notice dan dubbele uitleg.
-7. Verifieer met relevante design refs en een gerichte runtime/smoke-check voordat je “klaar” zegt.
+7. Maak background-modi en surfaces mode-aware; dark mode is nooit de impliciete default voor light mode.
+8. Verifieer met relevante design refs en een gerichte dark + light runtime/smoke-check voordat je “klaar” zegt.
 
 # Niet doen
 - Geen redesign zonder expliciete opdracht.
 - Geen nieuwe visuele defaults in screens introduceren.
 - Geen zware auth-cards, image backgrounds, borders of fills als shortcut.
+- Geen dark-only gradients, surfaces of scrims in shared primitives.
 - Geen productstatus ophogen zonder hard bewijs.

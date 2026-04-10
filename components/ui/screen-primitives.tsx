@@ -11,7 +11,10 @@ import {
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { AppBackground, type AppBackgroundTone } from "@/components/ui/app-background";
+import {
+  AppBackground,
+  type AppBackgroundTone,
+} from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   borders,

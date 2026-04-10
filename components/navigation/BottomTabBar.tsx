@@ -30,12 +30,12 @@ const TABS: VisibleTab[] = [
 ];
 
 const TAB_BAR_SURFACE = {
-  light: "rgba(250, 249, 244, 0.96)",
+  light: "rgba(245, 241, 233, 0.97)",
   dark: "rgba(17, 16, 14, 0.98)",
 } as const;
 
 const TAB_BAR_TOP_GLOW = {
-  light: "rgba(116, 91, 0, 0.12)",
+  light: "rgba(116, 91, 0, 0.06)",
   dark: "rgba(224, 180, 58, 0.12)",
 } as const;
 

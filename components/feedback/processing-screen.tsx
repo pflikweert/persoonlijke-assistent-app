@@ -115,7 +115,7 @@ export function ProcessingScreen({
       ? Math.max(0, normalizedDetailCurrent) / normalizedDetailTotal
       : null;
   const nextDetailLabel = detailProgressLabel?.trim() || null;
-  const overlayColor = scheme === 'dark' ? 'rgba(8, 7, 6, 0.56)' : 'rgba(8, 7, 6, 0.40)';
+  const overlayColor = scheme === 'dark' ? 'rgba(8, 7, 6, 0.56)' : 'rgba(250, 249, 244, 0.46)';
   const cardColor = scheme === 'dark' ? 'rgba(43, 41, 37, 0.82)' : 'rgba(255, 255, 255, 0.8)';
 
   const pulseScale = useMemo(

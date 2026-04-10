@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, type ViewStyle } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { AppBackground } from "@/components/ui/app-background";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { spacing } from "@/theme";
 
 type ModalBackdropLayout = "center" | "bottom";
@@ -20,6 +21,7 @@ export function ModalBackdrop({
   outsidePressDisabled?: boolean;
   contentStyle?: ViewStyle;
 }) {
+  const scheme = useColorScheme() ?? "light";
   const webBlurStyle: ViewStyle =
     Platform.OS === "web"
       ? ({
@@ -36,7 +38,18 @@ export function ModalBackdrop({
       ]}
     >
       <AppBackground tone="subtle" />
-      <ThemedView style={[styles.scrim, webBlurStyle]} />
+      <ThemedView
+        style={[
+          styles.scrim,
+          {
+            backgroundColor:
+              scheme === "dark"
+                ? "rgba(14, 13, 11, 0.38)"
+                : "rgba(27, 28, 26, 0.14)",
+          },
+          webBlurStyle,
+        ]}
+      />
       {onPressOutside ? (
         <Pressable
           style={styles.backdropTouch}
@@ -63,7 +76,6 @@ const styles = StyleSheet.create({
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(14, 13, 11, 0.38)",
   },
   backdropTouch: {
     ...StyleSheet.absoluteFillObject,

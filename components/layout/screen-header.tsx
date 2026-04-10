@@ -10,7 +10,7 @@ type HeaderTitleType = "sectionTitle" | "screenTitle";
 type HeaderTitleAlign = "left" | "center";
 
 const HEADER_SURFACE = {
-  light: "rgba(250, 249, 244, 0.94)",
+  light: "rgba(246, 242, 234, 0.96)",
   dark: "rgba(18, 17, 15, 0.96)",
 } as const;
 

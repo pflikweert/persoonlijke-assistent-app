@@ -1,25 +1,50 @@
 import { Platform, StyleSheet, View, type ViewStyle } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
+import { useColorScheme } from "@/hooks/use-color-scheme";
+
 export type AppBackgroundTone = "ambient" | "subtle" | "flat";
 
 const APP_BACKGROUND_PRESETS = {
   ambient: {
-    gradientColors: ["#11110F", "#171612", "#231D1A"] as const,
-    goldStrong: "rgba(224,180,58,0.09)",
-    goldSoft: "rgba(224,180,58,0.04)",
-    plumStrong: "rgba(76,46,56,0.08)",
-    plumSoft: "rgba(76,46,56,0.04)",
+    light: {
+      gradientColors: ["#FAF9F4", "#F5F0E4", "#EFE8D7"] as const,
+      goldStrong: "rgba(230,184,0,0.08)",
+      goldSoft: "rgba(230,184,0,0.035)",
+      plumStrong: "rgba(126,85,96,0.035)",
+      plumSoft: "rgba(126,85,96,0.014)",
+    },
+    dark: {
+      gradientColors: ["#11110F", "#171612", "#231D1A"] as const,
+      goldStrong: "rgba(224,180,58,0.09)",
+      goldSoft: "rgba(224,180,58,0.04)",
+      plumStrong: "rgba(76,46,56,0.08)",
+      plumSoft: "rgba(76,46,56,0.04)",
+    },
   },
   subtle: {
-    gradientColors: ["#11110F", "#12110F", "#14120F"] as const,
-    goldStrong: "rgba(224,180,58,0.04)",
-    goldSoft: "rgba(224,180,58,0.02)",
-    plumStrong: "rgba(76,46,56,0.03)",
-    plumSoft: "rgba(76,46,56,0.015)",
+    light: {
+      gradientColors: ["#FAF9F4", "#F8F5EC", "#F4F0E5"] as const,
+      goldStrong: "rgba(230,184,0,0.025)",
+      goldSoft: "rgba(230,184,0,0.012)",
+      plumStrong: "rgba(126,85,96,0.012)",
+      plumSoft: "rgba(126,85,96,0.006)",
+    },
+    dark: {
+      gradientColors: ["#11110F", "#12110F", "#14120F"] as const,
+      goldStrong: "rgba(224,180,58,0.04)",
+      goldSoft: "rgba(224,180,58,0.02)",
+      plumStrong: "rgba(76,46,56,0.03)",
+      plumSoft: "rgba(76,46,56,0.015)",
+    },
   },
   flat: {
-    baseColor: "#11110F",
+    light: {
+      baseColor: "#FAF9F4",
+    },
+    dark: {
+      baseColor: "#11110F",
+    },
   },
 } as const;
 
@@ -28,19 +53,21 @@ export function AppBackground({
 }: {
   tone?: AppBackgroundTone;
 }) {
+  const scheme = useColorScheme() ?? "light";
+
   if (tone === "flat") {
     return (
       <View
         pointerEvents="none"
         style={[
           styles.background,
-          { backgroundColor: APP_BACKGROUND_PRESETS.flat.baseColor },
+          { backgroundColor: APP_BACKGROUND_PRESETS.flat[scheme].baseColor },
         ]}
       />
     );
   }
 
-  const preset = APP_BACKGROUND_PRESETS[tone];
+  const preset = APP_BACKGROUND_PRESETS[tone][scheme];
 
   if (Platform.OS === "web") {
     const webGradientStyle: ViewStyle = {

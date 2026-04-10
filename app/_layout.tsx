@@ -137,7 +137,13 @@ a:focus-visible,
 
   if (!authReady) {
     return (
-      <View style={[styles.rootShell, styles.webBackdrop]}>
+      <View
+        style={[
+          styles.rootShell,
+          styles.webBackdrop,
+          { backgroundColor: palette.background },
+        ]}
+      >
         <View style={[styles.rootShell, styles.webAppShell]}>
           <AppBackground tone="ambient" />
           <View style={styles.loadingContainer}>
@@ -150,7 +156,13 @@ a:focus-visible,
 
   return (
     <ThemeProvider value={appTheme}>
-      <View style={[styles.rootShell, styles.webBackdrop]}>
+      <View
+        style={[
+          styles.rootShell,
+          styles.webBackdrop,
+          { backgroundColor: palette.background },
+        ]}
+      >
         <View style={[styles.rootShell, styles.webAppShell]}>
           <AppBackground tone="flat" />
           <Stack>
@@ -180,7 +192,7 @@ a:focus-visible,
       </View>
       <StatusBar
         style={colorScheme === "dark" ? "light" : "dark"}
-        backgroundColor="#11110F"
+        backgroundColor={palette.background}
       />
       {Platform.OS === "web" ? <Analytics /> : null}
     </ThemeProvider>
@@ -193,7 +205,6 @@ const styles = StyleSheet.create({
   },
   webBackdrop: {
     width: "100%",
-    backgroundColor: "#11110F",
     ...(Platform.OS === "web"
       ? {
           alignItems: "center",

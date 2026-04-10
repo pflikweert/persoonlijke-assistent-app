@@ -229,7 +229,8 @@ Not allowed:
 - Shift tone and contrast; keep composition lightweight.
 
 ### Background Modes
-- Warm dark page atmosphere is selective, not global.
+- Page atmosphere is selective, not global.
+- Background modes are mode-aware; never apply a dark ambient treatment unchanged in light mode.
 - Use three background modes:
   - `ambient`: auth, splash/loaders, processing states, Today, hero-first and empty states.
   - `subtle`: supporting overlays and screens that need light warmth without visible atmosphere.
@@ -237,6 +238,7 @@ Not allowed:
 - Capture screens (`idle`, `voice`, `typing`) prioritize clarity; avoid visible ambient gradients.
 - Content-heavy screens (day detail, week/month detail, settings-like utility flows) stay flatter.
 - Header and footer remain calmer than page content and never carry decorative ambient gradients.
+- Header, page and footer must form one coherent theme hierarchy in both light and dark mode.
 
 ### Header + Hero
 - Top navigation is navigation only.
@@ -253,7 +255,7 @@ Not allowed:
 
 ### Proof-first
 - A design implementation is not “done” on code shape alone.
-- Verify against relevant `design_refs/1.2.1/**` and runtime behavior before calling it finished.
+- Verify against relevant `design_refs/1.2.1/**` plus light and dark runtime behavior before calling it finished.
 
 ---
 
