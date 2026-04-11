@@ -60,6 +60,7 @@ Deze fase blijft hardening en is geen verbreding van productscope.
 3. Geen scope-creep naar brede assistent.
 4. Geen nieuwe app-architectuur binnen deze fase.
 5. Twijfelgevallen worden niet als waarheid vastgezet zonder bewijs.
+6. AI-gedrag en promptbeheer volgen `docs/project/ai-quality-studio.md`.
 
 ## Copykader (bindend)
 Voor productcopy, microcopy en UX-tekst is leidend:

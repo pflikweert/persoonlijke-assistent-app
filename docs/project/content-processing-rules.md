@@ -1,5 +1,11 @@
 # Content & Narrative Processing Rules (Canoniek)
 
+> Relatie met AI governance:
+> - Deze regels zijn onderdeel van het AI Quality Studio-contract.
+> - Bij conflict geldt:
+>   - `content-processing-rules.md` is leidend voor inhoud en laagcontracten.
+>   - `ai-quality-studio.md` is leidend voor tooling, prompting-governance en evaluatieproces.
+
 ## Doel
 Dit document is het bindende gedragscontract voor contentverwerking in drie lagen:
 1. `entries_normalized.body`

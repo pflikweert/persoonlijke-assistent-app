@@ -9,6 +9,10 @@ Deze map bevat de actieve projectwaarheid voor scope, richting en status.
 4. `docs/project/open-points.md`
 5. `docs/project/content-processing-rules.md`
 6. `docs/project/copy-instructions.md`
+7. `docs/project/ai-quality-studio.md`
+
+Aanvulling:
+- `docs/project/ai-quality-studio.md` is de centrale AI governance-laag voor AI-gedrag, promptbeheer en evaluatie.
 
 ## 2) Generated documenten (afgeleid, niet leidend)
 - `docs/project/generated/chatgpt-project-context.md`

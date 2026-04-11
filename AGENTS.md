@@ -23,6 +23,7 @@ Gebruik deze docs als actieve projectwaarheid:
 - `docs/project/open-points.md`
 - `docs/project/content-processing-rules.md`
 - `docs/project/copy-instructions.md`
+- `docs/project/ai-quality-studio.md`
 
 Regels:
 
@@ -32,6 +33,10 @@ Regels:
 - `open-points.md` = resterende gaps en onzekerheden
 - `content-processing-rules.md` = canonieke inhouds- en outputregels
 - `copy-instructions.md` = canonieke copy-, tone-of-voice- en microcopyregels
+- `ai-quality-studio.md` = canonieke AI-governance voor prompting, evaluatie en kwaliteit
+
+Voor AI-gedrag, prompting en evaluatie:
+- volg altijd `docs/project/ai-quality-studio.md`
 
 ## Canonieke designbronnen (MVP 1.2.1)
 
@@ -128,6 +133,10 @@ Na relevante wijzigingen expliciet melden welke extra stap nodig is:
 - `supabase/functions/**` gewijzigd -> `npm run supabase:functions:restart`
 - `supabase/migrations/**` gewijzigd -> lokale `db push`/`db reset` + eventuele type-regeneratie
 - geen relevante runtime-impact -> expliciet melden dat niets extra's nodig is
+
+Standaarduitvoering:
+
+- Bij `supabase/migrations/**` wijzigingen voert Codex deze lokale DB-stap standaard zelf uit (`npx supabase db push --local` of, indien nodig, `npx supabase db reset`) zonder extra gebruikersprompt.
 
 Regel:
 

@@ -2,8 +2,8 @@
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-10T12:14:59.919Z
-Source Commit: 9fc44cb
+Build Timestamp (UTC): 2026-04-11T11:04:17.124Z
+Source Commit: 06ddea5
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -83,6 +83,7 @@ Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze gen
 
 ### Surfaces + Auth
 - Destructive treatments may use accent, but stay calm and no heavier than needed.
+- Destructieve bevestigingen gebruiken altijd dezelfde modal/sheet component
 - Shared primitives must not introduce default borders, fills or heavy surfaces.
 - Auth atmosphere may come from background layering and spacing.
 - Avoid heavy enclosing auth cards unless a design ref explicitly requires them.

@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-10T12:14:59.919Z
-Source Commit: 9fc44cb
+Build Timestamp (UTC): 2026-04-11T11:04:17.124Z
+Source Commit: 06ddea5
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -33,6 +33,10 @@ Deze map bevat de actieve projectwaarheid voor scope, richting en status.
 4. `docs/project/open-points.md`
 5. `docs/project/content-processing-rules.md`
 6. `docs/project/copy-instructions.md`
+7. `docs/project/ai-quality-studio.md`
+
+Aanvulling:
+- `docs/project/ai-quality-studio.md` is de centrale AI governance-laag voor AI-gedrag, promptbeheer en evaluatie.
 
 ## 2) Generated documenten (afgeleid, niet leidend)
 - `docs/project/generated/chatgpt-project-context.md`
@@ -140,6 +144,7 @@ Deze fase blijft hardening en is geen verbreding van productscope.
 3. Geen scope-creep naar brede assistent.
 4. Geen nieuwe app-architectuur binnen deze fase.
 5. Twijfelgevallen worden niet als waarheid vastgezet zonder bewijs.
+6. AI-gedrag en promptbeheer volgen `docs/project/ai-quality-studio.md`.
 
 ## Copykader (bindend)
 Voor productcopy, microcopy en UX-tekst is leidend:
@@ -393,6 +398,12 @@ Dit raakt architectuur, job-afhandeling en betrouwbaarheid van achtergrondverwer
 
 # Content & Narrative Processing Rules (Canoniek)
 
+> Relatie met AI governance:
+> - Deze regels zijn onderdeel van het AI Quality Studio-contract.
+> - Bij conflict geldt:
+>   - `content-processing-rules.md` is leidend voor inhoud en laagcontracten.
+>   - `ai-quality-studio.md` is leidend voor tooling, prompting-governance en evaluatieproces.
+
 ## Doel
 Dit document is het bindende gedragscontract voor contentverwerking in drie lagen:
 1. `entries_normalized.body`
@@ -521,6 +532,16 @@ Primair geraakt door:
 - nieuwe AI-flowarchitectuur
 - stijlclone-engine
 - extra tabellen of migrations voor deze regels
+
+## Capture Audio — State Guardrails
+
+- Opname is pas actief wanneer de recorder technisch gestart is
+- Init/preparing state moet zichtbaar zijn vóór actieve opname
+- Annuleren-modal pauzeert actieve opname direct
+- Sluiten van modal herstelt de pre-modal state correct
+- Annuleren (bevestigd) reset alle capture state volledig naar idle
+- Annuleren start nooit verwerking en slaat niets op
+- State-transities zijn expliciet, nooit impliciet
 
 ---
 
@@ -721,6 +742,14 @@ Reflecties zijn ondersteunend, niet leidend.
 ✖ Begin hier  
 ✖ Ga verder
 
+### Te vaag (CTA’s)
+
+✖ Verder  
+✖ Ga door  
+✖ Start  
+
+✔ Gebruik altijd een concrete actie die beschrijft wat er gebeurt
+
 ---
 
 ## Check voor elke tekst
@@ -752,12 +781,15 @@ Hij helpt je rustig je dag vast te leggen.
 - `docs/project/open-points.md`
 - `docs/project/content-processing-rules.md`
 - `docs/project/copy-instructions.md`
+- `docs/project/ai-quality-studio.md`
 - `master-project.md` = product, scope, fasekaart, beslisregels
 - `product-vision-mvp.md` = productgedrag en guardrails
 - `current-status.md` = enige statuswaarheid voor code-realiteit
 - `open-points.md` = resterende gaps en onzekerheden
 - `content-processing-rules.md` = canonieke inhouds- en outputregels
 - `copy-instructions.md` = canonieke copy-, tone-of-voice- en microcopyregels
+- `ai-quality-studio.md` = canonieke AI-governance voor prompting, evaluatie en kwaliteit
+- volg altijd `docs/project/ai-quality-studio.md`
 
 ### Canonieke designbronnen (MVP 1.2.1)
 - `docs/design/mvp-design-spec-1.2.1.md` is leidend voor MVP-designbeslissingen.
