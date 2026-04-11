@@ -4,7 +4,8 @@ export type FlowName =
   | 'regenerate-day-journal'
   | 'renormalize-entry'
   | 'import-chatgpt-markdown'
-  | 'admin-regeneration-job';
+  | 'admin-regeneration-job'
+  | 'admin-ai-quality-studio';
 
 export type FlowErrorCode =
   | 'AUTH_MISSING'

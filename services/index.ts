@@ -14,7 +14,24 @@ export {
   regenerateDayJournalByDate,
   updateNormalizedEntryById,
 } from './day-journals';
-export { refreshDerivedAfterCaptureInBackground, submitAudioEntry, submitTextEntry } from './entries';
+export {
+  refreshDerivedAfterCaptureInBackground,
+  resumeCaptureEntryProcessing,
+  submitAudioEntry,
+  submitTextEntry,
+} from './entries';
+export {
+  checkCaptureProcessingSession,
+  clearCaptureProcessingSession,
+  createCaptureProcessingSession,
+  createClientProcessingId,
+  loadCaptureProcessingSession,
+  logCaptureProcessing,
+  saveCaptureProcessingSession,
+  updateCaptureProcessingSession,
+  type CaptureProcessingRecoveryCheck,
+  type CaptureProcessingSession,
+} from './processing-recovery';
 export { isChatGptMarkdownImportEnabled } from './feature-flags';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
 export { downloadUserArchive } from './export';
@@ -25,6 +42,19 @@ export {
   hasAdminRegenerationAccess,
   startAdminRegenerationJob,
 } from './admin-regeneration';
+export {
+  createAdminAiQualityStudioDraftVersion,
+  deleteAdminAiQualityStudioDraftVersion,
+  fetchAdminAiQualityStudioCompareView,
+  fetchAdminAiQualityStudioTestRun,
+  fetchAdminAiQualityStudioTaskDetail,
+  fetchAdminAiQualityStudioTasks,
+  hasAdminAiQualityStudioAccess,
+  importAdminAiQualityRuntimeBaseline,
+  listAdminAiQualityStudioTestSources,
+  runAdminAiQualityStudioTest,
+  updateAdminAiQualityStudioDraftVersion,
+} from './ai-quality-studio';
 export {
   importChatGptMarkdownPreview,
   invokeMarkdownImport,

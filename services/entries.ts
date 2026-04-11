@@ -89,6 +89,7 @@ export async function submitTextEntry(input: {
   journalDate?: string;
   timezoneOffsetMinutes?: number;
   deferDerived?: boolean;
+  clientProcessingId?: string;
 }): Promise<ProcessEntryResult> {
   const supabase = getSupabaseBrowserClient();
 
@@ -115,6 +116,7 @@ export async function submitTextEntry(input: {
       journalDate: input.journalDate,
       timezoneOffsetMinutes: input.timezoneOffsetMinutes,
       deferDerived: input.deferDerived ?? false,
+      clientProcessingId: input.clientProcessingId,
     },
   });
 
@@ -143,6 +145,7 @@ export async function submitAudioEntry(input: {
   journalDate?: string;
   timezoneOffsetMinutes?: number;
   deferDerived?: boolean;
+  clientProcessingId?: string;
 }): Promise<ProcessEntryResult> {
   const supabase = getSupabaseBrowserClient();
 
@@ -179,6 +182,58 @@ export async function submitAudioEntry(input: {
       journalDate: input.journalDate,
       timezoneOffsetMinutes: input.timezoneOffsetMinutes,
       deferDerived: input.deferDerived ?? false,
+      clientProcessingId: input.clientProcessingId,
+    },
+  });
+
+  if (error) {
+    await parseFunctionInvokeError(error);
+  }
+
+  if (!data) {
+    throw new Error('Lege response van process-entry.');
+  }
+
+  if (data.status !== 'ok' || data.flow !== 'process-entry' || !data.requestId) {
+    throw new Error('Ongeldige response van process-entry.');
+  }
+
+  return data;
+}
+
+export async function resumeCaptureEntryProcessing(input: {
+  clientProcessingId: string;
+  sourceType: 'text' | 'audio';
+  capturedAt?: string;
+  journalDate?: string;
+  timezoneOffsetMinutes?: number;
+  deferDerived?: boolean;
+}): Promise<ProcessEntryResult> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const clientProcessingId = input.clientProcessingId.trim();
+  if (!clientProcessingId) {
+    throw new Error('Herstelreferentie ontbreekt.');
+  }
+
+  const flowId = createClientFlowId(input.sourceType === 'audio' ? 'capture-audio' : 'capture-text');
+  await ensureAuthenticatedUserSession({ flowId, source: 'process-entry' });
+
+  const { data, error } = await supabase.functions.invoke<ProcessEntryResult>('process-entry', {
+    headers: {
+      'x-flow-id': flowId,
+    },
+    body: {
+      sourceType: input.sourceType,
+      capturedAt: input.capturedAt,
+      journalDate: input.journalDate,
+      timezoneOffsetMinutes: input.timezoneOffsetMinutes,
+      deferDerived: input.deferDerived ?? true,
+      clientProcessingId,
     },
   });
 

@@ -184,6 +184,14 @@ a:focus-visible,
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="settings-ai-quality-studio"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="settings-ai-quality-studio/[taskKey]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}
             />

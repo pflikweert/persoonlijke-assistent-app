@@ -1,2 +1,21 @@
 // App-wide TypeScript domain and DTO types.
-export {};
+export type {
+  AiTaskDetail,
+  AiTaskDraftPayload,
+  AiTaskDraftCreationMeta,
+  AiRuntimeBaselineImportResult,
+  AiDraftDerivationSource,
+  AiTaskInputType,
+  AiTaskLiveVersionSummary,
+  AiTaskOutputType,
+  AiTaskSummary,
+  AiTaskTestRun,
+  AiTaskTestSource,
+  AiTaskTestCompareView,
+  AiTaskVersionDetail,
+  AiTaskVersionStatus,
+  AiCompareBaselineStatus,
+  AiTestRunStatus,
+  AiTestSourceType,
+  RunAiTaskTestPayload,
+} from './ai-quality-studio';

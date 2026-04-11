@@ -21,10 +21,12 @@ type ProcessEntryRequest = {
   rawText?: unknown;
   audioBase64?: unknown;
   audioMimeType?: unknown;
+  sourceType?: unknown;
   capturedAt?: unknown;
   journalDate?: unknown;
   timezoneOffsetMinutes?: unknown;
   deferDerived?: unknown;
+  clientProcessingId?: unknown;
 };
 
 type ProcessEntryResponse = {
@@ -59,11 +61,17 @@ type ParsedSourceInput =
   | {
       sourceType: "text";
       rawText: string;
+      recoveryOnly?: false;
     }
   | {
       sourceType: "audio";
       audioBase64: string;
       audioMimeType: string;
+      recoveryOnly?: false;
+    }
+  | {
+      sourceType: "text" | "audio";
+      recoveryOnly: true;
     };
 
 const CORS_BASE_HEADERS = {
@@ -75,6 +83,7 @@ const CORS_BASE_HEADERS = {
 
 const FLOW = "process-entry" as const;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+const CLIENT_PROCESSING_ID_PATTERN = /^[A-Za-z0-9_-]{12,160}$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NO_SPEECH_TRANSCRIPT = "Geen spraak herkend in audio-opname.";
 const LOW_CONTENT_TITLE = "Audio-opname zonder spraak";
@@ -174,6 +183,17 @@ function errorResponse(input: {
 function parseFlowId(request: Request, requestId: string): string {
   const flowId = request.headers.get("x-flow-id")?.trim() ?? "";
   return flowId.length > 0 ? flowId : requestId;
+}
+
+function parseClientProcessingId(value: unknown): string | null {
+  const parsed = parseString(value);
+  if (!parsed) {
+    return null;
+  }
+  if (!CLIENT_PROCESSING_ID_PATTERN.test(parsed)) {
+    throw new Error("Invalid clientProcessingId.");
+  }
+  return parsed;
 }
 
 function parseCapturedAt(capturedAt?: string): string {
@@ -579,9 +599,22 @@ function parseSourceInput(body: ProcessEntryRequest): {
   const rawText = parseString(body.rawText);
   const audioBase64 = parseString(body.audioBase64);
   const audioMimeType = parseString(body.audioMimeType);
+  const sourceType = parseString(body.sourceType);
+  const hasClientProcessingId = Boolean(parseString(body.clientProcessingId));
 
   const hasText = Boolean(rawText);
   const hasAudio = Boolean(audioBase64);
+
+  if (!hasText && !hasAudio && hasClientProcessingId) {
+    if (sourceType === "text" || sourceType === "audio") {
+      return {
+        value: {
+          sourceType,
+          recoveryOnly: true,
+        },
+      };
+    }
+  }
 
   if (hasText === hasAudio) {
     return {
@@ -1428,6 +1461,7 @@ Deno.serve(async (request: Request) => {
 
   let step = "received";
   let rawEntryId: string | null = null;
+  let clientProcessingId: string | null = null;
 
   try {
     logFlow("info", {
@@ -1556,6 +1590,7 @@ Deno.serve(async (request: Request) => {
     try {
       requestJournalDate = parseJournalDateInput(body.journalDate);
       timezoneOffsetMinutes = parseTimezoneOffsetMinutes(body.timezoneOffsetMinutes);
+      clientProcessingId = parseClientProcessingId(body.clientProcessingId);
     } catch (error) {
       return errorResponse({
         request,
@@ -1568,7 +1603,7 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const journalDate = requestJournalDate ??
+    let journalDate = requestJournalDate ??
       toJournalDate(capturedAt, timezoneOffsetMinutes);
 
     logFlow("info", {
@@ -1587,6 +1622,7 @@ Deno.serve(async (request: Request) => {
           ? "capturedAt_with_client_offset"
           : "capturedAt_utc_day",
         timezoneOffsetMinutes,
+        hasClientProcessingId: Boolean(clientProcessingId),
         sourceType: parsedSource.value.sourceType,
       },
     });
@@ -1594,8 +1630,179 @@ Deno.serve(async (request: Request) => {
     let sourceTextForNormalization = "";
     let rawTextForPersist: string | null = null;
     let transcriptTextForPersist: string | null = null;
+    let rawEntry: { id: string } | null = null;
 
-    if (parsedSource.value.sourceType === "text") {
+    if (clientProcessingId) {
+      const { data: existingRawEntry, error: existingRawError } = await supabase
+        .from("entries_raw")
+        .select("id, source_type, raw_text, transcript_text, journal_date, captured_at")
+        .eq("user_id", authData.user.id)
+        .eq("client_processing_id", clientProcessingId)
+        .maybeSingle();
+
+      if (existingRawError) {
+        logFlow("error", {
+          flow: FLOW,
+          requestId,
+          flowId,
+          step,
+          event: "recovery_check_failed",
+          details: {
+            error: String(existingRawError.message ?? existingRawError),
+            clientProcessingId,
+          },
+        });
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: "DB_READ_FAILED",
+          message: "Failed to check existing capture",
+        });
+      }
+
+      if (existingRawEntry) {
+        if (existingRawEntry.source_type !== parsedSource.value.sourceType) {
+          return errorResponse({
+            request,
+            httpStatus: 409,
+            requestId,
+            flowId,
+            step,
+            code: "INPUT_INVALID",
+            message: "clientProcessingId already belongs to another capture type.",
+          });
+        }
+
+        rawEntry = { id: existingRawEntry.id };
+        rawEntryId = existingRawEntry.id;
+        const existingJournalDate = existingRawEntry.journal_date ?? journalDate;
+        journalDate = existingJournalDate;
+        const { data: existingNormalizedEntry, error: existingNormalizedError } = await supabase
+          .from("entries_normalized")
+          .select("id")
+          .eq("user_id", authData.user.id)
+          .eq("raw_entry_id", existingRawEntry.id)
+          .maybeSingle();
+
+        if (existingNormalizedError) {
+          logFlow("error", {
+            flow: FLOW,
+            requestId,
+            flowId,
+            step,
+            event: "recovery_check_failed",
+            details: {
+              error: String(existingNormalizedError.message ?? existingNormalizedError),
+              rawEntryId,
+              clientProcessingId,
+            },
+          });
+          return errorResponse({
+            request,
+            httpStatus: 500,
+            requestId,
+            flowId,
+            step,
+            code: "DB_READ_FAILED",
+            message: "Failed to check existing capture",
+            details: { rawEntryId },
+          });
+        }
+
+        if (existingNormalizedEntry) {
+          const response: ProcessEntryResponse = {
+            status: "ok",
+            flow: FLOW,
+            requestId,
+            flowId,
+            rawEntryId: existingRawEntry.id,
+            normalizedEntryId: existingNormalizedEntry.id,
+            journalDate: existingJournalDate,
+            dayJournalId: "",
+            sourceType: parsedSource.value.sourceType,
+          };
+
+          step = "completed";
+          logFlow("info", {
+            flow: FLOW,
+            requestId,
+            flowId,
+            step,
+            event: "idempotency_hit_completed",
+            details: {
+              rawEntryId: response.rawEntryId,
+              normalizedEntryId: response.normalizedEntryId,
+              journalDate: response.journalDate,
+              sourceType: response.sourceType,
+              clientProcessingId,
+            },
+          });
+
+          return jsonResponse(request, 200, response);
+        }
+
+        sourceTextForNormalization =
+          existingRawEntry.source_type === "audio"
+            ? parseString(existingRawEntry.transcript_text) ?? ""
+            : parseString(existingRawEntry.raw_text) ?? "";
+
+        if (!sourceTextForNormalization) {
+          logFlow("warn", {
+            flow: FLOW,
+            requestId,
+            flowId,
+            step,
+            event: "recovery_resume_blocked",
+            details: {
+              rawEntryId,
+              sourceType: existingRawEntry.source_type,
+              clientProcessingId,
+            },
+          });
+          return errorResponse({
+            request,
+            httpStatus: 409,
+            requestId,
+            flowId,
+            step,
+            code: "INPUT_INVALID",
+            message: "Capture could not be resumed safely.",
+            details: { rawEntryId },
+          });
+        }
+
+        logFlow("info", {
+          flow: FLOW,
+          requestId,
+          flowId,
+          step,
+          event: "recovery_resume",
+          details: {
+            rawEntryId,
+            journalDate: existingJournalDate,
+            sourceType: existingRawEntry.source_type,
+            clientProcessingId,
+          },
+        });
+      }
+    }
+
+    if (rawEntry) {
+      // Existing raw entry found for this idempotency key; continue normalization only.
+    } else if (parsedSource.value.recoveryOnly) {
+      return errorResponse({
+        request,
+        httpStatus: 409,
+        requestId,
+        flowId,
+        step,
+        code: "INPUT_INVALID",
+        message: "Capture could not be found for recovery.",
+      });
+    } else if (parsedSource.value.sourceType === "text") {
       sourceTextForNormalization = parsedSource.value.rawText;
       rawTextForPersist = parsedSource.value.rawText;
     } else {
@@ -1679,44 +1886,68 @@ Deno.serve(async (request: Request) => {
       transcriptTextForPersist = transcriptText;
     }
 
-    step = "raw_persisted";
-    const { data: rawEntry, error: rawError } = await supabase
-      .from("entries_raw")
-      .insert({
-        user_id: authData.user.id,
-        source_type: parsedSource.value.sourceType,
-        raw_text: rawTextForPersist,
-        transcript_text: transcriptTextForPersist,
-        journal_date: journalDate,
-        captured_at: capturedAt,
-      })
-      .select("id")
-      .single();
+    if (!rawEntry) {
+      step = "raw_persisted";
+      const { data: insertedRawEntry, error: rawError } = await supabase
+        .from("entries_raw")
+        .insert({
+          user_id: authData.user.id,
+          source_type: parsedSource.value.sourceType,
+          raw_text: rawTextForPersist,
+          transcript_text: transcriptTextForPersist,
+          journal_date: journalDate,
+          captured_at: capturedAt,
+          client_processing_id: clientProcessingId,
+        })
+        .select("id")
+        .single();
 
-    if (rawError || !rawEntry) {
-      logFlow("error", {
+      if (rawError || !insertedRawEntry) {
+        logFlow("error", {
+          flow: FLOW,
+          requestId,
+          flowId,
+          step,
+          event: "insert_entries_raw_failed",
+          details: {
+            error: rawError
+              ? String(rawError.message ?? rawError)
+              : "missing row",
+            hasClientProcessingId: Boolean(clientProcessingId),
+          },
+        });
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: "DB_WRITE_FAILED",
+          message: "Failed to persist raw entry",
+        });
+      }
+
+      rawEntry = insertedRawEntry;
+      rawEntryId = insertedRawEntry.id;
+      logFlow("info", {
         flow: FLOW,
         requestId,
         flowId,
         step,
-        event: "insert_entries_raw_failed",
+        event: "server_ack",
         details: {
-          error: rawError
-            ? String(rawError.message ?? rawError)
-            : "missing row",
+          rawEntryId,
+          journalDate,
+          sourceType: parsedSource.value.sourceType,
+          hasClientProcessingId: Boolean(clientProcessingId),
         },
       });
-      return errorResponse({
-        request,
-        httpStatus: 500,
-        requestId,
-        flowId,
-        step,
-        code: "DB_WRITE_FAILED",
-        message: "Failed to persist raw entry",
-      });
     }
-    rawEntryId = rawEntry.id;
+
+    if (!rawEntry) {
+      throw new Error("Raw entry missing after capture persistence.");
+    }
+    const persistedRawEntry = rawEntry;
 
     const normalized = await normalizeEntry({
       apiKey: runtimeEnv.openAiApiKey,
@@ -1730,13 +1961,16 @@ Deno.serve(async (request: Request) => {
     step = "normalized_persisted";
     const { data: normalizedEntry, error: normalizedError } = await supabase
       .from("entries_normalized")
-      .insert({
-        raw_entry_id: rawEntry.id,
-        user_id: authData.user.id,
-        title: normalized.title,
-        body: normalized.body,
-        summary_short: normalized.summaryShort,
-      })
+      .upsert(
+        {
+          raw_entry_id: persistedRawEntry.id,
+          user_id: authData.user.id,
+          title: normalized.title,
+          body: normalized.body,
+          summary_short: normalized.summaryShort,
+        },
+        { onConflict: "raw_entry_id" },
+      )
       .select("id")
       .single();
 
@@ -1752,6 +1986,7 @@ Deno.serve(async (request: Request) => {
             ? String(normalizedError.message ?? normalizedError)
             : "missing row",
           rawEntryId,
+          hasClientProcessingId: Boolean(clientProcessingId),
         },
       });
       return errorResponse({
@@ -1772,7 +2007,7 @@ Deno.serve(async (request: Request) => {
         flow: FLOW,
         requestId,
         flowId,
-        rawEntryId: rawEntry.id,
+        rawEntryId: persistedRawEntry.id,
         normalizedEntryId: normalizedEntry.id,
         journalDate,
         dayJournalId: "",
@@ -1792,6 +2027,7 @@ Deno.serve(async (request: Request) => {
           dayJournalDeferred: true,
           journalDate: response.journalDate,
           sourceType: response.sourceType,
+          hasClientProcessingId: Boolean(clientProcessingId),
         },
       });
 
@@ -2004,7 +2240,7 @@ Deno.serve(async (request: Request) => {
       flow: FLOW,
       requestId,
       flowId,
-      rawEntryId: rawEntry.id,
+      rawEntryId: persistedRawEntry.id,
       normalizedEntryId: normalizedEntry.id,
       journalDate,
       dayJournalId: dayJournal.id,
@@ -2024,6 +2260,7 @@ Deno.serve(async (request: Request) => {
         dayJournalId: response.dayJournalId,
         journalDate: response.journalDate,
         sourceType: response.sourceType,
+        hasClientProcessingId: Boolean(clientProcessingId),
       },
     });
 
@@ -2038,6 +2275,7 @@ Deno.serve(async (request: Request) => {
       details: {
         error: error instanceof Error ? error.message : String(error),
         ...(rawEntryId ? { rawEntryId } : {}),
+        hasClientProcessingId: Boolean(clientProcessingId),
       },
     });
     return errorResponse({

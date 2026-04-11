@@ -12,6 +12,7 @@ const outputPaths = {
   chatgptProjectContext: 'docs/project/generated/chatgpt-project-context.md',
   stitchDesignContext: 'docs/design/generated/stitch-design-context.md',
   uploadChatgptProjectContext: 'docs/upload/chatgpt-project-context.md',
+  uploadAiQualityStudio: 'docs/upload/ai-quality-studio.md',
   uploadMvpDesignSpec: 'docs/upload/mvp-design-spec-1.2.1.md',
   uploadStitchDesignContext: 'docs/upload/stitch-design-context.md',
   uploadManifest: 'docs/upload/upload-manifest.md',
@@ -40,6 +41,11 @@ const uploadSet = [
   {
     path: outputPaths.uploadChatgptProjectContext,
     type: 'generated upload copy',
+    flow: 'ChatGPT Project',
+  },
+  {
+    path: outputPaths.uploadAiQualityStudio,
+    type: 'canonical upload copy',
     flow: 'ChatGPT Project',
   },
   {
@@ -374,7 +380,7 @@ function renderUploadManifest({ buildTimestamp, commitHash }) {
     ...uploadSet.map((item) => `| \`${item.path}\` | ${item.type} | ${item.flow} |`),
     '',
     '## Regels',
-    '- Upload naar ChatGPT Project standaard de drie contextbestanden uit `docs/upload/**` plus dit manifest indien completeness-check gewenst is.',
+    '- Upload naar ChatGPT Project standaard de vier contextbestanden uit `docs/upload/**` plus dit manifest indien completeness-check gewenst is.',
     '- Gebruik `docs/upload/**` niet als canonieke bron voor agents; lees de handmatige bronbestanden en draai de bundle opnieuw.',
     '- Voor Stitch/design-handoff hoort `docs/upload/stitch-design-context.md` bij de uploadset.',
     '- Draai `npm run docs:bundle` en daarna `npm run docs:bundle:verify` na canonieke docs- of design-handoff wijzigingen.',
@@ -430,6 +436,7 @@ function renderOutputs(inputs, metadata) {
     [outputPaths.chatgptProjectContext, chatgptProjectContext],
     [outputPaths.stitchDesignContext, stitchDesignContext],
     [outputPaths.uploadChatgptProjectContext, chatgptProjectContext],
+    [outputPaths.uploadAiQualityStudio, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/project/ai-quality-studio.md')?.content?.trim() ?? ''}\n`],
     [outputPaths.uploadMvpDesignSpec, `${inputs.mvpDesignSpec.trim()}\n`],
     [outputPaths.uploadStitchDesignContext, stitchDesignContext],
     [outputPaths.uploadManifest, uploadManifest],

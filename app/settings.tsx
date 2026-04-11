@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet } from "react-native";
 
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { DestructiveConfirmSheetContent } from "@/components/feedback/destructive-confirm-sheet";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
@@ -14,17 +15,22 @@ import {
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
     classifyUnknownError,
+    hasAdminAiQualityStudioAccess,
     hasAdminRegenerationAccess,
     resetAllUserData,
 } from "@/services";
 import { colorTokens, radius, spacing } from "@/theme";
 
 type SettingsRoute = {
-  key: "export" | "import" | "regeneration";
+  key: "export" | "import" | "regeneration" | "ai-quality-studio";
   label: string;
   description: string;
   icon: keyof typeof MaterialIcons.glyphMap;
-  route: "/settings-export" | "/settings-import" | "/settings-regeneration";
+  route:
+    | "/settings-export"
+    | "/settings-import"
+    | "/settings-regeneration"
+    | "/settings-ai-quality-studio";
 };
 
 type RowItem = {
@@ -61,6 +67,14 @@ const ADMIN_ROUTE: SettingsRoute = {
     "Herbouw entries, dagjournals en reflecties voor alle gebruikers.",
   icon: "autorenew",
   route: "/settings-regeneration",
+};
+
+const ADMIN_AI_QUALITY_ROUTE: SettingsRoute = {
+  key: "ai-quality-studio",
+  label: "AI Quality Studio",
+  description: "Bekijk AI tasks en live versiestatus (admin-only).",
+  icon: "tune",
+  route: "/settings-ai-quality-studio",
 };
 
 const DELETE_ROW: RowItem = {
@@ -147,7 +161,11 @@ export default function SettingsScreen() {
 
     const run = async () => {
       try {
-        const allowed = await hasAdminRegenerationAccess();
+        const [regenAllowed, aiQualityAllowed] = await Promise.all([
+          hasAdminRegenerationAccess(),
+          hasAdminAiQualityStudioAccess(),
+        ]);
+        const allowed = regenAllowed || aiQualityAllowed;
         if (!cancelled) {
           setAdminAccess(allowed);
           setAccessError(null);
@@ -172,7 +190,7 @@ export default function SettingsScreen() {
   }, []);
 
   const adminRoutes = useMemo(
-    () => (adminAccess === true ? [ADMIN_ROUTE] : []),
+    () => (adminAccess === true ? [ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE] : []),
     [adminAccess],
   );
 
@@ -304,58 +322,14 @@ export default function SettingsScreen() {
             />
 
             {deleteSheetState === "confirm" ? (
-              <>
-                <ThemedText type="sectionTitle">
-                  Weet je zeker dat je alles wilt verwijderen?
-                </ThemedText>
-                <ThemedText
-                  type="bodySecondary"
-                  style={{ color: palette.muted }}
-                >
-                  Je momenten, dagen en reflecties worden verwijderd. Dit kun je
-                  niet ongedaan maken.
-                </ThemedText>
-
-                <ThemedView style={styles.sheetActions}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Annuleren"
-                    onPress={closeDeleteSheet}
-                    style={styles.sheetSecondaryButton}
-                  >
-                    <ThemedText
-                      type="defaultSemiBold"
-                      style={{ color: palette.mutedSoft }}
-                    >
-                      Annuleren
-                    </ThemedText>
-                  </Pressable>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Verwijder alles"
-                    onPress={() => void handleConfirmDeleteAll()}
-                    style={[
-                      styles.sheetDangerButton,
-                      {
-                        backgroundColor: palette.surfaceLow,
-                      },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name="delete-forever"
-                      size={18}
-                      color={palette.destructiveSoftText}
-                    />
-                    <ThemedText
-                      type="defaultSemiBold"
-                      style={{ color: palette.destructiveSoftText }}
-                    >
-                      Verwijder alles
-                    </ThemedText>
-                  </Pressable>
-                </ThemedView>
-              </>
+              <DestructiveConfirmSheetContent
+                title="Weet je zeker dat je alles wilt verwijderen?"
+                message="Je momenten, dagen en reflecties worden verwijderd. Dit kun je niet ongedaan maken."
+                secondaryLabel="Annuleren"
+                confirmLabel="Verwijder alles"
+                onCancel={closeDeleteSheet}
+                onConfirm={() => void handleConfirmDeleteAll()}
+              />
             ) : null}
 
             {deleteSheetState === "loading" ? (
@@ -551,15 +525,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.lg,
-  },
-  sheetDangerButton: {
-    minHeight: 44,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: spacing.xs,
     paddingHorizontal: spacing.lg,
   },
   sheetPrimaryButton: {
