@@ -69,10 +69,9 @@ function TabBarContent({
       ]}
     >
       <View
-        pointerEvents="none"
         style={[
           styles.topTone,
-          { backgroundColor: TAB_BAR_TOP_TONE[colorScheme] },
+          { backgroundColor: TAB_BAR_TOP_TONE[colorScheme], pointerEvents: "none" },
         ]}
       />
       <View style={styles.row}>

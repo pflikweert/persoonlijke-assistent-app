@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, type NativeSyntheticEvent, type TextInputSelectionChangeEventData } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { ConfirmDialog } from '@/components/feedback/confirm-dialog';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
@@ -18,8 +18,7 @@ import {
   SettingsTopNav,
 } from '@/components/ui/settings-screen-primitives';
 import { AiTokenChipPicker } from '@/components/ui/ai-token-chip-picker';
-import { AiTokenEditor } from '@/components/ui/ai-token-editor';
-import { insertTokenAtSelection } from '@/components/ui/ai-token-editor-utils';
+import { AiTokenEditor, type PromptEditorState } from '@/components/ui/ai-token-editor';
 import {
   InputField,
   MetaText,
@@ -75,12 +74,19 @@ export default function AiQualityStudioDraftScreen() {
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [entryCleanupSelections, setEntryCleanupSelections] = useState<Record<EntryCleanupEditorKey, { start: number; end: number }>>({
-    systemRulesInstruction: { start: 0, end: 0 },
-    generalInstruction: { start: 0, end: 0 },
-    titleInstruction: { start: 0, end: 0 },
-    bodyInstruction: { start: 0, end: 0 },
-    summaryShortInstruction: { start: 0, end: 0 },
+  const [entryCleanupPendingTokenInsert, setEntryCleanupPendingTokenInsert] = useState<Record<EntryCleanupEditorKey, string | null>>({
+    systemRulesInstruction: null,
+    generalInstruction: null,
+    titleInstruction: null,
+    bodyInstruction: null,
+    summaryShortInstruction: null,
+  });
+  const [entryCleanupEditorStates, setEntryCleanupEditorStates] = useState<Record<EntryCleanupEditorKey, PromptEditorState | null>>({
+    systemRulesInstruction: null,
+    generalInstruction: null,
+    titleInstruction: null,
+    bodyInstruction: null,
+    summaryShortInstruction: null,
   });
 
   const selectedDraft = useMemo(() => {
@@ -148,7 +154,7 @@ export default function AiQualityStudioDraftScreen() {
       setForm(toDraftFormState(updated));
       await load();
       if (options?.testAfterSave) {
-        router.push(`/settings-ai-quality-studio/${taskKey}/test/${selectedDraft.id}` as never);
+        router.push(`/settings-ai-quality-studio/${taskKey}/validate/${selectedDraft.id}` as never);
       }
     } catch (nextError) {
       const parsedError = classifyUnknownError(nextError);
@@ -245,7 +251,7 @@ export default function AiQualityStudioDraftScreen() {
 
   const canSave = formDirty && formValid && !savingDraft && !deletingDraft;
   const canTest = !savingDraft && !deletingDraft;
-  const primaryActionLabel = formDirty && formValid ? 'Opslaan en testen' : 'Test deze versie';
+  const primaryActionLabel = formDirty && formValid ? 'Opslaan en valideren' : 'Valideer deze versie';
   const entryCleanupSubtitle = taskContract?.lines[0] ?? 'Bron opschonen tot rustig, natuurlijk Nederlands.';
 
   function updateEntryCleanupInstructionSection(section: EntryCleanupEditorKey, value: string) {
@@ -294,40 +300,27 @@ export default function AiQualityStudioDraftScreen() {
     };
   }, [entryCleanupInstructionSections]);
 
-  function handleEntryCleanupSelectionChange(
-    section: EntryCleanupEditorKey,
-    event: NativeSyntheticEvent<TextInputSelectionChangeEventData>
-  ) {
-    const selection = event.nativeEvent.selection;
-    setEntryCleanupSelections((prev) => ({
-      ...prev,
-      [section]: {
-        start: selection.start,
-        end: selection.end,
-      },
-    }));
-  }
-
   function insertFieldReferenceIntoEditor(
     targetEditor: EntryCleanupEditorKey,
     tokenId: 'rawText' | 'title' | 'body' | 'summary_short'
   ) {
     if (!isEntryCleanup) return;
-    const currentValue = entryCleanupInstructionSections?.[targetEditor] ?? '';
-    const selection = entryCleanupSelections[targetEditor] ?? { start: currentValue.length, end: currentValue.length };
-    const token = getEntryCleanupTokenById(tokenId).token;
-    const { nextValue, nextCursor } = insertTokenAtSelection({
-      value: currentValue,
-      tokenText: token,
-      selectionStart: selection.start,
-      selectionEnd: selection.end,
-    });
-
-    updateEntryCleanupInstructionSection(targetEditor, nextValue);
-    setEntryCleanupSelections((prev) => ({
+    const token = getEntryCleanupTokenById(tokenId);
+    setEntryCleanupPendingTokenInsert((prev) => ({
       ...prev,
-      [targetEditor]: { start: nextCursor, end: nextCursor },
+      [targetEditor]: token.id,
     }));
+  }
+
+  function getUnknownTokenWarnings(section: EntryCleanupEditorKey): string[] {
+    const tokenIds: string[] = entryCleanupEditorStates[section]?.tokenIds ?? [];
+    return Array.from(
+      new Set(
+        tokenIds
+          .filter((tokenId: string) => !ENTRY_CLEANUP_TOKEN_DEFINITIONS.some((item) => item.id === tokenId))
+          .map((tokenId: string) => `Onbekende token-id in editor-state: ${tokenId}`)
+      )
+    );
   }
 
   function renderTokenEditorField(args: {
@@ -357,11 +350,23 @@ export default function AiQualityStudioDraftScreen() {
             value={args.value}
             tokens={ENTRY_CLEANUP_TOKEN_DEFINITIONS}
             minHeight={args.minHeight}
-            onSelectionChange={(event) => handleEntryCleanupSelectionChange(args.section, event)}
             onChangeText={(value) => updateEntryCleanupInstructionSection(args.section, value)}
+            requestInsertTokenId={entryCleanupPendingTokenInsert[args.section]}
+            onInsertTokenHandled={() =>
+              setEntryCleanupPendingTokenInsert((prev) => ({
+                ...prev,
+                [args.section]: null,
+              }))
+            }
+            onEditorStateChange={(state) =>
+              setEntryCleanupEditorStates((prev) => ({
+                ...prev,
+                [args.section]: state,
+              }))
+            }
           />
         }
-        warnings={args.warnings}
+        warnings={[...args.warnings, ...getUnknownTokenWarnings(args.section)]}
       />
     );
   }
@@ -372,7 +377,7 @@ export default function AiQualityStudioDraftScreen() {
       return;
     }
     if (selectedDraft && detail) {
-      router.push(`/settings-ai-quality-studio/${detail.key}/test/${selectedDraft.id}` as never);
+      router.push(`/settings-ai-quality-studio/${detail.key}/validate/${selectedDraft.id}` as never);
     }
   };
 

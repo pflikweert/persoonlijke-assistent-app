@@ -15,7 +15,9 @@ export type {
   AiTaskVersionDetail,
   AiTaskVersionStatus,
   AiCompareBaselineStatus,
+  AiReviewLabel,
   AiTestRunStatus,
   AiTestSourceType,
   RunAiTaskTestPayload,
+  SaveAiTaskTestReviewPayload,
 } from './ai-quality-studio';

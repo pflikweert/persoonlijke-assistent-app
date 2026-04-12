@@ -53,6 +53,7 @@ export {
   importAdminAiQualityRuntimeBaseline,
   listAdminAiQualityStudioTestSources,
   runAdminAiQualityStudioTest,
+  saveAdminAiQualityStudioTestReview,
   updateAdminAiQualityStudioDraftVersion,
 } from './ai-quality-studio';
 export {

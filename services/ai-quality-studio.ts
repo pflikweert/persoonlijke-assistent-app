@@ -1,8 +1,10 @@
 import type {
+  AiReviewLabel,
   AiTaskDraftCreationMeta,
   AiTaskDetail,
   AiTaskDraftPayload,
   AiRuntimeBaselineImportResult,
+  SaveAiTaskTestReviewPayload,
   AiTaskSummary,
   AiTaskTestCompareView,
   AiTaskTestRun,
@@ -459,6 +461,44 @@ export async function fetchAdminAiQualityStudioCompareView(
   }
 
   return data.compare;
+}
+
+export async function saveAdminAiQualityStudioTestReview(
+  payload: SaveAiTaskTestReviewPayload
+): Promise<AiTaskTestRun> {
+  const normalizedTestRunId = payload.testRunId.trim();
+  if (!normalizedTestRunId) {
+    throw new Error('testRunId ontbreekt.');
+  }
+
+  const allowedLabels: AiReviewLabel[] = ['beter', 'gelijk', 'slechter', 'fout'];
+  if (!allowedLabels.includes(payload.label)) {
+    throw new Error('label is ongeldig.');
+  }
+
+  const notes = payload.notes?.trim() || null;
+  if ((payload.label === 'slechter' || payload.label === 'fout') && !notes) {
+    throw new Error('Notitie is verplicht bij slechter of fout.');
+  }
+
+  const flowId = createClientFlowId('admin-ai-quality');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
+
+  const data = await invokeAction<TestRunResponse>({
+    flowId,
+    body: {
+      action: 'save_test_review',
+      testRunId: normalizedTestRunId,
+      label: payload.label,
+      notes,
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-ai-quality-studio' || !data.requestId || !data.testRun) {
+    throw new Error('Ongeldige response van admin-ai-quality-studio save_test_review.');
+  }
+
+  return data.testRun;
 }
 
 export async function importAdminAiQualityRuntimeBaseline(): Promise<AiRuntimeBaselineImportResult> {

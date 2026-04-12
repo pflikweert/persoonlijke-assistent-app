@@ -7,6 +7,10 @@ import type {
   AiTaskVersionDetail,
 } from '@/types';
 
+export default function SettingsAiQualityStudioSharedModule() {
+  return null;
+}
+
 export const AI_QUALITY_ALLOWED_MODELS = [
   { value: 'gpt-5.4-mini', label: 'GPT-5.4 mini' },
   { value: 'gpt-5.4', label: 'GPT-5.4' },
@@ -226,6 +230,7 @@ function parseLegacyEntryCleanupInstructionText(value: string): EntryCleanupInst
   const lines = trimmed.split('\n');
   const next = emptyEntryCleanupInstructionState();
   let current: keyof EntryCleanupInstructionState = 'generalInstruction';
+  let pendingEmptyLines = 0;
   const keyMap: Record<string, keyof EntryCleanupInstructionState> = {
     systeemregels: 'systemRulesInstruction',
     'systeem regels': 'systemRulesInstruction',
@@ -246,19 +251,30 @@ function parseLegacyEntryCleanupInstructionText(value: string): EntryCleanupInst
       const maybe = keyMap[match[1].trim().toLowerCase()];
       if (maybe) {
         current = maybe;
+        pendingEmptyLines = 0;
         continue;
       }
     }
+
+    if (line.trim().length === 0) {
+      pendingEmptyLines += 1;
+      continue;
+    }
+
+    if (pendingEmptyLines > 0 && next[current]) {
+      next[current] = `${next[current]}${'\n'.repeat(pendingEmptyLines)}`;
+    }
+    pendingEmptyLines = 0;
 
     next[current] = next[current] ? `${next[current]}\n${line}` : line;
   }
 
   return {
-    systemRulesInstruction: next.systemRulesInstruction.trim(),
-    generalInstruction: next.generalInstruction.trim(),
-    titleInstruction: next.titleInstruction.trim(),
-    bodyInstruction: next.bodyInstruction.trim(),
-    summaryShortInstruction: next.summaryShortInstruction.trim(),
+    systemRulesInstruction: next.systemRulesInstruction,
+    generalInstruction: next.generalInstruction,
+    titleInstruction: next.titleInstruction,
+    bodyInstruction: next.bodyInstruction,
+    summaryShortInstruction: next.summaryShortInstruction,
   };
 }
 
@@ -295,7 +311,7 @@ export function formatEntryCleanupInstructionStateForEditor(
   ];
 
   return rows
-    .map(([key, value]) => `${ENTRY_CLEANUP_INSTRUCTION_LABELS[key]}:\n${value.trim()}`)
+    .map(([key, value]) => `${ENTRY_CLEANUP_INSTRUCTION_LABELS[key]}:\n${value}`)
     .join('\n\n');
 }
 
@@ -307,11 +323,11 @@ export function buildEntryCleanupPromptTemplate(args: {
   const current: Record<string, unknown> = parsed ? { ...parsed } : { rawText: '{{raw_text}}' };
 
   current.instruction = {
-    systemRulesInstruction: args.instructions.systemRulesInstruction.trim(),
-    generalInstruction: args.instructions.generalInstruction.trim(),
-    titleInstruction: args.instructions.titleInstruction.trim(),
-    bodyInstruction: args.instructions.bodyInstruction.trim(),
-    summaryShortInstruction: args.instructions.summaryShortInstruction.trim(),
+    systemRulesInstruction: args.instructions.systemRulesInstruction,
+    generalInstruction: args.instructions.generalInstruction,
+    titleInstruction: args.instructions.titleInstruction,
+    bodyInstruction: args.instructions.bodyInstruction,
+    summaryShortInstruction: args.instructions.summaryShortInstruction,
   };
 
   return JSON.stringify(current, null, 2);

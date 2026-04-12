@@ -117,9 +117,9 @@ export default function AiQualityStudioTaskOverviewScreen() {
             secondaryAction={
               draftVersion
                 ? {
-                    label: 'Testen',
+                    label: 'Valideren',
                     onPress: () =>
-                      router.push(`/settings-ai-quality-studio/${detail.key}/test/${draftVersion.id}` as never),
+                      router.push(`/settings-ai-quality-studio/${detail.key}/validate/${draftVersion.id}` as never),
                     icon: 'science',
                   }
                 : undefined

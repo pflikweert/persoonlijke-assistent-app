@@ -12,6 +12,7 @@ Bij conflict geldt:
 Dit document beschrijft zowel:
 - de huidige werkende tussenarchitectuur
 - als de gewenste eindrichting voor een volwassen AI quality platform-laag
+- en de **bindende bouwvolgorde** voor de volgende studio-fase
 
 ---
 
@@ -23,12 +24,14 @@ Doel:
 - AI-output betrouwbaar verbeteren
 - prompt- en modelwijzigingen beheersbaar maken
 - testbaar en reproduceerbaar itereren op echte brondata
+- zichtbaar kunnen valideren of een nieuwe prompt **daadwerkelijk beter** is dan de huidige runtime-basis
 - runtime-gedrag later gecontroleerd uit code-baseline naar DB-live binding brengen
 
 De studio is:
 - task-first
 - contract-first
 - result-first
+- evidence-first
 - server-side only
 
 De studio is **geen**:
@@ -36,6 +39,7 @@ De studio is **geen**:
 - brede assistentlaag
 - generieke AI per scherm
 - vervanging van productkaders of contentcontracten
+- mini-Langfuse of mini-Agenta als generiek platformdoel
 
 ---
 
@@ -47,9 +51,11 @@ De studio is **geen**:
 - Runtime-baseline import uit code
 - Drafting en gecontroleerde model/prompt-editing
 - Test runs met snapshots
-- Vergelijking testoutput vs runtime-basis / live-output
+- Vergelijking testoutput vs runtime-basis
+- Opslaan van evaluatie-uitkomsten per run/case/versie
 - Handmatige review en rollout-governance
 - Traceability per versie en run
+- Admin UX voor mobiel én desktop/fullscreen gebruik
 
 ### Buiten scope
 - Client-side OpenAI calls
@@ -57,10 +63,36 @@ De studio is **geen**:
 - Brede chat/coach/agent-ervaring
 - Auto-optimalisatie als vervanging van menselijke review
 - Runtime DB-binding zonder rollout- en rollbackpad
+- Volledige live-observability en productiebeoordeling als eerste volgende fase
+- Generieke prompt IDE voor willekeurige toekomstige AI use cases
 
 ---
 
-## 3. Canonieke ontwerpprincipes
+## 3. Strategische aanscherping (april 2026)
+
+De eerstvolgende studiofase draait **niet** primair om rollout of live runtime-integratie.
+
+De eerstvolgende studiofase draait om één kernvraag:
+
+**Is een nieuwe promptversie aantoonbaar beter dan de huidige basis?**
+
+Daarom is de bindende prioriteit nu:
+1. testen binnen de studio
+2. vergelijkbaar valideren van kandidaat-output vs runtime-basis
+3. evaluatie-uitkomsten opslaan als bewijs
+4. editor-ervaring en task-consistentie gelijktrekken
+5. admin UX op desktop/fullscreen verbeteren zonder mobiel te breken
+6. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
+
+Dit betekent expliciet:
+- testbaarheid gaat vóór rollout-volume
+- evidence gaat vóór dashboard-polish
+- editor-consistentie gaat vóór nieuwe promptfeatures
+- runtime/live-beoordeling komt **later**, omdat runtime nu nog hardcoded en niet versiegestuurd uit de studio leest
+
+---
+
+## 4. Canonieke ontwerpprincipes
 
 1. **Contract-first**  
    Content contracts zijn leidend boven promptvrijheid.
@@ -71,21 +103,27 @@ De studio is **geen**:
 3. **Result-first**  
    Testresultaat, compare en evaluatie zijn primair; technische metadata is secundair.
 
-4. **Server-side only**  
+4. **Evidence-first**  
+   Een promptwijziging is pas waardevol als zichtbaar is of die beter, gelijk, slechter of fout is ten opzichte van de basis.
+
+5. **Server-side only**  
    API keys, modelcalls en runtime-execution blijven server-side.
 
-5. **Traceability by default**  
+6. **Traceability by default**  
    Input/prompt/model/output snapshots + request/flow context zijn standaard.
 
-6. **Eerlijke representatie**  
+7. **Eerlijke representatie**  
    Toon expliciet wanneer een studio-task onderdeel is van een gedeelde runtime-family.
 
-7. **Geen dubbele waarheid zonder transitieplan**  
+8. **Geen dubbele waarheid zonder transitieplan**  
    Als code en DB tijdelijk naast elkaar bestaan, moet de hiërarchie expliciet zijn.
+
+9. **Desktop-capable admin**  
+   Adminschermen mogen mobiel goed werken, maar mogen niet kunstmatig vastgezet blijven op een mobiele breedte als primaire desktopervaring.
 
 ---
 
-## 4. Relatie met contentcontracten (bindend)
+## 5. Relatie met contentcontracten (bindend)
 
 Volgt `docs/project/content-processing-rules.md`.
 
@@ -100,11 +138,11 @@ Als output deze grenzen schendt, is dat een **kwaliteitsfout**, ongeacht modelsc
 
 ---
 
-## 5. Huidige code-realiteit (status april 2026)
+## 6. Huidige code-realiteit (status april 2026)
 
-Deze sectie beschrijft wat nu aantoonbaar gebouwd is.
+Deze sectie beschrijft wat nu aantoonbaar gebouwd is en wat strategisch relevant is voor de volgende fase.
 
-### 5.1 Datamodel (aanwezig)
+### 6.1 Datamodel (aanwezig)
 Tabellen:
 - `ai_tasks`
 - `ai_task_versions`
@@ -120,7 +158,7 @@ Aanwezig in schema:
 - snapshotvelden voor test runs
 - seed van 12 canonieke tasks
 
-### 5.2 Edge function (aanwezig)
+### 6.2 Edge function (aanwezig)
 Function:
 - `admin-ai-quality-studio`
 
@@ -140,13 +178,13 @@ Huidige acties:
 Auth:
 - allowlist + internal token patroon, server-side gehandhaafd
 
-### 5.3 App-beheerlagen (aanwezig)
+### 6.3 App-beheerlagen (aanwezig)
 - task hub
 - task detail / versions
 - draft editor
 - test / compare
 
-### 5.5 Entry_cleanup contract-first editor (aanwezig)
+### 6.4 Entry_cleanup contract-first editor (aanwezig, maar voor op generieke editorlaag)
 - `entry_cleanup` volgt nu expliciet een contract-first editorstructuur:
   - **alleen taakinstructie bewerkbaar**
   - input/system/response/model contractlagen zichtbaar als read-only
@@ -158,26 +196,48 @@ Auth:
   - alleen opgegeven bronvelden gebruiken
   - alleen JSON volgens contract retourneren
   - field-level contractgrenzen blijven technisch afgedwongen
-- baseline metadata blijft zichtbaar maar read-only, en geen primaire bewerklaag.
+- baseline metadata blijft zichtbaar maar read-only, en geen primaire bewerklaag
 
-### 5.6 Admin detail-shell polish (aanwezig)
-- gedeelde admin topnavigatie is visueel en technisch gecentreerd en navigation-only gebleven.
+**Belangrijke conclusie:** `entry_cleanup` is nu inhoudelijk sterker dan de rest van de editors. Dat is goed voor die task, maar nog geen uniforme studio-abstraction.
+
+### 6.5 Admin detail-shell polish (aanwezig, maar desktop-ervaring nog niet goed genoeg)
+- gedeelde admin topnavigatie is visueel en technisch gecentreerd en navigation-only gebleven
 - gedeelde sticky action footer is nu een compact, herbruikbaar admin pattern met duidelijke hiërarchie:
   - primary
   - secondary
   - tertiary (quiet/destructive)
-- patroon is toegepast op AIQS detailschermen zonder runtime- of contractscope uit te breiden.
+- patroon is toegepast op AIQS detailschermen zonder runtime- of contractscope uit te breiden
 
-### 5.4 Runtime-baseline model (aanwezig, transitie)
-- Runtime-definities worden nu opgebouwd vanuit code
-- Baseline import schrijft deze als `live` naar studio-DB
-- Runtime zelf leest nog niet uit studio-DB
+**Belangrijke conclusie:** huidige adminschermen zijn nog te veel als mobiele breedte gefixeerd, ook op desktop. Dat beperkt de studio-waarde op grotere schermen en fullscreen gebruik.
 
-**Conclusie:** huidige model is een bruikbare overgangsarchitectuur, geen eindarchitectuur.
+### 6.6 Runtime-baseline model (aanwezig, transitie)
+- runtime-definities worden nu opgebouwd vanuit code
+- baseline import schrijft deze als `live` naar studio-DB
+- runtime zelf leest nog niet uit studio-DB
+
+**Conclusie:** huidige model is een bruikbare overgangsarchitectuur, geen eindarchitectuur. Live beoordeling en rollout moeten daarom nog niet de primaire studiofocus zijn.
 
 ---
 
-## 6. Editor abstraction (bindend)
+## 7. Eerstvolgende fase: wat het product nú moet oplossen
+
+De studio moet in de volgende bouwstap vooral deze dingen beter maken:
+
+1. ik kan een draftprompt wijzigen
+2. ik kan die op goede testbronnen draaien
+3. ik zie output naast de runtime-basis
+4. ik kan expliciet vastleggen of die beter, gelijk, slechter of fout is
+5. ik kan die uitkomst later terugvinden per task, versie en case
+
+Zolang dit niet stevig staat, zijn de volgende zaken **te vroeg als hoofdfocus**:
+- live production review
+- rollout-gates tot in detail
+- runtime DB-binding
+- kwaliteitsdashboard als eindlaag
+
+---
+
+## 8. Editor abstraction (bindend)
 
 De studio bewerkt **taakinstructies**, niet ruwe request/payload blobs.
 
@@ -220,9 +280,18 @@ De hoofd-editor toont **niet**:
 - raw placeholders als hoofdinhoud
 - baseline metadata als primaire bewerklaag
 
+### Aanscherping voor de volgende fase
+De `entry_cleanup` editor is de referentie voor de volgende editorronde.
+
+Dat betekent:
+- andere edit-schermen moeten hier conceptueel naartoe convergeren
+- hardcoded afwijkingen per task moeten worden afgebouwd
+- gedeelde editorprimitives moeten task-compatibel worden, niet alleen `entry_cleanup`-specifiek
+- waar taakverschillen echt nodig zijn, moeten die via task-metadata of config verklaard worden, niet via verborgen UI-afwijkingen
+
 ---
 
-## 7. Task composition model
+## 9. Task composition model
 
 Niet elke studio-task is een volledig losse runtime prompt.
 
@@ -261,7 +330,7 @@ Als een task onderdeel is van een gedeelde runtime-family:
 
 ---
 
-## 8. Output discipline
+## 10. Output discipline
 
 ### Richting
 Waar output gestructureerd moet zijn, is **Structured Outputs / JSON Schema** de voorkeursrichting.
@@ -284,7 +353,7 @@ Als `day_narrative` in studio één output representeert, dan moet:
 
 ---
 
-## 9. Model policy
+## 11. Model policy
 
 ### Productie
 - productie gebruikt **pinned model snapshots**
@@ -304,7 +373,7 @@ Elke test run en latere runtime write moet minimaal vastleggen:
 
 ---
 
-## 10. Runtime-baseline import en tijdelijke dubbele waarheid
+## 12. Runtime-baseline import en tijdelijke dubbele waarheid
 
 ### Huidige overgangsregel
 De studio gebruikt nu een **runtime baseline import** uit code:
@@ -324,16 +393,22 @@ De studio gebruikt nu een **runtime baseline import** uit code:
 ### Doel
 De studio moet een geloofwaardige live-basis tonen zonder productie al DB-driven te maken.
 
+### Strategische aanscherping
+Zolang runtime nog hardcoded is en niet versiegestuurd uit de studio leest:
+- blijft testvalidatie belangrijker dan live-review tooling
+- blijft compare tegen runtime-basis voldoende voor de eerstvolgende fase
+- blijven live-resultaten, reviewer queues en runtime dashboards een latere laag
+
 ---
 
-## 11. Evaluation architecture
+## 13. Evaluation architecture (aangescherpt)
 
-Evaluatie gebeurt in 4 lagen, in vaste volgorde.
+Evaluatie gebeurt in lagen, in vaste volgorde.
 
 ### Laag 1 — Contract checks
 Hard rules, bijvoorbeeld:
-- entry_cleanup mag niet samenvatten
-- day_summary moet compacter zijn dan day_narrative
+- `entry_cleanup` mag niet samenvatten
+- `day_summary` moet compacter zijn dan `day_narrative`
 - reflectiepunten mogen geen advieslaag worden
 - min/max items
 - schema validatie
@@ -341,7 +416,7 @@ Hard rules, bijvoorbeeld:
 
 ### Laag 2 — Pairwise compare
 Standaard menselijke vergelijking tussen:
-- live basis / huidige productie-uitkomst
+- runtime-basis / huidige productie-uitkomst
 - draft / candidate output
 
 Labels:
@@ -350,7 +425,18 @@ Labels:
 - `slechter`
 - `fout`
 
-### Laag 3 — Curated regression sets
+### Laag 3 — Evaluation result opslag
+Pairwise compare en contractuitkomsten mogen niet alleen tijdelijke UI-output zijn.
+
+Per run/case/versie moet de studio evaluatie-uitkomsten structureel kunnen opslaan, zodat zichtbaar wordt:
+- welke versie beter scoort
+- welke cases regressies tonen
+- welke fouten terugkomen
+- welke review al gedaan is
+
+**Bindende richting:** evaluatie wordt een first-class objectlaag, niet alleen een schermactie.
+
+### Laag 4 — Curated regression sets
 Voor elke belangrijke task geleidelijk opbouwen:
 - goldens
 - edge cases
@@ -360,7 +446,7 @@ Voor elke belangrijke task geleidelijk opbouwen:
 - lange persoonlijke dag
 - afwijkende talen / rare input
 
-### Laag 4 — Automated graders
+### Laag 5 — Automated graders
 Pas later toevoegen.
 
 Regels:
@@ -370,11 +456,39 @@ Regels:
 
 ---
 
-## 12. Human review protocol
+## 14. Evaluation object model (nieuwe bindende richting)
+
+De studio heeft een expliciete evaluatie-objectlaag nodig.
+
+Minimale richting:
+- evaluatie hoort bij task
+- evaluatie hoort bij taskversion
+- evaluatie hoort bij testcase of testbron
+- evaluatie hoort bij een specifieke run
+- evaluatie kan contractmatig, handmatig en later geautomatiseerd zijn
+
+### Minimale veldenrichting
+- `task_id`
+- `task_version_id`
+- `test_run_id`
+- `test_case_id` of bronreferentie
+- `evaluator_type` (`contract`, `human`, later optioneel `auto`)
+- `result_label` (`beter`, `gelijk`, `slechter`, `fout`, of contractstatus)
+- `score` of compacte scorevelden waar zinvol
+- `notes`
+- `created_at`
+- reviewer / actor waar relevant
+
+### Waarom dit bindend is
+Zonder evaluatie-objectlaag blijft de studio goed in testen, maar zwak in kwaliteitsbewijs.
+
+---
+
+## 15. Human review protocol
 
 ### Standaardreview
 De default reviewvorm is **pairwise**:
-- live / runtime-basis vs draft/candidate
+- runtime-basis vs draft/candidate
 
 ### Labels
 - `beter`
@@ -394,9 +508,12 @@ Minimaal beoordelen op:
 - volledigheid
 - compactheid waar relevant
 
+### Aanscherping
+De reviewactie moet opslaan als bewijslaag en niet alleen in de compare-UI blijven hangen.
+
 ---
 
-## 13. Source selection rules
+## 16. Source selection rules
 
 Bronselectie is onderdeel van kwaliteit, niet alleen een UI-detail.
 
@@ -408,14 +525,15 @@ Bronselectie is onderdeel van kwaliteit, niet alleen een UI-detail.
 - bronselectie moet compacte preview + zoek/filter ondersteunen
 
 ### Richting
-Latere fase:
+Volgende fase:
 - curated saved cases
 - goldens
 - regressiesets per task
+- snelle herbruikbare testsets per taskversie
 
 ---
 
-## 14. Version lifecycle governance
+## 17. Version lifecycle governance
 
 ### Gewenste lifecycle
 - `draft`
@@ -436,9 +554,12 @@ Minimaal:
 - pairwise review uitgevoerd
 - relevante curated cases gecontroleerd
 
+### Aanscherping voor huidige fase
+Deze lifecycle blijft bindende richting, maar is **niet** de eerstvolgende bouwfocus. Eerst moet test- en validatiebewijs in de studio zelf stevig staan.
+
 ---
 
-## 15. Prompt registry readiness
+## 18. Prompt registry readiness
 
 De studio moet compatibel blijven met een centrale prompt registry of prompt object model.
 
@@ -456,7 +577,7 @@ Promptstructuur moet logisch opgesplitst blijven in:
 
 ---
 
-## 16. Execution-modi
+## 19. Execution-modi
 
 1. **Single interactive call**
    - 1 task, 1 versie, 1 bron
@@ -470,9 +591,15 @@ Promptstructuur moet logisch opgesplitst blijven in:
 4. **Live regeneration batch**
    - gecontroleerde herberekening na rollout
 
+### Aanscherping
+Voor de volgende fase is de kernvolgorde:
+- eerst single interactive goed
+- daarna curated batch evaluation
+- production-derived en live regeneration pas later zwaarder uitwerken
+
 ---
 
-## 17. Prompt caching (vooruitblik)
+## 20. Prompt caching (vooruitblik)
 
 Nog niet leidend voor implementatie, wel bindend als technische richting.
 
@@ -488,7 +615,7 @@ Nog niet leidend voor implementatie, wel bindend als technische richting.
 
 ---
 
-## 18. Runtime-koppeling en lineage
+## 21. Runtime-koppeling en lineage
 
 Elke latere runtime-write moet versie-lineage dragen.
 
@@ -507,21 +634,53 @@ Minimaal te koppelen:
 
 `ai_live_generation_log` is hiervoor de structurele richting, niet alleen debug-data.
 
+### Aanscherping
+Dit blijft belangrijk, maar is **niet** de eerstvolgende prioriteit zolang runtime nog niet DB-live uit de studio leest.
+
 ---
 
-## 19. Bekende beperkingen (huidige fase)
+## 22. Admin UX-principes (nieuw bindend)
+
+AI Quality Studio is een admin-tool en mag daarom anders werken dan de eindgebruikersapp.
+
+### Regels
+- mobiel moet goed bruikbaar blijven
+- desktop mag niet kunstmatig klein blijven
+- fullscreen gebruik op desktop moet actief ondersteund worden
+- editor, compare en review zijn productieve werkmodi en verdienen ruimte
+- detailschermen mogen op grotere schermen werken met bredere layouts, kolommen of split views waar functioneel zinvol
+- behoud duidelijke hiërarchie en focus; geen generieke enterprise-zwaarte
+
+### Concreet betekent dit
+- task detail en draft editor mogen op desktop breder openen dan de app-shell
+- compare-views mogen naast elkaar staan op grotere schermen
+- testresultaten en contractnotices mogen op desktop zichtbaar zijn zonder overmatig scrollen
+- sticky action areas moeten goed werken op mobiel én desktop
+- fullscreen mag gebruikt worden voor productiviteit, niet alleen voor esthetiek
+
+### Niet doen
+- admin 1-op-1 behandelen als consumentenscherm
+- alles centreren in een smalle mobile-column op grote schermen
+- desktop oplossen met alleen grotere marges zonder informatiearchitectuur aan te passen
+
+---
+
+## 23. Bekende beperkingen (huidige fase)
 
 Niet volledig aanwezig:
 - promote-to-live workflow
 - rollback flow
-- reviewer labeling flow in UI
-- batch test runs / regressiesets
+- reviewer labeling flow in UI als persistente bewijslaag
+- batch test runs / regressiesets als volwaardige productlaag
 - volledige compare-ondersteuning voor alle taskkeys
 - directe DB-live binding voor productie-runtime
+- uniforme editor-abstraction over alle tasks heen
+- volwaardige desktop/fullscreen admin-ervaring
+- kwaliteitsdashboard met echte aggregatie en trendweergave
 
 ---
 
-## 20. Learnings uit de bouwsessie (gestandaardiseerd)
+## 24. Learnings uit de bouwsessie (gestandaardiseerd)
 
 1. Bewerk op **taakinstructie**, niet op payload/request blob.
 2. Modelkeuze moet gecontroleerd zijn, niet vrije tekst.
@@ -538,10 +697,12 @@ Niet volledig aanwezig:
    - runtime-basis
    - testresultaat
    - verschil met live
+9. Goede studio-UX is niet alleen mobiel; adminwerk vraagt ook desktopruimte.
+10. Een compare-view zonder opgeslagen oordeel is nog geen volwaardig kwaliteitsbewijs.
 
 ---
 
-## 21. Valkuilen (expliciet)
+## 25. Valkuilen (expliciet)
 
 1. Task/scherm-verwarring
 2. Compound-runtime verbergen als single output
@@ -552,21 +713,150 @@ Niet volledig aanwezig:
 7. Product-visible debugdrift buiten admincontext
 8. Runtimekoppeling zonder rollbackpad
 9. Payload-editing vermommen als promptbeheer
+10. Een dashboard bouwen voordat evaluatie als dataset bestaat
+11. Desktop “oplossen” door alleen containerbreedte aan te passen zonder workflowverbetering
 
 ---
 
-## 22. Prioriteitenvolgorde (advies)
+## 26. Prioriteitenvolgorde (bindend advies)
 
-1. Stabiliseer **editor abstraction + task semantiek**
-2. Voltooi **review protocol + version governance**
-3. Voeg **curated regression sets + batch evals** toe
-4. Verbind **runtime writes met lineage**
-5. Schakel gecontroleerd naar **DB-live binding**
-6. Open daarna pas verdere model-upgrades en automation
+### Fase A — Nu eerst bouwen
+1. **Testen en valideren binnen de tool als primaire lus**
+   - draft wijzigen
+   - bron kiezen
+   - run uitvoeren
+   - output vergelijken met runtime-basis
+   - expliciet oordeel vastleggen
+
+2. **Evaluation objectlaag toevoegen**
+   - contractresultaten + menselijke compare-uitkomst opslaan per run/case/versie
+   - vergelijking niet alleen tonen, maar ook bewaren
+
+3. **Editor abstraction gelijktrekken over tasks heen**
+   - `entry_cleanup` als referentie
+   - hardcoded afwijkingen afbouwen
+   - gedeelde edit-patterns en task-compatibele configuratie verstevigen
+
+4. **Admin UX voor desktop/fullscreen verbeteren**
+   - bredere detail/editor layouts
+   - compare beter naast elkaar op groot scherm
+   - mobiel niet breken
+
+### Fase B — Daarna uitbreiden
+5. **Curated testsets / regressiesets per task**
+   - saved cases
+   - goldens
+   - edge/noisy cases
+   - batch evals
+
+6. **Version governance verder dichtzetten**
+   - candidate / approved / live beter afbakenen
+   - promote-evidence expliciet tonen
+
+### Fase C — Pas daarna
+7. **Runtime lineage en DB-live binding verder uitwerken**
+   - pas na sterke test/evidence-lus
+
+8. **Live testen/resultaten/beoordelingen toevoegen**
+   - pas wanneer runtime daadwerkelijk zinnig koppelbaar is aan task versions uit de studio
+
+### Fase D — Als laatste
+9. **Kwaliteitsdashboard bouwen**
+   - pas bouwen wanneer er echte evaluatiedata, trends en aggregaties zijn
+   - dashboard is eindlaag, niet startpunt
 
 ---
 
-## 23. Samenvatting
+## 27. Concrete next steps om nu te bouwen
+
+### Stap 1 — Compare en validatie echt afmaken
+Doel:
+- in de studio aantoonbaar kunnen zeggen of een draft beter is dan de basis
+
+Bouwen:
+- compare-view afronden als primaire werkmodus
+- expliciete reviewactie inbouwen: `beter`, `gelijk`, `slechter`, `fout`
+- verplichte notitie bij `slechter` of `fout`
+- contract checks zichtbaar in dezelfde evaluatieflow
+
+Nog niet bouwen:
+- zware live dashboards
+- rollout automation
+
+### Stap 2 — Evaluation results persistent maken
+Doel:
+- evaluatie wordt bewijslaag
+
+Bouwen:
+- opslagmodel voor evaluatie-uitkomsten
+- koppeling aan task, versie, run en case
+- historisch terugvindbare beoordelingen
+- simpele aggregaties per versie: pass/fail, beter/gelijk/slechter/fout
+
+Nog niet bouwen:
+- complexe auto graders
+- brede analyticslaag
+
+### Stap 3 — Editors gelijktrekken
+Doel:
+- `entry_cleanup` niet als uitzondering laten bestaan
+
+Bouwen:
+- audit van alle bestaande prompt-editschermen
+- bepalen wat nog hardcoded of task-specifiek is
+- gedeelde editor-secties harmoniseren:
+  - taakinstructie
+  - system/advanced
+  - input mapping
+  - output contract
+  - model/config
+- task-metadata gebruiken waar taakverschillen echt bestaan
+
+Nog niet bouwen:
+- vrije payload editors
+- raw JSON blob editing als hoofdmodus
+
+### Stap 4 — Admin desktop/fullscreen UX verbeteren
+Doel:
+- AIQS wordt op desktop daadwerkelijk prettiger en sneller om mee te werken
+
+Bouwen:
+- bredere layoutregels voor admin
+- detail/editor/test schermen geschikt maken voor grotere schermen
+- split of multi-column waar compare dat ondersteunt
+- sticky action footer aanpassen waar nodig voor desktop
+- fullscreen als ondersteunde werkmodus behandelen
+
+Nog niet bouwen:
+- designpolish zonder workflowverbetering
+
+### Stap 5 — Curated testsets en batch evaluatie
+Doel:
+- minder handmatig dezelfde cases zoeken
+
+Bouwen:
+- saved cases
+- golden/edge/noisy labels
+- N-case batch runs per task/version
+- regressie-indicatie op dezelfde set
+
+Nog niet bouwen:
+- live beoordelingsqueues op productie-output
+
+### Stap 6 — Pas later runtime/live en dashboard
+Doel:
+- pas toevoegen wanneer de onderlaag klopt
+
+Later bouwen:
+- runtime-koppeling aan echte studio versions
+- live result reviews
+- reviewer queues op productie-output
+- kwaliteitstrends over live verkeer
+- dashboard bovenop echte evaluatiedata
+
+---
+
+## 28. Samenvatting
 
 AI Quality Studio is nu een werkende admin-hardening basis met:
 - taskbeheer
@@ -575,16 +865,59 @@ AI Quality Studio is nu een werkende admin-hardening basis met:
 - single-run testen
 - compare
 
-De volgende volwassen stap is niet meer UI-volume, maar:
-- bindende editor-abstraction
-- expliciete task-compositie
-- evaluatie-architectuur
-- lifecycle governance
-- runtime-lineage
-- en daarna pas gecontroleerde DB-live binding
+De volgende volwassen stap is **niet** meer UI-volume of direct live runtimebeheer.
+
+De volgende volwassen stap is:
+- aantoonbaar testen in de tool
+- evaluatie-uitkomsten opslaan als bewijs
+- editors gelijktrekken
+- admin desktop/fullscreen bruikbaar maken
+- daarna pas regressiesets, lifecycle-verdieping, runtime-lineage en live-kwaliteit
 
 Zo blijft de studio:
 - contractvast
 - reproduceerbaar
 - beheersbaar voor admins
-- veilig richting echte runtime-koppeling
+- eerlijk over wat nu al werkt en wat nog niet
+- gericht op echte kwaliteitsverbetering in plaats van tool-uitbreiding
+
+---
+
+## 29. Recente regressie-learnings (bindend)
+
+Doel: voorkomen dat dezelfde regressies terugkomen in AIQS editor- en admin-access flows.
+
+### 29.1 Access-state mag geen netwerkfout als “geen toegang” framen
+
+Regel:
+- `adminAccess=false` mag alleen bij expliciete auth-codes (`AUTH_UNAUTHORIZED` of `AUTH_MISSING`).
+- Generieke load/invoke/netwerkfouten blijven een laadfout, geen autorisatie-uitkomst.
+
+Waarom:
+- anders ontstaat false-negative “Geen toegang” voor echte allowlisted admins.
+
+### 29.2 Allowlist parsing moet robuust zijn voor gequote env-waarden
+
+Regel:
+- allowlist parsing in edge functions moet omringende quotes strippen op bron- én itemniveau.
+
+Waarom:
+- lokale `.env.local` waarden staan vaak als `"uuid"`; zonder quote-strip faalt user-id match en krijg je onterechte `Forbidden`.
+
+### 29.3 Prompt-editor normalisatie moet editor-overstijgend consistent zijn
+
+Regel:
+- newline/paragraph normalisatie moet identiek blijven tussen visual editor en sectieparsering.
+- sectiewissels mogen geen “lege regel migratie” veroorzaken.
+
+Waarom:
+- inconsistente representatie (lege regels direct toevoegen vs buffered toepassen) veroorzaakt drift: regel weg in editor A, lege regel terug in editor B.
+
+### 29.4 UI-regel voor deze editor
+
+Regel:
+- “Gebruikte tokens” hulpblok is verwijderd uit de editor-surface.
+- editor-surface blijft licht/thematisch leesbaar in dark mode.
+
+Waarom:
+- minder visuele ruis, minder dubbelheid, en stabiel contrast voor tekstbewerking.

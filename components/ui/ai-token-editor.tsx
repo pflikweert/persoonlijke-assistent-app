@@ -1,68 +1,46 @@
-import { StyleSheet, TextInput, type NativeSyntheticEvent, type TextInputSelectionChangeEventData } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, spacing } from '@/theme';
 
 import type { AiTokenDefinition } from './ai-token-chip-picker';
-import { splitAiTokenSegments } from './ai-token-editor-utils';
+import { PromptEditor, type PromptEditorState } from './prompt-editor';
+
+export type { PromptEditorState };
 
 type AiTokenEditorProps = {
   value: string;
   minHeight?: number;
   tokens: AiTokenDefinition[];
   onChangeText: (value: string) => void;
-  onSelectionChange: (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => void;
+  requestInsertTokenId?: string | null;
+  onInsertTokenHandled?: () => void;
+  onEditorStateChange?: (state: PromptEditorState) => void;
 };
 
-export function AiTokenEditor({ value, minHeight = 140, tokens, onChangeText, onSelectionChange }: AiTokenEditorProps) {
-  const scheme = useColorScheme() ?? 'light';
-  const palette = colorTokens[scheme];
-  const tokenSegments = splitAiTokenSegments(value, tokens).filter((segment) => segment.kind === 'token');
-  const uniqueTokenLabels = Array.from(
-    new Map(
-      tokenSegments.map((segment) => {
-        const label = segment.token?.label ?? segment.value;
-        const kind = segment.token?.kind ?? 'output';
-        return [label, { label, kind }] as const;
-      })
-    ).values()
-  );
+export function AiTokenEditor({
+  value,
+  minHeight = 140,
+  tokens,
+  onChangeText,
+  requestInsertTokenId,
+  onInsertTokenHandled,
+  onEditorStateChange,
+}: AiTokenEditorProps) {
+  const lightPalette = colorTokens.light;
 
   return (
-    <ThemedView style={[styles.root, { borderColor: palette.separator, backgroundColor: palette.surfaceLowest }]}> 
-      <TextInput
-        multiline
-        textAlignVertical="top"
+    <ThemedView style={[styles.root, { borderColor: lightPalette.separator, backgroundColor: lightPalette.surfaceLowest }]}> 
+      <PromptEditor
         value={value}
+        placeholder="Typ instructie…"
+        tokens={tokens}
+        minHeight={minHeight}
         onChangeText={onChangeText}
-        onSelectionChange={onSelectionChange}
-        cursorColor={palette.primary}
-        selectionColor={palette.primary}
-        style={[styles.input, { color: palette.text, minHeight }]}
+        onStateChange={onEditorStateChange}
+        requestInsertTokenId={requestInsertTokenId}
+        onInsertTokenHandled={onInsertTokenHandled}
       />
-
-      {uniqueTokenLabels.length > 0 ? (
-        <ThemedView style={styles.usedTokensWrap}>
-          <ThemedText type="meta">Gebruikte tokens</ThemedText>
-          <ThemedView style={styles.tokenRow}>
-            {uniqueTokenLabels.map((item, index) => {
-              const isInput = item.kind === 'input';
-              return (
-                <ThemedView
-                  key={`used-token-${item.label}-${index}`}
-                  style={[styles.chip, { backgroundColor: isInput ? palette.surfaceLow : palette.surface }]}
-                >
-                  <ThemedText type="caption" style={{ color: isInput ? palette.info : palette.primary }}>
-                    {item.label}
-                  </ThemedText>
-                </ThemedView>
-              );
-            })}
-          </ThemedView>
-        </ThemedView>
-      ) : null}
     </ThemedView>
   );
 }
@@ -72,28 +50,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     paddingVertical: spacing.xs,
-  },
-  input: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    lineHeight: 24,
-  },
-  usedTokensWrap: {
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xs,
-  },
-  tokenRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  chip: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
   },
 });

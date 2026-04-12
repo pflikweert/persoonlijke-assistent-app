@@ -58,10 +58,9 @@ export function AppBackground({
   if (tone === "flat") {
     return (
       <View
-        pointerEvents="none"
         style={[
           styles.background,
-          { backgroundColor: APP_BACKGROUND_PRESETS.flat[scheme].baseColor },
+          { backgroundColor: APP_BACKGROUND_PRESETS.flat[scheme].baseColor, pointerEvents: "none" },
         ]}
       />
     );
@@ -79,7 +78,7 @@ export function AppBackground({
     } as unknown as ViewStyle;
 
     return (
-      <View pointerEvents="none" style={[styles.background, webGradientStyle]} />
+      <View style={[styles.background, webGradientStyle, { pointerEvents: "none" }]} />
     );
   }
 

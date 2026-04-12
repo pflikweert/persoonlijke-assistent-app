@@ -6,9 +6,23 @@ export function parseAdminAllowlist(rawValue: string | undefined): Set<string> {
     return new Set();
   }
 
-  const items = source
+  const stripQuotes = (value: string): string => {
+    const trimmed = value.trim();
+    if (trimmed.length >= 2) {
+      const startsWithDouble = trimmed.startsWith('"') && trimmed.endsWith('"');
+      const startsWithSingle = trimmed.startsWith("'") && trimmed.endsWith("'");
+      if (startsWithDouble || startsWithSingle) {
+        return trimmed.slice(1, -1).trim();
+      }
+    }
+    return trimmed;
+  };
+
+  const normalizedSource = stripQuotes(source);
+
+  const items = normalizedSource
     .split(',')
-    .map((item) => item.trim())
+    .map((item) => stripQuotes(item))
     .filter((item) => item.length > 0);
 
   return new Set(items);

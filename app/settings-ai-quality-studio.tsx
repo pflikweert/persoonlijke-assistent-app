@@ -53,7 +53,11 @@ export default function SettingsAiQualityStudioScreen() {
       const parsed = classifyUnknownError(nextError);
       setError(parsed.message);
       setTasks([]);
-      setAdminAccess(false);
+      if (parsed.code === 'AUTH_UNAUTHORIZED' || parsed.code === 'AUTH_MISSING') {
+        setAdminAccess(false);
+      } else {
+        setAdminAccess(null);
+      }
     } finally {
       setLoading(false);
     }

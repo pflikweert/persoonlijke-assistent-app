@@ -146,7 +146,7 @@ export function AdminStickyFooterActions({
         },
       ]}
     >
-      <View pointerEvents="none" style={[styles.stickyFooterTopTone, { backgroundColor: FOOTER_TOP_TONE[scheme] }]} />
+      <View style={[styles.stickyFooterTopTone, { backgroundColor: FOOTER_TOP_TONE[scheme], pointerEvents: "none" }]} />
       <ThemedView style={styles.stickyFooterBody}>
         <ThemedView style={styles.stickyFooterRow}>
           {primaryAction ? (
@@ -196,7 +196,7 @@ export function SettingsTopNav({
         accessibilityLabel="Ga terug"
         onPress={onBack}
       />
-      <ThemedView style={styles.stickyTopBarCenter} pointerEvents="none">
+      <ThemedView style={[styles.stickyTopBarCenter, { pointerEvents: "none" }]}>
         <ThemedText type="defaultSemiBold" style={[styles.stickyTopBarTitle, { color: palette.text }]}> 
           {title}
         </ThemedText>

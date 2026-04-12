@@ -61,6 +61,7 @@ Los opruimen van de functions runtime kan met `npm run dev:stop`. Function logs 
 - Admin regeneratie vars:
   - `ADMIN_REGEN_ALLOWLIST_USER_IDS` (comma-separated user ids met toegang tot Data opnieuw verwerken)
   - `ADMIN_REGEN_INTERNAL_TOKEN` (server-side token voor interne `worker_tick` chaining)
+  - let op: gequote waarden (`"<uuid>"` of `'<uuid>'`) kunnen allowlist-mismatches geven in oudere local runtimes; gebruik bij voorkeur ongequote comma-separated UUIDs.
 - Feature flags (Vercel-managed env vars, lokaal via `.env.local`):
   - `VERCEL_FLAG_DAY_JOURNAL_SOFT_QUALITY_GUARDS` (default `false`): zet zachte quality-guards voor day-journal post-checks aan/uit.
   - `VERCEL_FLAG_DAY_JOURNAL_STRICT_VALIDATION` (default `false`): zet striktere day-journal validatie aan/uit.

@@ -6,6 +6,7 @@ export type AiTaskVersionStatus = 'draft' | 'testing' | 'live' | 'archived';
 export type AiTestRunStatus = 'queued' | 'completed' | 'failed';
 export type AiTestSourceType = 'entry' | 'day' | 'week' | 'month';
 export type AiDraftDerivationSource = 'live' | 'latest_draft' | 'latest_version' | 'empty';
+export type AiReviewLabel = 'beter' | 'gelijk' | 'slechter' | 'fout';
 
 export type AiTaskLiveVersionSummary = {
   id: string;
@@ -95,6 +96,8 @@ export type AiTaskTestRun = {
   promptTokens: number | null;
   completionTokens: number | null;
   totalTokens: number | null;
+  reviewerLabel: AiReviewLabel | null;
+  reviewerNotes: string | null;
   createdAt: string;
 };
 
@@ -132,4 +135,12 @@ export type AiTaskTestCompareView = {
   baselineReason: string | null;
   liveOutputText: string | null;
   testOutputText: string | null;
+  reviewerLabel: AiReviewLabel | null;
+  reviewerNotes: string | null;
+};
+
+export type SaveAiTaskTestReviewPayload = {
+  testRunId: string;
+  label: AiReviewLabel;
+  notes: string | null;
 };

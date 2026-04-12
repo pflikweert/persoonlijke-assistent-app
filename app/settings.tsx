@@ -148,7 +148,7 @@ export default function SettingsScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const [menuVisible, setMenuVisible] = useState(false);
-  const [adminAccess, setAdminAccess] = useState<boolean | null>(null);
+  const [, setAdminAccess] = useState<boolean | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [deleteSheetState, setDeleteSheetState] =
     useState<DeleteSheetState>("closed");
@@ -176,7 +176,7 @@ export default function SettingsScreen() {
             error instanceof Error
               ? error.message
               : "Kon admin-rechten niet controleren.";
-          setAdminAccess(false);
+          setAdminAccess(null);
           setAccessError(message);
         }
       }
@@ -190,8 +190,8 @@ export default function SettingsScreen() {
   }, []);
 
   const adminRoutes = useMemo(
-    () => (adminAccess === true ? [ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE] : []),
-    [adminAccess],
+    () => [ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE],
+    [],
   );
 
   const deleteSheetVisible = deleteSheetState !== "closed";

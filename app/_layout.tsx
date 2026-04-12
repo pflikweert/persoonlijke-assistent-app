@@ -204,6 +204,10 @@ a:focus-visible,
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="settings-ai-quality-studio/[taskKey]/validate/[version]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}
             />

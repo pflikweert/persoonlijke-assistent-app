@@ -24,6 +24,8 @@ type RequestBody = {
   sourceType?: unknown;
   sourceRecordId?: unknown;
   testRunId?: unknown;
+  label?: unknown;
+  notes?: unknown;
   payload?: unknown;
 };
 
@@ -128,6 +130,8 @@ type TestRunRow = {
   prompt_tokens: number | null;
   completion_tokens: number | null;
   total_tokens: number | null;
+  reviewer_label: 'better' | 'equal' | 'worse' | 'fail' | null;
+  reviewer_notes: string | null;
   created_at: string;
   task_version?: { version_number: number } | null;
   test_case?: { source_type: 'entry' | 'day' | 'week' | 'month'; source_record_id: string; label: string } | null;
@@ -419,6 +423,13 @@ function mapTaskSummary(row: TaskRow, liveVersion: VersionRow | null, hasDraft: 
 }
 
 function mapTestRunRow(row: TestRunRow) {
+  const reviewerLabelMap: Record<'better' | 'equal' | 'worse' | 'fail', 'beter' | 'gelijk' | 'slechter' | 'fout'> = {
+    better: 'beter',
+    equal: 'gelijk',
+    worse: 'slechter',
+    fail: 'fout',
+  };
+
   return {
     id: row.id,
     taskId: row.task_id,
@@ -441,6 +452,8 @@ function mapTestRunRow(row: TestRunRow) {
     promptTokens: row.prompt_tokens,
     completionTokens: row.completion_tokens,
     totalTokens: row.total_tokens,
+    reviewerLabel: row.reviewer_label ? reviewerLabelMap[row.reviewer_label] : null,
+    reviewerNotes: row.reviewer_notes,
     createdAt: row.created_at,
   };
 }
@@ -451,6 +464,13 @@ function toCompareView(args: {
   baselineReason: string | null;
   liveOutputText: string | null;
 }) {
+  const reviewerLabelMap: Record<'better' | 'equal' | 'worse' | 'fail', 'beter' | 'gelijk' | 'slechter' | 'fout'> = {
+    better: 'beter',
+    equal: 'gelijk',
+    worse: 'slechter',
+    fail: 'fout',
+  };
+
   return {
     testRunId: args.row.id,
     taskKey: args.row.task?.key ?? '',
@@ -463,7 +483,24 @@ function toCompareView(args: {
     baselineReason: args.baselineReason,
     liveOutputText: args.liveOutputText,
     testOutputText: args.row.output_text,
+    reviewerLabel: args.row.reviewer_label ? reviewerLabelMap[args.row.reviewer_label] : null,
+    reviewerNotes: args.row.reviewer_notes,
   };
+}
+
+function parseReviewLabel(value: unknown): 'beter' | 'gelijk' | 'slechter' | 'fout' | null {
+  if (typeof value !== 'string') return null;
+  if (value === 'beter' || value === 'gelijk' || value === 'slechter' || value === 'fout') {
+    return value;
+  }
+  return null;
+}
+
+function toDbReviewLabel(label: 'beter' | 'gelijk' | 'slechter' | 'fout'): 'better' | 'equal' | 'worse' | 'fail' {
+  if (label === 'beter') return 'better';
+  if (label === 'gelijk') return 'equal';
+  if (label === 'slechter') return 'worse';
+  return 'fail';
 }
 
 function getSupabaseRuntimeEnv(): { supabaseUrl: string; supabaseAnonKey: string } {
@@ -547,6 +584,7 @@ function parseAction(value: unknown):
   | 'run_test'
   | 'get_test_run'
   | 'get_compare_view'
+  | 'save_test_review'
   | null {
   if (typeof value !== 'string') return null;
   if (
@@ -560,7 +598,8 @@ function parseAction(value: unknown):
     value === 'list_test_sources' ||
     value === 'run_test' ||
     value === 'get_test_run' ||
-    value === 'get_compare_view'
+    value === 'get_compare_view' ||
+    value === 'save_test_review'
   ) {
     return value;
   }
@@ -973,26 +1012,14 @@ Deno.serve(async (request) => {
       const existingTask = existingTaskData as TaskRow;
 
       const payload = normalized.payload;
-      const nextSystemInstructions =
-        existingTask.key === 'entry_cleanup'
-          ? buildEntryCleanupSystemInstructionsFromContract()
-          : payload.systemInstructions;
-      const nextOutputSchemaJson =
-        existingTask.key === 'entry_cleanup'
-          ? buildEntryCleanupOutputSchemaJson()
-          : payload.outputSchemaJson;
-      const nextConfigJson =
-        existingTask.key === 'entry_cleanup'
-          ? withEntryCleanupTechnicalContract(payload.configJson)
-          : payload.configJson;
       const { data: updated, error: updateError } = await adminClient
         .from('ai_task_versions')
         .update({
           model: payload.model,
           prompt_template: payload.promptTemplate,
-          system_instructions: nextSystemInstructions,
-          output_schema_json: nextOutputSchemaJson,
-          config_json: nextConfigJson,
+          system_instructions: payload.systemInstructions,
+          output_schema_json: payload.outputSchemaJson,
+          config_json: payload.configJson,
           min_items: payload.minItems,
           max_items: payload.maxItems,
           changelog: payload.changelog,
@@ -1124,7 +1151,7 @@ Deno.serve(async (request) => {
       const { data, error } = await adminClient
         .from('ai_test_runs')
         .select(
-          'id, task_id, task_version_id, test_case_id, status, input_snapshot_json, prompt_snapshot, system_instructions_snapshot, output_schema_snapshot_json, config_snapshot_json, model_snapshot, output_text, output_json, latency_ms, prompt_tokens, completion_tokens, total_tokens, created_at, task_version:ai_task_versions!inner(version_number), test_case:ai_test_cases!inner(source_type, source_record_id, label)'
+          'id, task_id, task_version_id, test_case_id, status, input_snapshot_json, prompt_snapshot, system_instructions_snapshot, output_schema_snapshot_json, config_snapshot_json, model_snapshot, output_text, output_json, latency_ms, prompt_tokens, completion_tokens, total_tokens, reviewer_label, reviewer_notes, created_at, task_version:ai_task_versions!inner(version_number), test_case:ai_test_cases!inner(source_type, source_record_id, label)'
         )
         .eq('id', testRunId)
         .maybeSingle();
@@ -1145,7 +1172,7 @@ Deno.serve(async (request) => {
       const { data: runData, error: runError } = await adminClient
         .from('ai_test_runs')
         .select(
-          'id, task_id, task_version_id, test_case_id, status, input_snapshot_json, prompt_snapshot, system_instructions_snapshot, output_schema_snapshot_json, config_snapshot_json, model_snapshot, output_text, output_json, latency_ms, prompt_tokens, completion_tokens, total_tokens, created_at, task_version:ai_task_versions!inner(version_number), test_case:ai_test_cases!inner(source_type, source_record_id, label), task:ai_tasks!inner(key, label)'
+          'id, task_id, task_version_id, test_case_id, status, input_snapshot_json, prompt_snapshot, system_instructions_snapshot, output_schema_snapshot_json, config_snapshot_json, model_snapshot, output_text, output_json, latency_ms, prompt_tokens, completion_tokens, total_tokens, reviewer_label, reviewer_notes, created_at, task_version:ai_task_versions!inner(version_number), test_case:ai_test_cases!inner(source_type, source_record_id, label), task:ai_tasks!inner(key, label)'
         )
         .eq('id', testRunId)
         .maybeSingle();
@@ -1244,6 +1271,65 @@ Deno.serve(async (request) => {
       });
     }
 
+    if (action === 'save_test_review') {
+      step = 'save_test_review';
+      const testRunId = parseUuid(body.testRunId);
+      const label = parseReviewLabel(body.label);
+      const notesRaw = typeof body.notes === 'string' ? body.notes.trim() : '';
+      const notes = notesRaw.length > 0 ? notesRaw : null;
+
+      if (!testRunId || !label) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'testRunId en label zijn verplicht.',
+        });
+      }
+
+      if ((label === 'slechter' || label === 'fout') && !notes) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'Notitie is verplicht bij slechter of fout.',
+        });
+      }
+
+      const { data: updated, error: updateError } = await adminClient
+        .from('ai_test_runs')
+        .update({
+          reviewer_label: toDbReviewLabel(label),
+          reviewer_notes: notes,
+        })
+        .eq('id', testRunId)
+        .select(
+          'id, task_id, task_version_id, test_case_id, status, input_snapshot_json, prompt_snapshot, system_instructions_snapshot, output_schema_snapshot_json, config_snapshot_json, model_snapshot, output_text, output_json, latency_ms, prompt_tokens, completion_tokens, total_tokens, reviewer_label, reviewer_notes, created_at, task_version:ai_task_versions!inner(version_number), test_case:ai_test_cases!inner(source_type, source_record_id, label)'
+        )
+        .maybeSingle();
+
+      if (updateError) {
+        return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_WRITE_FAILED', message: 'Failed to save test review.' });
+      }
+      if (!updated) {
+        return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Test run not found.' });
+      }
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        testRun: mapTestRunRow(updated as TestRunRow),
+      });
+    }
+
     step = 'run_test';
     const taskKey = parseNonEmptyString(body.taskKey);
     const taskVersionId = parseUuid(body.taskVersionId);
@@ -1277,6 +1363,8 @@ Deno.serve(async (request) => {
       return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task version not found for task.' });
     }
     const version = versionData as VersionRow;
+
+    const systemInstructionSnippet = truncate(version.system_instructions ?? '', 200);
 
     let inputSnapshotJson: Record<string, unknown>;
     let sourceLabel = '';
@@ -1325,6 +1413,27 @@ Deno.serve(async (request) => {
     }
 
     const promptSnapshot = `${version.prompt_template}\n\n[INPUT_SNAPSHOT_JSON]\n${JSON.stringify(inputSnapshotJson, null, 2)}`;
+    const promptSnapshotSnippet = truncate(promptSnapshot, 200);
+
+    const testExecutionDebug = {
+      requestedTaskVersionId: taskVersionId,
+      resolvedTaskVersionId: version.id,
+      resolvedTaskVersionNumber: version.version_number,
+      systemInstructionSnippet,
+      promptSnapshotSnippet,
+    };
+
+    logFlow('info', {
+      flow: FLOW,
+      requestId,
+      flowId,
+      step,
+      event: 'run_test_config_resolved',
+      details: {
+        taskKey: task.key,
+        ...testExecutionDebug,
+      },
+    });
 
     const { data: existingTestCase } = await adminClient
       .from('ai_test_cases')
@@ -1416,7 +1525,7 @@ Deno.serve(async (request) => {
     const { data: runData, error: runReadError } = await adminClient
       .from('ai_test_runs')
       .select(
-        'id, task_id, task_version_id, test_case_id, status, input_snapshot_json, prompt_snapshot, system_instructions_snapshot, output_schema_snapshot_json, config_snapshot_json, model_snapshot, output_text, output_json, latency_ms, prompt_tokens, completion_tokens, total_tokens, created_at, task_version:ai_task_versions!inner(version_number), test_case:ai_test_cases!inner(source_type, source_record_id, label)'
+        'id, task_id, task_version_id, test_case_id, status, input_snapshot_json, prompt_snapshot, system_instructions_snapshot, output_schema_snapshot_json, config_snapshot_json, model_snapshot, output_text, output_json, latency_ms, prompt_tokens, completion_tokens, total_tokens, reviewer_label, reviewer_notes, created_at, task_version:ai_task_versions!inner(version_number), test_case:ai_test_cases!inner(source_type, source_record_id, label)'
       )
       .eq('id', runId)
       .single();
@@ -1431,6 +1540,7 @@ Deno.serve(async (request) => {
       requestId,
       flowId,
       testRun: mapTestRunRow(runData as TestRunRow),
+      debug: testExecutionDebug,
     });
   } catch (error) {
     logFlow('error', {
