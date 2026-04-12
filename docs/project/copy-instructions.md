@@ -28,6 +28,47 @@ Alles wat we schrijven moet dit ondersteunen:
 
 ---
 
+## Website-kernboodschap
+
+Gebruik voor website en positionering steeds deze gedachte:
+
+Deze app helpt je om losse momenten van je dag niet kwijt te raken.
+Je legt snel vast wat er is, ziet het later terug als een leesbare dag, en kunt rustiger terugzien wat terugkomt.
+
+### Kernzinnen voor website-copy
+
+- Leg vast wat er vandaag gebeurt
+- Zie je dag later rustig terug
+- Maak van losse momenten een leesbare dag
+- Zie over tijd wat terugkomt
+- Rust en continuïteit, zonder gedoe
+
+### Wat we wel beloven
+
+- snel vastleggen
+- rustig terugzien
+- leesbare dagopbouw
+- reflectie op basis van je eigen dagen
+- meer continuïteit in je eigen verhaal
+
+### Wat we niet beloven
+
+- therapie
+- coaching
+- diagnoses
+- gedragsanalyse als hoofdpropositie
+- een slimme assistent die het van je overneemt
+
+### Positioneringsregel
+
+Schrijf altijd vanuit de ervaring van de gebruiker:
+
+- ik wil mijn dagen niet kwijt raken
+- ik wil sneller kunnen terugzien wat er echt speelde
+- ik wil rustiger herkennen wat terugkomt
+
+Schrijf niet vanuit systeemtaal of technische slimheid.
+
 ## Tone of voice
 
 ### 1. Rustig
@@ -86,6 +127,62 @@ Gebruik deze woorden niet:
 - journaling platform
 
 ---
+
+## Website-positionering guardrails
+
+### Wat we wél mogen zeggen
+
+Gebruik taal die past bij:
+
+- je dagen niet kwijt raken
+- losse momenten terugzien als één leesbare dag
+- rustig terugzien wat terugkomt
+- continuïteit in je eigen verhaal
+- brongebonden verwerking
+- terugleesbaarheid en vertrouwen
+
+### Wat we níet mogen zeggen
+
+Gebruik niet:
+
+- second brain
+- knowledge base
+- personal CRM
+- life insights engine
+- AI-journal
+- therapeutisch systeem
+- coach voor herstel
+- vraag alles over je leven
+
+### Positioneringsregel
+
+De huidige website-copy verkoopt geen brede intelligentielaag.
+
+De website verkoopt nu:
+
+- snel vastleggen
+- leesbare dagopbouw
+- rustige terugblik
+- vertrouwen dat de output dicht bij de eigen input blijft
+
+### Founder story regel
+
+De oorsprong van het product mag persoonlijk zijn.
+De hoofdpositionering blijft productmatig.
+
+Dus:
+
+- persoonlijke aanleiding mag in een founder story of over-pagina
+- de homepage-hero en kerncopy spreken vanuit gebruikerswaarde, niet vanuit diagnoses, therapie of privégeschiedenis
+
+### Extra copycheck voor marketing
+
+Controleer bij website-copy altijd:
+
+1. Verkopen we hier een huidige productwaarde of een latere belofte?
+2. Klinkt dit rustig en menselijk?
+3. Trekken we niet ongemerkt richting AI-, coach- of second-brain-taal?
+4. Is de gebruiker hier geholpen met een concreet voordeel?
 
 ## Schrijfprincipes
 
@@ -197,7 +294,7 @@ Reflecties zijn ondersteunend, niet leidend.
 
 ✖ Verder  
 ✖ Ga door  
-✖ Start  
+✖ Start
 
 ✔ Gebruik altijd een concrete actie die beschrijft wat er gebeurt
 

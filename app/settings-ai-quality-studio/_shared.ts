@@ -3,6 +3,7 @@ import type {
   AiTaskDetail,
   AiTaskDraftCreationMeta,
   AiTaskDraftPayload,
+  AiTaskSummary,
   AiTaskVersionDetail,
 } from '@/types';
 
@@ -35,6 +36,92 @@ export type DraftFormState = {
   maxItemsText: string;
   changelog: string;
 };
+
+export type EntryCleanupInstructionState = {
+  systemRulesInstruction: string;
+  generalInstruction: string;
+  titleInstruction: string;
+  bodyInstruction: string;
+  summaryShortInstruction: string;
+};
+
+export type EntryCleanupTokenId = 'rawText' | 'title' | 'body' | 'summary_short';
+
+export type EntryCleanupTokenDefinition = {
+  id: EntryCleanupTokenId;
+  kind: 'input' | 'output';
+  label: string;
+  token: string;
+};
+
+export const ENTRY_CLEANUP_TOKEN_DEFINITIONS: EntryCleanupTokenDefinition[] = [
+  { id: 'rawText', kind: 'input', label: 'Ruwe tekst', token: '{{input.rawText}}' },
+  { id: 'title', kind: 'output', label: 'Titel', token: '{{output.title}}' },
+  { id: 'body', kind: 'output', label: 'Body', token: '{{output.body}}' },
+  { id: 'summary_short', kind: 'output', label: 'Summary short', token: '{{output.summary_short}}' },
+];
+
+export function getEntryCleanupTokenById(id: EntryCleanupTokenId): EntryCleanupTokenDefinition {
+  return ENTRY_CLEANUP_TOKEN_DEFINITIONS.find((item) => item.id === id) ?? ENTRY_CLEANUP_TOKEN_DEFINITIONS[0];
+}
+
+export function getEntryCleanupTokenByRawText(rawToken: string): EntryCleanupTokenDefinition | null {
+  const normalized = rawToken.replace(/\s+/g, '').toLowerCase();
+  return (
+    ENTRY_CLEANUP_TOKEN_DEFINITIONS.find(
+      (item) => item.token.replace(/\s+/g, '').toLowerCase() === normalized
+    ) ?? null
+  );
+}
+
+export type EntryCleanupTechnicalContract = {
+  inputFields: string[];
+  outputKeys: string[];
+  outputType: 'json_object';
+  noTextOutsideJson: boolean;
+  sourceOnly: boolean;
+  allowEmptySummaryShort: boolean;
+  responseFormat: 'json_object';
+};
+
+const DEFAULT_ENTRY_CLEANUP_TECHNICAL_CONTRACT: EntryCleanupTechnicalContract = {
+  inputFields: ['rawText'],
+  outputKeys: ['title', 'body', 'summary_short'],
+  outputType: 'json_object',
+  noTextOutsideJson: true,
+  sourceOnly: true,
+  allowEmptySummaryShort: true,
+  responseFormat: 'json_object',
+};
+
+const ENTRY_CLEANUP_ALLOWED_FIELD_NAMES = [
+  'rawText',
+  'title',
+  'body',
+  'summary_short',
+  'input.rawText',
+  'output.title',
+  'output.body',
+  'output.summary_short',
+] as const;
+
+const ENTRY_CLEANUP_INSTRUCTION_LABELS: Record<keyof EntryCleanupInstructionState, string> = {
+  systemRulesInstruction: 'Systeemregels',
+  generalInstruction: 'Algemene instructie',
+  titleInstruction: 'Titel',
+  bodyInstruction: 'Body',
+  summaryShortInstruction: 'Summary_short',
+};
+
+function emptyEntryCleanupInstructionState(): EntryCleanupInstructionState {
+  return {
+    systemRulesInstruction: '',
+    generalInstruction: '',
+    titleInstruction: '',
+    bodyInstruction: '',
+    summaryShortInstruction: '',
+  };
+}
 
 function splitConfigForEditor(config: Record<string, unknown>): {
   editableConfig: Record<string, unknown>;
@@ -80,7 +167,16 @@ function extractTaskInstructionFromPromptTemplate(promptTemplate: string): {
     };
   }
 
-  const instruction = typeof parsed.instruction === 'string' ? parsed.instruction : '';
+  let instruction = '';
+  if (typeof parsed.instruction === 'string') {
+    instruction = parsed.instruction;
+  }
+
+  if (typeof parsed.instruction === 'object' && parsed.instruction !== null && !Array.isArray(parsed.instruction)) {
+    const entryInstructions = parseEntryCleanupInstructionStateFromUnknown(parsed.instruction);
+    instruction = formatEntryCleanupInstructionStateForEditor(entryInstructions);
+  }
+
   const inputContext = { ...parsed };
   delete inputContext.instruction;
 
@@ -91,12 +187,171 @@ function extractTaskInstructionFromPromptTemplate(promptTemplate: string): {
   };
 }
 
+function parseEntryCleanupInstructionStateFromUnknown(value: unknown): EntryCleanupInstructionState {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return emptyEntryCleanupInstructionState();
+  }
+
+  const source = value as Record<string, unknown>;
+  return {
+    systemRulesInstruction:
+      typeof source.systemRulesInstruction === 'string'
+        ? source.systemRulesInstruction
+        : typeof source.system_rules === 'string'
+          ? source.system_rules
+          : '',
+    generalInstruction:
+      typeof source.generalInstruction === 'string'
+        ? source.generalInstruction
+        : typeof source.general === 'string'
+          ? source.general
+          : '',
+    titleInstruction: typeof source.titleInstruction === 'string' ? source.titleInstruction : '',
+    bodyInstruction: typeof source.bodyInstruction === 'string' ? source.bodyInstruction : '',
+    summaryShortInstruction:
+      typeof source.summaryShortInstruction === 'string'
+        ? source.summaryShortInstruction
+        : typeof source.summary_short === 'string'
+          ? source.summary_short
+          : '',
+  };
+}
+
+function parseLegacyEntryCleanupInstructionText(value: string): EntryCleanupInstructionState {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return emptyEntryCleanupInstructionState();
+  }
+
+  const lines = trimmed.split('\n');
+  const next = emptyEntryCleanupInstructionState();
+  let current: keyof EntryCleanupInstructionState = 'generalInstruction';
+  const keyMap: Record<string, keyof EntryCleanupInstructionState> = {
+    systeemregels: 'systemRulesInstruction',
+    'systeem regels': 'systemRulesInstruction',
+    systemrules: 'systemRulesInstruction',
+    'system rules': 'systemRulesInstruction',
+    'algemene instructie': 'generalInstruction',
+    title: 'titleInstruction',
+    titel: 'titleInstruction',
+    body: 'bodyInstruction',
+    summary_short: 'summaryShortInstruction',
+    'summary short': 'summaryShortInstruction',
+    summaryshort: 'summaryShortInstruction',
+  };
+
+  for (const line of lines) {
+    const match = line.match(/^\s*([^:]+):\s*$/);
+    if (match) {
+      const maybe = keyMap[match[1].trim().toLowerCase()];
+      if (maybe) {
+        current = maybe;
+        continue;
+      }
+    }
+
+    next[current] = next[current] ? `${next[current]}\n${line}` : line;
+  }
+
+  return {
+    systemRulesInstruction: next.systemRulesInstruction.trim(),
+    generalInstruction: next.generalInstruction.trim(),
+    titleInstruction: next.titleInstruction.trim(),
+    bodyInstruction: next.bodyInstruction.trim(),
+    summaryShortInstruction: next.summaryShortInstruction.trim(),
+  };
+}
+
+export function parseEntryCleanupInstructionStateFromText(value: string): EntryCleanupInstructionState {
+  return parseLegacyEntryCleanupInstructionText(value);
+}
+
+export function parseEntryCleanupInstructionStateFromPromptTemplate(promptTemplate: string): EntryCleanupInstructionState {
+  const parsed = parsePromptTemplateAsJsonObject(promptTemplate);
+  if (!parsed) {
+    return parseLegacyEntryCleanupInstructionText(promptTemplate);
+  }
+
+  if (typeof parsed.instruction === 'object' && parsed.instruction !== null && !Array.isArray(parsed.instruction)) {
+    return parseEntryCleanupInstructionStateFromUnknown(parsed.instruction);
+  }
+
+  if (typeof parsed.instruction === 'string') {
+    return parseLegacyEntryCleanupInstructionText(parsed.instruction);
+  }
+
+  return emptyEntryCleanupInstructionState();
+}
+
+export function formatEntryCleanupInstructionStateForEditor(
+  instructions: EntryCleanupInstructionState
+): string {
+  const rows: [keyof EntryCleanupInstructionState, string][] = [
+    ['systemRulesInstruction', instructions.systemRulesInstruction],
+    ['generalInstruction', instructions.generalInstruction],
+    ['titleInstruction', instructions.titleInstruction],
+    ['bodyInstruction', instructions.bodyInstruction],
+    ['summaryShortInstruction', instructions.summaryShortInstruction],
+  ];
+
+  return rows
+    .map(([key, value]) => `${ENTRY_CLEANUP_INSTRUCTION_LABELS[key]}:\n${value.trim()}`)
+    .join('\n\n');
+}
+
+export function buildEntryCleanupPromptTemplate(args: {
+  promptTemplateRaw: string;
+  instructions: EntryCleanupInstructionState;
+}): string {
+  const parsed = parsePromptTemplateAsJsonObject(args.promptTemplateRaw);
+  const current: Record<string, unknown> = parsed ? { ...parsed } : { rawText: '{{raw_text}}' };
+
+  current.instruction = {
+    systemRulesInstruction: args.instructions.systemRulesInstruction.trim(),
+    generalInstruction: args.instructions.generalInstruction.trim(),
+    titleInstruction: args.instructions.titleInstruction.trim(),
+    bodyInstruction: args.instructions.bodyInstruction.trim(),
+    summaryShortInstruction: args.instructions.summaryShortInstruction.trim(),
+  };
+
+  return JSON.stringify(current, null, 2);
+}
+
+export function getEntryCleanupInstructionWarnings(input: string): string[] {
+  const warnings = new Set<string>();
+
+  if (/\bsummaryShort\b/.test(input)) {
+    warnings.add('Gebruik `summary_short` in plaats van `summaryShort`.');
+  }
+
+  const explicitRefs = [
+    ...Array.from(input.matchAll(/`([A-Za-z_][A-Za-z0-9_.]*)`/g)).map((match) => match[1]),
+    ...Array.from(input.matchAll(/\{\{\s*([A-Za-z_][A-Za-z0-9_.]*)\s*\}\}/g)).map((match) => match[1]),
+  ];
+
+  for (const ref of explicitRefs) {
+    if (!ENTRY_CLEANUP_ALLOWED_FIELD_NAMES.includes(ref as (typeof ENTRY_CLEANUP_ALLOWED_FIELD_NAMES)[number])) {
+      warnings.add(`Onbekend veld: \`${ref}\`. Gebruik alleen rawText, title, body of summary_short.`);
+    }
+  }
+
+  return Array.from(warnings);
+}
+
 function mergeTaskInstructionIntoPromptTemplate(args: {
   promptTemplateRaw: string;
   taskInstruction: string;
 }): string {
   const parsed = parsePromptTemplateAsJsonObject(args.promptTemplateRaw);
-  if (!parsed || typeof parsed.instruction !== 'string') {
+  if (!parsed) {
+    return args.taskInstruction;
+  }
+
+  if (typeof parsed.instruction === 'object' && parsed.instruction !== null && !Array.isArray(parsed.instruction)) {
+    return args.promptTemplateRaw;
+  }
+
+  if (typeof parsed.instruction !== 'string') {
     return args.taskInstruction;
   }
 
@@ -388,8 +643,90 @@ export type TaskConsistencyInfo = {
   explanation?: string;
 };
 
+export type TaskResponseContractField = {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null';
+  required?: boolean;
+};
+
+export function getTaskResponseContractFields(taskKey: string): TaskResponseContractField[] {
+  if (taskKey === 'entry_cleanup') {
+    return [
+      { name: 'title', type: 'string', required: true },
+      { name: 'body', type: 'string', required: true },
+      { name: 'summary_short', type: 'string', required: true },
+    ];
+  }
+  return [];
+}
+
+export function getTaskInputContractLines(taskKey: string): string[] {
+  if (taskKey === 'entry_cleanup') {
+    return ['rawText: string (broninvoer van 1 entry)'];
+  }
+  return [];
+}
+
+export function getTaskSystemContractLines(taskKey: string): string[] {
+  if (taskKey === 'entry_cleanup') {
+    return [
+      'Gebruik alleen opgegeven bronvelden (geen externe context).',
+      'Geef alleen JSON terug volgens het afgesproken contract.',
+      'Respecteer vaste veldgrenzen: title, body, summary_short.',
+    ];
+  }
+  return [];
+}
+
+export function getEntryCleanupTechnicalContractFromConfig(config: Record<string, unknown> | null | undefined): EntryCleanupTechnicalContract {
+  const technical = config && typeof config.technical_contract === 'object' && config.technical_contract !== null
+    ? (config.technical_contract as Record<string, unknown>)
+    : null;
+
+  if (!technical) {
+    return DEFAULT_ENTRY_CLEANUP_TECHNICAL_CONTRACT;
+  }
+
+  const inputFields = Array.isArray(technical.inputFields)
+    ? technical.inputFields.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : DEFAULT_ENTRY_CLEANUP_TECHNICAL_CONTRACT.inputFields;
+  const outputKeys = Array.isArray(technical.outputKeys)
+    ? technical.outputKeys.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    : DEFAULT_ENTRY_CLEANUP_TECHNICAL_CONTRACT.outputKeys;
+
+  return {
+    inputFields: inputFields.length > 0 ? inputFields : DEFAULT_ENTRY_CLEANUP_TECHNICAL_CONTRACT.inputFields,
+    outputKeys: outputKeys.length > 0 ? outputKeys : DEFAULT_ENTRY_CLEANUP_TECHNICAL_CONTRACT.outputKeys,
+    outputType: 'json_object',
+    noTextOutsideJson: technical.noTextOutsideJson !== false,
+    sourceOnly: technical.sourceOnly !== false,
+    allowEmptySummaryShort: technical.allowEmptySummaryShort !== false,
+    responseFormat: 'json_object',
+  };
+}
+
+export function getEntryCleanupTechnicalContractLines(contract: EntryCleanupTechnicalContract): string[] {
+  return [
+    `Input: ${contract.inputFields.join(', ')}`,
+    `Output: ${contract.outputKeys.join(', ')}`,
+    'Formaat: JSON object',
+    contract.sourceOnly ? 'Alleen bronvelden' : 'Bronveldrestrictie uitgeschakeld',
+    contract.noTextOutsideJson ? 'Geen tekst buiten JSON' : 'Tekst buiten JSON toegestaan',
+    contract.allowEmptySummaryShort ? 'summary_short mag leeg zijn' : 'summary_short moet gevuld zijn',
+    `response_format: ${contract.responseFormat}`,
+  ];
+}
+
 export function getTaskConsistencyInfo(taskKey: string): TaskConsistencyInfo {
   const shared: Record<string, TaskConsistencyInfo> = {
+    entry_cleanup: {
+      representation: 'shared_runtime_family',
+      affectsLabel: 'title, body en summary_short',
+      taskOutputLabel: 'entry normalisatie-output',
+      familyLabel: 'Entry normalisatie runtime family',
+      explanation:
+        'Deze taak is onderdeel van de gedeelde entry-normalisatieflow en beïnvloedt de canonieke entry-outputvelden.',
+    },
     day_summary: {
       representation: 'shared_runtime_family',
       affectsLabel: 'samenvatting, dagverhaal en secties',
@@ -425,4 +762,85 @@ export function versionStatusLabel(status: AiTaskVersionDetail['status']): strin
     archived: 'Archief',
   };
   return labels[status];
+}
+
+export type AiQualityFamilyKey = 'moments' | 'today' | 'week' | 'month';
+
+export type AiQualityFamilyDefinition = {
+  key: AiQualityFamilyKey;
+  title: string;
+  description: string;
+  metaLabel: string;
+  taskKeys: string[];
+};
+
+export const AI_QUALITY_FAMILIES: AiQualityFamilyDefinition[] = [
+  {
+    key: 'moments',
+    title: 'Momenten',
+    description: 'Opschonen en samenvatting van één moment.',
+    metaLabel: '2 onderdelen',
+    taskKeys: ['entry_cleanup', 'entry_summary'],
+  },
+  {
+    key: 'today',
+    title: 'Vandaag',
+    description: 'Samenvatting en dagverhaal.',
+    metaLabel: '2 onderdelen',
+    taskKeys: ['day_summary', 'day_narrative'],
+  },
+  {
+    key: 'week',
+    title: 'Week',
+    description: 'Samenvatting, verhaal, highlights en reflectiepunten.',
+    metaLabel: '4 onderdelen',
+    taskKeys: ['week_summary', 'week_narrative', 'week_highlights', 'week_reflection_points'],
+  },
+  {
+    key: 'month',
+    title: 'Maand',
+    description: 'Samenvatting, verhaal, highlights en reflectiepunten.',
+    metaLabel: '4 onderdelen',
+    taskKeys: ['month_summary', 'month_narrative', 'month_highlights', 'month_reflection_points'],
+  },
+];
+
+export const AI_QUALITY_TASK_LABELS: Record<string, string> = {
+  entry_cleanup: 'Moment opschonen',
+  entry_summary: 'Moment samenvatting',
+  day_summary: 'Dag samenvatting',
+  day_narrative: 'Dagverhaal',
+  week_summary: 'Week samenvatting',
+  week_narrative: 'Weekverhaal',
+  week_highlights: 'Week highlights',
+  week_reflection_points: 'Week reflectiepunten',
+  month_summary: 'Maand samenvatting',
+  month_narrative: 'Maandverhaal',
+  month_highlights: 'Maand highlights',
+  month_reflection_points: 'Maand reflectiepunten',
+};
+
+export function getAiQualityFamilyByKey(key: string): AiQualityFamilyDefinition | null {
+  return AI_QUALITY_FAMILIES.find((family) => family.key === key) ?? null;
+}
+
+export function getAiQualityFamilyTasks(familyKey: AiQualityFamilyKey, tasks: AiTaskSummary[]): AiTaskSummary[] {
+  const family = getAiQualityFamilyByKey(familyKey);
+  if (!family) return [];
+
+  const byKey = new Map(tasks.map((task) => [task.key, task]));
+  return family.taskKeys.map((taskKey) => byKey.get(taskKey)).filter((task): task is AiTaskSummary => Boolean(task));
+}
+
+export function getAiQualityFamilyStatusSummary(tasks: AiTaskSummary[]): string {
+  if (tasks.length === 0) return 'Niet ingesteld';
+
+  const live = tasks.filter((task) => Boolean(task.liveVersion)).length;
+  const draft = tasks.filter((task) => !task.liveVersion && task.hasDraft).length;
+
+  if (live === tasks.length) return 'Runtime actief';
+  if (live === 0 && draft === 0) return 'Niet ingesteld';
+  if (live === 0 && draft > 0) return 'Draft actief';
+  if (live > 0 && draft > 0) return 'Runtime + draft';
+  return 'Deels actief';
 }

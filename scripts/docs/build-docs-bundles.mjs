@@ -26,6 +26,7 @@ const projectSources = [
   { path: 'docs/project/open-points.md', title: 'Open Punten / Resterend Werk' },
   { path: 'docs/project/content-processing-rules.md', title: 'Content / Narrative Processing Regels' },
   { path: 'docs/project/copy-instructions.md', title: 'Copy Instructions' },
+  { path: 'docs/project/ai-quality-studio.md', title: 'AI Quality Studio Governance' },
 ];
 
 const designSources = [

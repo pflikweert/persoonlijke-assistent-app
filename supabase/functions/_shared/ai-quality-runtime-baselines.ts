@@ -34,6 +34,74 @@ export type RuntimeBaselineDefinition = {
   changelog: string;
 };
 
+export type EntryCleanupTechnicalContract = {
+  inputFields: string[];
+  outputKeys: string[];
+  outputType: 'json_object';
+  noTextOutsideJson: true;
+  sourceOnly: true;
+  allowEmptySummaryShort: true;
+  responseFormat: 'json_object';
+};
+
+export function buildEntryCleanupTechnicalContract(): EntryCleanupTechnicalContract {
+  return {
+    inputFields: ['rawText'],
+    outputKeys: ['title', 'body', 'summary_short'],
+    outputType: 'json_object',
+    noTextOutsideJson: true,
+    sourceOnly: true,
+    allowEmptySummaryShort: true,
+    responseFormat: 'json_object',
+  };
+}
+
+function buildEntryCleanupSystemContractText(contract: EntryCleanupTechnicalContract): string {
+  return [
+    'Gebruik alleen opgegeven bronvelden.',
+    `Toegestane inputvelden: ${contract.inputFields.join(', ')}.`,
+    `Output moet precies 1 JSON object zijn met keys: ${contract.outputKeys.join(', ')}.`,
+    'Geen tekst buiten JSON.',
+    'summary_short mag een lege string zijn.',
+  ].join(' ');
+}
+
+function buildEntryCleanupBaselinePromptTemplate(userPrompt: string): string {
+  try {
+    const parsed = JSON.parse(userPrompt) as Record<string, unknown>;
+    const sourceInstruction = typeof parsed.instruction === 'string' ? parsed.instruction : '';
+    const rawText = typeof parsed.rawText === 'string' ? parsed.rawText : '{{raw_text}}';
+
+    return JSON.stringify(
+      {
+        instruction: {
+          generalInstruction: sourceInstruction,
+          titleInstruction: '',
+          bodyInstruction: '',
+          summaryShortInstruction: '',
+        },
+        rawText,
+      },
+      null,
+      2
+    );
+  } catch {
+    return JSON.stringify(
+      {
+        instruction: {
+          generalInstruction: '',
+          titleInstruction: '',
+          bodyInstruction: '',
+          summaryShortInstruction: '',
+        },
+        rawText: '{{raw_text}}',
+      },
+      null,
+      2
+    );
+  }
+}
+
 function withBaselineMetadata(input: {
   configJson: Record<string, unknown>;
   runtimeFlow: RuntimeFlow;
@@ -54,6 +122,7 @@ function withBaselineMetadata(input: {
 
 export function buildRuntimeBaselineDefinitions(input: { model: string }): RuntimeBaselineDefinition[] {
   const entrySpec = buildEntryNormalizationPromptSpec({ rawText: '{{raw_text}}' });
+  const entryContract = buildEntryCleanupTechnicalContract();
   const daySpec = buildDayJournalPromptSpec({
     journalDate: '{{journal_date}}',
     entries: [{ title: '{{entry_title}}', body: '{{entry_body}}' }],
@@ -77,11 +146,24 @@ export function buildRuntimeBaselineDefinitions(input: { model: string }): Runti
     {
       taskKey: 'entry_cleanup',
       model: input.model,
-      promptTemplate: entrySpec.userPrompt,
-      systemInstructions: entrySpec.systemPrompt,
-      outputSchemaJson: { type: 'string', description: 'entries_normalized.body (opgeschoonde entrytekst)' },
+      promptTemplate: buildEntryCleanupBaselinePromptTemplate(entrySpec.userPrompt),
+      systemInstructions: buildEntryCleanupSystemContractText(entryContract),
+      outputSchemaJson: {
+        type: 'object',
+        description: 'entries_normalized contract (title, body, summary_short)',
+        required: ['title', 'body', 'summary_short'],
+        properties: {
+          title: { type: 'string' },
+          body: { type: 'string' },
+          summary_short: { type: 'string' },
+        },
+      },
       configJson: withBaselineMetadata({
-        configJson: { temperature: 0.2, response_format: 'json_object' },
+        configJson: {
+          temperature: 0.2,
+          response_format: 'json_object',
+          technical_contract: entryContract,
+        },
         runtimeFlow: 'entry_normalization',
         outputField: 'body',
         promptVersion: entrySpec.promptVersion,

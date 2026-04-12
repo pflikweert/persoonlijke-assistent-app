@@ -6,7 +6,7 @@ import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { authenticateAllowlistedAdmin, getAdminAllowlistFromEnv, getInternalTokenFromEnv } from '../_shared/admin-access.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildRuntimeBaselineDefinitions } from '../_shared/ai-quality-runtime-baselines.ts';
+import { buildEntryCleanupTechnicalContract, buildRuntimeBaselineDefinitions } from '../_shared/ai-quality-runtime-baselines.ts';
 
 const FLOW = 'admin-ai-quality-studio' as const;
 
@@ -68,6 +68,38 @@ type DraftPayload = {
   maxItems: number | null;
   changelog: string | null;
 };
+
+function buildEntryCleanupSystemInstructionsFromContract(): string {
+  const contract = buildEntryCleanupTechnicalContract();
+  return [
+    'Gebruik alleen opgegeven bronvelden.',
+    `Toegestane inputvelden: ${contract.inputFields.join(', ')}.`,
+    `Output moet precies 1 JSON object zijn met keys: ${contract.outputKeys.join(', ')}.`,
+    'Geen tekst buiten JSON.',
+    'summary_short mag een lege string zijn.',
+  ].join(' ');
+}
+
+function buildEntryCleanupOutputSchemaJson(): Record<string, unknown> {
+  return {
+    type: 'object',
+    description: 'entries_normalized contract (title, body, summary_short)',
+    required: ['title', 'body', 'summary_short'],
+    properties: {
+      title: { type: 'string' },
+      body: { type: 'string' },
+      summary_short: { type: 'string' },
+    },
+  };
+}
+
+function withEntryCleanupTechnicalContract(configJson: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...configJson,
+    response_format: 'json_object',
+    technical_contract: buildEntryCleanupTechnicalContract(),
+  };
+}
 
 type DaySourceRow = {
   id: string;
@@ -692,6 +724,10 @@ async function callOpenAi(args: {
   config: Record<string, unknown>;
 }): Promise<{ outputText: string; outputJson: Record<string, unknown> | null; usage: { promptTokens: number | null; completionTokens: number | null; totalTokens: number | null } }> {
   const temperature = typeof args.config.temperature === 'number' && Number.isFinite(args.config.temperature) ? args.config.temperature : 0.2;
+  const responseFormat =
+    typeof args.config.response_format === 'string' && args.config.response_format === 'json_object'
+      ? { type: 'json_object' as const }
+      : undefined;
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -701,6 +737,7 @@ async function callOpenAi(args: {
     body: JSON.stringify({
       model: args.model,
       temperature,
+      ...(responseFormat ? { response_format: responseFormat } : {}),
       messages: [
         { role: 'system', content: args.systemInstructions },
         { role: 'user', content: args.promptSnapshot },
@@ -922,15 +959,40 @@ Deno.serve(async (request) => {
         return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Alleen draft versies zijn bewerkbaar.' });
       }
 
+      const { data: existingTaskData, error: existingTaskError } = await adminClient
+        .from('ai_tasks')
+        .select('id, key, label, input_type, output_type, description, is_active, created_at, updated_at')
+        .eq('id', (existing as VersionRow).task_id)
+        .maybeSingle();
+      if (existingTaskError) {
+        return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: 'Failed to load task for draft update.' });
+      }
+      if (!existingTaskData) {
+        return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task not found for draft update.' });
+      }
+      const existingTask = existingTaskData as TaskRow;
+
       const payload = normalized.payload;
+      const nextSystemInstructions =
+        existingTask.key === 'entry_cleanup'
+          ? buildEntryCleanupSystemInstructionsFromContract()
+          : payload.systemInstructions;
+      const nextOutputSchemaJson =
+        existingTask.key === 'entry_cleanup'
+          ? buildEntryCleanupOutputSchemaJson()
+          : payload.outputSchemaJson;
+      const nextConfigJson =
+        existingTask.key === 'entry_cleanup'
+          ? withEntryCleanupTechnicalContract(payload.configJson)
+          : payload.configJson;
       const { data: updated, error: updateError } = await adminClient
         .from('ai_task_versions')
         .update({
           model: payload.model,
           prompt_template: payload.promptTemplate,
-          system_instructions: payload.systemInstructions,
-          output_schema_json: payload.outputSchemaJson,
-          config_json: payload.configJson,
+          system_instructions: nextSystemInstructions,
+          output_schema_json: nextOutputSchemaJson,
+          config_json: nextConfigJson,
           min_items: payload.minItems,
           max_items: payload.maxItems,
           changelog: payload.changelog,
@@ -1122,13 +1184,23 @@ Deno.serve(async (request) => {
       if (taskKey === 'entry_cleanup') {
         const { data: entryData, error: entryError } = await adminClient
           .from('entries_normalized')
-          .select('body')
+          .select('title, body, summary_short')
           .eq('id', sourceRecordId)
           .maybeSingle();
         if (entryError) {
           return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: 'Failed to load entry live baseline.' });
         }
-        liveOutputText = entryData?.body ?? null;
+        liveOutputText = entryData
+          ? JSON.stringify(
+              {
+                title: entryData.title ?? '',
+                body: entryData.body ?? '',
+                summary_short: entryData.summary_short ?? '',
+              },
+              null,
+              2
+            )
+          : null;
         baselineStatus = liveOutputText ? 'available' : 'missing';
         baselineReason = liveOutputText ? null : 'Entry baseline ontbreekt.';
       } else if (taskKey === 'entry_summary') {

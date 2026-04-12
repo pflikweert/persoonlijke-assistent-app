@@ -5,12 +5,18 @@ import { Pressable, StyleSheet } from 'react-native';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { SettingsScreenHeader } from '@/components/ui/settings-screen-primitives';
+import {
+  AdminMetaStrip,
+  AdminPageHero,
+  AdminReadOnlyBlock,
+  AdminSection,
+  AdminShell,
+  AdminStickyFooterActions,
+  SettingsTopNav,
+} from '@/components/ui/settings-screen-primitives';
 import {
   InputField,
   MetaText,
-  PrimaryButton,
-  ScreenContainer,
   StateBlock,
   SurfaceSection,
   TextAreaField,
@@ -35,8 +41,67 @@ import {
   buildLineDiffText,
   deriveDraftOriginLabel,
   formatDateTimeLabel,
+  getEntryCleanupTechnicalContractFromConfig,
+  getEntryCleanupTechnicalContractLines,
+  getTaskInputContractLines,
+  getTaskResponseContractFields,
   getTaskConsistencyInfo,
+  parseEntryCleanupInstructionStateFromPromptTemplate,
 } from '../../_shared';
+
+type EntryCleanupOutput = {
+  title: string;
+  body: string;
+  summary_short: string;
+};
+
+function parseEntryCleanupOutput(value: unknown): {
+  output: EntryCleanupOutput | null;
+  parseOk: boolean;
+  unknownKeys: string[];
+} {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { output: null, parseOk: false, unknownKeys: [] };
+  }
+
+  const record = value as Record<string, unknown>;
+  const known = new Set(['title', 'body', 'summary_short']);
+  const unknownKeys = Object.keys(record).filter((key) => !known.has(key));
+  const title = typeof record.title === 'string' ? record.title : '';
+  const body = typeof record.body === 'string' ? record.body : '';
+  const summaryShort = typeof record.summary_short === 'string' ? record.summary_short : '';
+
+  return {
+    output: {
+      title,
+      body,
+      summary_short: summaryShort,
+    },
+    parseOk: true,
+    unknownKeys,
+  };
+}
+
+function parseEntryCleanupOutputFromText(value: string | null | undefined) {
+  if (!value) {
+    return { output: null, parseOk: false, unknownKeys: [] as string[] };
+  }
+  try {
+    const parsed = JSON.parse(value);
+    return parseEntryCleanupOutput(parsed);
+  } catch {
+    return { output: null, parseOk: false, unknownKeys: [] as string[] };
+  }
+}
+
+function sentenceCount(value: string): number {
+  const normalized = value.trim();
+  if (!normalized) return 0;
+  return normalized
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0).length;
+}
 
 export default function AiQualityStudioTestScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -81,9 +146,95 @@ export default function AiQualityStudioTestScreen() {
     return getTaskConsistencyInfo(detail.key);
   }, [detail]);
 
+  const isEntryCleanup = detail?.key === 'entry_cleanup';
+  const responseContractFields = useMemo(
+    () => (detail ? getTaskResponseContractFields(detail.key) : []),
+    [detail]
+  );
+  const inputContractLines = useMemo(
+    () => (detail ? getTaskInputContractLines(detail.key) : []),
+    [detail]
+  );
+  const entryCleanupTechnicalContractLines = useMemo(() => {
+    if (!isEntryCleanup || !selectedVersion) return [];
+    const contract = getEntryCleanupTechnicalContractFromConfig(selectedVersion.configJson ?? {});
+    return getEntryCleanupTechnicalContractLines(contract);
+  }, [isEntryCleanup, selectedVersion]);
+
   const supportsInlineTesting = detail?.inputType === 'entry' || detail?.inputType === 'day';
   const canRunTest =
     Boolean(supportsInlineTesting) && Boolean(selectedVersion) && Boolean(selectedSource) && !runningTest;
+  const showFooterActions = !loading && detail && selectedVersion && supportsInlineTesting;
+
+  const entryCleanupInstruction = useMemo(() => {
+    if (!isEntryCleanup || !selectedVersion) return null;
+    return parseEntryCleanupInstructionStateFromPromptTemplate(selectedVersion.promptTemplate);
+  }, [isEntryCleanup, selectedVersion]);
+
+  const entryCleanupTestOutput = useMemo(() => {
+    if (!isEntryCleanup || !latestTestRun) {
+      return { output: null, parseOk: false, unknownKeys: [] as string[] };
+    }
+    if (latestTestRun.outputJson) {
+      return parseEntryCleanupOutput(latestTestRun.outputJson);
+    }
+    return parseEntryCleanupOutputFromText(latestTestRun.outputText);
+  }, [isEntryCleanup, latestTestRun]);
+
+  const entryCleanupLiveOutput = useMemo(() => {
+    if (!isEntryCleanup || !compareView) {
+      return { output: null, parseOk: false, unknownKeys: [] as string[] };
+    }
+    return parseEntryCleanupOutputFromText(compareView.liveOutputText);
+  }, [compareView, isEntryCleanup]);
+
+  const entryCleanupCompareTestOutput = useMemo(() => {
+    if (!isEntryCleanup || !compareView) {
+      return { output: null, parseOk: false, unknownKeys: [] as string[] };
+    }
+    return parseEntryCleanupOutputFromText(compareView.testOutputText);
+  }, [compareView, isEntryCleanup]);
+
+  const entryCleanupQualityHints = useMemo(() => {
+    if (!isEntryCleanup) return [] as { label: string; ok: boolean; detail?: string }[];
+
+    const output = entryCleanupTestOutput.output;
+    const rawTextSource = latestTestRun?.inputSnapshotJson?.rawText;
+    const rawText = typeof rawTextSource === 'string' ? rawTextSource : '';
+    const body = output?.body ?? '';
+    const summaryShort = output?.summary_short ?? '';
+    const summarySentences = sentenceCount(summaryShort);
+    const bodyRatio = rawText.trim().length > 0 ? body.trim().length / rawText.trim().length : 1;
+
+    return [
+      {
+        label: 'JSON parse OK',
+        ok: entryCleanupTestOutput.parseOk,
+      },
+      {
+        label: 'Alleen bekende outputvelden aanwezig',
+        ok: entryCleanupTestOutput.unknownKeys.length === 0,
+        detail:
+          entryCleanupTestOutput.unknownKeys.length > 0
+            ? `Onbekend: ${entryCleanupTestOutput.unknownKeys.join(', ')}`
+            : undefined,
+      },
+      {
+        label: 'Body lijkt niet samengevat',
+        ok: body.trim().length > 0 && body.trim().length >= 280,
+      },
+      {
+        label: 'Body lijkt niet merkbaar ingekort',
+        ok: body.trim().length > 0 && bodyRatio >= 0.65,
+        detail: rawText ? `Indicatie ratio body/brontekst: ${bodyRatio.toFixed(2)}` : 'Geen brontekst beschikbaar',
+      },
+      {
+        label: 'Summary_short is 0–3 korte zinnen',
+        ok: summarySentences <= 3,
+        detail: `Geteld: ${summarySentences} zin(nen)`,
+      },
+    ];
+  }, [entryCleanupTestOutput, isEntryCleanup, latestTestRun]);
 
   const load = useCallback(async () => {
     const normalizedTaskKey = typeof taskKey === 'string' ? taskKey.trim() : '';
@@ -183,20 +334,55 @@ export default function AiQualityStudioTestScreen() {
   }
 
   return (
-    <ScreenContainer scrollable backgroundTone="flat" contentContainerStyle={styles.scrollContent}>
-      <SettingsScreenHeader
-        title="Testen"
-        subtitle={detail?.label ?? 'AI Quality Studio'}
-        onBack={() => router.back()}
-        onMenu={() => setMenuVisible(true)}
-      />
+    <AdminShell
+      fixedHeader={<SettingsTopNav onBack={() => router.back()} onMenu={() => setMenuVisible(true)} />}
+      fixedFooter={
+        showFooterActions ? (
+          <AdminStickyFooterActions
+            primaryAction={{
+              label: runningTest ? 'Testen…' : 'Test',
+              onPress: () => void handleRunTest(),
+              disabled: !canRunTest || loadingSources,
+              icon: 'play-arrow',
+            }}
+            secondaryAction={
+              latestTestRun
+                ? {
+                    label: loadingCompare ? 'Vergelijken…' : 'Vergelijk live',
+                    onPress: () => void handleLoadCompare(),
+                    disabled: loadingCompare,
+                    icon: 'difference',
+                  }
+                : undefined
+            }
+            tertiaryAction={{
+              label: 'Terug',
+              onPress: () => router.push(`/settings-ai-quality-studio/${detail.key}/draft/${selectedVersion.id}` as never),
+              icon: 'arrow-back',
+              tone: 'quiet',
+            }}
+          />
+        ) : null
+      }
+      contentContainerStyle={styles.scrollContent}
+    >
+      <AdminPageHero title="Testen" subtitle={detail?.label ?? 'AI Quality Studio'} />
+
+      {detail && selectedVersion ? (
+        <AdminMetaStrip
+          items={[
+            `Draft: v${selectedVersion.versionNumber}`,
+            detail.liveVersion ? `Runtime: v${detail.liveVersion.versionNumber}` : 'Runtime nog niet ingesteld',
+          ]}
+        />
+      ) : null}
 
       {loading ? <StateBlock tone="loading" message="Testomgeving laden" /> : null}
       {!loading && error ? <StateBlock tone="error" message="Kon testscherm niet laden." detail={error} /> : null}
 
       {!loading && detail && selectedVersion ? (
         <>
-          <SurfaceSection title="Versiecontext">
+          <AdminSection title={isEntryCleanup ? 'Runtime-basis' : 'Versiecontext'}>
             <MetaText>Onderdeel: {detail.label}</MetaText>
             <MetaText>Draft versie: v{selectedVersion.versionNumber}</MetaText>
             <MetaText>Model: {selectedVersion.model}</MetaText>
@@ -209,7 +395,44 @@ export default function AiQualityStudioTestScreen() {
             <MetaText>{deriveDraftOriginLabel(detail, selectedVersion)}</MetaText>
             {selectedVersion.updatedAt ? <MetaText>Bijgewerkt: {formatDateTimeLabel(selectedVersion.updatedAt)}</MetaText> : null}
             {taskConsistency ? <MetaText>Beïnvloedt: {taskConsistency.affectsLabel}</MetaText> : null}
-          </SurfaceSection>
+            {isEntryCleanup ? (
+              <>
+                <MetaText>Runtime-family: {taskConsistency?.familyLabel ?? 'entry normalisatie'}</MetaText>
+                <MetaText>Outputlaag: entries_normalized</MetaText>
+              </>
+            ) : null}
+          </AdminSection>
+
+          {isEntryCleanup ? (
+            <AdminSection title="Technisch contract (read-only)">
+              <ThemedView style={styles.resultGroup}>
+                <AdminReadOnlyBlock title="Input contract" lines={inputContractLines} />
+                <AdminReadOnlyBlock title="Technisch contract" lines={entryCleanupTechnicalContractLines} />
+                <AdminReadOnlyBlock
+                  title="Response contract"
+                  lines={responseContractFields.map((field) => `${field.name}: ${field.type}`)}
+                />
+              </ThemedView>
+            </AdminSection>
+          ) : null}
+
+            {isEntryCleanup && entryCleanupInstruction ? (
+              <SurfaceSection title="Instructies">
+                <ThemedView style={styles.resultGroup}>
+                  <ThemedText type="defaultSemiBold">Algemene instructie</ThemedText>
+                  <TextAreaField value={entryCleanupInstruction.generalInstruction} editable={false} style={styles.textAreaSmall} />
+
+                  <ThemedText type="defaultSemiBold">Titel</ThemedText>
+                  <TextAreaField value={entryCleanupInstruction.titleInstruction} editable={false} style={styles.textAreaSmall} />
+
+                  <ThemedText type="defaultSemiBold">Body</ThemedText>
+                  <TextAreaField value={entryCleanupInstruction.bodyInstruction} editable={false} style={styles.textAreaMedium} />
+
+                  <ThemedText type="defaultSemiBold">Summary_short</ThemedText>
+                  <TextAreaField value={entryCleanupInstruction.summaryShortInstruction} editable={false} style={styles.textAreaSmall} />
+                </ThemedView>
+              </SurfaceSection>
+            ) : null}
 
           <SurfaceSection title="Bron kiezen">
             {loadingSources ? <MetaText>Bronnen laden…</MetaText> : null}
@@ -261,39 +484,55 @@ export default function AiQualityStudioTestScreen() {
                 message="Testen volgt later"
                 detail="Voor dit onderdeel is testen nog niet beschikbaar."
               />
-            ) : (
-              <PrimaryButton
-                label={runningTest ? 'Test uitvoeren…' : 'Test uitvoeren'}
-                onPress={() => void handleRunTest()}
-                disabled={!canRunTest || loadingSources}
-              />
-            )}
+            ) : null}
           </SurfaceSection>
 
           {latestTestRun ? (
-            <SurfaceSection title="Testresultaat">
+            <SurfaceSection title={isEntryCleanup ? 'Testresultaat' : 'Testresultaat'}>
               <ThemedView style={styles.resultGroup}>
                 <MetaText>Status: {latestTestRun.status}</MetaText>
                 <MetaText>Versie: v{latestTestRun.taskVersionNumber}</MetaText>
                 <MetaText>Bron: {latestTestRun.sourceLabel || selectedSource?.label || 'Onbekende bron'}</MetaText>
 
-                <ThemedText type="defaultSemiBold">Testresultaat</ThemedText>
-                <TextAreaField
-                  value={
-                    latestTestRun.outputText ??
-                    (latestTestRun.outputJson
-                      ? JSON.stringify(latestTestRun.outputJson, null, 2)
-                      : 'Geen output')
-                  }
-                  editable={false}
-                  style={styles.textAreaLarge}
-                />
+                {isEntryCleanup && entryCleanupTestOutput.output ? (
+                  <>
+                    <ThemedText type="defaultSemiBold">Titel</ThemedText>
+                    <TextAreaField value={entryCleanupTestOutput.output.title} editable={false} style={styles.textAreaSmall} />
 
-                <PrimaryButton
-                  label={loadingCompare ? 'Verschil laden…' : 'Verschil met live'}
-                  onPress={() => void handleLoadCompare()}
-                  disabled={loadingCompare}
-                />
+                    <ThemedText type="defaultSemiBold">Body</ThemedText>
+                    <TextAreaField value={entryCleanupTestOutput.output.body} editable={false} style={styles.textAreaLarge} />
+
+                    <ThemedText type="defaultSemiBold">Summary_short</ThemedText>
+                    <TextAreaField
+                      value={entryCleanupTestOutput.output.summary_short}
+                      editable={false}
+                      style={styles.textAreaSmall}
+                    />
+
+                    <ThemedText type="defaultSemiBold">Contractchecks</ThemedText>
+                    {entryCleanupQualityHints.map((hint) => (
+                      <MetaText key={hint.label}>
+                        {hint.ok ? '✓' : '•'} {hint.label}
+                        {hint.detail ? ` · ${hint.detail}` : ''}
+                      </MetaText>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <ThemedText type="defaultSemiBold">Testresultaat</ThemedText>
+                    <TextAreaField
+                      value={
+                        latestTestRun.outputText ??
+                        (latestTestRun.outputJson
+                          ? JSON.stringify(latestTestRun.outputJson, null, 2)
+                          : 'Geen output')
+                      }
+                      editable={false}
+                      style={styles.textAreaLarge}
+                    />
+                  </>
+                )}
+
               </ThemedView>
 
               {compareView ? (
@@ -304,30 +543,75 @@ export default function AiQualityStudioTestScreen() {
                     {compareView.baselineReason ? ` · ${compareView.baselineReason}` : ''}
                   </MetaText>
 
-                  <MetaText>Runtime-basis output</MetaText>
-                  <TextAreaField
-                    value={compareView.liveOutputText ?? 'Nog geen live output beschikbaar.'}
-                    editable={false}
-                    style={styles.textAreaMedium}
-                  />
+                  {isEntryCleanup && entryCleanupLiveOutput.output && entryCleanupCompareTestOutput.output ? (
+                    <>
+                      <MetaText>Titel · runtime-basis vs testresultaat</MetaText>
+                      <TextAreaField
+                        value={`Runtime-basis:\n${entryCleanupLiveOutput.output.title}\n\nTestresultaat:\n${entryCleanupCompareTestOutput.output.title}`}
+                        editable={false}
+                        style={styles.textAreaSmall}
+                      />
+                      <TextAreaField
+                        value={buildLineDiffText(entryCleanupLiveOutput.output.title, entryCleanupCompareTestOutput.output.title)}
+                        editable={false}
+                        style={styles.textAreaSmall}
+                      />
 
-                  <MetaText>Test output</MetaText>
-                  <TextAreaField
-                    value={compareView.testOutputText ?? 'Geen test output beschikbaar.'}
-                    editable={false}
-                    style={styles.textAreaMedium}
-                  />
+                      <MetaText>Body · runtime-basis vs testresultaat</MetaText>
+                      <TextAreaField
+                        value={`Runtime-basis:\n${entryCleanupLiveOutput.output.body}\n\nTestresultaat:\n${entryCleanupCompareTestOutput.output.body}`}
+                        editable={false}
+                        style={styles.textAreaLarge}
+                      />
+                      <TextAreaField
+                        value={buildLineDiffText(entryCleanupLiveOutput.output.body, entryCleanupCompareTestOutput.output.body)}
+                        editable={false}
+                        style={styles.textAreaMedium}
+                      />
 
-                  <MetaText>Verschil met live</MetaText>
-                  <TextAreaField
-                    value={
-                      compareView.liveOutputText && compareView.testOutputText
-                        ? buildLineDiffText(compareView.liveOutputText, compareView.testOutputText)
-                        : 'Geen vergelijkbare output beschikbaar.'
-                    }
-                    editable={false}
-                    style={styles.textAreaLarge}
-                  />
+                      <MetaText>Summary_short · runtime-basis vs testresultaat</MetaText>
+                      <TextAreaField
+                        value={`Runtime-basis:\n${entryCleanupLiveOutput.output.summary_short}\n\nTestresultaat:\n${entryCleanupCompareTestOutput.output.summary_short}`}
+                        editable={false}
+                        style={styles.textAreaSmall}
+                      />
+                      <TextAreaField
+                        value={buildLineDiffText(
+                          entryCleanupLiveOutput.output.summary_short,
+                          entryCleanupCompareTestOutput.output.summary_short
+                        )}
+                        editable={false}
+                        style={styles.textAreaSmall}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <MetaText>Runtime-basis output</MetaText>
+                      <TextAreaField
+                        value={compareView.liveOutputText ?? 'Nog geen live output beschikbaar.'}
+                        editable={false}
+                        style={styles.textAreaMedium}
+                      />
+
+                      <MetaText>Test output</MetaText>
+                      <TextAreaField
+                        value={compareView.testOutputText ?? 'Geen test output beschikbaar.'}
+                        editable={false}
+                        style={styles.textAreaMedium}
+                      />
+
+                      <MetaText>Verschil met live</MetaText>
+                      <TextAreaField
+                        value={
+                          compareView.liveOutputText && compareView.testOutputText
+                            ? buildLineDiffText(compareView.liveOutputText, compareView.testOutputText)
+                            : 'Geen vergelijkbare output beschikbaar.'
+                        }
+                        editable={false}
+                        style={styles.textAreaLarge}
+                      />
+                    </>
+                  )}
                 </ThemedView>
               ) : null}
             </SurfaceSection>
@@ -356,7 +640,7 @@ export default function AiQualityStudioTestScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </ScreenContainer>
+    </AdminShell>
   );
 }
 
@@ -385,5 +669,8 @@ const styles = StyleSheet.create({
   },
   textAreaMedium: {
     minHeight: 140,
+  },
+  textAreaSmall: {
+    minHeight: 90,
   },
 });

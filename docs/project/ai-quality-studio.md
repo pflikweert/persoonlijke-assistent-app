@@ -146,6 +146,28 @@ Auth:
 - draft editor
 - test / compare
 
+### 5.5 Entry_cleanup contract-first editor (aanwezig)
+- `entry_cleanup` volgt nu expliciet een contract-first editorstructuur:
+  - **alleen taakinstructie bewerkbaar**
+  - input/system/response/model contractlagen zichtbaar als read-only
+- response-contract is object-based en zichtbaar als:
+  - `title: string`
+  - `body: string`
+  - `summary_short: string`
+- systemcontract is compact gehouden op niet-vrije grenzen:
+  - alleen opgegeven bronvelden gebruiken
+  - alleen JSON volgens contract retourneren
+  - field-level contractgrenzen blijven technisch afgedwongen
+- baseline metadata blijft zichtbaar maar read-only, en geen primaire bewerklaag.
+
+### 5.6 Admin detail-shell polish (aanwezig)
+- gedeelde admin topnavigatie is visueel en technisch gecentreerd en navigation-only gebleven.
+- gedeelde sticky action footer is nu een compact, herbruikbaar admin pattern met duidelijke hiërarchie:
+  - primary
+  - secondary
+  - tertiary (quiet/destructive)
+- patroon is toegepast op AIQS detailschermen zonder runtime- of contractscope uit te breiden.
+
 ### 5.4 Runtime-baseline model (aanwezig, transitie)
 - Runtime-definities worden nu opgebouwd vanuit code
 - Baseline import schrijft deze als `live` naar studio-DB

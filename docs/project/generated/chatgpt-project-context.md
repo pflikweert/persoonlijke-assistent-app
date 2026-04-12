@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-11T11:15:09.116Z
-Source Commit: e6bc235
+Build Timestamp (UTC): 2026-04-12T11:36:12.046Z
+Source Commit: 83b088f
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -16,6 +16,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/open-points.md
 - docs/project/content-processing-rules.md
 - docs/project/copy-instructions.md
+- docs/project/ai-quality-studio.md
 - AGENTS.md
 
 ---
@@ -56,12 +57,14 @@ Regel:
 ## 4) Standaard upload naar ChatGPT Project / Stitch
 Upload standaard de bestanden uit `docs/upload/`:
 1. `docs/upload/chatgpt-project-context.md`
-2. `docs/upload/mvp-design-spec-1.2.1.md`
-3. `docs/upload/stitch-design-context.md`
-4. `docs/upload/upload-manifest.md`
+2. `docs/upload/ai-quality-studio.md`
+3. `docs/upload/mvp-design-spec-1.2.1.md`
+4. `docs/upload/stitch-design-context.md`
+5. `docs/upload/upload-manifest.md`
 
 Reden:
 - de bundle bevat compacte projectcontext
+- AI Quality Studio governance wordt als canonieke upload-copy apart meegenomen
 - de design spec blijft apart leidend voor MVP-designbesluiten
 - de Stitch design context bevat compacte design-handoff zonder alle docs te dupliceren
 - het manifest maakt de uploadset controleerbaar
@@ -85,28 +88,51 @@ Reden:
 # Persoonlijke Assistent App — Master Project (Canoniek)
 
 ## Doel van dit document
+
 Dit document beschrijft de stabiele productkaders:
+
 - productdefinitie
 - scope en buiten scope
 - fasekaart
 - beslisregels
 
 Voor feitelijke implementatiestatus en code-realiteit is leidend:
+
 - `docs/project/current-status.md`
 
 ## Productdefinitie
+
 De app is een capture-first persoonlijke contextmachine:
+
 - vastleggen via tekst en audio
 - verwerken naar een leesbare dagboeklaag
 - periodieke reflectie op basis van die dagboeklaag
 
 Kernbelofte:
+
 - snel vastleggen
 - rustig teruglezen
 - later overzicht zonder handmatig samenstellen
 
+## Waarom dit product bestaat
+
+Veel dagen verdwijnen in losse momenten, gedachten en notities.
+
+Deze app is gebouwd om die fragmenten niet kwijt te raken.
+Je legt snel vast wat er is, ziet het later terug als een leesbare dag, en kunt over een week of maand rustiger terugzien wat terugkomt.
+
+De kernwaarde zit niet in meer functies, maar in continuïteit:
+
+- snel vastleggen
+- rustig teruglezen
+- later overzicht zonder handmatig samenstellen
+
+De app is daarmee geen coach, chatinterface of therapeutisch systeem, maar een rustige dagboekmachine die helpt om je eigen verhaal terug te zien.
+
 ## Scope (MVP)
+
 In scope:
+
 - auth-baseline
 - capture via tekst en audio
 - server-side verwerking van input
@@ -115,6 +141,7 @@ In scope:
 - kernschermen voor capture, dagweergave en reflecties
 
 Buiten scope:
+
 - brede chat/coach/agent-ervaring
 - retrieval/Q&A en vector search
 - document intelligence als brede productlaag
@@ -122,14 +149,19 @@ Buiten scope:
 - realtime voice als productmodus
 
 ## Fasekaart
+
 ### Fase 0
+
 Setup en basisomgeving.
 
 ### Fase 1
+
 Kernlus bouwen: van capture naar dagboeklaag en reflecties.
 
 ### Fase 1.2 (hardening)
+
 Release-1 hardening in subfases:
+
 1. 1.2A stabiliteit en foutafhandeling
 2. 1.2B outputkwaliteit
 3. 1.2C UX-polish
@@ -139,6 +171,7 @@ Release-1 hardening in subfases:
 Deze fase blijft hardening en is geen verbreding van productscope.
 
 ## Beslisregels
+
 1. Capture-first blijft leidend.
 2. Dagboeklaag blijft canonieke productlaag.
 3. Geen scope-creep naar brede assistent.
@@ -147,19 +180,55 @@ Deze fase blijft hardening en is geen verbreding van productscope.
 6. AI-gedrag en promptbeheer volgen `docs/project/ai-quality-studio.md`.
 
 ## Copykader (bindend)
+
 Voor productcopy, microcopy en UX-tekst is leidend:
+
 - `docs/project/copy-instructions.md`
 
 Regel:
+
 - copybeslissingen volgen dit document naast de productkaders in dit masterdocument.
 
 ## Post-MVP
-Mogelijke vervolgsporen na afronding van 1.2:
-- retrieval/Q&A over archief
-- verdere intelligentie-lagen
-- uitgebreidere assistentfunctionaliteit
 
-Deze vallen expliciet buiten de huidige fase.
+Mogelijke vervolgsporen na afronding van 1.2:
+
+### 1. Archiefdoorzoeking
+
+- zoeken door dagen, weken en maanden
+- sneller terugvinden wat er eerder speelde
+
+### 2. Retrieval / Q&A over archief
+
+- gerichte vragen stellen over eerder vastgelegde perioden of gebeurtenissen
+- antwoorden blijven gebaseerd op opgeslagen dagboeklagen
+
+### 3. Entiteitsextractie en tagging
+
+- mensen
+- plekken
+- thema’s
+- terugkerende onderwerpen
+
+### 4. Persoonlijke archieflaag
+
+- rijkere verbanden tussen dagen, perioden en terugkerende onderwerpen
+- meer structuur bovenop het bestaande archief
+
+### 5. Verdere intelligentielagen
+
+- alleen toevoegen als ze de dagboekmachine versterken
+- nooit als verbreding naar een brede coach-, chat- of agentervaring zonder expliciete nieuwe productfase
+
+### Productregel voor later
+
+Deze richtingen zijn waardevolle vervolgideeën, maar geen huidige MVP-belofte.
+
+In de huidige fase blijft leidend:
+
+- capture-first
+- dagboeklaag centraal
+- periodieke reflectie op basis van die dagboeklaag
 
 ---
 
@@ -168,39 +237,68 @@ Deze vallen expliciet buiten de huidige fase.
 # Persoonlijke Assistent App — Productvisie Aanscherping (MVP)
 
 ## Doel
+
 Dit document beschrijft gewenst productgedrag en guardrails binnen MVP.
 
 Voor implementatiestatus en code-audit is leidend:
+
 - `docs/project/current-status.md`
 
 ## Productgedrag
+
 Bindende formule:
+
 - capture → structureren → dagboeklaag → periodieke reflectie
 
 Aangescherpte interactieformule:
+
 - capture → korte ondersteuning waar passend → opname in dagboeklaag → latere reflectie
 
+## Waarde voor de gebruiker
+
+De app is bedoeld voor mensen die hun dagen niet kwijt willen raken in losse flarden.
+
+De waarde zit in drie stappen:
+
+1. snel vastleggen wat er vandaag gebeurt
+2. dat terugzien als een leesbare dag
+3. later rustiger herkennen wat terugkomt over een week of maand
+
+De app helpt daarmee niet door veel te praten of te sturen, maar door continuïteit te geven aan eigen input.
+
+Belangrijke productuitkomst:
+
+- losse momenten worden één geheel
+- teruglezen kost minder energie
+- reflectie ontstaat op basis van je eigen dagboeklaag, niet op basis van losse herinneringen
+
 ## Dagboeklaag vs assistentlaag
+
 ### Dagboeklaag (canoniek)
+
 - broninhoud van de gebruiker
 - verwerkte daginhoud
 - periodieke reflecties
 
 Eigenschappen:
+
 - duurzaam
 - terugleesbaar
 - leidend voor productwaarde
 
 ### Assistentlaag (ondersteunend)
+
 - korte begeleiding direct rond capture
 - begrensde, lichte ondersteuning
 
 Eigenschappen:
+
 - ondergeschikt aan dagboeklaag
 - niet de primaire productmodus
 - geen open chat als default
 
 ## Productguardrails
+
 1. Dagboeklaag blijft centraal.
 2. Assistentgedrag blijft kort en functioneel.
 3. Geen therapeutische positionering.
@@ -208,14 +306,57 @@ Eigenschappen:
 5. Rust, helderheid en eigenaarschap van gebruikersinhoud blijven leidend.
 
 ## UX-principes rond de kleine assistentlaag
+
 1. Ondersteuning direct rond capture, niet als los chatuniversum.
 2. Duidelijk onderscheid tussen wat tijdelijk helpt en wat canoniek wordt opgeslagen.
 3. Toon: rustig, concreet, niet-zwaar.
 4. Interactie blijft compact en doelgericht.
 
 ## Beslisregel voor uitbreidingen
+
 Alleen uitbreiden als het de dagboekmachine versterkt.
 Als het vooral richting brede assistent trekt, valt het buiten de huidige MVP-kaders.
+
+## Huidige productclaim vs latere richting
+
+### Huidige productclaim
+
+De app is nu een capture-first dagboekmachine.
+
+De kern is:
+
+- snel vastleggen
+- verwerken naar een leesbare dag
+- later rustig terugzien wat terugkomt via week- en maandreflecties
+
+De onderscheidende waarde zit in:
+
+- brongebonden verwerking
+- rustige narratieve reconstructie
+- terugleesbaarheid zonder verzonnen interpretatie
+
+### Latere richting
+
+Na MVP kan dit uitgroeien tot een rijkere persoonlijke archieflaag, bijvoorbeeld met:
+
+- archiefdoorzoeking
+- retrieval/Q&A over eigen geschiedenis
+- entiteitsextractie of tagging
+- een bredere kennislaag bovenop het archief
+
+### Belangrijke grens
+
+Deze latere richting mag intern richting geven, maar is geen huidige productclaim.
+
+We positioneren het product nu niet als:
+
+- second brain
+- knowledge base
+- personal CRM
+- life insights engine
+- vraaginterface over je leven
+
+Zolang deze lagen niet productmatig bewezen en expliciet in scope zijn, blijven ze post-MVP.
 
 ---
 
@@ -267,6 +408,8 @@ Gecontroleerd op:
 | Product-reset/delete-all | Gepland in 1.2D | **Aanwezig** | delete-sheet flow aanwezig in `app/settings.tsx` met `confirm/loading/success/error`; handmatige settings-tests bevestigen de gebruikersflow en runtime/API-check toont leegmaken van `period_reflections`, `day_journals`, `entries_normalized`, `entries_raw`. |
 | Logging/tracing | Gepland 1.2A | **Aanwezig** | `requestId/flowId` contract + `_shared/flow-logger.ts`. |
 | Verify scripts lokaal | Gepland 1.2A/1.2E | **Aanwezig** | text/audio/reflection/output-quality scripts aanwezig. |
+| AI Quality Studio contract-first editor (`entry_cleanup`) | Hardening AI governance | **Aanwezig** | editor split met alleen taakinstructie als bewerklaag; input/system/response/model + baseline metadata read-only zichtbaar. |
+| AIQS admin detail topnav + sticky action footer (shared) | UX/hardening admin | **Aanwezig** | gedeelde admin topnav en 3-action sticky footer primitives toegepast op task/draft/test detailschermen. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
 | Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
 
@@ -577,6 +720,47 @@ Alles wat we schrijven moet dit ondersteunen:
 
 ---
 
+## Website-kernboodschap
+
+Gebruik voor website en positionering steeds deze gedachte:
+
+Deze app helpt je om losse momenten van je dag niet kwijt te raken.
+Je legt snel vast wat er is, ziet het later terug als een leesbare dag, en kunt rustiger terugzien wat terugkomt.
+
+### Kernzinnen voor website-copy
+
+- Leg vast wat er vandaag gebeurt
+- Zie je dag later rustig terug
+- Maak van losse momenten een leesbare dag
+- Zie over tijd wat terugkomt
+- Rust en continuïteit, zonder gedoe
+
+### Wat we wel beloven
+
+- snel vastleggen
+- rustig terugzien
+- leesbare dagopbouw
+- reflectie op basis van je eigen dagen
+- meer continuïteit in je eigen verhaal
+
+### Wat we niet beloven
+
+- therapie
+- coaching
+- diagnoses
+- gedragsanalyse als hoofdpropositie
+- een slimme assistent die het van je overneemt
+
+### Positioneringsregel
+
+Schrijf altijd vanuit de ervaring van de gebruiker:
+
+- ik wil mijn dagen niet kwijt raken
+- ik wil sneller kunnen terugzien wat er echt speelde
+- ik wil rustiger herkennen wat terugkomt
+
+Schrijf niet vanuit systeemtaal of technische slimheid.
+
 ## Tone of voice
 
 ### 1. Rustig
@@ -635,6 +819,62 @@ Gebruik deze woorden niet:
 - journaling platform
 
 ---
+
+## Website-positionering guardrails
+
+### Wat we wél mogen zeggen
+
+Gebruik taal die past bij:
+
+- je dagen niet kwijt raken
+- losse momenten terugzien als één leesbare dag
+- rustig terugzien wat terugkomt
+- continuïteit in je eigen verhaal
+- brongebonden verwerking
+- terugleesbaarheid en vertrouwen
+
+### Wat we níet mogen zeggen
+
+Gebruik niet:
+
+- second brain
+- knowledge base
+- personal CRM
+- life insights engine
+- AI-journal
+- therapeutisch systeem
+- coach voor herstel
+- vraag alles over je leven
+
+### Positioneringsregel
+
+De huidige website-copy verkoopt geen brede intelligentielaag.
+
+De website verkoopt nu:
+
+- snel vastleggen
+- leesbare dagopbouw
+- rustige terugblik
+- vertrouwen dat de output dicht bij de eigen input blijft
+
+### Founder story regel
+
+De oorsprong van het product mag persoonlijk zijn.
+De hoofdpositionering blijft productmatig.
+
+Dus:
+
+- persoonlijke aanleiding mag in een founder story of over-pagina
+- de homepage-hero en kerncopy spreken vanuit gebruikerswaarde, niet vanuit diagnoses, therapie of privégeschiedenis
+
+### Extra copycheck voor marketing
+
+Controleer bij website-copy altijd:
+
+1. Verkopen we hier een huidige productwaarde of een latere belofte?
+2. Klinkt dit rustig en menselijk?
+3. Trekken we niet ongemerkt richting AI-, coach- of second-brain-taal?
+4. Is de gebruiker hier geholpen met een concreet voordeel?
 
 ## Schrijfprincipes
 
@@ -746,7 +986,7 @@ Reflecties zijn ondersteunend, niet leidend.
 
 ✖ Verder  
 ✖ Ga door  
-✖ Start  
+✖ Start
 
 ✔ Gebruik altijd een concrete actie die beschrijft wat er gebeurt
 
@@ -769,6 +1009,601 @@ Als het antwoord niet duidelijk ja is → herschrijven.
 
 De app praat niet tegen je.  
 Hij helpt je rustig je dag vast te leggen.
+
+---
+
+## AI Quality Studio Governance
+
+# AI Quality Studio (Canoniek)
+
+## Canonieke status
+
+Dit document is de **leidende bron voor AI-gedrag, promptbeheer, evaluatie en runtime-governance** binnen dit project.
+
+Bij conflict geldt:
+- `docs/project/content-processing-rules.md` is leidend voor **inhoudscontracten en grensgedrag van output**
+- `docs/project/ai-quality-studio.md` is leidend voor **AI-tooling, prompting, evaluatie, versiebeheer, rollout en runtime-governance**
+- andere projectdocs verwijzen hiernaar voor AI-gedrag en promptbeheer
+
+Dit document beschrijft zowel:
+- de huidige werkende tussenarchitectuur
+- als de gewenste eindrichting voor een volwassen AI quality platform-laag
+
+---
+
+## 1. Doel en positie
+
+AI Quality Studio is een **admin-only AI quality en prompting governance tool**.
+
+Doel:
+- AI-output betrouwbaar verbeteren
+- prompt- en modelwijzigingen beheersbaar maken
+- testbaar en reproduceerbaar itereren op echte brondata
+- runtime-gedrag later gecontroleerd uit code-baseline naar DB-live binding brengen
+
+De studio is:
+- task-first
+- contract-first
+- result-first
+- server-side only
+
+De studio is **geen**:
+- end-user feature
+- brede assistentlaag
+- generieke AI per scherm
+- vervanging van productkaders of contentcontracten
+
+---
+
+## 2. Scopekader
+
+### In scope
+- Werk per **AI-task**, niet per scherm
+- Versioning per task
+- Runtime-baseline import uit code
+- Drafting en gecontroleerde model/prompt-editing
+- Test runs met snapshots
+- Vergelijking testoutput vs runtime-basis / live-output
+- Handmatige review en rollout-governance
+- Traceability per versie en run
+
+### Buiten scope
+- Client-side OpenAI calls
+- End-user debug- of beheerfeatures
+- Brede chat/coach/agent-ervaring
+- Auto-optimalisatie als vervanging van menselijke review
+- Runtime DB-binding zonder rollout- en rollbackpad
+
+---
+
+## 3. Canonieke ontwerpprincipes
+
+1. **Contract-first**  
+   Content contracts zijn leidend boven promptvrijheid.
+
+2. **Task-first**  
+   Beheer op AI-taken, niet op UI-schermen.
+
+3. **Result-first**  
+   Testresultaat, compare en evaluatie zijn primair; technische metadata is secundair.
+
+4. **Server-side only**  
+   API keys, modelcalls en runtime-execution blijven server-side.
+
+5. **Traceability by default**  
+   Input/prompt/model/output snapshots + request/flow context zijn standaard.
+
+6. **Eerlijke representatie**  
+   Toon expliciet wanneer een studio-task onderdeel is van een gedeelde runtime-family.
+
+7. **Geen dubbele waarheid zonder transitieplan**  
+   Als code en DB tijdelijk naast elkaar bestaan, moet de hiërarchie expliciet zijn.
+
+---
+
+## 4. Relatie met contentcontracten (bindend)
+
+Volgt `docs/project/content-processing-rules.md`.
+
+Kernscheiding:
+- `entry_cleanup` ≠ samenvatting
+- `entry_summary` ≠ volledige bronlaag
+- `day_narrative` ≠ `day_summary`
+- reflectiepunten ≠ advieslaag
+- reflecties ≠ therapeutische interpretatie
+
+Als output deze grenzen schendt, is dat een **kwaliteitsfout**, ongeacht modelscore of “mooier” taalgebruik.
+
+---
+
+## 5. Huidige code-realiteit (status april 2026)
+
+Deze sectie beschrijft wat nu aantoonbaar gebouwd is.
+
+### 5.1 Datamodel (aanwezig)
+Tabellen:
+- `ai_tasks`
+- `ai_task_versions`
+- `ai_test_cases`
+- `ai_test_runs`
+- `ai_live_generation_log`
+
+Aanwezig in schema:
+- enums voor input/output/status/review/source
+- UUID PK’s, FK’s, timestamps
+- 1 live versie per task
+- oplopende versioning per task
+- snapshotvelden voor test runs
+- seed van 12 canonieke tasks
+
+### 5.2 Edge function (aanwezig)
+Function:
+- `admin-ai-quality-studio`
+
+Huidige acties:
+- `access`
+- `list_tasks`
+- `get_task_detail`
+- `import_runtime_baseline`
+- `create_draft_version`
+- `update_draft_version`
+- `delete_draft_version`
+- `list_test_sources`
+- `run_test`
+- `get_test_run`
+- `get_compare_view`
+
+Auth:
+- allowlist + internal token patroon, server-side gehandhaafd
+
+### 5.3 App-beheerlagen (aanwezig)
+- task hub
+- task detail / versions
+- draft editor
+- test / compare
+
+### 5.5 Entry_cleanup contract-first editor (aanwezig)
+- `entry_cleanup` volgt nu expliciet een contract-first editorstructuur:
+  - **alleen taakinstructie bewerkbaar**
+  - input/system/response/model contractlagen zichtbaar als read-only
+- response-contract is object-based en zichtbaar als:
+  - `title: string`
+  - `body: string`
+  - `summary_short: string`
+- systemcontract is compact gehouden op niet-vrije grenzen:
+  - alleen opgegeven bronvelden gebruiken
+  - alleen JSON volgens contract retourneren
+  - field-level contractgrenzen blijven technisch afgedwongen
+- baseline metadata blijft zichtbaar maar read-only, en geen primaire bewerklaag.
+
+### 5.6 Admin detail-shell polish (aanwezig)
+- gedeelde admin topnavigatie is visueel en technisch gecentreerd en navigation-only gebleven.
+- gedeelde sticky action footer is nu een compact, herbruikbaar admin pattern met duidelijke hiërarchie:
+  - primary
+  - secondary
+  - tertiary (quiet/destructive)
+- patroon is toegepast op AIQS detailschermen zonder runtime- of contractscope uit te breiden.
+
+### 5.4 Runtime-baseline model (aanwezig, transitie)
+- Runtime-definities worden nu opgebouwd vanuit code
+- Baseline import schrijft deze als `live` naar studio-DB
+- Runtime zelf leest nog niet uit studio-DB
+
+**Conclusie:** huidige model is een bruikbare overgangsarchitectuur, geen eindarchitectuur.
+
+---
+
+## 6. Editor abstraction (bindend)
+
+De studio bewerkt **taakinstructies**, niet ruwe request/payload blobs.
+
+### Bindende scheiding
+Elke bewerkbare taskversie bestaat conceptueel uit deze lagen:
+
+1. **Taakinstructie**
+   - primaire bewerklaag
+   - gewone tekst
+   - gericht op wat deze task moet doen
+
+2. **Vaste regels / system instructions**
+   - stabielere systeemlaag
+   - zelden aangepast
+   - standaard secundair of advanced
+
+3. **Input template / mapping**
+   - technische request assembly
+   - placeholders, bronvelden, mappinglogica
+   - niet dominant in de hoofd-editor
+
+4. **Output contract / schema**
+   - beschrijft verwachte output
+   - hoort bij de task of runtime-family
+
+5. **Model- en configlaag**
+   - modelkeuze
+   - temperature / response_format / andere toegestane parameters
+
+### Bindende UI-regel
+De hoofd-editor toont:
+- taakinstructie
+- taskdoel
+- model
+- contract notice
+- versiecontext
+
+De hoofd-editor toont **niet**:
+- volledige request payloads
+- raw placeholders als hoofdinhoud
+- baseline metadata als primaire bewerklaag
+
+---
+
+## 7. Task composition model
+
+Niet elke studio-task is een volledig losse runtime prompt.
+
+Daarom moet elke task conceptueel deze velden hebben:
+- `runtime_family`
+- `composition_role`: `standalone | compound_member`
+- `managed_output_field`
+- `affected_output_fields`
+
+### Voorbeelden
+- `entry_cleanup`
+  - runtime_family: `entry_normalization`
+  - composition_role: `compound_member`
+  - managed_output_field: `body`
+- `entry_summary`
+  - runtime_family: `entry_normalization`
+  - composition_role: `compound_member`
+  - managed_output_field: `summary_short`
+- `day_narrative`
+  - runtime_family: `day_journal`
+  - composition_role: `compound_member`
+  - managed_output_field: `narrativeText`
+- `day_summary`
+  - runtime_family: `day_journal`
+  - composition_role: `compound_member`
+  - managed_output_field: `summary`
+- week/month tasks
+  - runtime_family: `reflection`
+  - composition_role: meestal `compound_member`
+
+### Bindende representatieregel
+Als een task onderdeel is van een gedeelde runtime-family:
+- toon dat expliciet
+- toon ook wat die wijziging beïnvloedt
+- doe niet alsof het een volledig autonome prompt is als dat niet zo is
+
+---
+
+## 8. Output discipline
+
+### Richting
+Waar output gestructureerd moet zijn, is **Structured Outputs / JSON Schema** de voorkeursrichting.
+
+### Regels
+- outputtype expliciet vastleggen:
+  - `text`
+  - `object`
+  - `list`
+  - `compound`
+- schema hoort bij task of runtime-family, niet als los prompthulpstuk
+- JSON mode is alleen acceptabel als compat-layer of tijdelijke fallback
+- task-scherm, instructie en schema mogen elkaar niet tegenspreken
+
+### Voorbeeld
+Als `day_narrative` in studio één output representeert, dan moet:
+- het scherm dat eerlijk tonen
+- het schema dat ondersteunen
+- of expliciet zichtbaar zijn dat het onderdeel is van een compound runtime-family
+
+---
+
+## 9. Model policy
+
+### Productie
+- productie gebruikt **pinned model snapshots**
+- geen vrije modelkeuze in runtime
+- modelupgrade is een rollout-beslissing, geen gewone promptedit
+
+### Studio
+- modelkeuze in studio gebeurt via **allowlist**, niet vrije tekst
+- alleen goedgekeurde modellen zijn testbaar
+- modelwijziging moet zichtbaar meeversien
+
+### Logging
+Elke test run en latere runtime write moet minimaal vastleggen:
+- model
+- versie / snapshot
+- relevante config
+
+---
+
+## 10. Runtime-baseline import en tijdelijke dubbele waarheid
+
+### Huidige overgangsregel
+De studio gebruikt nu een **runtime baseline import** uit code:
+- code blijft runtime source-of-truth
+- studio importeert een mirror naar `ai_task_versions`
+- drafts starten vanuit deze runtime-basis
+
+### Bindende regels
+- runtime-baseline import mag nooit stil bestaande afwijkende live versies overschrijven
+- conflicts moeten expliciet worden gerapporteerd
+- baseline metadata moet zichtbaar maken:
+  - `baseline_source`
+  - `runtime_flow`
+  - `derived_from_shared_flow`
+  - `output_field`
+
+### Doel
+De studio moet een geloofwaardige live-basis tonen zonder productie al DB-driven te maken.
+
+---
+
+## 11. Evaluation architecture
+
+Evaluatie gebeurt in 4 lagen, in vaste volgorde.
+
+### Laag 1 — Contract checks
+Hard rules, bijvoorbeeld:
+- entry_cleanup mag niet samenvatten
+- day_summary moet compacter zijn dan day_narrative
+- reflectiepunten mogen geen advieslaag worden
+- min/max items
+- schema validatie
+- verboden taal / verboden meta-zinnen
+
+### Laag 2 — Pairwise compare
+Standaard menselijke vergelijking tussen:
+- live basis / huidige productie-uitkomst
+- draft / candidate output
+
+Labels:
+- `beter`
+- `gelijk`
+- `slechter`
+- `fout`
+
+### Laag 3 — Curated regression sets
+Voor elke belangrijke task geleidelijk opbouwen:
+- goldens
+- edge cases
+- noisy input
+- dunne bron
+- duplicate-heavy dag
+- lange persoonlijke dag
+- afwijkende talen / rare input
+
+### Laag 4 — Automated graders
+Pas later toevoegen.
+
+Regels:
+- nooit de enige bron van waarheid
+- pas ná curated regressiesets
+- alleen ondersteunend aan contract checks + human review
+
+---
+
+## 12. Human review protocol
+
+### Standaardreview
+De default reviewvorm is **pairwise**:
+- live / runtime-basis vs draft/candidate
+
+### Labels
+- `beter`
+- `gelijk`
+- `slechter`
+- `fout`
+
+### Verplichtingen
+- note verplicht bij `slechter` of `fout`
+- review gebeurt op compacte rubric, niet op los gevoel
+
+### Rubric
+Minimaal beoordelen op:
+- contracttrouw
+- natuurlijkheid
+- helderheid
+- volledigheid
+- compactheid waar relevant
+
+---
+
+## 13. Source selection rules
+
+Bronselectie is onderdeel van kwaliteit, niet alleen een UI-detail.
+
+### Regels
+- testdata moet representatief zijn
+- default sortering: recent + bruikbaar
+- fallback/lege records mogen niet dominant zijn
+- noisy cases mogen zichtbaar zijn, maar duidelijk herkenbaar
+- bronselectie moet compacte preview + zoek/filter ondersteunen
+
+### Richting
+Latere fase:
+- curated saved cases
+- goldens
+- regressiesets per task
+
+---
+
+## 14. Version lifecycle governance
+
+### Gewenste lifecycle
+- `draft`
+- `candidate`
+- `approved`
+- `live`
+- `archived`
+- optioneel `shadow`
+
+### Governance-regels
+- promote naar live alleen na voldoende evidence
+- rollbackpad moet bestaan vóór runtime DB-binding
+- modelwijzigingen en promptwijzigingen horen in dezelfde lifecycle-governance
+
+### Evidence voor promote (richtlijn)
+Minimaal:
+- contract checks passeren
+- pairwise review uitgevoerd
+- relevante curated cases gecontroleerd
+
+---
+
+## 15. Prompt registry readiness
+
+De studio moet compatibel blijven met een centrale prompt registry of prompt object model.
+
+### Regels
+Promptstructuur moet logisch opgesplitst blijven in:
+- instruction
+- system
+- input template
+- output schema
+- config
+
+### Verboden richting
+- monolithische request blobs als enige bewerkbare eenheid
+- prompttekst waarin payload assembly, placeholders en taakdoel door elkaar lopen
+
+---
+
+## 16. Execution-modi
+
+1. **Single interactive call**
+   - 1 task, 1 versie, 1 bron
+
+2. **Curated batch evaluation**
+   - 1 task, 1 versie, N cases
+
+3. **Production-derived shadow batch**
+   - echte bronnen, geen canonieke write
+
+4. **Live regeneration batch**
+   - gecontroleerde herberekening na rollout
+
+---
+
+## 17. Prompt caching (vooruitblik)
+
+Nog niet leidend voor implementatie, wel bindend als technische richting.
+
+### Regels
+- vaste delen vroeg in prompt
+- variabele input later in prompt
+- prefixstabiliteit is gewenst
+
+### Doel
+- lagere latency
+- lagere kosten
+- stabielere uitvoering bij herhaling
+
+---
+
+## 18. Runtime-koppeling en lineage
+
+Elke latere runtime-write moet versie-lineage dragen.
+
+Doel:
+- reproduceerbaarheid
+- impactanalyse
+- rollback
+- veilige regeneration
+
+Minimaal te koppelen:
+- `task_version`
+- `requestId`
+- `flowId`
+- `source_type / source_record_id`
+- `target_table / target_record_id`
+
+`ai_live_generation_log` is hiervoor de structurele richting, niet alleen debug-data.
+
+---
+
+## 19. Bekende beperkingen (huidige fase)
+
+Niet volledig aanwezig:
+- promote-to-live workflow
+- rollback flow
+- reviewer labeling flow in UI
+- batch test runs / regressiesets
+- volledige compare-ondersteuning voor alle taskkeys
+- directe DB-live binding voor productie-runtime
+
+---
+
+## 20. Learnings uit de bouwsessie (gestandaardiseerd)
+
+1. Bewerk op **taakinstructie**, niet op payload/request blob.
+2. Modelkeuze moet gecontroleerd zijn, niet vrije tekst.
+3. Advanced moet gegroepeerd blijven:
+   - Vaste regels
+   - Outputvorm
+   - Modelinstellingen
+   - Technische herkomst
+4. Baseline metadata is zichtbaar maar niet bewerkdominant.
+5. Compound tasks moeten expliciet tonen wat ze beïnvloeden.
+6. Editor, detail en test zijn verschillende modi en horen niet op één scherm gepropt.
+7. Bronselectie is onderdeel van kwaliteit; slechte selectie ondermijnt evaluatie.
+8. Testscherm moet editor-taal volgen:
+   - runtime-basis
+   - testresultaat
+   - verschil met live
+
+---
+
+## 21. Valkuilen (expliciet)
+
+1. Task/scherm-verwarring
+2. Compound-runtime verbergen als single output
+3. Dubbele waarheid tussen code en DB zonder transitieplan
+4. Promptedits zonder contractguardrails
+5. Alleen line-diff gebruiken als kwaliteitsbewijs
+6. Te vroege automation zonder curated regressiesets
+7. Product-visible debugdrift buiten admincontext
+8. Runtimekoppeling zonder rollbackpad
+9. Payload-editing vermommen als promptbeheer
+
+---
+
+## 22. Prioriteitenvolgorde (advies)
+
+1. Stabiliseer **editor abstraction + task semantiek**
+2. Voltooi **review protocol + version governance**
+3. Voeg **curated regression sets + batch evals** toe
+4. Verbind **runtime writes met lineage**
+5. Schakel gecontroleerd naar **DB-live binding**
+6. Open daarna pas verdere model-upgrades en automation
+
+---
+
+## 23. Samenvatting
+
+AI Quality Studio is nu een werkende admin-hardening basis met:
+- taskbeheer
+- baseline import
+- drafting
+- single-run testen
+- compare
+
+De volgende volwassen stap is niet meer UI-volume, maar:
+- bindende editor-abstraction
+- expliciete task-compositie
+- evaluatie-architectuur
+- lifecycle governance
+- runtime-lineage
+- en daarna pas gecontroleerde DB-live binding
+
+Zo blijft de studio:
+- contractvast
+- reproduceerbaar
+- beheersbaar voor admins
+- veilig richting echte runtime-koppeling
 
 ---
 

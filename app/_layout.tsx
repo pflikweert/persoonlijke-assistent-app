@@ -192,6 +192,18 @@ a:focus-visible,
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="settings-ai-quality-studio/family/[familyKey]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="settings-ai-quality-studio/[taskKey]/draft/[version]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="settings-ai-quality-studio/[taskKey]/test/[version]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="modal"
               options={{ presentation: "modal", title: "Modal" }}
             />

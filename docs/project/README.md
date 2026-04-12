@@ -32,12 +32,14 @@ Regel:
 ## 4) Standaard upload naar ChatGPT Project / Stitch
 Upload standaard de bestanden uit `docs/upload/`:
 1. `docs/upload/chatgpt-project-context.md`
-2. `docs/upload/mvp-design-spec-1.2.1.md`
-3. `docs/upload/stitch-design-context.md`
-4. `docs/upload/upload-manifest.md`
+2. `docs/upload/ai-quality-studio.md`
+3. `docs/upload/mvp-design-spec-1.2.1.md`
+4. `docs/upload/stitch-design-context.md`
+5. `docs/upload/upload-manifest.md`
 
 Reden:
 - de bundle bevat compacte projectcontext
+- AI Quality Studio governance wordt als canonieke upload-copy apart meegenomen
 - de design spec blijft apart leidend voor MVP-designbesluiten
 - de Stitch design context bevat compacte design-handoff zonder alle docs te dupliceren
 - het manifest maakt de uploadset controleerbaar

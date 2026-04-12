@@ -5,8 +5,15 @@ import { Pressable, StyleSheet } from 'react-native';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { SettingsScreenHeader } from '@/components/ui/settings-screen-primitives';
-import { MetaText, PrimaryButton, ScreenContainer, StateBlock, SurfaceSection } from '@/components/ui/screen-primitives';
+import {
+  AdminMetaStrip,
+  AdminPageHero,
+  AdminSection,
+  AdminShell,
+  AdminStickyFooterActions,
+  SettingsTopNav,
+} from '@/components/ui/settings-screen-primitives';
+import { MetaText, StateBlock } from '@/components/ui/screen-primitives';
 import {
   classifyUnknownError,
   createAdminAiQualityStudioDraftVersion,
@@ -96,28 +103,60 @@ export default function AiQualityStudioTaskOverviewScreen() {
   }
 
   return (
-    <ScreenContainer scrollable backgroundTone="flat" contentContainerStyle={styles.scrollContent}>
-      <SettingsScreenHeader
+    <AdminShell
+      fixedHeader={<SettingsTopNav onBack={() => router.back()} onMenu={() => setMenuVisible(true)} />}
+      fixedFooter={
+        !loading && detail ? (
+          <AdminStickyFooterActions
+            primaryAction={{
+              label: creatingDraft ? 'Versie maken…' : primaryLabel,
+              onPress: () => void handlePrimaryAction(),
+              disabled: creatingDraft,
+              icon: draftVersion ? 'edit' : 'add-circle-outline',
+            }}
+            secondaryAction={
+              draftVersion
+                ? {
+                    label: 'Testen',
+                    onPress: () =>
+                      router.push(`/settings-ai-quality-studio/${detail.key}/test/${draftVersion.id}` as never),
+                    icon: 'science',
+                  }
+                : undefined
+            }
+          />
+        ) : null
+      }
+      contentContainerStyle={styles.scrollContent}
+    >
+      <AdminPageHero
         title="Overzicht"
         subtitle={detail?.label ?? (typeof taskKey === 'string' ? taskKey : 'AI Quality Studio')}
-        onBack={() => router.back()}
-        onMenu={() => setMenuVisible(true)}
       />
+
+      {detail ? (
+        <AdminMetaStrip
+          items={[
+            `Input: ${detail.inputType}`,
+            detail.liveVersion ? `Runtime actief: v${detail.liveVersion.versionNumber}` : 'Runtime nog niet ingesteld',
+          ]}
+        />
+      ) : null}
 
       {loading ? <StateBlock tone="loading" message="Onderdeel laden" /> : null}
       {!loading && error ? <StateBlock tone="error" message="Kon onderdeel niet laden." detail={error} /> : null}
 
       {!loading && detail ? (
         <>
-          <SurfaceSection title="Onderdeel">
+          <AdminSection title="Onderdeel">
             <ThemedText type="defaultSemiBold">{detail.label}</ThemedText>
             {detail.description ? <ThemedText type="bodySecondary">{detail.description}</ThemedText> : null}
             <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
               key: {detail.key} · input: {detail.inputType} · output: {detail.outputType}
             </ThemedText>
-          </SurfaceSection>
+          </AdminSection>
 
-          <SurfaceSection title="Live versie">
+          <AdminSection title="Live versie">
             {detail.liveVersion ? (
               <ThemedView style={styles.fieldGroup}>
                 <MetaText>Status: Live (runtime-basis)</MetaText>
@@ -135,33 +174,9 @@ export default function AiQualityStudioTaskOverviewScreen() {
                 detail="Importeer eerst de huidige runtime-baseline voor deze task."
               />
             )}
-          </SurfaceSection>
+          </AdminSection>
 
-          <SurfaceSection
-            title="Versies"
-            footer={
-              <ThemedView style={styles.actionStack}>
-                <PrimaryButton
-                  label={creatingDraft ? 'Versie maken…' : primaryLabel}
-                  onPress={() => void handlePrimaryAction()}
-                  disabled={creatingDraft}
-                />
-                {draftVersion ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Testen"
-                    onPress={() =>
-                      router.push(`/settings-ai-quality-studio/${detail.key}/test/${draftVersion.id}` as never)
-                    }
-                  >
-                    <ThemedText type="caption" style={{ color: palette.primary }}>
-                      Testen
-                    </ThemedText>
-                  </Pressable>
-                ) : null}
-              </ThemedView>
-            }
-          >
+          <AdminSection title="Versies">
             <ThemedView style={styles.versionList}>
               {detail.versions.map((version) => {
                 const isDraft = isDraftVersion(version);
@@ -185,7 +200,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
                 );
               })}
             </ThemedView>
-          </SurfaceSection>
+          </AdminSection>
         </>
       ) : null}
 
@@ -194,7 +209,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </ScreenContainer>
+    </AdminShell>
   );
 }
 
@@ -205,9 +220,6 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     gap: spacing.xs,
-  },
-  actionStack: {
-    gap: spacing.sm,
   },
   versionList: {
     gap: spacing.sm,
