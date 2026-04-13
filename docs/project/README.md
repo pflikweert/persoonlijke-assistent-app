@@ -55,3 +55,17 @@ Reden:
 2. Draai `npm run docs:bundle`.
 3. Controleer met `npm run docs:bundle:verify`.
 4. Commit canonieke docs + generated output samen.
+
+## 7) Werken met ChatGPT Projects + Cline
+- **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
+- **Cline in VS Code**: repo-analyse, plan, wijzigingen, verify en commit.
+- Leidende waarheid voor product/scope/status staat in `docs/project/**`.
+- `AGENTS.md` + `.clinerules` zijn leidend voor werkwijze tijdens uitvoering.
+- Skills gebruik je alleen wanneer een taak duidelijk in een bestaande skillflow valt.
+- `docs/upload/**` blijft uploadartefact (generated), geen canonieke agentbron.
+- Bij wijzigingen aan canonieke docs: altijd bundlen + verify (`npm run docs:bundle` en `npm run docs:bundle:verify`).
+- Sessielearnings horen in:
+  - `AGENTS.md` voor always-on repo-regels
+  - `docs/dev/**` voor operationele workflowafspraken
+  - `docs/project/current-status.md` alleen voor bewijsbare statusrealiteit
+  - niet in productdocs als toolingsruis

@@ -1,5 +1,10 @@
 // App-wide TypeScript domain and DTO types.
 export type {
+  AiPromptAssistEditorContext,
+  AiPromptAssistIssue,
+  AiPromptAssistIssueSeverity,
+  AiPromptAssistIssueType,
+  AiPromptAssistPreviewResult,
   AiTaskDetail,
   AiTaskDraftPayload,
   AiTaskDraftCreationMeta,
@@ -15,9 +20,11 @@ export type {
   AiTaskVersionDetail,
   AiTaskVersionStatus,
   AiCompareBaselineStatus,
+  EntryCleanupPromptAssistTargetLayer,
   AiReviewLabel,
   AiTestRunStatus,
   AiTestSourceType,
+  RunPromptAssistPreviewPayload,
   RunAiTaskTestPayload,
   SaveAiTaskTestReviewPayload,
 } from './ai-quality-studio';

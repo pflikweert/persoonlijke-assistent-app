@@ -129,7 +129,7 @@ Volgt `docs/project/content-processing-rules.md`.
 
 Kernscheiding:
 - `entry_cleanup` ≠ samenvatting
-- `entry_summary` ≠ volledige bronlaag
+- entry-normalization loopt als één compound flow (`entry_cleanup`) voor `title`, `body`, `summary_short`
 - `day_narrative` ≠ `day_summary`
 - reflectiepunten ≠ advieslaag
 - reflecties ≠ therapeutische interpretatie
@@ -209,6 +209,16 @@ Auth:
 - patroon is toegepast op AIQS detailschermen zonder runtime- of contractscope uit te breiden
 
 **Belangrijke conclusie:** huidige adminschermen zijn nog te veel als mobiele breedte gefixeerd, ook op desktop. Dat beperkt de studio-waarde op grotere schermen en fullscreen gebruik.
+
+### 6.5b Prompt Assist in draft editor (`entry_cleanup`) (aanwezig, beperkte scope)
+- prompt assist draait admin-only binnen de bestaande draft editorlaag
+- assist is task-first en contract-first:
+  - analyse gebruikt volledige promptcontext (`system rules`, `general instruction`, `field rules`, outputcontract, taskmetadata)
+  - rewrite/apply blijft per run beperkt tot één expliciet gekozen targetlaag
+- server-side previewactie aanwezig (`prompt_assist_preview`) met typed payload/result
+- UI blijft diff/apply-georiënteerd en vermijdt brede chatervaring
+
+**Belangrijke conclusie:** assist is bewust een lokale editor-hardening en geen autonome prompt-optimizer of generieke chatlaag.
 
 ### 6.6 Runtime-baseline model (aanwezig, transitie)
 - runtime-definities worden nu opgebouwd vanuit code
@@ -305,11 +315,7 @@ Daarom moet elke task conceptueel deze velden hebben:
 - `entry_cleanup`
   - runtime_family: `entry_normalization`
   - composition_role: `compound_member`
-  - managed_output_field: `body`
-- `entry_summary`
-  - runtime_family: `entry_normalization`
-  - composition_role: `compound_member`
-  - managed_output_field: `summary_short`
+  - managed_output_field: `title/body/summary_short` (compound)
 - `day_narrative`
   - runtime_family: `day_journal`
   - composition_role: `compound_member`

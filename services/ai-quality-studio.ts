@@ -1,8 +1,10 @@
 import type {
+  AiPromptAssistPreviewResult,
   AiReviewLabel,
   AiTaskDraftCreationMeta,
   AiTaskDetail,
   AiTaskDraftPayload,
+  RunPromptAssistPreviewPayload,
   AiRuntimeBaselineImportResult,
   SaveAiTaskTestReviewPayload,
   AiTaskSummary,
@@ -101,6 +103,14 @@ type ImportRuntimeBaselineResponse = {
   requestId: string;
   flowId: string;
   importResult: AiRuntimeBaselineImportResult;
+};
+
+type PromptAssistPreviewResponse = {
+  status: 'ok';
+  flow: 'admin-ai-quality-studio';
+  requestId: string;
+  flowId: string;
+  preview: AiPromptAssistPreviewResult;
 };
 
 function parseFunctionMessage(parsed: unknown): string | null {
@@ -522,4 +532,38 @@ export async function importAdminAiQualityRuntimeBaseline(): Promise<AiRuntimeBa
   }
 
   return data.importResult;
+}
+
+export async function runAdminAiQualityStudioPromptAssistPreview(
+  payload: RunPromptAssistPreviewPayload
+): Promise<AiPromptAssistPreviewResult> {
+  const normalizedTaskKey = payload.taskKey.trim();
+  const normalizedVersionId = payload.versionId.trim();
+  if (!normalizedTaskKey) {
+    throw new Error('taskKey ontbreekt.');
+  }
+  if (!normalizedVersionId) {
+    throw new Error('versionId ontbreekt.');
+  }
+
+  const flowId = createClientFlowId('admin-ai-quality');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
+
+  const data = await invokeAction<PromptAssistPreviewResponse>({
+    flowId,
+    body: {
+      action: 'prompt_assist_preview',
+      taskKey: normalizedTaskKey,
+      versionId: normalizedVersionId,
+      targetLayerKey: payload.targetLayerKey,
+      assistIntent: payload.assistIntent?.trim() ?? '',
+      editorContext: payload.editorContext,
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-ai-quality-studio' || !data.requestId || !data.preview) {
+    throw new Error('Ongeldige response van admin-ai-quality-studio prompt_assist_preview.');
+  }
+
+  return data.preview;
 }

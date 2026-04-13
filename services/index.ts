@@ -52,6 +52,7 @@ export {
   hasAdminAiQualityStudioAccess,
   importAdminAiQualityRuntimeBaseline,
   listAdminAiQualityStudioTestSources,
+  runAdminAiQualityStudioPromptAssistPreview,
   runAdminAiQualityStudioTest,
   saveAdminAiQualityStudioTestReview,
   updateAdminAiQualityStudioDraftVersion,

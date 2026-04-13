@@ -20,6 +20,9 @@ type RequestBody = {
   action?: unknown;
   taskKey?: unknown;
   versionId?: unknown;
+  targetLayerKey?: unknown;
+  assistIntent?: unknown;
+  editorContext?: unknown;
   taskVersionId?: unknown;
   sourceType?: unknown;
   sourceRecordId?: unknown;
@@ -27,6 +30,34 @@ type RequestBody = {
   label?: unknown;
   notes?: unknown;
   payload?: unknown;
+};
+
+type PromptAssistTargetLayer =
+  | 'systemRulesInstruction'
+  | 'generalInstruction'
+  | 'titleInstruction'
+  | 'bodyInstruction'
+  | 'summaryShortInstruction';
+
+type PromptAssistIssueSeverity = 'info' | 'warning' | 'risk';
+type PromptAssistIssueType = 'duplicate' | 'misplaced' | 'conflict';
+
+type PromptAssistIssue = {
+  severity: PromptAssistIssueSeverity;
+  type: PromptAssistIssueType;
+  message: string;
+};
+
+type PromptAssistEditorContext = {
+  systemRulesInstruction: string;
+  generalInstruction: string;
+  fieldRules: {
+    titleInstruction: string;
+    bodyInstruction: string;
+    summaryShortInstruction: string;
+  };
+  outputContract: Record<string, unknown>;
+  taskMetadata: Record<string, unknown>;
 };
 
 type TaskRow = {
@@ -580,6 +611,7 @@ function parseAction(value: unknown):
   | 'create_draft_version'
   | 'update_draft_version'
   | 'delete_draft_version'
+  | 'prompt_assist_preview'
   | 'list_test_sources'
   | 'run_test'
   | 'get_test_run'
@@ -595,6 +627,7 @@ function parseAction(value: unknown):
     value === 'create_draft_version' ||
     value === 'update_draft_version' ||
     value === 'delete_draft_version' ||
+    value === 'prompt_assist_preview' ||
     value === 'list_test_sources' ||
     value === 'run_test' ||
     value === 'get_test_run' ||
@@ -604,6 +637,194 @@ function parseAction(value: unknown):
     return value;
   }
   return null;
+}
+
+function parsePromptAssistTargetLayer(value: unknown): PromptAssistTargetLayer | null {
+  if (
+    value === 'systemRulesInstruction' ||
+    value === 'generalInstruction' ||
+    value === 'titleInstruction' ||
+    value === 'bodyInstruction' ||
+    value === 'summaryShortInstruction'
+  ) {
+    return value;
+  }
+  return null;
+}
+
+function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorContext | null {
+  const source = ensureJsonObject(value);
+  if (!source) return null;
+
+  const fieldRules = ensureJsonObject(source.fieldRules);
+  if (!fieldRules) return null;
+
+  const systemRulesInstruction = typeof source.systemRulesInstruction === 'string' ? source.systemRulesInstruction : '';
+  const generalInstruction = typeof source.generalInstruction === 'string' ? source.generalInstruction : '';
+  const titleInstruction = typeof fieldRules.titleInstruction === 'string' ? fieldRules.titleInstruction : '';
+  const bodyInstruction = typeof fieldRules.bodyInstruction === 'string' ? fieldRules.bodyInstruction : '';
+  const summaryShortInstruction =
+    typeof fieldRules.summaryShortInstruction === 'string' ? fieldRules.summaryShortInstruction : '';
+
+  const outputContract = ensureJsonObject(source.outputContract) ?? {};
+  const taskMetadata = ensureJsonObject(source.taskMetadata) ?? {};
+
+  return {
+    systemRulesInstruction,
+    generalInstruction,
+    fieldRules: {
+      titleInstruction,
+      bodyInstruction,
+      summaryShortInstruction,
+    },
+    outputContract,
+    taskMetadata,
+  };
+}
+
+function getPromptAssistTargetText(context: PromptAssistEditorContext, targetLayerKey: PromptAssistTargetLayer): string {
+  if (targetLayerKey === 'systemRulesInstruction') return context.systemRulesInstruction;
+  if (targetLayerKey === 'generalInstruction') return context.generalInstruction;
+  if (targetLayerKey === 'titleInstruction') return context.fieldRules.titleInstruction;
+  if (targetLayerKey === 'bodyInstruction') return context.fieldRules.bodyInstruction;
+  return context.fieldRules.summaryShortInstruction;
+}
+
+function buildPromptAssistIssues(args: {
+  context: PromptAssistEditorContext;
+  targetLayerKey: PromptAssistTargetLayer;
+  proposedText: string;
+}): PromptAssistIssue[] {
+  const source = args.context;
+  const current = getPromptAssistTargetText(source, args.targetLayerKey);
+  const issues: PromptAssistIssue[] = [];
+
+  const referencesSystem = /system|json|contract|schema|response_format|geen tekst buiten json/i;
+  if (args.targetLayerKey !== 'generalInstruction' && args.targetLayerKey !== 'systemRulesInstruction' && referencesSystem.test(current)) {
+    issues.push({
+      severity: 'warning',
+      type: 'misplaced',
+      message: 'Bevat system-achtige regels; overweeg verplaatsen naar Systeemregels.',
+    });
+  }
+
+  if (
+    args.targetLayerKey !== 'generalInstruction' &&
+    args.targetLayerKey !== 'systemRulesInstruction' &&
+    current.trim().length > 0 &&
+    source.generalInstruction.trim().length > 0 &&
+    current.trim().toLowerCase() === source.generalInstruction.trim().toLowerCase()
+  ) {
+    issues.push({
+      severity: 'info',
+      type: 'duplicate',
+      message: 'Lijkt duplicaat van Algemene instructie.',
+    });
+  }
+
+  if (/samenvat|samenvatten/i.test(args.proposedText) && args.targetLayerKey === 'bodyInstruction') {
+    issues.push({
+      severity: 'risk',
+      type: 'conflict',
+      message: 'Voorstel suggereert samenvatten; dit botst met body-contract.',
+    });
+  }
+
+  if (
+    /geen tekst buiten json|alleen json|response_format|output moet precies/i.test(args.proposedText) &&
+    args.targetLayerKey !== 'generalInstruction' &&
+    args.targetLayerKey !== 'systemRulesInstruction'
+  ) {
+    issues.push({
+      severity: 'warning',
+      type: 'misplaced',
+      message: 'Voorstel bevat system-regels; houd deze laag veldspecifiek.',
+    });
+  }
+
+  return issues.slice(0, 4);
+}
+
+async function runPromptAssistPreview(args: {
+  apiKey: string;
+  model: string;
+  taskKey: string;
+  targetLayerKey: PromptAssistTargetLayer;
+  assistIntent: string;
+  context: PromptAssistEditorContext;
+}): Promise<{
+  analysisSummary: string;
+  proposedText: string;
+  changeSummary: string;
+  rationale: string | null;
+  issues: PromptAssistIssue[];
+}> {
+  const targetText = getPromptAssistTargetText(args.context, args.targetLayerKey);
+
+  const systemPrompt = [
+    'Je bent Prompt Assist voor een admin-only AI Quality Studio.',
+    'Analyseer volledige context, maar herschrijf exact één targetlaag.',
+    'Geen chatstijl, geen extra velden, geen verborgen mutaties.',
+    'Respecteer contract-first en task-first gedrag.',
+    'Geef JSON terug met: analysisSummary, proposedText, changeSummary, rationale.',
+    'proposedText moet alleen de tekst voor de gekozen targetlaag bevatten.',
+  ].join(' ');
+
+  const userPayload = {
+    taskKey: args.taskKey,
+    targetLayerKey: args.targetLayerKey,
+    assistIntent: args.assistIntent,
+    currentTargetText: targetText,
+    context: args.context,
+  };
+
+  const aiResult = await callOpenAi({
+    apiKey: args.apiKey,
+    model: args.model,
+    systemInstructions: systemPrompt,
+    promptSnapshot: JSON.stringify(userPayload, null, 2),
+    config: { temperature: 0.2, response_format: 'json_object' },
+  });
+
+  let parsed: Record<string, unknown> = {};
+  if (aiResult.outputJson && !Array.isArray(aiResult.outputJson)) {
+    parsed = aiResult.outputJson;
+  } else {
+    try {
+      const fallbackParsed = JSON.parse(aiResult.outputText);
+      if (fallbackParsed && typeof fallbackParsed === 'object' && !Array.isArray(fallbackParsed)) {
+        parsed = fallbackParsed as Record<string, unknown>;
+      }
+    } catch {
+      parsed = {};
+    }
+  }
+
+  const proposedTextRaw = typeof parsed.proposedText === 'string' ? parsed.proposedText.trim() : '';
+  const proposedText = proposedTextRaw.length > 0 ? proposedTextRaw : targetText;
+  const analysisSummaryRaw = typeof parsed.analysisSummary === 'string' ? parsed.analysisSummary.trim() : '';
+  const changeSummaryRaw = typeof parsed.changeSummary === 'string' ? parsed.changeSummary.trim() : '';
+  const rationaleRaw = typeof parsed.rationale === 'string' ? parsed.rationale.trim() : '';
+
+  return {
+    analysisSummary:
+      analysisSummaryRaw.length > 0
+        ? analysisSummaryRaw
+        : 'Analyse op volledige context gedaan; voorstel beperkt tot de gekozen laag.',
+    proposedText,
+    changeSummary:
+      changeSummaryRaw.length > 0
+        ? changeSummaryRaw
+        : proposedText === targetText
+          ? 'Geen inhoudelijke wijziging voorgesteld.'
+          : 'Tekst compacter en scherper gemaakt voor deze laag.',
+    rationale: rationaleRaw.length > 0 ? rationaleRaw : null,
+    issues: buildPromptAssistIssues({
+      context: args.context,
+      targetLayerKey: args.targetLayerKey,
+      proposedText,
+    }),
+  };
 }
 
 function getRuntimeOpenAiModel(): string {
@@ -881,6 +1102,7 @@ Deno.serve(async (request) => {
       const { data: taskData, error: taskError } = await adminClient
         .from('ai_tasks')
         .select('id, key, label, input_type, output_type, description, is_active, created_at, updated_at')
+        .eq('is_active', true)
         .order('key', { ascending: true });
       if (taskError) return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: 'Failed to load AI Quality Studio tasks.' });
 
@@ -914,7 +1136,9 @@ Deno.serve(async (request) => {
       const taskKey = parseNonEmptyString(body.taskKey);
       if (!taskKey) return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'taskKey ontbreekt.' });
       const detail = await buildTaskDetail({ adminClient, taskKey });
-      if (!detail) return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task not found.' });
+      if (!detail || !detail.isActive) {
+        return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task not found.' });
+      }
       return jsonResponse(request, 200, { status: 'ok', flow: FLOW, requestId, flowId, task: detail });
     }
 
@@ -1093,6 +1317,111 @@ Deno.serve(async (request) => {
       });
     }
 
+    if (action === 'prompt_assist_preview') {
+      step = 'prompt_assist_preview';
+      const taskKey = parseNonEmptyString(body.taskKey);
+      const versionId = parseUuid(body.versionId);
+      const targetLayerKey = parsePromptAssistTargetLayer(body.targetLayerKey);
+      const assistIntent = typeof body.assistIntent === 'string' ? body.assistIntent.trim() : '';
+      const editorContext = parsePromptAssistEditorContext(body.editorContext);
+
+      if (!taskKey || taskKey !== 'entry_cleanup') {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'Alleen entry_cleanup wordt ondersteund in deze slice.',
+        });
+      }
+      if (!versionId) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'versionId ontbreekt of is ongeldig.',
+        });
+      }
+      if (!targetLayerKey) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'targetLayerKey is ongeldig.',
+        });
+      }
+      if (!editorContext) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'editorContext ontbreekt of is ongeldig.',
+        });
+      }
+
+      const task = await loadTaskByKey({ adminClient, taskKey });
+      if (!task) {
+        return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task not found.' });
+      }
+
+      const { data: versionData, error: versionError } = await adminClient
+        .from('ai_task_versions')
+        .select('id, task_id, status, model')
+        .eq('id', versionId)
+        .maybeSingle();
+
+      if (versionError) {
+        return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: 'Failed to load version.' });
+      }
+      if (!versionData || versionData.task_id !== task.id) {
+        return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Version not found for task.' });
+      }
+      if (versionData.status !== 'draft') {
+        return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Alleen draft versies zijn toegestaan.' });
+      }
+
+      const result = await runPromptAssistPreview({
+        apiKey: getOpenAiApiKey(),
+        model: typeof versionData.model === 'string' && versionData.model.trim().length > 0 ? versionData.model : 'gpt-5.4-mini',
+        taskKey,
+        targetLayerKey,
+        assistIntent,
+        context: editorContext,
+      });
+
+      const beforeText = getPromptAssistTargetText(editorContext, targetLayerKey);
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        preview: {
+          targetLayerKey,
+          analysisSummary: result.analysisSummary,
+          issues: result.issues,
+          proposedText: result.proposedText,
+          changeSummary: result.changeSummary,
+          rationale: result.rationale,
+          diff: {
+            before: beforeText,
+            after: result.proposedText,
+          },
+        },
+      });
+    }
+
     if (action === 'list_test_sources') {
       step = 'list_test_sources';
       const taskKey = parseNonEmptyString(body.taskKey);
@@ -1230,9 +1559,6 @@ Deno.serve(async (request) => {
           : null;
         baselineStatus = liveOutputText ? 'available' : 'missing';
         baselineReason = liveOutputText ? null : 'Entry baseline ontbreekt.';
-      } else if (taskKey === 'entry_summary') {
-        baselineStatus = 'unsupported';
-        baselineReason = 'Nog geen aparte canonieke live opslag voor entry_summary baseline.';
       } else if (taskKey === 'day_summary') {
         const { data: dayData, error: dayError } = await adminClient
           .from('day_journals')
@@ -1346,7 +1672,7 @@ Deno.serve(async (request) => {
 
     const task = await loadTaskByKey({ adminClient, taskKey });
     if (!task) return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task not found.' });
-    if (!['entry_cleanup', 'entry_summary', 'day_summary', 'day_narrative'].includes(task.key)) {
+    if (!['entry_cleanup', 'day_summary', 'day_narrative'].includes(task.key)) {
       return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task key wordt nog niet ondersteund in stap 3.' });
     }
     if (task.input_type !== sourceType) {

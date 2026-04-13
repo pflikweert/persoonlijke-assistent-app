@@ -10,7 +10,6 @@ type RuntimeOutputField = 'body' | 'summary' | 'narrative' | 'highlights' | 'ref
 
 export type RuntimeBaselineTaskKey =
   | 'entry_cleanup'
-  | 'entry_summary'
   | 'day_summary'
   | 'day_narrative'
   | 'week_summary'
@@ -166,22 +165,6 @@ export function buildRuntimeBaselineDefinitions(input: { model: string }): Runti
         },
         runtimeFlow: 'entry_normalization',
         outputField: 'body',
-        promptVersion: entrySpec.promptVersion,
-      }),
-      minItems: null,
-      maxItems: null,
-      changelog,
-    },
-    {
-      taskKey: 'entry_summary',
-      model: input.model,
-      promptTemplate: entrySpec.userPrompt,
-      systemInstructions: entrySpec.systemPrompt,
-      outputSchemaJson: { type: 'string', description: 'entries_normalized.summary_short (korte momentsamenvatting)' },
-      configJson: withBaselineMetadata({
-        configJson: { temperature: 0.2, response_format: 'json_object' },
-        runtimeFlow: 'entry_normalization',
-        outputField: 'summary',
         promptVersion: entrySpec.promptVersion,
       }),
       minItems: null,

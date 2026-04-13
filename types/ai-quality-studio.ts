@@ -8,6 +8,55 @@ export type AiTestSourceType = 'entry' | 'day' | 'week' | 'month';
 export type AiDraftDerivationSource = 'live' | 'latest_draft' | 'latest_version' | 'empty';
 export type AiReviewLabel = 'beter' | 'gelijk' | 'slechter' | 'fout';
 
+export type EntryCleanupPromptAssistTargetLayer =
+  | 'systemRulesInstruction'
+  | 'generalInstruction'
+  | 'titleInstruction'
+  | 'bodyInstruction'
+  | 'summaryShortInstruction';
+
+export type AiPromptAssistIssueSeverity = 'info' | 'warning' | 'risk';
+export type AiPromptAssistIssueType = 'duplicate' | 'misplaced' | 'conflict';
+
+export type AiPromptAssistIssue = {
+  severity: AiPromptAssistIssueSeverity;
+  type: AiPromptAssistIssueType;
+  message: string;
+};
+
+export type AiPromptAssistEditorContext = {
+  systemRulesInstruction: string;
+  generalInstruction: string;
+  fieldRules: {
+    titleInstruction: string;
+    bodyInstruction: string;
+    summaryShortInstruction: string;
+  };
+  outputContract?: Record<string, unknown>;
+  taskMetadata?: Record<string, unknown>;
+};
+
+export type RunPromptAssistPreviewPayload = {
+  taskKey: string;
+  versionId: string;
+  targetLayerKey: EntryCleanupPromptAssistTargetLayer;
+  assistIntent?: string;
+  editorContext: AiPromptAssistEditorContext;
+};
+
+export type AiPromptAssistPreviewResult = {
+  targetLayerKey: EntryCleanupPromptAssistTargetLayer;
+  analysisSummary: string;
+  issues: AiPromptAssistIssue[];
+  proposedText: string;
+  changeSummary: string;
+  rationale: string | null;
+  diff: {
+    before: string;
+    after: string;
+  };
+};
+
 export type AiTaskLiveVersionSummary = {
   id: string;
   versionNumber: number;

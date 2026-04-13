@@ -382,12 +382,14 @@ export function AdminTokenRail({ children }: { children: ReactNode }) {
 
 export function AdminEditorSection({
   title,
+  action,
   helper,
   tokenRail,
   editor,
   warnings,
 }: {
   title: string;
+  action?: ReactNode;
   helper?: string;
   tokenRail?: ReactNode;
   editor: ReactNode;
@@ -397,7 +399,10 @@ export function AdminEditorSection({
   const palette = colorTokens[scheme];
   return (
     <ThemedView style={styles.editorSection}>
-      <ThemedText type="defaultSemiBold">{title}</ThemedText>
+      <ThemedView style={styles.editorSectionHeader}>
+        <ThemedText type="defaultSemiBold">{title}</ThemedText>
+        {action}
+      </ThemedView>
       {helper ? <MetaText>{helper}</MetaText> : null}
       {tokenRail}
       {editor}
@@ -582,6 +587,12 @@ const styles = StyleSheet.create({
   },
   editorSection: {
     gap: spacing.xs,
+  },
+  editorSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   readOnlyBlock: {
     gap: spacing.xs,

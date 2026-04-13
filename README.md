@@ -20,6 +20,14 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 - Build bundle: `npm run docs:bundle`
 - Verify bundle-sync: `npm run docs:bundle:verify`
 
+## Contributor workflow (kort)
+- Check eerst `docs/project/README.md` en daarna `AGENTS.md` voor scope, waarheid en werkwijze.
+- Gebruik **ChatGPT Projects** voor strategie/review/promptontwerp; gebruik **Cline in VS Code** voor repo-uitvoering.
+- Gebruik `docs/project/**` als canonieke bron; gebruik `docs/upload/**` niet als bron voor beslissingen.
+- Start geen langlopende dev servers tenzij expliciet gevraagd.
+- Draai verify vóór commit (`npm run lint`, `npm run typecheck`, en bij canonieke docs ook docs bundle + verify).
+- Houd productdocs vrij van toolingsruis; operationele workflowafspraken horen in `docs/dev/**`.
+
 ## Lokale startcommando's
 ```bash
 npm install

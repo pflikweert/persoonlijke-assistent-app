@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Platform, Pressable, StyleSheet, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -18,7 +18,7 @@ export function ModalBackdrop({
   layout?: ModalBackdropLayout;
   onPressOutside?: () => void;
   outsidePressDisabled?: boolean;
-  contentStyle?: ViewStyle;
+  contentStyle?: StyleProp<ViewStyle>;
 }) {
   const scheme = useColorScheme() ?? "light";
   const webBlurStyle: ViewStyle =

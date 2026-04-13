@@ -1,4 +1,5 @@
 import type {
+  EntryCleanupPromptAssistTargetLayer,
   AiDraftDerivationSource,
   AiTaskDetail,
   AiTaskDraftCreationMeta,
@@ -48,6 +49,21 @@ export type EntryCleanupInstructionState = {
   bodyInstruction: string;
   summaryShortInstruction: string;
 };
+
+export const ENTRY_CLEANUP_PROMPT_ASSIST_TARGETS: {
+  key: EntryCleanupPromptAssistTargetLayer;
+  label: string;
+}[] = [
+  { key: 'systemRulesInstruction', label: 'Systeemregels' },
+  { key: 'generalInstruction', label: 'Algemene instructie' },
+  { key: 'titleInstruction', label: 'Titel' },
+  { key: 'bodyInstruction', label: 'Body' },
+  { key: 'summaryShortInstruction', label: 'Summary short' },
+];
+
+export function getEntryCleanupPromptAssistTargetLabel(target: EntryCleanupPromptAssistTargetLayer): string {
+  return ENTRY_CLEANUP_PROMPT_ASSIST_TARGETS.find((item) => item.key === target)?.label ?? target;
+}
 
 export type EntryCleanupTokenId = 'rawText' | 'title' | 'body' | 'summary_short';
 
@@ -794,9 +810,9 @@ export const AI_QUALITY_FAMILIES: AiQualityFamilyDefinition[] = [
   {
     key: 'moments',
     title: 'Momenten',
-    description: 'Opschonen en samenvatting van één moment.',
-    metaLabel: '2 onderdelen',
-    taskKeys: ['entry_cleanup', 'entry_summary'],
+    description: 'Entry normalisatie van één moment.',
+    metaLabel: '1 onderdeel',
+    taskKeys: ['entry_cleanup'],
   },
   {
     key: 'today',
@@ -823,7 +839,6 @@ export const AI_QUALITY_FAMILIES: AiQualityFamilyDefinition[] = [
 
 export const AI_QUALITY_TASK_LABELS: Record<string, string> = {
   entry_cleanup: 'Moment opschonen',
-  entry_summary: 'Moment samenvatting',
   day_summary: 'Dag samenvatting',
   day_narrative: 'Dagverhaal',
   week_summary: 'Week samenvatting',

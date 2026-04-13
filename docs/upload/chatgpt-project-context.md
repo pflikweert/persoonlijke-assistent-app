@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-12T19:55:46.646Z
-Source Commit: 75fbf4f
+Build Timestamp (UTC): 2026-04-13T11:03:13.926Z
+Source Commit: bc53a0a
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -80,6 +80,20 @@ Reden:
 2. Draai `npm run docs:bundle`.
 3. Controleer met `npm run docs:bundle:verify`.
 4. Commit canonieke docs + generated output samen.
+
+## 7) Werken met ChatGPT Projects + Cline
+- **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
+- **Cline in VS Code**: repo-analyse, plan, wijzigingen, verify en commit.
+- Leidende waarheid voor product/scope/status staat in `docs/project/**`.
+- `AGENTS.md` + `.clinerules` zijn leidend voor werkwijze tijdens uitvoering.
+- Skills gebruik je alleen wanneer een taak duidelijk in een bestaande skillflow valt.
+- `docs/upload/**` blijft uploadartefact (generated), geen canonieke agentbron.
+- Bij wijzigingen aan canonieke docs: altijd bundlen + verify (`npm run docs:bundle` en `npm run docs:bundle:verify`).
+- Sessielearnings horen in:
+  - `AGENTS.md` voor always-on repo-regels
+  - `docs/dev/**` voor operationele workflowafspraken
+  - `docs/project/current-status.md` alleen voor bewijsbare statusrealiteit
+  - niet in productdocs als toolingsruis
 
 ---
 
@@ -410,6 +424,7 @@ Gecontroleerd op:
 | Verify scripts lokaal | Gepland 1.2A/1.2E | **Aanwezig** | text/audio/reflection/output-quality scripts aanwezig. |
 | AI Quality Studio contract-first editor (`entry_cleanup`) | Hardening AI governance | **Aanwezig** | editor split met alleen taakinstructie als bewerklaag; input/system/response/model + baseline metadata read-only zichtbaar. |
 | AIQS admin detail topnav + sticky action footer (shared) | UX/hardening admin | **Aanwezig** | gedeelde admin topnav en 3-action sticky footer primitives toegepast op task/draft/test detailschermen. |
+| AIQS prompt-assist preview voor `entry_cleanup` (admin-only) | Editor hardening | **Aanwezig** | server-side action `prompt_assist_preview` + client service/types + draft editor met single-target apply, inline diff en issue-signalen zonder brede chat-UI. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
 | Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
 
@@ -460,6 +475,11 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 - Foutieve padverwijzing gecorrigeerd: `docs/project/docs/project/master-project.md` bestaat niet; correct is `docs/project/master-project.md`.
 - Productfeature, dev-tooling en verify-tooling zijn expliciet onderscheiden.
 - Tooling-aanwezigheid telt niet automatisch als gebruikersfeature.
+
+## Workflow/docs realiteit (april 2026)
+- Rolverdeling ChatGPT Projects (strategie/review/promptontwerp) vs Cline (repo-uitvoering) is nu expliciet vastgelegd in `AGENTS.md`.
+- Scheiding tussen canonieke projectdocs (`docs/project/**`), workflowdocs (`docs/dev/**`) en uploadartefacten (`docs/upload/**`) is expliciet aangescherpt.
+- Er is een operationele workflowdoc toegevoegd: `docs/dev/cline-workflow.md`.
 
 ## Recente regressie-learnings (april 2026)
 - Admin-access UI mag alleen `Geen toegang` tonen bij expliciete auth-codes (`AUTH_UNAUTHORIZED`/`AUTH_MISSING`), niet bij generieke netwerk- of loadfouten.
@@ -1151,7 +1171,7 @@ Volgt `docs/project/content-processing-rules.md`.
 
 Kernscheiding:
 - `entry_cleanup` ≠ samenvatting
-- `entry_summary` ≠ volledige bronlaag
+- entry-normalization loopt als één compound flow (`entry_cleanup`) voor `title`, `body`, `summary_short`
 - `day_narrative` ≠ `day_summary`
 - reflectiepunten ≠ advieslaag
 - reflecties ≠ therapeutische interpretatie
@@ -1231,6 +1251,16 @@ Auth:
 - patroon is toegepast op AIQS detailschermen zonder runtime- of contractscope uit te breiden
 
 **Belangrijke conclusie:** huidige adminschermen zijn nog te veel als mobiele breedte gefixeerd, ook op desktop. Dat beperkt de studio-waarde op grotere schermen en fullscreen gebruik.
+
+### 6.5b Prompt Assist in draft editor (`entry_cleanup`) (aanwezig, beperkte scope)
+- prompt assist draait admin-only binnen de bestaande draft editorlaag
+- assist is task-first en contract-first:
+  - analyse gebruikt volledige promptcontext (`system rules`, `general instruction`, `field rules`, outputcontract, taskmetadata)
+  - rewrite/apply blijft per run beperkt tot één expliciet gekozen targetlaag
+- server-side previewactie aanwezig (`prompt_assist_preview`) met typed payload/result
+- UI blijft diff/apply-georiënteerd en vermijdt brede chatervaring
+
+**Belangrijke conclusie:** assist is bewust een lokale editor-hardening en geen autonome prompt-optimizer of generieke chatlaag.
 
 ### 6.6 Runtime-baseline model (aanwezig, transitie)
 - runtime-definities worden nu opgebouwd vanuit code
@@ -1327,11 +1357,7 @@ Daarom moet elke task conceptueel deze velden hebben:
 - `entry_cleanup`
   - runtime_family: `entry_normalization`
   - composition_role: `compound_member`
-  - managed_output_field: `body`
-- `entry_summary`
-  - runtime_family: `entry_normalization`
-  - composition_role: `compound_member`
-  - managed_output_field: `summary_short`
+  - managed_output_field: `title/body/summary_short` (compound)
 - `day_narrative`
   - runtime_family: `day_journal`
   - composition_role: `compound_member`
@@ -1980,6 +2006,7 @@ Waarom:
 - `npm run docs:bundle:verify`
 - `docs/upload/**` is generated uploadoutput voor de gebruiker; gebruik deze map niet als canonieke agentbron.
 - Standaard uploadset staat in `docs/upload/upload-manifest.md` en bevat ChatGPT Project context, MVP design spec en Stitch design context.
+- Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
 - documenteer altijd zichtbaarheidsregel (admin-only) en allowlist-mechanisme
 - documenteer relevante env-vars (`ADMIN_REGEN_ALLOWLIST_USER_IDS`, `ADMIN_REGEN_INTERNAL_TOKEN`)
 

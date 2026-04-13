@@ -54,6 +54,16 @@ Voor AI-gedrag, prompting en evaluatie:
 - Houd taken klein en scherp afgebakend.
 - Gebruik bestaande patronen in de repo vóór nieuwe patronen.
 
+## Workflowlaag: ChatGPT Projects + Cline
+
+- **ChatGPT Projects** gebruik je voor strategie, review en promptontwerp buiten de repo-uitvoering.
+- **Cline in VS Code** gebruik je voor repo-analyse, plan, code/docs-wijzigingen, verify en commit.
+- Productwaarheid en toolingwaarheid blijven gescheiden:
+  - `docs/project/**` = canonieke projectwaarheid
+  - `docs/dev/**` = operationele workflowafspraken
+  - `docs/upload/**` = generated uploadartefacten, nooit canonieke bron
+- Bij onderbroken of herhaalde patch-rondes: bevestig eerst de actuele file state (small-read/diff) vóór je verder wijzigt.
+
 ## Skill-selectie
 
 - Gebruik `.agents/skills/stitch-redesign-execution/SKILL.md` voor scherm-redesigns op basis van Stitch exports in `design_refs/...`.
@@ -119,6 +129,7 @@ Bij wijzigingen aan canonieke docs:
 - `npm run docs:bundle:verify`
 - `docs/upload/**` is generated uploadoutput voor de gebruiker; gebruik deze map niet als canonieke agentbron.
 - Standaard uploadset staat in `docs/upload/upload-manifest.md` en bevat ChatGPT Project context, MVP design spec en Stitch design context.
+- Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
 
 Bij wijzigingen in admin-regeneratie:
 
