@@ -13,6 +13,8 @@ Die file bepaalt:
 - welke archive-only zijn
 - wat naar ChatGPT Project geüpload wordt
 
+Lees daarna alleen taakrelevante bronnen; hanteer geen “lees alles altijd”-aanpak.
+
 ## Canonieke projectdocs
 
 Gebruik deze docs als actieve projectwaarheid:
@@ -63,6 +65,11 @@ Voor AI-gedrag, prompting en evaluatie:
   - `docs/dev/**` = operationele workflowafspraken
   - `docs/upload/**` = generated uploadartefacten, nooit canonieke bron
 - Bij onderbroken of herhaalde patch-rondes: bevestig eerst de actuele file state (small-read/diff) vóór je verder wijzigt.
+- Gebruik `docs/dev/active-context.md` als lichte sessiecontext wanneer recente WIP/learnings relevant zijn.
+- Verhoog nooit status of waarheid op basis van `docs/dev/active-context.md` alleen.
+- Canonieke docs blijven altijd leidend boven `docs/dev/active-context.md`.
+- Structurele workflowlearnings horen in `AGENTS.md` of `docs/dev/**`, niet in productdocs.
+- Is een learning taak-/domeinspecifiek en herhaalbaar, leg die vast in een bestaande skill (niet in AGENTS).
 
 ## Skill-selectie
 

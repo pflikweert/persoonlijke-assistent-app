@@ -102,6 +102,7 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 - Rolverdeling ChatGPT Projects (strategie/review/promptontwerp) vs Cline (repo-uitvoering) is nu expliciet vastgelegd in `AGENTS.md`.
 - Scheiding tussen canonieke projectdocs (`docs/project/**`), workflowdocs (`docs/dev/**`) en uploadartefacten (`docs/upload/**`) is expliciet aangescherpt.
 - Er is een operationele workflowdoc toegevoegd: `docs/dev/cline-workflow.md`.
+- Er is een lichte repo-eigen memory-bank/active-context workflow vastgelegd in `docs/dev/memory-bank.md` en `docs/dev/active-context.md` (operationeel, niet-canoniek).
 
 ## Recente regressie-learnings (april 2026)
 - Admin-access UI mag alleen `Geen toegang` tonen bij expliciete auth-codes (`AUTH_UNAUTHORIZED`/`AUTH_MISSING`), niet bij generieke netwerk- of loadfouten.

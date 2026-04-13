@@ -11,11 +11,49 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 1. `docs/project/README.md`
 2. `AGENTS.md`
 3. taakrelevante canonieke docs in `docs/project/**`
+4. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
+5. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
 
 Regels:
 - `docs/project/**` = canonieke projectwaarheid.
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
+- Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
+
+## Repo-eigen Memory Bank workflow
+- Onze memory bank is een **workflowlaag**, geen extra waarheidshiërarchie.
+- Verdeling:
+  - canonieke waarheid: `docs/project/**`
+  - always-on gedrag: `AGENTS.md`
+  - domeinspecifieke herhaalpatronen: `.agents/skills/**`
+  - operationele workflow: `docs/dev/cline-workflow.md` + `docs/dev/memory-bank.md`
+  - tijdelijke sessiecontext: `docs/dev/active-context.md`
+  - statuswaarheid: `docs/project/current-status.md`
+  - echte gaps/onzekerheden: `docs/project/open-points.md`
+
+## Active context tussen sessies
+- `docs/dev/active-context.md` is een lichte brug tussen Cline-sessies.
+- Gebruik actief bij:
+  - non-triviale taken
+  - onderbroken sessies
+  - multi-file werk
+  - taken waar recente learnings/WIP of docs-updates relevant zijn
+- Meestal niet nodig bij:
+  - kleine, volledig afgebakende fixes zonder sessieafhankelijkheid
+
+Regels:
+- `active-context.md` is niet canoniek en niet de statuswaarheid.
+- Verwijs naar canonieke docs in plaats van inhoud te kopiëren.
+- Promoveer alleen stabiele learnings naar `AGENTS.md`, skills of `docs/dev/**`.
+
+## Beslisregels per laag
+- canonieke waarheid → `docs/project/**`
+- operationele workflow → `docs/dev/**`
+- always-on gedrag → `AGENTS.md`
+- taak-/domeinspecifieke herhaalpatronen → skills
+- tijdelijke sessiecontext → `docs/dev/active-context.md`
+- statusrealiteit (bewijsbaar) → `docs/project/current-status.md`
+- echte gaps/onzekerheden → `docs/project/open-points.md`
 
 ## Wanneer Plan mode
 Gebruik Plan mode bij:

@@ -71,3 +71,19 @@ Reden:
   - `docs/dev/**` voor operationele workflowafspraken
   - `docs/project/current-status.md` alleen voor bewijsbare statusrealiteit
   - niet in productdocs als toolingsruis
+
+## 8) Repo-eigen Memory Bank (workflow, geen extra waarheid)
+Deze repo gebruikt een lichte memory-bank workflow als uitvoerhulp, zonder tweede waarheidshiërarchie.
+
+Relatie tussen lagen:
+- `docs/project/**` = canonieke waarheid (product/scope/status)
+- `AGENTS.md` = always-on uitvoerregels
+- `.agents/skills/**` = taak-/domeinspecifieke herhaalpatronen
+- `docs/dev/cline-workflow.md` = operationele Cline-werkwijze
+- `docs/dev/memory-bank.md` = memory-bank principes en update-regels
+- `docs/dev/active-context.md` = tijdelijke sessiecontext (niet-canoniek)
+
+Regels:
+- geen generieke memory-bank boom toevoegen
+- geen duplicatie van canonieke docs
+- `current-status.md` blijft de enige statuswaarheid
