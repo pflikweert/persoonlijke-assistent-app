@@ -1,5 +1,9 @@
 import type {
-  EntryCleanupPromptAssistTargetLayer,
+  AiPromptAssistActionDefinition,
+  AiPromptAssistActionId,
+  AiPromptAssistActionOutputType,
+  AiPromptAssistTargetLayerKey,
+  AiPromptAssistTargetLayerType,
   AiDraftDerivationSource,
   AiTaskDetail,
   AiTaskDraftCreationMeta,
@@ -51,18 +55,116 @@ export type EntryCleanupInstructionState = {
 };
 
 export const ENTRY_CLEANUP_PROMPT_ASSIST_TARGETS: {
-  key: EntryCleanupPromptAssistTargetLayer;
+  key: AiPromptAssistTargetLayerKey;
+  layerType: AiPromptAssistTargetLayerType;
   label: string;
 }[] = [
-  { key: 'systemRulesInstruction', label: 'Systeemregels' },
-  { key: 'generalInstruction', label: 'Algemene instructie' },
-  { key: 'titleInstruction', label: 'Titel' },
-  { key: 'bodyInstruction', label: 'Body' },
-  { key: 'summaryShortInstruction', label: 'Summary short' },
+  { key: 'systemRulesInstruction', layerType: 'system', label: 'Systeemregels' },
+  { key: 'generalInstruction', layerType: 'general', label: 'Algemene instructie' },
+  { key: 'titleInstruction', layerType: 'field', label: 'Titel' },
+  { key: 'bodyInstruction', layerType: 'field', label: 'Body' },
+  { key: 'summaryShortInstruction', layerType: 'field', label: 'Summary short' },
 ];
 
-export function getEntryCleanupPromptAssistTargetLabel(target: EntryCleanupPromptAssistTargetLayer): string {
+export function getEntryCleanupPromptAssistTargetLabel(target: AiPromptAssistTargetLayerKey): string {
   return ENTRY_CLEANUP_PROMPT_ASSIST_TARGETS.find((item) => item.key === target)?.label ?? target;
+}
+
+export function getEntryCleanupPromptAssistTargetLayerType(
+  target: AiPromptAssistTargetLayerKey
+): AiPromptAssistTargetLayerType {
+  return ENTRY_CLEANUP_PROMPT_ASSIST_TARGETS.find((item) => item.key === target)?.layerType ?? 'field';
+}
+
+export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
+  {
+    id: 'compacter',
+    label: 'Compacter',
+    helper: 'Korter zonder betekenisverlies',
+    order: 1,
+    placement: 'primary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
+    id: 'ontdubbelen',
+    label: 'Ontdubbelen',
+    helper: 'Overlap verwijderen',
+    order: 2,
+    placement: 'primary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
+    id: 'verhelderen',
+    label: 'Verhelderen',
+    helper: 'Minder ambigu en specifieker',
+    order: 3,
+    placement: 'primary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
+    id: 'check_contract',
+    label: 'Check contract',
+    helper: 'Check met taakdoel en contract',
+    order: 4,
+    placement: 'primary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
+    id: 'check_overlap',
+    label: 'Check overlap',
+    helper: 'Zoek overlap tussen lagen',
+    order: 5,
+    placement: 'secondary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
+    id: 'verplaats_naar_juiste_laag',
+    label: 'Juiste laag',
+    helper: 'Signaleer betere laagplaatsing',
+    order: 6,
+    placement: 'secondary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
+    id: 'maak_strikter',
+    label: 'Strikter',
+    helper: 'Maak minder vrijblijvend',
+    order: 7,
+    placement: 'secondary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
+    id: 'check_outputvorm',
+    label: 'Outputvorm',
+    helper: 'Check prompt vs outputschema',
+    order: 8,
+    placement: 'secondary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+    relevantOutputTypes: ['object', 'compound'],
+  },
+];
+
+export function mapTaskOutputTypeToAssistOutputType(taskKey: string): AiPromptAssistActionOutputType {
+  if (taskKey === 'entry_cleanup') return 'compound';
+  if (taskKey.includes('highlights') || taskKey.includes('reflection_points')) return 'list';
+  if (taskKey.includes('summary') || taskKey.includes('narrative')) return 'text';
+  return 'text';
+}
+
+export function getPromptAssistActionsForTarget(args: {
+  targetLayerType: AiPromptAssistTargetLayerType;
+  taskKey: string;
+}): AiPromptAssistActionDefinition[] {
+  const outputType = mapTaskOutputTypeToAssistOutputType(args.taskKey);
+  return AI_PROMPT_ASSIST_ACTIONS.filter((item) => {
+    if (!item.allowedTargetLayerTypes.includes(args.targetLayerType)) return false;
+    if (item.relevantOutputTypes && !item.relevantOutputTypes.includes(outputType)) return false;
+    return true;
+  }).sort((a, b) => a.order - b.order);
+}
+
+export function getPromptAssistActionById(id: AiPromptAssistActionId): AiPromptAssistActionDefinition {
+  return AI_PROMPT_ASSIST_ACTIONS.find((item) => item.id === id) ?? AI_PROMPT_ASSIST_ACTIONS[0];
 }
 
 export type EntryCleanupTokenId = 'rawText' | 'title' | 'body' | 'summary_short';

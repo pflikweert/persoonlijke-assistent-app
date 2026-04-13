@@ -37,14 +37,18 @@ import {
   updateAdminAiQualityStudioDraftVersion,
 } from '@/services';
 import type {
+  AiPromptAssistActionId,
+  AiPromptAssistActionDefinition,
   AiPromptAssistPreviewResult,
+  AiPromptAssistTargetLayerKey,
+  AiPromptAssistTargetLayerType,
   AiTaskDetail,
-  EntryCleanupPromptAssistTargetLayer,
 } from '@/types';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, spacing } from '@/theme';
 import {
   AI_QUALITY_ALLOWED_MODELS,
+  getPromptAssistActionsForTarget,
   buildEntryCleanupPromptTemplate,
   DraftFormState,
   ENTRY_CLEANUP_TOKEN_DEFINITIONS,
@@ -68,17 +72,20 @@ import {
 
 type EntryCleanupEditorKey = keyof EntryCleanupInstructionState;
 
-const ENTRY_CLEANUP_ASSIST_TARGET_BY_SECTION: Partial<
-  Record<EntryCleanupEditorKey, EntryCleanupPromptAssistTargetLayer>
-> = {
-  systemRulesInstruction: 'systemRulesInstruction',
-  generalInstruction: 'generalInstruction',
-  titleInstruction: 'titleInstruction',
-  bodyInstruction: 'bodyInstruction',
-  summaryShortInstruction: 'summaryShortInstruction',
+type PromptAssistTarget = {
+  key: AiPromptAssistTargetLayerKey;
+  layerType: AiPromptAssistTargetLayerType;
 };
 
-const ASSIST_QUICK_INTENTS = ['Compacter', 'Ontdubbelen', 'Verhelderen', 'Check overlap'] as const;
+const ENTRY_CLEANUP_ASSIST_TARGET_BY_SECTION: Partial<
+  Record<EntryCleanupEditorKey, PromptAssistTarget>
+> = {
+  systemRulesInstruction: { key: 'systemRulesInstruction', layerType: 'system' },
+  generalInstruction: { key: 'generalInstruction', layerType: 'general' },
+  titleInstruction: { key: 'titleInstruction', layerType: 'field' },
+  bodyInstruction: { key: 'bodyInstruction', layerType: 'field' },
+  summaryShortInstruction: { key: 'summaryShortInstruction', layerType: 'field' },
+};
 
 type InlineDiffSegment = {
   kind: 'unchanged' | 'removed' | 'added';
@@ -290,11 +297,14 @@ export default function AiQualityStudioDraftScreen() {
     bodyInstruction: null,
     summaryShortInstruction: null,
   });
-  const [activeAssistTarget, setActiveAssistTarget] = useState<EntryCleanupPromptAssistTargetLayer | null>(null);
+  const [activeAssistTarget, setActiveAssistTarget] = useState<PromptAssistTarget | null>(null);
+  const [selectedAssistActionId, setSelectedAssistActionId] = useState<AiPromptAssistActionId>('compacter');
+  const [assistMoreOpen, setAssistMoreOpen] = useState(false);
   const [assistIntent, setAssistIntent] = useState('');
   const [assistLoading, setAssistLoading] = useState(false);
   const [assistError, setAssistError] = useState<string | null>(null);
   const [assistPreview, setAssistPreview] = useState<AiPromptAssistPreviewResult | null>(null);
+  const [assistPreviewSignature, setAssistPreviewSignature] = useState<string | null>(null);
 
   const selectedDraft = useMemo(() => {
     if (!detail) return null;
@@ -533,14 +543,17 @@ export default function AiQualityStudioDraftScreen() {
   function openAssistForSection(section: EntryCleanupEditorKey) {
     const target = ENTRY_CLEANUP_ASSIST_TARGET_BY_SECTION[section] ?? null;
     if (!target) return;
-    if (activeAssistTarget === target) {
+    if (activeAssistTarget?.key === target.key) {
       closeAssistPanel();
       return;
     }
     setActiveAssistTarget(target);
+    setSelectedAssistActionId('compacter');
+    setAssistMoreOpen(false);
     setAssistIntent('');
     setAssistError(null);
     setAssistPreview(null);
+    setAssistPreviewSignature(null);
   }
 
   function closeAssistPanel() {
@@ -548,11 +561,37 @@ export default function AiQualityStudioDraftScreen() {
     setAssistLoading(false);
     setAssistError(null);
     setAssistPreview(null);
+    setAssistPreviewSignature(null);
     setAssistIntent('');
   }
 
-  async function runAssistPreview(targetLayerKey: EntryCleanupPromptAssistTargetLayer) {
-    if (!detail || !selectedDraft || !entryCleanupInstructionSections) return;
+  const currentAssistSignature = `${activeAssistTarget?.key ?? ''}::${selectedAssistActionId}::${assistIntent.trim()}`;
+  const assistPreviewStale = Boolean(assistPreview && assistPreviewSignature !== currentAssistSignature);
+
+  const assistAvailableActions = useMemo<AiPromptAssistActionDefinition[]>(() => {
+    if (!activeAssistTarget || !detail) return [];
+    return getPromptAssistActionsForTarget({
+      targetLayerType: activeAssistTarget.layerType,
+      taskKey: detail.key,
+    });
+  }, [activeAssistTarget, detail]);
+
+  const assistPrimaryActions = useMemo(
+    () => assistAvailableActions.filter((item) => item.placement === 'primary').slice(0, 4),
+    [assistAvailableActions]
+  );
+  const assistSecondaryActions = useMemo(
+    () => assistAvailableActions.filter((item) => item.placement === 'secondary'),
+    [assistAvailableActions]
+  );
+
+  function selectAssistAction(action: AiPromptAssistActionDefinition) {
+    setSelectedAssistActionId(action.id);
+    setAssistIntent(action.helper);
+  }
+
+  async function runAssistPreview() {
+    if (!detail || !selectedDraft || !entryCleanupInstructionSections || !activeAssistTarget) return;
 
     setAssistLoading(true);
     setAssistError(null);
@@ -562,7 +601,9 @@ export default function AiQualityStudioDraftScreen() {
       const preview = await runAdminAiQualityStudioPromptAssistPreview({
         taskKey: detail.key,
         versionId: selectedDraft.id,
-        targetLayerKey,
+        targetLayerType: activeAssistTarget.layerType,
+        targetLayerKey: activeAssistTarget.key,
+        assistActionId: selectedAssistActionId,
         assistIntent,
         editorContext: {
           systemRulesInstruction: entryCleanupInstructionSections.systemRulesInstruction,
@@ -585,6 +626,7 @@ export default function AiQualityStudioDraftScreen() {
       });
 
       setAssistPreview(preview);
+      setAssistPreviewSignature(currentAssistSignature);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setAssistError(parsed.message);
@@ -595,9 +637,9 @@ export default function AiQualityStudioDraftScreen() {
 
   function applyAssistToTarget() {
     if (!activeAssistTarget || !assistPreview) return;
-    const section = activeAssistTarget as EntryCleanupEditorKey;
+    const section = activeAssistTarget.key as EntryCleanupEditorKey;
     updateEntryCleanupInstructionSection(section, assistPreview.proposedText);
-    setSaveMessage(`Voorstel toegepast op ${getEntryCleanupPromptAssistTargetLabel(activeAssistTarget)}.`);
+    setSaveMessage(`Voorstel toegepast op ${getEntryCleanupPromptAssistTargetLabel(activeAssistTarget.key)}.`);
     closeAssistPanel();
   }
 
@@ -610,7 +652,7 @@ export default function AiQualityStudioDraftScreen() {
     warnings: string[];
   }) {
     const assistTarget = ENTRY_CLEANUP_ASSIST_TARGET_BY_SECTION[args.section] ?? null;
-    const assistOpen = activeAssistTarget === assistTarget;
+    const assistOpen = activeAssistTarget?.key === assistTarget?.key;
 
     return (
       <ThemedView style={styles.assistSectionWrap}>
@@ -679,7 +721,7 @@ export default function AiQualityStudioDraftScreen() {
   }, [assistPreview]);
 
   const activeAssistTargetLabel = activeAssistTarget
-    ? getEntryCleanupPromptAssistTargetLabel(activeAssistTarget)
+    ? getEntryCleanupPromptAssistTargetLabel(activeAssistTarget.key)
     : '';
 
   const assistChangeSummary = assistPreview?.changeSummary?.trim() || 'Voorstel gemaakt op basis van jouw intent.';
@@ -1100,7 +1142,7 @@ export default function AiQualityStudioDraftScreen() {
                 </HeaderIconButton>
               </ThemedView>
               <MetaText>
-                {activeAssistTarget === 'systemRulesInstruction'
+                {activeAssistTarget?.key === 'systemRulesInstruction'
                   ? 'Geldt voor alle outputs • Alleen deze laag wordt gewijzigd'
                   : 'Volledige context • Alleen deze laag wordt gewijzigd'}
               </MetaText>
@@ -1110,24 +1152,72 @@ export default function AiQualityStudioDraftScreen() {
               <ThemedView style={styles.fieldGroup}>
                 <MetaText>Wat wil je aanpassen?</MetaText>
                 <ThemedView style={styles.assistQuickIntentRow}>
-                  {ASSIST_QUICK_INTENTS.map((chip) => (
+                  {assistPrimaryActions.map((action) => (
                     <Pressable
-                      key={chip}
+                      key={action.id}
                       accessibilityRole="button"
-                      onPress={() => setAssistIntent(chip)}
-                      style={[styles.assistQuickIntentChip, { backgroundColor: palette.surfaceLow }]}
+                      onPress={() => selectAssistAction(action)}
+                      style={[
+                        styles.assistQuickIntentChip,
+                        {
+                          backgroundColor:
+                            selectedAssistActionId === action.id ? palette.surfaceLowest : palette.surfaceLow,
+                        },
+                      ]}
                     >
-                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                        {chip}
+                      <ThemedText
+                        type="caption"
+                        style={{ color: selectedAssistActionId === action.id ? palette.primary : palette.mutedSoft }}
+                      >
+                        {action.label}
                       </ThemedText>
                     </Pressable>
                   ))}
                 </ThemedView>
+                {assistSecondaryActions.length > 0 ? (
+                  <ThemedView style={styles.fieldGroup}>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => setAssistMoreOpen((prev) => !prev)}
+                      style={[styles.assistMoreToggle, { backgroundColor: palette.surfaceLow }]}
+                    >
+                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                        {assistMoreOpen ? 'Minder' : 'Meer'}
+                      </ThemedText>
+                    </Pressable>
+                    {assistMoreOpen ? (
+                      <ThemedView style={styles.assistSecondaryRow}>
+                        {assistSecondaryActions.map((action) => (
+                          <Pressable
+                            key={action.id}
+                            accessibilityRole="button"
+                            onPress={() => selectAssistAction(action)}
+                            style={[
+                              styles.assistQuickIntentChip,
+                              {
+                                backgroundColor:
+                                  selectedAssistActionId === action.id ? palette.surfaceLowest : palette.surfaceLow,
+                              },
+                            ]}
+                          >
+                            <ThemedText
+                              type="caption"
+                              style={{ color: selectedAssistActionId === action.id ? palette.primary : palette.mutedSoft }}
+                            >
+                              {action.label}
+                            </ThemedText>
+                          </Pressable>
+                        ))}
+                      </ThemedView>
+                    ) : null}
+                  </ThemedView>
+                ) : null}
                 <TextAreaField
                   value={assistIntent}
-                  onChangeText={setAssistIntent}
+                  onChangeText={(value) => setAssistIntent(value)}
                   style={styles.assistIntentInput}
-                  placeholder="bijv. maak compacter"
+                  placeholder="Extra nuance (optioneel)"
+                  placeholderTextColor={scheme === 'dark' ? 'rgba(181, 173, 155, 0.56)' : 'rgba(115, 106, 86, 0.42)'}
                 />
               </ThemedView>
 
@@ -1136,6 +1226,9 @@ export default function AiQualityStudioDraftScreen() {
 
               {assistPreview ? (
                 <>
+                {assistPreviewStale ? (
+                  <MetaText>Huidig voorstel is verouderd. Vernieuw om door te gaan met deze input.</MetaText>
+                ) : null}
                 <ThemedView style={styles.assistResultGroup}>
                   <ThemedText type="defaultSemiBold">Wat is aangepast</ThemedText>
                   <MetaText>{assistChangeSummary}</MetaText>
@@ -1201,30 +1294,31 @@ export default function AiQualityStudioDraftScreen() {
                 <Pressable
                   accessibilityRole="button"
                   onPress={applyAssistToTarget}
+                  disabled={assistPreviewStale}
                   style={[styles.assistActionButton, { backgroundColor: palette.surfaceLow }]}
                 >
                   <ThemedText type="caption" style={{ color: palette.primary }}>
                     Toepassen op deze laag
                   </ThemedText>
                 </Pressable>
-              ) : (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => activeAssistTarget && void runAssistPreview(activeAssistTarget)}
-                  disabled={assistLoading || !activeAssistTarget}
-                  style={[
-                    styles.assistActionButton,
-                    {
-                      backgroundColor: palette.surfaceLow,
-                      opacity: assistLoading ? 0.6 : 1,
-                    },
-                  ]}
-                >
-                  <ThemedText type="caption" style={{ color: palette.primary }}>
-                    Maak voorstel
-                  </ThemedText>
-                </Pressable>
-              )}
+              ) : null}
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void runAssistPreview()}
+                disabled={assistLoading || !activeAssistTarget}
+                style={[
+                  styles.assistActionButton,
+                  {
+                    backgroundColor: palette.surfaceLow,
+                    opacity: assistLoading ? 0.6 : 1,
+                  },
+                ]}
+              >
+                <ThemedText type="caption" style={{ color: palette.primary }}>
+                  {assistPreview ? 'Voorstel vernieuwen' : 'Maak voorstel'}
+                </ThemedText>
+              </Pressable>
 
               <Pressable
                 accessibilityRole="button"
@@ -1356,6 +1450,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
+  },
+  assistMoreToggle: {
+    borderRadius: 999,
+    minHeight: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+    alignSelf: 'flex-start',
+  },
+  assistSecondaryRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
   assistActionButton: {
     flex: 1,

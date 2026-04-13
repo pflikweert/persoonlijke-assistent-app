@@ -1,5 +1,9 @@
 // App-wide TypeScript domain and DTO types.
 export type {
+  AiPromptAssistActionDefinition,
+  AiPromptAssistActionId,
+  AiPromptAssistActionOutputType,
+  AiPromptAssistActionPlacement,
   AiPromptAssistEditorContext,
   AiPromptAssistIssue,
   AiPromptAssistIssueSeverity,
@@ -20,7 +24,8 @@ export type {
   AiTaskVersionDetail,
   AiTaskVersionStatus,
   AiCompareBaselineStatus,
-  EntryCleanupPromptAssistTargetLayer,
+  AiPromptAssistTargetLayerKey,
+  AiPromptAssistTargetLayerType,
   AiReviewLabel,
   AiTestRunStatus,
   AiTestSourceType,

@@ -20,7 +20,9 @@ type RequestBody = {
   action?: unknown;
   taskKey?: unknown;
   versionId?: unknown;
+  targetLayerType?: unknown;
   targetLayerKey?: unknown;
+  assistActionId?: unknown;
   assistIntent?: unknown;
   editorContext?: unknown;
   taskVersionId?: unknown;
@@ -32,12 +34,18 @@ type RequestBody = {
   payload?: unknown;
 };
 
-type PromptAssistTargetLayer =
-  | 'systemRulesInstruction'
-  | 'generalInstruction'
-  | 'titleInstruction'
-  | 'bodyInstruction'
-  | 'summaryShortInstruction';
+type PromptAssistTargetLayerType = 'system' | 'general' | 'field';
+type PromptAssistTargetLayerKey = string;
+
+type PromptAssistActionId =
+  | 'compacter'
+  | 'ontdubbelen'
+  | 'verhelderen'
+  | 'check_contract'
+  | 'check_overlap'
+  | 'verplaats_naar_juiste_laag'
+  | 'maak_strikter'
+  | 'check_outputvorm';
 
 type PromptAssistIssueSeverity = 'info' | 'warning' | 'risk';
 type PromptAssistIssueType = 'duplicate' | 'misplaced' | 'conflict';
@@ -51,11 +59,7 @@ type PromptAssistIssue = {
 type PromptAssistEditorContext = {
   systemRulesInstruction: string;
   generalInstruction: string;
-  fieldRules: {
-    titleInstruction: string;
-    bodyInstruction: string;
-    summaryShortInstruction: string;
-  };
+  fieldRules: Record<string, string>;
   outputContract: Record<string, unknown>;
   taskMetadata: Record<string, unknown>;
 };
@@ -639,17 +643,38 @@ function parseAction(value: unknown):
   return null;
 }
 
-function parsePromptAssistTargetLayer(value: unknown): PromptAssistTargetLayer | null {
+function parsePromptAssistTargetLayerType(value: unknown): PromptAssistTargetLayerType | null {
+  if (value === 'system' || value === 'general' || value === 'field') {
+    return value;
+  }
+  return null;
+}
+
+function parsePromptAssistTargetLayerKey(value: unknown): PromptAssistTargetLayerKey | null {
+  const key = parseNonEmptyString(value);
+  return key ?? null;
+}
+
+function parsePromptAssistActionId(value: unknown): PromptAssistActionId | null {
   if (
-    value === 'systemRulesInstruction' ||
-    value === 'generalInstruction' ||
-    value === 'titleInstruction' ||
-    value === 'bodyInstruction' ||
-    value === 'summaryShortInstruction'
+    value === 'compacter' ||
+    value === 'ontdubbelen' ||
+    value === 'verhelderen' ||
+    value === 'check_contract' ||
+    value === 'check_overlap' ||
+    value === 'verplaats_naar_juiste_laag' ||
+    value === 'maak_strikter' ||
+    value === 'check_outputvorm'
   ) {
     return value;
   }
   return null;
+}
+
+function inferPromptAssistTargetLayerTypeFromKey(key: PromptAssistTargetLayerKey): PromptAssistTargetLayerType {
+  if (key === 'systemRulesInstruction') return 'system';
+  if (key === 'generalInstruction') return 'general';
+  return 'field';
 }
 
 function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorContext | null {
@@ -661,10 +686,9 @@ function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorConte
 
   const systemRulesInstruction = typeof source.systemRulesInstruction === 'string' ? source.systemRulesInstruction : '';
   const generalInstruction = typeof source.generalInstruction === 'string' ? source.generalInstruction : '';
-  const titleInstruction = typeof fieldRules.titleInstruction === 'string' ? fieldRules.titleInstruction : '';
-  const bodyInstruction = typeof fieldRules.bodyInstruction === 'string' ? fieldRules.bodyInstruction : '';
-  const summaryShortInstruction =
-    typeof fieldRules.summaryShortInstruction === 'string' ? fieldRules.summaryShortInstruction : '';
+  const parsedFieldRules = Object.fromEntries(
+    Object.entries(fieldRules).map(([key, val]) => [key, typeof val === 'string' ? val : ''])
+  );
 
   const outputContract = ensureJsonObject(source.outputContract) ?? {};
   const taskMetadata = ensureJsonObject(source.taskMetadata) ?? {};
@@ -672,27 +696,22 @@ function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorConte
   return {
     systemRulesInstruction,
     generalInstruction,
-    fieldRules: {
-      titleInstruction,
-      bodyInstruction,
-      summaryShortInstruction,
-    },
+    fieldRules: parsedFieldRules,
     outputContract,
     taskMetadata,
   };
 }
 
-function getPromptAssistTargetText(context: PromptAssistEditorContext, targetLayerKey: PromptAssistTargetLayer): string {
+function getPromptAssistTargetText(context: PromptAssistEditorContext, targetLayerKey: PromptAssistTargetLayerKey): string {
   if (targetLayerKey === 'systemRulesInstruction') return context.systemRulesInstruction;
   if (targetLayerKey === 'generalInstruction') return context.generalInstruction;
-  if (targetLayerKey === 'titleInstruction') return context.fieldRules.titleInstruction;
-  if (targetLayerKey === 'bodyInstruction') return context.fieldRules.bodyInstruction;
-  return context.fieldRules.summaryShortInstruction;
+  return context.fieldRules[targetLayerKey] ?? '';
 }
 
 function buildPromptAssistIssues(args: {
   context: PromptAssistEditorContext;
-  targetLayerKey: PromptAssistTargetLayer;
+  targetLayerType: PromptAssistTargetLayerType;
+  targetLayerKey: PromptAssistTargetLayerKey;
   proposedText: string;
 }): PromptAssistIssue[] {
   const source = args.context;
@@ -700,7 +719,7 @@ function buildPromptAssistIssues(args: {
   const issues: PromptAssistIssue[] = [];
 
   const referencesSystem = /system|json|contract|schema|response_format|geen tekst buiten json/i;
-  if (args.targetLayerKey !== 'generalInstruction' && args.targetLayerKey !== 'systemRulesInstruction' && referencesSystem.test(current)) {
+  if (args.targetLayerType === 'field' && referencesSystem.test(current)) {
     issues.push({
       severity: 'warning',
       type: 'misplaced',
@@ -708,13 +727,7 @@ function buildPromptAssistIssues(args: {
     });
   }
 
-  if (
-    args.targetLayerKey !== 'generalInstruction' &&
-    args.targetLayerKey !== 'systemRulesInstruction' &&
-    current.trim().length > 0 &&
-    source.generalInstruction.trim().length > 0 &&
-    current.trim().toLowerCase() === source.generalInstruction.trim().toLowerCase()
-  ) {
+  if (args.targetLayerType === 'field' && current.trim().length > 0 && source.generalInstruction.trim().length > 0 && current.trim().toLowerCase() === source.generalInstruction.trim().toLowerCase()) {
     issues.push({
       severity: 'info',
       type: 'duplicate',
@@ -732,8 +745,7 @@ function buildPromptAssistIssues(args: {
 
   if (
     /geen tekst buiten json|alleen json|response_format|output moet precies/i.test(args.proposedText) &&
-    args.targetLayerKey !== 'generalInstruction' &&
-    args.targetLayerKey !== 'systemRulesInstruction'
+    args.targetLayerType === 'field'
   ) {
     issues.push({
       severity: 'warning',
@@ -749,7 +761,9 @@ async function runPromptAssistPreview(args: {
   apiKey: string;
   model: string;
   taskKey: string;
-  targetLayerKey: PromptAssistTargetLayer;
+  targetLayerType: PromptAssistTargetLayerType;
+  targetLayerKey: PromptAssistTargetLayerKey;
+  assistActionId: PromptAssistActionId;
   assistIntent: string;
   context: PromptAssistEditorContext;
 }): Promise<{
@@ -760,6 +774,17 @@ async function runPromptAssistPreview(args: {
   issues: PromptAssistIssue[];
 }> {
   const targetText = getPromptAssistTargetText(args.context, args.targetLayerKey);
+
+  const actionHints: Record<PromptAssistActionId, string> = {
+    compacter: 'Maak de tekst compacter zonder betekenisverlies.',
+    ontdubbelen: 'Verwijder duplicaten en herhaling.',
+    verhelderen: 'Maak de instructie duidelijker en direct uitvoerbaar.',
+    check_contract: 'Check contract-match; herschrijf waar nodig om contractschending te voorkomen.',
+    check_overlap: 'Check overlap met andere lagen en voorkom doublures.',
+    verplaats_naar_juiste_laag: 'Verplaats verkeerd geplaatste regels naar juiste laag (alleen binnen target herschrijven).',
+    maak_strikter: 'Maak regels concreter en strikter.',
+    check_outputvorm: 'Verduidelijk outputvorm/format-verwachting binnen scope van de gekozen laag.',
+  };
 
   const systemPrompt = [
     'Je bent Prompt Assist voor een admin-only AI Quality Studio.',
@@ -772,7 +797,10 @@ async function runPromptAssistPreview(args: {
 
   const userPayload = {
     taskKey: args.taskKey,
+    targetLayerType: args.targetLayerType,
     targetLayerKey: args.targetLayerKey,
+    assistActionId: args.assistActionId,
+    assistActionHint: actionHints[args.assistActionId],
     assistIntent: args.assistIntent,
     currentTargetText: targetText,
     context: args.context,
@@ -821,6 +849,7 @@ async function runPromptAssistPreview(args: {
     rationale: rationaleRaw.length > 0 ? rationaleRaw : null,
     issues: buildPromptAssistIssues({
       context: args.context,
+      targetLayerType: args.targetLayerType,
       targetLayerKey: args.targetLayerKey,
       proposedText,
     }),
@@ -1321,7 +1350,9 @@ Deno.serve(async (request) => {
       step = 'prompt_assist_preview';
       const taskKey = parseNonEmptyString(body.taskKey);
       const versionId = parseUuid(body.versionId);
-      const targetLayerKey = parsePromptAssistTargetLayer(body.targetLayerKey);
+      const targetLayerKey = parsePromptAssistTargetLayerKey(body.targetLayerKey);
+      const parsedTargetLayerType = parsePromptAssistTargetLayerType(body.targetLayerType);
+      const parsedAssistActionId = parsePromptAssistActionId(body.assistActionId);
       const assistIntent = typeof body.assistIntent === 'string' ? body.assistIntent.trim() : '';
       const editorContext = parsePromptAssistEditorContext(body.editorContext);
 
@@ -1358,6 +1389,10 @@ Deno.serve(async (request) => {
           message: 'targetLayerKey is ongeldig.',
         });
       }
+
+      const targetLayerType = parsedTargetLayerType ?? inferPromptAssistTargetLayerTypeFromKey(targetLayerKey);
+      const assistActionId = parsedAssistActionId ?? 'compacter';
+
       if (!editorContext) {
         return errorResponse({
           request,
@@ -1395,7 +1430,9 @@ Deno.serve(async (request) => {
         apiKey: getOpenAiApiKey(),
         model: typeof versionData.model === 'string' && versionData.model.trim().length > 0 ? versionData.model : 'gpt-5.4-mini',
         taskKey,
+        targetLayerType,
         targetLayerKey,
+        assistActionId,
         assistIntent,
         context: editorContext,
       });
@@ -1408,7 +1445,9 @@ Deno.serve(async (request) => {
         requestId,
         flowId,
         preview: {
+          targetLayerType,
           targetLayerKey,
+          assistActionId,
           analysisSummary: result.analysisSummary,
           issues: result.issues,
           proposedText: result.proposedText,

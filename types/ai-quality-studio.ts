@@ -8,12 +8,33 @@ export type AiTestSourceType = 'entry' | 'day' | 'week' | 'month';
 export type AiDraftDerivationSource = 'live' | 'latest_draft' | 'latest_version' | 'empty';
 export type AiReviewLabel = 'beter' | 'gelijk' | 'slechter' | 'fout';
 
-export type EntryCleanupPromptAssistTargetLayer =
-  | 'systemRulesInstruction'
-  | 'generalInstruction'
-  | 'titleInstruction'
-  | 'bodyInstruction'
-  | 'summaryShortInstruction';
+export type AiPromptAssistTargetLayerType = 'system' | 'general' | 'field';
+
+export type AiPromptAssistTargetLayerKey = string;
+
+export type AiPromptAssistActionId =
+  | 'compacter'
+  | 'ontdubbelen'
+  | 'verhelderen'
+  | 'check_contract'
+  | 'check_overlap'
+  | 'verplaats_naar_juiste_laag'
+  | 'maak_strikter'
+  | 'check_outputvorm';
+
+export type AiPromptAssistActionPlacement = 'primary' | 'secondary';
+
+export type AiPromptAssistActionOutputType = 'text' | 'object' | 'list' | 'compound';
+
+export type AiPromptAssistActionDefinition = {
+  id: AiPromptAssistActionId;
+  label: string;
+  helper: string;
+  order: number;
+  placement: AiPromptAssistActionPlacement;
+  allowedTargetLayerTypes: AiPromptAssistTargetLayerType[];
+  relevantOutputTypes?: AiPromptAssistActionOutputType[];
+};
 
 export type AiPromptAssistIssueSeverity = 'info' | 'warning' | 'risk';
 export type AiPromptAssistIssueType = 'duplicate' | 'misplaced' | 'conflict';
@@ -27,11 +48,7 @@ export type AiPromptAssistIssue = {
 export type AiPromptAssistEditorContext = {
   systemRulesInstruction: string;
   generalInstruction: string;
-  fieldRules: {
-    titleInstruction: string;
-    bodyInstruction: string;
-    summaryShortInstruction: string;
-  };
+  fieldRules: Record<string, string>;
   outputContract?: Record<string, unknown>;
   taskMetadata?: Record<string, unknown>;
 };
@@ -39,13 +56,17 @@ export type AiPromptAssistEditorContext = {
 export type RunPromptAssistPreviewPayload = {
   taskKey: string;
   versionId: string;
-  targetLayerKey: EntryCleanupPromptAssistTargetLayer;
+  targetLayerType: AiPromptAssistTargetLayerType;
+  targetLayerKey: AiPromptAssistTargetLayerKey;
+  assistActionId: AiPromptAssistActionId;
   assistIntent?: string;
   editorContext: AiPromptAssistEditorContext;
 };
 
 export type AiPromptAssistPreviewResult = {
-  targetLayerKey: EntryCleanupPromptAssistTargetLayer;
+  targetLayerType: AiPromptAssistTargetLayerType;
+  targetLayerKey: AiPromptAssistTargetLayerKey;
+  assistActionId: AiPromptAssistActionId;
   analysisSummary: string;
   issues: AiPromptAssistIssue[];
   proposedText: string;
