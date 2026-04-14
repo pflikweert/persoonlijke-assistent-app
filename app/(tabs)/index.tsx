@@ -124,27 +124,41 @@ export default function TodayScreen() {
       fixedHeader={
         <ScreenHeader
           leftAction={
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Kies dag"
-              onPress={() => router.push("/days")}
-            >
-              <MaterialIcons
-                name="calendar-today"
-                size={18}
-                color={palette.primary}
-              />
-            </HeaderIconButton>
+            <ThemedView style={styles.brandLockup}>
+              <ThemedText type="sectionTitle" style={styles.brandPrimary}>
+                Budio
+              </ThemedText>
+              <ThemedText
+                type="sectionTitle"
+                style={[styles.brandSecondary, { color: palette.mutedSoft }]}
+              >
+                Vandaag
+              </ThemedText>
+            </ThemedView>
           }
           rightAction={
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Open menu"
-              onPress={() => setMenuVisible(true)}
-            >
-              <MaterialIcons name="menu" size={20} color={palette.primary} />
-            </HeaderIconButton>
+            <ThemedView style={styles.headerActions}>
+              <HeaderIconButton
+                accessibilityRole="button"
+                accessibilityLabel="Kies dag"
+                onPress={() => router.push("/days")}
+              >
+                <MaterialIcons
+                  name="calendar-today"
+                  size={18}
+                  color={palette.primary}
+                />
+              </HeaderIconButton>
+              <HeaderIconButton
+                accessibilityRole="button"
+                accessibilityLabel="Open menu"
+                onPress={() => setMenuVisible(true)}
+              >
+                <MaterialIcons name="menu" size={20} color={palette.primary} />
+              </HeaderIconButton>
+            </ThemedView>
           }
+          surface="transparent"
         />
       }
       contentContainerStyle={styles.scrollContent}
@@ -313,6 +327,27 @@ function isUsableTodaySummary(value: string | null): boolean {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
+  },
+  brandLockup: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing.xs,
+  },
+  brandPrimary: {
+    fontSize: 24,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+  },
+  brandSecondary: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "400",
+    letterSpacing: -0.4,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   compactText: {
     lineHeight: typography.roles.bodySecondary.lineHeight + 1,
