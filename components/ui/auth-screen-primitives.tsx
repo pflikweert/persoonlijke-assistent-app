@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  Image,
   StyleSheet,
   View,
   type StyleProp,
@@ -11,6 +12,8 @@ import { ThemedText } from "@/components/themed-text";
 import { AppBackground } from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { colorTokens, spacing, typography } from "@/theme";
+
+const BUDIO_VANDAAG_LOGO = require("../../design_refs/brand/budio-vandaag/logo/budio-vandaag-logo.png");
 
 export function AuthAmbientShell({
   children,
@@ -72,6 +75,39 @@ export function AuthHero({
         ]}
       >
         {subtitle}
+      </ThemedText>
+    </View>
+  );
+}
+
+export function AuthBrandMark({
+  compactViewport,
+  style,
+}: {
+  compactViewport: boolean;
+  style?: ViewStyle;
+}) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+
+  return (
+    <View style={[styles.brandWrap, compactViewport && styles.brandWrapCompact, style]}>
+      <View
+        style={[
+          styles.brandLogoShell,
+          compactViewport && styles.brandLogoShellCompact,
+          { backgroundColor: `${palette.surfaceLowest}D9` },
+        ]}
+      >
+        <Image
+          source={BUDIO_VANDAAG_LOGO}
+          accessibilityLabel="Budio Vandaag"
+          resizeMode="contain"
+          style={styles.brandLogo}
+        />
+      </View>
+      <ThemedText type="caption" style={[styles.brandLabel, { color: palette.muted }]}>
+        Budio Vandaag
       </ThemedText>
     </View>
   );
@@ -143,6 +179,33 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     gap: spacing.sm,
+  },
+  brandWrap: {
+    width: "100%",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  brandWrapCompact: {
+    gap: spacing.sm,
+  },
+  brandLogoShell: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  brandLogoShellCompact: {
+    width: 52,
+    height: 52,
+  },
+  brandLogo: {
+    width: "68%",
+    height: "68%",
+  },
+  brandLabel: {
+    textAlign: "center",
+    letterSpacing: 0.3,
   },
   formControls: {
     width: "100%",

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import {
   AuthAmbientShell,
+  AuthBrandMark,
   AuthFormStack,
   AuthHero,
   AuthTextSubtitle,
@@ -111,79 +112,84 @@ export default function SignInScreen() {
     >
       {uiState === "success" ? (
         <View style={styles.successWrap}>
-                <View style={styles.successIconCluster}>
-                  <View
-                    style={[
-                      styles.successIconShell,
-                      isCompactViewport && styles.successIconShellCompact,
-                      { backgroundColor: `${palette.primaryStrong}26` },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name="mark-email-read"
-                      size={54}
-                      color={palette.primary}
-                    />
-                  </View>
-                  <View
-                    style={[
-                      styles.successBadge,
-                      isCompactViewport && styles.successBadgeCompact,
-                      {
-                        backgroundColor: palette.surfaceLowest,
-                      },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name="check-circle"
-                      size={20}
-                      color={palette.primary}
-                    />
-                  </View>
-                </View>
+          <>
+            <AuthBrandMark compactViewport={isCompactViewport} />
 
-                <View style={styles.successCopy}>
-                  <ThemedText
-                    type="screenTitle"
-                    style={[
-                      styles.headline,
-                      isCompactViewport && styles.headlineCompact,
-                    ]}
-                  >
-                    De link is onderweg
-                  </ThemedText>
-                  <AuthTextSubtitle
-                    compactViewport={isCompactViewport}
-                    style={[
-                      { color: palette.muted },
-                    ]}
-                  >
-                    We hebben een inloglink gestuurd. Open de mail in je inbox
-                    om direct verder te gaan.
-                  </AuthTextSubtitle>
-                </View>
-
-                <NoticeCard
-                  title="Geen e-mail ontvangen?"
-                  body="Controleer ook je spam- of promotiesmap. Je kunt daarna opnieuw proberen."
+            <View style={styles.successIconCluster}>
+              <View
+                style={[
+                  styles.successIconShell,
+                  isCompactViewport && styles.successIconShellCompact,
+                  { backgroundColor: `${palette.primaryStrong}26` },
+                ]}
+              >
+                <MaterialIcons
+                  name="mark-email-read"
+                  size={54}
+                  color={palette.primary}
                 />
-
-                <Pressable onPress={handleBackToSignIn} style={styles.backLink}>
-                  <MaterialIcons
-                    name="arrow-back"
-                    size={18}
-                    color={palette.muted}
-                  />
-                  <ThemedText
-                    type="bodySecondary"
-                    style={{ color: palette.muted }}
-                  >
-                    Terug naar inloggen
-                  </ThemedText>
-                </Pressable>
               </View>
+              <View
+                style={[
+                  styles.successBadge,
+                  isCompactViewport && styles.successBadgeCompact,
+                  {
+                    backgroundColor: palette.surfaceLowest,
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name="check-circle"
+                  size={20}
+                  color={palette.primary}
+                />
+              </View>
+            </View>
+
+            <View style={styles.successCopy}>
+              <ThemedText
+                type="screenTitle"
+                style={[
+                  styles.headline,
+                  isCompactViewport && styles.headlineCompact,
+                ]}
+              >
+                De link is onderweg
+              </ThemedText>
+              <AuthTextSubtitle
+                compactViewport={isCompactViewport}
+                style={[
+                  { color: palette.muted },
+                ]}
+              >
+                Open de mail in je inbox om direct verder te gaan.
+              </AuthTextSubtitle>
+            </View>
+
+            <NoticeCard
+              title="Geen e-mail ontvangen?"
+              body="Controleer ook je spam- of promotiesmap. Je kunt daarna opnieuw proberen."
+            />
+
+            <Pressable onPress={handleBackToSignIn} style={styles.backLink}>
+              <MaterialIcons
+                name="arrow-back"
+                size={18}
+                color={palette.muted}
+              />
+              <ThemedText
+                type="bodySecondary"
+                style={{ color: palette.muted }}
+              >
+                Terug naar inloggen
+              </ThemedText>
+            </Pressable>
+          </>
+        </View>
       ) : (
         <View style={styles.formWrap}>
+          <AuthBrandMark compactViewport={isCompactViewport} />
+
           <AuthHero
             title="Vang je dag in woorden"
             subtitle="Voor momenten, gedachten en gebeurtenissen die je niet kwijt wilt raken."
@@ -195,6 +201,13 @@ export default function SignInScreen() {
           ) : null}
 
           <AuthFormStack>
+            <AuthTextSubtitle
+              compactViewport={isCompactViewport}
+              style={styles.formIntro}
+            >
+              Vul je e-mailadres in om een inloglink te ontvangen.
+            </AuthTextSubtitle>
+
             <InputField
               autoCapitalize="none"
               autoCorrect={false}
@@ -236,10 +249,9 @@ export default function SignInScreen() {
             />
           </AuthFormStack>
 
-          <NoticeCard
-            compact
-            body="We sturen je een eenmalige link om in te loggen."
-          />
+          <AuthTextSubtitle compactViewport={isCompactViewport} style={styles.footnote}>
+            Geen wachtwoorden nodig. Wij sturen een veilige link naar je inbox.
+          </AuthTextSubtitle>
         </View>
       )}
     </AuthAmbientShell>
@@ -320,6 +332,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xxl,
   },
+  formIntro: {
+    textAlign: "center",
+    maxWidth: 320,
+    alignSelf: "center",
+  },
   headline: {
     textAlign: "center",
     fontSize: 40,
@@ -370,6 +387,11 @@ const styles = StyleSheet.create({
   successCopy: {
     alignItems: "center",
     gap: spacing.md,
+  },
+  footnote: {
+    textAlign: "center",
+    maxWidth: 260,
+    opacity: 0.76,
   },
   backLink: {
     flexDirection: "row",
