@@ -22,7 +22,7 @@ type MenuEntry = {
   key: MainMenuRouteKey | "settings" | "libium" | "logout";
   label: string;
   icon: keyof typeof MaterialIcons.glyphMap;
-  visible: boolean;
+  section: "primary" | "utility";
   route?: string;
   action?: "logout";
 };
@@ -31,44 +31,43 @@ const MENU_ENTRIES: MenuEntry[] = [
   {
     key: "today",
     label: "Vandaag",
-    icon: "auto-awesome",
-    visible: true,
+    icon: "today",
+    section: "primary",
     route: "/(tabs)",
   },
   {
     key: "capture",
     label: "Vastleggen",
-    icon: "add-circle",
-    visible: true,
+    icon: "mic-none",
+    section: "primary",
     route: "/capture",
   },
   {
     key: "days",
     label: "Dagen",
     icon: "calendar-today",
-    visible: true,
+    section: "primary",
     route: "/days",
   },
   {
     key: "reflections",
     label: "Reflecties",
-    icon: "menu-book",
-    visible: true,
+    icon: "auto-awesome",
+    section: "primary",
     route: "/reflections",
   },
   {
     key: "settings",
     label: "Instellingen",
     icon: "settings",
-    visible: true,
+    section: "utility",
     route: "/settings",
   },
-  { key: "libium", label: "Bibliotheek", icon: "book", visible: false },
   {
     key: "logout",
     label: "Uitloggen",
     icon: "logout",
-    visible: true,
+    section: "utility",
     action: "logout",
   },
 ];
@@ -86,16 +85,20 @@ export function FullscreenMenuOverlay({
   const palette = colorTokens[scheme];
   const [busy, setBusy] = useState(false);
 
-  const routeEntries = useMemo(
+  const primaryRouteEntries = useMemo(
     () =>
       MENU_ENTRIES.filter(
         (entry): entry is MenuEntry & { route: string } =>
-          entry.visible && Boolean(entry.route),
+          entry.section === "primary" && Boolean(entry.route),
       ),
     [],
   );
+  const settingsEntry = useMemo(
+    () => MENU_ENTRIES.find((entry) => entry.key === "settings" && Boolean(entry.route)),
+    [],
+  );
   const logoutEntry = useMemo(
-    () => MENU_ENTRIES.find((entry) => entry.key === "logout" && entry.visible),
+    () => MENU_ENTRIES.find((entry) => entry.key === "logout"),
     [],
   );
 
@@ -136,9 +139,19 @@ export function FullscreenMenuOverlay({
       onRequestClose={onRequestClose}
     >
       <ThemedView style={styles.overlay}>
-        <AppBackground tone="flat" />
+        <AppBackground tone="ambient" />
         <ThemedView style={styles.topBar}>
-          <ThemedText type="sectionTitle">Persoonlijke Assistent</ThemedText>
+          <ThemedView style={styles.brandLockup}>
+            <ThemedText type="sectionTitle" style={styles.brandPrimary}>
+              Budio
+            </ThemedText>
+            <ThemedText
+              type="sectionTitle"
+              style={[styles.brandSecondary, { color: palette.mutedSoft }]}
+            >
+              Vandaag
+            </ThemedText>
+          </ThemedView>
           <HeaderIconButton
             accessibilityRole="button"
             accessibilityLabel="Sluit menu"
@@ -149,7 +162,7 @@ export function FullscreenMenuOverlay({
         </ThemedView>
 
         <ThemedView style={styles.listWrap}>
-          {routeEntries.map((entry) => {
+          {primaryRouteEntries.map((entry) => {
             const active = entry.key === currentRouteKey;
             return (
               <Pressable
@@ -157,55 +170,78 @@ export function FullscreenMenuOverlay({
                 onPress={() => void handleSelect(entry)}
                 style={styles.menuRow}
               >
-                <ThemedText
-                  style={[
-                    styles.menuLabel,
-                    { color: active ? palette.primary : palette.mutedSoft },
-                  ]}
-                >
-                  {entry.label}
-                </ThemedText>
-                <ThemedView style={styles.menuRowRight}>
-                  {active ? (
-                    <ThemedView
-                      style={[
-                        styles.activeDot,
-                        { backgroundColor: palette.primary },
-                      ]}
-                    />
-                  ) : null}
+                <ThemedView style={styles.menuRowLeft}>
                   <MaterialIcons
                     name={entry.icon}
-                    size={20}
+                    size={30}
                     color={active ? palette.primary : palette.mutedSoft}
                   />
+                  <ThemedText
+                    style={[
+                      styles.menuLabel,
+                      { color: active ? palette.primary : palette.mutedSoft },
+                    ]}
+                  >
+                    {entry.label}
+                  </ThemedText>
                 </ThemedView>
+                {active ? (
+                  <ThemedView
+                    style={[
+                      styles.activeDot,
+                      { backgroundColor: palette.primary },
+                    ]}
+                  />
+                ) : null}
               </Pressable>
             );
           })}
         </ThemedView>
 
-        {logoutEntry ? (
-          <ThemedView style={styles.footer}>
+        <ThemedView style={styles.footer}>
+          <ThemedView style={[styles.utilityDivider, { backgroundColor: `${palette.border}66` }]} />
+          {settingsEntry ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={settingsEntry.label}
+              onPress={() => void handleSelect(settingsEntry)}
+              style={styles.utilityButton}
+            >
+              <MaterialIcons
+                name={settingsEntry.icon}
+                size={22}
+                color={currentRouteKey === "settings" ? palette.text : palette.mutedSoft}
+              />
+              <ThemedText
+                style={[
+                  styles.utilityLabel,
+                  { color: currentRouteKey === "settings" ? palette.text : palette.mutedSoft },
+                ]}
+              >
+                {settingsEntry.label}
+              </ThemedText>
+            </Pressable>
+          ) : null}
+          {logoutEntry ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={logoutEntry.label}
               onPress={() => void handleSelect(logoutEntry)}
-              style={styles.logoutButton}
+              style={styles.utilityButton}
             >
+              <MaterialIcons
+                name={logoutEntry.icon}
+                size={22}
+                color={palette.mutedSoft}
+              />
               <ThemedText
-                style={[styles.logoutLabel, { color: palette.muted }]}
+                style={[styles.utilityLabel, { color: palette.mutedSoft }]}
               >
                 {logoutEntry.label}
               </ThemedText>
-              <MaterialIcons
-                name={logoutEntry.icon}
-                size={18}
-                color={palette.muted}
-              />
             </Pressable>
-          </ThemedView>
-        ) : null}
+          ) : null}
+        </ThemedView>
       </ThemedView>
     </Modal>
   );
@@ -215,36 +251,53 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     paddingHorizontal: spacing.page,
-    paddingTop: spacing.xl + spacing.xs,
+    paddingTop: spacing.xl,
     paddingBottom: spacing.xl,
   },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.xxl,
+    minHeight: 56,
+    marginBottom: spacing.xl,
+  },
+  brandLockup: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing.xs,
+  },
+  brandPrimary: {
+    fontSize: 24,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+  },
+  brandSecondary: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "400",
+    letterSpacing: -0.4,
   },
   listWrap: {
-    gap: spacing.xl,
+    marginTop: spacing.xl,
+    gap: spacing.md,
   },
   menuRow: {
-    minHeight: 44,
+    minHeight: 62,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  menuLabel: {
-    fontFamily: typography.families.sans,
-    fontSize: 35,
-    lineHeight: 40,
-    letterSpacing: -0.5,
-    fontWeight: "500",
-  },
-  menuRowRight: {
+  menuRowLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "transparent",
+    gap: spacing.lg,
+  },
+  menuLabel: {
+    fontFamily: typography.families.sans,
+    fontSize: 31,
+    lineHeight: 36,
+    letterSpacing: -0.5,
+    fontWeight: "600",
   },
   activeDot: {
     width: 6,
@@ -253,17 +306,22 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: "auto",
-    paddingTop: spacing.lg,
+    paddingTop: spacing.xl,
+    gap: spacing.lg,
   },
-  logoutButton: {
+  utilityDivider: {
+    width: 44,
+    height: 1,
+  },
+  utilityButton: {
     minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: spacing.md,
   },
-  logoutLabel: {
-    fontSize: 22,
-    lineHeight: 28,
+  utilityLabel: {
+    fontSize: 18,
+    lineHeight: 24,
     letterSpacing: -0.2,
     fontWeight: "500",
   },
