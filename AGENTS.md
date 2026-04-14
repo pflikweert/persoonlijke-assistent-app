@@ -125,6 +125,8 @@ Voor AI-gedrag, prompting en evaluatie:
 - Every UI polish or design change must be checked in both dark and light mode before it is considered done.
 - Noem design-implementatie pas klaar na bewijs: check tegen relevante `design_refs`, gerichte runtime/smoke-check en verplichte verify-output voor de taak.
 - Houd productfeature, tooling en verify-tooling gescheiden: status/docs alleen ophogen met hard bewijs uit code, runtime of expliciete projectdocs.
+- Runtime-code mag nooit assets direct uit `design_refs/**` importeren of exposen.
+- Promoveer herbruikbare merk- of schermassets altijd eerst naar een publieke assetlocatie onder `assets/**` voordat app-code ze gebruikt.
 
 ## Kosten- en inputregels
 
@@ -161,6 +163,7 @@ Na relevante wijzigingen expliciet melden welke extra stap nodig is:
 Standaarduitvoering:
 
 - Bij `supabase/migrations/**` wijzigingen voert Codex deze lokale DB-stap standaard zelf uit (`npx supabase db push --local` of, indien nodig, `npx supabase db reset`) zonder extra gebruikersprompt.
+- Als runtime of errors tonen dat een al bestaande migratie lokaal nog niet is toegepast (bijv. missende tabel/kolom), voert Codex ook dan direct `npx supabase db push --local` uit zonder extra gebruikersprompt.
 
 Regel:
 

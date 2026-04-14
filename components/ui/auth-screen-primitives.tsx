@@ -1,19 +1,19 @@
 import type { ReactNode } from "react";
 import {
-  Image,
   StyleSheet,
   View,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import { Image } from "expo-image";
 
 import { ThemedText } from "@/components/themed-text";
 import { AppBackground } from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { colorTokens, spacing, typography } from "@/theme";
 
-const BUDIO_VANDAAG_LOGO = require("../../design_refs/brand/budio-vandaag/logo/budio-vandaag-logo.png");
+const BUDIO_VANDAAG_LOGO = require("../../assets/images/brand/budio-vandaag-logo.svg");
 
 export function AuthAmbientShell({
   children,
