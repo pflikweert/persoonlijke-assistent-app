@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Budio Vandaag - Menu</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "surface-bright": "#faf9f4",
+                        "surface-container": "#efeee9",
+                        "surface-dim": "#dbdad5",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#574400",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#f0c115",
+                        "primary-fixed": "#ffe08a",
+                        "on-surface": "#1b1c19",
+                        "on-surface-variant": "#4e4633",
+                        "on-secondary-fixed-variant": "#4e4634",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#ebdec6",
+                        "surface": "#faf9f4",
+                        "primary-container": "#e6b800",
+                        "on-tertiary-fixed": "#241a00",
+                        "inverse-surface": "#30312e",
+                        "on-primary-fixed-variant": "#574400",
+                        "surface-variant": "#e3e3de",
+                        "on-primary-container": "#5e4a00",
+                        "on-tertiary-container": "#5e4a00",
+                        "tertiary-container": "#e6b800",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffe08a",
+                        "tertiary-fixed-dim": "#f0c115",
+                        "on-secondary-fixed": "#211b0c",
+                        "on-primary-fixed": "#241a00",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-container-highest": "#e3e3de",
+                        "surface-tint": "#745b00",
+                        "secondary": "#665e4a",
+                        "on-background": "#1b1c19",
+                        "surface-container-low": "#f5f4ef",
+                        "outline": "#807660",
+                        "primary-fixed-dim": "#f0c115",
+                        "on-secondary-container": "#6a624e",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e9e8e3",
+                        "secondary-fixed": "#eee1c9",
+                        "secondary-fixed-dim": "#d1c5ae",
+                        "tertiary": "#745b00",
+                        "primary": "#745b00",
+                        "outline-variant": "#d1c5ac",
+                        "on-primary": "#ffffff",
+                        "background": "#faf9f4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "xxl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #faf9f4;
+            color: #1b1c19;
+            -webkit-font-smoothing: antialiased;
+        }
+        .bg-ambient {
+            background: radial-gradient(120% 90% at 20% 0%, #FFFFFF 0%, #FAF9F4 52%, #F1EEE6 100%),
+                        linear-gradient(180deg, rgba(230, 184, 0, 0.12) 0%, rgba(230, 184, 0, 0) 42%, rgba(214, 194, 152, 0.18) 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400;
+        }
+    </style>
+</head>
+<body class="antialiased text-on-surface">
+<main class="min-h-screen flex flex-col bg-ambient overflow-hidden">
+<!-- Header: Exact style from SCREEN_235 -->
+<header class="bg-transparent flex justify-between items-center px-6 h-20 w-full z-50">
+<div class="flex items-center gap-1">
+<span class="text-xl font-bold tracking-tight text-[#1B1C1A]">Budio</span>
+<span class="text-xl font-normal tracking-tight text-[#736A56]">Vandaag</span>
+</div>
+<button aria-label="Sluit menu" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors active:scale-95 duration-140">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="close">close</span>
+</button>
+</header>
+<!-- Navigation Content -->
+<nav class="flex-grow flex flex-col px-8 pt-12">
+<!-- Main Navigation List -->
+<div class="space-y-2">
+<!-- Vandaag (Active State: Refined and Intentional) -->
+<a class="flex items-center group py-4 relative" href="#">
+<div class="flex items-center space-x-6 text-primary">
+<span class="material-symbols-outlined text-[28px] active-icon" data-icon="today">today</span>
+<span class="text-[28px] font-bold tracking-tight">Vandaag</span>
+</div>
+<!-- Refined active indicator dot -->
+<div class="absolute -left-4 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(230,184,0,0.6)]"></div>
+</a>
+<!-- Vastleggen -->
+<a class="flex items-center py-4 group transition-all duration-200 hover:translate-x-1" href="#">
+<div class="flex items-center space-x-6 text-on-surface-variant group-hover:text-on-surface">
+<span class="material-symbols-outlined text-[28px]" data-icon="mic_none">mic_none</span>
+<span class="text-[28px] font-medium tracking-tight">Vastleggen</span>
+</div>
+</a>
+<!-- Dagen -->
+<a class="flex items-center py-4 group transition-all duration-200 hover:translate-x-1" href="#">
+<div class="flex items-center space-x-6 text-on-surface-variant group-hover:text-on-surface">
+<span class="material-symbols-outlined text-[28px]" data-icon="calendar_today">calendar_today</span>
+<span class="text-[28px] font-medium tracking-tight">Dagen</span>
+</div>
+</a>
+<!-- Reflecties -->
+<a class="flex items-center py-4 group transition-all duration-200 hover:translate-x-1" href="#">
+<div class="flex items-center space-x-6 text-on-surface-variant group-hover:text-on-surface">
+<span class="material-symbols-outlined text-[28px]" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-[28px] font-medium tracking-tight">Reflecties</span>
+</div>
+</a>
+</div>
+<!-- Spacer to balance vertical rhythm -->
+<div class="flex-grow"></div>
+<!-- Secondary Navigation & Footer -->
+<div class="pb-12 space-y-8">
+<!-- Divider -->
+<div class="h-[1px] w-12 bg-outline-variant opacity-30"></div>
+<div class="space-y-6">
+<!-- Instellingen (Quieter secondary option) -->
+<a class="flex items-center space-x-5 text-on-surface-variant hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="settings">settings</span>
+<span class="text-[18px] font-medium tracking-tight">Instellingen</span>
+</a>
+<!-- Uitloggen (Footer position) -->
+<a class="flex items-center space-x-5 text-on-surface-variant hover:text-error transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="logout">logout</span>
+<span class="text-[18px] font-medium tracking-tight">Uitloggen</span>
+</a>
+</div>
+</div>
+</nav>
+</main>
+<!-- Background Grain Overlay -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] contrast-150 brightness-100" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBB6uvemdBuSDwch5fXT54_Y0Kxwf6mLYcbX0AFNOSSsBHH5yYn9YUWWCnsBsY553yeLPMfFiL6uX3Vd8PVa5-EuScReM88HNaPVjZW4B2clBJiY2Lmtk5WRSOQmqP6uhxZeSvwRQ-vf_-T23T8tiZplfvVWG7I-NmJXYD_pS62rqZ0L2hYTnbLEm9esBPZ5_cgB6RFVassjBG6leCwTMOfMtBaj5gpSRrB_LGui6PnijRtCux7l30TSGq6MFt9XVXLZaKYETeBSYvW');"></div>
+</body></html>

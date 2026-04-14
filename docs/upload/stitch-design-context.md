@@ -2,8 +2,8 @@
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-14T11:40:49.894Z
-Source Commit: b6319e3
+Build Timestamp (UTC): 2026-04-14T17:03:45.853Z
+Source Commit: 1fd6d2d
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,9 +15,13 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - AGENTS.md
 - .agents/skills/ui-implementation-guardrails/SKILL.md
 - .agents/skills/stitch-redesign-execution/SKILL.md
+- design_refs/1.2.1/auth_branded/DESIGN.md
 - design_refs/1.2.1/entry_voltooid/DESIGN.md
 - design_refs/1.2.1/fullscreen_menu overlay/DESIGN.md
+- design_refs/1.2.1/fullscreen_menu_branded/DESIGN.md
 - design_refs/1.2.1/journal_entry_iconic_result/DESIGN2.md
+- design_refs/1.2.1/README.md
+- design_refs/1.2.1/today_branded_header/DESIGN.md
 
 ## Handoff Samenvatting
 - Capture-first blijft leidend: de app is een snelle, rustige persoonlijke thinking tool, geen dashboard of chatinterface.
@@ -44,9 +48,13 @@ Afgeleid uit `theme/tokens.ts`; die file blijft de enige tokenbron.
 ## Per-page Markdown Refs
 Deze markdown refs onder `design_refs/1.2.1/**` zijn meegenomen als aanvullende design input wanneer aanwezig.
 
+- design_refs/1.2.1/auth_branded/DESIGN.md
 - design_refs/1.2.1/entry_voltooid/DESIGN.md
 - design_refs/1.2.1/fullscreen_menu overlay/DESIGN.md
+- design_refs/1.2.1/fullscreen_menu_branded/DESIGN.md
 - design_refs/1.2.1/journal_entry_iconic_result/DESIGN2.md
+- design_refs/1.2.1/README.md
+- design_refs/1.2.1/today_branded_header/DESIGN.md
 
 Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze generated handoff houdt alleen de verwijzingen compact bij.
 

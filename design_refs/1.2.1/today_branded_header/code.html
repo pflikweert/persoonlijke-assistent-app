@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#807660",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffe08a",
+                        "on-tertiary-fixed": "#241a00",
+                        "primary-fixed-dim": "#f0c115",
+                        "on-surface": "#1b1c19",
+                        "inverse-surface": "#30312e",
+                        "secondary-container": "#ebdec6",
+                        "background": "#faf9f4",
+                        "outline-variant": "#d1c5ac",
+                        "surface-container-high": "#e9e8e3",
+                        "on-secondary-fixed-variant": "#4e4634",
+                        "surface-tint": "#745b00",
+                        "surface-variant": "#e3e3de",
+                        "on-tertiary-fixed-variant": "#574400",
+                        "tertiary": "#745b00",
+                        "inverse-on-surface": "#f2f1ec",
+                        "secondary-fixed": "#eee1c9",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#4e4633",
+                        "on-secondary-container": "#6a624e",
+                        "on-primary-fixed-variant": "#574400",
+                        "on-background": "#1b1c19",
+                        "on-secondary-fixed": "#211b0c",
+                        "inverse-primary": "#f0c115",
+                        "secondary": "#665e4a",
+                        "on-primary-container": "#5e4a00",
+                        "surface-container-low": "#f5f4ef",
+                        "surface-container": "#efeee9",
+                        "surface-bright": "#faf9f4",
+                        "surface": "#faf9f4",
+                        "primary": "#745b00",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#dbdad5",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#241a00",
+                        "surface-container-highest": "#e3e3de",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#ffe08a",
+                        "on-error": "#ffffff",
+                        "primary-container": "#e6b800",
+                        "tertiary-container": "#e6b800",
+                        "on-tertiary-container": "#5e4a00",
+                        "tertiary-fixed-dim": "#f0c115",
+                        "secondary-fixed-dim": "#d1c5ae"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "xxl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #faf9f4;
+            color: #1b1c19;
+            -webkit-font-smoothing: antialiased;
+        }
+        .ambient-bg {
+            background: radial-gradient(120% 90% at 20% 0%, #FFFFFF 0%, #FAF9F4 52%, #F1EEE6 100%),
+                        linear-gradient(180deg, rgba(230, 184, 0, 0.12) 0%, rgba(230, 184, 0, 0) 42%, rgba(214, 194, 152, 0.18) 100%);
+        }
+        .primary-gradient {
+            background: linear-gradient(180deg, #F0C115 0%, #E6B800 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="ambient-bg min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-transparent flex justify-between items-center px-6 h-20 w-full fixed top-0 z-50">
+<div class="flex items-center gap-1">
+<span class="text-xl font-bold tracking-tight text-[#1B1C1A]">Budio</span>
+<span class="text-xl font-normal tracking-tight text-[#736A56]">Vandaag</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors active:scale-95 duration-140">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px]" data-icon="menu">menu</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-1 px-6 pb-32 max-w-lg mx-auto w-full mt-20">
+<!-- Hero Section -->
+<section class="pt-12 pb-10 text-center">
+<h1 class="text-[34px] font-bold tracking-[-0.5px] text-on-surface mb-8">Vandaag</h1>
+<!-- Primary CTA: Nieuwe entry -->
+<button class="primary-gradient w-full h-14 rounded-full flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-140">
+<span class="material-symbols-outlined text-on-tertiary-fixed" data-icon="mic">mic</span>
+<span class="text-[16px] font-bold tracking-[0.2px] text-on-tertiary-fixed">Nieuwe entry</span>
+</button>
+<p class="mt-4 text-sm text-on-surface-variant opacity-70">Spreek of schrijf iets</p>
+</section>
+<!-- Recent Content Section -->
+<section class="space-y-6">
+<div class="flex justify-between items-center">
+<h2 class="text-[20px] font-semibold tracking-[-0.2px] text-on-surface">Recent</h2>
+<button class="text-xs font-semibold tracking-wider uppercase text-on-surface-variant hover:text-primary transition-colors">Bekijk alles</button>
+</div>
+<!-- List of 2 scannable items -->
+<div class="space-y-3">
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest/40 border border-separator p-4 rounded-xl hover:bg-surface-container-lowest/60 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[11px] font-bold uppercase tracking-[1.1px] text-muted-soft">Gisteren, 21:45</span>
+<span class="material-symbols-outlined text-[16px] text-muted-soft group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+<p class="text-[15px] leading-relaxed text-on-surface line-clamp-2">Nagedacht over de presentatie van morgen. De kernboodschap moet rustiger en meer gefocust op de menselijke kant van het proces...</p>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest/40 border border-separator p-4 rounded-xl hover:bg-surface-container-lowest/60 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-1">
+<span class="text-[11px] font-bold uppercase tracking-[1.1px] text-muted-soft">Maandag, 08:30</span>
+<span class="material-symbols-outlined text-[16px] text-muted-soft group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+<p class="text-[15px] leading-relaxed text-on-surface line-clamp-2">Ochtendwandeling in de regen. Het geluid van de druppels hielp om mijn gedachten te ordenen voor de rest van de week.</p>
+</div>
+</div>
+</section>
+<!-- Reflection Preview (Subtle secondary element) -->
+<section class="mt-12 pt-8 border-t border-separator">
+<div class="bg-primary-container/10 p-5 rounded-xxl text-center border border-primary-container/20">
+<span class="material-symbols-outlined text-primary mb-2" data-icon="auto_stories">auto_stories</span>
+<h3 class="text-[15px] font-semibold text-on-surface-variant mb-1">Terugblik van de week</h3>
+<p class="text-sm text-on-surface-variant/80">Je bent deze week vooral gefocust op groei en balans.</p>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-8 bg-[#FAF9F6EE] backdrop-blur-md border-t border-[#DED6C4]">
+<!-- Vandaag (Active) -->
+<a class="flex flex-col items-center justify-center text-[#745B00] font-bold hover:opacity-80 transition-opacity active:scale-95 duration-140" href="#">
+<span class="material-symbols-outlined active-icon" data-icon="today">today</span>
+<span class="text-[12px] font-medium tracking-[0.2px] mt-1">Vandaag</span>
+</a>
+<!-- Capture -->
+<a class="flex flex-col items-center justify-center text-[#736A56] hover:text-[#1B1C1A] transition-colors active:scale-95 duration-140" href="#">
+<span class="material-symbols-outlined" data-icon="mic_none">mic_none</span>
+<span class="text-[12px] font-medium tracking-[0.2px] mt-1">Capture</span>
+</a>
+<!-- Terugblik -->
+<a class="flex flex-col items-center justify-center text-[#736A56] hover:text-[#1B1C1A] transition-colors active:scale-95 duration-140" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="text-[12px] font-medium tracking-[0.2px] mt-1">Terugblik</span>
+</a>
+</nav>
+</body></html>

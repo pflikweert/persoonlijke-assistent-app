@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html class="light" lang="nl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"outline-variant": "#d1c5ac", "surface-container-highest": "#e3e3de", "on-primary-container": "#5e4a00", "on-secondary": "#ffffff", "secondary-fixed": "#eee1c9", "surface-variant": "#e3e3de", "surface-container-high": "#e9e8e3", "surface-tint": "#745b00", "primary-fixed": "#ffe08a", "on-secondary-fixed": "#211b0c", "on-error-container": "#93000a", "inverse-primary": "#f0c115", "on-secondary-container": "#6a624e", "on-primary-fixed": "#241a00", "tertiary-fixed": "#ffe08a", "surface-container-lowest": "#ffffff", background: "#faf9f4", outline: "#807660", "secondary-fixed-dim": "#d1c5ae", "on-primary": "#ffffff", "on-surface-variant": "#4e4633", "surface-container": "#efeee9", "inverse-on-surface": "#f2f1ec", "surface-container-low": "#f5f4ef", "primary-fixed-dim": "#f0c115", "on-surface": "#1b1c19", error: "#ba1a1a", "on-primary-fixed-variant": "#574400", primary: "#745b00", "on-tertiary": "#ffffff", surface: "#faf9f4", "primary-container": "#e6b800", "tertiary-fixed-dim": "#f0c115", "inverse-surface": "#30312e", tertiary: "#745b00", "on-error": "#ffffff", "on-tertiary-fixed-variant": "#574400", "surface-bright": "#faf9f4", "on-background": "#1b1c19", "on-tertiary-fixed": "#241a00", "tertiary-container": "#e6b800", "on-tertiary-container": "#5e4a00", "surface-dim": "#dbdad5", "secondary-container": "#ebdec6", "on-secondary-fixed-variant": "#4e4634", "error-container": "#ffdad6", secondary: "#665e4a"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, fontFamily: {headline: ["Inter"], body: ["Inter"], label: ["Inter"], display: "Inter"}}}};</script>
+<style>
+        body { font-family: "Inter", sans-serif }
+        .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24 }
+        .budio-logo-text { font-weight: 800; letter-spacing: -0.04em }
+        body { min-height: max(884px, 100dvh); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<header class="bg-[#FAF9F4] dark:bg-[#171714] border-b border-[#DED6C4] dark:border-[#5C5548] fixed top-0 w-full z-50">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#E6B800] dark:text-[#F3C53A]">menu</span>
+<h1 class="text-lg font-bold tracking-tight text-[#1B1C1A] dark:text-[#F4F1E8]">Budio Vandaag Brand Foundation</h1>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-xs">person</span>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-5xl mx-auto space-y-16">
+<section class="space-y-8">
+<div class="space-y-2">
+<p class="font-sans text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">01. Architectuur</p>
+<h2 class="text-[34px] leading-[40px] font-bold tracking-[-0.5px]">Brand Architecture</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-8 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<p class="text-xs font-semibold text-muted-soft mb-2 uppercase tracking-wider">Parent Brand</p>
+<p class="text-2xl font-extrabold tracking-tighter">Budio</p>
+</div>
+<div class="p-8 rounded-xl bg-surface-container border border-primary-container/20 ring-1 ring-primary-container/10">
+<p class="text-xs font-semibold text-primary mb-2 uppercase tracking-wider">Product Brand</p>
+<p class="text-2xl font-extrabold tracking-tighter">Budio Vandaag</p>
+</div>
+<div class="p-8 rounded-xl bg-surface-container-low border border-outline-variant/30">
+<p class="text-xs font-semibold text-muted-soft mb-2 uppercase tracking-wider">In-app Shorthand</p>
+<p class="text-2xl font-extrabold tracking-tighter">Vandaag</p>
+</div>
+</div>
+</section>
+<section class="space-y-8">
+<div class="space-y-2">
+<p class="font-sans text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">02. Assets</p>
+<h2 class="text-[34px] leading-[40px] font-bold tracking-[-0.5px]">Asset Usage</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="space-y-4">
+<div class="aspect-square rounded-2xl bg-white border border-outline-variant flex flex-col items-center justify-center p-8 text-center overflow-hidden">
+<img alt="Budio Vandaag Lockup" class="w-full h-auto max-w-[180px] object-contain mb-4" src="https://lh3.googleusercontent.com/aida/ADBb0ugDcKVDXBlpQxG8QxK3GMyME3Hhp-GR8rRl1Mv03-3C4-50dIJSGLQ0ICrxrIdaOtCeEU_MtqAOvlYAWSlB-yi-A1pwTKRSkGXNEPhjbKfy6HST-iwe8GEdw7D-d8sl5ChbVSCrlaS0In2WG9fNdfEBu5ZbAv_PGt5f4URaYUmAUMHDfRQ1Q_gp7eVi4u37Ez9N5Kbg0knspBGg0FoPeBv-j3SqdsMqIufID7dUyzE922bKutRpbDw5hmu1tboybG1BZqCFFS_fU4s"/>
+<div class="w-full h-[1px] bg-outline-variant/20 mb-4"></div>
+<p class="text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">Primary Product Lockup</p>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">Full brand expression. Use for headers, landing states, and high-visibility entry points.</p>
+</div>
+<div class="space-y-4">
+<div class="aspect-square rounded-2xl bg-white border border-outline-variant flex flex-col items-center justify-center p-8 text-center overflow-hidden">
+<div class="mb-4 h-12 flex items-center justify-center">
+<img alt="Compact UI Expression" class="h-5 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ugDcKVDXBlpQxG8QxK3GMyME3Hhp-GR8rRl1Mv03-3C4-50dIJSGLQ0ICrxrIdaOtCeEU_MtqAOvlYAWSlB-yi-A1pwTKRSkGXNEPhjbKfy6HST-iwe8GEdw7D-d8sl5ChbVSCrlaS0In2WG9fNdfEBu5ZbAv_PGt5f4URaYUmAUMHDfRQ1Q_gp7eVi4u37Ez9N5Kbg0knspBGg0FoPeBv-j3SqdsMqIufID7dUyzE922bKutRpbDw5hmu1tboybG1BZqCFFS_fU4s" style="object-position: 0 12%; transform: scale(3);"/>
+</div>
+<div class="w-full h-[1px] bg-outline-variant/20 mb-4"></div>
+<p class="text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">Compact UI Mark</p>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">Utility-focused shorthand. Use for toolbars, sidebars, and constrained UI spaces.</p>
+</div>
+<div class="space-y-4">
+<div class="aspect-square rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col items-center justify-center p-8 text-center">
+<div class="w-20 h-20 rounded-[22%] overflow-hidden shadow-sm border border-black/5 mb-4">
+<img alt="App Icon" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0ugDcKVDXBlpQxG8QxK3GMyME3Hhp-GR8rRl1Mv03-3C4-50dIJSGLQ0ICrxrIdaOtCeEU_MtqAOvlYAWSlB-yi-A1pwTKRSkGXNEPhjbKfy6HST-iwe8GEdw7D-d8sl5ChbVSCrlaS0In2WG9fNdfEBu5ZbAv_PGt5f4URaYUmAUMHDfRQ1Q_gp7eVi4u37Ez9N5Kbg0knspBGg0FoPeBv-j3SqdsMqIufID7dUyzE922bKutRpbDw5hmu1tboybG1BZqCFFS_fU4s"/>
+</div>
+<div class="w-full h-[1px] bg-outline-variant/20 mb-4"></div>
+<p class="text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">App Icon Usage</p>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">Identifiable silhouette for home screen usage and system task switchers.</p>
+</div>
+</div>
+</section>
+<section class="space-y-8">
+<div class="space-y-2">
+<p class="font-sans text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">03. Shell Principles</p>
+<h2 class="text-[34px] leading-[40px] font-bold tracking-[-0.5px]">Structural Guidelines</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+<div class="flex gap-6 items-start">
+<div class="w-12 h-12 flex-shrink-0 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">login</span>
+</div>
+<div class="space-y-2">
+<h4 class="text-lg font-bold tracking-tight">Auth Usage</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Atmospheric backgrounds only. Focus on whitespace and typography. Avoid heavy enclosing cards that break the "paper" feel.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="w-12 h-12 flex-shrink-0 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">dock_to_bottom</span>
+</div>
+<div class="space-y-2">
+<h4 class="text-lg font-bold tracking-tight">TopNav Usage</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Functional navigation only. Keep headers small and navigation-only. The page title and supporting copy always belong in the content hero section below the navigation shell.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="w-12 h-12 flex-shrink-0 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</div>
+<div class="space-y-2">
+<h4 class="text-lg font-bold tracking-tight">Settings / About</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Maintain branding through typography and color palette, but prioritize utility. Standard list patterns are acceptable here.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="w-12 h-12 flex-shrink-0 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="space-y-2">
+<h4 class="text-lg font-bold tracking-tight">Reflection Marker</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">A subtle functional marker for insights or summaries. Use as a contextual indicator for smart features, never competing with the primary lockup as a sub-brand.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-2 gap-12 pt-8">
+<div class="space-y-6">
+<div class="space-y-2">
+<p class="font-sans text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">Visual Logic</p>
+<h3 class="text-2xl font-bold tracking-tight">Design Essence</h3>
+</div>
+<div class="space-y-6">
+<div class="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-4">
+<div class="flex gap-2">
+<div class="w-6 h-6 rounded bg-background border border-outline-variant"></div>
+<div class="w-6 h-6 rounded bg-surface-container"></div>
+<div class="w-6 h-6 rounded bg-primary-container"></div>
+</div>
+<p class="text-sm font-semibold">Color: Calm neutral surfaces, primary accent reserved for CTAs and small emphasis.</p>
+</div>
+<div class="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-1">
+<p class="text-xl font-bold tracking-tight">Editorial Type</p>
+<p class="text-sm font-semibold">Typography: Calm, readable, editorial sans-serif hierarchy.</p>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="space-y-2">
+<p class="font-sans text-[11px] font-semibold tracking-[1.1px] uppercase text-on-surface-variant">Implementation</p>
+<h3 class="text-2xl font-bold tracking-tight">Do's &amp; Don'ts</h3>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-3 text-sm font-semibold text-green-700 bg-green-50 px-4 py-3 rounded-lg border border-green-100">
+<span class="material-symbols-outlined text-base">check_circle</span>
+<span>Use whitespace as a functional element.</span>
+</div>
+<div class="flex items-center gap-3 text-sm font-semibold text-green-700 bg-green-50 px-4 py-3 rounded-lg border border-green-100">
+<span class="material-symbols-outlined text-base">check_circle</span>
+<span>Prioritize content hierarchy over UI chrome.</span>
+</div>
+<div class="flex items-center gap-3 text-sm font-semibold text-green-700 bg-green-50 px-4 py-3 rounded-lg border border-green-100">
+<span class="material-symbols-outlined text-base">check_circle</span>
+<span>Use tonal shifts instead of borders.</span>
+</div>
+<div class="flex items-center gap-3 text-sm font-semibold text-error bg-error-container/20 px-4 py-3 rounded-lg border border-error/10 mt-6">
+<span class="material-symbols-outlined text-base">cancel</span>
+<span>Overuse the primary accent color.</span>
+</div>
+<div class="flex items-center gap-3 text-sm font-semibold text-error bg-error-container/20 px-4 py-3 rounded-lg border border-error/10">
+<span class="material-symbols-outlined text-base">cancel</span>
+<span>Add 'assistant' framing or terminology.</span>
+</div>
+<div class="flex items-center gap-3 text-sm font-semibold text-error bg-error-container/20 px-4 py-3 rounded-lg border border-error/10">
+<span class="material-symbols-outlined text-base">cancel</span>
+<span>Stack cards in standard dashboard style or invent submarks.</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-[#FAF9F6EE] dark:bg-[#171714EE] backdrop-blur-md border-t border-[#DED6C4] dark:border-[#5C5548] h-16 px-8 pb-safe flex justify-around items-center">
+<a class="flex flex-col items-center justify-center text-[#736A56] dark:text-[#B5AD9B] hover:text-[#4E4633] active:scale-95 transition-all" href="#">
+<span class="material-symbols-outlined">today</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#745B00] dark:text-[#F3C53A] scale-110 active:scale-95 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#736A56] dark:text-[#B5AD9B] hover:text-[#4E4633] active:scale-95 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</nav>
+</body></html>
