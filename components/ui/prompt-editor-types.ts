@@ -39,9 +39,14 @@ export function normalizeTokenLiteral(value: string): string {
 
 const tokenRegex = /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
 
+function trimTrailingBlankLines(value: string): string {
+  return value.replace(/(?:\n[ \t]*)+$/g, '');
+}
+
 export function textToDoc(text: string, tokens: PromptEditorToken[]): PromptEditorDocument {
   const tokenByLiteral = new Map(tokens.map((item) => [normalizeTokenLiteral(item.token), item]));
-  const lines = String(text || '').split(/\n\n/);
+  const normalizedText = trimTrailingBlankLines(String(text || '').replace(/\r\n?/g, '\n'));
+  const lines = normalizedText.length > 0 ? normalizedText.split(/\n\n/) : [''];
   const content = lines.map((line) => {
     const nodes: PromptEditorJsonNode[] = [];
     let lastIndex = 0;

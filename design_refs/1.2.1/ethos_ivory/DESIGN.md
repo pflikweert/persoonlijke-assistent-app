@@ -1,173 +1,883 @@
-# Design System Strategy: The Quiet Curator
+# Budio Vandaag — Design System Handoff (MVP)
 
-## 1. Creative North Star
+## 1. Purpose
 
-This product is a capture-first personal thinking tool.
+This document is a standalone design-system handoff for Budio Vandaag.
 
-It treats personal reflections as high-quality content, but it is not a static editorial product, a dashboard, a coach, or a chat interface.
+It exists to keep Stitch output consistent without relying on hidden context.
 
-The user should feel: I can start immediately, and the app will keep the rest calm.
+Use this document as explicit design truth for screen generation, refinement, and brand alignment.
 
-## 2. Operational Guardrails
+---
 
-These rules are part of the foundation, not just implementation notes.
+## 2. Product Position
 
-- Clean-first is the default: use spacing, hierarchy, typography and tonal contrast before adding containers.
-- Borders, strokes, outlines, extra fills and nested surfaces are opt-in only.
-- Plain text wrappers stay transparent by default.
-- Top navigation is navigation only; title and supporting copy live in the hero below the nav by default.
-- Header, page and footer form one coherent theme hierarchy per mode.
-- Dark and light mode share the same composition; dark mode must not become the implicit source of truth.
-- Background modes are mode-aware and selective: `ambient`, `subtle` and `flat`.
-- Auth atmosphere comes from code-based page background and spacing, not heavy enclosing cards.
-- Design refs remain binding per screen; if a screen ref folder has a `.md` note, use it next to `code.html` and `screen.png`.
+Budio Vandaag is a capture-first journaling product.
 
-## 3. Product Hierarchy
+It is:
 
-Today is the main entry point.
+- a fast, calm personal thinking tool
 
-- Primary CTA gets the strongest visual priority.
-- Recent context is lightweight and scannable.
-- Reflection previews are secondary.
-- No competing primary actions on one screen/state.
-- Capture screens prioritize obvious affordances over atmosphere.
+- focused on capturing today
 
-Visual attention model:
+- designed for quiet continuity and readable reflection
 
-- Hero + CTA: about 70%.
-- Recent context: about 20%.
-- Reflection preview: about 10%.
+It is not:
 
-## 4. Tokens And Tonal Architecture
+- a dashboard
 
-`theme/tokens.ts` is the only implementation token source.
+- a coach
 
-Core light surfaces:
+- a chat interface
 
-- `background`: `#FAF9F4`
-- `surfaceLow`: `#F4F3F0`
-- `surface`: `#EFEEEB`
-- `surfaceLowest`: `#FFFFFF`
-- `surfaceHigh`: `#E9E8E5`
+- an AI-branded product
 
-Core dark surfaces:
+- an analytics product
 
-- `background`: `#171714`
-- `surface`: `#201F1C`
-- `surfaceLow`: `#2B2925`
-- `surfaceLowest`: `#34322D`
-- `surfaceHigh`: `#262521`
+Core rule:
 
-Primary action:
+the product must help the user start quickly, not admire the interface.
 
-- Light CTA gradient: `#F0C115` → `#E6B800`
-- Dark CTA gradient: `#F3C53A` → `#D7A91B`
-- Primary color is reserved for the main action and key interaction moments.
+---
 
-Destructive soft treatment:
+## 3. Brand Rules
 
-- Light: `#F6E8E5`, text `#C62929`, border `#ECC1BF`
-- Dark: `#4B2D2B`, text `#FFB4AB`, border `#7E5A56`
+Parent brand:
 
-Tab bar:
+- Budio
 
-- Light base token: `#FAF9F6EE`
-- Dark base token: `#171714EE`
-- Implementation may use slightly tuned translucent surfaces, but must stay mode-aware.
+Product brand:
 
-## 5. Background Hierarchy
+- Budio Vandaag
 
-Page atmosphere is selective, not global.
+In-app shorthand:
 
-- `ambient`: auth, splash/loaders, processing states, hero-first and empty states.
-- `subtle`: screens that need warmth without visible atmosphere.
-- `flat`: capture and content-heavy/utility/detail screens.
+- Vandaag
 
-Header and footer are structural anchors. They stay calmer than the page background and must not carry decorative ambient gradients.
+Rules:
 
-Dark mode is not the implicit visual truth. Light and dark mode share composition; only tone, contrast and surface values shift.
+- use **Budio Vandaag** for explicit product branding
 
-## 6. Header And Hero System
+- use **Vandaag** only as an in-app shorthand or screen context
 
-Top navigation is navigation only.
+- do not invent alternative product names
 
-- Main-screen header: nav row with primary icon/menu, hero below.
-- Detail-screen header: back/menu row, compact hero below.
-- Page title and supporting copy belong in the hero by default.
-- Do not press titles next to back buttons unless the screen ref explicitly shows it.
-- Header, page and footer must form one coherent theme hierarchy per mode.
+- do not introduce sub-brands
 
-## 7. Layout And Spacing
+- do not use “Quiet Curator” as a visible brand or system name
 
-Use flow, not stacked cards.
+- do not invent a new logo or symbol unless explicitly requested
 
-- Standard content gap: `32px` (`spacing.content`).
-- Section labels sit on the page background unless a screen ref explicitly shows a section surface.
-- Whitespace supports hierarchy and clarity, not decoration.
-- Avoid equal-weight blocks that make every element feel equally important.
+Brand feeling:
 
-## 8. Component Weight Rules
+- calm
 
-Cards are not the default layout system.
+- warm
 
-Use cards only when grouping or interaction containment is required.
+- editorial
 
-- Rows/cards stay compact and light.
-- No default decorative borders, strokes or outlines.
-- No extra fills behind plain text wrappers.
-- No nested surfaces unless the design ref explicitly shows them.
-- Separation comes first from spacing, tonal contrast, typography and hierarchy.
-- Destructive rows may use accent, but should remain calm and no heavier than needed.
+- premium but simple
 
-Allowed functional fills include chips, badges, buttons, inputs, textareas, alerts, toasts and tagged status surfaces.
+- understated, never loud
 
-## 9. Auth And Modal Rules
+---
 
-Auth screens may use page-level atmosphere from code-based background layering and spacing.
+## 4. Today Screen Hierarchy
 
-- Avoid heavy enclosing auth cards unless a design ref explicitly requires one.
-- Prefer code-based gradients over image backgrounds when they are calmer and more consistent.
-- Copy should be compact: hero + action + small notice is preferred over repeated explanation.
+Today is an entry point, not a reading-first screen and not a dashboard.
 
-Modals, sheets, dialogs and popups use the shared backdrop standard. Do not create ad hoc backdrop treatments per screen.
+Rules:
 
-## 10. Typography
+- one dominant primary CTA per screen or state
 
-Use the implementation roles from `theme/tokens.ts`.
+- primary CTA gets most of the visual attention
 
-Key roles:
+- no competing primary action
 
-- `screenTitle`: 34 / 40, weight 700
-- `sectionTitle`: 20 / 26, weight 600
-- `body`: 16 / 26, weight 400
-- `bodySecondary`: 15 / 24, weight 400
-- `caption`: 12 / 18, weight 500
-- `meta`: 11 / 16, weight 600
-- `ctaLabel`: 16 / 20, weight 700
+- reflection is always secondary on Today
 
-Typography should feel calm and readable. Labels are used sparingly.
+- recent context stays lightweight and scannable
 
-## 11. Motion
+Priority model:
 
-Motion guides attention and reinforces hierarchy.
+1. hero + primary action
 
-Use:
+2. recent context
 
-- soft transitions
-- micro feedback on the primary CTA
-- subtle completion feedback
+3. reflection preview
+
+User feeling:
+
+“I can start immediately.”
+
+---
+
+## 5. Capture Rules
+
+Capture is a core system, not a decorative surface.
+
+Capture must feel:
+
+- obvious
+
+- fast
+
+- calm
+
+- low-friction
+
+### Idle state
+
+- mic is the primary action
+
+- typing is clearly available
+
+- the user understands immediately what to do
+
+### Voice state
+
+- clear recording feedback
+
+- primary action: stop / klaar
+
+- secondary action: annuleer
+
+- no pause
+
+- no live transcript
+
+- no editing tools
+
+### Typing state
+
+- large text area
+
+- keyboard-first
+
+- clear save or complete action
+
+- no formatting toolbar
+
+- no visual noise
+
+- no multiple competing actions
+
+---
+
+## 6. Navigation and Shell Rules
+
+Top navigation is navigation-only.
+
+Rules:
+
+- page titles do not dominate the top bar
+
+- supporting copy belongs below the top navigation
+
+- title and supporting copy usually live in a hero below the nav
+
+- use two header modes:
+
+- main screen header
+
+- detail screen header
+
+- header, page, and footer must feel like one coherent system
 
 Avoid:
 
+- oversized branded mastheads
+
+- title jammed next to a back button unless truly necessary
+
+- decorative nav gradients
+
+- heavy shell chrome
+
+---
+
+## 7. Background Modes
+
+Background treatment is selective, not global.
+
+Use these three modes:
+
+### Ambient
+
+Use for:
+
+- auth
+
+- splash
+
+- loaders
+
+- processing states
+
+- Today
+
+- hero-first screens
+
+- empty states
+
+Characteristics:
+
+- warm atmosphere
+
+- subtle depth
+
+- calm, not flashy
+
+### Subtle
+
+Use for:
+
+- overlays
+
+- light support screens
+
+- places that need warmth without obvious atmosphere
+
+Characteristics:
+
+- restrained
+
+- quiet
+
+- nearly flat, but not cold
+
+### Flat
+
+Use for:
+
+- capture
+
+- content-heavy screens
+
+- utility and detail screens
+
+- day detail
+
+- week or month detail
+
+- settings-like screens
+
+Characteristics:
+
+- clear
+
+- quiet
+
+- minimal visual interference
+
+Rules:
+
+- dark mode must not become heavier than light mode
+
+- never reuse a dark ambient treatment unchanged in light mode
+
+- capture prioritizes clarity over atmosphere
+
+- content-heavy screens stay flatter than entry screens
+
+---
+
+## 8. Color System
+
+The palette is warm, neutral, soft, and paper-like.
+
+### Core surfaces — Light
+
+- Background: `#FAF9F4`
+
+- Surface low: `#F4F3F0`
+
+- Surface: `#EFEEEB`
+
+- Surface lowest: `#FFFFFF`
+
+- Surface high: `#E9E8E5`
+
+### Core surfaces — Dark
+
+- Background: `#171714`
+
+- Surface: `#201F1C`
+
+- Surface low: `#2B2925`
+
+- Surface lowest: `#34322D`
+
+- Surface high: `#262521`
+
+### Text and supporting tones
+
+Light:
+
+- Text: `#1B1C1A`
+
+- Muted: `#4E4633`
+
+- Muted soft: `#736A56`
+
+Dark:
+
+- Text: `#F4F1E8`
+
+- Muted: `#D4CCBB`
+
+- Muted soft: `#B5AD9B`
+
+### Primary accent
+
+Light:
+
+- Primary: `#E6B800`
+
+- Primary strong: `#E6B800`
+
+- Primary on: `#241A00`
+
+Dark:
+
+- Primary: `#F3C53A`
+
+- Primary strong: `#E9B91F`
+
+- Primary on: `#241A00`
+
+### Primary CTA gradient
+
+Light:
+
+- `#F0C115` → `#E6B800`
+
+Dark:
+
+- `#F3C53A` → `#D7A91B`
+
+### Borders and separators
+
+Light:
+
+- Border: `#D1C5AC`
+
+- Separator: `#DED6C4`
+
+Dark:
+
+- Border: `#4F493E`
+
+- Separator: `#5C5548`
+
+### Tabs
+
+Light:
+
+- Tab bar background: `#FAF9F6EE`
+
+- Active: `#745B00`
+
+- Inactive: `#736A56`
+
+Dark:
+
+- Tab bar background: `#171714EE`
+
+- Active: `#F3C53A`
+
+- Inactive: `#B5AD9B`
+
+### Status colors
+
+Light:
+
+- Info: `#395F94`
+
+- Success: `#1B6D24`
+
+- Error: `#BA1A1A`
+
+Dark:
+
+- Info: `#A7C8FF`
+
+- Success: `#A3F69C`
+
+- Error: `#FFB4AB`
+
+### Destructive soft colors
+
+Light:
+
+- Background: `#F6E8E5`
+
+- Text: `#C62929`
+
+- Border: `#ECC1BF`
+
+Dark:
+
+- Background: `#4B2D2B`
+
+- Text: `#FFB4AB`
+
+- Border: `#7E5A56`
+
+Rules:
+
+- use **primary accent** as the reserved highlight color
+
+- primary accent is mainly for the primary CTA and small emphasis moments
+
+- do not flood screens with the primary accent
+
+- tonal hierarchy matters more than saturation
+
+- surfaces stay calm; emphasis stays deliberate
+
+---
+
+## 9. Typography
+
+Typography should feel calm, readable, and functional.
+
+Families:
+
+- Sans: Inter on web, system-based sans on native
+
+- Serif: reserved, not default
+
+- Rounded: not a visual theme
+
+- Mono: utility only
+
+Style:
+
+- editorial in tone
+
+- practical in use
+
+- never techy
+
+- never loud
+
+### Type roles
+
+- Screen title: `34 / 40`, weight `700`, letter spacing `-0.5`
+
+- Section title: `20 / 26`, weight `600`, letter spacing `-0.2`
+
+- Body: `16 / 26`, weight `400`, letter spacing `-0.1`
+
+- Body secondary: `15 / 24`, weight `400`, letter spacing `-0.1`
+
+- Caption: `12 / 18`, weight `500`, letter spacing `0.2`
+
+- Meta: `11 / 16`, weight `600`, letter spacing `1.1`
+
+- CTA label: `16 / 20`, weight `700`, letter spacing `0.2`
+
+Rules:
+
+- readability over visual cleverness
+
+- labels are used sparingly
+
+- avoid UI-heavy label noise
+
+- on capture and entry screens, clarity wins over editorial flourish
+
+- long text belongs in reading contexts, not in entry-first screens
+
+---
+
+## 10. Spacing
+
+Spacing supports hierarchy, not decoration.
+
+### Core spacing
+
+- xxs: `2`
+
+- xs: `4`
+
+- sm: `8`
+
+- md: `12`
+
+- lg: `16`
+
+- xl: `24`
+
+- xxl: `32`
+
+- xxxl: `40`
+
+### Layout spacing
+
+- Page: `24`
+
+- Content: `32`
+
+- Section: `32`
+
+- Cluster: `12`
+
+- Inline: `8`
+
+Rules:
+
+- use spacing to clarify importance
+
+- do not add empty space without purpose
+
+- do not solve hierarchy with boxes first
+
+- section labels usually sit on the page background
+
+- keep scanability high
+
+---
+
+## 11. Radius, Borders, and Depth
+
+### Radius
+
+- Small: `8`
+
+- Medium: `12`
+
+- Large: `16`
+
+- Extra large: `24`
+
+- Pill: `999`
+
+### Borders
+
+- Hairline: platform hairline
+
+- Subtle: `1`
+
+Rules:
+
+- borders are allowed, but not default
+
+- strokes, outlines, fills, and nested surfaces are opt-in
+
+- plain text wrappers stay transparent by default
+
+- rows and cards stay light
+
+- avoid stacked heavy surfaces
+
+- avoid decorative borders as a default pattern
+
+### Depth
+
+Default depth is subtle.
+
+Surface shadow:
+
+- soft depth only
+
+- used sparingly
+
+- supports hierarchy, not decoration
+
+CTA shadow:
+
+- stronger than normal surfaces
+
+- reserved for primary CTA emphasis
+
+- still calm, never flashy
+
+Auth:
+
+- auth atmosphere may come from page background and spacing
+
+- avoid heavy enclosing auth cards unless truly necessary
+
+---
+
+## 12. Sizing and Touch Targets
+
+Use consistent sizing for interaction clarity.
+
+### Core sizing
+
+- CTA height: `56`
+
+- Compact CTA height: `44`
+
+- Input minimum height: `48`
+
+- Text area minimum height: `140`
+
+- Icon small: `16`
+
+- Icon medium: `20`
+
+- Icon large: `24`
+
+- Touch target minimum: `44`
+
+Rules:
+
+- primary actions should feel comfortably pressable
+
+- compact controls still respect touch target rules
+
+- icons support clarity, not decoration
+
+---
+
+## 13. Component Rules
+
+### Primary CTA
+
+This is the most important component in the product.
+
+It must feel:
+
+- pressable
+
+- warm
+
+- premium
+
+- inviting
+
+- clear
+
+Rules:
+
+- only one primary CTA per screen or state
+
+- use the primary CTA gradient for the main action
+
+- it should dominate without becoming loud
+
+- include icon support only if it improves clarity
+
+- do not create multiple equally loud actions
+
+- preferred shape is pill or strongly rounded
+
+### Secondary actions
+
+Rules:
+
+- visually quieter than the primary CTA
+
+- never compete with the primary action
+
+- kept compact and clear
+
+### Cards
+
+Rules:
+
+- cards are not the default layout system
+
+- use cards only when containment or grouping is truly needed
+
+- do not stack multiple similar cards as the main page pattern
+
+### Lists
+
+Rules:
+
+- prefer lightweight lists over card stacks
+
+- optimize for scanability
+
+- keep previews short
+
+### Reflection preview
+
+Rules:
+
+- compact
+
+- secondary
+
+- calm
+
+- never the hero on Today
+
+### Modals and sheets
+
+Rules:
+
+- one calm shared behavior
+
+- no ad-hoc popup styling
+
+- destructive confirmations stay calm and controlled
+
+---
+
+## 14. Motion
+
+Motion supports hierarchy and feedback.
+
+### Duration
+
+- Fast: `140ms`
+
+- Normal: `220ms`
+
+- Slow: `320ms`
+
+### Easing
+
+- Standard: `[0.2, 0, 0, 1]`
+
+- Entrance: `[0.16, 1, 0.3, 1]`
+
+- Exit: `[0.4, 0, 1, 1]`
+
+Allowed:
+
+- subtle transitions
+
+- CTA feedback
+
+- gentle completion feeling
+
+- quiet state changes
+
+Not allowed:
+
 - flashy animation
-- motion that competes with capture clarity
 
-## Final Principle
+- decorative motion that distracts from action
 
-Every screen must answer:
+- movement of interactive controls as part of decorative motion
 
-- What should the user do now?
-- Is that instantly obvious?
-- Does it feel calm, coherent and premium in both light and dark mode?
+Rule:
 
-If not: simplify further.
+buttons, inputs, and other interactive elements must not visually move around because of decorative motion.
+
+---
+
+## 15. Content and Copy Direction
+
+Copy should feel:
+
+- short
+
+- human
+
+- direct
+
+- calm
+
+Do:
+
+- make the next action obvious
+
+- keep copy compact
+
+- use concrete language
+
+- keep reflection language quiet and secondary
+
+Do not:
+
+- use AI buzzwords
+
+- use coach language
+
+- use productivity language
+
+- over-explain
+
+- repeat the same instruction multiple times
+
+Preferred direction:
+
+- action first
+
+- today is central
+
+- reflection supports, but does not lead
+
+Useful default copy:
+
+- “Leg iets vast”
+
+- “Spreek of schrijf iets”
+
+- “Je hebt vandaag nog niets vastgelegd.”
+
+- “Dit is je dag tot nu toe.”
+
+- “Vandaag bijgewerkt”
+
+---
+
+## 16. Do / Don’t
+
+### Do
+
+- keep the product capture-first
+
+- make the primary action obvious
+
+- keep the shell calm
+
+- use clean-first composition
+
+- keep the primary accent reserved and hierarchical
+
+- make lists lightweight
+
+- keep reflection secondary on entry screens
+
+- make dark mode as calm as light mode
+
+### Don’t
+
+- do not design dashboards
+
+- do not create chat-like UI
+
+- do not make reflection the hero on Today
+
+- do not overuse the primary accent
+
+- do not default to stacked cards
+
+- do not add visual mass to solve hierarchy
+
+- do not invent extra brand symbols
+
+- do not make auth feel heavy
+
+- do not let decorative motion move interactive controls
+
+---
+
+## 17. Definition of Done
+
+A screen direction is only ready when:
+
+- the product hierarchy is obvious
+
+- the primary action is clear
+
+- the brand is consistent
+
+- the screen feels buildable
+
+- the composition is calm in light and dark mode
+
+- the design does not add complexity without improving clarity, speed, or calm
+
+Final rule:
+
+if something adds complexity without improving clarity, speed, or calm, it does not belong.

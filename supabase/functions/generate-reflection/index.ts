@@ -7,6 +7,8 @@ import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.t
 import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildReflectionPromptSpec, REFLECTION_PROMPT_VERSION } from '../_shared/prompt-specs.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow } from '../_shared/openai-debug-storage.ts';
 
 type GenerateReflectionRequest = {
   periodType?: unknown;
@@ -330,6 +332,7 @@ async function callOpenAiJson(args: {
   promptVersion: string;
   systemPrompt: string;
   userPrompt: string;
+  debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<OpenAiJson | null> {
   try {
     const startedAt = Date.now();
@@ -343,29 +346,37 @@ async function callOpenAiJson(args: {
         operation: args.operation,
         provider: 'openai',
         model: args.model,
+        debugStoreEnabled: args.debugStore?.store === true,
       },
     });
+    const requestBody: Record<string, unknown> = {
+      model: args.model,
+      temperature: 0.2,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: args.systemPrompt,
+        },
+        {
+          role: 'user',
+          content: `${args.userPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
+        },
+      ],
+    };
+    if (args.debugStore !== undefined) {
+      requestBody.store = args.debugStore.store;
+      if (args.debugStore.store) {
+        requestBody.metadata = args.debugStore.metadata;
+      }
+    }
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${args.apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: args.model,
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: args.systemPrompt,
-          },
-          {
-            role: 'user',
-            content: `${args.userPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
-          },
-        ],
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -471,6 +482,7 @@ async function composeReflection(args: {
   periodStart: string;
   periodEnd: string;
   dayJournals: DayJournalRow[];
+  debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<ReflectionComposeResult> {
   if (args.dayJournals.length === 0) {
     return {
@@ -496,6 +508,7 @@ async function composeReflection(args: {
     promptVersion: reflectionPrompt.promptVersion,
     systemPrompt: reflectionPrompt.systemPrompt,
     userPrompt: reflectionPrompt.userPrompt,
+    debugStore: args.debugStore,
   });
 
   if (!aiResult) {
@@ -603,6 +616,43 @@ Deno.serve(async (request: Request) => {
     });
 
     const runtimeEnv = getFunctionRuntimeEnv();
+
+    // Load debug storage policy for this flow (best-effort; no-op on error)
+    let debugStore: { store: boolean; metadata?: Record<string, string> } | undefined;
+    try {
+      const serviceRoleKey =
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
+        Deno.env.get('APP_SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
+        '';
+      if (serviceRoleKey) {
+        const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
+        const resolution = resolveOpenAiDebugStorageForFlow({
+          settings: debugSettings,
+          flowKey: 'generate-reflection.generation',
+          endpointFamily: 'chat_completions',
+        });
+        const metadata = buildOpenAiDebugMetadata({
+          app: 'persoonlijke-assistent',
+          env: Deno.env.get('APP_ENV') ?? 'production',
+          flow: 'generate-reflection',
+          functionName: 'generate-reflection',
+          taskKey: 'reflection_generation',
+          runtimeFamily: 'reflection',
+          requestId,
+          flowId,
+          mode: 'generation',
+          version: '1',
+          actor: 'user',
+        });
+        debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
+      }
+    } catch {
+      // debug storage policy load is non-fatal; continue without
+    }
+
     const authHeader = request.headers.get('Authorization');
 
     if (!authHeader) {
@@ -827,6 +877,7 @@ Deno.serve(async (request: Request) => {
       periodStart: bounds.periodStart,
       periodEnd: bounds.periodEnd,
       dayJournals: safeDayJournals,
+      debugStore,
     });
 
     if (!reflectionResult.ok) {

@@ -6,21 +6,23 @@ import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-o
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AdminMetaStrip, AdminPageHero, AdminShell, SettingsTopNav } from '@/components/ui/settings-screen-primitives';
-import { MetaText, PrimaryButton, StateBlock, SurfaceSection } from '@/components/ui/screen-primitives';
+import { MetaText, PrimaryButton, SecondaryButton, StateBlock, SurfaceSection } from '@/components/ui/screen-primitives';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   classifyUnknownError,
+  fetchAdminOpenAiDebugStorageSettings,
   fetchAdminAiQualityStudioTasks,
   hasAdminAiQualityStudioAccess,
   importAdminAiQualityRuntimeBaseline,
+  updateAdminOpenAiDebugStorageSettings,
 } from '@/services';
-import type { AiTaskSummary } from '@/types';
+import type { AiOpenAiDebugFlowKey, AiOpenAiDebugStorageSettings, AiTaskSummary } from '@/types';
 import { colorTokens, radius, spacing } from '@/theme';
 import {
-  AI_QUALITY_FAMILIES,
-  getAiQualityFamilyStatusSummary,
-  getAiQualityFamilyTasks,
-} from './settings-ai-quality-studio/_shared';
+  buildAiQualityStudioReadModel,
+  getAiQualityFamilyPrimaryTaskKey,
+  shouldShowAiQualityGroupScreen,
+} from './settings-ai-quality-studio/readmodel';
 
 export default function SettingsAiQualityStudioScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -31,8 +33,10 @@ export default function SettingsAiQualityStudioScreen() {
   const [loading, setLoading] = useState(false);
   const [importingBaseline, setImportingBaseline] = useState(false);
   const [tasks, setTasks] = useState<AiTaskSummary[]>([]);
+  const [debugStorage, setDebugStorage] = useState<AiOpenAiDebugStorageSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [updatingDebugStorage, setUpdatingDebugStorage] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,11 +48,14 @@ export default function SettingsAiQualityStudioScreen() {
 
       if (!allowed) {
         setTasks([]);
+        setDebugStorage(null);
         return;
       }
 
       const nextTasks = await fetchAdminAiQualityStudioTasks();
+      const nextDebugStorage = await fetchAdminOpenAiDebugStorageSettings();
       setTasks(nextTasks);
+      setDebugStorage(nextDebugStorage);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError(parsed.message);
@@ -115,17 +122,65 @@ export default function SettingsAiQualityStudioScreen() {
     };
   }, [tasks]);
 
-  const familyRows = useMemo(
-    () =>
-      AI_QUALITY_FAMILIES.map((family) => {
-        const familyTasks = getAiQualityFamilyTasks(family.key, tasks);
-        return {
-          ...family,
-          status: getAiQualityFamilyStatusSummary(familyTasks),
-          taskCount: familyTasks.length,
-        };
-      }),
-    [tasks]
+  const groupRows = useMemo(() => buildAiQualityStudioReadModel(tasks).families, [tasks]);
+
+  const handleSetMasterDebugStorage = useCallback(
+    async (enabled: boolean) => {
+      if (updatingDebugStorage) return;
+      setUpdatingDebugStorage(true);
+      setError(null);
+      try {
+        const next = await updateAdminOpenAiDebugStorageSettings({
+          masterEnabled: enabled,
+          masterTtlHours: enabled ? 4 : null,
+          flowUpdates: [
+            {
+              flowKey: 'admin-ai-quality-studio.prompt_assist_preview',
+              enabled: debugStorage?.flows.find((item) => item.flowKey === 'admin-ai-quality-studio.prompt_assist_preview')?.desiredOn ?? false,
+              ttlHours: 4,
+            },
+            {
+              flowKey: 'admin-ai-quality-studio.run_test',
+              enabled: debugStorage?.flows.find((item) => item.flowKey === 'admin-ai-quality-studio.run_test')?.desiredOn ?? false,
+              ttlHours: 4,
+            },
+          ],
+        });
+        setDebugStorage(next);
+      } catch (nextError) {
+        setError(classifyUnknownError(nextError).message);
+      } finally {
+        setUpdatingDebugStorage(false);
+      }
+    },
+    [debugStorage, updatingDebugStorage]
+  );
+
+  const handleSetFlowDebugStorage = useCallback(
+    async (flowKey: AiOpenAiDebugFlowKey, enabled: boolean) => {
+      if (updatingDebugStorage || !debugStorage) return;
+      setUpdatingDebugStorage(true);
+      setError(null);
+      try {
+        const next = await updateAdminOpenAiDebugStorageSettings({
+          masterEnabled: debugStorage.masterEnabled,
+          masterTtlHours: null,
+          flowUpdates: [
+            {
+              flowKey,
+              enabled,
+              ttlHours: enabled ? 4 : null,
+            },
+          ],
+        });
+        setDebugStorage(next);
+      } catch (nextError) {
+        setError(classifyUnknownError(nextError).message);
+      } finally {
+        setUpdatingDebugStorage(false);
+      }
+    },
+    [debugStorage, updatingDebugStorage]
   );
 
   return (
@@ -183,35 +238,101 @@ export default function SettingsAiQualityStudioScreen() {
               <StateBlock
                 tone="info"
                 message="Nog geen onderdelen gevonden"
-                detail="Importeer eerst de runtime-basis om families te openen."
+                detail="Importeer eerst de runtime-basis om groepen te openen."
               />
             ) : null}
           </SurfaceSection>
 
+          {debugStorage ? (
+            <SurfaceSection title="OpenAI debug-opslag (admin)">
+              <MetaText>
+                Alleen ondersteunde generatiecalls. Audio-transcriptie valt buiten scope.
+              </MetaText>
+              <MetaText>
+                Master: {debugStorage.masterEnabled ? 'aan' : 'uit'}
+                {debugStorage.masterExpiresAt ? ` · verloopt ${debugStorage.masterExpiresAt}` : ''}
+              </MetaText>
+              <ThemedView style={styles.debugActionsRow}>
+                <PrimaryButton
+                  label={updatingDebugStorage ? 'Bijwerken…' : 'Master aan (4u)'}
+                  onPress={() => void handleSetMasterDebugStorage(true)}
+                  disabled={updatingDebugStorage}
+                />
+                <SecondaryButton
+                  label="Master uit"
+                  onPress={() => void handleSetMasterDebugStorage(false)}
+                  disabled={updatingDebugStorage}
+                />
+              </ThemedView>
+
+              {debugStorage.flows.map((flow) => (
+                <ThemedView key={flow.flowKey} style={[styles.taskRow, { backgroundColor: palette.surfaceLow }]}>
+                  <ThemedText type="defaultSemiBold">{flow.flowKey}</ThemedText>
+                  <MetaText>
+                    Status: {flow.state}
+                    {flow.reason ? ` · reden: ${flow.reason}` : ''}
+                  </MetaText>
+                  <MetaText>
+                    Gewenst: {flow.desiredOn ? 'aan' : 'uit'} · effectief: {flow.effectiveOn ? 'aan' : 'uit'}
+                  </MetaText>
+                  <ThemedView style={styles.debugActionsRow}>
+                    <PrimaryButton
+                      label="Flow aan (4u)"
+                      onPress={() => void handleSetFlowDebugStorage(flow.flowKey, true)}
+                      disabled={updatingDebugStorage}
+                    />
+                    <SecondaryButton
+                      label="Flow uit"
+                      onPress={() => void handleSetFlowDebugStorage(flow.flowKey, false)}
+                      disabled={updatingDebugStorage}
+                    />
+                  </ThemedView>
+                </ThemedView>
+              ))}
+            </SurfaceSection>
+          ) : null}
+
           {!loading && !error ? (
-            <SurfaceSection title="Families">
+            <SurfaceSection title="Groepen">
               <ThemedView style={styles.taskList}>
-                {familyRows.map((family) => (
-                  <Pressable
-                    key={family.key}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${family.title} bekijken en aanpassen`}
-                    onPress={() => router.push(`/settings-ai-quality-studio/family/${family.key}` as never)}
-                    style={[styles.taskRow, { backgroundColor: palette.surfaceLow }]}
-                  >
+                {groupRows.map((group) => {
+                  const showGroupScreen = shouldShowAiQualityGroupScreen(tasks, group.key);
+                  const primaryTaskKey = getAiQualityFamilyPrimaryTaskKey(tasks, group.key);
+                  const openLabel = showGroupScreen ? 'Open onderdelen' : 'Open prompt';
+
+                  return (
+                    <Pressable
+                      key={group.key}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${group.title} openen`}
+                      onPress={() => {
+                        if (showGroupScreen) {
+                          router.push(`/settings-ai-quality-studio/group/${group.key}` as never);
+                          return;
+                        }
+                        if (primaryTaskKey) {
+                          router.push(`/settings-ai-quality-studio/${primaryTaskKey}` as never);
+                        }
+                      }}
+                      style={[styles.taskRow, { backgroundColor: palette.surfaceLow }]}
+                    >
                     <ThemedView style={styles.taskRowTop}>
-                      <ThemedText type="defaultSemiBold">{family.title}</ThemedText>
-                      <MetaText>{family.description}</MetaText>
+                      <ThemedText type="defaultSemiBold">{group.title}</ThemedText>
+                      <MetaText>{group.description}</MetaText>
                     </ThemedView>
 
                     <MetaText>
-                      {family.metaLabel} · {family.status}
+                      {group.componentCountLabel} · {group.statusSummary}
                     </MetaText>
+                    {group.sharedRuntimeCall ? (
+                      <MetaText>Gedeelde runtime-call · 1 centrale prompt</MetaText>
+                    ) : null}
                     <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                      Bekijken en aanpassen
+                      {openLabel}
                     </ThemedText>
                   </Pressable>
-                ))}
+                  );
+                })}
               </ThemedView>
             </SurfaceSection>
           ) : null}
@@ -243,5 +364,9 @@ const styles = StyleSheet.create({
   },
   taskRowTop: {
     gap: spacing.xxs,
+  },
+  debugActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
 });

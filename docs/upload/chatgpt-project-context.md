@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-13T12:52:06.103Z
-Source Commit: 644491c
+Build Timestamp (UTC): 2026-04-14T11:40:49.894Z
+Source Commit: b6319e3
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -60,14 +60,16 @@ Upload standaard de bestanden uit `docs/upload/`:
 1. `docs/upload/chatgpt-project-context.md`
 2. `docs/upload/ai-quality-studio.md`
 3. `docs/upload/cline-workflow.md`
-4. `docs/upload/mvp-design-spec-1.2.1.md`
-5. `docs/upload/stitch-design-context.md`
-6. `docs/upload/upload-manifest.md`
+4. `docs/upload/stitch-workflow.md`
+5. `docs/upload/mvp-design-spec-1.2.1.md`
+6. `docs/upload/stitch-design-context.md`
+7. `docs/upload/upload-manifest.md`
 
 Reden:
 - de bundle bevat compacte projectcontext
 - AI Quality Studio governance wordt als canonieke upload-copy apart meegenomen
 - Cline workflow-afspraken staan als aparte upload-copy klaar voor uitvoeringscontext
+- Stitch-workflow-afspraken staan als aparte upload-copy klaar voor Stitch/ChatGPT handoff
 - de design spec blijft apart leidend voor MVP-designbesluiten
 - de Stitch design context bevat compacte design-handoff zonder alle docs te dupliceren
 - het manifest maakt de uploadset controleerbaar
@@ -2015,6 +2017,14 @@ Regels:
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
+- Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
+
+## Design-implementatie guardrails (operationeel)
+- `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
+- Gebruik eerst bestaande shared primitives/patronen; voeg alleen een nieuw shared component toe bij een echt herhaalbaar patroon over meerdere schermen.
+- Stop geen screen-specifieke designregels in generieke shared primitives.
+- `design_refs/1.2.1/**` zijn bindend per scherm; `.md` notes tellen mee naast `code.html` en `screen.png`.
+- Verify stylingwerk altijd in light én dark mode tegen relevante design refs voordat het “klaar” is.
 
 ## Repo-eigen Memory Bank workflow
 - Onze memory bank is een **workflowlaag**, geen extra waarheidshiërarchie.

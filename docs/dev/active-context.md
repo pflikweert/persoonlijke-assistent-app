@@ -1,18 +1,19 @@
 # Active context (niet-canoniek)
 
+Laatst bijgewerkt op: 2026-04-13
+
 ## Doel
 Lichte sessiecontext tussen Cline-sessies, zodat non-triviale taken sneller en consistenter hervat kunnen worden.
 
 ## Huidige focus
-- Repo-eigen Memory Bank workflow verankeren in docs-router, AGENTS en workflowdocs.
+- Alleen vullen met actieve WIP die relevant is voor de eerstvolgende sessie.
 
-## Recent afgerond
-- `docs/dev/memory-bank.md` toegevoegd met leesvolgorde, laagverdeling en update-regels.
-- `docs/dev/cline-workflow.md` uitgebreid met memory-bank- en active-context beslisregels.
+## Open WIP
+- Geen actieve WIP-context op dit moment.
 
-## Volgende logische stappen
-- Werk `AGENTS.md`, `docs/project/README.md`, `README.md` en `docs/project/current-status.md` consistent bij.
-- Draai docs-verify (`docs:bundle` + `docs:bundle:verify`) en commit alleen bij groen resultaat.
+## Laatste onderhoud
+- Memory-bank review uitgevoerd; opschoningsregels aangescherpt in `docs/dev/memory-bank.md`.
+- Deze file opgeschoond naar baseline om stale sessiecontext te voorkomen.
 
 ## Actuele valkuilen / sessielearnings
 - Geen tweede waarheidshiërarchie bouwen naast `docs/project/**`.
@@ -33,3 +34,4 @@ Lichte sessiecontext tussen Cline-sessies, zodat non-triviale taken sneller en c
 - Werk alleen bij bij relevante sessies (onderbroken werk, multi-file context, nuttige WIP/learnings).
 - Verwijs naar canonieke docs in plaats van content te dupliceren.
 - Promote structurele learnings naar `AGENTS.md`, bestaande skills of `docs/dev/**`.
+- Is deze file ouder dan 14 dagen en bevat hij geen aantoonbaar relevante open WIP, reset naar baseline.

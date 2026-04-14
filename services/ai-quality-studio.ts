@@ -1,4 +1,5 @@
 import type {
+  AiOpenAiDebugStorageSettings,
   AiPromptAssistPreviewResult,
   AiReviewLabel,
   AiTaskDraftCreationMeta,
@@ -13,6 +14,7 @@ import type {
   AiTaskTestSource,
   AiTaskVersionDetail,
   RunAiTaskTestPayload,
+  UpdateAiOpenAiDebugStorageSettingsPayload,
 } from '@/types';
 
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
@@ -111,6 +113,14 @@ type PromptAssistPreviewResponse = {
   requestId: string;
   flowId: string;
   preview: AiPromptAssistPreviewResult;
+};
+
+type OpenAiDebugStorageResponse = {
+  status: 'ok';
+  flow: 'admin-ai-quality-studio';
+  requestId: string;
+  flowId: string;
+  debugStorage: AiOpenAiDebugStorageSettings;
 };
 
 function parseFunctionMessage(parsed: unknown): string | null {
@@ -532,6 +542,47 @@ export async function importAdminAiQualityRuntimeBaseline(): Promise<AiRuntimeBa
   }
 
   return data.importResult;
+}
+
+export async function fetchAdminOpenAiDebugStorageSettings(): Promise<AiOpenAiDebugStorageSettings> {
+  const flowId = createClientFlowId('admin-ai-quality');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
+
+  const data = await invokeAction<OpenAiDebugStorageResponse>({
+    flowId,
+    body: {
+      action: 'get_openai_debug_storage_settings',
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-ai-quality-studio' || !data.requestId || !data.debugStorage) {
+    throw new Error('Ongeldige response van admin-ai-quality-studio get_openai_debug_storage_settings.');
+  }
+
+  return data.debugStorage;
+}
+
+export async function updateAdminOpenAiDebugStorageSettings(
+  payload: UpdateAiOpenAiDebugStorageSettingsPayload
+): Promise<AiOpenAiDebugStorageSettings> {
+  const flowId = createClientFlowId('admin-ai-quality');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
+
+  const data = await invokeAction<OpenAiDebugStorageResponse>({
+    flowId,
+    body: {
+      action: 'update_openai_debug_storage_settings',
+      masterEnabled: payload.masterEnabled,
+      masterTtlHours: payload.masterTtlHours,
+      flowUpdates: payload.flowUpdates,
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-ai-quality-studio' || !data.requestId || !data.debugStorage) {
+    throw new Error('Ongeldige response van admin-ai-quality-studio update_openai_debug_storage_settings.');
+  }
+
+  return data.debugStorage;
 }
 
 export async function runAdminAiQualityStudioPromptAssistPreview(

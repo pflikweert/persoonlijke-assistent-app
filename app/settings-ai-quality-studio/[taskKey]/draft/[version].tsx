@@ -1,14 +1,15 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import { ConfirmDialog } from '@/components/feedback/confirm-dialog';
+import { DestructiveConfirmSheet } from '@/components/feedback/destructive-confirm-sheet';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { ModalBackdrop } from '@/components/ui/modal-backdrop';
 import { HeaderIconButton } from '@/components/ui/header-icon-button';
+import { InlineWordDiffText } from '@/components/ui/inline-word-diff';
+import { ModalBackdrop } from '@/components/ui/modal-backdrop';
 import {
   AdminAccordion,
   AdminEditorSection,
@@ -22,13 +23,8 @@ import {
 } from '@/components/ui/settings-screen-primitives';
 import { AiTokenChipPicker } from '@/components/ui/ai-token-chip-picker';
 import { AiTokenEditor, type PromptEditorState } from '@/components/ui/ai-token-editor';
-import {
-  InputField,
-  MetaText,
-  StateBlock,
-  SurfaceSection,
-  TextAreaField,
-} from '@/components/ui/screen-primitives';
+import { MetaText, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   classifyUnknownError,
   deleteAdminAiQualityStudioDraftVersion,
@@ -36,234 +32,45 @@ import {
   runAdminAiQualityStudioPromptAssistPreview,
   updateAdminAiQualityStudioDraftVersion,
 } from '@/services';
+import { colorTokens, spacing } from '@/theme';
 import type {
-  AiPromptAssistActionId,
   AiPromptAssistActionDefinition,
+  AiPromptAssistActionId,
   AiPromptAssistPreviewResult,
   AiPromptAssistTargetLayerKey,
   AiPromptAssistTargetLayerType,
   AiTaskDetail,
 } from '@/types';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colorTokens, spacing } from '@/theme';
 import {
   AI_QUALITY_ALLOWED_MODELS,
-  getPromptAssistActionsForTarget,
-  buildEntryCleanupPromptTemplate,
+  buildAllowedChangeKinds,
+  buildInvariants,
+  buildLayerSemantics,
+  buildReadOnlyContext,
+  buildStructuredPromptTemplate,
   DraftFormState,
-  ENTRY_CLEANUP_TOKEN_DEFINITIONS,
-  type EntryCleanupInstructionState,
-  formatEntryCleanupInstructionStateForEditor,
-  getEntryCleanupPromptAssistTargetLabel,
-  getEntryCleanupTokenById,
-  getEntryCleanupInstructionWarnings,
+  formatStructuredPromptInstructionSections,
   getDraftFormJsonFieldErrors,
+  getEntryCleanupInstructionWarnings,
   getEntryCleanupTechnicalContractFromConfig,
   getEntryCleanupTechnicalContractLines,
+  getLayerNoticeInfo,
+  getPromptAssistActionsForTarget,
+  getStructuredPromptEditorDefinition,
+  getTaskConsistencyInfo,
   getTaskInputContractLines,
   getTaskResponseContractFields,
-  getTaskConsistencyInfo,
-  getTaskContractNotice,
   isDraftFormDirty,
-  parseEntryCleanupInstructionStateFromText,
   parseDraftFormState,
+  parseStructuredPromptInstructionSections,
   toDraftFormState,
 } from '../../_shared';
-
-type EntryCleanupEditorKey = keyof EntryCleanupInstructionState;
+import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '../../readmodel';
 
 type PromptAssistTarget = {
   key: AiPromptAssistTargetLayerKey;
   layerType: AiPromptAssistTargetLayerType;
 };
-
-const ENTRY_CLEANUP_ASSIST_TARGET_BY_SECTION: Partial<
-  Record<EntryCleanupEditorKey, PromptAssistTarget>
-> = {
-  systemRulesInstruction: { key: 'systemRulesInstruction', layerType: 'system' },
-  generalInstruction: { key: 'generalInstruction', layerType: 'general' },
-  titleInstruction: { key: 'titleInstruction', layerType: 'field' },
-  bodyInstruction: { key: 'bodyInstruction', layerType: 'field' },
-  summaryShortInstruction: { key: 'summaryShortInstruction', layerType: 'field' },
-};
-
-type InlineDiffSegment = {
-  kind: 'unchanged' | 'removed' | 'added';
-  text: string;
-};
-
-const INLINE_DIFF_MINOR_BRIDGE_PATTERN = /^[\s.,;:!?()[\]{}"“”'’`…\-–—/\\]+$/;
-
-function tokenizeWithFallback(input: string): string[] {
-  const tokens = input.match(/(\s+|[.,!?;:()[\]{}"“”'’`…\-–—/\\]+|[^\s.,!?;:()[\]{}"“”'’`…\-–—/\\]+)/g);
-  return tokens ?? [];
-}
-
-function tokenizeWithSegmenter(input: string): string[] {
-  const SegmenterCtor = Intl?.Segmenter;
-  if (!SegmenterCtor) {
-    return tokenizeWithFallback(input);
-  }
-
-  try {
-    const segmenter = new SegmenterCtor('nl', { granularity: 'word' });
-    return Array.from(segmenter.segment(input), (item) => item.segment);
-  } catch {
-    return tokenizeWithFallback(input);
-  }
-}
-
-function tokenizeForInlineDiff(input: string): string[] {
-  if (!input) return [];
-
-  const placeholderPattern = /(\{\{[^{}]+\}\})/g;
-  const chunks = input.split(placeholderPattern).filter((chunk) => chunk.length > 0);
-  const tokens: string[] = [];
-
-  for (const chunk of chunks) {
-    if (/^\{\{[^{}]+\}\}$/.test(chunk)) {
-      tokens.push(chunk);
-      continue;
-    }
-    tokens.push(...tokenizeWithSegmenter(chunk));
-  }
-
-  return tokens;
-}
-
-function mergeAdjacentInlineDiffSegments(segments: InlineDiffSegment[]): InlineDiffSegment[] {
-  const merged: InlineDiffSegment[] = [];
-  for (const segment of segments) {
-    if (!segment.text) continue;
-    const previous = merged[merged.length - 1];
-    if (previous && previous.kind === segment.kind) {
-      previous.text += segment.text;
-      continue;
-    }
-    merged.push({ ...segment });
-  }
-  return merged;
-}
-
-function isMinorBridgeSegment(text: string): boolean {
-  if (!text || text.includes('\n')) return false;
-  return text.length <= 8 && INLINE_DIFF_MINOR_BRIDGE_PATTERN.test(text);
-}
-
-function absorbMinorUnchangedBridges(segments: InlineDiffSegment[]): InlineDiffSegment[] {
-  const next: InlineDiffSegment[] = [];
-
-  for (let index = 0; index < segments.length; index += 1) {
-    const segment = segments[index];
-    const previous = next[next.length - 1];
-    const following = segments[index + 1];
-
-    if (
-      segment.kind === 'unchanged' &&
-      isMinorBridgeSegment(segment.text) &&
-      previous &&
-      previous.kind !== 'unchanged' &&
-      following &&
-      following.kind !== 'unchanged'
-    ) {
-      previous.text += segment.text;
-      continue;
-    }
-
-    next.push({ ...segment });
-  }
-
-  return mergeAdjacentInlineDiffSegments(next);
-}
-
-function rebalanceChangedSegmentWhitespace(segments: InlineDiffSegment[]): InlineDiffSegment[] {
-  const next = segments.map((segment) => ({ ...segment }));
-
-  for (let index = 0; index < next.length; index += 1) {
-    const segment = next[index];
-    if (segment.kind === 'unchanged') continue;
-
-    const previous = next[index - 1];
-    const following = next[index + 1];
-
-    const leadingWhitespace = segment.text.match(/^[ \t]+/)?.[0] ?? '';
-    if (leadingWhitespace && previous) {
-      previous.text += leadingWhitespace;
-      segment.text = segment.text.slice(leadingWhitespace.length);
-    }
-
-    const trailingWhitespace = segment.text.match(/[ \t]+$/)?.[0] ?? '';
-    if (trailingWhitespace && following) {
-      following.text = `${trailingWhitespace}${following.text}`;
-      segment.text = segment.text.slice(0, segment.text.length - trailingWhitespace.length);
-    }
-  }
-
-  return mergeAdjacentInlineDiffSegments(next).filter((segment) => segment.text.length > 0);
-}
-
-function buildInlineDiffSegments(beforeText: string, afterText: string): InlineDiffSegment[] {
-  const before = tokenizeForInlineDiff(beforeText);
-  const after = tokenizeForInlineDiff(afterText);
-
-  const dp: number[][] = Array.from({ length: before.length + 1 }, () => Array(after.length + 1).fill(0));
-  for (let i = before.length - 1; i >= 0; i -= 1) {
-    for (let j = after.length - 1; j >= 0; j -= 1) {
-      if (before[i] === after[j]) {
-        dp[i][j] = dp[i + 1][j + 1] + 1;
-      } else {
-        dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
-      }
-    }
-  }
-
-  const rawSegments: InlineDiffSegment[] = [];
-  let i = 0;
-  let j = 0;
-  while (i < before.length && j < after.length) {
-    if (before[i] === after[j]) {
-      rawSegments.push({ kind: 'unchanged', text: before[i] });
-      i += 1;
-      j += 1;
-      continue;
-    }
-
-    const removeScore = dp[i + 1][j];
-    const addScore = dp[i][j + 1];
-
-    let takeRemove = false;
-    if (removeScore > addScore) {
-      takeRemove = true;
-    } else if (removeScore < addScore) {
-      takeRemove = false;
-    } else if (before[i + 1] === after[j]) {
-      takeRemove = true;
-    } else if (before[i] === after[j + 1]) {
-      takeRemove = false;
-    }
-
-    if (takeRemove) {
-      rawSegments.push({ kind: 'removed', text: before[i] });
-      i += 1;
-    } else {
-      rawSegments.push({ kind: 'added', text: after[j] });
-      j += 1;
-    }
-  }
-
-  while (i < before.length) {
-    rawSegments.push({ kind: 'removed', text: before[i] });
-    i += 1;
-  }
-  while (j < after.length) {
-    rawSegments.push({ kind: 'added', text: after[j] });
-    j += 1;
-  }
-
-  const merged = mergeAdjacentInlineDiffSegments(rawSegments);
-  const grouped = absorbMinorUnchangedBridges(merged);
-  return rebalanceChangedSegmentWhitespace(grouped);
-}
 
 export default function AiQualityStudioDraftScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -283,23 +90,11 @@ export default function AiQualityStudioDraftScreen() {
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [entryCleanupPendingTokenInsert, setEntryCleanupPendingTokenInsert] = useState<Record<EntryCleanupEditorKey, string | null>>({
-    systemRulesInstruction: null,
-    generalInstruction: null,
-    titleInstruction: null,
-    bodyInstruction: null,
-    summaryShortInstruction: null,
-  });
-  const [entryCleanupEditorStates, setEntryCleanupEditorStates] = useState<Record<EntryCleanupEditorKey, PromptEditorState | null>>({
-    systemRulesInstruction: null,
-    generalInstruction: null,
-    titleInstruction: null,
-    bodyInstruction: null,
-    summaryShortInstruction: null,
-  });
+  const [pendingTokenInsertBySection, setPendingTokenInsertBySection] = useState<Record<string, string | null>>({});
+  const [editorStatesBySection, setEditorStatesBySection] = useState<Record<string, PromptEditorState | null>>({});
+
   const [activeAssistTarget, setActiveAssistTarget] = useState<PromptAssistTarget | null>(null);
-  const [selectedAssistActionId, setSelectedAssistActionId] = useState<AiPromptAssistActionId>('compacter');
-  const [assistMoreOpen, setAssistMoreOpen] = useState(false);
+  const [selectedAssistActionId, setSelectedAssistActionId] = useState<AiPromptAssistActionId | null>(null);
   const [assistIntent, setAssistIntent] = useState('');
   const [assistLoading, setAssistLoading] = useState(false);
   const [assistError, setAssistError] = useState<string | null>(null);
@@ -314,6 +109,16 @@ export default function AiQualityStudioDraftScreen() {
     }
     return detail.versions.find((item) => item.status === 'draft') ?? null;
   }, [detail, version]);
+
+  const structuredEditor = useMemo(
+    () => getStructuredPromptEditorDefinition(detail?.key ?? ''),
+    [detail?.key]
+  );
+
+  const sectionValues = useMemo(() => {
+    if (!detail || !form) return {} as Record<string, string>;
+    return parseStructuredPromptInstructionSections(detail.key, form.taskInstruction);
+  }, [detail, form]);
 
   const load = useCallback(async () => {
     const normalizedTaskKey = typeof taskKey === 'string' ? taskKey.trim() : '';
@@ -330,6 +135,16 @@ export default function AiQualityStudioDraftScreen() {
 
     try {
       const nextDetail = await fetchAdminAiQualityStudioTaskDetail(normalizedTaskKey);
+      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label);
+      if (metadata.editorScope === 'read_only_part') {
+        if (metadata.editorTargetTaskKey) {
+          router.replace(`/settings-ai-quality-studio/${metadata.editorTargetTaskKey}` as never);
+        } else {
+          router.replace('/settings-ai-quality-studio' as never);
+        }
+        return;
+      }
+
       const requestedId = typeof version === 'string' ? version.trim() : '';
       const draft = requestedId
         ? nextDetail.versions.find((item) => item.id === requestedId && item.status === 'draft') ?? null
@@ -337,6 +152,8 @@ export default function AiQualityStudioDraftScreen() {
 
       setDetail(nextDetail);
       setForm(draft ? toDraftFormState(draft) : null);
+      setPendingTokenInsertBySection({});
+      setEditorStatesBySection({});
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError(parsed.message);
@@ -353,51 +170,6 @@ export default function AiQualityStudioDraftScreen() {
     }, [load])
   );
 
-  async function handleSaveDraft(options?: { testAfterSave?: boolean }) {
-    if (!selectedDraft || !form || savingDraft) return;
-    const parsed = parseDraftFormState(form);
-    if (!parsed.payload) {
-      setError(parsed.error ?? 'Draft payload ongeldig.');
-      return;
-    }
-
-    setSavingDraft(true);
-    setError(null);
-    setSaveMessage(null);
-
-    try {
-      const updated = await updateAdminAiQualityStudioDraftVersion(selectedDraft.id, parsed.payload);
-      setSaveMessage(`Draft v${updated.versionNumber} opgeslagen.`);
-      setForm(toDraftFormState(updated));
-      await load();
-      if (options?.testAfterSave) {
-        router.push(`/settings-ai-quality-studio/${taskKey}/validate/${selectedDraft.id}` as never);
-      }
-    } catch (nextError) {
-      const parsedError = classifyUnknownError(nextError);
-      setError(parsedError.message);
-    } finally {
-      setSavingDraft(false);
-    }
-  }
-
-  async function handleDeleteDraft() {
-    if (!selectedDraft || deletingDraft) return;
-    setDeletingDraft(true);
-    setError(null);
-
-    try {
-      await deleteAdminAiQualityStudioDraftVersion(selectedDraft.id);
-      setShowDeleteDialog(false);
-      router.replace(`/settings-ai-quality-studio/${taskKey}` as never);
-    } catch (nextError) {
-      const parsed = classifyUnknownError(nextError);
-      setError(parsed.message);
-    } finally {
-      setDeletingDraft(false);
-    }
-  }
-
   const parsedForm = useMemo(() => {
     if (!form) return { payload: null, error: 'Geen formulier.' };
     return parseDraftFormState(form);
@@ -410,146 +182,119 @@ export default function AiQualityStudioDraftScreen() {
   }, [form, selectedDraft]);
 
   const jsonFieldErrors = useMemo(() => {
-    if (!form) {
-      return { outputSchemaError: null, configError: null };
-    }
+    if (!form) return { outputSchemaError: null, configError: null };
     return getDraftFormJsonFieldErrors(form);
   }, [form]);
 
-  const taskContract = useMemo(() => {
-    if (!detail) return null;
-    return getTaskContractNotice(detail.key);
-  }, [detail]);
-
-  const taskConsistency = useMemo(() => {
-    if (!detail) return null;
-    return getTaskConsistencyInfo(detail.key);
-  }, [detail]);
-
-  const isEntryCleanup = detail?.key === 'entry_cleanup';
-
-  const entryCleanupModelSettings = useMemo(() => {
-    if (!isEntryCleanup || !form) return null;
-    try {
-      const config = JSON.parse(form.configJsonText) as Record<string, unknown>;
-      const temperature =
-        typeof config.temperature === 'number' && Number.isFinite(config.temperature) ? config.temperature : 0.2;
-      const responseFormat =
-        typeof config.response_format === 'string' && config.response_format.trim().length > 0
-          ? config.response_format
-          : 'json_object';
-      return {
-        model: form.model,
-        temperature,
-        responseFormat,
-      };
-    } catch {
-      return {
-        model: form.model,
-        temperature: 0.2,
-        responseFormat: 'json_object',
-      };
-    }
-  }, [form, isEntryCleanup]);
-
-  const taskInputContractLines = useMemo(
-    () => (detail ? getTaskInputContractLines(detail.key) : []),
-    [detail]
-  );
-  const entryCleanupTechnicalContractLines = useMemo(() => {
-    if (!isEntryCleanup || !selectedDraft) return [];
+  const taskConsistency = useMemo(() => (detail ? getTaskConsistencyInfo(detail.key) : null), [detail]);
+  const taskCapabilities = useMemo(() => (detail ? getAiQualityTaskCapabilities(detail.key) : null), [detail]);
+  const taskInputContractLines = useMemo(() => (detail ? getTaskInputContractLines(detail.key) : []), [detail]);
+  const taskResponseContractFields = useMemo(() => (detail ? getTaskResponseContractFields(detail.key) : []), [detail]);
+  const technicalContractLines = useMemo(() => {
+    if (!detail || !selectedDraft || detail.key !== 'entry_cleanup') return [];
     const contract = getEntryCleanupTechnicalContractFromConfig(selectedDraft.configJson ?? {});
     return getEntryCleanupTechnicalContractLines(contract);
-  }, [isEntryCleanup, selectedDraft]);
-  const taskResponseContractFields = useMemo(
-    () => (detail ? getTaskResponseContractFields(detail.key) : []),
-    [detail]
-  );
+  }, [detail, selectedDraft]);
 
   const canSave = formDirty && formValid && !savingDraft && !deletingDraft;
-  const canTest = !savingDraft && !deletingDraft;
-  const primaryActionLabel = formDirty && formValid ? 'Opslaan en valideren' : 'Valideer deze versie';
-  const entryCleanupSubtitle = taskContract?.lines[0] ?? 'Bron opschonen tot rustig, natuurlijk Nederlands.';
+  const canValidate = Boolean(taskCapabilities?.canReview) && !savingDraft && !deletingDraft;
 
-  function updateEntryCleanupInstructionSection(section: EntryCleanupEditorKey, value: string) {
+  async function handleSaveDraft(options?: { testAfterSave?: boolean }) {
+    if (!selectedDraft || !form || savingDraft) return;
+    const parsed = parseDraftFormState(form);
+    if (!parsed.payload) {
+      setError(parsed.error ?? 'Draft payload ongeldig.');
+      return;
+    }
+
+    setSavingDraft(true);
+    setError(null);
+    setSaveMessage(null);
+    try {
+      const updated = await updateAdminAiQualityStudioDraftVersion(selectedDraft.id, parsed.payload);
+      setSaveMessage(`Draft v${updated.versionNumber} opgeslagen.`);
+      setForm(toDraftFormState(updated));
+      await load();
+      if (options?.testAfterSave && detail) {
+        router.push(`/settings-ai-quality-studio/${detail.key}/validate/${selectedDraft.id}` as never);
+      }
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError(parsed.message);
+    } finally {
+      setSavingDraft(false);
+    }
+  }
+
+  async function handleDeleteDraft() {
+    if (!selectedDraft || deletingDraft) return;
+    setDeletingDraft(true);
+    setError(null);
+    try {
+      await deleteAdminAiQualityStudioDraftVersion(selectedDraft.id);
+      setShowDeleteDialog(false);
+      if (detail) {
+        router.replace(`/settings-ai-quality-studio/${detail.key}` as never);
+      }
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError(parsed.message);
+    } finally {
+      setDeletingDraft(false);
+    }
+  }
+
+  function updateInstructionSection(sectionKey: string, value: string) {
     setForm((prev) => {
-      if (!prev) return prev;
-      const parsedSections = parseEntryCleanupInstructionStateFromText(prev.taskInstruction);
-      const nextSections: EntryCleanupInstructionState = {
-        ...parsedSections,
-        [section]: value,
-      };
+      if (!prev || !detail) return prev;
+      const currentSections = parseStructuredPromptInstructionSections(detail.key, prev.taskInstruction);
+      const nextSections = { ...currentSections, [sectionKey]: value };
       return {
         ...prev,
-        taskInstruction: formatEntryCleanupInstructionStateForEditor(nextSections),
-        promptTemplateRaw: buildEntryCleanupPromptTemplate({
+        taskInstruction: formatStructuredPromptInstructionSections(detail.key, nextSections),
+        promptTemplateRaw: buildStructuredPromptTemplate({
+          taskKey: detail.key,
           promptTemplateRaw: prev.promptTemplateRaw,
-          instructions: nextSections,
+          sectionValues: nextSections,
         }),
       };
     });
   }
 
-  const entryCleanupInstructionSections = useMemo(() => {
-    if (!isEntryCleanup || !form) {
-      return null;
-    }
-    return parseEntryCleanupInstructionStateFromText(form.taskInstruction);
-  }, [form, isEntryCleanup]);
-
-  const entryCleanupInstructionWarnings = useMemo(() => {
-    if (!entryCleanupInstructionSections) {
+  function applyInstructionSections(nextSections: Record<string, string>) {
+    setForm((prev) => {
+      if (!prev || !detail) return prev;
       return {
-        systemRulesInstruction: [] as string[],
-        generalInstruction: [] as string[],
-        titleInstruction: [] as string[],
-        bodyInstruction: [] as string[],
-        summaryShortInstruction: [] as string[],
+        ...prev,
+        taskInstruction: formatStructuredPromptInstructionSections(detail.key, nextSections),
+        promptTemplateRaw: buildStructuredPromptTemplate({
+          taskKey: detail.key,
+          promptTemplateRaw: prev.promptTemplateRaw,
+          sectionValues: nextSections,
+        }),
       };
-    }
-
-    return {
-      systemRulesInstruction: getEntryCleanupInstructionWarnings(entryCleanupInstructionSections.systemRulesInstruction),
-      generalInstruction: getEntryCleanupInstructionWarnings(entryCleanupInstructionSections.generalInstruction),
-      titleInstruction: getEntryCleanupInstructionWarnings(entryCleanupInstructionSections.titleInstruction),
-      bodyInstruction: getEntryCleanupInstructionWarnings(entryCleanupInstructionSections.bodyInstruction),
-      summaryShortInstruction: getEntryCleanupInstructionWarnings(entryCleanupInstructionSections.summaryShortInstruction),
-    };
-  }, [entryCleanupInstructionSections]);
-
-  function insertFieldReferenceIntoEditor(
-    targetEditor: EntryCleanupEditorKey,
-    tokenId: 'rawText' | 'title' | 'body' | 'summary_short'
-  ) {
-    if (!isEntryCleanup) return;
-    const token = getEntryCleanupTokenById(tokenId);
-    setEntryCleanupPendingTokenInsert((prev) => ({
-      ...prev,
-      [targetEditor]: token.id,
-    }));
+    });
   }
 
-  function getUnknownTokenWarnings(section: EntryCleanupEditorKey): string[] {
-    const tokenIds: string[] = entryCleanupEditorStates[section]?.tokenIds ?? [];
-    return Array.from(
-      new Set(
-        tokenIds
-          .filter((tokenId: string) => !ENTRY_CLEANUP_TOKEN_DEFINITIONS.some((item) => item.id === tokenId))
-          .map((tokenId: string) => `Onbekende token-id in editor-state: ${tokenId}`)
-      )
-    );
+  function insertTokenForSection(sectionKey: string, tokenId: string) {
+    setPendingTokenInsertBySection((prev) => ({ ...prev, [sectionKey]: tokenId }));
   }
 
-  function openAssistForSection(section: EntryCleanupEditorKey) {
-    const target = ENTRY_CLEANUP_ASSIST_TARGET_BY_SECTION[section] ?? null;
-    if (!target) return;
-    if (activeAssistTarget?.key === target.key) {
-      closeAssistPanel();
-      return;
-    }
-    setActiveAssistTarget(target);
-    setSelectedAssistActionId('compacter');
-    setAssistMoreOpen(false);
+  function sectionWarnings(sectionKey: string): string[] {
+    if (!detail) return [];
+    if (detail.key !== 'entry_cleanup') return [];
+    return getEntryCleanupInstructionWarnings(sectionValues[sectionKey] ?? '');
+  }
+
+  function unknownTokenWarnings(sectionKey: string): string[] {
+    const known = new Set(structuredEditor.tokens.map((item) => item.id));
+    const tokenIds = editorStatesBySection[sectionKey]?.tokenIds ?? [];
+    return Array.from(new Set(tokenIds.filter((id) => !known.has(id)).map((id) => `Onbekende token-id: ${id}`)));
+  }
+
+  function openAssistForSection(sectionKey: string, layerType: AiPromptAssistTargetLayerType) {
+    setActiveAssistTarget({ key: sectionKey, layerType });
+    setSelectedAssistActionId(null);
     setAssistIntent('');
     setAssistError(null);
     setAssistPreview(null);
@@ -558,6 +303,7 @@ export default function AiQualityStudioDraftScreen() {
 
   function closeAssistPanel() {
     setActiveAssistTarget(null);
+    setSelectedAssistActionId(null);
     setAssistLoading(false);
     setAssistError(null);
     setAssistPreview(null);
@@ -565,68 +311,75 @@ export default function AiQualityStudioDraftScreen() {
     setAssistIntent('');
   }
 
-  const currentAssistSignature = `${activeAssistTarget?.key ?? ''}::${selectedAssistActionId}::${assistIntent.trim()}`;
-  const assistPreviewStale = Boolean(assistPreview && assistPreviewSignature !== currentAssistSignature);
-
-  const assistAvailableActions = useMemo<AiPromptAssistActionDefinition[]>(() => {
+  const assistHasTypedIntent = assistIntent.trim().length > 0;
+  const effectiveAssistActionId: AiPromptAssistActionId = selectedAssistActionId ?? (assistHasTypedIntent ? 'verhelderen' : 'compacter');
+  const assistSignature = `${activeAssistTarget?.key ?? ''}::${effectiveAssistActionId}::${assistIntent.trim()}`;
+  const assistPreviewStale = Boolean(assistPreview && assistPreviewSignature !== assistSignature);
+  const assistActions = useMemo<AiPromptAssistActionDefinition[]>(() => {
     if (!activeAssistTarget || !detail) return [];
-    return getPromptAssistActionsForTarget({
-      targetLayerType: activeAssistTarget.layerType,
-      taskKey: detail.key,
-    });
+    return getPromptAssistActionsForTarget({ targetLayerType: activeAssistTarget.layerType, taskKey: detail.key });
   }, [activeAssistTarget, detail]);
 
-  const assistPrimaryActions = useMemo(
-    () => assistAvailableActions.filter((item) => item.placement === 'primary').slice(0, 4),
-    [assistAvailableActions]
-  );
-  const assistSecondaryActions = useMemo(
-    () => assistAvailableActions.filter((item) => item.placement === 'secondary'),
-    [assistAvailableActions]
-  );
-
-  function selectAssistAction(action: AiPromptAssistActionDefinition) {
-    setSelectedAssistActionId(action.id);
-    setAssistIntent(action.helper);
-  }
-
   async function runAssistPreview() {
-    if (!detail || !selectedDraft || !entryCleanupInstructionSections || !activeAssistTarget) return;
-
+    if (!detail || !selectedDraft || !activeAssistTarget) return;
     setAssistLoading(true);
     setAssistError(null);
     setAssistPreview(null);
-
     try {
+      const fieldRules: Record<string, string> = {};
+      for (const section of structuredEditor.sections) {
+        if (section.layerType === 'field') {
+          fieldRules[section.key] = sectionValues[section.key] ?? '';
+        }
+      }
+
+      const layerSemantics = buildLayerSemantics(structuredEditor.sections);
+      const readOnlyContext = buildReadOnlyContext({
+        sections: structuredEditor.sections,
+        targetKey: activeAssistTarget.key,
+        sectionValues,
+      });
+      const invariants = buildInvariants(detail.key);
+      const allowedChangeKinds = buildAllowedChangeKinds(effectiveAssistActionId, activeAssistTarget.layerType);
+
       const preview = await runAdminAiQualityStudioPromptAssistPreview({
         taskKey: detail.key,
         versionId: selectedDraft.id,
         targetLayerType: activeAssistTarget.layerType,
         targetLayerKey: activeAssistTarget.key,
-        assistActionId: selectedAssistActionId,
+        assistActionId: effectiveAssistActionId,
         assistIntent,
         editorContext: {
-          systemRulesInstruction: entryCleanupInstructionSections.systemRulesInstruction,
-          generalInstruction: entryCleanupInstructionSections.generalInstruction,
-          fieldRules: {
-            titleInstruction: entryCleanupInstructionSections.titleInstruction,
-            bodyInstruction: entryCleanupInstructionSections.bodyInstruction,
-            summaryShortInstruction: entryCleanupInstructionSections.summaryShortInstruction,
-          },
-          outputContract: {
-            fields: taskResponseContractFields,
-          },
+          systemRulesInstruction: sectionValues.systemRulesInstruction ?? '',
+          generalInstruction: sectionValues.generalInstruction ?? '',
+          fieldRules,
+          editableSections: structuredEditor.sections.map((section) => ({
+            key: section.key,
+            label: section.label,
+            layerType: section.layerType,
+          })),
+          tokenCatalog: structuredEditor.tokens.map((token) => ({
+            id: token.id,
+            kind: token.kind,
+            label: token.label,
+            token: token.token,
+          })),
+          outputContract: { fields: taskResponseContractFields },
           taskMetadata: {
             taskKey: detail.key,
             taskLabel: detail.label,
             versionId: selectedDraft.id,
             versionNumber: selectedDraft.versionNumber,
           },
+          layerSemantics,
+          readOnlyContext,
+          invariants,
+          allowedChangeKinds,
         },
       });
 
       setAssistPreview(preview);
-      setAssistPreviewSignature(currentAssistSignature);
+      setAssistPreviewSignature(assistSignature);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setAssistError(parsed.message);
@@ -635,128 +388,35 @@ export default function AiQualityStudioDraftScreen() {
     }
   }
 
-  function applyAssistToTarget() {
+  function applyAssistSuggestion() {
     if (!activeAssistTarget || !assistPreview) return;
-    const section = activeAssistTarget.key as EntryCleanupEditorKey;
-    updateEntryCleanupInstructionSection(section, assistPreview.proposedText);
-    setSaveMessage(`Voorstel toegepast op ${getEntryCleanupPromptAssistTargetLabel(activeAssistTarget.key)}.`);
+    if (effectiveAssistActionId === 'verdeel_over_velden' && assistPreview.proposedSections) {
+      applyInstructionSections({
+        ...sectionValues,
+        ...assistPreview.proposedSections,
+      });
+      closeAssistPanel();
+      return;
+    }
+    updateInstructionSection(activeAssistTarget.key, assistPreview.proposedText);
     closeAssistPanel();
   }
 
-  function renderTokenEditorField(args: {
-    title: string;
-    subtitle: string;
-    section: EntryCleanupEditorKey;
-    value: string;
-    minHeight: number;
-    warnings: string[];
-  }) {
-    const assistTarget = ENTRY_CLEANUP_ASSIST_TARGET_BY_SECTION[args.section] ?? null;
-    const assistOpen = activeAssistTarget?.key === assistTarget?.key;
-
-    return (
-      <ThemedView style={styles.assistSectionWrap}>
-        <AdminEditorSection
-          title={args.title}
-          action={
-            assistTarget ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => openAssistForSection(args.section)}
-                style={[
-                  styles.assistTrigger,
-                  {
-                    backgroundColor: assistOpen ? palette.surfaceLowest : palette.surfaceLow,
-                    borderColor: assistOpen ? palette.primary : palette.separator,
-                  },
-                ]}
-              >
-                <ThemedText type="caption" style={{ color: palette.primary }}>
-                  {assistOpen ? 'Assist sluiten' : 'Assist'}
-                </ThemedText>
-              </Pressable>
-            ) : undefined
-          }
-          helper={args.subtitle}
-          tokenRail={
-            <AdminTokenRail>
-              <AiTokenChipPicker
-                tokens={ENTRY_CLEANUP_TOKEN_DEFINITIONS}
-                onInsertToken={(tokenId) =>
-                  insertFieldReferenceIntoEditor(args.section, tokenId as 'rawText' | 'title' | 'body' | 'summary_short')
-                }
-              />
-            </AdminTokenRail>
-          }
-          editor={
-            <AiTokenEditor
-              value={args.value}
-              tokens={ENTRY_CLEANUP_TOKEN_DEFINITIONS}
-              minHeight={args.minHeight}
-              onChangeText={(value) => updateEntryCleanupInstructionSection(args.section, value)}
-              requestInsertTokenId={entryCleanupPendingTokenInsert[args.section]}
-              onInsertTokenHandled={() =>
-                setEntryCleanupPendingTokenInsert((prev) => ({
-                  ...prev,
-                  [args.section]: null,
-                }))
-              }
-              onEditorStateChange={(state) =>
-                setEntryCleanupEditorStates((prev) => ({
-                  ...prev,
-                  [args.section]: state,
-                }))
-              }
-            />
-          }
-          warnings={[...args.warnings, ...getUnknownTokenWarnings(args.section)]}
-        />
-      </ThemedView>
-    );
-  }
-
-  const assistInlineDiffSegments = useMemo(() => {
-    if (!assistPreview) return [] as InlineDiffSegment[];
-    return buildInlineDiffSegments(assistPreview.diff.before, assistPreview.diff.after);
-  }, [assistPreview]);
-
-  const activeAssistTargetLabel = activeAssistTarget
-    ? getEntryCleanupPromptAssistTargetLabel(activeAssistTarget.key)
-    : '';
-
-  const assistChangeSummary = assistPreview?.changeSummary?.trim() || 'Voorstel gemaakt op basis van jouw intent.';
-  const assistAdviceSummary =
-    assistPreview?.rationale?.trim() || assistPreview?.analysisSummary?.trim() || 'Advies: compacter geformuleerd met behoud van taakbetekenis en contract.';
-  const assistIssueLines = useMemo(() => {
-    if (!assistPreview) return [] as string[];
-    const issues = assistPreview.issues;
-    const overlapCount = issues.filter((item) => item.type === 'duplicate' || item.type === 'misplaced').length;
-    const riskCount = issues.filter((item) => item.type === 'conflict' || item.severity === 'risk').length;
-    const lines: string[] = [];
-    if (riskCount > 0) {
-      lines.push(`${riskCount} risico${riskCount > 1 ? "'s" : ''} gevonden.`);
-    }
-    if (overlapCount > 0) {
-      lines.push(`${overlapCount} overlap/plaatsingspunt gevonden.`);
-    }
-    for (const issue of issues.slice(0, 3)) {
-      lines.push(issue.message);
-    }
-    if (lines.length === 0) {
-      lines.push('Geen risico’s of conflicten gevonden.');
-    }
-    return lines;
-  }, [assistPreview]);
-
-  const primaryAction = () => {
-    if (formDirty && formValid) {
-      void handleSaveDraft({ testAfterSave: true });
-      return;
-    }
-    if (selectedDraft && detail) {
-      router.push(`/settings-ai-quality-studio/${detail.key}/validate/${selectedDraft.id}` as never);
-    }
-  };
+  const assistSectionDiffs = useMemo(() => {
+    if (!assistPreview?.proposedSections) return [] as { key: string; label: string; before: string; after: string }[];
+    return structuredEditor.sections
+      .map((section) => {
+        const before = sectionValues[section.key] ?? '';
+        const after = assistPreview.proposedSections?.[section.key] ?? before;
+        return {
+          key: section.key,
+          label: section.label,
+          before,
+          after,
+        };
+      })
+      .filter((item) => item.before !== item.after);
+  }, [assistPreview?.proposedSections, sectionValues, structuredEditor.sections]);
 
   return (
     <AdminShell
@@ -765,9 +425,15 @@ export default function AiQualityStudioDraftScreen() {
         !loading && detail && selectedDraft && form ? (
           <AdminStickyFooterActions
             primaryAction={{
-              label: savingDraft ? 'Bezig…' : primaryActionLabel,
-              onPress: primaryAction,
-              disabled: formDirty && !formValid ? true : !canTest,
+              label: savingDraft ? 'Bezig…' : formDirty && formValid ? 'Opslaan en valideren' : 'Valideren',
+              onPress: () => {
+                if (formDirty && formValid) {
+                  void handleSaveDraft({ testAfterSave: true });
+                } else if (taskCapabilities?.canReview) {
+                  router.push(`/settings-ai-quality-studio/${detail.key}/validate/${selectedDraft.id}` as never);
+                }
+              },
+              disabled: formDirty ? !formValid : !canValidate,
               icon: 'play-arrow',
             }}
             secondaryAction={{
@@ -790,123 +456,100 @@ export default function AiQualityStudioDraftScreen() {
     >
       <AdminPageHero title="Draft bewerken" subtitle={detail?.label ?? 'AI Quality Studio'} />
 
-        {loading ? <StateBlock tone="loading" message="Draft laden" /> : null}
-        {!loading && error ? <StateBlock tone="error" message="Kon draft niet laden." detail={error} /> : null}
+      {loading ? <StateBlock tone="loading" message="Draft laden" /> : null}
+      {!loading && error ? <StateBlock tone="error" message="Kon draft niet laden." detail={error} /> : null}
 
-        {!loading && detail && selectedDraft && form ? (
-          <>
-            {isEntryCleanup ? (
-              <ThemedView style={styles.heroBlock}>
-                <ThemedText type="sectionTitle">Entry cleanup</ThemedText>
-                <ThemedText type="bodySecondary">{entryCleanupSubtitle}</ThemedText>
-                <MetaText>
-                  Draft v{selectedDraft.versionNumber} · runtime-basis{' '}
-                  {detail.liveVersion ? `v${detail.liveVersion.versionNumber}` : 'niet ingesteld'} · {selectedDraft.model}
-                </MetaText>
-                <ThemedView style={styles.inlineMetaWrap}>
-                  <ThemedView style={[styles.metaChip, { backgroundColor: palette.surfaceLow }]}>
-                    <MetaText>Beïnvloedt: {taskConsistency?.affectsLabel ?? 'title, body, summary_short'}</MetaText>
-                  </ThemedView>
-                  <ThemedView style={[styles.metaChip, { backgroundColor: palette.surfaceLow }]}>
-                    <MetaText>Runtime-family: entry normalisatie</MetaText>
-                  </ThemedView>
-                </ThemedView>
-              </ThemedView>
-            ) : (
-              <SurfaceSection title="Samenvatting">
-                <ThemedView style={styles.summaryGrid}>
-                  <ThemedView style={styles.fieldGroup}>
-                    <MetaText>Onderdeel</MetaText>
-                    <ThemedText type="defaultSemiBold">{detail.label}</ThemedText>
-                  </ThemedView>
-                  <ThemedView style={styles.fieldGroup}>
-                    <MetaText>Draft versie</MetaText>
-                    <ThemedText type="defaultSemiBold">v{selectedDraft.versionNumber}</ThemedText>
-                  </ThemedView>
-                  <ThemedView style={styles.fieldGroup}>
-                    <MetaText>Model</MetaText>
-                    <ThemedText type="bodySecondary">{selectedDraft.model}</ThemedText>
-                  </ThemedView>
-                  <ThemedView style={styles.fieldGroup}>
-                    <MetaText>Huidige runtime-basis</MetaText>
-                    <ThemedText type="bodySecondary">
-                      {detail.liveVersion
-                        ? `v${detail.liveVersion.versionNumber} · ${detail.liveVersion.model}`
-                        : 'Nog niet ingesteld'}
-                    </ThemedText>
-                  </ThemedView>
-                </ThemedView>
-              </SurfaceSection>
-            )}
+      {!loading && detail && selectedDraft && form ? (
+        <>
+          <ThemedView style={styles.heroBlock}>
+            <ThemedText type="sectionTitle">{structuredEditor.title}</ThemedText>
+            <ThemedText type="bodySecondary">{structuredEditor.subtitle}</ThemedText>
+            <MetaText>
+              Draft v{selectedDraft.versionNumber} · runtime-basis{' '}
+              {detail.liveVersion ? `v${detail.liveVersion.versionNumber}` : 'niet ingesteld'} · {selectedDraft.model}
+            </MetaText>
+            <MetaText>Runtime-groep: {structuredEditor.runtimeFamilyLabel}</MetaText>
+            {taskConsistency ? <MetaText>Beïnvloedt: {taskConsistency.affectsLabel}</MetaText> : null}
+          </ThemedView>
 
-            {isEntryCleanup ? (
-              <ThemedView style={styles.entryCleanupMainLayout}>
-                <ThemedView style={styles.entryCleanupMainColumn}>
-                  {saveMessage ? <StateBlock tone="success" message={saveMessage} /> : null}
+          {saveMessage ? <StateBlock tone="success" message={saveMessage} /> : null}
 
-                  <ThemedView style={styles.editorBlock}>
-                    <ThemedText type="defaultSemiBold">Bewerkbare instructies</ThemedText>
-                    <MetaText>Pas gedrag aan per outputveld. Houd regels kort en brongebonden.</MetaText>
-                  </ThemedView>
-
-                  {renderTokenEditorField({
-                    title: 'Systeemregels',
-                    subtitle: 'Geldt altijd voor alle outputs. Houd dit inhoudelijk en brongebonden.',
-                    section: 'systemRulesInstruction',
-                    value: entryCleanupInstructionSections?.systemRulesInstruction ?? '',
-                    minHeight: 150,
-                    warnings: entryCleanupInstructionWarnings.systemRulesInstruction,
-                  })}
-
-                  {renderTokenEditorField({
-                    title: 'Algemene instructie',
-                    subtitle: 'Wat deze taak als geheel moet opleveren.',
-                    section: 'generalInstruction',
-                    value: entryCleanupInstructionSections?.generalInstruction ?? '',
-                    minHeight: 150,
-                    warnings: entryCleanupInstructionWarnings.generalInstruction,
-                  })}
-
-                  {renderTokenEditorField({
-                    title: 'Titel',
-                    subtitle: 'Alleen regels voor het veld `title`.',
-                    section: 'titleInstruction',
-                    value: entryCleanupInstructionSections?.titleInstruction ?? '',
-                    minHeight: 120,
-                    warnings: entryCleanupInstructionWarnings.titleInstruction,
-                  })}
-
-                  {renderTokenEditorField({
-                    title: 'Body',
-                    subtitle: 'Alleen regels voor het veld `body`.',
-                    section: 'bodyInstruction',
-                    value: entryCleanupInstructionSections?.bodyInstruction ?? '',
-                    minHeight: 150,
-                    warnings: entryCleanupInstructionWarnings.bodyInstruction,
-                  })}
-
-                  {renderTokenEditorField({
-                    title: 'Summary_short',
-                    subtitle: 'Alleen regels voor het veld `summary_short`.',
-                    section: 'summaryShortInstruction',
-                    value: entryCleanupInstructionSections?.summaryShortInstruction ?? '',
-                    minHeight: 120,
-                    warnings: entryCleanupInstructionWarnings.summaryShortInstruction,
-                  })}
-                </ThemedView>
-              </ThemedView>
-            ) : (
-              <SurfaceSection title="Draft bewerken">
-                {saveMessage ? <StateBlock tone="success" message={saveMessage} /> : null}
-                <ThemedView style={styles.fieldGroup}>
-                  <MetaText>Taakinstructie</MetaText>
-                  <ThemedText type="caption">Dit is de instructie die je voor deze versie wilt testen.</ThemedText>
-                  <TextAreaField
-                    value={form.taskInstruction}
-                    onChangeText={(value) => setForm((prev) => (prev ? { ...prev, taskInstruction: value } : prev))}
-                    style={styles.textAreaLarge}
+          <AdminSection title="Bewerkbare instructies">
+            <ThemedView style={styles.editorColumn}>
+              {structuredEditor.sections.map((section) => {
+                const assistOpen = activeAssistTarget?.key === section.key;
+                return (
+                  <AdminEditorSection
+                    key={section.key}
+                    title={section.label}
+                    helper={`${getLayerNoticeInfo(section.layerType, section.label).badgeLabel} · ${section.helper}`}
+                    action={
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => openAssistForSection(section.key, section.layerType)}
+                        style={[
+                          styles.assistTrigger,
+                          {
+                            backgroundColor: assistOpen ? palette.surfaceLowest : palette.surfaceLow,
+                            borderColor: assistOpen ? palette.primary : palette.separator,
+                          },
+                        ]}
+                      >
+                        <ThemedText type="caption" style={{ color: palette.primary }}>
+                          Assist
+                        </ThemedText>
+                      </Pressable>
+                    }
+                    tokenRail={
+                      <AdminTokenRail>
+                        <AiTokenChipPicker
+                          tokens={structuredEditor.tokens}
+                          onInsertToken={(tokenId) => insertTokenForSection(section.key, tokenId)}
+                        />
+                      </AdminTokenRail>
+                    }
+                    editor={
+                      <AiTokenEditor
+                        value={sectionValues[section.key] ?? ''}
+                        tokens={structuredEditor.tokens}
+                        minHeight={section.minHeight}
+                        onChangeText={(value) => updateInstructionSection(section.key, value)}
+                        requestInsertTokenId={pendingTokenInsertBySection[section.key] ?? null}
+                        onInsertTokenHandled={() =>
+                          setPendingTokenInsertBySection((prev) => ({ ...prev, [section.key]: null }))
+                        }
+                        onEditorStateChange={(state) =>
+                          setEditorStatesBySection((prev) => ({ ...prev, [section.key]: state }))
+                        }
+                      />
+                    }
+                    warnings={[...sectionWarnings(section.key), ...unknownTokenWarnings(section.key)]}
                   />
-                </ThemedView>
+                );
+              })}
+            </ThemedView>
+          </AdminSection>
+
+          <AdminSection title="Geavanceerd">
+            <AdminAccordion
+              title={advancedOpen ? 'Verberg geavanceerd' : 'Toon geavanceerd'}
+              summary={advancedOpen ? 'Minder technische details' : 'Technisch contract, model en herkomst'}
+              defaultOpen={advancedOpen}
+              onToggle={setAdvancedOpen}
+            >
+              <ThemedView style={styles.advancedBody}>
+                {taskInputContractLines.length > 0 ? (
+                  <AdminReadOnlyBlock title="Input contract" lines={taskInputContractLines} />
+                ) : null}
+                {technicalContractLines.length > 0 ? (
+                  <AdminReadOnlyBlock title="Technisch contract" lines={technicalContractLines} />
+                ) : null}
+                {taskResponseContractFields.length > 0 ? (
+                  <AdminReadOnlyBlock
+                    title="Response contract"
+                    lines={taskResponseContractFields.map((field) => `${field.name}: ${field.type}`)}
+                  />
+                ) : null}
 
                 <ThemedView style={styles.fieldGroup}>
                   <MetaText>Model</MetaText>
@@ -918,12 +561,7 @@ export default function AiQualityStudioDraftScreen() {
                           key={option.value}
                           accessibilityRole="button"
                           onPress={() => setForm((prev) => (prev ? { ...prev, model: option.value } : prev))}
-                          style={[
-                            styles.modelOption,
-                            {
-                              backgroundColor: active ? palette.surfaceLowest : palette.surfaceLow,
-                            },
-                          ]}
+                          style={[styles.modelOption, { backgroundColor: active ? palette.surfaceLowest : palette.surfaceLow }]}
                         >
                           <ThemedText type="caption" style={{ color: active ? palette.primary : palette.mutedSoft }}>
                             {option.label}
@@ -934,175 +572,50 @@ export default function AiQualityStudioDraftScreen() {
                   </ThemedView>
                 </ThemedView>
 
-                {taskContract ? (
-                  <StateBlock
-                    tone="info"
-                    message={taskContract.title}
-                    detail={taskContract.lines.join(' · ')}
+                <ThemedView style={styles.fieldGroup}>
+                  <MetaText>Output schema JSON</MetaText>
+                  <TextAreaField
+                    value={form.outputSchemaJsonText}
+                    onChangeText={(value) => setForm((prev) => (prev ? { ...prev, outputSchemaJsonText: value } : prev))}
+                    style={styles.textAreaMedium}
                   />
-                ) : null}
-              </SurfaceSection>
-            )}
-
-            <AdminSection title="Geavanceerd">
-              <AdminAccordion
-                title={advancedOpen ? 'Verberg geavanceerd' : 'Toon geavanceerd'}
-                summary={advancedOpen ? 'Minder technische details' : 'Technisch contract, model en herkomst'}
-                defaultOpen={advancedOpen}
-                onToggle={setAdvancedOpen}
-              >
-                <ThemedView style={styles.advancedBody}>
-                  {isEntryCleanup ? (
-                    <>
-                      <AdminReadOnlyBlock title="Input contract" lines={taskInputContractLines} />
-
-                      <AdminReadOnlyBlock title="Technisch contract" lines={entryCleanupTechnicalContractLines} />
-
-                      <AdminReadOnlyBlock
-                        title="Response contract"
-                        lines={taskResponseContractFields.map((field) => `${field.name}: ${field.type}`)}
-                      />
-
-                      <AdminReadOnlyBlock
-                        title="Modelinstellingen"
-                        lines={[
-                          `Model: ${entryCleanupModelSettings?.model ?? form.model}`,
-                          `Temperature: ${String(entryCleanupModelSettings?.temperature ?? 0.2)}`,
-                          'Lagere temperature = stabieler resultaat met minder variatie.',
-                          `response_format: ${entryCleanupModelSettings?.responseFormat ?? 'json_object'}`,
-                          'response_format hoort bij het API/parse-contract.',
-                        ]}
-                      />
-
-                      <AdminReadOnlyBlock title="Technische herkomst / runtime-basis">
-                        {form.baselineMetadataJsonText ? (
-                          <TextAreaField value={form.baselineMetadataJsonText} editable={false} style={styles.textAreaSmall} />
-                        ) : (
-                          <MetaText>Geen baseline metadata beschikbaar.</MetaText>
-                        )}
-                      </AdminReadOnlyBlock>
-                    </>
-                  ) : (
-                    <>
-                      <ThemedView style={styles.advancedGroup}>
-                        <ThemedText type="defaultSemiBold">Vaste regels</ThemedText>
-                        {form.promptTemplateInputContext ? (
-                          <ThemedView style={styles.fieldGroup}>
-                            <MetaText>Technische herkomst / inputmapping</MetaText>
-                            <TextAreaField value={form.promptTemplateInputContext} editable={false} style={styles.textAreaMedium} />
-                          </ThemedView>
-                        ) : null}
-
-                        <ThemedView style={styles.fieldGroup}>
-                          <MetaText>System instructions</MetaText>
-                          <TextAreaField
-                            value={form.systemInstructions}
-                            onChangeText={(value) =>
-                              setForm((prev) => (prev ? { ...prev, systemInstructions: value } : prev))
-                            }
-                            style={styles.textAreaMedium}
-                          />
-                        </ThemedView>
-                      </ThemedView>
-
-                      <ThemedView style={styles.advancedGroup}>
-                        <ThemedText type="defaultSemiBold">Outputvorm</ThemedText>
-                        {taskConsistency?.representation === 'shared_runtime_family' ? (
-                          <MetaText>
-                            Deze taak zit in een gedeelde runtime-family. Dit schema hoort bij de studio-taakweergave,
-                            terwijl runtime meerdere outputs samen opbouwt.
-                          </MetaText>
-                        ) : null}
-                        <ThemedView style={styles.fieldGroup}>
-                          <MetaText>Output schema JSON</MetaText>
-                          <TextAreaField
-                            value={form.outputSchemaJsonText}
-                            onChangeText={(value) =>
-                              setForm((prev) => (prev ? { ...prev, outputSchemaJsonText: value } : prev))
-                            }
-                            style={styles.textAreaMedium}
-                          />
-                          {jsonFieldErrors.outputSchemaError ? (
-                            <MetaText>Output schema: {jsonFieldErrors.outputSchemaError}</MetaText>
-                          ) : null}
-                        </ThemedView>
-                      </ThemedView>
-
-                      <ThemedView style={styles.advancedGroup}>
-                        <ThemedText type="defaultSemiBold">Modelinstellingen</ThemedText>
-                        <ThemedView style={styles.fieldGroup}>
-                          <MetaText>Config JSON</MetaText>
-                          <TextAreaField
-                            value={form.configJsonText}
-                            onChangeText={(value) =>
-                              setForm((prev) => (prev ? { ...prev, configJsonText: value } : prev))
-                            }
-                            style={styles.textAreaMedium}
-                          />
-                          {jsonFieldErrors.configError ? <MetaText>Config: {jsonFieldErrors.configError}</MetaText> : null}
-                        </ThemedView>
-
-                        <ThemedView style={styles.inlineFields}>
-                          <ThemedView style={styles.inlineFieldItem}>
-                            <MetaText>Min items</MetaText>
-                            <InputField
-                              keyboardType="numeric"
-                              value={form.minItemsText}
-                              onChangeText={(value) => setForm((prev) => (prev ? { ...prev, minItemsText: value } : prev))}
-                            />
-                          </ThemedView>
-                          <ThemedView style={styles.inlineFieldItem}>
-                            <MetaText>Max items</MetaText>
-                            <InputField
-                              keyboardType="numeric"
-                              value={form.maxItemsText}
-                              onChangeText={(value) => setForm((prev) => (prev ? { ...prev, maxItemsText: value } : prev))}
-                            />
-                          </ThemedView>
-                        </ThemedView>
-                      </ThemedView>
-
-                      <ThemedView style={styles.advancedGroup}>
-                        <ThemedText type="defaultSemiBold">Technische herkomst</ThemedText>
-                        {form.baselineMetadataJsonText ? (
-                          <ThemedView style={styles.fieldGroup}>
-                            <MetaText>Baseline metadata (read-only)</MetaText>
-                            <TextAreaField value={form.baselineMetadataJsonText} editable={false} style={styles.textAreaSmall} />
-                          </ThemedView>
-                        ) : (
-                          <MetaText>Geen baseline metadata beschikbaar.</MetaText>
-                        )}
-                      </ThemedView>
-
-                      <ThemedView style={styles.fieldGroup}>
-                        <MetaText>Wijzigingsnotitie</MetaText>
-                        <TextAreaField
-                          value={form.changelog}
-                          onChangeText={(value) => setForm((prev) => (prev ? { ...prev, changelog: value } : prev))}
-                          style={styles.textAreaSmall}
-                        />
-                      </ThemedView>
-                    </>
-                  )}
+                  {jsonFieldErrors.outputSchemaError ? <MetaText>{jsonFieldErrors.outputSchemaError}</MetaText> : null}
                 </ThemedView>
-              </AdminAccordion>
-            </AdminSection>
-          </>
-        ) : null}
 
-        {!loading && detail && !selectedDraft ? (
-          <StateBlock
-            tone="info"
-            message="Nog geen draft"
-            detail="Ga terug naar overzicht om eerst een draft te maken."
-          />
-        ) : null}
-      <ConfirmDialog
+                <ThemedView style={styles.fieldGroup}>
+                  <MetaText>Config JSON</MetaText>
+                  <TextAreaField
+                    value={form.configJsonText}
+                    onChangeText={(value) => setForm((prev) => (prev ? { ...prev, configJsonText: value } : prev))}
+                    style={styles.textAreaMedium}
+                  />
+                  {jsonFieldErrors.configError ? <MetaText>{jsonFieldErrors.configError}</MetaText> : null}
+                </ThemedView>
+
+                <ThemedView style={styles.fieldGroup}>
+                  <MetaText>Wijzigingsnotitie</MetaText>
+                  <TextAreaField
+                    value={form.changelog}
+                    onChangeText={(value) => setForm((prev) => (prev ? { ...prev, changelog: value } : prev))}
+                    style={styles.textAreaSmall}
+                  />
+                </ThemedView>
+              </ThemedView>
+            </AdminAccordion>
+          </AdminSection>
+        </>
+      ) : null}
+
+      {!loading && detail && !selectedDraft ? (
+        <StateBlock tone="info" message="Nog geen draft" detail="Ga terug naar overzicht om eerst een draft te maken." />
+      ) : null}
+
+      <DestructiveConfirmSheet
         visible={showDeleteDialog}
         title="Draft verwijderen?"
         message="Deze versie is nog niet actief en wordt verwijderd."
-        cancelLabel="Annuleren"
-        confirmLabel="Verwijderen"
+        secondaryLabel="Annuleren"
+        confirmLabel={deletingDraft ? 'Verwijderen…' : 'Verwijderen'}
         processing={deletingDraft}
         onCancel={() => {
           if (!deletingDraft) setShowDeleteDialog(false);
@@ -1116,220 +629,138 @@ export default function AiQualityStudioDraftScreen() {
         onRequestClose={() => setMenuVisible(false)}
       />
 
-      <Modal
-        visible={Boolean(activeAssistTarget)}
-        transparent
-        animationType="fade"
-        onRequestClose={closeAssistPanel}
-      >
+      <Modal visible={Boolean(activeAssistTarget)} transparent animationType="fade" onRequestClose={closeAssistPanel}>
         <ModalBackdrop
           onPressOutside={closeAssistPanel}
-          contentStyle={[
-            styles.assistOverlayWrap,
-            isWideAssistLayout ? styles.assistOverlayWrapWide : null,
-          ]}
+          contentStyle={[styles.assistOverlayWrap, isWideAssistLayout ? styles.assistOverlayWrapWide : null]}
         >
           <ThemedView
             lightColor={colorTokens.light.surfaceLowest}
             darkColor={colorTokens.dark.surface}
             style={[styles.assistOverlayCard, { borderColor: palette.separator, maxHeight: assistOverlayMaxHeight }]}
           >
-            <ThemedView style={styles.assistFixedHeader}>
-              <ThemedView style={styles.assistHeaderRow}>
-                <ThemedText type="defaultSemiBold">Assist — {activeAssistTargetLabel}</ThemedText>
-                <HeaderIconButton accessibilityRole="button" onPress={closeAssistPanel} size={40}>
-                  <MaterialIcons name="close" size={18} color={palette.text} />
-                </HeaderIconButton>
-              </ThemedView>
-              <MetaText>
-                {activeAssistTarget?.key === 'systemRulesInstruction'
-                  ? 'Geldt voor alle outputs • Alleen deze laag wordt gewijzigd'
-                  : 'Volledige context • Alleen deze laag wordt gewijzigd'}
-              </MetaText>
+            <ThemedView style={styles.assistHeaderRow}>
+              <ThemedText type="defaultSemiBold">Assist — {activeAssistTarget?.key ?? 'laag'}</ThemedText>
+              <HeaderIconButton accessibilityRole="button" onPress={closeAssistPanel} size={40}>
+                <MaterialIcons name="close" size={18} color={palette.text} />
+              </HeaderIconButton>
             </ThemedView>
+            {activeAssistTarget ? (
+              <MetaText>{getLayerNoticeInfo(activeAssistTarget.layerType, activeAssistTarget.key).assistContextMessage}</MetaText>
+            ) : null}
 
             <ScrollView style={styles.assistScrollBody} contentContainerStyle={styles.assistScrollBodyContent}>
-              <ThemedView style={styles.fieldGroup}>
-                <MetaText>Wat wil je aanpassen?</MetaText>
-                <ThemedView style={styles.assistQuickIntentRow}>
-                  {assistPrimaryActions.map((action) => (
-                    <Pressable
-                      key={action.id}
-                      accessibilityRole="button"
-                      onPress={() => selectAssistAction(action)}
-                      style={[
-                        styles.assistQuickIntentChip,
-                        {
-                          backgroundColor:
-                            selectedAssistActionId === action.id ? palette.surfaceLowest : palette.surfaceLow,
-                        },
-                      ]}
+              <ThemedView style={styles.assistQuickIntentRow}>
+                {assistActions.map((action) => (
+                  <Pressable
+                    key={action.id}
+                    accessibilityRole="button"
+                    onPress={() => {
+                      setSelectedAssistActionId(action.id);
+                      setAssistIntent(action.helper);
+                    }}
+                    style={[
+                      styles.assistQuickIntentChip,
+                      {
+                        backgroundColor:
+                          selectedAssistActionId === action.id ? palette.surfaceLowest : palette.surfaceLow,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      type="caption"
+                      style={{
+                        color:
+                          selectedAssistActionId === action.id ? palette.primary : palette.mutedSoft,
+                        fontWeight: selectedAssistActionId === action.id ? '600' : '400',
+                      }}
                     >
-                      <ThemedText
-                        type="caption"
-                        style={{ color: selectedAssistActionId === action.id ? palette.primary : palette.mutedSoft }}
-                      >
-                        {action.label}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
-                </ThemedView>
-                {assistSecondaryActions.length > 0 ? (
-                  <ThemedView style={styles.fieldGroup}>
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => setAssistMoreOpen((prev) => !prev)}
-                      style={[styles.assistMoreToggle, { backgroundColor: palette.surfaceLow }]}
-                    >
-                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                        {assistMoreOpen ? 'Minder' : 'Meer'}
-                      </ThemedText>
-                    </Pressable>
-                    {assistMoreOpen ? (
-                      <ThemedView style={styles.assistSecondaryRow}>
-                        {assistSecondaryActions.map((action) => (
-                          <Pressable
-                            key={action.id}
-                            accessibilityRole="button"
-                            onPress={() => selectAssistAction(action)}
-                            style={[
-                              styles.assistQuickIntentChip,
-                              {
-                                backgroundColor:
-                                  selectedAssistActionId === action.id ? palette.surfaceLowest : palette.surfaceLow,
-                              },
-                            ]}
-                          >
-                            <ThemedText
-                              type="caption"
-                              style={{ color: selectedAssistActionId === action.id ? palette.primary : palette.mutedSoft }}
-                            >
-                              {action.label}
-                            </ThemedText>
-                          </Pressable>
-                        ))}
-                      </ThemedView>
-                    ) : null}
-                  </ThemedView>
-                ) : null}
-                <TextAreaField
-                  value={assistIntent}
-                  onChangeText={(value) => setAssistIntent(value)}
-                  style={styles.assistIntentInput}
-                  placeholder="Extra nuance (optioneel)"
-                  placeholderTextColor={scheme === 'dark' ? 'rgba(181, 173, 155, 0.56)' : 'rgba(115, 106, 86, 0.42)'}
-                />
+                      {action.label}
+                    </ThemedText>
+                  </Pressable>
+                ))}
               </ThemedView>
 
+              <TextAreaField
+                value={assistIntent}
+                onChangeText={(value) => setAssistIntent(value)}
+                style={styles.textAreaSmall}
+                placeholder="Extra nuance (optioneel)"
+                placeholderTextColor={scheme === 'dark' ? 'rgba(181, 173, 155, 0.56)' : 'rgba(115, 106, 86, 0.42)'}
+              />
+
+              {!selectedAssistActionId ? (
+                assistHasTypedIntent ? (
+                  <MetaText>Geen chip gekozen: je eigen instructie wordt gebruikt met neutrale actie Verhelderen.</MetaText>
+                ) : (
+                  <MetaText>Geen chip gekozen: standaardactie Compacter wordt gebruikt.</MetaText>
+                )
+              ) : null}
               {assistLoading ? <StateBlock tone="loading" message="Voorstel maken" /> : null}
               {assistError ? <StateBlock tone="error" message="Assist kon niet laden." detail={assistError} /> : null}
 
               {assistPreview ? (
                 <>
-                {assistPreviewStale ? (
-                  <MetaText>Huidig voorstel is verouderd. Vernieuw om door te gaan met deze input.</MetaText>
-                ) : null}
-                <ThemedView style={styles.assistResultGroup}>
-                  <ThemedText type="defaultSemiBold">Wat is aangepast</ThemedText>
-                  <MetaText>{assistChangeSummary}</MetaText>
-                </ThemedView>
-
-                <ThemedView style={styles.assistResultGroup}>
-                  <ThemedText type="defaultSemiBold">Advies</ThemedText>
-                  <MetaText>{assistAdviceSummary}</MetaText>
-                </ThemedView>
-
-                <ThemedView style={styles.assistResultGroup}>
-                  <ThemedText type="defaultSemiBold">Voorstel</ThemedText>
-                  <TextAreaField value={assistPreview.proposedText} editable={false} style={styles.assistReadOnlyText} />
-                </ThemedView>
-
-                <ThemedView style={styles.assistResultGroup}>
-                  <ThemedText type="defaultSemiBold">Verschil</ThemedText>
-                  <ThemedView style={styles.inlineDiffWrap}>
-                    {assistInlineDiffSegments.length === 0 ? (
-                      <MetaText>Geen zichtbaar verschil.</MetaText>
-                    ) : (
-                      <ThemedText type="bodySecondary" style={{ color: palette.text }}>
-                        {assistInlineDiffSegments.map((segment, index) => (
-                          <Text
-                            key={`${segment.kind}-${index}`}
-                            style={[
-                              styles.diffTokenBase,
-                              segment.kind === 'removed'
-                                ? styles.diffRemoveText
-                                : segment.kind === 'added'
-                                  ? styles.diffAddText
-                                  : undefined,
-                            ]}
-                          >
-                            {segment.text}
-                          </Text>
-                        ))}
-                      </ThemedText>
-                    )}
+                  {assistPreviewStale ? <MetaText>Voorstel is verouderd. Vernieuw eerst.</MetaText> : null}
+                  <ThemedView style={styles.fieldGroup}>
+                    <MetaText>Analyse</MetaText>
+                    <ThemedText type="bodySecondary">{assistPreview.analysisSummary}</ThemedText>
                   </ThemedView>
-                </ThemedView>
-
-                {assistPreview.issues.length > 0 ? (
-                  <ThemedView style={styles.assistResultGroup}>
-                    <ThemedText type="defaultSemiBold">Aandachtspunten</ThemedText>
-                    {assistIssueLines.map((line, index) => (
-                      <MetaText key={`${line}-${index}`}>• {line}</MetaText>
-                    ))}
+                  <ThemedView style={styles.fieldGroup}>
+                    <MetaText>Wijzigingssamenvatting</MetaText>
+                    <ThemedText type="bodySecondary">{assistPreview.changeSummary}</ThemedText>
                   </ThemedView>
-                ) : (
-                  <MetaText>Geen risico’s of conflicten gevonden.</MetaText>
-                )}
-
+                  {assistPreview.rationale ? (
+                    <ThemedView style={styles.fieldGroup}>
+                      <MetaText>Rationale</MetaText>
+                      <ThemedText type="bodySecondary">{assistPreview.rationale}</ThemedText>
+                    </ThemedView>
+                  ) : null}
+                  {effectiveAssistActionId === 'verdeel_over_velden' && assistSectionDiffs.length > 0 ? (
+                    <ThemedView style={styles.fieldGroup}>
+                      <MetaText>Voorstel per veld</MetaText>
+                      {assistSectionDiffs.map((item) => (
+                        <ThemedView key={item.key} style={styles.fieldGroup}>
+                          <MetaText>{item.label}</MetaText>
+                          <TextAreaField value={item.after} editable={false} style={styles.textAreaSmall} />
+                        </ThemedView>
+                      ))}
+                    </ThemedView>
+                  ) : (
+                    <>
+                      <TextAreaField value={assistPreview.proposedText} editable={false} style={styles.textAreaMedium} />
+                      <ThemedView style={styles.inlineDiffWrap}>
+                        <InlineWordDiffText beforeText={assistPreview.diff.before} afterText={assistPreview.diff.after} />
+                      </ThemedView>
+                    </>
+                  )}
                 </>
-              ) : (
-                <MetaText>Voorstel verschijnt hier zodra je op Maak voorstel klikt.</MetaText>
-              )}
+              ) : null}
             </ScrollView>
 
-            <ThemedView style={styles.assistFixedFooter}>
-              <ThemedView style={styles.assistActionRow}>
-              {assistPreview ? (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={applyAssistToTarget}
-                  disabled={assistPreviewStale}
-                  style={[styles.assistActionButton, { backgroundColor: palette.surfaceLow }]}
-                >
-                  <ThemedText type="caption" style={{ color: palette.primary }}>
-                    Toepassen op deze laag
-                  </ThemedText>
-                </Pressable>
-              ) : null}
-
+            <ThemedView style={styles.assistActionRow}>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => void runAssistPreview()}
-                disabled={assistLoading || !activeAssistTarget}
-                style={[
-                  styles.assistActionButton,
-                  {
-                    backgroundColor: palette.surfaceLow,
-                    opacity: assistLoading ? 0.6 : 1,
-                  },
-                ]}
+                  disabled={assistLoading || !activeAssistTarget}
+                style={[styles.assistActionButton, { backgroundColor: palette.surfaceLow }]}
               >
                 <ThemedText type="caption" style={{ color: palette.primary }}>
                   {assistPreview ? 'Voorstel vernieuwen' : 'Maak voorstel'}
                 </ThemedText>
               </Pressable>
-
-              <Pressable
-                accessibilityRole="button"
-                onPress={closeAssistPanel}
-                style={[styles.assistActionButton, { backgroundColor: palette.surfaceLow }]}
-              >
-                <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                  Sluiten
-                </ThemedText>
-              </Pressable>
-              </ThemedView>
+              {assistPreview ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={applyAssistSuggestion}
+                  disabled={assistPreviewStale}
+                  style={[styles.assistActionButton, { backgroundColor: palette.surfaceLow }]}
+                >
+                  <ThemedText type="caption" style={{ color: palette.primary }}>
+                    Toepassen
+                  </ThemedText>
+                </Pressable>
+              ) : null}
             </ThemedView>
           </ThemedView>
         </ModalBackdrop>
@@ -1344,35 +775,38 @@ const styles = StyleSheet.create({
     gap: spacing.content,
   },
   heroBlock: {
-    gap: spacing.sm,
-  },
-  inlineMetaWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.xs,
   },
-  metaChip: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  entryCleanupMainLayout: {
+  editorColumn: {
     gap: spacing.section,
-  },
-  entryCleanupMainColumn: {
-    gap: spacing.section,
-  },
-  editorBlock: {
-    gap: spacing.xs,
-  },
-  assistSectionWrap: {
-    gap: spacing.sm,
   },
   assistTrigger: {
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderWidth: 1,
+  },
+  advancedBody: {
+    gap: spacing.sm,
+  },
+  fieldGroup: {
+    gap: spacing.xs,
+  },
+  modelOptionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  modelOption: {
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  textAreaMedium: {
+    minHeight: 140,
+  },
+  textAreaSmall: {
+    minHeight: 90,
   },
   assistOverlayWrap: {
     width: '100%',
@@ -1388,56 +822,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
-  assistFixedHeader: {
-    gap: spacing.xxs,
+  assistHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   assistScrollBody: {
     flex: 1,
   },
   assistScrollBodyContent: {
     gap: spacing.sm,
-    paddingTop: spacing.xxs,
-    paddingBottom: spacing.xxs,
-  },
-  assistFixedFooter: {
-    paddingTop: spacing.xxs,
-  },
-  assistHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
-  },
-  assistIntentInput: {
-    minHeight: 44,
-  },
-  assistResultGroup: {
-    gap: spacing.xxs,
-  },
-  assistReadOnlyText: {
-    minHeight: 150,
-  },
-  inlineDiffWrap: {
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  diffTokenBase: {
-    borderRadius: 4,
-    paddingHorizontal: 1,
-  },
-  diffRemoveText: {
-    textDecorationLine: 'line-through',
-    backgroundColor: 'rgba(186, 64, 67, 0.12)',
-  },
-  diffAddText: {
-    backgroundColor: 'rgba(52, 138, 83, 0.14)',
-  },
-  assistActionRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
+    paddingBottom: spacing.xs,
   },
   assistQuickIntentRow: {
     flexDirection: 'row',
@@ -1451,17 +848,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
-  assistMoreToggle: {
-    borderRadius: 999,
-    minHeight: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
+  inlineDiffWrap: {
+    borderRadius: 12,
     paddingHorizontal: spacing.sm,
-    alignSelf: 'flex-start',
+    paddingVertical: spacing.sm,
   },
-  assistSecondaryRow: {
+  assistActionRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.xs,
   },
   assistActionButton: {
@@ -1471,72 +864,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
-  },
-  fieldChipWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  chipGroup: {
-    gap: spacing.xs,
-  },
-  fieldChip: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  inputFieldChip: {
-    minHeight: 28,
-  },
-  outputFieldChip: {
-    minHeight: 28,
-  },
-  fieldGroup: {
-    gap: spacing.xs,
-  },
-  summaryGrid: {
-    gap: spacing.sm,
-  },
-  advancedToggle: {
-    gap: spacing.xxs,
-  },
-  advancedBody: {
-    gap: spacing.sm,
-  },
-  advancedGroup: {
-    gap: spacing.xs,
-  },
-  modelOptionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  modelOption: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: 999,
-  },
-  inlineFields: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  inlineFieldItem: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  textAreaLarge: {
-    minHeight: 180,
-  },
-  textAreaMedium: {
-    minHeight: 140,
-  },
-  textAreaSmall: {
-    minHeight: 90,
-  },
-  textAreaInstruction: {
-    minHeight: 150,
-  },
-  textAreaSection: {
-    minHeight: 120,
   },
 });

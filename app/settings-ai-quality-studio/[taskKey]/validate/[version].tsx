@@ -13,6 +13,7 @@ import {
   AdminStickyFooterActions,
   SettingsTopNav,
 } from '@/components/ui/settings-screen-primitives';
+import { InlineWordDiffText } from '@/components/ui/inline-word-diff';
 import { InputField, MetaText, StateBlock, SurfaceSection, TextAreaField } from '@/components/ui/screen-primitives';
 import {
   classifyUnknownError,
@@ -32,6 +33,7 @@ import type {
 } from '@/types';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, radius, spacing } from '@/theme';
+import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '../../readmodel';
 
 type SignalTone = 'ok' | 'warn' | 'fail';
 
@@ -111,15 +113,36 @@ function parseObjectLikeText(value: string): Record<string, unknown> | null {
 
 function normalizeOutput(input: {
   rawText: string | null;
+  rawJson?: unknown;
   preferredType: OutputRenderKind;
   forceObjectParse?: boolean;
 }): NormalizedOutput {
+  if (Array.isArray(input.rawJson)) {
+    return { kind: 'list', items: input.rawJson };
+  }
+
+  if (input.rawJson && typeof input.rawJson === 'object') {
+    const objectValue = input.rawJson as Record<string, unknown>;
+    const fields = Object.keys(objectValue)
+      .sort((a, b) => a.localeCompare(b))
+      .map((key) => ({ key, value: objectValue[key] }));
+    return { kind: 'object', fields };
+  }
+
   const text = (input.rawText ?? '').trim();
   if (!text) {
     return { kind: 'text', text: '', parseFallback: false };
   }
 
-  if (input.preferredType === 'text') {
+  // Always try object parse first — even for text/list tasks — so JSON output is never shown as raw string
+  if (input.preferredType === 'text' && !input.forceObjectParse) {
+    const tryObj = parseObjectLikeText(text);
+    if (tryObj) {
+      const fields = Object.keys(tryObj)
+        .sort((a, b) => a.localeCompare(b))
+        .map((key) => ({ key, value: tryObj[key] }));
+      return { kind: 'object', fields };
+    }
     return { kind: 'text', text, parseFallback: false };
   }
 
@@ -155,6 +178,11 @@ function renderUnknownValue(value: unknown): string {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    return value
+      .map((item, i) => `${i + 1}. ${typeof item === 'string' ? item : JSON.stringify(item)}`)
+      .join('\n');
+  }
   try {
     return JSON.stringify(value, null, 2);
   } catch {
@@ -162,11 +190,55 @@ function renderUnknownValue(value: unknown): string {
   }
 }
 
+const FIELD_LABELS: Record<string, Record<string, string>> = {
+  entry_cleanup: {
+    title: 'Titel',
+    body: 'Volledige tekst',
+    summary_short: 'Korte samenvatting',
+  },
+  day_journal: {
+    summary: 'Samenvatting',
+    narrativeText: 'Verhaaltekst',
+    sections: 'Kernblokken',
+  },
+  day_summary: {
+    summary: 'Samenvatting',
+    narrativeText: 'Verhaaltekst',
+    narrative_text: 'Verhaaltekst',
+    sections: 'Kernblokken',
+  },
+  day_narrative: {
+    summary: 'Samenvatting',
+    narrativeText: 'Verhaaltekst',
+    narrative_text: 'Verhaaltekst',
+    sections: 'Kernblokken',
+  },
+  week_summary: {
+    summaryText: 'Samenvatting',
+    summary_text: 'Samenvatting',
+    narrativeText: 'Verhaaltekst',
+    narrative_text: 'Verhaaltekst',
+    highlights: 'Highlights',
+    highlights_json: 'Highlights',
+    reflectionPoints: 'Reflectiepunten',
+    reflection_points_json: 'Reflectiepunten',
+  },
+  month_summary: {
+    summaryText: 'Samenvatting',
+    summary_text: 'Samenvatting',
+    narrativeText: 'Verhaaltekst',
+    narrative_text: 'Verhaaltekst',
+    highlights: 'Highlights',
+    highlights_json: 'Highlights',
+    reflectionPoints: 'Reflectiepunten',
+    reflection_points_json: 'Reflectiepunten',
+  },
+};
+
 function formatObjectFieldLabel(taskKey: string | undefined, fieldKey: string): string {
-  if (taskKey === 'entry_cleanup') {
-    if (fieldKey === 'title') return 'Title';
-    if (fieldKey === 'body') return 'Body';
-    if (fieldKey === 'summary_short') return 'Summary';
+  if (taskKey) {
+    const map = FIELD_LABELS[taskKey];
+    if (map?.[fieldKey]) return map[fieldKey];
   }
   return fieldKey;
 }
@@ -184,6 +256,19 @@ function sentenceCount(value: string): number {
     .split(/(?<=[.!?])\s+/)
     .map((part) => part.trim())
     .filter((part) => part.length > 0).length;
+}
+
+function parseStringFieldLengths(value: string): Record<string, number> | null {
+  const parsed = parseObjectLikeText(value);
+  if (!parsed) return null;
+
+  const lengths = Object.fromEntries(
+    Object.entries(parsed)
+      .filter(([, fieldValue]) => typeof fieldValue === 'string')
+      .map(([fieldKey, fieldValue]) => [fieldKey, (fieldValue as string).trim().length])
+  );
+
+  return Object.keys(lengths).length > 0 ? lengths : null;
 }
 
 function buildContractSignals(args: {
@@ -227,34 +312,34 @@ function buildContractSignals(args: {
 
     return [
       {
-        label: 'Schema parse',
+        label: 'Output leesbaar als JSON',
         tone: parseOk ? 'ok' : 'fail',
-        detail: parseOk ? 'JSON object parse OK.' : 'Output is geen geldig JSON object.',
+        detail: parseOk ? undefined : 'De output kon niet worden gelezen als geldige JSON. Controleer of de instructie een correct object teruggeeft.',
       },
       {
-        label: 'Required fields',
+        label: 'Alle verplichte velden aanwezig (titel, tekst, samenvatting)',
         tone: missingKeys.length === 0 ? 'ok' : 'fail',
-        detail: missingKeys.length === 0 ? undefined : `Ontbreekt: ${missingKeys.join(', ')}`,
+        detail: missingKeys.length === 0 ? undefined : `Ontbrekend: ${missingKeys.join(', ')}`,
       },
       {
-        label: 'Contractregel: body is geen samenvatting',
+        label: 'Volledige tekst is geen samenvatting',
         tone: !parseOk ? 'fail' : bodyLooksShort ? 'warn' : 'ok',
-        detail: !parseOk ? 'Niet te beoordelen door parsefout.' : bodyLooksShort ? 'Body lijkt erg kort voor cleanup.' : undefined,
+        detail: !parseOk ? 'Niet te beoordelen.' : bodyLooksShort ? 'De volledige tekst lijkt erg kort. Controleer of er geen content verloren gaat.' : undefined,
       },
       {
-        label: 'Compactness (relevant)',
+        label: 'Lengte volledige tekst past bij de huidige versie',
         tone: compactnessWarn ? 'warn' : 'ok',
-        detail: compactnessWarn ? 'Body wijkt sterk af in lengte t.o.v. baseline.' : undefined,
+        detail: compactnessWarn ? 'De volledige tekst is duidelijk langer dan de huidige versie. Controleer of er extra tekst is bijgekomen die er niet in hoort.' : undefined,
       },
       {
-        label: 'Hard fail checks',
+        label: 'Geen structuurfouten of onbruikbare output',
         tone: parseOk && missingKeys.length === 0 ? 'ok' : 'fail',
-        detail: parseOk && missingKeys.length === 0 ? undefined : 'Structuurfout of onbruikbare output gedetecteerd.',
+        detail: parseOk && missingKeys.length === 0 ? undefined : 'Structuurfout of onvolledig resultaat. Deze versie kan niet worden geactiveerd.',
       },
       {
-        label: 'Summary_short compact',
+        label: 'Korte samenvatting is bondig (max. 3 zinnen)',
         tone: summarySentences <= 3 ? 'ok' : 'warn',
-        detail: `Geteld: ${summarySentences} zin(nen).`,
+        detail: summarySentences > 3 ? `De korte samenvatting telt ${summarySentences} zinnen. Houd dit bij voorkeur op 1–3 zinnen.` : undefined,
       },
     ];
   }
@@ -265,41 +350,61 @@ function buildContractSignals(args: {
     args.taskKey.includes('reflection_points') &&
     /(moet je|je zou|raad ik|adviseer|stap\s+\d|actiepunt)/i.test(normalizedTestText);
 
+  const liveStringFieldLengths = parseStringFieldLengths(liveText.trim());
+  const testStringFieldLengths = parseStringFieldLengths(normalizedTestText);
+  const fieldLengthWarnings =
+    liveStringFieldLengths && testStringFieldLengths
+      ? Object.keys(testStringFieldLengths)
+          .filter((fieldKey) => (liveStringFieldLengths[fieldKey] ?? 0) > 0)
+          .filter((fieldKey) => testStringFieldLengths[fieldKey] > (liveStringFieldLengths[fieldKey] ?? 0) * 1.8)
+      : [];
+
+  const lengthWarn =
+    fieldLengthWarnings.length > 0 ||
+    (liveText.trim().length > 0 && normalizedTestText.length > liveText.trim().length * 1.8);
+
+  const lengthWarnDetail =
+    fieldLengthWarnings.length > 0
+      ? `Duidelijk langere velden: ${fieldLengthWarnings
+          .map((fieldKey) => formatObjectFieldLabel(args.taskKey, fieldKey))
+          .join(', ')}.`
+      : 'De output is duidelijk langer dan de huidige versie. Controleer of er extra tekst in staat die er niet in hoort.';
+
   return [
     {
-      label: 'Schema parse',
+      label: 'Output aanwezig en leesbaar',
       tone: textListShape || args.taskKey.endsWith('summary') || args.taskKey.endsWith('narrative') ? 'ok' : 'warn',
-      detail: textListShape ? 'Lijkt list-output.' : 'Text-output zonder harde parsevalidatie.',
+      detail: !textListShape && !args.taskKey.endsWith('summary') && !args.taskKey.endsWith('narrative')
+        ? 'De output heeft geen herkend formaat. Controleer of de instructie het juiste type teruggeeft.'
+        : undefined,
     },
     {
-      label: 'Required fields',
+      label: 'Output is niet leeg',
       tone: normalizedTestText.length > 0 ? 'ok' : 'fail',
-      detail: normalizedTestText.length > 0 ? undefined : 'Lege output.',
+      detail: normalizedTestText.length > 0 ? undefined : 'Geen bruikbare output ontvangen.',
     },
     {
-      label: 'Task-contract waarschuwing',
+      label: summaryLooksLong
+        ? 'Samenvatting is te lang'
+        : reflectionAdviceWarn
+          ? 'Reflectiepunten lijken op adviezen'
+          : 'Inhoud past bij de taak',
       tone: summaryLooksLong || reflectionAdviceWarn ? 'warn' : 'ok',
       detail: summaryLooksLong
-        ? 'day_summary oogt lang voor compacte samenvatting.'
+        ? 'De samenvatting is langer dan verwacht. Controleer of de instructie niet te uitgebreid is.'
         : reflectionAdviceWarn
-          ? 'reflectiepunten lijken advieslaag te worden.'
+          ? 'De reflectiepunten lijken richting advies of actiepunten te gaan. Houd het observerend.'
           : undefined,
     },
     {
-      label: 'Compactness (relevant)',
-      tone:
-        liveText.trim().length > 0 && normalizedTestText.length > liveText.trim().length * 1.8
-          ? 'warn'
-          : 'ok',
-      detail:
-        liveText.trim().length > 0 && normalizedTestText.length > liveText.trim().length * 1.8
-          ? 'Kandidaat is duidelijk langer dan baseline.'
-          : undefined,
+      label: 'Lengte output past bij de huidige versie',
+      tone: lengthWarn ? 'warn' : 'ok',
+      detail: lengthWarn ? lengthWarnDetail : undefined,
     },
     {
-      label: 'Hard fail checks',
+      label: 'Geen kritieke fouten',
       tone: normalizedTestText.length > 0 ? 'ok' : 'fail',
-      detail: normalizedTestText.length > 0 ? undefined : 'Onbruikbare lege output.',
+      detail: normalizedTestText.length > 0 ? undefined : 'Lege output. Kan niet worden beoordeeld.',
     },
   ];
 }
@@ -329,6 +434,7 @@ export default function AiQualityStudioValidateScreen() {
   const [decisionNotes, setDecisionNotes] = useState('');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [candidateDiffTogglesByKey, setCandidateDiffTogglesByKey] = useState<Record<string, boolean>>({});
 
   const selectedVersion = useMemo(() => {
     if (!detail) return null;
@@ -343,6 +449,10 @@ export default function AiQualityStudioValidateScreen() {
   );
 
   const isEntryCleanup = detail?.key === 'entry_cleanup';
+  const taskCapabilities = useMemo(
+    () => (detail ? getAiQualityTaskCapabilities(detail.key) : null),
+    [detail]
+  );
 
   const filteredSources = useMemo(() => {
     const query = sourceQuery.trim().toLowerCase();
@@ -353,7 +463,7 @@ export default function AiQualityStudioValidateScreen() {
   }, [sourceQuery, testSources]);
 
   const baselineAvailable = compareView?.baselineStatus === 'available';
-  const supportsInlineTesting = detail?.inputType === 'entry' || detail?.inputType === 'day';
+  const supportsInlineTesting = Boolean(taskCapabilities?.canTest && taskCapabilities?.canReview);
   const caseStorageKey = useMemo(() => {
     if (!detail?.key || !selectedVersion?.id) return null;
     return `aiqs_validate_case_${detail.key}_${selectedVersion.id}`;
@@ -403,21 +513,38 @@ export default function AiQualityStudioValidateScreen() {
     () =>
       normalizeOutput({
         rawText: compareView?.liveOutputText ?? null,
+        rawJson: compareView?.liveOutputJson ?? null,
         preferredType: preferredOutputType,
         forceObjectParse: detail?.key === 'entry_cleanup',
       }),
-    [compareView?.liveOutputText, preferredOutputType, detail?.key]
+    [compareView, preferredOutputType, detail?.key]
   );
 
   const normalizedCandidateOutput = useMemo(
     () =>
       normalizeOutput({
         rawText: compareView?.testOutputText ?? null,
+        rawJson: compareView?.testOutputJson ?? null,
         preferredType: preferredOutputType,
         forceObjectParse: detail?.key === 'entry_cleanup',
       }),
-    [compareView?.testOutputText, preferredOutputType, detail?.key]
+    [compareView, preferredOutputType, detail?.key]
   );
+
+  const baselineObjectFieldMap = useMemo(() => {
+    if (normalizedBaselineOutput.kind !== 'object') return {} as Record<string, unknown>;
+    return Object.fromEntries(normalizedBaselineOutput.fields.map((field) => [field.key, field.value]));
+  }, [normalizedBaselineOutput]);
+
+  const compareShapeMismatchNotice = useMemo(() => {
+    if (!compareView || compareView.baselineStatus !== 'available') return null;
+    if (normalizedBaselineOutput.kind === normalizedCandidateOutput.kind) return null;
+    return 'Baseline en kandidaat hebben een verschillende output-structuur. Vergelijking wordt als best-effort getoond.';
+  }, [compareView, normalizedBaselineOutput.kind, normalizedCandidateOutput.kind]);
+
+  useEffect(() => {
+    setCandidateDiffTogglesByKey({});
+  }, [compareView?.testRunId]);
 
   const load = useCallback(async () => {
     const normalizedTaskKey = typeof taskKey === 'string' ? taskKey.trim() : '';
@@ -433,9 +560,19 @@ export default function AiQualityStudioValidateScreen() {
 
     try {
       const nextDetail = await fetchAdminAiQualityStudioTaskDetail(normalizedTaskKey);
+      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label);
+      if (metadata.editorScope === 'read_only_part') {
+        if (metadata.familyKey) {
+          router.replace(`/settings-ai-quality-studio/group/${metadata.familyKey}` as never);
+        } else if (metadata.editorTargetTaskKey) {
+          router.replace(`/settings-ai-quality-studio/${metadata.editorTargetTaskKey}` as never);
+        }
+        return;
+      }
       setDetail(nextDetail);
 
-      if (nextDetail.inputType === 'entry' || nextDetail.inputType === 'day') {
+      const nextCapabilities = getAiQualityTaskCapabilities(nextDetail.key);
+      if (nextCapabilities.canTest) {
         setLoadingSources(true);
         try {
           const sources = await listAdminAiQualityStudioTestSources(nextDetail.key);
@@ -523,7 +660,12 @@ export default function AiQualityStudioValidateScreen() {
 
   async function handleRunTest() {
     if (!detail || !selectedVersion || !selectedSource || runningTest) return;
-    if (selectedSource.sourceType !== 'entry' && selectedSource.sourceType !== 'day') {
+    const sourceType = selectedSource.sourceType;
+    if (sourceType !== 'entry' && sourceType !== 'day') {
+      setError('Alleen entry/day test-bronnen worden nu ondersteund.');
+      return;
+    }
+    if (!taskCapabilities?.allowedSourceTypes.includes(sourceType)) {
       setError('Alleen entry/day test-bronnen worden nu ondersteund.');
       return;
     }
@@ -540,7 +682,7 @@ export default function AiQualityStudioValidateScreen() {
       const created = await runAdminAiQualityStudioTest({
         taskKey: detail.key,
         taskVersionId: selectedVersion.id,
-        sourceType: selectedSource.sourceType,
+        sourceType,
         sourceRecordId: selectedSource.sourceRecordId,
       });
 
@@ -788,7 +930,7 @@ export default function AiQualityStudioValidateScreen() {
           </SurfaceSection>
 
           <ThemedView style={[styles.compareLayout, isDesktop && styles.compareLayoutDesktop]}>
-            <AdminSection title="Baseline output" subtitle="Runtime-basis (verplicht voor beslissing)">
+            <AdminSection title="Huidige versie" subtitle="Wat nu live staat (basis voor vergelijking)">
               {!compareView ? (
                 <StateBlock tone="info" message="Nog geen run" detail="Run eerst een test om baseline te laden." />
               ) : compareView.baselineStatus !== 'available' ? (
@@ -799,6 +941,7 @@ export default function AiQualityStudioValidateScreen() {
                 />
               ) : (
                 <ThemedView style={styles.outputBlock}>
+                  {compareShapeMismatchNotice ? <MetaText>{compareShapeMismatchNotice}</MetaText> : null}
                   {normalizedBaselineOutput.kind === 'object' ? (
                     <ThemedView style={styles.outputStack}>
                       {normalizedBaselineOutput.fields.map((field) => (
@@ -845,7 +988,7 @@ export default function AiQualityStudioValidateScreen() {
               )}
             </AdminSection>
 
-            <AdminSection title="Kandidaat output" subtitle="Resultaat van de nieuwe draftversie">
+            <AdminSection title="Nieuwe versie" subtitle="Wat de draft teruggeeft op deze case">
               {!compareView ? (
                 <StateBlock tone="info" message="Nog geen run" detail="Run een test om kandidaat-output te zien." />
               ) : (
@@ -853,13 +996,49 @@ export default function AiQualityStudioValidateScreen() {
                   {normalizedCandidateOutput.kind === 'object' ? (
                     <ThemedView style={styles.outputStack}>
                       {normalizedCandidateOutput.fields.map((field) => (
-                        <ThemedView
-                          key={`candidate-${field.key}`}
-                          style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}
-                        >
-                          <ThemedText type="defaultSemiBold">{formatObjectFieldLabel(detail?.key, field.key)}</ThemedText>
-                          <ThemedText type="bodySecondary">{renderUnknownValue(field.value)}</ThemedText>
-                        </ThemedView>
+                        (() => {
+                          const diffKey = `field:${field.key}`;
+                          const candidateText = typeof field.value === 'string' ? field.value : null;
+                          const baselineValue = baselineObjectFieldMap[field.key];
+                          const baselineText = typeof baselineValue === 'string' ? baselineValue : null;
+                          const canShowDiff = Boolean(candidateText !== null && baselineText !== null);
+                          const diffOpen = Boolean(candidateDiffTogglesByKey[diffKey]);
+
+                          return (
+                            <ThemedView
+                              key={`candidate-${field.key}`}
+                              style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}
+                            >
+                              <ThemedText type="defaultSemiBold">{formatObjectFieldLabel(detail?.key, field.key)}</ThemedText>
+                              {diffOpen && canShowDiff ? (
+                                <ThemedView style={[styles.inlineDiffWrap, { backgroundColor: palette.surfaceLowest }]}> 
+                                  <InlineWordDiffText beforeText={baselineText ?? ''} afterText={candidateText ?? ''} />
+                                </ThemedView>
+                              ) : (
+                                <ThemedText type="bodySecondary">{renderUnknownValue(field.value)}</ThemedText>
+                              )}
+
+                              {canShowDiff ? (
+                                <>
+                                  <Pressable
+                                    accessibilityRole="button"
+                                    onPress={() =>
+                                      setCandidateDiffTogglesByKey((prev) => ({
+                                        ...prev,
+                                        [diffKey]: !prev[diffKey],
+                                      }))
+                                    }
+                                    style={styles.diffToggleButton}
+                                  >
+                                    <ThemedText type="caption" style={{ color: palette.primary }}>
+                                      {diffOpen ? 'Verberg diff' : 'Toon diff'}
+                                    </ThemedText>
+                                  </Pressable>
+                                </>
+                              ) : null}
+                            </ThemedView>
+                          );
+                        })()
                       ))}
                     </ThemedView>
                   ) : null}
@@ -883,21 +1062,56 @@ export default function AiQualityStudioValidateScreen() {
                   ) : null}
 
                   {normalizedCandidateOutput.kind === 'text' ? (
+                    (() => {
+                      const diffKey = 'text:root';
+                      const baselineText = normalizedBaselineOutput.kind === 'text' ? normalizedBaselineOutput.text : null;
+                      const candidateText = normalizedCandidateOutput.text;
+                      const canShowDiff = Boolean(baselineText !== null && candidateText.length > 0);
+                      const diffOpen = Boolean(candidateDiffTogglesByKey[diffKey]);
+
+                      return (
                     <>
                       {normalizedCandidateOutput.parseFallback ? (
                         <MetaText>Kon kandidaat-output niet veilig als gestructureerde output parsen; toont leesbare tekstfallback.</MetaText>
                       ) : null}
                       <ThemedView style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}> 
-                        <ThemedText type="bodySecondary">{normalizedCandidateOutput.text || 'Geen output.'}</ThemedText>
+                        {diffOpen && canShowDiff ? (
+                          <ThemedView style={[styles.inlineDiffWrap, { backgroundColor: palette.surfaceLowest }]}> 
+                            <InlineWordDiffText beforeText={baselineText ?? ''} afterText={candidateText} />
+                          </ThemedView>
+                        ) : (
+                          <ThemedText type="bodySecondary">{normalizedCandidateOutput.text || 'Geen output.'}</ThemedText>
+                        )}
+
+                        {canShowDiff ? (
+                          <>
+                            <Pressable
+                              accessibilityRole="button"
+                              onPress={() =>
+                                setCandidateDiffTogglesByKey((prev) => ({
+                                  ...prev,
+                                  [diffKey]: !prev[diffKey],
+                                }))
+                              }
+                              style={styles.diffToggleButton}
+                            >
+                              <ThemedText type="caption" style={{ color: palette.primary }}>
+                                {diffOpen ? 'Verberg diff' : 'Toon diff'}
+                              </ThemedText>
+                            </Pressable>
+                          </>
+                        ) : null}
                       </ThemedView>
                     </>
+                      );
+                    })()
                   ) : null}
                 </ThemedView>
               )}
             </AdminSection>
           </ThemedView>
 
-          <SurfaceSection title="Contract signals" subtitle="Compacte checks voor objectieve beoordeling.">
+          <SurfaceSection title="Snelle controle" subtitle="Objectieve signalen over de kwaliteit van deze versie.">
             {contractSignals.length === 0 ? (
               <MetaText>Run eerst een test om signals te tonen.</MetaText>
             ) : (
@@ -1093,6 +1307,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: spacing.xxs,
+  },
+  diffToggleButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.xxs,
+  },
+  inlineDiffWrap: {
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   textAreaLarge: {
     minHeight: 220,

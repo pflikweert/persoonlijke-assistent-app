@@ -7,6 +7,8 @@ import { logFlow } from '../_shared/flow-logger.ts';
 import { authenticateAllowlistedAdmin, getAdminAllowlistFromEnv, getInternalTokenFromEnv } from '../_shared/admin-access.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildEntryCleanupTechnicalContract, buildRuntimeBaselineDefinitions } from '../_shared/ai-quality-runtime-baselines.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow, updateOpenAiDebugStorageSettings, type OpenAiDebugFlowKey } from '../_shared/openai-debug-storage.ts';
 
 const FLOW = 'admin-ai-quality-studio' as const;
 
@@ -32,6 +34,9 @@ type RequestBody = {
   label?: unknown;
   notes?: unknown;
   payload?: unknown;
+  masterEnabled?: unknown;
+  masterTtlHours?: unknown;
+  flowUpdates?: unknown;
 };
 
 type PromptAssistTargetLayerType = 'system' | 'general' | 'field';
@@ -45,7 +50,8 @@ type PromptAssistActionId =
   | 'check_overlap'
   | 'verplaats_naar_juiste_laag'
   | 'maak_strikter'
-  | 'check_outputvorm';
+  | 'check_outputvorm'
+  | 'verdeel_over_velden';
 
 type PromptAssistIssueSeverity = 'info' | 'warning' | 'risk';
 type PromptAssistIssueType = 'duplicate' | 'misplaced' | 'conflict';
@@ -56,12 +62,66 @@ type PromptAssistIssue = {
   message: string;
 };
 
+type PromptAssistLayerRole = 'high_precedence_instruction' | 'task_goal' | 'field_rule';
+type PromptAssistLayerPrecedence = 'high' | 'normal';
+type PromptAssistAllowedChangeKind =
+  | 'rewrite_within_layer'
+  | 'dedupe_within_layer'
+  | 'tighten_wording'
+  | 'clarify_execution'
+  | 'redistribute_with_explicit_justification';
+
+type PromptAssistLayerSemantics = {
+  key: string;
+  label: string;
+  layerType: PromptAssistTargetLayerType;
+  runtimeRole: PromptAssistLayerRole;
+  precedence: PromptAssistLayerPrecedence;
+  purpose: string;
+  preserveRules: string[];
+  forbiddenMoves: string[];
+};
+
+type PromptAssistInvariant = {
+  id: string;
+  description: string;
+  sourceLayerKey: string;
+  mustRemainHighPrecedence: boolean;
+};
+
+type PromptAssistReadOnlyContext = {
+  key: string;
+  label: string;
+  layerType: PromptAssistTargetLayerType;
+  runtimeRole: PromptAssistLayerRole;
+  text: string;
+};
+
 type PromptAssistEditorContext = {
   systemRulesInstruction: string;
   generalInstruction: string;
   fieldRules: Record<string, string>;
+  editableSections: Array<{
+    key: string;
+    label: string;
+    layerType: PromptAssistTargetLayerType;
+  }>;
+  tokenCatalog: Array<{
+    id: string;
+    kind: 'input' | 'output';
+    label: string;
+    token: string;
+  }>;
   outputContract: Record<string, unknown>;
   taskMetadata: Record<string, unknown>;
+  /** Semantiek per laag: rolomschrijving, precedentie, guardrails */
+  layerSemantics: PromptAssistLayerSemantics[];
+  /** Sibling-lagen als read-only context */
+  readOnlyContext: PromptAssistReadOnlyContext[];
+  /** Harde constraints die nooit verloren mogen gaan */
+  invariants: PromptAssistInvariant[];
+  /** Toegestane wijzigingstypes voor de huidige actie + laag */
+  allowedChangeKinds: PromptAssistAllowedChangeKind[];
 };
 
 type TaskRow = {
@@ -98,24 +158,13 @@ type VersionRow = {
 type DraftPayload = {
   model: string;
   promptTemplate: string;
-  systemInstructions: string;
+  systemInstructions?: string;
   outputSchemaJson: Record<string, unknown>;
   configJson: Record<string, unknown>;
-  minItems: number | null;
-  maxItems: number | null;
+  minItems?: number | null;
+  maxItems?: number | null;
   changelog: string | null;
 };
-
-function buildEntryCleanupSystemInstructionsFromContract(): string {
-  const contract = buildEntryCleanupTechnicalContract();
-  return [
-    'Gebruik alleen opgegeven bronvelden.',
-    `Toegestane inputvelden: ${contract.inputFields.join(', ')}.`,
-    `Output moet precies 1 JSON object zijn met keys: ${contract.outputKeys.join(', ')}.`,
-    'Geen tekst buiten JSON.',
-    'summary_short mag een lege string zijn.',
-  ].join(' ');
-}
 
 function buildEntryCleanupOutputSchemaJson(): Record<string, unknown> {
   return {
@@ -172,6 +221,24 @@ type TestRunRow = {
   test_case?: { source_type: 'entry' | 'day' | 'week' | 'month'; source_record_id: string; label: string } | null;
   task?: { key: string; label: string } | null;
 };
+
+type SupportedTestSourceType = 'entry' | 'day';
+
+type DebugFlowUpdateInput = {
+  flowKey: OpenAiDebugFlowKey;
+  enabled: boolean;
+  ttlHours: number | null;
+};
+
+const TEST_CAPABILITIES_BY_TASK_KEY: Record<string, { sourceTypes: SupportedTestSourceType[] }> = {
+  entry_cleanup: { sourceTypes: ['entry'] },
+  day_summary: { sourceTypes: ['day'] },
+  day_narrative: { sourceTypes: ['day'] },
+};
+
+function getTaskTestCapabilities(taskKey: string): { sourceTypes: SupportedTestSourceType[] } | null {
+  return TEST_CAPABILITIES_BY_TASK_KEY[taskKey] ?? null;
+}
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') ?? '*';
@@ -232,24 +299,6 @@ function parseUuid(value: unknown): string | null {
 
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidPattern.test(raw) ? raw : null;
-}
-
-function parseNullableInteger(value: unknown): number | null {
-  if (value === null || value === undefined || value === '') {
-    return null;
-  }
-  if (typeof value === 'number' && Number.isInteger(value)) {
-    return value;
-  }
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      return null;
-    }
-    const parsed = Number.parseInt(trimmed, 10);
-    return Number.isInteger(parsed) ? parsed : Number.NaN;
-  }
-  return Number.NaN;
 }
 
 function ensureJsonObject(value: unknown): Record<string, unknown> | null {
@@ -397,26 +446,17 @@ function normalizeDraftPayload(value: unknown): { payload: DraftPayload | null; 
 
   const model = parseNonEmptyString(input.model);
   const promptTemplate = typeof input.promptTemplate === 'string' ? input.promptTemplate : null;
-  const systemInstructions = typeof input.systemInstructions === 'string' ? input.systemInstructions : '';
   const outputSchemaJson = ensureJsonObject(input.outputSchemaJson);
   const configJson = ensureJsonObject(input.configJson);
-  const minItems = parseNullableInteger(input.minItems);
-  const maxItems = parseNullableInteger(input.maxItems);
   const changelog = input.changelog === null || input.changelog === undefined ? null : String(input.changelog).trim() || null;
 
   if (!model) return { payload: null, error: 'model ontbreekt.' };
   if (promptTemplate === null) return { payload: null, error: 'promptTemplate ontbreekt.' };
   if (!outputSchemaJson) return { payload: null, error: 'outputSchemaJson moet een JSON object zijn.' };
   if (!configJson) return { payload: null, error: 'configJson moet een JSON object zijn.' };
-  if (Number.isNaN(minItems) || Number.isNaN(maxItems)) return { payload: null, error: 'minItems/maxItems moeten gehele getallen of leeg zijn.' };
-  if (minItems !== null && minItems < 0) return { payload: null, error: 'minItems kan niet negatief zijn.' };
-  if (maxItems !== null && maxItems < 0) return { payload: null, error: 'maxItems kan niet negatief zijn.' };
-  if (minItems !== null && maxItems !== null && maxItems < minItems) {
-    return { payload: null, error: 'maxItems moet groter of gelijk zijn aan minItems.' };
-  }
 
   return {
-    payload: { model, promptTemplate, systemInstructions, outputSchemaJson, configJson, minItems, maxItems, changelog },
+    payload: { model, promptTemplate, outputSchemaJson, configJson, changelog },
     error: null,
   };
 }
@@ -428,11 +468,8 @@ function mapVersionRow(row: VersionRow) {
     status: row.status,
     model: row.model,
     promptTemplate: row.prompt_template,
-    systemInstructions: row.system_instructions,
     outputSchemaJson: row.output_schema_json ?? {},
     configJson: row.config_json ?? {},
-    minItems: row.min_items,
-    maxItems: row.max_items,
     changelog: row.changelog,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -498,6 +535,7 @@ function toCompareView(args: {
   baselineStatus: 'available' | 'missing' | 'unsupported';
   baselineReason: string | null;
   liveOutputText: string | null;
+  liveOutputJson: Record<string, unknown> | unknown[] | null;
 }) {
   const reviewerLabelMap: Record<'better' | 'equal' | 'worse' | 'fail', 'beter' | 'gelijk' | 'slechter' | 'fout'> = {
     better: 'beter',
@@ -517,7 +555,9 @@ function toCompareView(args: {
     baselineStatus: args.baselineStatus,
     baselineReason: args.baselineReason,
     liveOutputText: args.liveOutputText,
+    liveOutputJson: args.liveOutputJson,
     testOutputText: args.row.output_text,
+    testOutputJson: args.row.output_json ?? null,
     reviewerLabel: args.row.reviewer_label ? reviewerLabelMap[args.row.reviewer_label] : null,
     reviewerNotes: args.row.reviewer_notes,
   };
@@ -588,7 +628,7 @@ async function loadTaskByKey(args: { adminClient: any; taskKey: string }): Promi
 async function loadVersionsByTaskId(args: { adminClient: any; taskId: string }): Promise<VersionRow[]> {
   const { data, error } = await args.adminClient
     .from('ai_task_versions')
-    .select('id, task_id, version_number, status, model, prompt_template, system_instructions, output_schema_json, config_json, min_items, max_items, changelog, created_at, updated_at, became_live_at, locked_at')
+    .select('id, task_id, version_number, status, model, prompt_template, output_schema_json, config_json, changelog, created_at, updated_at, became_live_at, locked_at')
     .eq('task_id', args.taskId)
     .order('version_number', { ascending: false });
   if (error) throw new Error(String(error.message ?? error));
@@ -609,6 +649,8 @@ async function buildTaskDetail(args: { adminClient: any; taskKey: string }) {
 
 function parseAction(value: unknown):
   | 'access'
+  | 'get_openai_debug_storage_settings'
+  | 'update_openai_debug_storage_settings'
   | 'list_tasks'
   | 'get_task_detail'
   | 'import_runtime_baseline'
@@ -625,6 +667,8 @@ function parseAction(value: unknown):
   if (typeof value !== 'string') return null;
   if (
     value === 'access' ||
+    value === 'get_openai_debug_storage_settings' ||
+    value === 'update_openai_debug_storage_settings' ||
     value === 'list_tasks' ||
     value === 'get_task_detail' ||
     value === 'import_runtime_baseline' ||
@@ -641,6 +685,73 @@ function parseAction(value: unknown):
     return value;
   }
   return null;
+}
+
+function parseBoolean(value: unknown): boolean | null {
+  if (value === true) return true;
+  if (value === false) return false;
+  return null;
+}
+
+function parseTtlHours(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null;
+  }
+  if (value <= 0 || value > 24 * 30) {
+    return null;
+  }
+  return Math.round(value * 100) / 100;
+}
+
+function parseDebugFlowKey(value: unknown): OpenAiDebugFlowKey | null {
+  if (value === 'admin-ai-quality-studio.prompt_assist_preview') return value;
+  if (value === 'admin-ai-quality-studio.run_test') return value;
+  return null;
+}
+
+function parseDebugFlowUpdates(value: unknown): DebugFlowUpdateInput[] | null {
+  if (!Array.isArray(value)) return null;
+  const output: DebugFlowUpdateInput[] = [];
+  for (const item of value) {
+    const row = ensureJsonObject(item);
+    if (!row) return null;
+    const flowKey = parseDebugFlowKey(row.flowKey);
+    const enabled = parseBoolean(row.enabled);
+    const ttlHours = parseTtlHours(row.ttlHours);
+    if (!flowKey || enabled === null) {
+      return null;
+    }
+    output.push({ flowKey, enabled, ttlHours });
+  }
+  return output;
+}
+
+function buildOpenAiDebugStorageResponse(settings: Awaited<ReturnType<typeof loadOpenAiDebugStorageSettings>>) {
+  const promptAssist = resolveOpenAiDebugStorageForFlow({
+    settings,
+    flowKey: 'admin-ai-quality-studio.prompt_assist_preview',
+    endpointFamily: 'chat_completions',
+  });
+  const runTest = resolveOpenAiDebugStorageForFlow({
+    settings,
+    flowKey: 'admin-ai-quality-studio.run_test',
+    endpointFamily: 'chat_completions',
+  });
+
+  return {
+    masterEnabled: settings.masterEnabled,
+    masterExpiresAt: settings.masterExpiresAt,
+    updatedAt: settings.updatedAt,
+    flows: [promptAssist, runTest].map((flow) => ({
+      flowKey: flow.flowKey,
+      state: flow.state,
+      reason: flow.reason,
+      desiredOn: flow.desiredOn,
+      effectiveOn: flow.effectiveOn,
+      expiresAt: flow.expiresAt,
+    })),
+  };
 }
 
 function parsePromptAssistTargetLayerType(value: unknown): PromptAssistTargetLayerType | null {
@@ -664,17 +775,124 @@ function parsePromptAssistActionId(value: unknown): PromptAssistActionId | null 
     value === 'check_overlap' ||
     value === 'verplaats_naar_juiste_laag' ||
     value === 'maak_strikter' ||
-    value === 'check_outputvorm'
+    value === 'check_outputvorm' ||
+    value === 'verdeel_over_velden'
   ) {
     return value;
   }
   return null;
 }
 
+function parseEditableSections(
+  value: unknown
+): Array<{ key: string; label: string; layerType: PromptAssistTargetLayerType }> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const source = ensureJsonObject(item);
+      if (!source) return null;
+      const key = parseNonEmptyString(source.key);
+      const label = parseNonEmptyString(source.label);
+      const layerType = parsePromptAssistTargetLayerType(source.layerType);
+      if (!key || !label || !layerType) return null;
+      return { key, label, layerType };
+    })
+    .filter((item): item is { key: string; label: string; layerType: PromptAssistTargetLayerType } => Boolean(item));
+}
+
+function parseTokenCatalog(
+  value: unknown
+): Array<{ id: string; kind: 'input' | 'output'; label: string; token: string }> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const source = ensureJsonObject(item);
+      if (!source) return null;
+      const id = parseNonEmptyString(source.id);
+      const label = parseNonEmptyString(source.label);
+      const token = parseNonEmptyString(source.token);
+      const kind = source.kind === 'input' || source.kind === 'output' ? source.kind : null;
+      if (!id || !label || !token || !kind) return null;
+      return { id, kind, label, token };
+    })
+    .filter((item): item is { id: string; kind: 'input' | 'output'; label: string; token: string } => Boolean(item));
+}
+
 function inferPromptAssistTargetLayerTypeFromKey(key: PromptAssistTargetLayerKey): PromptAssistTargetLayerType {
   if (key === 'systemRulesInstruction') return 'system';
   if (key === 'generalInstruction') return 'general';
   return 'field';
+}
+
+function parseLayerSemantics(value: unknown): PromptAssistLayerSemantics[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const source = ensureJsonObject(item);
+      if (!source) return null;
+      const key = parseNonEmptyString(source.key);
+      const label = parseNonEmptyString(source.label);
+      const layerType = parsePromptAssistTargetLayerType(source.layerType);
+      const runtimeRole = source.runtimeRole === 'high_precedence_instruction' || source.runtimeRole === 'task_goal' || source.runtimeRole === 'field_rule'
+        ? (source.runtimeRole as PromptAssistLayerRole) : null;
+      const precedence = source.precedence === 'high' || source.precedence === 'normal'
+        ? (source.precedence as PromptAssistLayerPrecedence) : null;
+      if (!key || !label || !layerType || !runtimeRole || !precedence) return null;
+      const purpose = typeof source.purpose === 'string' ? source.purpose : '';
+      const preserveRules = Array.isArray(source.preserveRules)
+        ? source.preserveRules.filter((r): r is string => typeof r === 'string') : [];
+      const forbiddenMoves = Array.isArray(source.forbiddenMoves)
+        ? source.forbiddenMoves.filter((r): r is string => typeof r === 'string') : [];
+      return { key, label, layerType, runtimeRole, precedence, purpose, preserveRules, forbiddenMoves };
+    })
+    .filter((item): item is PromptAssistLayerSemantics => Boolean(item));
+}
+
+function parseReadOnlyContext(value: unknown): PromptAssistReadOnlyContext[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const source = ensureJsonObject(item);
+      if (!source) return null;
+      const key = parseNonEmptyString(source.key);
+      const label = parseNonEmptyString(source.label);
+      const layerType = parsePromptAssistTargetLayerType(source.layerType);
+      const runtimeRole = source.runtimeRole === 'high_precedence_instruction' || source.runtimeRole === 'task_goal' || source.runtimeRole === 'field_rule'
+        ? (source.runtimeRole as PromptAssistLayerRole) : null;
+      const text = typeof source.text === 'string' ? source.text : '';
+      if (!key || !label || !layerType || !runtimeRole) return null;
+      return { key, label, layerType, runtimeRole, text };
+    })
+    .filter((item): item is PromptAssistReadOnlyContext => Boolean(item));
+}
+
+function parseInvariants(value: unknown): PromptAssistInvariant[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const source = ensureJsonObject(item);
+      if (!source) return null;
+      const id = parseNonEmptyString(source.id);
+      const description = typeof source.description === 'string' ? source.description : '';
+      const sourceLayerKey = typeof source.sourceLayerKey === 'string' ? source.sourceLayerKey : '';
+      const mustRemainHighPrecedence = source.mustRemainHighPrecedence === true;
+      if (!id) return null;
+      return { id, description, sourceLayerKey, mustRemainHighPrecedence };
+    })
+    .filter((item): item is PromptAssistInvariant => Boolean(item));
+}
+
+function parseAllowedChangeKinds(value: unknown): PromptAssistAllowedChangeKind[] {
+  const valid: PromptAssistAllowedChangeKind[] = [
+    'rewrite_within_layer',
+    'dedupe_within_layer',
+    'tighten_wording',
+    'clarify_execution',
+    'redistribute_with_explicit_justification',
+  ];
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is PromptAssistAllowedChangeKind => valid.includes(item as PromptAssistAllowedChangeKind));
 }
 
 function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorContext | null {
@@ -692,14 +910,66 @@ function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorConte
 
   const outputContract = ensureJsonObject(source.outputContract) ?? {};
   const taskMetadata = ensureJsonObject(source.taskMetadata) ?? {};
+  const editableSections = parseEditableSections(source.editableSections);
+  const tokenCatalog = parseTokenCatalog(source.tokenCatalog);
+  const layerSemantics = parseLayerSemantics(source.layerSemantics);
+  const readOnlyContext = parseReadOnlyContext(source.readOnlyContext);
+  const invariants = parseInvariants(source.invariants);
+  const allowedChangeKinds = parseAllowedChangeKinds(source.allowedChangeKinds);
 
   return {
     systemRulesInstruction,
     generalInstruction,
     fieldRules: parsedFieldRules,
+    editableSections,
+    tokenCatalog,
     outputContract,
     taskMetadata,
+    layerSemantics,
+    readOnlyContext,
+    invariants,
+    allowedChangeKinds,
   };
+}
+
+function normalizePromptTokens(text: string, tokenCatalog: PromptAssistEditorContext['tokenCatalog']): string {
+  if (!tokenCatalog.length) return text;
+  const byInnerToken = new Map<string, string>();
+  for (const item of tokenCatalog) {
+    const inner = item.token.replace(/^\{\{\s*/, '').replace(/\s*\}\}$/, '').replace(/\s+/g, '').toLowerCase();
+    byInnerToken.set(inner, item.token);
+  }
+
+  return text.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (full, inner: string) => {
+    const normalized = inner.replace(/\s+/g, '').toLowerCase();
+    return byInnerToken.get(normalized) ?? full;
+  });
+}
+
+function normalizeProposedSections(args: {
+  proposedSections: Record<string, string>;
+  context: PromptAssistEditorContext;
+}): Record<string, string> {
+  const normalized: Record<string, string> = {};
+  const allowedKeys = new Set<string>([
+    'systemRulesInstruction',
+    'generalInstruction',
+    ...Object.keys(args.context.fieldRules),
+    ...args.context.editableSections.map((item) => item.key),
+  ]);
+
+  for (const key of allowedKeys) {
+    const value = typeof args.proposedSections[key] === 'string'
+      ? args.proposedSections[key]
+      : key === 'systemRulesInstruction'
+        ? args.context.systemRulesInstruction
+        : key === 'generalInstruction'
+          ? args.context.generalInstruction
+          : args.context.fieldRules[key] ?? '';
+    normalized[key] = normalizePromptTokens(value, args.context.tokenCatalog).trim();
+  }
+
+  return normalized;
 }
 
 function getPromptAssistTargetText(context: PromptAssistEditorContext, targetLayerKey: PromptAssistTargetLayerKey): string {
@@ -766,12 +1036,19 @@ async function runPromptAssistPreview(args: {
   assistActionId: PromptAssistActionId;
   assistIntent: string;
   context: PromptAssistEditorContext;
+  debugRequest?: ReturnType<typeof buildChatCompletionsDebugRequest>;
 }): Promise<{
   analysisSummary: string;
   proposedText: string;
+  proposedSections?: Record<string, string>;
+  sectionReasons?: Record<string, string>;
+  sectionRisks?: Record<string, string[]>;
+  preservedInvariants?: string[];
+  detectedRisks?: string[];
   changeSummary: string;
   rationale: string | null;
   issues: PromptAssistIssue[];
+  openAiObjectId: string | null;
 }> {
   const targetText = getPromptAssistTargetText(args.context, args.targetLayerKey);
 
@@ -784,26 +1061,262 @@ async function runPromptAssistPreview(args: {
     verplaats_naar_juiste_laag: 'Verplaats verkeerd geplaatste regels naar juiste laag (alleen binnen target herschrijven).',
     maak_strikter: 'Maak regels concreter en strikter.',
     check_outputvorm: 'Verduidelijk outputvorm/format-verwachting binnen scope van de gekozen laag.',
+    verdeel_over_velden:
+      'Verdeel en herstructureer instructies over alle bewerkbare velden. Verminder overlap en zet chips op de juiste plek.',
   };
 
+  // ── verdeel_over_velden: guarded redistribute ──────────────────────────────
+  if (args.assistActionId === 'verdeel_over_velden') {
+    const sectionOrder =
+      args.context.editableSections.length > 0
+        ? args.context.editableSections
+        : [
+            { key: 'systemRulesInstruction', label: 'Systeemregels', layerType: 'system' as const },
+            { key: 'generalInstruction', label: 'Algemene instructie', layerType: 'general' as const },
+            ...Object.keys(args.context.fieldRules).map((key) => ({ key, label: key, layerType: 'field' as const })),
+          ];
+
+    const currentSections = Object.fromEntries(
+      sectionOrder.map((section) => [section.key, getPromptAssistTargetText(args.context, section.key)])
+    );
+
+    // Build per-section semantics for the prompt (from context if available, else infer)
+    const sectionSemantics = sectionOrder.map((section) => {
+      const sem = args.context.layerSemantics.find((s) => s.key === section.key);
+      if (sem) return sem;
+      // Fallback inferred semantics
+      const role: PromptAssistLayerRole = section.layerType === 'system'
+        ? 'high_precedence_instruction'
+        : section.layerType === 'general'
+          ? 'task_goal'
+          : 'field_rule';
+      return {
+        key: section.key,
+        label: section.label,
+        layerType: section.layerType,
+        runtimeRole: role,
+        precedence: section.layerType === 'system' ? 'high' as const : 'normal' as const,
+        purpose: section.layerType === 'system'
+          ? 'Harde grenzen die boven alle andere instructies gaan.'
+          : section.layerType === 'general'
+            ? 'Overkoepelend taakdoel voor alle velden tezamen.'
+            : `Veldspecifieke regels voor ${section.label}.`,
+        preserveRules: [],
+        forbiddenMoves: section.layerType === 'system'
+          ? ['Verplaats nooit systeemregels of JSON/contract-constraints naar lagere lagen.']
+          : [],
+      };
+    });
+
+    const highPrecedenceInvariants = args.context.invariants.filter((inv) => inv.mustRemainHighPrecedence);
+
+    const systemPrompt = [
+      'Je bent een rolbewuste Prompt Assist voor een admin-only AI Quality Studio.',
+      '',
+      'TAAK: Herverdeel instructies over ALLE bewerkbare velden in één voorstel.',
+      '',
+      'HARDE REGELS (niet onderhandelbaar):',
+      '1. Houd laagdiscipline: system=harde grenzen/contractregels, general=taakdoel, field=veldspecifiek.',
+      '2. Verplaats NOOIT high-precedence constraints (JSON-formaat, response_format, contractvelden, schema) naar field-lagen.',
+      '3. Verplaats NOOIT systeemregels naar de general-laag als ze technisch van aard zijn.',
+      '4. Per veld: geef proposedText EN placementReason (waarom staat dit hier?).',
+      '5. Signaleer detectedRisks per veld als verplaatsing risico geeft op invariant-verlies.',
+      '6. De volgende invariants MOETEN behouden blijven en blijven in een high-precedence laag:',
+      ...highPrecedenceInvariants.map((inv) => `   - ${inv.id}: ${inv.description}`),
+      '7. Normaliseer tokengebruik naar de meegegeven tokencatalogus.',
+      '',
+      'OUTPUT (JSON):',
+      '{ analysisSummary, proposedSections, sectionReasons, sectionRisks, changeSummary, rationale, preservedInvariants }',
+      'proposedSections: object met key per bewerkbaar veld.',
+      'sectionReasons: object met placementReason per key.',
+      'sectionRisks: object met array van risicomeldingen per key (leeg als geen risico).',
+      'preservedInvariants: array van invariant-ids die behouden zijn.',
+    ].join('\n');
+
+    const userPayload = {
+      taskKey: args.taskKey,
+      assistActionId: args.assistActionId,
+      assistIntent: args.assistIntent,
+      sectionSemantics,
+      tokenCatalog: args.context.tokenCatalog,
+      currentSections,
+      outputContract: args.context.outputContract,
+      taskMetadata: args.context.taskMetadata,
+      invariants: args.context.invariants,
+      allowedChangeKinds: args.context.allowedChangeKinds,
+    };
+
+    const aiResult = await callOpenAi({
+      apiKey: args.apiKey,
+      model: args.model,
+      systemInstructions: systemPrompt,
+      promptSnapshot: JSON.stringify(userPayload, null, 2),
+      config: { temperature: 0.2, response_format: 'json_object' },
+      debugRequest: args.debugRequest,
+    });
+
+    let parsed: Record<string, unknown> = {};
+    if (aiResult.outputJson && !Array.isArray(aiResult.outputJson)) {
+      parsed = aiResult.outputJson;
+    } else {
+      try {
+        const fallbackParsed = JSON.parse(aiResult.outputText);
+        if (fallbackParsed && typeof fallbackParsed === 'object' && !Array.isArray(fallbackParsed)) {
+          parsed = fallbackParsed as Record<string, unknown>;
+        }
+      } catch {
+        parsed = {};
+      }
+    }
+
+    const proposedSectionsRaw = ensureJsonObject(parsed.proposedSections) ?? {};
+    const normalizedSections = normalizeProposedSections({
+      proposedSections: Object.fromEntries(
+        Object.entries(proposedSectionsRaw).map(([key, value]) => [key, typeof value === 'string' ? value : ''])
+      ),
+      context: args.context,
+    });
+
+    // Server-side layer leakage guard: detect if system-like patterns appear in field layers
+    const layerLeakageIssues: PromptAssistIssue[] = [];
+    const systemLikePattern = /response_format|geen tekst buiten json|json_object|output schema|technical_contract/i;
+    for (const section of sectionOrder) {
+      if (section.layerType === 'field') {
+        const proposedFieldText = normalizedSections[section.key] ?? '';
+        if (systemLikePattern.test(proposedFieldText)) {
+          layerLeakageIssues.push({
+            severity: 'risk',
+            type: 'misplaced',
+            message: `Veld "${section.label}" bevat system-contractregels in het voorstel. Controleer voor toepassing.`,
+          });
+        }
+      }
+    }
+
+    const proposedText = normalizedSections[args.targetLayerKey] ?? targetText;
+    const analysisSummaryRaw = typeof parsed.analysisSummary === 'string' ? parsed.analysisSummary.trim() : '';
+    const changeSummaryRaw = typeof parsed.changeSummary === 'string' ? parsed.changeSummary.trim() : '';
+    const rationaleRaw = typeof parsed.rationale === 'string' ? parsed.rationale.trim() : '';
+
+    const sectionReasonsRaw = ensureJsonObject(parsed.sectionReasons) ?? {};
+    const sectionRisksRaw = ensureJsonObject(parsed.sectionRisks) ?? {};
+    const sectionReasons = Object.fromEntries(
+      Object.entries(sectionReasonsRaw).map(([key, value]) => [key, typeof value === 'string' ? value : ''])
+    );
+    const sectionRisks = Object.fromEntries(
+      Object.entries(sectionRisksRaw).map(([key, value]) => [
+        key,
+        Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [],
+      ])
+    );
+
+    const preservedInvariantsRaw = Array.isArray(parsed.preservedInvariants)
+      ? parsed.preservedInvariants.filter((item): item is string => typeof item === 'string')
+      : [];
+
+    const baseIssues = buildPromptAssistIssues({
+      context: args.context,
+      targetLayerType: args.targetLayerType,
+      targetLayerKey: args.targetLayerKey,
+      proposedText,
+    });
+
+    return {
+      analysisSummary:
+        analysisSummaryRaw.length > 0
+          ? analysisSummaryRaw
+          : 'Instructies zijn opnieuw verdeeld over alle bewerkbare velden.',
+      proposedText,
+      proposedSections: normalizedSections,
+      sectionReasons,
+      sectionRisks,
+      preservedInvariants: preservedInvariantsRaw,
+      changeSummary:
+        changeSummaryRaw.length > 0
+          ? changeSummaryRaw
+          : 'Regels zijn herschikt per laag en overlap is verminderd.',
+      rationale: rationaleRaw.length > 0 ? rationaleRaw : null,
+      issues: [...baseIssues, ...layerLeakageIssues].slice(0, 6),
+      openAiObjectId: aiResult.openAiObjectId,
+    };
+  }
+
+  // ── Single-layer role-aware rewrite ────────────────────────────────────────
+  // Resolve semantics for the target layer
+  const targetSemantics = args.context.layerSemantics.find((s) => s.key === args.targetLayerKey);
+  const isHighPrecedence = targetSemantics?.precedence === 'high' || args.targetLayerType === 'system';
+  const runtimeRoleLabel = targetSemantics?.runtimeRole ?? (isHighPrecedence ? 'high_precedence_instruction' : 'task_goal');
+  const preserveRules = targetSemantics?.preserveRules ?? [];
+  const forbiddenMoves = targetSemantics?.forbiddenMoves ?? [];
+  const allowedKinds = args.context.allowedChangeKinds.length > 0
+    ? args.context.allowedChangeKinds
+    : ['rewrite_within_layer'];
+
+  const highPrecedenceInvariantsForSingle = args.context.invariants.filter((inv) => inv.mustRemainHighPrecedence);
+
   const systemPrompt = [
-    'Je bent Prompt Assist voor een admin-only AI Quality Studio.',
-    'Analyseer volledige context, maar herschrijf exact één targetlaag.',
-    'Geen chatstijl, geen extra velden, geen verborgen mutaties.',
-    'Respecteer contract-first en task-first gedrag.',
-    'Geef JSON terug met: analysisSummary, proposedText, changeSummary, rationale.',
-    'proposedText moet alleen de tekst voor de gekozen targetlaag bevatten.',
-  ].join(' ');
+    'Je bent een rolbewuste Prompt Assist voor een admin-only AI Quality Studio.',
+    '',
+    `TARGETLAAG: ${targetSemantics?.label ?? args.targetLayerKey}`,
+    `RUNTIMEROL: ${runtimeRoleLabel}`,
+    `PRIORITEIT: ${isHighPrecedence ? 'HIGH (boven general en field)' : 'NORMAL'}`,
+    targetSemantics?.purpose ? `DOEL: ${targetSemantics.purpose}` : '',
+    '',
+    'HARDE REGELS (niet onderhandelbaar):',
+    '1. Analyseer alle sibling-lagen als read-only context; bewerk ALLEEN de targetlaag.',
+    '2. Bewaar harde contractregels die aanwezig zijn in de targetlaag.',
+    isHighPrecedence
+      ? '3. Dit is een HIGH PRIORITY laag: verplaats NOOIT contractregels, JSON-formaat of schema-verplichtingen buiten deze laag.'
+      : '3. Zet GEEN systeemregels of JSON/contract-verplichtingen in deze laag.',
+    preserveRules.length > 0
+      ? `4. Regels die ALTIJD bewaard moeten blijven:\n${preserveRules.map((r) => `   - ${r}`).join('\n')}`
+      : '4. Geen extra preserve-regels.',
+    forbiddenMoves.length > 0
+      ? `5. Verboden verplaatsingen:\n${forbiddenMoves.map((r) => `   - ${r}`).join('\n')}`
+      : '5. Geen extra verplaatsingsverboden.',
+    highPrecedenceInvariantsForSingle.length > 0
+      ? `6. Invariants die BEHOUDEN moeten blijven:\n${highPrecedenceInvariantsForSingle.map((inv) => `   - ${inv.id}: ${inv.description}`).join('\n')}`
+      : '6. Geen extra invariants.',
+    `7. Toegestane wijzigingstypes: ${allowedKinds.join(', ')}.`,
+    '8. Als een veilige wijziging niet mogelijk is: geef een conservatief voorstel en signaleer het risico.',
+    '9. Geen chatstijl, geen extra velden, geen verborgen mutaties.',
+    '',
+    'OUTPUT (JSON):',
+    '{ analysisSummary, proposedText, changeSummary, rationale, preservedInvariants, detectedRisks }',
+    'proposedText: alleen de tekst voor de gekozen targetlaag.',
+    'preservedInvariants: array van invariant-ids die behouden zijn.',
+    'detectedRisks: array van risicobeschrijvingen (leeg als geen risico).',
+  ].filter(Boolean).join('\n');
 
   const userPayload = {
     taskKey: args.taskKey,
-    targetLayerType: args.targetLayerType,
-    targetLayerKey: args.targetLayerKey,
-    assistActionId: args.assistActionId,
-    assistActionHint: actionHints[args.assistActionId],
-    assistIntent: args.assistIntent,
-    currentTargetText: targetText,
-    context: args.context,
+    targetLayer: {
+      key: args.targetLayerKey,
+      type: args.targetLayerType,
+      runtimeRole: runtimeRoleLabel,
+      precedence: isHighPrecedence ? 'high' : 'normal',
+      purpose: targetSemantics?.purpose ?? '',
+      currentText: targetText,
+    },
+    action: {
+      id: args.assistActionId,
+      hint: actionHints[args.assistActionId],
+      allowedChangeKinds: allowedKinds,
+      customIntent: args.assistIntent,
+    },
+    readOnlyContext: args.context.readOnlyContext.length > 0
+      ? args.context.readOnlyContext
+      : [
+          { key: 'systemRulesInstruction', label: 'Systeemregels', layerType: 'system', runtimeRole: 'high_precedence_instruction', text: args.context.systemRulesInstruction },
+          { key: 'generalInstruction', label: 'Algemene instructie', layerType: 'general', runtimeRole: 'task_goal', text: args.context.generalInstruction },
+          ...Object.entries(args.context.fieldRules).map(([key, text]) => ({
+            key, label: key, layerType: 'field', runtimeRole: 'field_rule', text,
+          })),
+        ].filter((item) => item.key !== args.targetLayerKey),
+    invariants: args.context.invariants,
+    tokenCatalog: args.context.tokenCatalog,
+    outputContract: args.context.outputContract,
+    taskMetadata: args.context.taskMetadata,
   };
 
   const aiResult = await callOpenAi({
@@ -812,6 +1325,7 @@ async function runPromptAssistPreview(args: {
     systemInstructions: systemPrompt,
     promptSnapshot: JSON.stringify(userPayload, null, 2),
     config: { temperature: 0.2, response_format: 'json_object' },
+    debugRequest: args.debugRequest,
   });
 
   let parsed: Record<string, unknown> = {};
@@ -829,10 +1343,19 @@ async function runPromptAssistPreview(args: {
   }
 
   const proposedTextRaw = typeof parsed.proposedText === 'string' ? parsed.proposedText.trim() : '';
-  const proposedText = proposedTextRaw.length > 0 ? proposedTextRaw : targetText;
+  const proposedText = normalizePromptTokens(
+    proposedTextRaw.length > 0 ? proposedTextRaw : targetText,
+    args.context.tokenCatalog
+  );
   const analysisSummaryRaw = typeof parsed.analysisSummary === 'string' ? parsed.analysisSummary.trim() : '';
   const changeSummaryRaw = typeof parsed.changeSummary === 'string' ? parsed.changeSummary.trim() : '';
   const rationaleRaw = typeof parsed.rationale === 'string' ? parsed.rationale.trim() : '';
+  const preservedInvariantsRaw = Array.isArray(parsed.preservedInvariants)
+    ? parsed.preservedInvariants.filter((item): item is string => typeof item === 'string')
+    : [];
+  const detectedRisksRaw = Array.isArray(parsed.detectedRisks)
+    ? parsed.detectedRisks.filter((item): item is string => typeof item === 'string')
+    : [];
 
   return {
     analysisSummary:
@@ -840,6 +1363,8 @@ async function runPromptAssistPreview(args: {
         ? analysisSummaryRaw
         : 'Analyse op volledige context gedaan; voorstel beperkt tot de gekozen laag.',
     proposedText,
+    preservedInvariants: preservedInvariantsRaw,
+    detectedRisks: detectedRisksRaw,
     changeSummary:
       changeSummaryRaw.length > 0
         ? changeSummaryRaw
@@ -853,6 +1378,7 @@ async function runPromptAssistPreview(args: {
       targetLayerKey: args.targetLayerKey,
       proposedText,
     }),
+    openAiObjectId: aiResult.openAiObjectId,
   };
 }
 
@@ -878,20 +1404,14 @@ function normalizeJsonForCompare(value: unknown): unknown {
 function buildVersionBaselineFingerprint(input: {
   model: string;
   promptTemplate: string;
-  systemInstructions: string;
   outputSchemaJson: Record<string, unknown>;
   configJson: Record<string, unknown>;
-  minItems: number | null;
-  maxItems: number | null;
 }): string {
   return JSON.stringify({
     model: input.model,
     promptTemplate: input.promptTemplate,
-    systemInstructions: input.systemInstructions,
     outputSchemaJson: normalizeJsonForCompare(input.outputSchemaJson),
     configJson: normalizeJsonForCompare(input.configJson),
-    minItems: input.minItems,
-    maxItems: input.maxItems,
   });
 }
 
@@ -941,11 +1461,8 @@ async function importRuntimeBaselines(args: {
     const incomingFingerprint = buildVersionBaselineFingerprint({
       model: definition.model,
       promptTemplate: definition.promptTemplate,
-      systemInstructions: definition.systemInstructions,
       outputSchemaJson: definition.outputSchemaJson,
       configJson: definition.configJson,
-      minItems: definition.minItems,
-      maxItems: definition.maxItems,
     });
 
     if (!liveVersion) {
@@ -956,11 +1473,8 @@ async function importRuntimeBaselines(args: {
           status: 'live',
           model: definition.model,
           prompt_template: definition.promptTemplate,
-          system_instructions: definition.systemInstructions,
           output_schema_json: definition.outputSchemaJson,
           config_json: definition.configJson,
-          min_items: definition.minItems,
-          max_items: definition.maxItems,
           changelog: definition.changelog,
           created_by: args.userId,
           became_live_at: new Date().toISOString(),
@@ -980,11 +1494,8 @@ async function importRuntimeBaselines(args: {
     const existingFingerprint = buildVersionBaselineFingerprint({
       model: liveVersion.model,
       promptTemplate: liveVersion.prompt_template,
-      systemInstructions: liveVersion.system_instructions,
       outputSchemaJson: liveVersion.output_schema_json ?? {},
       configJson: liveVersion.config_json ?? {},
-      minItems: liveVersion.min_items,
-      maxItems: liveVersion.max_items,
     });
 
     if (existingFingerprint === incomingFingerprint) {
@@ -1011,7 +1522,8 @@ async function callOpenAi(args: {
   systemInstructions: string;
   promptSnapshot: string;
   config: Record<string, unknown>;
-}): Promise<{ outputText: string; outputJson: Record<string, unknown> | null; usage: { promptTokens: number | null; completionTokens: number | null; totalTokens: number | null } }> {
+  debugRequest?: ReturnType<typeof buildChatCompletionsDebugRequest>;
+}): Promise<{ outputText: string; outputJson: Record<string, unknown> | null; openAiObjectId: string | null; usage: { promptTokens: number | null; completionTokens: number | null; totalTokens: number | null } }> {
   const temperature = typeof args.config.temperature === 'number' && Number.isFinite(args.config.temperature) ? args.config.temperature : 0.2;
   const responseFormat =
     typeof args.config.response_format === 'string' && args.config.response_format === 'json_object'
@@ -1026,6 +1538,7 @@ async function callOpenAi(args: {
     body: JSON.stringify({
       model: args.model,
       temperature,
+      ...(args.debugRequest ? args.debugRequest : {}),
       ...(responseFormat ? { response_format: responseFormat } : {}),
       messages: [
         { role: 'system', content: args.systemInstructions },
@@ -1060,6 +1573,7 @@ async function callOpenAi(args: {
   return {
     outputText,
     outputJson,
+    openAiObjectId: typeof json.id === 'string' ? json.id : null,
     usage: {
       promptTokens: typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : null,
       completionTokens: typeof usage.completion_tokens === 'number' ? usage.completion_tokens : null,
@@ -1125,6 +1639,52 @@ Deno.serve(async (request) => {
     const adminClient = createClient(supabaseRuntimeEnv.supabaseUrl, getServiceRoleKey(), {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
+    if (action === 'get_openai_debug_storage_settings') {
+      step = 'get_openai_debug_storage_settings';
+      const settings = await loadOpenAiDebugStorageSettings(adminClient);
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        debugStorage: buildOpenAiDebugStorageResponse(settings),
+      });
+    }
+
+    if (action === 'update_openai_debug_storage_settings') {
+      step = 'update_openai_debug_storage_settings';
+      const masterEnabled = parseBoolean(body.masterEnabled);
+      const masterTtlHours = parseTtlHours(body.masterTtlHours);
+      const flowUpdates = parseDebugFlowUpdates(body.flowUpdates);
+
+      if (masterEnabled === null || !flowUpdates) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'masterEnabled of flowUpdates is ongeldig.',
+        });
+      }
+
+      const settings = await updateOpenAiDebugStorageSettings(adminClient, {
+        updatedBy: userId,
+        masterEnabled,
+        masterTtlHours,
+        flowUpdates,
+      });
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        debugStorage: buildOpenAiDebugStorageResponse(settings),
+      });
+    }
 
     if (action === 'list_tasks') {
       step = 'list_tasks';
@@ -1356,7 +1916,7 @@ Deno.serve(async (request) => {
       const assistIntent = typeof body.assistIntent === 'string' ? body.assistIntent.trim() : '';
       const editorContext = parsePromptAssistEditorContext(body.editorContext);
 
-      if (!taskKey || taskKey !== 'entry_cleanup') {
+      if (!taskKey) {
         return errorResponse({
           request,
           httpStatus: 400,
@@ -1364,7 +1924,7 @@ Deno.serve(async (request) => {
           flowId,
           step,
           code: 'INPUT_INVALID',
-          message: 'Alleen entry_cleanup wordt ondersteund in deze slice.',
+          message: 'taskKey ontbreekt.',
         });
       }
       if (!versionId) {
@@ -1435,6 +1995,26 @@ Deno.serve(async (request) => {
         assistActionId,
         assistIntent,
         context: editorContext,
+        debugRequest: buildChatCompletionsDebugRequest({
+          resolution: resolveOpenAiDebugStorageForFlow({
+            settings: await loadOpenAiDebugStorageSettings(adminClient),
+            flowKey: 'admin-ai-quality-studio.prompt_assist_preview',
+            endpointFamily: 'chat_completions',
+          }),
+          metadata: buildOpenAiDebugMetadata({
+            app: 'persoonlijke-assistent-app',
+            env: Deno.env.get('APP_ENV')?.trim() || 'local',
+            flow: FLOW,
+            functionName: 'admin-ai-quality-studio',
+            taskKey,
+            runtimeFamily: 'ai_quality_studio',
+            requestId,
+            flowId,
+            mode: 'admin_debug',
+            version: 'mvp-1.2.1',
+            actor: userId ?? (isInternal ? 'internal' : 'admin'),
+          }),
+        }),
       });
 
       const beforeText = getPromptAssistTargetText(editorContext, targetLayerKey);
@@ -1451,8 +2031,14 @@ Deno.serve(async (request) => {
           analysisSummary: result.analysisSummary,
           issues: result.issues,
           proposedText: result.proposedText,
+          proposedSections: result.proposedSections,
+          sectionReasons: result.sectionReasons,
+          sectionRisks: result.sectionRisks,
+          preservedInvariants: result.preservedInvariants,
+          detectedRisks: result.detectedRisks,
           changeSummary: result.changeSummary,
           rationale: result.rationale,
+          openAiObjectId: result.openAiObjectId,
           diff: {
             before: beforeText,
             after: result.proposedText,
@@ -1468,8 +2054,12 @@ Deno.serve(async (request) => {
 
       const task = await loadTaskByKey({ adminClient, taskKey });
       if (!task) return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task not found.' });
+      const testCapabilities = getTaskTestCapabilities(task.key);
+      if (!testCapabilities) {
+        return jsonResponse(request, 200, { status: 'ok', flow: FLOW, requestId, flowId, sources: [] });
+      }
 
-      if (task.input_type === 'entry') {
+      if (testCapabilities.sourceTypes.includes('entry')) {
         const { data, error } = await adminClient
           .from('entries_normalized')
           .select('id, title, body, summary_short, created_at')
@@ -1488,7 +2078,7 @@ Deno.serve(async (request) => {
         return jsonResponse(request, 200, { status: 'ok', flow: FLOW, requestId, flowId, sources });
       }
 
-      if (task.input_type === 'day') {
+      if (testCapabilities.sourceTypes.includes('day')) {
         const { data, error } = await adminClient
           .from('day_journals')
           .select('id, journal_date, summary, narrative_text, sections, updated_at')
@@ -1568,6 +2158,7 @@ Deno.serve(async (request) => {
             baselineStatus: 'missing',
             baselineReason: 'Bronrecord context ontbreekt op test run.',
             liveOutputText: null,
+            liveOutputJson: null,
           }),
         });
       }
@@ -1575,6 +2166,7 @@ Deno.serve(async (request) => {
       let baselineStatus: 'available' | 'missing' | 'unsupported' = 'missing';
       let baselineReason: string | null = 'Geen live baseline beschikbaar.';
       let liveOutputText: string | null = null;
+      let liveOutputJson: Record<string, unknown> | unknown[] | null = null;
 
       if (taskKey === 'entry_cleanup') {
         const { data: entryData, error: entryError } = await adminClient
@@ -1596,32 +2188,55 @@ Deno.serve(async (request) => {
               2
             )
           : null;
+        liveOutputJson = entryData
+          ? {
+              title: entryData.title ?? '',
+              body: entryData.body ?? '',
+              summary_short: entryData.summary_short ?? '',
+            }
+          : null;
         baselineStatus = liveOutputText ? 'available' : 'missing';
         baselineReason = liveOutputText ? null : 'Entry baseline ontbreekt.';
       } else if (taskKey === 'day_summary') {
         const { data: dayData, error: dayError } = await adminClient
           .from('day_journals')
-          .select('summary')
+          .select('summary, narrative_text, sections')
           .eq('id', sourceRecordId)
           .maybeSingle();
         if (dayError) {
           return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: 'Failed to load day summary baseline.' });
         }
-        liveOutputText = dayData?.summary ?? null;
-        baselineStatus = liveOutputText ? 'available' : 'missing';
-        baselineReason = liveOutputText ? null : 'Dag summary baseline ontbreekt.';
+        const dayBaseline = dayData
+          ? {
+              summary: dayData.summary ?? '',
+              narrativeText: dayData.narrative_text ?? '',
+              sections: Array.isArray(dayData.sections) ? dayData.sections : [],
+            }
+          : null;
+        liveOutputJson = dayBaseline;
+        liveOutputText = dayBaseline ? JSON.stringify(dayBaseline, null, 2) : null;
+        baselineStatus = dayBaseline ? 'available' : 'missing';
+        baselineReason = dayBaseline ? null : 'Dag baseline ontbreekt.';
       } else if (taskKey === 'day_narrative') {
         const { data: dayData, error: dayError } = await adminClient
           .from('day_journals')
-          .select('narrative_text')
+          .select('summary, narrative_text, sections')
           .eq('id', sourceRecordId)
           .maybeSingle();
         if (dayError) {
           return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: 'Failed to load day narrative baseline.' });
         }
-        liveOutputText = dayData?.narrative_text ?? null;
-        baselineStatus = liveOutputText ? 'available' : 'missing';
-        baselineReason = liveOutputText ? null : 'Dag narrative baseline ontbreekt.';
+        const dayBaseline = dayData
+          ? {
+              summary: dayData.summary ?? '',
+              narrativeText: dayData.narrative_text ?? '',
+              sections: Array.isArray(dayData.sections) ? dayData.sections : [],
+            }
+          : null;
+        liveOutputJson = dayBaseline;
+        liveOutputText = dayBaseline ? JSON.stringify(dayBaseline, null, 2) : null;
+        baselineStatus = dayBaseline ? 'available' : 'missing';
+        baselineReason = dayBaseline ? null : 'Dag baseline ontbreekt.';
       } else {
         baselineStatus = 'unsupported';
         baselineReason = 'Compare baseline voor deze task is nog niet ondersteund in stap 4.';
@@ -1632,7 +2247,7 @@ Deno.serve(async (request) => {
         flow: FLOW,
         requestId,
         flowId,
-        compare: toCompareView({ row, baselineStatus, baselineReason, liveOutputText }),
+        compare: toCompareView({ row, baselineStatus, baselineReason, liveOutputText, liveOutputJson }),
       });
     }
 
@@ -1698,23 +2313,20 @@ Deno.serve(async (request) => {
     step = 'run_test';
     const taskKey = parseNonEmptyString(body.taskKey);
     const taskVersionId = parseUuid(body.taskVersionId);
-    const sourceType = parseNonEmptyString(body.sourceType) as 'entry' | 'day' | null;
+    const sourceType = parseNonEmptyString(body.sourceType) as SupportedTestSourceType | null;
     const sourceRecordId = parseUuid(body.sourceRecordId);
 
     if (!taskKey || !taskVersionId || !sourceType || !sourceRecordId) {
       return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'taskKey/taskVersionId/sourceType/sourceRecordId zijn verplicht.' });
     }
 
-    if (sourceType !== 'entry' && sourceType !== 'day') {
-      return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Alleen entry/day bronnen worden ondersteund in stap 3.' });
-    }
-
     const task = await loadTaskByKey({ adminClient, taskKey });
     if (!task) return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task not found.' });
-    if (!['entry_cleanup', 'day_summary', 'day_narrative'].includes(task.key)) {
+    const testCapabilities = getTaskTestCapabilities(task.key);
+    if (!testCapabilities) {
       return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Task key wordt nog niet ondersteund in stap 3.' });
     }
-    if (task.input_type !== sourceType) {
+    if (!testCapabilities.sourceTypes.includes(sourceType)) {
       return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'sourceType past niet bij task input_type.' });
     }
 
@@ -1786,6 +2398,7 @@ Deno.serve(async (request) => {
       resolvedTaskVersionNumber: version.version_number,
       systemInstructionSnippet,
       promptSnapshotSnippet,
+      openAiObjectId: null as string | null,
     };
 
     logFlow('info', {
@@ -1854,12 +2467,33 @@ Deno.serve(async (request) => {
     const startTime = Date.now();
 
     try {
+      const runTestDebugResolution = resolveOpenAiDebugStorageForFlow({
+        settings: await loadOpenAiDebugStorageSettings(adminClient),
+        flowKey: 'admin-ai-quality-studio.run_test',
+        endpointFamily: 'chat_completions',
+      });
       const aiResponse = await callOpenAi({
         apiKey: getOpenAiApiKey(),
         model: version.model,
         systemInstructions: version.system_instructions,
         promptSnapshot,
         config: version.config_json ?? {},
+        debugRequest: buildChatCompletionsDebugRequest({
+          resolution: runTestDebugResolution,
+          metadata: buildOpenAiDebugMetadata({
+            app: 'persoonlijke-assistent-app',
+            env: Deno.env.get('APP_ENV')?.trim() || 'local',
+            flow: FLOW,
+            functionName: 'admin-ai-quality-studio',
+            taskKey,
+            runtimeFamily: 'ai_quality_studio',
+            requestId,
+            flowId,
+            mode: 'admin_test',
+            version: 'mvp-1.2.1',
+            actor: userId ?? (isInternal ? 'internal' : 'admin'),
+          }),
+        }),
       });
 
       const latencyMs = Date.now() - startTime;
@@ -1875,6 +2509,8 @@ Deno.serve(async (request) => {
           total_tokens: aiResponse.usage.totalTokens,
         })
         .eq('id', runId);
+
+      testExecutionDebug.openAiObjectId = aiResponse.openAiObjectId;
     } catch (upstreamError) {
       const latencyMs = Date.now() - startTime;
       await adminClient

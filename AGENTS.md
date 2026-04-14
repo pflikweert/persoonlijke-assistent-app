@@ -64,6 +64,10 @@ Voor AI-gedrag, prompting en evaluatie:
   - `docs/project/**` = canonieke projectwaarheid
   - `docs/dev/**` = operationele workflowafspraken
   - `docs/upload/**` = generated uploadartefacten, nooit canonieke bron
+- Start-of-session guardrail:
+  - lees eerst `docs/project/README.md`
+  - check `docs/dev/active-context.md` alleen bij non-triviale/onderbroken/multi-file taken
+  - sla `active-context.md` over bij kleine, volledig afgebakende fixes
 - Bij onderbroken of herhaalde patch-rondes: bevestig eerst de actuele file state (small-read/diff) vóór je verder wijzigt.
 - Gebruik `docs/dev/active-context.md` als lichte sessiecontext wanneer recente WIP/learnings relevant zijn.
 - Verhoog nooit status of waarheid op basis van `docs/dev/active-context.md` alleen.
@@ -104,6 +108,8 @@ Voor AI-gedrag, prompting en evaluatie:
 - Standaard content-gap is altijd 32px voor content-stacks (screens, sections, modals, sheets, dialogs en popups), tenzij een `design_ref` expliciet iets anders toont.
 - Nieuwe componenten volgen default `spacing.content` (32) voor verticale content-spacing; afwijkingen alleen met expliciete design-ref of expliciete gebruikersvraag.
 - Voor modals/sheets/dialogs/popups: gebruik altijd dezelfde backdrop-scrim/blur-standaard via shared `components/ui/modal-backdrop.tsx`; geen losse backdrop-implementaties per scherm.
+- Bevestigingsflows gebruiken altijd een shared variant; verzin geen nieuwe popup/prompt per scherm.
+- Destructive confirmaties gebruiken standaard shared `components/feedback/destructive-confirm-sheet.tsx` (modal-variant); alleen met expliciete design_ref of expliciete gebruikersvraag afwijken.
 - Sectielabels staan standaard op de page background (zonder section-card), tenzij de design_ref expliciet een section surface vraagt.
 - Rows/cards blijven compact en licht: geen overmatige hoogte, padding of visuele massa; destructive rows mogen accent hebben maar blijven rustig.
 - Dark mode behoudt dezelfde lichtgewicht compositie als light mode: geen extra containerlagen, extra massa of zwaardere surfaces zonder expliciete design_ref.
@@ -160,6 +166,40 @@ Regel:
 
 - `npm run dev` is lokaal-only en mag geen remote functions deploy doen.
 - productie deploy van Supabase Edge Functions loopt alleen via GitHub Actions.
+
+## Supabase Edge Functions — import-regels
+
+Deno vereist expliciete bestandsextensies op lokale imports. Schending hiervan leidt tot een **silent boot failure (503)** zonder duidelijke foutmelding.
+
+Regels voor elke import in `supabase/functions/**`:
+
+- Gebruik **altijd** `.ts` als extensie op lokale imports: `from '../_shared/mijn-module.ts'`
+- Schrijf **nooit** `from '../_shared/mijn-module'` zonder extensie — Deno kan dat niet resolven
+- Elke lokale import heeft een `// @ts-ignore`-regel erboven omdat TypeScript `.ts`-extensies in imports niet accepteert
+- `// @ts-ignore` onderdrukt **alleen de eerstvolgende regel** — zet het direct boven elke afzonderlijke import-statement
+- Een `// @ts-ignore` boven een multi-line import werkt **niet** — gebruik altijd één import per `@ts-ignore`-blok
+
+Correct patroon (verplicht):
+
+```ts
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { foo } from '../_shared/foo.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { bar } from '../_shared/bar.ts';
+```
+
+Fout patroon (verboden):
+
+```ts
+// @ts-ignore -- Deno runtime requires local import extensions.
+import {
+  foo,
+  bar,
+} from '../_shared/foo.ts'; // @ts-ignore geldt NIET voor multi-line imports
+
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { baz } from '../_shared/baz'; // GEEN .ts extensie = boot failure
+```
 
 ## Security
 

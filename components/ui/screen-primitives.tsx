@@ -28,6 +28,8 @@ import {
 
 type Tone = "loading" | "empty" | "error" | "success" | "info";
 
+type StateTone = Tone | "warning";
+
 export function ScreenContainer({
   children,
   style,
@@ -106,21 +108,94 @@ export function ScreenContainer({
   );
 }
 
-function toneLabel(tone: Tone): string {
+function toneLabel(tone: StateTone): string | null {
   if (tone === "loading") {
     return "Laden";
   }
   if (tone === "empty") {
     return "Nog leeg";
   }
-  if (tone === "error") {
-    return "Er ging iets mis";
+  if (tone === "warning") {
+    return "Let op";
   }
   if (tone === "success") {
     return "Gelukt";
   }
+  if (tone === "error") {
+    return null;
+  }
+  if (tone === "info") {
+    return "Info";
+  }
 
-  return "Context";
+  return null;
+}
+
+function alpha(hex: string, opacityHex: string): string {
+  if (!hex.startsWith("#") || hex.length !== 7) {
+    return hex;
+  }
+
+  return `${hex}${opacityHex}`;
+}
+
+function getStateToneColors(
+  tone: StateTone,
+  palette: (typeof colorTokens)["light"] | (typeof colorTokens)["dark"],
+): {
+  background: string;
+  border: string;
+  title: string;
+  body: string;
+  meta: string;
+} {
+  if (tone === "error") {
+    return {
+      background: palette.destructiveSoftBackground,
+      border: palette.destructiveSoftBorder,
+      title: palette.destructiveSoftText,
+      body: palette.text,
+      meta: palette.destructiveSoftText,
+    };
+  }
+
+  if (tone === "warning") {
+    return {
+      background: alpha(palette.primaryStrong, "1C"),
+      border: alpha(palette.primaryStrong, "52"),
+      title: palette.primary,
+      body: palette.text,
+      meta: palette.muted,
+    };
+  }
+
+  if (tone === "success") {
+    return {
+      background: alpha(palette.success, "1F"),
+      border: alpha(palette.success, "52"),
+      title: palette.success,
+      body: palette.text,
+      meta: palette.muted,
+    };
+  }
+
+  if (tone === "loading") {
+    return {
+      background: alpha(palette.info, "1A"),
+      border: alpha(palette.info, "42"),
+      title: palette.info,
+      body: palette.text,
+      meta: palette.muted,
+    };
+  }
+
+  return {
+    background: palette.surfaceLow,
+    border: palette.separator,
+    title: palette.muted,
+    body: palette.text,
+    meta: palette.mutedSoft,
+  };
 }
 
 export function SurfaceSection({
@@ -138,6 +213,7 @@ export function SurfaceSection({
   style?: ViewStyle;
   className?: string;
 }) {
+  const hasHeader = Boolean(title || subtitle);
   return (
     <ThemedView
       className={className}
@@ -145,8 +221,12 @@ export function SurfaceSection({
       darkColor={colorTokens.dark.surface}
       style={[styles.section, style]}
     >
-      {title ? <ThemedText type="sectionTitle">{title}</ThemedText> : null}
-      {subtitle ? <MetaText>{subtitle}</MetaText> : null}
+      {hasHeader ? (
+        <ThemedView style={styles.sectionHeader}>
+          {title ? <ThemedText type="sectionTitle">{title}</ThemedText> : null}
+          {subtitle ? <MetaText>{subtitle}</MetaText> : null}
+        </ThemedView>
+      ) : null}
       <ThemedView style={styles.sectionBody}>{children}</ThemedView>
       {footer ? (
         <ThemedView style={styles.sectionFooter}>{footer}</ThemedView>
@@ -294,25 +374,68 @@ export function StateBlock({
   message,
   detail,
   meta,
+  showToneLabel,
   className,
 }: {
-  tone?: Tone;
+  tone?: StateTone;
   message: string;
   detail?: string | null;
   meta?: string | null;
+  showToneLabel?: boolean;
   className?: string;
 }) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+  const toneColors = getStateToneColors(tone, palette);
+  const label = toneLabel(tone);
+  const shouldShowToneLabel =
+    typeof showToneLabel === "boolean" ? showToneLabel : Boolean(label);
+
   return (
     <ThemedView
       className={className}
-      lightColor={colorTokens.light.surfaceLow}
-      darkColor={colorTokens.dark.surfaceLow}
-      style={styles.stateBlock}
+      style={[
+        styles.stateBlock,
+        {
+          backgroundColor: toneColors.background,
+          borderColor: toneColors.border,
+        },
+      ]}
     >
-      <MetaText>{toneLabel(tone)}</MetaText>
-      <ThemedText type="defaultSemiBold">{message}</ThemedText>
-      {detail ? <ThemedText type="bodySecondary">{detail}</ThemedText> : null}
-      {meta ? <ThemedText type="caption">{meta}</ThemedText> : null}
+      {shouldShowToneLabel && label ? (
+        <ThemedText
+          type="meta"
+          lightColor={toneColors.title}
+          darkColor={toneColors.title}
+        >
+          {label}
+        </ThemedText>
+      ) : null}
+      <ThemedText
+        type="defaultSemiBold"
+        lightColor={toneColors.body}
+        darkColor={toneColors.body}
+      >
+        {message}
+      </ThemedText>
+      {detail ? (
+        <ThemedText
+          type="bodySecondary"
+          lightColor={toneColors.body}
+          darkColor={toneColors.body}
+        >
+          {detail}
+        </ThemedText>
+      ) : null}
+      {meta ? (
+        <ThemedText
+          type="caption"
+          lightColor={toneColors.meta}
+          darkColor={toneColors.meta}
+        >
+          {meta}
+        </ThemedText>
+      ) : null}
     </ThemedView>
   );
 }
@@ -339,7 +462,7 @@ export function StateNotice({
   detail,
   meta,
 }: {
-  tone?: Tone | "neutral";
+  tone?: StateTone | "neutral";
   message: string;
   detail?: string | null;
   meta?: string | null;
@@ -372,8 +495,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
-    gap: spacing.content,
+    gap: spacing.md,
     ...shadows.surface,
+  },
+  sectionHeader: {
+    gap: spacing.xxs,
   },
   sectionBody: {
     gap: spacing.content,
@@ -415,6 +541,7 @@ const styles = StyleSheet.create({
     minHeight: sizing.textAreaMinHeight,
   },
   stateBlock: {
+    borderWidth: borders.subtle,
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,

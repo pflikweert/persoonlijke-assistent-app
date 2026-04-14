@@ -20,7 +20,8 @@ export type AiPromptAssistActionId =
   | 'check_overlap'
   | 'verplaats_naar_juiste_laag'
   | 'maak_strikter'
-  | 'check_outputvorm';
+  | 'check_outputvorm'
+  | 'verdeel_over_velden';
 
 export type AiPromptAssistActionPlacement = 'primary' | 'secondary';
 
@@ -45,12 +46,85 @@ export type AiPromptAssistIssue = {
   message: string;
 };
 
+/**
+ * De functionele OpenAI-runtimerol die deze laag representeert.
+ * - high_precedence_instruction: system/developer instructies met hoge prioriteit (boven user)
+ * - task_goal: taakbrede gebruikersinstructies
+ * - field_rule: veldspecifieke outputregels
+ */
+export type AiPromptAssistLayerRole =
+  | 'high_precedence_instruction'
+  | 'task_goal'
+  | 'field_rule';
+
+/** Laagprioriteit in runtime-context */
+export type AiPromptAssistLayerPrecedence = 'high' | 'normal';
+
+/** Soorten toegestane wijzigingen per actie/laag */
+export type AiPromptAssistAllowedChangeKind =
+  | 'rewrite_within_layer'
+  | 'dedupe_within_layer'
+  | 'tighten_wording'
+  | 'clarify_execution'
+  | 'redistribute_with_explicit_justification';
+
+/** Semantische context van één laag voor de assist */
+export type AiPromptAssistLayerSemantics = {
+  key: string;
+  label: string;
+  layerType: AiPromptAssistTargetLayerType;
+  runtimeRole: AiPromptAssistLayerRole;
+  precedence: AiPromptAssistLayerPrecedence;
+  purpose: string;
+  /** Regels/instructies die absoluut behouden moeten blijven */
+  preserveRules: string[];
+  /** Wat mag niet naar andere lagen verschuiven */
+  forbiddenMoves: string[];
+};
+
+/** Een harde constraint die nooit verloren mag gaan of naar een lagere laag mag zakken */
+export type AiPromptAssistInvariant = {
+  id: string;
+  description: string;
+  sourceLayerKey: string;
+  /** Als true mag deze constraint nooit naar een lagere-precedence laag verplaatsen */
+  mustRemainHighPrecedence: boolean;
+};
+
+/** Sibling-context als read-only voor de assist; nooit direct bewerkbaar */
+export type AiPromptAssistReadOnlyContext = {
+  key: string;
+  label: string;
+  layerType: AiPromptAssistTargetLayerType;
+  runtimeRole: AiPromptAssistLayerRole;
+  text: string;
+};
+
 export type AiPromptAssistEditorContext = {
   systemRulesInstruction: string;
   generalInstruction: string;
   fieldRules: Record<string, string>;
+  editableSections?: Array<{
+    key: string;
+    label: string;
+    layerType: AiPromptAssistTargetLayerType;
+  }>;
+  tokenCatalog?: Array<{
+    id: string;
+    kind: 'input' | 'output';
+    label: string;
+    token: string;
+  }>;
   outputContract?: Record<string, unknown>;
   taskMetadata?: Record<string, unknown>;
+  /** Semantiek per laag — geeft de assist expliciete rolomschrijving en guardrails */
+  layerSemantics?: AiPromptAssistLayerSemantics[];
+  /** Sibling-lagen als read-only context voor de assist */
+  readOnlyContext?: AiPromptAssistReadOnlyContext[];
+  /** Harde constraints die nooit verloren mogen gaan */
+  invariants?: AiPromptAssistInvariant[];
+  /** Welke soort wijzigingen zijn toegestaan voor de huidige target + actie */
+  allowedChangeKinds?: AiPromptAssistAllowedChangeKind[];
 };
 
 export type RunPromptAssistPreviewPayload = {
@@ -63,6 +137,13 @@ export type RunPromptAssistPreviewPayload = {
   editorContext: AiPromptAssistEditorContext;
 };
 
+/** Per veld in verdeel_over_velden: de voorgestelde tekst + expliciete reden voor plaatsing in die laag */
+export type AiPromptAssistSectionProposal = {
+  proposedText: string;
+  placementReason: string;
+  detectedRisks: string[];
+};
+
 export type AiPromptAssistPreviewResult = {
   targetLayerType: AiPromptAssistTargetLayerType;
   targetLayerKey: AiPromptAssistTargetLayerKey;
@@ -70,12 +151,68 @@ export type AiPromptAssistPreviewResult = {
   analysisSummary: string;
   issues: AiPromptAssistIssue[];
   proposedText: string;
+  proposedSections?: Record<string, string>;
+  /** Placement reasons per veld bij verdeel_over_velden */
+  sectionReasons?: Record<string, string>;
+  /** Gedetecteerde risico's per veld bij verdeel_over_velden */
+  sectionRisks?: Record<string, string[]>;
   changeSummary: string;
   rationale: string | null;
+  /** Invariants die behouden zijn in het voorstel */
+  preservedInvariants?: string[];
+  /** Gedetecteerde risico's bij single-layer rewrite */
+  detectedRisks?: string[];
   diff: {
     before: string;
     after: string;
   };
+  openAiObjectId?: string | null;
+};
+
+export type AiOpenAiDebugFlowKey =
+  | 'process-entry.generation'
+  | 'generate-reflection.generation'
+  | 'regenerate-day-journal.generation'
+  | 'admin-ai-quality-studio.prompt_assist_preview'
+  | 'admin-ai-quality-studio.run_test';
+
+export type AiOpenAiDebugCapabilityState =
+  | 'supported'
+  | 'off'
+  | 'on'
+  | 'requested_but_effectively_unsupported';
+
+export type AiOpenAiDebugCapabilityReason =
+  | 'zero_data_retention'
+  | 'non_us_region_chat_completions'
+  | 'endpoint_out_of_scope'
+  | 'expired'
+  | null;
+
+export type AiOpenAiDebugFlowStatus = {
+  flowKey: AiOpenAiDebugFlowKey;
+  state: AiOpenAiDebugCapabilityState;
+  reason: AiOpenAiDebugCapabilityReason;
+  desiredOn: boolean;
+  effectiveOn: boolean;
+  expiresAt: string | null;
+};
+
+export type AiOpenAiDebugStorageSettings = {
+  masterEnabled: boolean;
+  masterExpiresAt: string | null;
+  updatedAt: string | null;
+  flows: AiOpenAiDebugFlowStatus[];
+};
+
+export type UpdateAiOpenAiDebugStorageSettingsPayload = {
+  masterEnabled: boolean;
+  masterTtlHours: number | null;
+  flowUpdates: Array<{
+    flowKey: AiOpenAiDebugFlowKey;
+    enabled: boolean;
+    ttlHours: number | null;
+  }>;
 };
 
 export type AiTaskLiveVersionSummary = {
@@ -95,11 +232,8 @@ export type AiTaskVersionDetail = {
   status: AiTaskVersionStatus;
   model: string;
   promptTemplate: string;
-  systemInstructions: string;
   outputSchemaJson: Record<string, unknown>;
   configJson: Record<string, unknown>;
-  minItems: number | null;
-  maxItems: number | null;
   changelog: string | null;
   createdAt: string;
   updatedAt: string;
@@ -110,11 +244,8 @@ export type AiTaskVersionDetail = {
 export type AiTaskDraftPayload = {
   model: string;
   promptTemplate: string;
-  systemInstructions: string;
   outputSchemaJson: Record<string, unknown>;
   configJson: Record<string, unknown>;
-  minItems: number | null;
-  maxItems: number | null;
   changelog: string | null;
 };
 
@@ -204,7 +335,9 @@ export type AiTaskTestCompareView = {
   baselineStatus: AiCompareBaselineStatus;
   baselineReason: string | null;
   liveOutputText: string | null;
+  liveOutputJson: Record<string, unknown> | unknown[] | null;
   testOutputText: string | null;
+  testOutputJson: Record<string, unknown> | unknown[] | null;
   reviewerLabel: AiReviewLabel | null;
   reviewerNotes: string | null;
 };
@@ -213,4 +346,56 @@ export type SaveAiTaskTestReviewPayload = {
   testRunId: string;
   label: AiReviewLabel;
   notes: string | null;
+};
+
+export type AiQualityFamilyKey = 'moments' | 'today' | 'week' | 'month';
+
+export type AiQualityTaskCapabilities = {
+  canDraft: boolean;
+  canTest: boolean;
+  canCompare: boolean;
+  canReview: boolean;
+  canPromptAssist: boolean;
+  allowedSourceTypes: Extract<AiTestSourceType, 'entry' | 'day'>[];
+};
+
+export type AiQualityTaskMetadata = {
+  taskKey: string;
+  taskLabel: string;
+  familyKey: AiQualityFamilyKey | null;
+  familyTitle: string | null;
+  familyDescription: string | null;
+  runtimeFamily: 'entry_normalization' | 'day_journal' | 'reflection' | 'unknown';
+  compositionRole: 'single' | 'compound_part' | 'legacy_hidden';
+  managedOutputField: string | null;
+  affectedOutputFields: string[];
+  sortOrder: number;
+  visibleInFamily: boolean;
+  sharedRuntimeCall: boolean;
+  editorScope: 'task' | 'family' | 'read_only_part';
+  editorTargetTaskKey: string | null;
+  capabilities: AiQualityTaskCapabilities;
+};
+
+export type AiQualityFamilyTaskReadModel = {
+  task: AiTaskSummary;
+  metadata: AiQualityTaskMetadata;
+  status: 'runtime' | 'draft' | 'missing';
+};
+
+export type AiQualityFamilyReadModel = {
+  key: AiQualityFamilyKey;
+  title: string;
+  description: string;
+  componentCountLabel: string;
+  statusSummary: string;
+  sharedRuntimeCall: boolean;
+  editorScope: 'task' | 'family' | 'read_only';
+  editorEntryTaskKey: string | null;
+  tasks: AiQualityFamilyTaskReadModel[];
+};
+
+export type AiQualityStudioReadModel = {
+  families: AiQualityFamilyReadModel[];
+  visibleTasks: AiTaskSummary[];
 };

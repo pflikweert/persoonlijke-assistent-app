@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
@@ -20,6 +21,11 @@ import { sendMagicLink } from "@/services";
 import { colorTokens, radius, spacing } from "@/theme";
 
 export default function SignInScreen() {
+  const params = useLocalSearchParams<{
+    auth_error?: string;
+    auth_error_code?: string;
+    auth_error_description?: string;
+  }>();
   const { height: viewportHeight, width: viewportWidth } =
     useWindowDimensions();
   const scheme = useColorScheme() ?? "light";
@@ -30,7 +36,33 @@ export default function SignInScreen() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [successSent, setSuccessSent] = useState(false);
+  const callbackError = useMemo(
+    () =>
+      mapAuthCallbackError({
+        error: typeof params.auth_error === "string" ? params.auth_error : null,
+        errorCode:
+          typeof params.auth_error_code === "string"
+            ? params.auth_error_code
+            : null,
+        errorDescription:
+          typeof params.auth_error_description === "string"
+            ? params.auth_error_description
+            : null,
+      }),
+    [params.auth_error, params.auth_error_code, params.auth_error_description],
+  );
+
+  useEffect(() => {
+    if (!callbackError) {
+      return;
+    }
+
+    setErrorMessage(callbackError.message);
+    setErrorDetail(callbackError.detail);
+    setSuccessSent(false);
+  }, [callbackError]);
 
   const hasTypedEmail = email.trim().length > 0;
   const isInputActive = isInputFocused || hasTypedEmail;
@@ -49,6 +81,7 @@ export default function SignInScreen() {
 
     setSubmitting(true);
     setErrorMessage(null);
+    setErrorDetail(null);
     setSuccessSent(false);
 
     try {
@@ -56,6 +89,7 @@ export default function SignInScreen() {
       setSuccessSent(true);
     } catch (error) {
       setErrorMessage(mapSignInError(error));
+      setErrorDetail(null);
     } finally {
       setSubmitting(false);
     }
@@ -65,6 +99,7 @@ export default function SignInScreen() {
     setSuccessSent(false);
     setSubmitting(false);
     setErrorMessage(null);
+    setErrorDetail(null);
     setEmail("");
     setIsInputFocused(false);
   }
@@ -128,10 +163,9 @@ export default function SignInScreen() {
                   </AuthTextSubtitle>
                 </View>
 
-                <StateBlock
-                  tone="info"
-                  message="Geen e-mail ontvangen?"
-                  detail="Controleer ook je spam- of promotiesmap. Je kunt daarna opnieuw proberen."
+                <NoticeCard
+                  title="Geen e-mail ontvangen?"
+                  body="Controleer ook je spam- of promotiesmap. Je kunt daarna opnieuw proberen."
                 />
 
                 <Pressable onPress={handleBackToSignIn} style={styles.backLink}>
@@ -157,7 +191,7 @@ export default function SignInScreen() {
           />
 
           {uiState === "error" && errorMessage ? (
-            <StateBlock tone="error" message={errorMessage} />
+            <StateBlock tone="error" message={errorMessage} detail={errorDetail} />
           ) : null}
 
           <AuthFormStack>
@@ -170,6 +204,7 @@ export default function SignInScreen() {
                 setEmail(value);
                 if (errorMessage) {
                   setErrorMessage(null);
+                  setErrorDetail(null);
                 }
               }}
               onFocus={() => setIsInputFocused(true)}
@@ -209,6 +244,45 @@ export default function SignInScreen() {
       )}
     </AuthAmbientShell>
   );
+}
+
+function mapAuthCallbackError(input: {
+  error: string | null;
+  errorCode: string | null;
+  errorDescription: string | null;
+}): { message: string; detail: string } | null {
+  const fields = [input.error, input.errorCode, input.errorDescription]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.toLowerCase());
+
+  if (fields.length === 0) {
+    return null;
+  }
+
+  const combined = fields.join(" ");
+
+  if (
+    combined.includes("expired") ||
+    combined.includes("otp_expired") ||
+    combined.includes("email link is invalid")
+  ) {
+    return {
+      message: "Deze inloglink is verlopen.",
+      detail: "Vraag hieronder een nieuwe inloglink aan en open die direct vanuit je mail.",
+    };
+  }
+
+  if (combined.includes("access_denied") || combined.includes("denied")) {
+    return {
+      message: "Inloggen is niet gelukt.",
+      detail: "Vraag een nieuwe inloglink aan en probeer opnieuw.",
+    };
+  }
+
+  return {
+    message: "Deze inloglink is ongeldig of niet meer bruikbaar.",
+    detail: "Vraag hieronder een nieuwe inloglink aan en probeer opnieuw.",
+  };
 }
 
 function mapSignInError(error: unknown): string {

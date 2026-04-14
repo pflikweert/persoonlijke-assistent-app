@@ -19,6 +19,14 @@ Regels:
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
+- Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
+
+## Design-implementatie guardrails (operationeel)
+- `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
+- Gebruik eerst bestaande shared primitives/patronen; voeg alleen een nieuw shared component toe bij een echt herhaalbaar patroon over meerdere schermen.
+- Stop geen screen-specifieke designregels in generieke shared primitives.
+- `design_refs/1.2.1/**` zijn bindend per scherm; `.md` notes tellen mee naast `code.html` en `screen.png`.
+- Verify stylingwerk altijd in light én dark mode tegen relevante design refs voordat het “klaar” is.
 
 ## Repo-eigen Memory Bank workflow
 - Onze memory bank is een **workflowlaag**, geen extra waarheidshiërarchie.

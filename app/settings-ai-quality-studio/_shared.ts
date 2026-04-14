@@ -2,13 +2,18 @@ import type {
   AiPromptAssistActionDefinition,
   AiPromptAssistActionId,
   AiPromptAssistActionOutputType,
+  AiPromptAssistAllowedChangeKind,
+  AiPromptAssistInvariant,
+  AiPromptAssistLayerPrecedence,
+  AiPromptAssistLayerRole,
+  AiPromptAssistLayerSemantics,
+  AiPromptAssistReadOnlyContext,
   AiPromptAssistTargetLayerKey,
   AiPromptAssistTargetLayerType,
   AiDraftDerivationSource,
   AiTaskDetail,
   AiTaskDraftCreationMeta,
   AiTaskDraftPayload,
-  AiTaskSummary,
   AiTaskVersionDetail,
 } from '@/types';
 
@@ -37,12 +42,9 @@ export type DraftFormState = {
   taskInstruction: string;
   promptTemplateRaw: string;
   promptTemplateInputContext: string | null;
-  systemInstructions: string;
   outputSchemaJsonText: string;
   configJsonText: string;
   baselineMetadataJsonText: string | null;
-  minItemsText: string;
-  maxItemsText: string;
   changelog: string;
 };
 
@@ -78,10 +80,18 @@ export function getEntryCleanupPromptAssistTargetLayerType(
 
 export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
   {
+    id: 'verdeel_over_velden',
+    label: 'Verdelen over velden',
+    helper: 'Verdeel instructies over alle bewerkbare velden',
+    order: 1,
+    placement: 'primary',
+    allowedTargetLayerTypes: ['system', 'general', 'field'],
+  },
+  {
     id: 'compacter',
     label: 'Compacter',
     helper: 'Korter zonder betekenisverlies',
-    order: 1,
+    order: 2,
     placement: 'primary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
   },
@@ -89,7 +99,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
     id: 'ontdubbelen',
     label: 'Ontdubbelen',
     helper: 'Overlap verwijderen',
-    order: 2,
+    order: 3,
     placement: 'primary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
   },
@@ -97,7 +107,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
     id: 'verhelderen',
     label: 'Verhelderen',
     helper: 'Minder ambigu en specifieker',
-    order: 3,
+    order: 4,
     placement: 'primary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
   },
@@ -105,7 +115,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
     id: 'check_contract',
     label: 'Check contract',
     helper: 'Check met taakdoel en contract',
-    order: 4,
+    order: 5,
     placement: 'primary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
   },
@@ -113,7 +123,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
     id: 'check_overlap',
     label: 'Check overlap',
     helper: 'Zoek overlap tussen lagen',
-    order: 5,
+    order: 6,
     placement: 'secondary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
   },
@@ -121,7 +131,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
     id: 'verplaats_naar_juiste_laag',
     label: 'Juiste laag',
     helper: 'Signaleer betere laagplaatsing',
-    order: 6,
+    order: 7,
     placement: 'secondary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
   },
@@ -129,7 +139,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
     id: 'maak_strikter',
     label: 'Strikter',
     helper: 'Maak minder vrijblijvend',
-    order: 7,
+    order: 8,
     placement: 'secondary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
   },
@@ -137,7 +147,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
     id: 'check_outputvorm',
     label: 'Outputvorm',
     helper: 'Check prompt vs outputschema',
-    order: 8,
+    order: 9,
     placement: 'secondary',
     allowedTargetLayerTypes: ['system', 'general', 'field'],
     relevantOutputTypes: ['object', 'compound'],
@@ -176,6 +186,30 @@ export type EntryCleanupTokenDefinition = {
   token: string;
 };
 
+export type StructuredPromptTokenDefinition = {
+  id: string;
+  kind: 'input' | 'output';
+  label: string;
+  token: string;
+};
+
+export type StructuredPromptSectionDefinition = {
+  key: string;
+  label: string;
+  helper: string;
+  layerType: AiPromptAssistTargetLayerType;
+  minHeight: number;
+};
+
+export type StructuredPromptEditorDefinition = {
+  taskKey: string;
+  title: string;
+  subtitle: string;
+  runtimeFamilyLabel: string;
+  sections: StructuredPromptSectionDefinition[];
+  tokens: StructuredPromptTokenDefinition[];
+};
+
 export const ENTRY_CLEANUP_TOKEN_DEFINITIONS: EntryCleanupTokenDefinition[] = [
   { id: 'rawText', kind: 'input', label: 'Ruwe tekst', token: '{{input.rawText}}' },
   { id: 'title', kind: 'output', label: 'Titel', token: '{{output.title}}' },
@@ -194,6 +228,344 @@ export function getEntryCleanupTokenByRawText(rawToken: string): EntryCleanupTok
       (item) => item.token.replace(/\s+/g, '').toLowerCase() === normalized
     ) ?? null
   );
+}
+
+const DAY_SHARED_TOKEN_DEFINITIONS: StructuredPromptTokenDefinition[] = [
+  { id: 'journalDate', kind: 'input', label: 'Datum', token: '{{journal_date}}' },
+  { id: 'entryTitle', kind: 'input', label: 'Entry titel', token: '{{entry_title}}' },
+  { id: 'entryBody', kind: 'input', label: 'Entry body', token: '{{entry_body}}' },
+  { id: 'summary', kind: 'output', label: 'Samenvatting', token: '{{output.summary}}' },
+  { id: 'narrativeText', kind: 'output', label: 'Dagverhaal', token: '{{output.narrativeText}}' },
+  { id: 'sections', kind: 'output', label: 'Secties', token: '{{output.sections}}' },
+];
+
+const REFLECTION_SHARED_TOKEN_DEFINITIONS: StructuredPromptTokenDefinition[] = [
+  { id: 'periodStart', kind: 'input', label: 'Periode start', token: '{{period_start}}' },
+  { id: 'periodEnd', kind: 'input', label: 'Periode einde', token: '{{period_end}}' },
+  { id: 'journalDate', kind: 'input', label: 'Dagdatum', token: '{{journal_date}}' },
+  { id: 'summaryInput', kind: 'input', label: 'Dag samenvatting', token: '{{summary}}' },
+  { id: 'narrativeInput', kind: 'input', label: 'Dag verhaal', token: '{{narrative_text}}' },
+  { id: 'summaryText', kind: 'output', label: 'Samenvatting', token: '{{output.summaryText}}' },
+  { id: 'narrativeText', kind: 'output', label: 'Periodeverhaal', token: '{{output.narrativeText}}' },
+  { id: 'highlights', kind: 'output', label: 'Highlights', token: '{{output.highlights}}' },
+  { id: 'reflectionPoints', kind: 'output', label: 'Reflectiepunten', token: '{{output.reflectionPoints}}' },
+];
+
+const STRUCTURED_PROMPT_DEFINITIONS: Record<string, StructuredPromptEditorDefinition> = {
+  entry_cleanup: {
+    taskKey: 'entry_cleanup',
+    title: 'Moments prompt',
+    subtitle: 'Structured editor voor entry-normalisatie.',
+    runtimeFamilyLabel: 'entry normalisatie',
+    sections: [
+      {
+        key: 'systemRulesInstruction',
+        label: 'Systeemregels',
+        helper: 'Geldt voor alle outputs. Houd dit inhoudelijk en brongebonden.',
+        layerType: 'system',
+        minHeight: 150,
+      },
+      {
+        key: 'generalInstruction',
+        label: 'Algemene instructie',
+        helper: 'Wat deze taak als geheel moet opleveren.',
+        layerType: 'general',
+        minHeight: 150,
+      },
+      {
+        key: 'titleInstruction',
+        label: 'Titel',
+        helper: 'Alleen regels voor het veld title.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+      {
+        key: 'bodyInstruction',
+        label: 'Body',
+        helper: 'Alleen regels voor het veld body.',
+        layerType: 'field',
+        minHeight: 150,
+      },
+      {
+        key: 'summaryShortInstruction',
+        label: 'Summary_short',
+        helper: 'Alleen regels voor het veld summary_short.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+    ],
+    tokens: ENTRY_CLEANUP_TOKEN_DEFINITIONS,
+  },
+  day_summary: {
+    taskKey: 'day_summary',
+    title: 'Vandaag prompt',
+    subtitle: 'Gedeelde prompt voor samenvatting, dagverhaal en secties.',
+    runtimeFamilyLabel: 'dag-opbouw',
+    sections: [
+      {
+        key: 'systemRulesInstruction',
+        label: 'Systeemregels',
+        helper: 'Globale grenzen voor de complete dag-opbouw output.',
+        layerType: 'system',
+        minHeight: 150,
+      },
+      {
+        key: 'generalInstruction',
+        label: 'Algemene instructie',
+        helper: 'Hoofddoel van de gedeelde prompt.',
+        layerType: 'general',
+        minHeight: 160,
+      },
+      {
+        key: 'summaryInstruction',
+        label: 'Samenvatting',
+        helper: 'Regels voor het samenvattingsveld.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+      {
+        key: 'narrativeInstruction',
+        label: 'Dagverhaal',
+        helper: 'Regels voor narrativeText.',
+        layerType: 'field',
+        minHeight: 160,
+      },
+      {
+        key: 'sectionsInstruction',
+        label: 'Secties',
+        helper: 'Regels voor sections output.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+    ],
+    tokens: DAY_SHARED_TOKEN_DEFINITIONS,
+  },
+  week_summary: {
+    taskKey: 'week_summary',
+    title: 'Week prompt',
+    subtitle: 'Gedeelde prompt voor weekoutput.',
+    runtimeFamilyLabel: 'reflectie',
+    sections: [
+      {
+        key: 'systemRulesInstruction',
+        label: 'Systeemregels',
+        helper: 'Globale grenzen voor de complete weekoutput.',
+        layerType: 'system',
+        minHeight: 150,
+      },
+      {
+        key: 'generalInstruction',
+        label: 'Algemene instructie',
+        helper: 'Hoofddoel van de gedeelde weekprompt.',
+        layerType: 'general',
+        minHeight: 170,
+      },
+      {
+        key: 'summaryInstruction',
+        label: 'Weeksamenvatting',
+        helper: 'Regels voor summaryText.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+      {
+        key: 'narrativeInstruction',
+        label: 'Weekverhaal',
+        helper: 'Regels voor narrativeText.',
+        layerType: 'field',
+        minHeight: 150,
+      },
+      {
+        key: 'highlightsInstruction',
+        label: 'Highlights',
+        helper: 'Regels voor highlights.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+      {
+        key: 'reflectionPointsInstruction',
+        label: 'Reflectiepunten',
+        helper: 'Regels voor reflectionPoints.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+    ],
+    tokens: REFLECTION_SHARED_TOKEN_DEFINITIONS,
+  },
+  month_summary: {
+    taskKey: 'month_summary',
+    title: 'Maand prompt',
+    subtitle: 'Gedeelde prompt voor maandoutput.',
+    runtimeFamilyLabel: 'reflectie',
+    sections: [
+      {
+        key: 'systemRulesInstruction',
+        label: 'Systeemregels',
+        helper: 'Globale grenzen voor de complete maandoutput.',
+        layerType: 'system',
+        minHeight: 150,
+      },
+      {
+        key: 'generalInstruction',
+        label: 'Algemene instructie',
+        helper: 'Hoofddoel van de gedeelde maandprompt.',
+        layerType: 'general',
+        minHeight: 170,
+      },
+      {
+        key: 'summaryInstruction',
+        label: 'Maandsamenvatting',
+        helper: 'Regels voor summaryText.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+      {
+        key: 'narrativeInstruction',
+        label: 'Maandverhaal',
+        helper: 'Regels voor narrativeText.',
+        layerType: 'field',
+        minHeight: 150,
+      },
+      {
+        key: 'highlightsInstruction',
+        label: 'Highlights',
+        helper: 'Regels voor highlights.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+      {
+        key: 'reflectionPointsInstruction',
+        label: 'Reflectiepunten',
+        helper: 'Regels voor reflectionPoints.',
+        layerType: 'field',
+        minHeight: 120,
+      },
+    ],
+    tokens: REFLECTION_SHARED_TOKEN_DEFINITIONS,
+  },
+};
+
+const DEFAULT_STRUCTURED_PROMPT_DEFINITION: StructuredPromptEditorDefinition = {
+  taskKey: 'generic',
+  title: 'Prompt',
+  subtitle: 'Structured editor.',
+  runtimeFamilyLabel: 'aiqs',
+  sections: [
+    {
+      key: 'systemRulesInstruction',
+      label: 'Systeemregels',
+      helper: 'Algemene regels die altijd gelden.',
+      layerType: 'system',
+      minHeight: 140,
+    },
+    {
+      key: 'generalInstruction',
+      label: 'Algemene instructie',
+      helper: 'Hoofdinstructie voor deze prompt.',
+      layerType: 'general',
+      minHeight: 160,
+    },
+  ],
+  tokens: [],
+};
+
+function parseLabeledStructuredText(
+  value: string,
+  sections: StructuredPromptSectionDefinition[]
+): Record<string, string> {
+  const byLabel = new Map<string, string>(sections.map((item) => [item.label.toLowerCase(), item.key]));
+  const result: Record<string, string> = Object.fromEntries(sections.map((item) => [item.key, '']));
+
+  const lines = value.split('\n');
+  let currentKey = sections[0]?.key ?? 'generalInstruction';
+  for (const line of lines) {
+    const header = line.match(/^\s*([^:]+):\s*$/);
+    if (header) {
+      const nextKey = byLabel.get(header[1].trim().toLowerCase());
+      if (nextKey) {
+        currentKey = nextKey;
+        continue;
+      }
+    }
+
+    result[currentKey] = result[currentKey] ? `${result[currentKey]}\n${line}` : line;
+  }
+
+  return result;
+}
+
+function formatLabeledStructuredText(
+  sections: StructuredPromptSectionDefinition[],
+  values: Record<string, string>
+): string {
+  const rows = sections
+    .map((section) => `${section.label}:\n${values[section.key] ?? ''}`)
+    .join('\n\n')
+    .trim();
+  return rows;
+}
+
+export function getStructuredPromptEditorDefinition(taskKey: string): StructuredPromptEditorDefinition {
+  return STRUCTURED_PROMPT_DEFINITIONS[taskKey] ?? {
+    ...DEFAULT_STRUCTURED_PROMPT_DEFINITION,
+    taskKey,
+  };
+}
+
+export function parseStructuredPromptInstructionSections(taskKey: string, taskInstruction: string): Record<string, string> {
+  const definition = getStructuredPromptEditorDefinition(taskKey);
+
+  if (taskKey === 'entry_cleanup') {
+    const parsed = parseEntryCleanupInstructionStateFromText(taskInstruction);
+    return {
+      systemRulesInstruction: parsed.systemRulesInstruction,
+      generalInstruction: parsed.generalInstruction,
+      titleInstruction: parsed.titleInstruction,
+      bodyInstruction: parsed.bodyInstruction,
+      summaryShortInstruction: parsed.summaryShortInstruction,
+    };
+  }
+
+  return parseLabeledStructuredText(taskInstruction, definition.sections);
+}
+
+export function formatStructuredPromptInstructionSections(taskKey: string, values: Record<string, string>): string {
+  if (taskKey === 'entry_cleanup') {
+    return formatEntryCleanupInstructionStateForEditor({
+      systemRulesInstruction: values.systemRulesInstruction ?? '',
+      generalInstruction: values.generalInstruction ?? '',
+      titleInstruction: values.titleInstruction ?? '',
+      bodyInstruction: values.bodyInstruction ?? '',
+      summaryShortInstruction: values.summaryShortInstruction ?? '',
+    });
+  }
+
+  const definition = getStructuredPromptEditorDefinition(taskKey);
+  return formatLabeledStructuredText(definition.sections, values);
+}
+
+export function buildStructuredPromptTemplate(args: {
+  taskKey: string;
+  promptTemplateRaw: string;
+  sectionValues: Record<string, string>;
+}): string {
+  if (args.taskKey === 'entry_cleanup') {
+    return buildEntryCleanupPromptTemplate({
+      promptTemplateRaw: args.promptTemplateRaw,
+      instructions: {
+        systemRulesInstruction: args.sectionValues.systemRulesInstruction ?? '',
+        generalInstruction: args.sectionValues.generalInstruction ?? '',
+        titleInstruction: args.sectionValues.titleInstruction ?? '',
+        bodyInstruction: args.sectionValues.bodyInstruction ?? '',
+        summaryShortInstruction: args.sectionValues.summaryShortInstruction ?? '',
+      },
+    });
+  }
+
+  const nextInstruction = formatStructuredPromptInstructionSections(args.taskKey, args.sectionValues);
+  return mergeTaskInstructionIntoPromptTemplate({
+    promptTemplateRaw: args.promptTemplateRaw,
+    taskInstruction: nextInstruction,
+  });
 }
 
 export type EntryCleanupTechnicalContract = {
@@ -508,22 +880,12 @@ export function toDraftFormState(version: AiTaskVersionDetail): DraftFormState {
     taskInstruction: promptView.taskInstruction,
     promptTemplateRaw: version.promptTemplate,
     promptTemplateInputContext: promptView.promptTemplateInputContext,
-    systemInstructions: version.systemInstructions,
     outputSchemaJsonText: JSON.stringify(version.outputSchemaJson ?? {}, null, 2),
     configJsonText: JSON.stringify(editableConfig, null, 2),
     baselineMetadataJsonText:
       Object.keys(baselineMetadata).length > 0 ? JSON.stringify(baselineMetadata, null, 2) : null,
-    minItemsText: version.minItems === null ? '' : String(version.minItems),
-    maxItemsText: version.maxItems === null ? '' : String(version.maxItems),
     changelog: version.changelog ?? '',
   };
-}
-
-function parseIntegerInput(value: string): number | null {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const next = Number.parseInt(trimmed, 10);
-  return Number.isInteger(next) ? next : Number.NaN;
 }
 
 export function parseDraftFormState(form: DraftFormState): {
@@ -551,21 +913,6 @@ export function parseDraftFormState(form: DraftFormState): {
     configJson = parsed as Record<string, unknown>;
   } catch {
     return { payload: null, error: 'Config JSON is ongeldig.' };
-  }
-
-  const minItems = parseIntegerInput(form.minItemsText);
-  const maxItems = parseIntegerInput(form.maxItemsText);
-  if (Number.isNaN(minItems) || Number.isNaN(maxItems)) {
-    return { payload: null, error: 'Min/max items moeten gehele getallen of leeg zijn.' };
-  }
-  if (minItems !== null && minItems < 0) {
-    return { payload: null, error: 'Min items kan niet negatief zijn.' };
-  }
-  if (maxItems !== null && maxItems < 0) {
-    return { payload: null, error: 'Max items kan niet negatief zijn.' };
-  }
-  if (minItems !== null && maxItems !== null && maxItems < minItems) {
-    return { payload: null, error: 'Max items moet groter of gelijk zijn aan min items.' };
   }
 
   const model = form.model.trim();
@@ -596,14 +943,11 @@ export function parseDraftFormState(form: DraftFormState): {
         promptTemplateRaw: form.promptTemplateRaw,
         taskInstruction: form.taskInstruction,
       }),
-      systemInstructions: form.systemInstructions,
       outputSchemaJson,
       configJson: {
         ...configJson,
         ...baselineMetadata,
       },
-      minItems,
-      maxItems,
       changelog: form.changelog.trim() || null,
     },
     error: null,
@@ -631,11 +975,8 @@ function buildPayloadFingerprint(payload: AiTaskDraftPayload): string {
   return JSON.stringify({
     model: payload.model.trim(),
     promptTemplate: payload.promptTemplate,
-    systemInstructions: payload.systemInstructions,
     outputSchemaJson: normalizeJsonForCompare(payload.outputSchemaJson),
     configJson: normalizeJsonForCompare(payload.configJson),
-    minItems: payload.minItems,
-    maxItems: payload.maxItems,
     changelog: payload.changelog ?? null,
   });
 }
@@ -650,11 +991,8 @@ export function isDraftFormDirty(form: DraftFormState, version: AiTaskVersionDet
   const originalFingerprint = buildPayloadFingerprint({
     model: version.model,
     promptTemplate: version.promptTemplate,
-    systemInstructions: version.systemInstructions,
     outputSchemaJson: version.outputSchemaJson,
     configJson: version.configJson,
-    minItems: version.minItems,
-    maxItems: version.maxItems,
     changelog: version.changelog ?? null,
   });
 
@@ -857,7 +1195,7 @@ export function getTaskConsistencyInfo(taskKey: string): TaskConsistencyInfo {
       representation: 'shared_runtime_family',
       affectsLabel: 'title, body en summary_short',
       taskOutputLabel: 'entry normalisatie-output',
-      familyLabel: 'Entry normalisatie runtime family',
+      familyLabel: 'Entry normalisatie runtime-groep',
       explanation:
         'Deze taak is onderdeel van de gedeelde entry-normalisatieflow en beïnvloedt de canonieke entry-outputvelden.',
     },
@@ -865,7 +1203,7 @@ export function getTaskConsistencyInfo(taskKey: string): TaskConsistencyInfo {
       representation: 'shared_runtime_family',
       affectsLabel: 'samenvatting, dagverhaal en secties',
       taskOutputLabel: 'samenvatting',
-      familyLabel: 'Dag-opbouw runtime family',
+      familyLabel: 'Dag-opbouw runtime-groep',
       explanation:
         'Deze draft hoort bij een gedeelde dag-opbouw. Je bewerkt hier de taakfocus voor samenvatting, binnen dezelfde runtime-familie.',
     },
@@ -873,7 +1211,7 @@ export function getTaskConsistencyInfo(taskKey: string): TaskConsistencyInfo {
       representation: 'shared_runtime_family',
       affectsLabel: 'samenvatting, dagverhaal en secties',
       taskOutputLabel: 'dagverhaal',
-      familyLabel: 'Dag-opbouw runtime family',
+      familyLabel: 'Dag-opbouw runtime-groep',
       explanation:
         'Deze draft hoort bij een gedeelde dag-opbouw. Je bewerkt hier de taakfocus voor het dagverhaal, binnen dezelfde runtime-familie.',
     },
@@ -898,82 +1236,282 @@ export function versionStatusLabel(status: AiTaskVersionDetail['status']): strin
   return labels[status];
 }
 
-export type AiQualityFamilyKey = 'moments' | 'today' | 'week' | 'month';
+// ─── Prompt Assist semantics helpers ───────────────────────────────────────
 
-export type AiQualityFamilyDefinition = {
-  key: AiQualityFamilyKey;
-  title: string;
-  description: string;
-  metaLabel: string;
-  taskKeys: string[];
-};
-
-export const AI_QUALITY_FAMILIES: AiQualityFamilyDefinition[] = [
-  {
-    key: 'moments',
-    title: 'Momenten',
-    description: 'Entry normalisatie van één moment.',
-    metaLabel: '1 onderdeel',
-    taskKeys: ['entry_cleanup'],
-  },
-  {
-    key: 'today',
-    title: 'Vandaag',
-    description: 'Samenvatting en dagverhaal.',
-    metaLabel: '2 onderdelen',
-    taskKeys: ['day_summary', 'day_narrative'],
-  },
-  {
-    key: 'week',
-    title: 'Week',
-    description: 'Samenvatting, verhaal, highlights en reflectiepunten.',
-    metaLabel: '4 onderdelen',
-    taskKeys: ['week_summary', 'week_narrative', 'week_highlights', 'week_reflection_points'],
-  },
-  {
-    key: 'month',
-    title: 'Maand',
-    description: 'Samenvatting, verhaal, highlights en reflectiepunten.',
-    metaLabel: '4 onderdelen',
-    taskKeys: ['month_summary', 'month_narrative', 'month_highlights', 'month_reflection_points'],
-  },
-];
-
-export const AI_QUALITY_TASK_LABELS: Record<string, string> = {
-  entry_cleanup: 'Moment opschonen',
-  day_summary: 'Dag samenvatting',
-  day_narrative: 'Dagverhaal',
-  week_summary: 'Week samenvatting',
-  week_narrative: 'Weekverhaal',
-  week_highlights: 'Week highlights',
-  week_reflection_points: 'Week reflectiepunten',
-  month_summary: 'Maand samenvatting',
-  month_narrative: 'Maandverhaal',
-  month_highlights: 'Maand highlights',
-  month_reflection_points: 'Maand reflectiepunten',
-};
-
-export function getAiQualityFamilyByKey(key: string): AiQualityFamilyDefinition | null {
-  return AI_QUALITY_FAMILIES.find((family) => family.key === key) ?? null;
+/** Mapt de editorlaagtype naar de functionele OpenAI-runtimerol */
+export function getLayerRoleForLayerType(layerType: AiPromptAssistTargetLayerType): AiPromptAssistLayerRole {
+  if (layerType === 'system') return 'high_precedence_instruction';
+  if (layerType === 'general') return 'task_goal';
+  return 'field_rule';
 }
 
-export function getAiQualityFamilyTasks(familyKey: AiQualityFamilyKey, tasks: AiTaskSummary[]): AiTaskSummary[] {
-  const family = getAiQualityFamilyByKey(familyKey);
-  if (!family) return [];
-
-  const byKey = new Map(tasks.map((task) => [task.key, task]));
-  return family.taskKeys.map((taskKey) => byKey.get(taskKey)).filter((task): task is AiTaskSummary => Boolean(task));
+/** Mapt de editorlaagtype naar de runtime-precedentie */
+export function getLayerPrecedence(layerType: AiPromptAssistTargetLayerType): AiPromptAssistLayerPrecedence {
+  if (layerType === 'system') return 'high';
+  return 'normal';
 }
 
-export function getAiQualityFamilyStatusSummary(tasks: AiTaskSummary[]): string {
-  if (tasks.length === 0) return 'Niet ingesteld';
+/** Korte beschrijving van de laag-purpose per layerType */
+function getLayerPurpose(layerType: AiPromptAssistTargetLayerType, label: string): string {
+  if (layerType === 'system') {
+    return `Systeemlaag (${label}): geldt als harde grens voor alle outputs van deze prompt. Hogere prioriteit dan taak- en veldregels.`;
+  }
+  if (layerType === 'general') {
+    return `Taaklaag (${label}): het overkoepelende taakdoel. Geldt voor alle outputvelden tezamen.`;
+  }
+  return `Veldlaag (${label}): regels die alleen gelden voor dit specifieke outputveld.`;
+}
 
-  const live = tasks.filter((task) => Boolean(task.liveVersion)).length;
-  const draft = tasks.filter((task) => !task.liveVersion && task.hasDraft).length;
+/** Regels die bij een laagtype absoluut behouden moeten blijven */
+function getPreserveRulesForLayerType(layerType: AiPromptAssistTargetLayerType): string[] {
+  if (layerType === 'system') {
+    return [
+      'Behou JSON/response_format-constraints als ze aanwezig zijn.',
+      'Behou alle "geen tekst buiten JSON"-type regels.',
+      'Behou brongebondenheidsregels die voor alle velden gelden.',
+      'Behou contractgrenzen die runtime altijd van toepassing zijn.',
+    ];
+  }
+  if (layerType === 'general') {
+    return [
+      'Behou de kernomschrijving van het taakdoel.',
+      'Behou brongebondenheidsregels die taakbreed gelden.',
+    ];
+  }
+  return [
+    'Behou veldspecifieke contractgrenzen (bijv. "niet samenvatten" bij body).',
+    'Behou eventuele lengte- of formaateisen die aan dit veld zijn gesteld.',
+  ];
+}
 
-  if (live === tasks.length) return 'Runtime actief';
-  if (live === 0 && draft === 0) return 'Niet ingesteld';
-  if (live === 0 && draft > 0) return 'Draft actief';
-  if (live > 0 && draft > 0) return 'Runtime + draft';
-  return 'Deels actief';
+/** Moves die verboden zijn vanuit een laagtype */
+function getForbiddenMovesForLayerType(layerType: AiPromptAssistTargetLayerType): string[] {
+  if (layerType === 'system') {
+    return [
+      'Verplaats nooit systeemregels naar general- of field-lagen.',
+      'Verplaats nooit JSON/response_format-constraints buiten deze laag.',
+      'Verschuif nooit technische contractvereisten naar lagere lagen.',
+    ];
+  }
+  if (layerType === 'general') {
+    return [
+      'Verplaats geen taakbrede regels naar veldlagen.',
+      'Zet geen veldspecifieke regels in de taaklaag die alleen voor één veld gelden.',
+    ];
+  }
+  return [
+    'Zet geen systeemregels of JSON-contractvereisten in een veldlaag.',
+    'Zet geen taakbrede regels in een veldlaag; die horen in de general- of systemlaag.',
+  ];
+}
+
+/**
+ * Bouwt layerSemantics-objecten voor alle secties van de editor.
+ * Dit geeft de assist expliciete rolomschrijving, precedentie en guardrails per laag.
+ */
+export function buildLayerSemantics(
+  sections: StructuredPromptSectionDefinition[]
+): AiPromptAssistLayerSemantics[] {
+  return sections.map((section) => ({
+    key: section.key,
+    label: section.label,
+    layerType: section.layerType,
+    runtimeRole: getLayerRoleForLayerType(section.layerType),
+    precedence: getLayerPrecedence(section.layerType),
+    purpose: getLayerPurpose(section.layerType, section.label),
+    preserveRules: getPreserveRulesForLayerType(section.layerType),
+    forbiddenMoves: getForbiddenMovesForLayerType(section.layerType),
+  }));
+}
+
+/**
+ * Bouwt de read-only sibling context voor de assist.
+ * Alle lagen behalve de targetlaag worden als read-only context meegegeven.
+ */
+export function buildReadOnlyContext(args: {
+  sections: StructuredPromptSectionDefinition[];
+  targetKey: string;
+  sectionValues: Record<string, string>;
+}): AiPromptAssistReadOnlyContext[] {
+  return args.sections
+    .filter((section) => section.key !== args.targetKey)
+    .map((section) => ({
+      key: section.key,
+      label: section.label,
+      layerType: section.layerType,
+      runtimeRole: getLayerRoleForLayerType(section.layerType),
+      text: args.sectionValues[section.key] ?? '',
+    }));
+}
+
+/**
+ * Bouwt de harde invariants voor een task.
+ * Deze constraints mogen nooit verloren gaan of naar lagere lagen verschuiven.
+ */
+export function buildInvariants(taskKey: string): AiPromptAssistInvariant[] {
+  const base: AiPromptAssistInvariant[] = [
+    {
+      id: 'no_external_sources',
+      description: 'Gebruik alleen opgegeven bronvelden; geen externe context, kennis of verzinsels toevoegen.',
+      sourceLayerKey: 'systemRulesInstruction',
+      mustRemainHighPrecedence: true,
+    },
+  ];
+
+  if (taskKey === 'entry_cleanup') {
+    return [
+      ...base,
+      {
+        id: 'json_only_output',
+        description: 'Output moet altijd een geldig JSON object zijn; geen tekst buiten JSON.',
+        sourceLayerKey: 'systemRulesInstruction',
+        mustRemainHighPrecedence: true,
+      },
+      {
+        id: 'no_summarization_of_body',
+        description: 'body mag niet samenvatten; de volledige opgeschoonde broninhoud moet behouden blijven.',
+        sourceLayerKey: 'bodyInstruction',
+        mustRemainHighPrecedence: false,
+      },
+      {
+        id: 'no_new_claims',
+        description: 'Geen nieuwe claims, interpretaties of oorzaken toevoegen buiten de bron.',
+        sourceLayerKey: 'systemRulesInstruction',
+        mustRemainHighPrecedence: true,
+      },
+      {
+        id: 'output_contract_fields',
+        description: 'Output moet altijd de velden title, body en summary_short bevatten.',
+        sourceLayerKey: 'systemRulesInstruction',
+        mustRemainHighPrecedence: true,
+      },
+    ];
+  }
+
+  if (taskKey === 'day_summary' || taskKey === 'day_narrative') {
+    return [
+      ...base,
+      {
+        id: 'no_summarization_as_narrative',
+        description: 'narrativeText mag niet als samenvatting functioneren; alle relevante momenten moeten aanwezig zijn.',
+        sourceLayerKey: 'narrativeInstruction',
+        mustRemainHighPrecedence: false,
+      },
+      {
+        id: 'no_therapy_language',
+        description: 'Geen therapeutische, diagnostische of coachtaal gebruiken.',
+        sourceLayerKey: 'systemRulesInstruction',
+        mustRemainHighPrecedence: true,
+      },
+    ];
+  }
+
+  if (taskKey === 'week_summary' || taskKey === 'month_summary') {
+    return [
+      ...base,
+      {
+        id: 'source_bound_synthesis',
+        description: 'Synthese blijft brongebonden op day_journals; geen verzinsels buiten de bron.',
+        sourceLayerKey: 'systemRulesInstruction',
+        mustRemainHighPrecedence: true,
+      },
+      {
+        id: 'no_therapy_language',
+        description: 'Geen therapeutische, diagnostische of coachtaal gebruiken.',
+        sourceLayerKey: 'systemRulesInstruction',
+        mustRemainHighPrecedence: true,
+      },
+      {
+        id: 'no_action_items',
+        description: 'Reflectiepunten worden geen actiepuntenlijst of checklisttaal.',
+        sourceLayerKey: 'reflectionPointsInstruction',
+        mustRemainHighPrecedence: false,
+      },
+    ];
+  }
+
+  return base;
+}
+
+/**
+ * Geeft de toegestane soorten wijzigingen voor een actie + laag.
+ * Beperkt automatisch wat de assist mag doen op high-precedence lagen.
+ */
+export function buildAllowedChangeKinds(
+  actionId: string,
+  layerType: AiPromptAssistTargetLayerType
+): AiPromptAssistAllowedChangeKind[] {
+  if (actionId === 'verdeel_over_velden') {
+    return ['redistribute_with_explicit_justification'];
+  }
+
+  const base: AiPromptAssistAllowedChangeKind[] = ['rewrite_within_layer'];
+
+  if (actionId === 'compacter') {
+    return [...base, 'tighten_wording'];
+  }
+  if (actionId === 'ontdubbelen') {
+    return [...base, 'dedupe_within_layer'];
+  }
+  if (actionId === 'verhelderen' || actionId === 'maak_strikter') {
+    return [...base, 'clarify_execution', 'tighten_wording'];
+  }
+  if (actionId === 'check_contract' || actionId === 'check_overlap' || actionId === 'check_outputvorm') {
+    // Analyse-acties: geen directe rewrite op system-laag, alleen tighten
+    if (layerType === 'system') {
+      return ['tighten_wording'];
+    }
+    return [...base, 'clarify_execution'];
+  }
+  if (actionId === 'verplaats_naar_juiste_laag') {
+    // Verplaats alleen target herschrijven (geen verplaatsen van high-precedence content)
+    return [...base, 'clarify_execution'];
+  }
+
+  return base;
+}
+
+// ─── UI layer notice helpers ────────────────────────────────────────────────
+
+export type LayerNoticeInfo = {
+  /** Korte badge-label voor naast de sectiehoofdlabel */
+  badgeLabel: string;
+  /** Korte uitleg wat deze laag doet — voor hint onder de editor */
+  hintText: string;
+  /** Contextregel voor in de assist-modal */
+  assistContextMessage: string;
+  /** True als dit een high-precedence laag is */
+  isHighPrecedence: boolean;
+};
+
+/**
+ * Geeft UI-noticeinformatie per laag zonder redesign.
+ * Gebruik dit om labels en hints in de editor en assist-modal te tonen.
+ */
+export function getLayerNoticeInfo(
+  layerType: AiPromptAssistTargetLayerType,
+  label: string
+): LayerNoticeInfo {
+  if (layerType === 'system') {
+    return {
+      badgeLabel: 'Systeemlaag',
+      hintText: 'Geldt boven alle andere instructies. Gebruik dit voor harde grenzen: contract, JSON-vorm en regels die altijd gelden.',
+      assistContextMessage: `Je bewerkt de systeemlaag (${label}). Harde regels blijven hier en verschuiven niet naar lagere lagen.`,
+      isHighPrecedence: true,
+    };
+  }
+  if (layerType === 'general') {
+    return {
+      badgeLabel: 'Algemene instructie',
+      hintText: 'Het overkoepelende taakdoel. Geldt voor alle outputvelden tezamen.',
+      assistContextMessage: `Je bewerkt de algemene instructie (${label}). Dit is het taakbrede doel; veldspecifieke regels horen in de veldlagen.`,
+      isHighPrecedence: false,
+    };
+  }
+  return {
+    badgeLabel: 'Veldlaag',
+    hintText: 'Alleen regels voor dit specifieke outputveld. Houd dit veldgericht en kort.',
+    assistContextMessage: `Je bewerkt de veldlaag (${label}). Regels hier gelden alleen voor dit veld; systeemregels en taakbrede regels horen in hogere lagen.`,
+    isHighPrecedence: false,
+  };
 }

@@ -14,6 +14,7 @@ const outputPaths = {
   uploadChatgptProjectContext: 'docs/upload/chatgpt-project-context.md',
   uploadAiQualityStudio: 'docs/upload/ai-quality-studio.md',
   uploadClineWorkflow: 'docs/upload/cline-workflow.md',
+  uploadStitchWorkflow: 'docs/upload/stitch-workflow.md',
   uploadMvpDesignSpec: 'docs/upload/mvp-design-spec-1.2.1.md',
   uploadStitchDesignContext: 'docs/upload/stitch-design-context.md',
   uploadManifest: 'docs/upload/upload-manifest.md',
@@ -55,6 +56,11 @@ const uploadSet = [
     path: outputPaths.uploadClineWorkflow,
     type: 'workflow upload copy',
     flow: 'ChatGPT Project (execution context)',
+  },
+  {
+    path: outputPaths.uploadStitchWorkflow,
+    type: 'workflow upload copy',
+    flow: 'ChatGPT Project + Stitch handoff (workflow context)',
   },
   {
     path: outputPaths.uploadMvpDesignSpec,
@@ -406,6 +412,7 @@ async function loadBundleInputs() {
   const agents = await readText('AGENTS.md');
   const mvpDesignSpec = await readText('docs/design/mvp-design-spec-1.2.1.md');
   const ethosDesign = await readText('design_refs/1.2.1/ethos_ivory/DESIGN.md');
+  const stitchWorkflow = await readText('docs/dev/stitch-workflow.md');
   const tokens = await readText('theme/tokens.ts');
   const pageMarkdownRefs = await listDesignMarkdownRefs();
 
@@ -420,6 +427,7 @@ async function loadBundleInputs() {
     ]),
     mvpDesignSpec,
     ethosDesign,
+    stitchWorkflow,
     tokenSnapshot: extractTokenSnapshot(tokens),
     pageMarkdownRefs,
   };
@@ -446,6 +454,7 @@ function renderOutputs(inputs, metadata) {
     [outputPaths.uploadChatgptProjectContext, chatgptProjectContext],
     [outputPaths.uploadAiQualityStudio, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/project/ai-quality-studio.md')?.content?.trim() ?? ''}\n`],
     [outputPaths.uploadClineWorkflow, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/dev/cline-workflow.md')?.content?.trim() ?? ''}\n`],
+    [outputPaths.uploadStitchWorkflow, `${inputs.stitchWorkflow.trim()}\n`],
     [outputPaths.uploadMvpDesignSpec, `${inputs.mvpDesignSpec.trim()}\n`],
     [outputPaths.uploadStitchDesignContext, stitchDesignContext],
     [outputPaths.uploadManifest, uploadManifest],
@@ -456,6 +465,7 @@ async function assertRequiredSourcesExist(pageMarkdownRefs) {
   const requiredSources = [
     ...projectSources.map((item) => item.path),
     ...designSources,
+    'docs/dev/stitch-workflow.md',
     ...pageMarkdownRefs,
   ];
 

@@ -46,6 +46,7 @@ export {
   createAdminAiQualityStudioDraftVersion,
   deleteAdminAiQualityStudioDraftVersion,
   fetchAdminAiQualityStudioCompareView,
+  fetchAdminOpenAiDebugStorageSettings,
   fetchAdminAiQualityStudioTestRun,
   fetchAdminAiQualityStudioTaskDetail,
   fetchAdminAiQualityStudioTasks,
@@ -55,6 +56,7 @@ export {
   runAdminAiQualityStudioPromptAssistPreview,
   runAdminAiQualityStudioTest,
   saveAdminAiQualityStudioTestReview,
+  updateAdminOpenAiDebugStorageSettings,
   updateAdminAiQualityStudioDraftVersion,
 } from './ai-quality-studio';
 export {

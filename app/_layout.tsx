@@ -23,6 +23,45 @@ export const unstable_settings = {
 
 const WEB_APP_SHELL_MAX_WIDTH = 460;
 
+type AuthCallbackErrorPayload = {
+  error: string | null;
+  errorCode: string | null;
+  errorDescription: string | null;
+};
+
+function normalizeAuthParam(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function extractAuthErrorFromHref(href: string): AuthCallbackErrorPayload {
+  try {
+    const url = new URL(href);
+    const hashParams = new URLSearchParams(
+      url.hash.startsWith("#") ? url.hash.slice(1) : url.hash,
+    );
+
+    const readParam = (key: string): string | null =>
+      normalizeAuthParam(url.searchParams.get(key) ?? hashParams.get(key));
+
+    return {
+      error: readParam("error"),
+      errorCode: readParam("error_code"),
+      errorDescription: readParam("error_description"),
+    };
+  } catch {
+    return {
+      error: null,
+      errorCode: null,
+      errorDescription: null,
+    };
+  }
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme() ?? "light";
   const segments = useSegments();
@@ -126,6 +165,25 @@ a:focus-visible,
     const inAuthRoute = segments[0] === "sign-in";
 
     if (!session && !inAuthRoute) {
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        const callbackError = extractAuthErrorFromHref(window.location.href);
+        if (
+          callbackError.error ||
+          callbackError.errorCode ||
+          callbackError.errorDescription
+        ) {
+          router.replace({
+            pathname: "/sign-in",
+            params: {
+              auth_error: callbackError.error ?? undefined,
+              auth_error_code: callbackError.errorCode ?? undefined,
+              auth_error_description: callbackError.errorDescription ?? undefined,
+            },
+          });
+          return;
+        }
+      }
+
       router.replace("/sign-in");
       return;
     }
@@ -192,7 +250,7 @@ a:focus-visible,
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="settings-ai-quality-studio/family/[familyKey]"
+              name="settings-ai-quality-studio/group/[groupKey]"
               options={{ headerShown: false }}
             />
             <Stack.Screen

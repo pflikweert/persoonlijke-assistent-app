@@ -2,8 +2,8 @@
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-13T12:52:06.103Z
-Source Commit: 644491c
+Build Timestamp (UTC): 2026-04-14T11:40:49.894Z
+Source Commit: b6319e3
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -97,17 +97,7 @@ Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze gen
 ---
 
 ## Foundation Guardrails
-These rules are part of the foundation, not just implementation notes.
-
-- Clean-first is the default: use spacing, hierarchy, typography and tonal contrast before adding containers.
-- Borders, strokes, outlines, extra fills and nested surfaces are opt-in only.
-- Plain text wrappers stay transparent by default.
-- Top navigation is navigation only; title and supporting copy live in the hero below the nav by default.
-- Header, page and footer form one coherent theme hierarchy per mode.
-- Dark and light mode share the same composition; dark mode must not become the implicit source of truth.
-- Background modes are mode-aware and selective: `ambient`, `subtle` and `flat`.
-- Auth atmosphere comes from code-based page background and spacing, not heavy enclosing cards.
-- Design refs remain binding per screen; if a screen ref folder has a `.md` note, use it next to `code.html` and `screen.png`.
+- Zie `design_refs/1.2.1/ethos_ivory/DESIGN.md` voor foundation guardrails.
 
 ## Agent Workflow Notes
 - `AGENTS.md` blijft de always-on workflowbron voor agents.

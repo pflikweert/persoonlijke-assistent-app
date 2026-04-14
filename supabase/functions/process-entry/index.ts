@@ -8,6 +8,8 @@ import { logFlow } from "../_shared/flow-logger.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildEntryNormalizationPromptSpec, buildEntryNormalizationRepairPromptSpec } from "../_shared/prompt-specs.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
+import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow } from "../_shared/openai-debug-storage.ts";
+// @ts-ignore -- Deno runtime requires local import extensions.
 import {
   buildDayJournalPromptSpec,
   buildDayJournalRepairPromptSpec,
@@ -845,6 +847,7 @@ async function callOpenAiJson(args: {
   promptVersion: string;
   systemPrompt: string;
   userPrompt: string;
+  debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<OpenAiJson | null> {
   try {
     const startedAt = Date.now();
@@ -858,26 +861,34 @@ async function callOpenAiJson(args: {
         operation: args.operation,
         provider: "openai",
         model: args.model,
+        debugStoreEnabled: args.debugStore?.store === true,
       },
     });
+    const requestBody: Record<string, unknown> = {
+      model: args.model,
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `${args.systemPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
+        },
+        { role: "user", content: args.userPrompt },
+      ],
+    };
+    if (args.debugStore !== undefined) {
+      requestBody.store = args.debugStore.store;
+      if (args.debugStore.store) {
+        requestBody.metadata = args.debugStore.metadata;
+      }
+    }
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${args.apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: args.model,
-        temperature: 0.2,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: `${args.systemPrompt}\nPromptVersion: ${args.promptVersion}\nRequestId: ${args.requestId}`,
-          },
-          { role: "user", content: args.userPrompt },
-        ],
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -971,6 +982,7 @@ async function normalizeEntry(args: {
   flowId: string;
   softQualityGuards: boolean;
   rawText: string;
+  debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<NormalizedEntry> {
   if (containsNoSpeechMarker(args.rawText)) {
     return {
@@ -993,6 +1005,7 @@ async function normalizeEntry(args: {
     promptVersion: normalizationPrompt.promptVersion,
     systemPrompt: normalizationPrompt.systemPrompt,
     userPrompt: normalizationPrompt.userPrompt,
+    debugStore: args.debugStore,
   });
 
   const fallback = fallbackNormalization(args.rawText);
@@ -1198,6 +1211,7 @@ async function composeDayJournal(args: {
   strictValidation: boolean;
   softQualityGuards: boolean;
   normalizedEntries: NormalizedEntry[];
+  debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<DayJournalDraft> {
   const orderedEntries = orderDayJournalEntries(args.normalizedEntries);
   const contentEntries = orderedEntries.filter(
@@ -1236,6 +1250,7 @@ async function composeDayJournal(args: {
     promptVersion: promptSpec.promptVersion,
     systemPrompt: promptSpec.systemPrompt,
     userPrompt: promptSpec.userPrompt,
+    debugStore: args.debugStore,
   });
 
   const finalized = finalizeDayJournalDraft({
@@ -1473,6 +1488,43 @@ Deno.serve(async (request: Request) => {
     });
 
     const runtimeEnv = getFunctionRuntimeEnv();
+
+    // Load debug storage policy for this flow (best-effort; no-op on error)
+    let debugStore: { store: boolean; metadata?: Record<string, string> } | undefined;
+    try {
+      const serviceRoleKey =
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
+        Deno.env.get("APP_SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
+        "";
+      if (serviceRoleKey) {
+        const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
+        const resolution = resolveOpenAiDebugStorageForFlow({
+          settings: debugSettings,
+          flowKey: "process-entry.generation",
+          endpointFamily: "chat_completions",
+        });
+        const metadata = buildOpenAiDebugMetadata({
+          app: "persoonlijke-assistent",
+          env: Deno.env.get("APP_ENV") ?? "production",
+          flow: "process-entry",
+          functionName: "process-entry",
+          taskKey: "entry_normalization+day_journal",
+          runtimeFamily: "entry",
+          requestId,
+          flowId,
+          mode: "generation",
+          version: "1",
+          actor: "user",
+        });
+        debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
+      }
+    } catch {
+      // debug storage policy load is non-fatal; continue without
+    }
+
     const authHeader = request.headers.get("Authorization");
 
     if (!authHeader) {
@@ -1956,6 +2008,7 @@ Deno.serve(async (request: Request) => {
       flowId,
       softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
       rawText: sourceTextForNormalization,
+      debugStore,
     });
 
     step = "normalized_persisted";
@@ -2191,6 +2244,7 @@ Deno.serve(async (request: Request) => {
       strictValidation: runtimeEnv.dayJournalStrictValidation,
       softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
       normalizedEntries: normalizedEntriesForDay,
+      debugStore,
     });
 
     const { data: dayJournal, error: dayJournalError } = await supabase

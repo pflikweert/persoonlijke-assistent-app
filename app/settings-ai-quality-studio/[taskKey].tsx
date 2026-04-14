@@ -23,6 +23,12 @@ import type { AiTaskDetail, AiTaskVersionDetail } from '@/types';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, radius, spacing } from '@/theme';
 import { formatDateTimeLabel, versionStatusLabel } from './_shared';
+import {
+  getAiQualityTaskCapabilities,
+  getAiQualityFamilyPrimaryTaskKey,
+  getAiQualityTaskMetadata,
+  shouldBypassAiQualityTaskOverview,
+} from './readmodel';
 
 function isDraftVersion(version: AiTaskVersionDetail): boolean {
   return version.status === 'draft';
@@ -43,13 +49,27 @@ export default function AiQualityStudioTaskOverviewScreen() {
     () => detail?.versions.find((version) => version.status === 'draft') ?? null,
     [detail]
   );
+  const taskCapabilities = useMemo(
+    () => (detail ? getAiQualityTaskCapabilities(detail.key) : null),
+    [detail]
+  );
+  const taskMetadata = useMemo(() => (detail ? getAiQualityTaskMetadata(detail.key, detail.label) : null), [detail]);
   const hasLive = Boolean(detail?.liveVersion);
 
-  const primaryLabel = draftVersion
-    ? 'Verder bewerken'
-    : hasLive
-      ? 'Nieuwe draft op basis van live'
-      : 'Eerste versie maken';
+  const primaryLabel =
+    taskMetadata?.editorScope === 'read_only_part'
+      ? 'Open gedeelde prompt'
+      : taskMetadata?.editorScope === 'family'
+        ? draftVersion
+          ? 'Gedeelde prompt openen'
+          : hasLive
+            ? 'Nieuwe gedeelde draft op basis van live'
+            : 'Eerste gedeelde draft maken'
+        : draftVersion
+          ? 'Verder bewerken'
+          : hasLive
+            ? 'Nieuwe draft op basis van live'
+            : 'Eerste versie maken';
 
   const load = useCallback(async () => {
     const normalizedTaskKey = typeof taskKey === 'string' ? taskKey.trim() : '';
@@ -65,6 +85,26 @@ export default function AiQualityStudioTaskOverviewScreen() {
 
     try {
       const nextDetail = await fetchAdminAiQualityStudioTaskDetail(normalizedTaskKey);
+      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label);
+      if (shouldBypassAiQualityTaskOverview(nextDetail.key, nextDetail.label) && metadata.familyKey) {
+        if (metadata.editorTargetTaskKey) {
+          router.replace(`/settings-ai-quality-studio/${metadata.editorTargetTaskKey}` as never);
+          return;
+        }
+
+        const fallbackPrimaryTask = getAiQualityFamilyPrimaryTaskKey([nextDetail], metadata.familyKey);
+        if (fallbackPrimaryTask) {
+          router.replace(`/settings-ai-quality-studio/${fallbackPrimaryTask}` as never);
+          return;
+        }
+
+        router.replace('/settings-ai-quality-studio' as never);
+        return;
+      }
+      if (metadata.editorScope === 'read_only_part' && metadata.editorTargetTaskKey) {
+        router.replace(`/settings-ai-quality-studio/${metadata.editorTargetTaskKey}` as never);
+        return;
+      }
       setDetail(nextDetail);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -83,6 +123,11 @@ export default function AiQualityStudioTaskOverviewScreen() {
 
   async function handlePrimaryAction() {
     if (!detail || creatingDraft) return;
+
+    if (taskMetadata?.editorScope === 'read_only_part' && taskMetadata.editorTargetTaskKey) {
+      router.replace(`/settings-ai-quality-studio/${taskMetadata.editorTargetTaskKey}` as never);
+      return;
+    }
 
     if (draftVersion) {
       router.push(`/settings-ai-quality-studio/${detail.key}/draft/${draftVersion.id}` as never);
@@ -115,7 +160,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
               icon: draftVersion ? 'edit' : 'add-circle-outline',
             }}
             secondaryAction={
-              draftVersion
+              draftVersion && taskCapabilities?.canReview
                 ? {
                     label: 'Valideren',
                     onPress: () =>
@@ -148,6 +193,14 @@ export default function AiQualityStudioTaskOverviewScreen() {
 
       {!loading && detail ? (
         <>
+          {taskMetadata?.editorScope === 'family' ? (
+            <StateBlock
+              tone="info"
+              message="Gedeelde prompt"
+              detail="Dit onderdeel wordt samen met andere outputvelden via één runtime-call bewerkt."
+            />
+          ) : null}
+
           <AdminSection title="Onderdeel">
             <ThemedText type="defaultSemiBold">{detail.label}</ThemedText>
             {detail.description ? <ThemedText type="bodySecondary">{detail.description}</ThemedText> : null}
@@ -195,7 +248,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
                       v{version.versionNumber} · {versionStatusLabel(version.status)}
                     </ThemedText>
                     <MetaText>{version.model}</MetaText>
-                    <MetaText>{isDraft ? 'Verder bewerken' : 'Alleen bekijken'}</MetaText>
+                    <MetaText>{isDraft ? 'Draft openen' : 'Alleen bekijken'}</MetaText>
                   </Pressable>
                 );
               })}

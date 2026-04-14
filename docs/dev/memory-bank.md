@@ -57,3 +57,19 @@ Meestal niet nodig bij:
 - houd het kort en feitelijk
 - verwijs naar canonieke bron in plaats van te kopiëren
 - promote alleen stabiele learnings; laat sessieruis tijdelijk
+
+## Opschoning (verplicht)
+- `docs/dev/active-context.md` is een **tijdelijke werkfile**, geen backlog.
+- Voeg in `active-context.md` altijd een regel toe: `Laatst bijgewerkt op: YYYY-MM-DD`.
+- Na afronding van non-triviale of onderbroken taken:
+  1. promote stabiele learnings naar `AGENTS.md`, skill of `docs/dev/**` (indien structureel), en
+  2. verwijder afgeronde WIP-context uit `active-context.md`.
+- Laat alleen context staan die aantoonbaar nodig is voor de eerstvolgende sessie.
+- Staat er geen relevante open WIP meer, reset `active-context.md` naar een korte baseline.
+- Is `active-context.md` ouder dan 14 dagen en bevat het geen aantoonbaar relevante open WIP, reset naar baseline.
+
+## Toolingverwachting (Cline/Codex)
+- Deze memory-bank flow is repo-side en **best effort**: hij helpt alleen wanneer de agent de docs-volgorde volgt.
+- Voor Cline is dit doorgaans effectief via `AGENTS.md` + `.clinerules`.
+- Voor andere agents (zoals Codex) blijft dit afhankelijk van hoe die sessie repo-instructies inlaadt.
+- Daarom blijft de canonieke waarheid altijd in `docs/project/**`; memory-bank content mag nooit leidend worden.

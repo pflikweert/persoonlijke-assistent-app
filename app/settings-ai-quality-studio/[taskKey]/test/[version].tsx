@@ -48,6 +48,7 @@ import {
   getTaskConsistencyInfo,
   parseEntryCleanupInstructionStateFromPromptTemplate,
 } from '../../_shared';
+import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '../../readmodel';
 
 type EntryCleanupOutput = {
   title: string;
@@ -145,6 +146,10 @@ export default function AiQualityStudioTestScreen() {
     if (!detail) return null;
     return getTaskConsistencyInfo(detail.key);
   }, [detail]);
+  const taskCapabilities = useMemo(
+    () => (detail ? getAiQualityTaskCapabilities(detail.key) : null),
+    [detail]
+  );
 
   const isEntryCleanup = detail?.key === 'entry_cleanup';
   const responseContractFields = useMemo(
@@ -161,9 +166,15 @@ export default function AiQualityStudioTestScreen() {
     return getEntryCleanupTechnicalContractLines(contract);
   }, [isEntryCleanup, selectedVersion]);
 
-  const supportsInlineTesting = detail?.inputType === 'entry' || detail?.inputType === 'day';
+  const supportsInlineTesting = Boolean(taskCapabilities?.canTest);
   const canRunTest =
-    Boolean(supportsInlineTesting) && Boolean(selectedVersion) && Boolean(selectedSource) && !runningTest;
+    Boolean(supportsInlineTesting) &&
+    Boolean(selectedVersion) &&
+    Boolean(selectedSource) &&
+    Boolean(
+      selectedSource && taskCapabilities?.allowedSourceTypes.includes(selectedSource.sourceType as 'entry' | 'day')
+    ) &&
+    !runningTest;
   const showFooterActions = !loading && detail && selectedVersion && supportsInlineTesting;
 
   const entryCleanupInstruction = useMemo(() => {
@@ -250,9 +261,19 @@ export default function AiQualityStudioTestScreen() {
 
     try {
       const nextDetail = await fetchAdminAiQualityStudioTaskDetail(normalizedTaskKey);
+      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label);
+      if (metadata.editorScope === 'read_only_part') {
+        if (metadata.familyKey) {
+          router.replace(`/settings-ai-quality-studio/group/${metadata.familyKey}` as never);
+        } else if (metadata.editorTargetTaskKey) {
+          router.replace(`/settings-ai-quality-studio/${metadata.editorTargetTaskKey}` as never);
+        }
+        return;
+      }
       setDetail(nextDetail);
 
-      if (nextDetail.inputType === 'entry' || nextDetail.inputType === 'day') {
+      const nextCapabilities = getAiQualityTaskCapabilities(nextDetail.key);
+      if (nextCapabilities.canTest) {
         setLoadingSources(true);
         try {
           const sources = await listAdminAiQualityStudioTestSources(nextDetail.key);
@@ -284,7 +305,12 @@ export default function AiQualityStudioTestScreen() {
 
   async function handleRunTest() {
     if (!detail || !selectedVersion || !selectedSource || runningTest) return;
-    if (selectedSource.sourceType !== 'entry' && selectedSource.sourceType !== 'day') {
+    const sourceType = selectedSource.sourceType;
+    if (sourceType !== 'entry' && sourceType !== 'day') {
+      setError('Alleen entry/day test-bronnen worden nu ondersteund.');
+      return;
+    }
+    if (!taskCapabilities?.allowedSourceTypes.includes(sourceType)) {
       setError('Alleen entry/day test-bronnen worden nu ondersteund.');
       return;
     }
@@ -296,7 +322,7 @@ export default function AiQualityStudioTestScreen() {
       const created = await runAdminAiQualityStudioTest({
         taskKey: detail.key,
         taskVersionId: selectedVersion.id,
-        sourceType: selectedSource.sourceType,
+        sourceType,
         sourceRecordId: selectedSource.sourceRecordId,
       });
 
@@ -346,7 +372,7 @@ export default function AiQualityStudioTestScreen() {
               icon: 'play-arrow',
             }}
             secondaryAction={
-              latestTestRun
+              latestTestRun && taskCapabilities?.canCompare
                 ? {
                     label: loadingCompare ? 'Vergelijken…' : 'Vergelijk live',
                     onPress: () => void handleLoadCompare(),
@@ -397,7 +423,7 @@ export default function AiQualityStudioTestScreen() {
             {taskConsistency ? <MetaText>Beïnvloedt: {taskConsistency.affectsLabel}</MetaText> : null}
             {isEntryCleanup ? (
               <>
-                <MetaText>Runtime-family: {taskConsistency?.familyLabel ?? 'entry normalisatie'}</MetaText>
+                <MetaText>Runtime-groep: {taskConsistency?.familyLabel ?? 'entry normalisatie'}</MetaText>
                 <MetaText>Outputlaag: entries_normalized</MetaText>
               </>
             ) : null}
