@@ -6,6 +6,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 import { Stack, router, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
@@ -16,6 +17,9 @@ import { AppBackground } from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCurrentSession, onAuthStateChange } from "@/services";
 import { colorTokens } from "@/theme";
+
+// Keep native splash visible while app boots
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -156,6 +160,13 @@ a:focus-visible,
       unsubscribe();
     };
   }, []);
+
+  // Hide native splash screen once auth is ready and AppBackground can render
+  useEffect(() => {
+    if (authReady) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [authReady]);
 
   useEffect(() => {
     if (!authReady) {
