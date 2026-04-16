@@ -1,7 +1,7 @@
 import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider,
 } from "@react-navigation/native";
 import type { Session } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
@@ -177,7 +177,8 @@ a:focus-visible,
             params: {
               auth_error: callbackError.error ?? undefined,
               auth_error_code: callbackError.errorCode ?? undefined,
-              auth_error_description: callbackError.errorDescription ?? undefined,
+              auth_error_description:
+                callbackError.errorDescription ?? undefined,
             },
           });
           return;
@@ -195,13 +196,7 @@ a:focus-visible,
 
   if (!authReady) {
     return (
-      <View
-        style={[
-          styles.rootShell,
-          styles.webBackdrop,
-          { backgroundColor: palette.background },
-        ]}
-      >
+      <View style={[styles.rootShell, styles.webBackdrop]}>
         <View style={[styles.rootShell, styles.webAppShell]}>
           <AppBackground tone="ambient" />
           <View style={styles.loadingContainer}>
@@ -214,13 +209,7 @@ a:focus-visible,
 
   return (
     <ThemeProvider value={appTheme}>
-      <View
-        style={[
-          styles.rootShell,
-          styles.webBackdrop,
-          { backgroundColor: palette.background },
-        ]}
-      >
+      <View style={[styles.rootShell, styles.webBackdrop]}>
         <View style={[styles.rootShell, styles.webAppShell]}>
           <AppBackground tone="flat" />
           <Stack>
@@ -272,10 +261,7 @@ a:focus-visible,
           </Stack>
         </View>
       </View>
-      <StatusBar
-        style={colorScheme === "dark" ? "light" : "dark"}
-        backgroundColor={palette.background}
-      />
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       {Platform.OS === "web" ? <Analytics /> : null}
     </ThemeProvider>
   );
