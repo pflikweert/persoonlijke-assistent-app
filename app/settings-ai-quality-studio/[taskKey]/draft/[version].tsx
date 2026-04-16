@@ -65,7 +65,7 @@ import {
   parseStructuredPromptInstructionSections,
   toDraftFormState,
 } from '../../_shared';
-import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '../../readmodel';
+import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '@/services/ai-quality-studio/readmodel';
 
 type PromptAssistTarget = {
   key: AiPromptAssistTargetLayerKey;

@@ -8,7 +8,7 @@ import { authenticateAllowlistedAdmin, getAdminAllowlistFromEnv, getInternalToke
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildEntryCleanupTechnicalContract, buildRuntimeBaselineDefinitions } from '../_shared/ai-quality-runtime-baselines.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow, updateOpenAiDebugStorageSettings, type OpenAiDebugFlowKey } from '../_shared/openai-debug-storage.ts';
+import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettingsWithBackend, resolveOpenAiDebugStorageForFlow, updateOpenAiDebugStorageSettingsWithBackend, type OpenAiDebugFlowKey } from '../_shared/openai-debug-storage.ts';
 
 const FLOW = 'admin-ai-quality-studio' as const;
 
@@ -727,7 +727,8 @@ function parseDebugFlowUpdates(value: unknown): DebugFlowUpdateInput[] | null {
   return output;
 }
 
-function buildOpenAiDebugStorageResponse(settings: Awaited<ReturnType<typeof loadOpenAiDebugStorageSettings>>) {
+function buildOpenAiDebugStorageResponse(result: Awaited<ReturnType<typeof loadOpenAiDebugStorageSettingsWithBackend>>) {
+  const settings = result.settings;
   const promptAssist = resolveOpenAiDebugStorageForFlow({
     settings,
     flowKey: 'admin-ai-quality-studio.prompt_assist_preview',
@@ -743,6 +744,7 @@ function buildOpenAiDebugStorageResponse(settings: Awaited<ReturnType<typeof loa
     masterEnabled: settings.masterEnabled,
     masterExpiresAt: settings.masterExpiresAt,
     updatedAt: settings.updatedAt,
+    backend: result.backend,
     flows: [promptAssist, runTest].map((flow) => ({
       flowKey: flow.flowKey,
       state: flow.state,
@@ -1642,13 +1644,13 @@ Deno.serve(async (request) => {
 
     if (action === 'get_openai_debug_storage_settings') {
       step = 'get_openai_debug_storage_settings';
-      const settings = await loadOpenAiDebugStorageSettings(adminClient);
+      const settingsResult = await loadOpenAiDebugStorageSettingsWithBackend(adminClient);
       return jsonResponse(request, 200, {
         status: 'ok',
         flow: FLOW,
         requestId,
         flowId,
-        debugStorage: buildOpenAiDebugStorageResponse(settings),
+        debugStorage: buildOpenAiDebugStorageResponse(settingsResult),
       });
     }
 
@@ -1670,7 +1672,7 @@ Deno.serve(async (request) => {
         });
       }
 
-      const settings = await updateOpenAiDebugStorageSettings(adminClient, {
+      const settingsResult = await updateOpenAiDebugStorageSettingsWithBackend(adminClient, {
         updatedBy: userId,
         masterEnabled,
         masterTtlHours,
@@ -1682,7 +1684,7 @@ Deno.serve(async (request) => {
         flow: FLOW,
         requestId,
         flowId,
-        debugStorage: buildOpenAiDebugStorageResponse(settings),
+        debugStorage: buildOpenAiDebugStorageResponse(settingsResult),
       });
     }
 
@@ -1997,7 +1999,7 @@ Deno.serve(async (request) => {
         context: editorContext,
         debugRequest: buildChatCompletionsDebugRequest({
           resolution: resolveOpenAiDebugStorageForFlow({
-            settings: await loadOpenAiDebugStorageSettings(adminClient),
+            settings: (await loadOpenAiDebugStorageSettingsWithBackend(adminClient)).settings,
             flowKey: 'admin-ai-quality-studio.prompt_assist_preview',
             endpointFamily: 'chat_completions',
           }),
@@ -2468,7 +2470,7 @@ Deno.serve(async (request) => {
 
     try {
       const runTestDebugResolution = resolveOpenAiDebugStorageForFlow({
-        settings: await loadOpenAiDebugStorageSettings(adminClient),
+        settings: (await loadOpenAiDebugStorageSettingsWithBackend(adminClient)).settings,
         flowKey: 'admin-ai-quality-studio.run_test',
         endpointFamily: 'chat_completions',
       });

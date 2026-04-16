@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet } from "react-native";
 
+import { ScreenHeader } from "@/components/layout/screen-header";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { AppBackground } from "@/components/ui/app-background";
@@ -140,28 +141,35 @@ export function FullscreenMenuOverlay({
     >
       <ThemedView style={styles.overlay}>
         <AppBackground tone="ambient" />
-        <ThemedView style={styles.topBar}>
-          <ThemedView style={styles.brandLockup}>
-            <ThemedText type="sectionTitle" style={styles.brandPrimary}>
-              Budio
-            </ThemedText>
-            <ThemedText
-              type="sectionTitle"
-              style={[styles.brandSecondary, { color: palette.mutedSoft }]}
+        <ScreenHeader
+          surface="transparent"
+          style={styles.menuHeader}
+          leftAction={
+            <ThemedView style={styles.brandLockup}>
+              <ThemedText type="sectionTitle" style={styles.brandPrimary}>
+                Budio
+              </ThemedText>
+              <ThemedText
+                type="sectionTitle"
+                style={[styles.brandSecondary, { color: palette.mutedSoft }]}
+              >
+                Vandaag
+              </ThemedText>
+            </ThemedView>
+          }
+          rightAction={
+            <HeaderIconButton
+              accessibilityRole="button"
+              accessibilityLabel="Sluit menu"
+              onPress={onRequestClose}
             >
-              Vandaag
-            </ThemedText>
-          </ThemedView>
-          <HeaderIconButton
-            accessibilityRole="button"
-            accessibilityLabel="Sluit menu"
-            onPress={onRequestClose}
-          >
-            <MaterialIcons name="close" size={20} color={palette.text} />
-          </HeaderIconButton>
-        </ThemedView>
+              <MaterialIcons name="close" size={20} color={palette.text} />
+            </HeaderIconButton>
+          }
+        />
 
-        <ThemedView style={styles.listWrap}>
+        <ThemedView style={styles.body}>
+          <ThemedView style={styles.listWrap}>
           {primaryRouteEntries.map((entry) => {
             const active = entry.key === currentRouteKey;
             return (
@@ -196,51 +204,52 @@ export function FullscreenMenuOverlay({
               </Pressable>
             );
           })}
-        </ThemedView>
+          </ThemedView>
 
-        <ThemedView style={styles.footer}>
-          <ThemedView style={[styles.utilityDivider, { backgroundColor: `${palette.border}66` }]} />
-          {settingsEntry ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={settingsEntry.label}
-              onPress={() => void handleSelect(settingsEntry)}
-              style={styles.utilityButton}
-            >
-              <MaterialIcons
-                name={settingsEntry.icon}
-                size={22}
-                color={currentRouteKey === "settings" ? palette.text : palette.mutedSoft}
-              />
-              <ThemedText
-                style={[
-                  styles.utilityLabel,
-                  { color: currentRouteKey === "settings" ? palette.text : palette.mutedSoft },
-                ]}
+          <ThemedView style={styles.footer}>
+            <ThemedView style={[styles.utilityDivider, { backgroundColor: `${palette.border}66` }]} />
+            {settingsEntry ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={settingsEntry.label}
+                onPress={() => void handleSelect(settingsEntry)}
+                style={styles.utilityButton}
               >
-                {settingsEntry.label}
-              </ThemedText>
-            </Pressable>
-          ) : null}
-          {logoutEntry ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={logoutEntry.label}
-              onPress={() => void handleSelect(logoutEntry)}
-              style={styles.utilityButton}
-            >
-              <MaterialIcons
-                name={logoutEntry.icon}
-                size={22}
-                color={palette.mutedSoft}
-              />
-              <ThemedText
-                style={[styles.utilityLabel, { color: palette.mutedSoft }]}
+                <MaterialIcons
+                  name={settingsEntry.icon}
+                  size={22}
+                  color={currentRouteKey === "settings" ? palette.text : palette.mutedSoft}
+                />
+                <ThemedText
+                  style={[
+                    styles.utilityLabel,
+                    { color: currentRouteKey === "settings" ? palette.text : palette.mutedSoft },
+                  ]}
+                >
+                  {settingsEntry.label}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+            {logoutEntry ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={logoutEntry.label}
+                onPress={() => void handleSelect(logoutEntry)}
+                style={styles.utilityButton}
               >
-                {logoutEntry.label}
-              </ThemedText>
-            </Pressable>
-          ) : null}
+                <MaterialIcons
+                  name={logoutEntry.icon}
+                  size={22}
+                  color={palette.mutedSoft}
+                />
+                <ThemedText
+                  style={[styles.utilityLabel, { color: palette.mutedSoft }]}
+                >
+                  {logoutEntry.label}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+          </ThemedView>
         </ThemedView>
       </ThemedView>
     </Modal>
@@ -250,16 +259,14 @@ export function FullscreenMenuOverlay({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    paddingHorizontal: spacing.page,
-    paddingTop: spacing.xl,
     paddingBottom: spacing.xl,
   },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 56,
-    marginBottom: spacing.xl,
+  menuHeader: {
+    zIndex: 1,
+  },
+  body: {
+    flex: 1,
+    paddingHorizontal: spacing.page,
   },
   brandLockup: {
     flexDirection: "row",
@@ -278,7 +285,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   listWrap: {
-    marginTop: spacing.xl,
+    marginTop: spacing.xxxl,
     gap: spacing.md,
   },
   menuRow: {

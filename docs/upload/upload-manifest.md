@@ -2,8 +2,8 @@
 
 # Upload Manifest
 
-Build Timestamp (UTC): 2026-04-14T11:40:49.894Z
-Source Commit: b6319e3
+Build Timestamp (UTC): 2026-04-14T17:07:39.840Z
+Source Commit: 839dc79
 
 ## Standaard Uploadset
 
@@ -14,6 +14,7 @@ Source Commit: b6319e3
 | `docs/upload/cline-workflow.md` | workflow upload copy | ChatGPT Project (execution context) |
 | `docs/upload/stitch-workflow.md` | workflow upload copy | ChatGPT Project + Stitch handoff (workflow context) |
 | `docs/upload/mvp-design-spec-1.2.1.md` | canonical upload copy | ChatGPT Project + Stitch/design handoff |
+| `docs/upload/ethos-ivory-design.md` | canonical upload copy | Stitch/design handoff foundations |
 | `docs/upload/stitch-design-context.md` | generated upload copy | Stitch/design handoff |
 | `docs/upload/upload-manifest.md` | generated manifest | Upload completeness check |
 

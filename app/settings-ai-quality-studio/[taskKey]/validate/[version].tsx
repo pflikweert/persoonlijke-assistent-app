@@ -33,7 +33,7 @@ import type {
 } from '@/types';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, radius, spacing } from '@/theme';
-import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '../../readmodel';
+import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '@/services/ai-quality-studio/readmodel';
 
 type SignalTone = 'ok' | 'warn' | 'fail';
 

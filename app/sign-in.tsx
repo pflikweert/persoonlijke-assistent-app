@@ -113,8 +113,6 @@ export default function SignInScreen() {
       {uiState === "success" ? (
         <View style={styles.successWrap}>
           <>
-            <AuthBrandMark compactViewport={isCompactViewport} />
-
             <View style={styles.successIconCluster}>
               <View
                 style={[
@@ -194,6 +192,7 @@ export default function SignInScreen() {
             title="Vang je dag in woorden"
             subtitle="Voor momenten, gedachten en gebeurtenissen die je niet kwijt wilt raken."
             compactViewport={isCompactViewport}
+            subtitleStyle={{ color: palette.text }}
           />
 
           {uiState === "error" && errorMessage ? (
@@ -201,13 +200,6 @@ export default function SignInScreen() {
           ) : null}
 
           <AuthFormStack>
-            <AuthTextSubtitle
-              compactViewport={isCompactViewport}
-              style={styles.formIntro}
-            >
-              Vul je e-mailadres in om een inloglink te ontvangen.
-            </AuthTextSubtitle>
-
             <InputField
               autoCapitalize="none"
               autoCorrect={false}
@@ -331,11 +323,6 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     gap: spacing.xxl,
-  },
-  formIntro: {
-    textAlign: "center",
-    maxWidth: 320,
-    alignSelf: "center",
   },
   headline: {
     textAlign: "center",

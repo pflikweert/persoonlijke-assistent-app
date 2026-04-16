@@ -48,7 +48,7 @@ import {
   getTaskConsistencyInfo,
   parseEntryCleanupInstructionStateFromPromptTemplate,
 } from '../../_shared';
-import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '../../readmodel';
+import { getAiQualityTaskCapabilities, getAiQualityTaskMetadata } from '@/services/ai-quality-studio/readmodel';
 
 type EntryCleanupOutput = {
   title: string;

@@ -16,6 +16,7 @@ const outputPaths = {
   uploadClineWorkflow: 'docs/upload/cline-workflow.md',
   uploadStitchWorkflow: 'docs/upload/stitch-workflow.md',
   uploadMvpDesignSpec: 'docs/upload/mvp-design-spec-1.2.1.md',
+  uploadEthosIvoryDesign: 'docs/upload/ethos-ivory-design.md',
   uploadStitchDesignContext: 'docs/upload/stitch-design-context.md',
   uploadManifest: 'docs/upload/upload-manifest.md',
 };
@@ -66,6 +67,11 @@ const uploadSet = [
     path: outputPaths.uploadMvpDesignSpec,
     type: 'canonical upload copy',
     flow: 'ChatGPT Project + Stitch/design handoff',
+  },
+  {
+    path: outputPaths.uploadEthosIvoryDesign,
+    type: 'canonical upload copy',
+    flow: 'Stitch/design handoff foundations',
   },
   {
     path: outputPaths.uploadStitchDesignContext,
@@ -456,6 +462,7 @@ function renderOutputs(inputs, metadata) {
     [outputPaths.uploadClineWorkflow, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/dev/cline-workflow.md')?.content?.trim() ?? ''}\n`],
     [outputPaths.uploadStitchWorkflow, `${inputs.stitchWorkflow.trim()}\n`],
     [outputPaths.uploadMvpDesignSpec, `${inputs.mvpDesignSpec.trim()}\n`],
+    [outputPaths.uploadEthosIvoryDesign, `${inputs.ethosDesign.trim()}\n`],
     [outputPaths.uploadStitchDesignContext, stitchDesignContext],
     [outputPaths.uploadManifest, uploadManifest],
   ]);

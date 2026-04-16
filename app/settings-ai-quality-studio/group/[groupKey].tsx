@@ -23,7 +23,7 @@ import {
   getAiQualityFamilyReadModel,
   getAiQualityTaskLabel,
   getAiQualityTaskStatus,
-} from '../readmodel';
+} from '@/services/ai-quality-studio/readmodel';
 
 function taskRowStatus(task: AiTaskSummary): string {
   const status = getAiQualityTaskStatus(task);

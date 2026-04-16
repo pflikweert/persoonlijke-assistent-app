@@ -49,11 +49,13 @@ export function AuthHero({
   subtitle,
   compactViewport,
   style,
+  subtitleStyle,
 }: {
   title: string;
   subtitle: string;
   compactViewport: boolean;
   style?: ViewStyle;
+  subtitleStyle?: StyleProp<TextStyle>;
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
@@ -72,6 +74,7 @@ export function AuthHero({
           styles.subtitle,
           compactViewport && styles.subtitleCompact,
           { color: palette.muted },
+          subtitleStyle,
         ]}
       >
         {subtitle}
@@ -87,28 +90,14 @@ export function AuthBrandMark({
   compactViewport: boolean;
   style?: ViewStyle;
 }) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-
   return (
     <View style={[styles.brandWrap, compactViewport && styles.brandWrapCompact, style]}>
-      <View
-        style={[
-          styles.brandLogoShell,
-          compactViewport && styles.brandLogoShellCompact,
-          { backgroundColor: `${palette.surfaceLowest}D9` },
-        ]}
-      >
-        <Image
-          source={BUDIO_VANDAAG_LOGO}
-          accessibilityLabel="Budio Vandaag"
-          resizeMode="contain"
-          style={styles.brandLogo}
-        />
-      </View>
-      <ThemedText type="caption" style={[styles.brandLabel, { color: palette.muted }]}>
-        Budio Vandaag
-      </ThemedText>
+      <Image
+        source={BUDIO_VANDAAG_LOGO}
+        accessibilityLabel="Budio Vandaag"
+        contentFit="contain"
+        style={[styles.brandLogo, compactViewport && styles.brandLogoCompact]}
+      />
     </View>
   );
 }
@@ -183,29 +172,17 @@ const styles = StyleSheet.create({
   brandWrap: {
     width: "100%",
     alignItems: "center",
-    gap: spacing.md,
   },
   brandWrapCompact: {
-    gap: spacing.sm,
-  },
-  brandLogoShell: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandLogoShellCompact: {
-    width: 52,
-    height: 52,
+    transform: [{ scale: 0.92 }],
   },
   brandLogo: {
-    width: "68%",
-    height: "68%",
+    width: 112,
+    height: 112,
   },
-  brandLabel: {
-    textAlign: "center",
-    letterSpacing: 0.3,
+  brandLogoCompact: {
+    width: 96,
+    height: 96,
   },
   formControls: {
     width: "100%",

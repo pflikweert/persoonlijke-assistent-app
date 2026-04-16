@@ -28,7 +28,7 @@ import {
   getAiQualityFamilyPrimaryTaskKey,
   getAiQualityTaskMetadata,
   shouldBypassAiQualityTaskOverview,
-} from './readmodel';
+} from '@/services/ai-quality-studio/readmodel';
 
 function isDraftVersion(version: AiTaskVersionDetail): boolean {
   return version.status === 'draft';

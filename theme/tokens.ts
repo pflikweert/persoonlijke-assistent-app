@@ -97,10 +97,7 @@ export const shadows = {
     },
     default: {},
     web: {
-      shadowColor: "#1B1C1A",
-      shadowOpacity: 0.06,
-      shadowOffset: { width: 0, height: 6 },
-      shadowRadius: 16,
+      boxShadow: "0px 6px 16px rgba(27, 28, 26, 0.06)",
     },
   }),
   cta: Platform.select({
@@ -115,10 +112,7 @@ export const shadows = {
     },
     default: {},
     web: {
-      shadowColor: "#E6B800",
-      shadowOpacity: 0.28,
-      shadowOffset: { width: 0, height: 8 },
-      shadowRadius: 20,
+      boxShadow: "0px 8px 20px rgba(230, 184, 0, 0.28)",
     },
   }),
 } as const;

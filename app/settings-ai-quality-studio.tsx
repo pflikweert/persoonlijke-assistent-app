@@ -22,7 +22,7 @@ import {
   buildAiQualityStudioReadModel,
   getAiQualityFamilyPrimaryTaskKey,
   shouldShowAiQualityGroupScreen,
-} from './settings-ai-quality-studio/readmodel';
+} from '@/services/ai-quality-studio/readmodel';
 
 export default function SettingsAiQualityStudioScreen() {
   const scheme = useColorScheme() ?? 'light';
@@ -31,16 +31,20 @@ export default function SettingsAiQualityStudioScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [adminAccess, setAdminAccess] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingDebugStorage, setLoadingDebugStorage] = useState(false);
   const [importingBaseline, setImportingBaseline] = useState(false);
   const [tasks, setTasks] = useState<AiTaskSummary[]>([]);
   const [debugStorage, setDebugStorage] = useState<AiOpenAiDebugStorageSettings | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
+  const [debugStorageError, setDebugStorageError] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [updatingDebugStorage, setUpdatingDebugStorage] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
+    setLoadingDebugStorage(true);
+    setOverviewError(null);
+    setDebugStorageError(null);
 
     try {
       const allowed = await hasAdminAiQualityStudioAccess();
@@ -52,14 +56,34 @@ export default function SettingsAiQualityStudioScreen() {
         return;
       }
 
-      const nextTasks = await fetchAdminAiQualityStudioTasks();
-      const nextDebugStorage = await fetchAdminOpenAiDebugStorageSettings();
-      setTasks(nextTasks);
-      setDebugStorage(nextDebugStorage);
+      const [tasksResult, debugStorageResult] = await Promise.allSettled([
+        fetchAdminAiQualityStudioTasks(),
+        fetchAdminOpenAiDebugStorageSettings(),
+      ]);
+
+      if (tasksResult.status === 'fulfilled') {
+        setTasks(tasksResult.value);
+      } else {
+        const parsed = classifyUnknownError(tasksResult.reason);
+        setOverviewError(parsed.message);
+        setTasks([]);
+        if (parsed.code === 'AUTH_UNAUTHORIZED' || parsed.code === 'AUTH_MISSING') {
+          setAdminAccess(false);
+        }
+      }
+
+      if (debugStorageResult.status === 'fulfilled') {
+        setDebugStorage(debugStorageResult.value);
+      } else {
+        const parsed = classifyUnknownError(debugStorageResult.reason);
+        setDebugStorageError(parsed.message);
+        setDebugStorage(null);
+      }
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
-      setError(parsed.message);
+      setOverviewError(parsed.message);
       setTasks([]);
+      setDebugStorage(null);
       if (parsed.code === 'AUTH_UNAUTHORIZED' || parsed.code === 'AUTH_MISSING') {
         setAdminAccess(false);
       } else {
@@ -67,6 +91,7 @@ export default function SettingsAiQualityStudioScreen() {
       }
     } finally {
       setLoading(false);
+      setLoadingDebugStorage(false);
     }
   }, []);
 
@@ -77,7 +102,7 @@ export default function SettingsAiQualityStudioScreen() {
 
     setImportingBaseline(true);
     setImportMessage(null);
-    setError(null);
+    setOverviewError(null);
 
     try {
       const result = await importAdminAiQualityRuntimeBaseline();
@@ -87,7 +112,7 @@ export default function SettingsAiQualityStudioScreen() {
       await load();
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
-      setError(parsed.message);
+      setOverviewError(parsed.message);
     } finally {
       setImportingBaseline(false);
     }
@@ -128,7 +153,7 @@ export default function SettingsAiQualityStudioScreen() {
     async (enabled: boolean) => {
       if (updatingDebugStorage) return;
       setUpdatingDebugStorage(true);
-      setError(null);
+      setDebugStorageError(null);
       try {
         const next = await updateAdminOpenAiDebugStorageSettings({
           masterEnabled: enabled,
@@ -148,7 +173,7 @@ export default function SettingsAiQualityStudioScreen() {
         });
         setDebugStorage(next);
       } catch (nextError) {
-        setError(classifyUnknownError(nextError).message);
+        setDebugStorageError(classifyUnknownError(nextError).message);
       } finally {
         setUpdatingDebugStorage(false);
       }
@@ -160,7 +185,7 @@ export default function SettingsAiQualityStudioScreen() {
     async (flowKey: AiOpenAiDebugFlowKey, enabled: boolean) => {
       if (updatingDebugStorage || !debugStorage) return;
       setUpdatingDebugStorage(true);
-      setError(null);
+      setDebugStorageError(null);
       try {
         const next = await updateAdminOpenAiDebugStorageSettings({
           masterEnabled: debugStorage.masterEnabled,
@@ -175,7 +200,7 @@ export default function SettingsAiQualityStudioScreen() {
         });
         setDebugStorage(next);
       } catch (nextError) {
-        setError(classifyUnknownError(nextError).message);
+        setDebugStorageError(classifyUnknownError(nextError).message);
       } finally {
         setUpdatingDebugStorage(false);
       }
@@ -230,11 +255,11 @@ export default function SettingsAiQualityStudioScreen() {
 
             {loading ? <MetaText>Laden…</MetaText> : null}
 
-            {error ? (
-              <StateBlock tone="error" message="Kon het overzicht niet laden." detail={error} />
+            {overviewError ? (
+              <StateBlock tone="error" message="Kon het overzicht niet laden." detail={overviewError} />
             ) : null}
 
-            {!loading && !error && tasks.length === 0 ? (
+            {!loading && !overviewError && tasks.length === 0 ? (
               <StateBlock
                 tone="info"
                 message="Nog geen onderdelen gevonden"
@@ -243,8 +268,31 @@ export default function SettingsAiQualityStudioScreen() {
             ) : null}
           </SurfaceSection>
 
-          {debugStorage ? (
+          {loadingDebugStorage || debugStorage || debugStorageError ? (
             <SurfaceSection title="OpenAI debug-opslag (admin)">
+              {loadingDebugStorage ? <MetaText>Debug-opslag laden…</MetaText> : null}
+
+              {debugStorageError ? (
+                <StateBlock
+                  tone="error"
+                  message="Debug-opslag niet beschikbaar"
+                  detail={debugStorageError}
+                />
+              ) : null}
+
+              {debugStorage?.backend.persistence === 'ephemeral_fallback' ? (
+                <StateBlock
+                  tone="info"
+                  message="Debug-opslag draait in tijdelijke fallback-modus"
+                  detail={
+                    debugStorage.backend.message ??
+                    'Persistente private-opslag is niet beschikbaar; wijzigingen kunnen tijdelijk zijn.'
+                  }
+                />
+              ) : null}
+
+              {debugStorage ? (
+                <>
               <MetaText>
                 Alleen ondersteunde generatiecalls. Audio-transcriptie valt buiten scope.
               </MetaText>
@@ -289,10 +337,12 @@ export default function SettingsAiQualityStudioScreen() {
                   </ThemedView>
                 </ThemedView>
               ))}
+                </>
+              ) : null}
             </SurfaceSection>
           ) : null}
 
-          {!loading && !error ? (
+          {!loading && !overviewError ? (
             <SurfaceSection title="Groepen">
               <ThemedView style={styles.taskList}>
                 {groupRows.map((group) => {

@@ -198,10 +198,17 @@ export type AiOpenAiDebugFlowStatus = {
   expiresAt: string | null;
 };
 
+export type AiOpenAiDebugStorageBackendStatus = {
+  persistence: 'persistent' | 'ephemeral_fallback';
+  reason: 'ok' | 'missing_relation' | 'storage_error';
+  message: string | null;
+};
+
 export type AiOpenAiDebugStorageSettings = {
   masterEnabled: boolean;
   masterExpiresAt: string | null;
   updatedAt: string | null;
+  backend: AiOpenAiDebugStorageBackendStatus;
   flows: AiOpenAiDebugFlowStatus[];
 };
 

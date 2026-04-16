@@ -93,6 +93,11 @@ Gebruik Act mode voor:
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Commit alleen na geslaagde verify.
 
+## Supabase migratie-uitvoering (verplicht)
+- Bij wijzigingen in `supabase/migrations/**` voert Cline/Codex de lokale DB-stap standaard zelf uit: `npx supabase db push --local` (of `npx supabase db reset` wanneer nodig).
+- Ook wanneer een taak leunt op een **al bestaande maar lokaal nog niet toegepaste** migratie (bijv. nieuwe tabel/kolom ontbreekt in runtime), voert Cline/Codex alsnog direct `npx supabase db push --local` uit.
+- Vraag deze stap niet terug aan de gebruiker als de CLI hem veilig non-interactief kan uitvoeren.
+
 ## Dev-server policy
 - Start geen langlopende dev servers tenzij expliciet gevraagd.
 - Gebruik geen `CI=1` prefix voor lokale dev-server commando’s.

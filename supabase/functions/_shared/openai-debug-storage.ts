@@ -49,6 +49,17 @@ export type OpenAiDebugStorageResolved = {
   flow: OpenAiDebugFlowResolution;
 };
 
+export type OpenAiDebugStorageBackendStatus = {
+  persistence: 'persistent' | 'ephemeral_fallback';
+  reason: 'ok' | 'missing_relation' | 'storage_error';
+  message: string | null;
+};
+
+export type OpenAiDebugStorageSettingsWithBackend = {
+  settings: OpenAiDebugStorageSettings;
+  backend: OpenAiDebugStorageBackendStatus;
+};
+
 export type OpenAiDebugStorageUpdateInput = {
   updatedBy: string | null;
   masterEnabled: boolean;
@@ -60,6 +71,13 @@ export type OpenAiDebugStorageUpdateInput = {
   }>;
 };
 
+const DEFAULT_OPENAI_DEBUG_STORAGE_SETTINGS: OpenAiDebugStorageSettings = {
+  masterEnabled: false,
+  masterExpiresAt: null,
+  flowOverrides: {},
+  updatedAt: null,
+};
+
 export const OPENAI_DEBUG_SUPPORTED_FLOWS: ReadonlyArray<OpenAiDebugFlowKey> = [
   'process-entry.generation',
   'generate-reflection.generation',
@@ -69,6 +87,12 @@ export const OPENAI_DEBUG_SUPPORTED_FLOWS: ReadonlyArray<OpenAiDebugFlowKey> = [
 ];
 
 const SUPPORTED_FLOWS: ReadonlySet<OpenAiDebugFlowKey> = new Set(OPENAI_DEBUG_SUPPORTED_FLOWS);
+
+const PERSISTENT_BACKEND_STATUS: OpenAiDebugStorageBackendStatus = {
+  persistence: 'persistent',
+  reason: 'ok',
+  message: null,
+};
 
 function parseBooleanEnv(value: string | undefined): boolean {
   const normalized = value?.trim().toLowerCase() ?? '';
@@ -100,6 +124,48 @@ function isExpired(iso: string | null): boolean {
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.getTime())) return true;
   return parsed.getTime() <= Date.now();
+}
+
+function mergeSettingsUpdate(input: {
+  current: OpenAiDebugStorageSettings;
+  update: OpenAiDebugStorageUpdateInput;
+}): OpenAiDebugStorageSettings {
+  const current = input.current;
+  const nextOverrides: FlowOverridesJson = { ...current.flowOverrides };
+  const nextMasterExpiresAt = input.update.masterEnabled
+    ? input.update.masterTtlHours === null
+      ? current.masterExpiresAt
+      : futureIsoFromHours(input.update.masterTtlHours)
+    : null;
+
+  for (const flowUpdate of input.update.flowUpdates) {
+    if (!SUPPORTED_FLOWS.has(flowUpdate.flowKey)) continue;
+    const existing = current.flowOverrides[flowUpdate.flowKey] ?? null;
+    const nextExpiresAt = flowUpdate.enabled
+      ? flowUpdate.ttlHours === null
+        ? existing?.expires_at ?? null
+        : futureIsoFromHours(flowUpdate.ttlHours)
+      : null;
+    nextOverrides[flowUpdate.flowKey] = {
+      enabled: flowUpdate.enabled === true,
+      expires_at: nextExpiresAt,
+    };
+  }
+
+  return {
+    masterEnabled: input.update.masterEnabled === true,
+    masterExpiresAt: nextMasterExpiresAt,
+    flowOverrides: nextOverrides,
+    updatedAt: current.updatedAt,
+  };
+}
+
+function fallbackBackendStatus(reason: OpenAiDebugStorageBackendStatus['reason'], message: string | null): OpenAiDebugStorageBackendStatus {
+  return {
+    persistence: 'ephemeral_fallback',
+    reason,
+    message,
+  };
 }
 
 function readFlowOverrides(value: unknown): FlowOverridesJson {
@@ -149,28 +215,87 @@ function normalizeSettingsRow(row: any): OpenAiDebugStorageSettings {
   };
 }
 
+function isMissingOpenAiDebugStorageSettingsError(error: unknown): boolean {
+  const code = typeof (error as { code?: unknown })?.code === 'string'
+    ? String((error as { code?: string }).code).toUpperCase()
+    : '';
+  const details = typeof (error as { details?: unknown })?.details === 'string'
+    ? String((error as { details?: string }).details).toLowerCase()
+    : '';
+  const hint = typeof (error as { hint?: unknown })?.hint === 'string'
+    ? String((error as { hint?: string }).hint).toLowerCase()
+    : '';
+  const message = typeof (error as { message?: unknown })?.message === 'string'
+    ? String((error as { message?: string }).message).toLowerCase()
+    : '';
+
+  if (code === '42P01' || code === 'PGRST106') {
+    return true;
+  }
+
+  const combined = [message, details, hint].filter((value) => value.length > 0).join(' ');
+
+  if (!combined) {
+    return false;
+  }
+
+  const mentionsTarget =
+    combined.includes('openai_debug_storage_settings') ||
+    combined.includes('private.openai_debug_storage_settings') ||
+    combined.includes('private') ||
+    combined.includes('admin_get_openai_debug_storage_settings') ||
+    combined.includes('admin_upsert_openai_debug_storage_settings');
+
+  return mentionsTarget && (
+    combined.includes('does not exist') ||
+    combined.includes('relation') ||
+    combined.includes('schema cache') ||
+    combined.includes('not in this schema cache') ||
+    combined.includes('not one of the exposed schemas') ||
+    combined.includes('could not find the function')
+  );
+}
+
 async function ensureSettingsRow(adminClient: any): Promise<void> {
-  await adminClient
-    .schema('private')
-    .from('openai_debug_storage_settings')
-    .upsert({ id: 1 }, { onConflict: 'id' });
+  const { error } = await adminClient.rpc('admin_get_openai_debug_storage_settings');
+
+  if (error && !isMissingOpenAiDebugStorageSettingsError(error)) {
+    throw new Error('Failed to initialize private OpenAI debug storage settings.');
+  }
 }
 
 export async function loadOpenAiDebugStorageSettings(adminClient: any): Promise<OpenAiDebugStorageSettings> {
   await ensureSettingsRow(adminClient);
 
-  const { data, error } = await adminClient
-    .schema('private')
-    .from('openai_debug_storage_settings')
-    .select('id, master_enabled, master_expires_at, flow_overrides_json, updated_at')
-    .eq('id', 1)
-    .maybeSingle();
+  const { data, error } = await adminClient.rpc('admin_get_openai_debug_storage_settings');
 
   if (error) {
+    if (isMissingOpenAiDebugStorageSettingsError(error)) {
+      return { ...DEFAULT_OPENAI_DEBUG_STORAGE_SETTINGS };
+    }
     throw new Error('Failed to load private OpenAI debug storage settings.');
   }
 
-  return normalizeSettingsRow(data ?? null);
+  const row = Array.isArray(data) ? data[0] ?? null : data ?? null;
+  return normalizeSettingsRow(row);
+}
+
+export async function loadOpenAiDebugStorageSettingsWithBackend(
+  adminClient: any,
+): Promise<OpenAiDebugStorageSettingsWithBackend> {
+  try {
+    const settings = await loadOpenAiDebugStorageSettings(adminClient);
+    return {
+      settings,
+      backend: PERSISTENT_BACKEND_STATUS,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown OpenAI debug storage load error.';
+    return {
+      settings: { ...DEFAULT_OPENAI_DEBUG_STORAGE_SETTINGS },
+      backend: fallbackBackendStatus('storage_error', message),
+    };
+  }
 }
 
 export async function updateOpenAiDebugStorageSettings(
@@ -178,45 +303,70 @@ export async function updateOpenAiDebugStorageSettings(
   input: OpenAiDebugStorageUpdateInput,
 ): Promise<OpenAiDebugStorageSettings> {
   const current = await loadOpenAiDebugStorageSettings(adminClient);
-  const nextOverrides: FlowOverridesJson = { ...current.flowOverrides };
-  const nextMasterExpiresAt = input.masterEnabled
-    ? input.masterTtlHours === null
-      ? current.masterExpiresAt
-      : futureIsoFromHours(input.masterTtlHours)
-    : null;
+  const mergedSettings = mergeSettingsUpdate({ current, update: input });
 
-  for (const update of input.flowUpdates) {
-    if (!SUPPORTED_FLOWS.has(update.flowKey)) continue;
-    const existing = current.flowOverrides[update.flowKey] ?? null;
-    const nextExpiresAt = update.enabled
-      ? update.ttlHours === null
-        ? existing?.expires_at ?? null
-        : futureIsoFromHours(update.ttlHours)
-      : null;
-    nextOverrides[update.flowKey] = {
-      enabled: update.enabled === true,
-      expires_at: nextExpiresAt,
-    };
-  }
-
-  const { data, error } = await adminClient
-    .schema('private')
-    .from('openai_debug_storage_settings')
-    .update({
-      master_enabled: input.masterEnabled === true,
-      master_expires_at: nextMasterExpiresAt,
-      flow_overrides_json: nextOverrides,
-      updated_by: input.updatedBy,
-    })
-    .eq('id', 1)
-    .select('id, master_enabled, master_expires_at, flow_overrides_json, updated_at')
-    .single();
+  const { data, error } = await adminClient.rpc('admin_upsert_openai_debug_storage_settings', {
+    p_master_enabled: mergedSettings.masterEnabled,
+    p_master_expires_at: mergedSettings.masterExpiresAt,
+    p_flow_overrides_json: mergedSettings.flowOverrides,
+    p_updated_by: input.updatedBy,
+  });
 
   if (error || !data) {
+    if (isMissingOpenAiDebugStorageSettingsError(error)) {
+      return mergedSettings;
+    }
     throw new Error('Failed to update private OpenAI debug storage settings.');
   }
 
-  return normalizeSettingsRow(data);
+  const row = Array.isArray(data) ? data[0] ?? null : data ?? null;
+  return normalizeSettingsRow(row);
+}
+
+export async function updateOpenAiDebugStorageSettingsWithBackend(
+  adminClient: any,
+  input: OpenAiDebugStorageUpdateInput,
+): Promise<OpenAiDebugStorageSettingsWithBackend> {
+  const currentResult = await loadOpenAiDebugStorageSettingsWithBackend(adminClient);
+  const mergedSettings = mergeSettingsUpdate({ current: currentResult.settings, update: input });
+
+  if (currentResult.backend.reason === 'storage_error') {
+    return {
+      settings: mergedSettings,
+      backend: currentResult.backend,
+    };
+  }
+
+  const { data, error } = await adminClient.rpc('admin_upsert_openai_debug_storage_settings', {
+    p_master_enabled: mergedSettings.masterEnabled,
+    p_master_expires_at: mergedSettings.masterExpiresAt,
+    p_flow_overrides_json: mergedSettings.flowOverrides,
+    p_updated_by: input.updatedBy,
+  });
+
+  if (error || !data) {
+    if (isMissingOpenAiDebugStorageSettingsError(error)) {
+      return {
+        settings: mergedSettings,
+        backend: fallbackBackendStatus('missing_relation', 'OpenAI debug storage relation ontbreekt lokaal.'),
+      };
+    }
+
+    return {
+      settings: mergedSettings,
+      backend: fallbackBackendStatus(
+        'storage_error',
+        error && typeof (error as { message?: unknown }).message === 'string'
+          ? String((error as { message?: string }).message)
+          : 'OpenAI debug storage update failed.'
+      ),
+    };
+  }
+
+  return {
+    settings: normalizeSettingsRow(Array.isArray(data) ? data[0] ?? null : data ?? null),
+    backend: PERSISTENT_BACKEND_STATUS,
+  };
 }
 
 export function resolveOpenAiDebugStorageForFlow(input: {

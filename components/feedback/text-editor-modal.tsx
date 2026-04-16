@@ -35,6 +35,9 @@ export function TextEditorModal({
 }: TextEditorModalProps) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const inputBackgroundColor =
+    scheme === "dark" ? palette.surfaceLow : palette.surfaceLowest;
+  const inputBorderColor = scheme === "dark" ? palette.border : palette.separator;
 
   return (
     <Modal
@@ -62,17 +65,15 @@ export function TextEditorModal({
           editable={!processing}
           placeholder={placeholder}
           placeholderTextColor={palette.mutedSoft}
+          selectionColor={palette.primaryStrong}
+          keyboardAppearance={scheme === "dark" ? "dark" : "light"}
           textAlignVertical="top"
           style={[
             styles.input,
             {
               color: palette.text,
-              borderColor:
-                scheme === "dark"
-                  ? `${palette.primaryStrong}66`
-                  : `${palette.primaryStrong}7A`,
-              backgroundColor:
-                scheme === "dark" ? "transparent" : "rgba(255,255,255,0.14)",
+              borderColor: inputBorderColor,
+              backgroundColor: inputBackgroundColor,
             },
           ]}
         />
