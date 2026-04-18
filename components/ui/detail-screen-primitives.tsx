@@ -31,6 +31,13 @@ type SectionLabelRowProps = {
   labelStyle?: TextStyle;
 };
 
+type DetailSectionHeaderProps = {
+  icon: ComponentProps<typeof MaterialIcons>["name"];
+  title: string;
+  trailingAction?: ReactNode;
+  style?: ViewStyle;
+};
+
 export function DetailScreenHero({
   title,
   subtitle,
@@ -93,29 +100,60 @@ export function DetailActionStack({
   return <ThemedView style={[styles.actionStack, style]}>{children}</ThemedView>;
 }
 
+export function DetailSectionHeader({
+  icon,
+  title,
+  trailingAction,
+  style,
+}: DetailSectionHeaderProps) {
+  const scheme = useColorScheme() ?? "light";
+  const warmAccent = scheme === "dark" ? "#D1B574" : "#8A6A1F";
+
+  return (
+    <ThemedView style={[styles.detailSectionHeaderRow, style]}>
+      <ThemedView style={styles.detailSectionHeaderLeading}>
+        <MaterialIcons name={icon} size={18} color={warmAccent} />
+        <ThemedText type="defaultSemiBold" style={[styles.detailSectionHeaderTitle, { color: warmAccent }]}>
+          {title}
+        </ThemedText>
+      </ThemedView>
+      {trailingAction ? (
+        <ThemedView style={styles.detailSectionHeaderTrailing}>{trailingAction}</ThemedView>
+      ) : null}
+    </ThemedView>
+  );
+}
+
 export function DetailTertiaryAction({
   label,
   onPress,
   disabled = false,
   style,
   labelStyle,
+  tone = "muted",
+  uppercase = true,
+  textType = "caption",
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   style?: ViewStyle;
   labelStyle?: TextStyle;
+  tone?: "muted" | "destructive";
+  uppercase?: boolean;
+  textType?: "caption" | "bodySecondary" | "defaultSemiBold";
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const labelColor = tone === "destructive" ? palette.destructiveSoftText : palette.mutedSoft;
 
   return (
     <Pressable onPress={onPress} disabled={disabled} style={[styles.tertiaryAction, style]}>
       <ThemedText
-        type="caption"
+        type={textType}
         style={[
-          styles.tertiaryActionLabel,
-          { color: palette.mutedSoft },
+          uppercase ? styles.tertiaryActionLabelUppercase : null,
+          { color: labelColor },
           labelStyle,
         ]}
       >
@@ -150,14 +188,34 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   tertiaryAction: {
-    marginTop: spacing.lg,
     paddingVertical: spacing.sm,
   },
-  tertiaryActionLabel: {
+  tertiaryActionLabelUppercase: {
     letterSpacing: 2,
     textTransform: "uppercase",
   },
   readingBlock: {
     marginBottom: spacing.xxxl,
+  },
+  detailSectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  detailSectionHeaderLeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    flexShrink: 1,
+  },
+  detailSectionHeaderTrailing: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  detailSectionHeaderTitle: {
+    fontSize: 20,
+    lineHeight: 30,
+    letterSpacing: -0.2,
   },
 });

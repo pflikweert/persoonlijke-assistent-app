@@ -68,12 +68,19 @@ import {
 const CAPTURE_AUDIO_BIT_RATE = 64_000;
 const MAX_RECORDING_MS = 300_000;
 const MAX_RECORDING_SECONDS = Math.floor(MAX_RECORDING_MS / 1000);
+const MIN_VALID_RECORDING_MS = 5_000;
+const MIN_SPEECH_LEVEL = 0.12;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 const MAX_AUDIO_BASE64_CHARS = Math.ceil((MAX_AUDIO_BYTES * 4) / 3);
 const RECOVERY_PENDING_GRACE_MS = 30_000;
 const RECOVERY_RECHECK_MS = 3_000;
 const NEAR_END_TONE = "#D4A41D";
 const WAVEFORM_MAX_BAR_HEIGHT = 88;
+const WAVEFORM_BAR_COUNT = 19;
+const WAVEFORM_QUIET_MIN_HEIGHT = 2;
+const WAVEFORM_QUIET_MAX_HEIGHT = 8;
+const WAVEFORM_CLIP_CAP_MAX_HEIGHT = 4;
+const WAVEFORM_CLIP_LEVEL_THRESHOLD = 0.94;
 const AUDIO_CAPTURE_RECORDING_OPTIONS = {
   ...RecordingPresets.HIGH_QUALITY,
   numberOfChannels: 1,
@@ -96,6 +103,13 @@ const WEB_AUDIO_MOTION = {
   idleCutoff: 0.022,
 } as const;
 
+type PreRecordPhase =
+  | "permission_check"
+  | "permission_needed"
+  | "warming_up"
+  | "countdown"
+  | null;
+
 function normalizeMetering(metering?: number): number {
   if (typeof metering !== "number" || Number.isNaN(metering)) {
     return 0;
@@ -117,29 +131,95 @@ function calculateTimeDomainRms(samples: Uint8Array): number {
   return Math.sqrt(sumSquares / samples.length);
 }
 
-function getWaveformHeights(durationMillis: number, level: number): number[] {
-  const seed = Math.floor(durationMillis / 250);
-  const base = [14, 22, 32, 46, 62, 76, 84, 76, 62, 46, 32, 22, 14];
-  const lift = Math.round(level * 20);
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
 
-  return base.map((height, index) => {
-    const pulse = ((seed + index * 2) % 7) - 3;
-    return Math.min(
-      WAVEFORM_MAX_BAR_HEIGHT,
-      Math.max(12, height + pulse * 3 + lift),
-    );
+function downsampleFrequencyBins(
+  source: Uint8Array,
+  targetCount: number,
+): number[] {
+  if (source.length === 0 || targetCount <= 0) {
+    return [];
+  }
+
+  const chunkSize = source.length / targetCount;
+  return Array.from({ length: targetCount }, (_, index) => {
+    const start = Math.floor(index * chunkSize);
+    const end = Math.max(start + 1, Math.floor((index + 1) * chunkSize));
+    let total = 0;
+    let count = 0;
+
+    for (let i = start; i < end && i < source.length; i += 1) {
+      total += source[i];
+      count += 1;
+    }
+
+    if (count === 0) {
+      return 0;
+    }
+
+    return clamp01(total / count / 255);
   });
 }
 
-function getFallbackWaveformHeights(durationMillis: number): number[] {
-  const seed = Math.floor(durationMillis / 320);
-  const base = [14, 22, 32, 46, 62, 76, 84, 76, 62, 46, 32, 22, 14];
-  return base.map((height, index) => {
-    const pulse = ((seed + index * 3) % 7) - 3;
-    return Math.min(
-      WAVEFORM_MAX_BAR_HEIGHT,
-      Math.max(12, height + pulse * 2),
+function getWaveformBars({
+  durationMillis,
+  level,
+  isActive,
+  frequencyBins,
+}: {
+  durationMillis: number;
+  level: number;
+  isActive: boolean;
+  frequencyBins: number[];
+}): { height: number; clipCapHeight: number }[] {
+  const seed = Math.floor(durationMillis / 210);
+  const hasAudibleSignal = isActive && level >= MIN_SPEECH_LEVEL;
+
+  return Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) => {
+    const progress = index / (WAVEFORM_BAR_COUNT - 1);
+    const pulse = (((seed + index * 2) % 7) - 3) / 3;
+
+    if (!hasAudibleSignal) {
+      const quietBase = 0.28 + (1 - Math.abs(progress - 0.5) * 1.4) * 0.16;
+      const quietPulse = pulse * 0.12;
+      const quietLevel = clamp01(quietBase + quietPulse);
+      const quietHeight = Math.round(
+        WAVEFORM_QUIET_MIN_HEIGHT +
+          quietLevel * (WAVEFORM_QUIET_MAX_HEIGHT - WAVEFORM_QUIET_MIN_HEIGHT),
+      );
+
+      return {
+        height: quietHeight,
+        clipCapHeight: 0,
+      };
+    }
+
+    const frequencyLevel =
+      frequencyBins[index] ??
+      clamp01(
+        level *
+          (0.58 +
+            0.22 * (1 - progress) +
+            0.2 * (1 - Math.abs(progress - 0.5) * 1.4)),
+      );
+    const motion = pulse * 0.1;
+    const mixedLevel = clamp01(frequencyLevel * 0.82 + level * 0.18 + motion);
+    const height = Math.round(
+      WAVEFORM_QUIET_MIN_HEIGHT +
+        mixedLevel * (WAVEFORM_MAX_BAR_HEIGHT - WAVEFORM_QUIET_MIN_HEIGHT),
     );
+
+    const clipCapHeight =
+      mixedLevel >= WAVEFORM_CLIP_LEVEL_THRESHOLD
+        ? Math.min(WAVEFORM_CLIP_CAP_MAX_HEIGHT, Math.max(0, height - 2))
+        : 0;
+
+    return {
+      height,
+      clipCapHeight,
+    };
   });
 }
 
@@ -179,11 +259,16 @@ export default function CaptureRecordScreen() {
     useState<ProcessingVariant | null>(null);
   const [recoveryStatus, setRecoveryStatus] = useState<string | null>(null);
   const [webLiveLevel, setWebLiveLevel] = useState(0);
+  const [webFrequencyBins, setWebFrequencyBins] = useState<number[]>([]);
   const [webAnalyserReady, setWebAnalyserReady] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [isVoiceSessionActive, setIsVoiceSessionActive] = useState(false);
   const [pausedVisualLevel, setPausedVisualLevel] = useState(0);
   const [pausedDurationMillis, setPausedDurationMillis] = useState(0);
+  const [preRecordPhase, setPreRecordPhase] = useState<PreRecordPhase>(null);
+  const [countdownValue, setCountdownValue] = useState<number | null>(null);
+  const [draftDurationMillis, setDraftDurationMillis] = useState(0);
+  const [draftHasSpeech, setDraftHasSpeech] = useState(false);
 
   const hasStartedRef = useRef(false);
   const startAttemptIdRef = useRef(0);
@@ -195,6 +280,7 @@ export default function CaptureRecordScreen() {
   const recoveryRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const speechDetectedRef = useRef(false);
 
   const isRecording = recorderState.isRecording;
   const hasActiveRecordingSession =
@@ -228,15 +314,65 @@ export default function CaptureRecordScreen() {
     Platform.OS === "web" && isRecording && webAnalyserReady;
   const isWebFallbackMotion =
     Platform.OS === "web" && isRecording && !webAnalyserReady;
+  const maxRecordingMinutesLabel = Math.max(
+    1,
+    Math.ceil(MAX_RECORDING_SECONDS / 60),
+  );
+  const isLiveRecordingVisualState =
+    (isRecording || isVoiceSessionActive) &&
+    !isPaused &&
+    !isPreparingRecording &&
+    preRecordPhase === null;
+  const shouldShowRecordingTimer =
+    isPaused || isRecording || isLiveRecordingVisualState;
+  const isPermissionHelpVisible =
+    micPermissionDenied && !hasActiveRecordingSession && !hasAudioDraft;
+  const voiceTitleText = isPreparingRecording
+    ? preRecordPhase === "countdown"
+      ? "Opname start zo"
+      : preRecordPhase === "permission_check"
+        ? "Geef toegang tot je microfoon"
+        : "Microfoon klaarmaken"
+    : isPermissionHelpVisible
+      ? "Geef toegang tot je microfoon"
+      : isPaused
+        ? "Opname gepauzeerd"
+        : isLiveRecordingVisualState
+          ? "Je opname loopt"
+          : "";
+  const voiceSubtitleText = isPreparingRecording
+    ? preRecordPhase === "countdown"
+      ? "Spreek zodra de teller klaar is."
+      : preRecordPhase === "permission_check"
+        ? "Daarna start de opname vanzelf."
+        : "Een moment geduld."
+    : isPermissionHelpVisible
+      ? "Daarna start de opname vanzelf."
+      : isPaused
+        ? "Opname gepauzeerd. Hervat wanneer je verder wilt."
+        : isLiveRecordingVisualState
+          ? `Spreek rustig. Je hebt maximaal ${maxRecordingMinutesLabel} minuten.`
+          : "";
   const voiceMotionScale = 1 + liveAudioLevel * 0.07;
   const voiceMotionOpacity = isRecording ? 0.76 + liveAudioLevel * 0.24 : 0.45;
   const canTogglePauseResume = isPaused || isRecording;
+
+  const goBackToStart = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace({ pathname: "/capture", params: returnParams });
+  }, [returnParams]);
 
   const cancelPreparingRecording = useCallback(() => {
     startAttemptIdRef.current += 1;
     setIsPreparingRecording(false);
     setRecordingActionBusy(false);
     setIsVoiceSessionActive(false);
+    setPreRecordPhase(null);
+    setCountdownValue(null);
     void recorder.stop().catch(() => {
       // Best effort: preparing may not have initialized the recorder yet.
     });
@@ -256,6 +392,11 @@ export default function CaptureRecordScreen() {
       }
 
       setAudioUri(uri);
+      const capturedDurationMillis = isPaused
+        ? pausedDurationMillis
+        : recorderState.durationMillis;
+      setDraftDurationMillis(capturedDurationMillis);
+      setDraftHasSpeech(speechDetectedRef.current);
       setIsPreparingRecording(false);
       setIsPaused(false);
       setIsVoiceSessionActive(false);
@@ -273,7 +414,7 @@ export default function CaptureRecordScreen() {
     } finally {
       setRecordingActionBusy(false);
     }
-  }, [recorder, recorderState.url]);
+  }, [isPaused, pausedDurationMillis, recorder, recorderState.durationMillis, recorderState.url]);
 
   const startRecording = useCallback(async () => {
     const attemptId = startAttemptIdRef.current + 1;
@@ -282,6 +423,8 @@ export default function CaptureRecordScreen() {
     setMicPermissionDenied(false);
     setIsPreparingRecording(true);
     setRecordingActionBusy(true);
+    setPreRecordPhase("permission_check");
+    setCountdownValue(null);
 
     try {
       const permission = await getRecordingPermissionsAsync();
@@ -293,14 +436,10 @@ export default function CaptureRecordScreen() {
       }
 
       if (!granted) {
+        setPreRecordPhase("permission_needed");
         setIsPreparingRecording(false);
         setIsVoiceSessionActive(false);
         setMicPermissionDenied(true);
-        setError({
-          message: "Microfoontoegang is nodig om audio op te nemen.",
-          retryable: true,
-          requestId: null,
-        });
         return;
       }
 
@@ -308,6 +447,7 @@ export default function CaptureRecordScreen() {
         return;
       }
 
+      setPreRecordPhase("warming_up");
       await recorder.prepareToRecordAsync();
 
       if (startAttemptIdRef.current !== attemptId) {
@@ -317,17 +457,41 @@ export default function CaptureRecordScreen() {
         return;
       }
 
+      setPreRecordPhase("countdown");
+      const countdownSequence = [3, 2, 1];
+      for (const value of countdownSequence) {
+        if (startAttemptIdRef.current !== attemptId) {
+          return;
+        }
+        setCountdownValue(value);
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
+      }
+
+      if (startAttemptIdRef.current !== attemptId) {
+        return;
+      }
+
       autoStopTriggeredRef.current = false;
       setAudioUri(null);
+      setDraftDurationMillis(0);
+      setDraftHasSpeech(false);
       setIsPaused(false);
       setPausedVisualLevel(0);
       setPausedDurationMillis(0);
+      speechDetectedRef.current = false;
+      setCountdownValue(null);
+      setPreRecordPhase(null);
+      setIsPreparingRecording(false);
       recorder.record();
       setIsVoiceSessionActive(true);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setIsPreparingRecording(false);
       setIsVoiceSessionActive(false);
+      setPreRecordPhase(null);
+      setCountdownValue(null);
       setMicPermissionDenied(false);
       setError({
         message: parsed.message,
@@ -358,6 +522,8 @@ export default function CaptureRecordScreen() {
     revokeAudioObjectUrl(stoppedAudioUri);
 
     setAudioUri(null);
+    setDraftDurationMillis(0);
+    setDraftHasSpeech(false);
     setSavedEntry(null);
     setDerivedResult(null);
     startAttemptIdRef.current += 1;
@@ -368,13 +534,44 @@ export default function CaptureRecordScreen() {
     setPausedVisualLevel(0);
     setPausedDurationMillis(0);
     setWebLiveLevel(0);
+    setWebFrequencyBins([]);
     setWebAnalyserReady(true);
+    setPreRecordPhase(null);
+    setCountdownValue(null);
     setMicPermissionDenied(false);
     setError(null);
     setProcessingVariant(null);
     setRecoveryStatus(null);
     autoStopTriggeredRef.current = false;
+    speechDetectedRef.current = false;
   }, [audioUri, hasActiveRecordingSession, recorder, recorderState.url]);
+
+  const returnToCaptureWithValidation = useCallback(
+    async (validation: "short" | "no_speech") => {
+      await resetCaptureAudioState();
+      router.replace({
+        pathname: "/capture",
+        params: {
+          ...(returnParams ?? {}),
+          validation,
+        },
+      });
+    },
+    [resetCaptureAudioState, returnParams],
+  );
+
+  const isRecordingValidForSubmit = useCallback(
+    (durationMillis: number, hasSpeech: boolean): boolean => {
+      if (durationMillis < MIN_VALID_RECORDING_MS) {
+        return false;
+      }
+      if (!hasSpeech) {
+        return false;
+      }
+      return true;
+    },
+    [],
+  );
 
   const goToEntry = useCallback((entryId: string, nextJournalDate: string) => {
     router.replace({
@@ -692,17 +889,27 @@ export default function CaptureRecordScreen() {
       setRecordingActionBusy(false);
       setIsPaused(false);
       setIsVoiceSessionActive(true);
+      setPreRecordPhase(null);
+      setCountdownValue(null);
     }
   }, [isRecording]);
 
   useEffect(() => {
+    if (isRecording && liveAudioLevel >= MIN_SPEECH_LEVEL) {
+      speechDetectedRef.current = true;
+    }
+  }, [isRecording, liveAudioLevel]);
+
+  useEffect(() => {
     if (Platform.OS !== "web") {
       setWebLiveLevel(0);
+      setWebFrequencyBins([]);
       return;
     }
 
     if (!isRecording) {
       setWebLiveLevel(0);
+      setWebFrequencyBins([]);
       setWebAnalyserReady(true);
       return;
     }
@@ -717,8 +924,10 @@ export default function CaptureRecordScreen() {
         resume?: () => Promise<void>;
         createAnalyser?: () => {
           fftSize: number;
+          frequencyBinCount: number;
           smoothingTimeConstant: number;
           getByteTimeDomainData: (array: Uint8Array) => void;
+          getByteFrequencyData: (array: Uint8Array) => void;
         };
         createMediaStreamSource?: (stream: MediaStream) => {
           connect: (node: unknown) => void;
@@ -794,6 +1003,7 @@ export default function CaptureRecordScreen() {
         setWebAnalyserReady(true);
 
         const buffer = new Uint8Array(createdAnalyser.fftSize);
+        const frequencyBuffer = new Uint8Array(createdAnalyser.frequencyBinCount);
 
         const frame = () => {
           if (cancelled) {
@@ -801,6 +1011,7 @@ export default function CaptureRecordScreen() {
           }
 
           createdAnalyser.getByteTimeDomainData(buffer);
+          createdAnalyser.getByteFrequencyData(frequencyBuffer);
           const rms = calculateTimeDomainRms(buffer);
           if (rms < ambientRms + WEB_AUDIO_MOTION.noiseTrackingMarginRms) {
             ambientRms +=
@@ -825,6 +1036,9 @@ export default function CaptureRecordScreen() {
           setWebLiveLevel(
             smoothedLevel < WEB_AUDIO_MOTION.idleCutoff ? 0 : smoothedLevel,
           );
+          setWebFrequencyBins(
+            downsampleFrequencyBins(frequencyBuffer, WAVEFORM_BAR_COUNT),
+          );
           rafId = requestAnimationFrame(frame);
         };
 
@@ -833,6 +1047,7 @@ export default function CaptureRecordScreen() {
         if (!cancelled) {
           setWebAnalyserReady(false);
           setWebLiveLevel(0);
+          setWebFrequencyBins([]);
         }
       }
     };
@@ -894,15 +1109,40 @@ export default function CaptureRecordScreen() {
     }
 
     if (hasActiveRecordingSession) {
+      const capturedDurationMillis = isPaused
+        ? pausedDurationMillis
+        : recorderState.durationMillis;
+      const capturedHasSpeech = speechDetectedRef.current;
       const uri = await stopRecorderAndStoreUri();
       if (!uri) {
         return;
       }
+
+      if (!isRecordingValidForSubmit(capturedDurationMillis, capturedHasSpeech)) {
+        if (capturedDurationMillis < MIN_VALID_RECORDING_MS) {
+          await returnToCaptureWithValidation("short");
+          return;
+        }
+
+        await returnToCaptureWithValidation("no_speech");
+        return;
+      }
+
       await submitCapturedAudio(uri);
       return;
     }
 
     if (audioUri) {
+      if (!isRecordingValidForSubmit(draftDurationMillis, draftHasSpeech)) {
+        if (draftDurationMillis < MIN_VALID_RECORDING_MS) {
+          await returnToCaptureWithValidation("short");
+          return;
+        }
+
+        await returnToCaptureWithValidation("no_speech");
+        return;
+      }
+
       await submitCapturedAudio(audioUri);
     }
   }
@@ -1041,15 +1281,6 @@ export default function CaptureRecordScreen() {
     }
   }
 
-  function goBackToStart() {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace({ pathname: "/capture", params: returnParams });
-  }
-
   function handleBack() {
     if (isProcessingBusy || (recordingActionBusy && !isPreparingRecording)) {
       return;
@@ -1079,20 +1310,23 @@ export default function CaptureRecordScreen() {
     ? pausedDurationMillis
     : recorderState.durationMillis;
 
-  const waveformHeights = isPaused
-    ? getWaveformHeights(
-        displayDurationMillis,
-        Math.max(0.12, pausedVisualLevel),
-      )
-    : isWebFallbackMotion
-      ? getFallbackWaveformHeights(displayDurationMillis)
-      : getWaveformHeights(displayDurationMillis, liveAudioLevel);
+  const waveformBars = getWaveformBars({
+    durationMillis: displayDurationMillis,
+    level: isPaused ? pausedVisualLevel : liveAudioLevel,
+    isActive: isRecording,
+    frequencyBins: isRecording && Platform.OS === "web" ? webFrequencyBins : [],
+  });
 
   return (
     <ScreenContainer
       backgroundTone="flat"
       fixedHeader={
-        <CaptureBackHeader topInset={insets.top} onBack={handleBack} />
+        <CaptureBackHeader
+          topInset={insets.top}
+          onBack={handleBack}
+          iconName="close"
+          accessibilityLabel="Opname annuleren"
+        />
       }
     >
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
@@ -1157,9 +1391,6 @@ export default function CaptureRecordScreen() {
           style={[
             styles.waveCard,
             isNearRecordingEnd ? styles.waveCardNearEnd : null,
-            {
-              backgroundColor: palette.surface,
-            },
           ]}
         >
           <View
@@ -1180,17 +1411,13 @@ export default function CaptureRecordScreen() {
               },
             ]}
           >
-            {waveformHeights.map((height, index) => (
+            {waveformBars.map((bar, index) => (
               <View
                 key={`wave-${index}`}
                 style={[
                   styles.waveBar,
                   isWebFallbackMotion ? styles.waveBarFallback : null,
                   {
-                    backgroundColor: isWebFallbackMotion
-                      ? `${palette.primary}B8`
-                      : palette.primary,
-                    height,
                     opacity: isWebFallbackMotion
                       ? 0.88
                       : isRecording
@@ -1198,76 +1425,132 @@ export default function CaptureRecordScreen() {
                         : 0.58 + liveAudioLevel * 0.2,
                   },
                 ]}
-              />
+              >
+                <View
+                  style={[
+                    styles.waveBarBody,
+                    {
+                      backgroundColor: isWebFallbackMotion
+                        ? `${palette.primary}B8`
+                        : palette.primary,
+                      height: Math.max(2, bar.height - bar.clipCapHeight),
+                    },
+                  ]}
+                />
+                {bar.clipCapHeight > 0 ? (
+                  <View
+                    style={[
+                      styles.waveBarClip,
+                      {
+                        backgroundColor: palette.destructiveSoftText,
+                        height: bar.clipCapHeight,
+                      },
+                    ]}
+                  />
+                ) : null}
+              </View>
             ))}
           </View>
-        </View>
+          <View style={styles.timerBlock}>
+            <View style={styles.statusBlock}>
+              <ThemedText
+                type="sectionTitle"
+                lightColor={palette.muted}
+                darkColor={palette.muted}
+                style={styles.voiceTitle}
+              >
+                {voiceTitleText || " "}
+              </ThemedText>
+              <ThemedText
+                type="meta"
+                lightColor={palette.muted}
+                darkColor={palette.muted}
+                style={styles.voiceSubtitle}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {voiceSubtitleText || " "}
+              </ThemedText>
+              <View style={styles.countdownSlot}>
+                {isPreparingRecording && preRecordPhase === "countdown" ? (
+                  <View style={styles.countdownRow}>
+                    {[3, 2, 1].map((value) => {
+                      const isActive = countdownValue === value;
 
-        <View style={styles.timerBlock}>
-          {isPreparingRecording ? (
-            <>
-              <ThemedText
-                type="sectionTitle"
-                lightColor={palette.muted}
-                darkColor={palette.muted}
-                style={styles.voiceLead}
-              >
-                Opname starten
-              </ThemedText>
-              <ThemedText
-                type="bodySecondary"
-                lightColor={palette.muted}
-                darkColor={palette.muted}
-                style={styles.voiceLead}
-              >
-                Je kunt zo beginnen met praten.
-              </ThemedText>
-            </>
-          ) : (
-            <>
-              <ThemedText
-                type="bodySecondary"
-                lightColor={palette.muted}
-                darkColor={palette.muted}
-                style={styles.voiceLead}
-              >
-                {isPaused
-                  ? "Opname gepauzeerd."
-                  : isRecording
-                    ? "Je opname loopt."
-                    : "Leg je moment vast."}
-              </ThemedText>
-              <ThemedText
-                type="sectionTitle"
-                lightColor={palette.muted}
-                darkColor={palette.muted}
-                style={styles.timerText}
-              >
-                {formatDuration(displayRecordingSeconds)} /{" "}
-                {formatDuration(MAX_RECORDING_SECONDS)}
-              </ThemedText>
-            </>
-          )}
+                      return (
+                        <ThemedText
+                          key={`countdown-${value}`}
+                          type={isActive ? "screenTitle" : "sectionTitle"}
+                          lightColor={isActive ? palette.primary : palette.mutedSoft}
+                          darkColor={isActive ? palette.primary : palette.mutedSoft}
+                          style={styles.countdownDigit}
+                        >
+                          {value}
+                        </ThemedText>
+                      );
+                    })}
+                  </View>
+                ) : shouldShowRecordingTimer ? (
+                  <ThemedText
+                    type="screenTitle"
+                    lightColor={palette.primary}
+                    darkColor={palette.primary}
+                    style={styles.timerText}
+                  >
+                    {formatDuration(displayRecordingSeconds)}
+                  </ThemedText>
+                ) : null}
+              </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.controlsStack}>
           <PrimaryButton
-            label="Opname afronden"
+            label={isPermissionHelpVisible ? "Microfoon opnieuw proberen" : "Opname afronden"}
+            icon={isPermissionHelpVisible ? undefined : "stop"}
             className="w-full"
-            onPress={() => void handleStop()}
+            onPress={() => {
+              if (isPermissionHelpVisible) {
+                void startRecording();
+                return;
+              }
+
+              void handleStop();
+            }}
             disabled={
               isBusy ||
               isPreparingRecording ||
               derivedNeedsAttention ||
-              (!hasActiveRecordingSession && !hasAudioDraft)
+              (!isPermissionHelpVisible &&
+                !hasActiveRecordingSession &&
+                !hasAudioDraft)
             }
           />
 
           <SecondaryButton
-            label={isPaused ? "Opname hervatten" : "Pauze"}
+            label={isPermissionHelpVisible ? "Ga terug" : isPaused ? "Opname hervatten" : "Pauze"}
+            icon={
+              isPermissionHelpVisible
+                ? undefined
+                : isPaused
+                  ? "fiber-manual-record"
+                  : "pause"
+            }
             className="w-full"
-            onPress={() => void handleTogglePauseResume()}
-            disabled={isBusy || isPreparingRecording || !canTogglePauseResume}
+            onPress={() => {
+              if (isPermissionHelpVisible) {
+                handleBack();
+                return;
+              }
+
+              void handleTogglePauseResume();
+            }}
+            disabled={
+              isPermissionHelpVisible
+                ? isBusy
+                : isBusy || isPreparingRecording || !canTogglePauseResume
+            }
           />
 
           <Pressable
@@ -1345,10 +1628,11 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     minHeight: 156,
     borderRadius: radius.xl,
-    paddingHorizontal: 32,
-    paddingVertical: 32,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    backgroundColor: "transparent",
   },
   waveMotionLayer: {
     height: WAVEFORM_MAX_BAR_HEIGHT,
@@ -1362,25 +1646,65 @@ const styles = StyleSheet.create({
   },
   waveBar: {
     width: 6,
+    minHeight: WAVEFORM_QUIET_MIN_HEIGHT,
+    justifyContent: "flex-end",
     borderRadius: radius.pill,
+    overflow: "hidden",
+  },
+  waveBarBody: {
+    width: "100%",
+    borderRadius: radius.pill,
+  },
+  waveBarClip: {
+    width: "100%",
   },
   waveBarFallback: {},
   timerBlock: {
     marginTop: spacing.lg,
     alignItems: "center",
     gap: spacing.sm,
+    minHeight: 176,
+    width: "100%",
+    justifyContent: "flex-start",
   },
-  voiceLead: {
+  statusBlock: {
+    alignItems: "center",
+    gap: spacing.xs,
+    minHeight: 126,
+    width: "100%",
+  },
+  voiceTitle: {
     textAlign: "center",
+    minHeight: typography.roles.sectionTitle.lineHeight,
+  },
+  voiceSubtitle: {
+    textAlign: "center",
+    minHeight: typography.roles.meta.lineHeight * 2,
+    maxWidth: 320,
   },
   timerText: {
-    fontSize: typography.roles.sectionTitle.size,
-    lineHeight: typography.roles.sectionTitle.lineHeight,
+    fontSize: typography.roles.screenTitle.size,
+    lineHeight: typography.roles.screenTitle.lineHeight,
+    textAlign: "center",
+  },
+  countdownRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xl,
+  },
+  countdownSlot: {
+    minHeight: 44,
+    marginTop: spacing.md,
+    justifyContent: "center",
+  },
+  countdownDigit: {
+    minWidth: 22,
     textAlign: "center",
   },
   controlsStack: {
     width: "100%",
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     alignItems: "center",
     gap: spacing.md,
   },

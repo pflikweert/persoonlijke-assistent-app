@@ -12,9 +12,13 @@ import { colorTokens, spacing } from "@/theme";
 export function CaptureBackHeader({
   topInset,
   onBack,
+  iconName = "arrow-back",
+  accessibilityLabel = "Terug",
 }: {
   topInset: number;
   onBack: () => void;
+  iconName?: "arrow-back" | "close";
+  accessibilityLabel?: string;
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
@@ -30,10 +34,10 @@ export function CaptureBackHeader({
       leftAction={
         <HeaderIconButton
           accessibilityRole="button"
-          accessibilityLabel="Terug"
+          accessibilityLabel={accessibilityLabel}
           onPress={onBack}
         >
-          <MaterialIcons name="arrow-back" size={18} color={palette.primary} />
+          <MaterialIcons name={iconName} size={18} color={palette.primary} />
         </HeaderIconButton>
       }
     />

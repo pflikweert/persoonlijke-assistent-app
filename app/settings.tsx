@@ -22,13 +22,14 @@ import {
 import { colorTokens, radius, spacing } from "@/theme";
 
 type SettingsRoute = {
-  key: "export" | "import" | "regeneration" | "ai-quality-studio";
+  key: "export" | "import" | "audio" | "regeneration" | "ai-quality-studio";
   label: string;
   description: string;
   icon: keyof typeof MaterialIcons.glyphMap;
   route:
     | "/settings-export"
     | "/settings-import"
+    | "/settings-audio"
     | "/settings-regeneration"
     | "/settings-ai-quality-studio";
 };
@@ -50,6 +51,13 @@ const ARCHIVE_ROUTES: SettingsRoute[] = [
     description: "Bewaar een leesbaar bestand van je archief.",
     icon: "download",
     route: "/settings-export",
+  },
+  {
+    key: "audio",
+    label: "Audio-opnames bewaren",
+    description: "Kies of je originele audio-opnames worden bewaard.",
+    icon: "mic",
+    route: "/settings-audio",
   },
   {
     key: "import",

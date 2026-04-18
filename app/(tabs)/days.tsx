@@ -9,12 +9,18 @@ import {
   type ArchiveGroupedListSection,
 } from "@/components/journal/archive-grouped-list";
 import { ScreenHeader } from "@/components/layout/screen-header";
-import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
-import { DetailScreenHero } from "@/components/ui/detail-screen-primitives";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { ScreenContainer, StateBlock } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { fetchRecentDayJournals, parseJournalSections } from "@/services";
+import {
+  fetchRecentDayJournals,
+  getSessionSelectedDayDate,
+  getUtcTodayDate,
+  parseJournalSections,
+  setSessionSelectedDayDate,
+} from "@/services";
 import { colorTokens, spacing } from "@/theme";
 
 type MonthGroup = {
@@ -81,10 +87,19 @@ export default function DaysScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [sessionSelectedDayDate, setSessionSelectedDayDateState] =
+    useState<string | null>(getSessionSelectedDayDate());
   const [journals, setJournals] = useState<
     Awaited<ReturnType<typeof fetchRecentDayJournals>>
   >([]);
+
+  const handleClose = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/(tabs)");
+  }, []);
 
   const loadDays = useCallback(async () => {
     setLoading(true);
@@ -146,9 +161,12 @@ export default function DaysScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setSessionSelectedDayDateState(getSessionSelectedDayDate());
       loadDays();
     }, [loadDays]),
   );
+
+  const selectedDayDate = sessionSelectedDayDate ?? getUtcTodayDate();
 
   const sections = useMemo<ArchiveGroupedListSection[]>(() => {
     const monthMap = new Map<string, MonthGroup>();
@@ -178,15 +196,19 @@ export default function DaysScreen() {
           leftTop: formatWeekdayShort(journal.journal_date),
           leftBottom: formatDayNumber(journal.journal_date),
           snippet,
-          onPress: () =>
+          selected: journal.journal_date === selectedDayDate,
+          onPress: () => {
+            setSessionSelectedDayDate(journal.journal_date);
+            setSessionSelectedDayDateState(journal.journal_date);
             router.push({
               pathname: "/day/[date]",
               params: { date: journal.journal_date },
-            }),
+            });
+          },
         };
       }),
     }));
-  }, [journals]);
+  }, [journals, selectedDayDate]);
 
   return (
     <ScreenContainer
@@ -194,24 +216,41 @@ export default function DaysScreen() {
       backgroundTone="flat"
       fixedHeader={
         <ScreenHeader
+          surface="transparent"
+          leftAction={
+            <ThemedView style={styles.titleStack}>
+              <ThemedView style={styles.titleLockup}>
+                <ThemedText type="sectionTitle" style={styles.titlePrimary}>
+                  Kies
+                </ThemedText>
+                <ThemedText
+                  type="sectionTitle"
+                  style={[styles.titleSecondary, { color: palette.mutedSoft }]}
+                >
+                  een dag
+                </ThemedText>
+              </ThemedView>
+              <ThemedText
+                type="bodySecondary"
+                style={[styles.headerSubtitle, { color: palette.muted }]}
+              >
+                Overzicht van je recente dagen.
+              </ThemedText>
+            </ThemedView>
+          }
           rightAction={
             <HeaderIconButton
               accessibilityRole="button"
-              accessibilityLabel="Open menu"
-              onPress={() => setMenuVisible(true)}
+              accessibilityLabel="Sluiten"
+              onPress={handleClose}
             >
-              <MaterialIcons name="menu" size={20} color={palette.primary} />
+              <MaterialIcons name="close" size={20} color={palette.primary} />
             </HeaderIconButton>
           }
         />
       }
       contentContainerStyle={styles.scrollContent}
     >
-      <DetailScreenHero
-        title="Dagen"
-        subtitle="Persoonlijk archief om rustig terug te lezen."
-      />
-
       {loading ? (
         <InlineLoadingOverlay
           message="Archief laden..."
@@ -236,18 +275,13 @@ export default function DaysScreen() {
       {!loading && !error && journals.length > 0 ? (
         <ArchiveGroupedList
           sections={sections}
+          snippetLines={3}
           hasMore={hasMore}
           loadingMore={loadingMore}
           loadMoreLabel="Meer dagen laden"
           onLoadMore={() => void loadMoreDays()}
         />
       ) : null}
-
-      <FullscreenMenuOverlay
-        visible={menuVisible}
-        currentRouteKey="days"
-        onRequestClose={() => setMenuVisible(false)}
-      />
     </ScreenContainer>
   );
 }
@@ -255,5 +289,27 @@ export default function DaysScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
+  },
+  titleLockup: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing.xs,
+  },
+  titleStack: {
+    gap: spacing.xs,
+  },
+  titlePrimary: {
+    fontSize: 24,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+  },
+  titleSecondary: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "400",
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    lineHeight: 22,
   },
 });

@@ -31,11 +31,21 @@ export type RecentNormalizedEntry = Pick<
 
 export type NormalizedEntryDetail = Pick<
   Tables<'entries_normalized'>,
-  'id' | 'raw_entry_id' | 'title' | 'body' | 'summary_short' | 'created_at'
+  | 'id'
+  | 'raw_entry_id'
+  | 'title'
+  | 'body'
+  | 'summary_short'
+  | 'created_at'
+  | 'updated_at'
 > & {
   source_type: 'text' | 'audio';
   captured_at: string;
   journal_date: string;
+  audio_storage_path: string | null;
+  audio_mime_type: string | null;
+  audio_size_bytes: number | null;
+  audio_duration_ms: number | null;
 };
 
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -492,7 +502,7 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
 
   const { data: normalizedRow, error: normalizedError } = await supabase
     .from('entries_normalized')
-    .select('id, raw_entry_id, title, body, summary_short, created_at')
+    .select('id, raw_entry_id, title, body, summary_short, created_at, updated_at')
     .eq('id', normalizedId)
     .maybeSingle();
 
@@ -506,7 +516,9 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
 
   const { data: rawRow, error: rawError } = await supabase
     .from('entries_raw')
-    .select('source_type, captured_at, journal_date')
+    .select(
+      'source_type, captured_at, journal_date, audio_storage_path, audio_mime_type, audio_size_bytes, audio_duration_ms'
+    )
     .eq('id', normalizedRow.raw_entry_id)
     .maybeSingle();
 
@@ -520,7 +532,44 @@ export async function fetchNormalizedEntryById(id: string): Promise<NormalizedEn
     source_type: (rawRow?.source_type as 'text' | 'audio' | undefined) ?? 'text',
     captured_at: capturedAt,
     journal_date: rawRow?.journal_date ?? deriveJournalDateFromIsoLocal(capturedAt),
+    audio_storage_path: rawRow?.audio_storage_path ?? null,
+    audio_mime_type: rawRow?.audio_mime_type ?? null,
+    audio_size_bytes: rawRow?.audio_size_bytes ?? null,
+    audio_duration_ms: rawRow?.audio_duration_ms ?? null,
   };
+}
+
+export async function createEntryAudioSignedUrl(input: {
+  storagePath: string;
+  downloadFileName?: string;
+}): Promise<string> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const path = input.storagePath.trim();
+  if (!path) {
+    throw new Error('Audio pad ontbreekt.');
+  }
+
+  const { data, error } = await supabase.storage
+    .from('entry-audio')
+    .createSignedUrl(path, 60 * 15);
+
+  if (error || !data?.signedUrl) {
+    throw error ?? new Error('Kon audio-link niet ophalen.');
+  }
+
+  if (!input.downloadFileName) {
+    return data.signedUrl;
+  }
+
+  const separator = data.signedUrl.includes('?') ? '&' : '?';
+  return `${data.signedUrl}${separator}download=${encodeURIComponent(
+    input.downloadFileName
+  )}`;
 }
 
 export async function updateNormalizedEntryById(input: { id: string; body: string }): Promise<void> {
@@ -588,7 +637,10 @@ export async function updateNormalizedEntryById(input: { id: string; body: strin
 
   const { error: normalizedUpdateError } = await supabase
     .from('entries_normalized')
-    .update(updates)
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', input.id);
 
   if (normalizedUpdateError) {

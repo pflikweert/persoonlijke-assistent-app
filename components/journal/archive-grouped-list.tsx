@@ -47,6 +47,7 @@ export function ArchiveGroupedList({
   const palette = colorTokens[scheme];
   const isCompact = styleVariant === 'compact';
   const resolvedSnippetLines = snippetLines ?? (isCompact ? 2 : 1);
+  const selectedAccent = palette.primaryStrong;
 
   return (
     <ThemedView style={styles.list}>
@@ -63,20 +64,33 @@ export function ArchiveGroupedList({
                 style={[
                   styles.row,
                   {
-                    borderColor: item.selected ? `${palette.primary}66` : 'transparent',
-                    borderWidth: item.selected ? StyleSheet.hairlineWidth : 0,
+                    borderColor: item.selected ? `${selectedAccent}CC` : 'transparent',
+                    borderWidth: item.selected ? 1 : 0,
                   },
                 ]}>
                 <View style={[styles.dateColumn, isCompact ? styles.dateColumnCompact : null]}>
                   <ThemedText type="caption" style={[styles.weekday, { color: palette.mutedSoft }]}>
                     {item.leftTop}
                   </ThemedText>
-                  <ThemedText type="sectionTitle" style={[styles.dayNumber, { color: palette.text }]}>
+                  <ThemedText
+                    type="sectionTitle"
+                    style={[
+                      styles.dayNumber,
+                      {
+                        color: item.selected ? selectedAccent : palette.text,
+                      },
+                    ]}
+                  >
                     {item.leftBottom}
                   </ThemedText>
                 </View>
 
-                <ThemedView style={styles.snippetColumn}>
+                <ThemedView
+                  style={[
+                    styles.snippetColumn,
+                    { borderLeftColor: `${palette.separator}A6` },
+                  ]}
+                >
                   <ThemedText numberOfLines={resolvedSnippetLines} type="bodySecondary" style={[styles.snippet, { color: palette.muted }]}>
                     {item.snippet}
                   </ThemedText>
@@ -140,6 +154,7 @@ const styles = StyleSheet.create({
   dayNumber: {},
   snippetColumn: {
     flex: 1,
+    borderLeftWidth: 1,
     paddingLeft: spacing.md,
     justifyContent: 'center',
   },

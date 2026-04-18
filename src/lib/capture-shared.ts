@@ -5,6 +5,7 @@ import { isValidJournalDate } from '@/services';
 
 export type CaptureRouteParams = {
   date?: string | string[];
+  validation?: 'short' | 'no_speech' | string | string[];
 };
 
 export function formatDuration(seconds: number): string {

@@ -227,6 +227,7 @@ export type Database = {
           raw_entry_id: string
           summary_short: string | null
           title: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -237,6 +238,7 @@ export type Database = {
           raw_entry_id: string
           summary_short?: string | null
           title: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -247,6 +249,7 @@ export type Database = {
           raw_entry_id?: string
           summary_short?: string | null
           title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -261,6 +264,11 @@ export type Database = {
       }
       entries_raw: {
         Row: {
+          audio_duration_ms: number | null
+          audio_mime_type: string | null
+          audio_saved_at: string | null
+          audio_size_bytes: number | null
+          audio_storage_path: string | null
           captured_at: string
           client_processing_id: string | null
           created_at: string
@@ -276,6 +284,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          audio_duration_ms?: number | null
+          audio_mime_type?: string | null
+          audio_saved_at?: string | null
+          audio_size_bytes?: number | null
+          audio_storage_path?: string | null
           captured_at?: string
           client_processing_id?: string | null
           created_at?: string
@@ -291,6 +304,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          audio_duration_ms?: number | null
+          audio_mime_type?: string | null
+          audio_saved_at?: string | null
+          audio_size_bytes?: number | null
+          audio_storage_path?: string | null
           captured_at?: string
           client_processing_id?: string | null
           created_at?: string
@@ -348,6 +366,24 @@ export type Database = {
           period_type?: string
           reflection_points_json?: Json
           summary_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          save_audio_recordings: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          save_audio_recordings?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          save_audio_recordings?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

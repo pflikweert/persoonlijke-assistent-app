@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-14T17:07:39.840Z
-Source Commit: 839dc79
+Build Timestamp (UTC): 2026-04-18T19:02:53.385Z
+Source Commit: 4867208
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -35,7 +35,8 @@ Deze map bevat de actieve projectwaarheid voor scope, richting en status.
 4. `docs/project/open-points.md`
 5. `docs/project/content-processing-rules.md`
 6. `docs/project/copy-instructions.md`
-7. `docs/project/ai-quality-studio.md`
+7. `docs/project/ui-modals.md`
+8. `docs/project/ai-quality-studio.md`
 
 Aanvulling:
 - `docs/project/ai-quality-studio.md` is de centrale AI governance-laag voor AI-gedrag, promptbeheer en evaluatie.

@@ -16,6 +16,13 @@ type ReflectionCopyInput = {
   reflectionPoints: string[];
 };
 
+type EntryCopyInput = {
+  title: string;
+  capturedAtLabel: string;
+  summaryText?: string | null;
+  bodyText: string;
+};
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
@@ -174,6 +181,58 @@ export function buildReflectionCopyPayload(input: ReflectionCopyInput): Clipboar
       '<ul>',
       ...points.map((item) => `<li>${escapeHtml(item)}</li>`),
       '</ul>'
+    );
+  }
+
+  return {
+    plainText: plain.join('\n').trim(),
+    htmlText: html.join(''),
+  };
+}
+
+export function buildEntryCopyPayload(
+  input: EntryCopyInput,
+): ClipboardCopyPayload | null {
+  const title = input.title.trim();
+  const capturedAtLabel = input.capturedAtLabel.trim();
+  const summary = (input.summaryText ?? '').trim();
+  const body = input.bodyText.trim();
+
+  if (!title && !capturedAtLabel && !summary && !body) {
+    return null;
+  }
+
+  const plain: string[] = [];
+  if (title) {
+    pushPlainBlock(plain, title);
+  }
+  if (capturedAtLabel) {
+    pushPlainBlock(plain, capturedAtLabel);
+  }
+  if (summary) {
+    pushPlainBlock(plain, summary);
+  }
+  if (body) {
+    pushPlainBlock(plain, body);
+  }
+
+  const html: string[] = [];
+  if (title) {
+    pushHtmlSection(html, `<h3>${escapeHtml(title)}</h3>`);
+  }
+  if (capturedAtLabel) {
+    pushHtmlSection(html, `<p>${escapeHtml(capturedAtLabel)}</p>`);
+  }
+  if (summary) {
+    pushHtmlSection(
+      html,
+      ...asParagraphs(summary).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`),
+    );
+  }
+  if (body) {
+    pushHtmlSection(
+      html,
+      ...asParagraphs(body).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`),
     );
   }
 

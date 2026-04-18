@@ -85,6 +85,7 @@ const CORS_BASE_HEADERS = {
 
 const FLOW = "process-entry" as const;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+const AUDIO_STORAGE_BUCKET = "entry-audio";
 const CLIENT_PROCESSING_ID_PATTERN = /^[A-Za-z0-9_-]{12,160}$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NO_SPEECH_TRANSCRIPT = "Geen spraak herkend in audio-opname.";
@@ -703,6 +704,65 @@ function audioFileExtensionFromMimeType(mimeType: string): string {
     default:
       return "bin";
   }
+}
+
+async function shouldSaveAudioRecordings(args: {
+  supabase: ReturnType<typeof createClient>;
+  userId: string;
+  requestId: string;
+  flowId: string;
+}): Promise<boolean> {
+  const { data, error } = await args.supabase
+    .from("user_preferences")
+    .select("save_audio_recordings")
+    .eq("user_id", args.userId)
+    .maybeSingle();
+
+  if (error) {
+    logFlow("warn", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: "validated",
+      event: "user_preferences_read_failed",
+      details: {
+        error: String(error.message ?? error),
+      },
+    });
+    return false;
+  }
+
+  return data?.save_audio_recordings === true;
+}
+
+async function uploadEntryAudio(args: {
+  supabase: ReturnType<typeof createClient>;
+  userId: string;
+  rawEntryId: string;
+  audioBytes: Uint8Array;
+  audioMimeType: string;
+}): Promise<{ path: string; mimeType: string; sizeBytes: number }> {
+  const mimeType = normalizeAudioMimeType(args.audioMimeType);
+  const extension = audioFileExtensionFromMimeType(mimeType);
+  const path = `${args.userId}/${args.rawEntryId}/original.${extension}`;
+
+  const { error } = await args.supabase.storage
+    .from(AUDIO_STORAGE_BUCKET)
+    .upload(path, args.audioBytes, {
+      contentType: mimeType,
+      upsert: true,
+      cacheControl: "3600",
+    });
+
+  if (error) {
+    throw new Error(error.message || "Audio upload failed.");
+  }
+
+  return {
+    path,
+    mimeType,
+    sizeBytes: args.audioBytes.byteLength,
+  };
 }
 
 async function transcribeAudio(args: {
@@ -1683,6 +1743,14 @@ Deno.serve(async (request: Request) => {
     let rawTextForPersist: string | null = null;
     let transcriptTextForPersist: string | null = null;
     let rawEntry: { id: string } | null = null;
+    let audioUploadPayload: { bytes: Uint8Array; mimeType: string } | null = null;
+
+    const saveAudioRecordings = await shouldSaveAudioRecordings({
+      supabase,
+      userId: authData.user.id,
+      requestId,
+      flowId,
+    });
 
     if (clientProcessingId) {
       const { data: existingRawEntry, error: existingRawError } = await supabase
@@ -1936,6 +2004,10 @@ Deno.serve(async (request: Request) => {
 
       sourceTextForNormalization = transcriptText;
       transcriptTextForPersist = transcriptText;
+      audioUploadPayload = {
+        bytes: audioBytes,
+        mimeType: parsedSource.value.audioMimeType,
+      };
     }
 
     if (!rawEntry) {
@@ -2000,6 +2072,60 @@ Deno.serve(async (request: Request) => {
       throw new Error("Raw entry missing after capture persistence.");
     }
     const persistedRawEntry = rawEntry;
+
+    if (
+      parsedSource.value.sourceType === "audio" &&
+      saveAudioRecordings &&
+      audioUploadPayload
+    ) {
+      step = "audio_saved";
+      try {
+        const uploaded = await uploadEntryAudio({
+          supabase,
+          userId: authData.user.id,
+          rawEntryId: persistedRawEntry.id,
+          audioBytes: audioUploadPayload.bytes,
+          audioMimeType: audioUploadPayload.mimeType,
+        });
+
+        const { error: audioMetaError } = await supabase
+          .from("entries_raw")
+          .update({
+            audio_storage_path: uploaded.path,
+            audio_mime_type: uploaded.mimeType,
+            audio_size_bytes: uploaded.sizeBytes,
+            audio_saved_at: new Date().toISOString(),
+          })
+          .eq("id", persistedRawEntry.id)
+          .eq("user_id", authData.user.id);
+
+        if (audioMetaError) {
+          logFlow("warn", {
+            flow: FLOW,
+            requestId,
+            flowId,
+            step,
+            event: "audio_metadata_update_failed",
+            details: {
+              rawEntryId: persistedRawEntry.id,
+              error: String(audioMetaError.message ?? audioMetaError),
+            },
+          });
+        }
+      } catch (error) {
+        logFlow("warn", {
+          flow: FLOW,
+          requestId,
+          flowId,
+          step,
+          event: "audio_upload_failed",
+          details: {
+            rawEntryId: persistedRawEntry.id,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        });
+      }
+    }
 
     const normalized = await normalizeEntry({
       apiKey: runtimeEnv.openAiApiKey,

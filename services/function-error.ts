@@ -47,6 +47,7 @@ export function createClientFlowId(
     | 'admin-regeneration'
     | 'admin-ai-quality'
     | 'export-archive'
+    | 'user-preferences'
 ): string {
   const random = Math.random().toString(36).slice(2, 10);
   return `${prefix}-${Date.now()}-${random}`;

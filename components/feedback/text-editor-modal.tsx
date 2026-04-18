@@ -1,12 +1,12 @@
-import { Modal, StyleSheet, TextInput } from "react-native";
+import { Modal, StyleSheet } from "react-native";
 
+import { TextEntryEditor } from "@/components/feedback/text-entry-editor";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { AppBackground } from "@/components/ui/app-background";
 import { HeaderTextAction } from "@/components/ui/header-icon-button";
 import { PrimaryButton } from "@/components/ui/screen-primitives";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { colorTokens, radius, spacing, typography } from "@/theme";
+import { spacing } from "@/theme";
 
 type TextEditorModalProps = {
   visible: boolean;
@@ -33,12 +33,7 @@ export function TextEditorModal({
   onCancel,
   onSubmit,
 }: TextEditorModalProps) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-  const inputBackgroundColor =
-    scheme === "dark" ? palette.surfaceLow : palette.surfaceLowest;
-  const inputBorderColor = scheme === "dark" ? palette.border : palette.separator;
-
+  const canSubmit = value.trim().length > 0;
   return (
     <Modal
       visible={visible}
@@ -46,44 +41,38 @@ export function TextEditorModal({
       onRequestClose={() => !processing && onCancel()}
     >
       <ThemedView style={styles.screen}>
-        <AppBackground tone="flat" />
-        <ThemedView style={styles.topBar}>
-          <HeaderTextAction
-            label="Annuleer"
-            onPress={onCancel}
-            disabled={processing}
-          />
-          <ThemedText type="sectionTitle">{title}</ThemedText>
-          <ThemedView style={styles.topSpacer} />
+        <ThemedView style={styles.backgroundLayer} pointerEvents="none">
+          <AppBackground tone="flat" />
         </ThemedView>
 
-        <TextInput
-          multiline
-          autoFocus
-          value={value}
-          onChangeText={onChange}
-          editable={!processing}
-          placeholder={placeholder}
-          placeholderTextColor={palette.mutedSoft}
-          selectionColor={palette.primaryStrong}
-          keyboardAppearance={scheme === "dark" ? "dark" : "light"}
-          textAlignVertical="top"
-          style={[
-            styles.input,
-            {
-              color: palette.text,
-              borderColor: inputBorderColor,
-              backgroundColor: inputBackgroundColor,
-            },
-          ]}
-        />
+        <ThemedView style={styles.contentLayer}>
+          <ThemedView style={styles.topBar}>
+            <HeaderTextAction
+              label="Annuleren"
+              onPress={onCancel}
+              disabled={processing}
+            />
+            <ThemedText type="sectionTitle">{title}</ThemedText>
+            <ThemedView style={styles.topSpacer} />
+          </ThemedView>
 
-        <ThemedView style={styles.bottomZone}>
-          <PrimaryButton
-            label={processing ? processingLabel : submitLabel}
-            onPress={onSubmit}
-            disabled={processing || !value.trim()}
+          <TextEntryEditor
+            autoFocus
+            value={value}
+            onChangeText={onChange}
+            editable={!processing}
+            placeholder={placeholder}
+            variant="edit"
+            style={styles.input}
           />
+
+          <ThemedView style={styles.bottomZone}>
+            <PrimaryButton
+              label={processing ? processingLabel : submitLabel}
+              onPress={onSubmit}
+              disabled={processing || !canSubmit}
+            />
+          </ThemedView>
         </ThemedView>
       </ThemedView>
     </Modal>
@@ -93,6 +82,14 @@ export function TextEditorModal({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    position: "relative",
+  },
+  backgroundLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  contentLayer: {
+    flex: 1,
+    position: "relative",
     paddingTop: spacing.xl,
     paddingHorizontal: spacing.page,
     paddingBottom: spacing.page,
@@ -110,15 +107,6 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 320,
-    fontFamily: typography.families.sans,
-    fontSize: 28,
-    lineHeight: 38,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    textAlign: "left",
   },
   bottomZone: {
     width: "100%",

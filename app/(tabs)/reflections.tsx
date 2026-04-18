@@ -1,9 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, ScrollView, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
+import { SelectorModalShell } from "@/components/feedback/selector-modal-shell";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import {
   ArchiveGroupedList,
@@ -15,18 +16,16 @@ import { ScreenHeader } from "@/components/layout/screen-header";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { AppBackground } from "@/components/ui/app-background";
+import { CopyIconButton } from "@/components/ui/copy-icon-button";
 import {
   DetailScreenHero,
   SectionLabelRow,
 } from "@/components/ui/detail-screen-primitives";
 import {
   HeaderIconButton,
-  HeaderTextAction,
 } from "@/components/ui/header-icon-button";
 import { PeriodSegmentedControl } from "@/components/ui/period-segmented-control";
 import {
-  MetaText,
   ScreenContainer,
   SecondaryButton,
   StateBlock,
@@ -39,11 +38,13 @@ import {
   getUtcTodayDate,
   parseJsonStringArray,
 } from "@/services";
+import { buildReflectionCopyPayload } from "@/src/lib/copy-payloads";
 import type { PeriodType } from "@/services/reflections";
 import { colorTokens, radius, spacing } from "@/theme";
 
 type RouteParams = {
   period?: string | string[];
+  anchorDate?: string | string[];
 };
 
 const FORBIDDEN_REFLECTION_PHRASES = ["dit thema kwam meerdere keren terug"];
@@ -55,6 +56,13 @@ function parseRoutePeriod(
 ): PeriodType | null {
   const parsed = Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
   return parsed === "week" || parsed === "month" ? parsed : null;
+}
+
+function parseAnchorDate(
+  value: string | string[] | undefined,
+): string | null {
+  const parsed = Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
+  return /^\d{4}-\d{2}-\d{2}$/.test(parsed) ? parsed : null;
 }
 
 function periodTypeLabel(periodType: PeriodType): string {
@@ -250,8 +258,12 @@ export default function ReflectionsScreen() {
   const PAGE_SIZE = 20;
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
-  const { period } = useLocalSearchParams<RouteParams>();
+  const { period, anchorDate } = useLocalSearchParams<RouteParams>();
   const requestedPeriod = useMemo(() => parseRoutePeriod(period), [period]);
+  const requestedAnchorDate = useMemo(
+    () => parseAnchorDate(anchorDate),
+    [anchorDate],
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
     message: string;
@@ -311,12 +323,18 @@ export default function ReflectionsScreen() {
       setSelectedWeekId((current) =>
         current && weekRows.some((row) => row.id === current)
           ? current
-          : selectCurrentPeriodId(weekRows),
+          : selectCurrentPeriodId(
+              weekRows,
+              requestedAnchorDate ?? localDayStringNow(),
+            ),
       );
       setSelectedMonthId((current) =>
         current && monthRows.some((row) => row.id === current)
           ? current
-          : selectCurrentPeriodId(monthRows),
+          : selectCurrentPeriodId(
+              monthRows,
+              requestedAnchorDate ?? localDayStringNow(),
+            ),
       );
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
@@ -334,7 +352,7 @@ export default function ReflectionsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [PAGE_SIZE]);
+  }, [PAGE_SIZE, requestedAnchorDate]);
 
   useFocusEffect(
     useCallback(() => {
@@ -435,6 +453,28 @@ export default function ReflectionsScreen() {
         activeReflection.period_end,
       )
     : null;
+  const reflectionCopyPayload = useMemo(() => {
+    if (!activeReflection) {
+      return null;
+    }
+
+    const periodRange =
+      narrativeTitle ??
+      `${formatDateLabel(activeReflection.period_start)} – ${formatDateLabel(activeReflection.period_end)}`;
+
+    return buildReflectionCopyPayload({
+      periodRange,
+      summaryText: activeReflection.summary_text ?? "",
+      narrativeText: activeReflection.narrative_text ?? "",
+      highlights: cleanHighlights,
+      reflectionPoints: cleanReflectionPoints,
+    });
+  }, [
+    activeReflection,
+    narrativeTitle,
+    cleanHighlights,
+    cleanReflectionPoints,
+  ]);
 
   const selectorSections = useMemo<ArchiveGroupedListSection[]>(() => {
     const grouped = new Map<string, ArchiveGroupedListSection>();
@@ -547,31 +587,45 @@ export default function ReflectionsScreen() {
           isProcessing ? null : (
             <ScreenHeader
               leftAction={
-                <HeaderIconButton
-                  accessibilityRole="button"
-                  accessibilityLabel={headerActionLabel}
-                  onPress={() => openSelector(activePeriod)}
-                >
-                  <MaterialIcons
-                    name="calendar-month"
-                    size={20}
-                    color={palette.primary}
-                  />
-                </HeaderIconButton>
+                <ThemedView style={styles.brandLockup}>
+                  <ThemedText type="sectionTitle" style={styles.brandPrimary}>
+                    Budio
+                  </ThemedText>
+                  <ThemedText
+                    type="sectionTitle"
+                    style={[styles.brandSecondary, { color: palette.mutedSoft }]}
+                  >
+                    Terugblik
+                  </ThemedText>
+                </ThemedView>
               }
               rightAction={
-                <HeaderIconButton
-                  accessibilityRole="button"
-                  accessibilityLabel="Open menu"
-                  onPress={() => setMenuVisible(true)}
-                >
-                  <MaterialIcons
-                    name="menu"
-                    size={20}
-                    color={palette.primary}
-                  />
-                </HeaderIconButton>
+                <ThemedView style={styles.headerActions}>
+                  <HeaderIconButton
+                    accessibilityRole="button"
+                    accessibilityLabel={headerActionLabel}
+                    onPress={() => openSelector(activePeriod)}
+                  >
+                    <MaterialIcons
+                      name="calendar-month"
+                      size={20}
+                      color={palette.primary}
+                    />
+                  </HeaderIconButton>
+                  <HeaderIconButton
+                    accessibilityRole="button"
+                    accessibilityLabel="Open menu"
+                    onPress={() => setMenuVisible(true)}
+                  >
+                    <MaterialIcons
+                      name="menu"
+                      size={20}
+                      color={palette.primary}
+                    />
+                  </HeaderIconButton>
+                </ThemedView>
               }
+              surface="transparent"
             />
           )
         }
@@ -651,6 +705,13 @@ export default function ReflectionsScreen() {
                         <EditorialNarrativeBlock
                           title={narrativeTitle ?? undefined}
                           text={activeReflection.narrative_text}
+                          action={
+                            <CopyIconButton
+                              payload={reflectionCopyPayload}
+                              copyLabel={`Kopieer ${activePeriod === "week" ? "week" : "maand"}reflectie`}
+                              copiedLabel={`${activePeriod === "week" ? "Week" : "Maand"}reflectie gekopieerd`}
+                            />
+                          }
                         />
                       ) : null}
 
@@ -794,72 +855,39 @@ export default function ReflectionsScreen() {
           currentRouteKey="reflections"
           onRequestClose={() => setMenuVisible(false)}
         />
-        <Modal
+        <SelectorModalShell
           visible={selectorVisible && !isProcessing}
-          animationType="slide"
-          onRequestClose={closeSelector}
+          title={selectorPeriod === "week" ? "een week" : "een maand"}
+          subtitle={
+            selectorPeriod === "week"
+              ? "Overzicht van je recente weekreflecties."
+              : "Overzicht van je recente maandreflecties."
+          }
+          onClose={closeSelector}
+          scrollableBody={selectorRows.length > 0}
+          bodyContentContainerStyle={styles.selectorList}
         >
-          <ThemedView style={styles.selectorScreen}>
-            <AppBackground tone="flat" />
-            <ThemedView
-              style={[
-                styles.selectorHeader,
-                {
-                  backgroundColor:
-                    scheme === "dark"
-                      ? "rgba(18, 17, 15, 0.96)"
-                      : "rgba(250, 249, 244, 0.94)",
-                },
-              ]}
-            >
-              <HeaderTextAction label="Sluiten" onPress={closeSelector} />
-              <HeaderTextAction
-                label={selectorPeriod === "week" ? "Toon week" : "Toon maand"}
-                onPress={() => {
-                  setActivePeriod(selectorPeriod);
-                  closeSelector();
-                }}
-              />
-            </ThemedView>
-
-            <ThemedView style={styles.selectorBody}>
-              <ThemedText type="screenTitle" style={styles.selectorTitle}>
-                {selectorPeriod === "week" ? "Kies een week" : "Kies een maand"}
-              </ThemedText>
-              <MetaText>
-                {selectorPeriod === "week"
-                  ? "Overzicht van je recente weekreflecties."
-                  : "Overzicht van je recente maandreflecties."}
-              </MetaText>
-
-              {selectorRows.length === 0 ? (
-                <StateBlock
-                  tone="empty"
-                  message={`Nog geen ${periodTypeLabel(selectorPeriod).toLowerCase()}reflecties.`}
-                  detail="Genereer eerst een reflectie om hier te kunnen kiezen."
-                />
-              ) : (
-                <ScrollView
-                  contentContainerStyle={styles.selectorList}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <ArchiveGroupedList
-                    sections={selectorSections}
-                    styleVariant="compact"
-                    hasMore={selectorHasMore}
-                    loadingMore={loadingMorePeriod === selectorPeriod}
-                    loadMoreLabel={
-                      selectorPeriod === "week"
-                        ? "Meer weken laden"
-                        : "Meer maanden laden"
-                    }
-                    onLoadMore={() => void loadMoreSelector()}
-                  />
-                </ScrollView>
-              )}
-            </ThemedView>
-          </ThemedView>
-        </Modal>
+          {selectorRows.length === 0 ? (
+            <StateBlock
+              tone="empty"
+              message={`Nog geen ${periodTypeLabel(selectorPeriod).toLowerCase()}reflecties.`}
+              detail="Genereer eerst een reflectie om hier te kunnen kiezen."
+            />
+          ) : (
+            <ArchiveGroupedList
+              sections={selectorSections}
+              styleVariant="compact"
+              hasMore={selectorHasMore}
+              loadingMore={loadingMorePeriod === selectorPeriod}
+              loadMoreLabel={
+                selectorPeriod === "week"
+                  ? "Meer weken laden"
+                  : "Meer maanden laden"
+              }
+              onLoadMore={() => void loadMoreSelector()}
+            />
+          )}
+        </SelectorModalShell>
       </ScreenContainer>
       <ProcessingScreen visible={isProcessing} variant="reflection-generate" />
     </>
@@ -869,6 +897,27 @@ export default function ReflectionsScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
+  },
+  brandLockup: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing.xs,
+  },
+  brandPrimary: {
+    fontSize: 24,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+  },
+  brandSecondary: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "400",
+    letterSpacing: -0.4,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   periodSwitch: {
     marginTop: spacing.sm,
@@ -943,33 +992,6 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     letterSpacing: -0.2,
     fontWeight: "400",
-  },
-  selectorScreen: {
-    flex: 1,
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-    overflow: "hidden",
-  },
-  selectorHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: -spacing.xl,
-    marginHorizontal: -spacing.lg,
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  selectorBody: {
-    flex: 1,
-    gap: spacing.md,
-  },
-  selectorTitle: {
-    fontSize: 34,
-    lineHeight: 38,
-    letterSpacing: -0.6,
   },
   selectorList: {
     paddingBottom: spacing.xl,

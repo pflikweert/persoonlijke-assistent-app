@@ -10,14 +10,8 @@ type RawEntryRow = Pick<
   Tables<"entries_raw">,
   "id" | "captured_at" | "journal_date" | "source_type"
 >;
-type NormalizedEntryRow = Pick<
-  Tables<"entries_normalized">,
-  "raw_entry_id" | "body"
->;
-type DayRow = Pick<
-  Tables<"day_journals">,
-  "journal_date" | "summary" | "narrative_text"
->;
+type NormalizedEntryRow = Pick<Tables<"entries_normalized">, "raw_entry_id" | "body">;
+type DayRow = Pick<Tables<"day_journals">, "journal_date" | "summary" | "narrative_text">;
 type ReflectionRow = Pick<
   Tables<"period_reflections">,
   | "period_type"
@@ -54,10 +48,41 @@ type ExportSnapshot = {
   monthReflections: ExportReflection[];
 };
 
+export type DateScope =
+  | { kind: "all" }
+  | { kind: "day"; date: string }
+  | { kind: "week"; startDate: string; endDate: string; label: string }
+  | { kind: "month"; startDate: string; endDate: string; label: string }
+  | { kind: "range"; startDate: string; endDate: string };
+
+export const ALL_DATE_SCOPE: DateScope = { kind: "all" };
+
+export type SelectableDay = {
+  date: string;
+  label: string;
+  snippet: string;
+};
+
+export type SelectablePeriod = {
+  id: string;
+  label: string;
+  subtitle: string;
+  startDate: string;
+  endDate: string;
+};
+
+export type ArchiveExportPreview = {
+  scope: DateScope;
+  hasContent: boolean;
+  isSparse: boolean;
+  days: number;
+  entries: number;
+  weekReflections: number;
+  monthReflections: number;
+};
+
 export type ArchiveExportResult =
-  | {
-      status: "empty";
-    }
+  | { status: "empty" }
   | {
       status: "saved";
       fileName: string;
@@ -103,123 +128,218 @@ function sourceLabel(sourceType: "text" | "audio"): string {
   return sourceType === "audio" ? "spraak" : "tekst";
 }
 
-function escapeHeader(value: string): string {
-  return value.replace(/\n+/g, " ").trim();
+function parseUtcDate(value: string): Date | null {
+  const parsed = new Date(`${value}T12:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function describeDay(date: string): string {
+  const parsed = parseUtcDate(date);
+  if (!parsed) {
+    return date;
+  }
+  return parsed.toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function shortMonthLabel(date: string): string {
+  const parsed = parseUtcDate(date);
+  if (!parsed) {
+    return date.slice(0, 7);
+  }
+  const month = parsed.toLocaleDateString("nl-NL", {
+    month: "long",
+    timeZone: "UTC",
+  });
+  return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${parsed.getUTCFullYear()}`;
+}
+
+function getIsoWeekStart(date: string): string {
+  const parsed = parseUtcDate(date);
+  if (!parsed) {
+    return date;
+  }
+  const day = parsed.getUTCDay() || 7;
+  parsed.setUTCDate(parsed.getUTCDate() - (day - 1));
+  return toDateLabel(parsed);
+}
+
+function getIsoWeekEnd(weekStart: string): string {
+  const parsed = parseUtcDate(weekStart);
+  if (!parsed) {
+    return weekStart;
+  }
+  parsed.setUTCDate(parsed.getUTCDate() + 6);
+  return toDateLabel(parsed);
+}
+
+function getMonthBounds(date: string): { startDate: string; endDate: string } {
+  const parsed = parseUtcDate(date);
+  if (!parsed) {
+    return { startDate: date.slice(0, 7) + "-01", endDate: date.slice(0, 7) + "-31" };
+  }
+  const year = parsed.getUTCFullYear();
+  const monthIndex = parsed.getUTCMonth();
+  const startDate = `${year}-${String(monthIndex + 1).padStart(2, "0")}-01`;
+  const monthEnd = new Date(Date.UTC(year, monthIndex + 1, 0, 12, 0, 0));
+  const endDate = toDateLabel(monthEnd);
+  return { startDate, endDate };
+}
+
+function normalizeBounds(startDate: string, endDate: string): { startDate: string; endDate: string } {
+  return startDate <= endDate ? { startDate, endDate } : { startDate: endDate, endDate: startDate };
+}
+
+function scopeBounds(scope: DateScope): { startDate: string | null; endDate: string | null } {
+  if (scope.kind === "all") {
+    return { startDate: null, endDate: null };
+  }
+  if (scope.kind === "day") {
+    return { startDate: scope.date, endDate: scope.date };
+  }
+  if (scope.kind === "week" || scope.kind === "month" || scope.kind === "range") {
+    return normalizeBounds(scope.startDate, scope.endDate);
+  }
+  return { startDate: null, endDate: null };
+}
+
+function inBounds(date: string | null | undefined, bounds: { startDate: string | null; endDate: string | null }): boolean {
+  if (!date) {
+    return false;
+  }
+  if (!bounds.startDate || !bounds.endDate) {
+    return true;
+  }
+  return date >= bounds.startDate && date <= bounds.endDate;
+}
+
+function overlapsBounds(start: string, end: string, bounds: { startDate: string | null; endDate: string | null }): boolean {
+  if (!bounds.startDate || !bounds.endDate) {
+    return true;
+  }
+  return start <= bounds.endDate && end >= bounds.startDate;
+}
+
+export function describeDateScope(scope: DateScope): { title: string; subtitle: string } {
+  if (scope.kind === "all") {
+    return {
+      title: "Alles bewaren",
+      subtitle: "Je bewaart alles wat je tot nu toe hebt vastgelegd.",
+    };
+  }
+  if (scope.kind === "day") {
+    return {
+      title: "Een dag",
+      subtitle: describeDay(scope.date),
+    };
+  }
+  if (scope.kind === "week" || scope.kind === "month") {
+    return {
+      title: scope.kind === "week" ? "Een week" : "Een maand",
+      subtitle: scope.label,
+    };
+  }
+
+  return {
+    title: "Een periode",
+    subtitle: `${describeDay(scope.startDate)} t/m ${describeDay(scope.endDate)}`,
+  };
 }
 
 async function fetchAllRawEntries(): Promise<RawEntryRow[]> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error(
-      "Supabase client niet beschikbaar. Controleer je env variabelen.",
-    );
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
   }
 
   const rows: RawEntryRow[] = [];
   let offset = 0;
-
   while (true) {
     const { data, error } = await supabase
       .from("entries_raw")
       .select("id, captured_at, journal_date, source_type")
       .order("captured_at", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
-
     if (error) {
       throw error;
     }
-
     const next = (data ?? []) as RawEntryRow[];
     rows.push(...next);
     if (next.length < PAGE_SIZE) {
       break;
     }
-
     offset += PAGE_SIZE;
   }
-
   return rows;
 }
 
 async function fetchAllNormalizedEntries(): Promise<NormalizedEntryRow[]> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error(
-      "Supabase client niet beschikbaar. Controleer je env variabelen.",
-    );
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
   }
 
   const rows: NormalizedEntryRow[] = [];
   let offset = 0;
-
   while (true) {
     const { data, error } = await supabase
       .from("entries_normalized")
       .select("raw_entry_id, body")
       .order("created_at", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
-
     if (error) {
       throw error;
     }
-
     const next = (data ?? []) as NormalizedEntryRow[];
     rows.push(...next);
     if (next.length < PAGE_SIZE) {
       break;
     }
-
     offset += PAGE_SIZE;
   }
-
   return rows;
 }
 
 async function fetchAllDayJournals(): Promise<DayRow[]> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error(
-      "Supabase client niet beschikbaar. Controleer je env variabelen.",
-    );
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
   }
 
   const rows: DayRow[] = [];
   let offset = 0;
-
   while (true) {
     const { data, error } = await supabase
       .from("day_journals")
       .select("journal_date, summary, narrative_text")
       .order("journal_date", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
-
     if (error) {
       throw error;
     }
-
     const next = (data ?? []) as DayRow[];
     rows.push(...next);
     if (next.length < PAGE_SIZE) {
       break;
     }
-
     offset += PAGE_SIZE;
   }
-
   return rows;
 }
 
 async function fetchAllReflections(): Promise<ExportReflection[]> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error(
-      "Supabase client niet beschikbaar. Controleer je env variabelen.",
-    );
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
   }
 
   const rows: ExportReflection[] = [];
   let offset = 0;
-
   while (true) {
     const { data, error } = await supabase
       .from("period_reflections")
@@ -228,7 +348,6 @@ async function fetchAllReflections(): Promise<ExportReflection[]> {
       )
       .order("period_start", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
-
     if (error) {
       throw error;
     }
@@ -254,10 +373,8 @@ async function fetchAllReflections(): Promise<ExportReflection[]> {
     if (next.length < PAGE_SIZE) {
       break;
     }
-
     offset += PAGE_SIZE;
   }
-
   return rows;
 }
 
@@ -266,7 +383,9 @@ function buildSnapshot(input: {
   normalizedEntries: NormalizedEntryRow[];
   days: DayRow[];
   reflections: ExportReflection[];
+  scope: DateScope;
 }): ExportSnapshot {
+  const bounds = scopeBounds(input.scope);
   const normalizedByRawEntry = new Map<string, string>(
     input.normalizedEntries.map((row) => [row.raw_entry_id, row.body]),
   );
@@ -275,6 +394,15 @@ function buildSnapshot(input: {
     .map((raw) => {
       const body = normalizedByRawEntry.get(raw.id);
       if (!body || body.trim().length === 0) {
+        return null;
+      }
+
+      const capturedDate = raw.captured_at.slice(0, 10);
+      const include = raw.journal_date
+        ? inBounds(raw.journal_date, bounds)
+        : inBounds(capturedDate, bounds);
+
+      if (!include) {
         return null;
       }
 
@@ -287,29 +415,24 @@ function buildSnapshot(input: {
     })
     .filter((entry): entry is ExportEntry => entry !== null);
 
-  const daysByDate = new Set(input.days.map((day) => day.journal_date));
-  const looseEntries = entries.filter(
-    (entry) => !entry.journalDate || !daysByDate.has(entry.journalDate),
+  const days = input.days.filter((day) => inBounds(day.journal_date, bounds));
+  const daysByDate = new Set(days.map((day) => day.journal_date));
+  const looseEntries = entries.filter((entry) => !entry.journalDate || !daysByDate.has(entry.journalDate));
+
+  const reflections = input.reflections.filter((reflection) =>
+    overlapsBounds(reflection.periodStart, reflection.periodEnd, bounds),
   );
 
   return {
-    days: input.days,
+    days,
     entries,
     looseEntries,
-    weekReflections: input.reflections.filter(
-      (item) => item.periodType === "week",
-    ),
-    monthReflections: input.reflections.filter(
-      (item) => item.periodType === "month",
-    ),
+    weekReflections: reflections.filter((item) => item.periodType === "week"),
+    monthReflections: reflections.filter((item) => item.periodType === "month"),
   };
 }
 
-function pushReflectionSection(
-  lines: string[],
-  title: string,
-  items: ExportReflection[],
-): void {
+function pushReflectionSection(lines: string[], title: string, items: ExportReflection[]): void {
   lines.push(`## ${title}`);
   lines.push("");
 
@@ -347,13 +470,16 @@ function pushReflectionSection(
   }
 }
 
-function buildArchiveMarkdown(snapshot: ExportSnapshot): string {
+function buildArchiveMarkdown(snapshot: ExportSnapshot, scope: DateScope): string {
   const exportDate = toDateLabel(new Date());
   const lines: string[] = [];
+  const description = describeDateScope(scope);
 
   lines.push("# Mijn archief");
   lines.push("");
   lines.push(`Exportdatum: ${exportDate}`);
+  lines.push(`Selectie: ${description.title}`);
+  lines.push(`Periode: ${description.subtitle}`);
   lines.push(`Dagen: ${snapshot.days.length}`);
   lines.push(`Entries: ${snapshot.entries.length}`);
   lines.push(`Weekreflecties: ${snapshot.weekReflections.length}`);
@@ -371,7 +497,6 @@ function buildArchiveMarkdown(snapshot: ExportSnapshot): string {
       if (!entry.journalDate) {
         continue;
       }
-
       const bucket = entriesByDate.get(entry.journalDate) ?? [];
       bucket.push(entry);
       entriesByDate.set(entry.journalDate, bucket);
@@ -413,14 +538,10 @@ function buildArchiveMarkdown(snapshot: ExportSnapshot): string {
     lines.push("");
   } else {
     for (const [index, entry] of snapshot.looseEntries.entries()) {
-      const dateHeader = entry.journalDate
-        ? `${entry.journalDate} (zonder dagblok)`
-        : "zonder dagdatum";
+      const dateHeader = entry.journalDate ? `${entry.journalDate} (zonder dagblok)` : "zonder dagdatum";
       lines.push(`### Losse entry ${index + 1} · ${dateHeader}`);
       lines.push("");
-      lines.push(
-        `Vastgelegd: ${toDateTimeLabel(entry.capturedAt)} · ${sourceLabel(entry.sourceType)}`,
-      );
+      lines.push(`Vastgelegd: ${toDateTimeLabel(entry.capturedAt)} · ${sourceLabel(entry.sourceType)}`);
       lines.push("");
       lines.push(entry.body.trim());
       lines.push("");
@@ -433,8 +554,21 @@ function buildArchiveMarkdown(snapshot: ExportSnapshot): string {
   return lines.join("\n").trimEnd() + "\n";
 }
 
-function buildExportFileName(): string {
-  return `dagboek-archief-${toDateLabel(new Date())}.md`;
+function buildExportFileName(scope: DateScope): string {
+  const today = toDateLabel(new Date());
+  if (scope.kind === "all") {
+    return `dagboek-archief-alles-${today}.md`;
+  }
+  if (scope.kind === "day") {
+    return `dagboek-archief-dag-${scope.date}.md`;
+  }
+  if (scope.kind === "week") {
+    return `dagboek-archief-week-${scope.startDate}-tm-${scope.endDate}.md`;
+  }
+  if (scope.kind === "month") {
+    return `dagboek-archief-maand-${scope.startDate.slice(0, 7)}.md`;
+  }
+  return `dagboek-archief-periode-${scope.startDate}-tm-${scope.endDate}.md`;
 }
 
 function triggerWebDownload(fileName: string, contents: string): void {
@@ -465,10 +599,7 @@ function saveToLocalDocument(fileName: string, contents: string): string {
   return file.uri;
 }
 
-export async function downloadUserArchive(): Promise<ArchiveExportResult> {
-  const flowId = createClientFlowId("export-archive");
-  await ensureAuthenticatedUserSession({ flowId, source: "export-archive" });
-
+async function loadSnapshotForScope(scope: DateScope): Promise<ExportSnapshot> {
   const [rawEntries, normalizedEntries, days, reflections] = await Promise.all([
     fetchAllRawEntries(),
     fetchAllNormalizedEntries(),
@@ -476,13 +607,102 @@ export async function downloadUserArchive(): Promise<ArchiveExportResult> {
     fetchAllReflections(),
   ]);
 
-  const snapshot = buildSnapshot({
+  return buildSnapshot({
     rawEntries,
     normalizedEntries,
     days,
     reflections,
+    scope,
   });
+}
 
+export async function previewArchiveScope(scope: DateScope): Promise<ArchiveExportPreview> {
+  const flowId = createClientFlowId("export-archive");
+  await ensureAuthenticatedUserSession({ flowId, source: "export-archive" });
+
+  const snapshot = await loadSnapshotForScope(scope);
+  const hasContent =
+    snapshot.days.length > 0 ||
+    snapshot.entries.length > 0 ||
+    snapshot.weekReflections.length > 0 ||
+    snapshot.monthReflections.length > 0;
+
+  return {
+    scope,
+    hasContent,
+    isSparse: snapshot.days.length === 0 && snapshot.entries.length <= 2,
+    days: snapshot.days.length,
+    entries: snapshot.entries.length,
+    weekReflections: snapshot.weekReflections.length,
+    monthReflections: snapshot.monthReflections.length,
+  };
+}
+
+export async function listSelectableDays(): Promise<SelectableDay[]> {
+  const flowId = createClientFlowId("export-archive");
+  await ensureAuthenticatedUserSession({ flowId, source: "export-archive" });
+
+  const days = await fetchAllDayJournals();
+  return days
+    .slice()
+    .reverse()
+    .map((day) => ({
+      date: day.journal_date,
+      label: describeDay(day.journal_date),
+      snippet:
+        day.summary?.trim() || day.narrative_text?.trim().slice(0, 120) || "Nog geen samenvatting voor deze dag.",
+    }));
+}
+
+export async function listSelectableWeeks(): Promise<SelectablePeriod[]> {
+  const days = await listSelectableDays();
+  const grouped = new Map<string, SelectablePeriod>();
+
+  for (const day of days) {
+    const weekStart = getIsoWeekStart(day.date);
+    const weekEnd = getIsoWeekEnd(weekStart);
+    if (grouped.has(weekStart)) {
+      continue;
+    }
+    grouped.set(weekStart, {
+      id: weekStart,
+      label: `${describeDay(weekStart)} t/m ${describeDay(weekEnd)}`,
+      subtitle: `${weekStart} t/m ${weekEnd}`,
+      startDate: weekStart,
+      endDate: weekEnd,
+    });
+  }
+
+  return Array.from(grouped.values()).sort((a, b) => (a.startDate < b.startDate ? 1 : -1));
+}
+
+export async function listSelectableMonths(): Promise<SelectablePeriod[]> {
+  const days = await listSelectableDays();
+  const grouped = new Map<string, SelectablePeriod>();
+
+  for (const day of days) {
+    const monthKey = day.date.slice(0, 7);
+    if (grouped.has(monthKey)) {
+      continue;
+    }
+    const bounds = getMonthBounds(day.date);
+    grouped.set(monthKey, {
+      id: monthKey,
+      label: shortMonthLabel(day.date),
+      subtitle: `${bounds.startDate} t/m ${bounds.endDate}`,
+      startDate: bounds.startDate,
+      endDate: bounds.endDate,
+    });
+  }
+
+  return Array.from(grouped.values()).sort((a, b) => (a.startDate < b.startDate ? 1 : -1));
+}
+
+export async function downloadUserArchive(scope: DateScope = ALL_DATE_SCOPE): Promise<ArchiveExportResult> {
+  const flowId = createClientFlowId("export-archive");
+  await ensureAuthenticatedUserSession({ flowId, source: "export-archive" });
+
+  const snapshot = await loadSnapshotForScope(scope);
   const hasContent =
     snapshot.days.length > 0 ||
     snapshot.entries.length > 0 ||
@@ -490,13 +710,11 @@ export async function downloadUserArchive(): Promise<ArchiveExportResult> {
     snapshot.monthReflections.length > 0;
 
   if (!hasContent) {
-    return {
-      status: "empty",
-    };
+    return { status: "empty" };
   }
 
-  const fileName = buildExportFileName();
-  const contents = buildArchiveMarkdown(snapshot);
+  const fileName = buildExportFileName(scope);
+  const contents = buildArchiveMarkdown(snapshot, scope);
   let fileUri: string | undefined;
 
   if (Platform.OS === "web") {

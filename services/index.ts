@@ -1,6 +1,7 @@
 // Service layer for API/data orchestration lives here.
 export { getCurrentSession, onAuthStateChange, sendMagicLink, signOutUser } from './auth';
 export {
+  createEntryAudioSignedUrl,
   deleteNormalizedEntryById,
   fetchDayJournalByDate,
   fetchNormalizedEntryById,
@@ -34,7 +35,19 @@ export {
 } from './processing-recovery';
 export { isChatGptMarkdownImportEnabled } from './feature-flags';
 export { classifyUnknownError, FunctionFlowError } from './function-error';
-export { downloadUserArchive } from './export';
+export {
+  ALL_DATE_SCOPE,
+  describeDateScope,
+  downloadUserArchive,
+  listSelectableDays,
+  listSelectableMonths,
+  listSelectableWeeks,
+  previewArchiveScope,
+  type ArchiveExportPreview,
+  type DateScope,
+  type SelectableDay,
+  type SelectablePeriod,
+} from './export';
 export { resetAllUserData } from './reset';
 export {
   fetchAdminRegenerationJobStatus,
@@ -60,13 +73,15 @@ export {
   updateAdminAiQualityStudioDraftVersion,
 } from './ai-quality-studio';
 export {
+  dismissImportBackgroundTaskNotice,
+  fetchImportBackgroundTaskById,
+  fetchLatestImportBackgroundTask,
   importChatGptMarkdownPreview,
   invokeMarkdownImport,
   invokeChatGptMarkdownImport,
   listPreviewDays,
   parseChatGptMarkdownFile,
   parseImportMarkdownFile,
-  refreshImportedChatGptDerivedContent,
   summarizePreviewDate,
 } from './import';
 export {
@@ -78,3 +93,12 @@ export {
   generateReflection,
   parseJsonStringArray,
 } from './reflections';
+export {
+  getSessionSelectedDayDate,
+  setSessionSelectedDayDate,
+} from './day-selection-session';
+export {
+  fetchUserAudioPreferences,
+  updateUserAudioPreferences,
+  type UserAudioPreferences,
+} from './user-preferences';

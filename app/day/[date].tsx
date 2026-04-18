@@ -32,7 +32,6 @@ import { ThemedView } from "@/components/themed-view";
 import { AppBackground } from "@/components/ui/app-background";
 import { CopyIconButton } from "@/components/ui/copy-icon-button";
 import {
-  DetailScreenHero,
   SectionLabelRow,
 } from "@/components/ui/detail-screen-primitives";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
@@ -47,6 +46,7 @@ import {
   isValidJournalDate,
   parseJournalSections,
   regenerateDayJournalByDate,
+  setSessionSelectedDayDate,
   updateNormalizedEntryById,
 } from "@/services";
 import { buildDayJournalCopyPayload } from "@/src/lib/copy-payloads";
@@ -206,6 +206,13 @@ export default function DayDetailScreen() {
     const value = resolveRouteDate(processed);
     return value === "1" || value.toLowerCase() === "true";
   }, [processed]);
+
+  useEffect(() => {
+    if (!isValidJournalDate(journalDate)) {
+      return;
+    }
+    setSessionSelectedDayDate(journalDate);
+  }, [journalDate]);
 
   type DayEntry = Awaited<
     ReturnType<typeof fetchNormalizedEntriesByDate>
@@ -534,38 +541,31 @@ export default function DayDetailScreen() {
     }
   }
 
-  function handleBackPress() {
-    const fromCapture = showProcessedBanner || previousTabName === "capture";
-    if (fromCapture) {
-      router.replace("/(tabs)");
-      return;
-    }
-
-    const cameFromValidMain =
-      previousTabName === "index" ||
-      previousTabName === "days" ||
-      previousTabName === "reflections";
-    if (cameFromValidMain && router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace("/(tabs)");
-  }
-
   return (
     <ThemedView style={styles.screen}>
       <AppBackground tone="flat" />
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         leftAction={
-          <HeaderIconButton onPress={handleBackPress}>
-            <MaterialIcons
-              name="arrow-back"
-              size={18}
-              color={palette.mutedSoft}
-            />
-          </HeaderIconButton>
+          <ThemedView style={styles.headerTitleStack}>
+            <ThemedView style={styles.headerTitleLockup}>
+              <ThemedText type="sectionTitle" style={styles.headerTitlePrimary}>
+                {dayHeading}
+              </ThemedText>
+              <ThemedText
+                type="sectionTitle"
+                style={[styles.headerTitleSecondary, { color: palette.mutedSoft }]}
+              >
+                dag
+              </ThemedText>
+            </ThemedView>
+            <ThemedText
+              type="bodySecondary"
+              style={[styles.headerSubtitle, { color: palette.muted }]}
+            >
+              {readableDate}
+            </ThemedText>
+          </ThemedView>
         }
         rightAction={
           <ThemedView style={styles.headerActions}>
@@ -589,11 +589,7 @@ export default function DayDetailScreen() {
             </HeaderIconButton>
           </ThemedView>
         }
-      />
-      <DetailScreenHero
-        title={dayHeading}
-        subtitle={readableDate}
-        style={styles.detailHero}
+        surface="transparent"
       />
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
         {showProcessedBanner ? (
@@ -722,11 +718,11 @@ export default function DayDetailScreen() {
 
         <TextEditorModal
           visible={Boolean(editingEntry)}
-          title="Moment bewerken"
+          title="Moment aanpassen"
           value={editBody}
           placeholder="Wat houdt je bezig?"
-          submitLabel="Moment bewaren"
-          processingLabel="Moment bewaren..."
+          submitLabel="Wijziging bewaren"
+          processingLabel="Wijziging bewaren..."
           processing={mutationBusy}
           onCancel={closeEditModal}
           onChange={setEditBody}
@@ -755,7 +751,7 @@ export default function DayDetailScreen() {
                 onPress={() =>
                   router.push({
                     pathname: "/(tabs)/reflections",
-                    params: { period: "week" },
+                    params: { period: "week", anchorDate: journalDate },
                   })
                 }
               />
@@ -767,7 +763,7 @@ export default function DayDetailScreen() {
                 onPress={() =>
                   router.push({
                     pathname: "/(tabs)/reflections",
-                    params: { period: "month" },
+                    params: { period: "month", anchorDate: journalDate },
                   })
                 }
               />
@@ -790,7 +786,10 @@ export default function DayDetailScreen() {
             return;
           }
           if (key === "reflections") {
-            router.replace("/reflections");
+            router.replace({
+              pathname: "/reflections",
+              params: { period: "week", anchorDate: journalDate },
+            });
             return;
           }
           router.replace("/(tabs)");
@@ -800,6 +799,9 @@ export default function DayDetailScreen() {
       <FullscreenMenuOverlay
         visible={menuVisible}
         currentRouteKey={menuRouteKey}
+        routeParamsByKey={{
+          reflections: { period: "week", anchorDate: journalDate },
+        }}
         onRequestClose={() => setMenuVisible(false)}
       />
     </ThemedView>
@@ -821,10 +823,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
   },
-  detailHero: {
-    paddingHorizontal: spacing.page,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
+  headerTitleStack: {
+    gap: spacing.xs,
+  },
+  headerTitleLockup: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: spacing.xs,
+  },
+  headerTitlePrimary: {
+    fontSize: 24,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+  },
+  headerTitleSecondary: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "400",
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    lineHeight: 22,
   },
   processedRow: {
     flexDirection: "row",

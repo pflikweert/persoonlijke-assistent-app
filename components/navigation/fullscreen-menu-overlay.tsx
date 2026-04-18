@@ -76,10 +76,12 @@ const MENU_ENTRIES: MenuEntry[] = [
 export function FullscreenMenuOverlay({
   visible,
   currentRouteKey,
+  routeParamsByKey,
   onRequestClose,
 }: {
   visible: boolean;
   currentRouteKey: MainMenuRouteKey;
+  routeParamsByKey?: Partial<Record<MainMenuRouteKey, Record<string, string>>>;
   onRequestClose: () => void;
 }) {
   const scheme = useColorScheme() ?? "light";
@@ -127,6 +129,12 @@ export function FullscreenMenuOverlay({
     onRequestClose();
 
     if (entry.key === currentRouteKey) {
+      return;
+    }
+
+    const params = routeParamsByKey?.[entry.key as MainMenuRouteKey];
+    if (params) {
+      router.push({ pathname: entry.route as never, params: params as never });
       return;
     }
 

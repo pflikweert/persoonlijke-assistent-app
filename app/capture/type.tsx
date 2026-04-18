@@ -6,7 +6,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  TextInput,
   useColorScheme,
   View,
 } from "react-native";
@@ -14,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
+import { TextEntryEditor } from "@/components/feedback/text-entry-editor";
 import {
   CaptureBackHeader,
   CaptureErrorStack,
@@ -43,7 +43,7 @@ import type {
   DerivedRefreshResult,
   ProcessEntryResult,
 } from "@/services/entries";
-import { colorTokens, spacing, typography } from "@/theme";
+import { spacing } from "@/theme";
 
 import {
   buildCaptureParams,
@@ -57,7 +57,6 @@ const RECOVERY_RECHECK_MS = 3_000;
 
 export default function CaptureTypeScreen() {
   const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
   const insets = useSafeAreaInsets();
   const { date } = useLocalSearchParams<CaptureRouteParams>();
   const journalDate = resolveCaptureJournalDate(date);
@@ -472,8 +471,7 @@ export default function CaptureTypeScreen() {
             </CaptureErrorStack>
           ) : null}
 
-          <TextInput
-            multiline
+          <TextEntryEditor
             autoFocus
             editable={
               !submitting &&
@@ -484,9 +482,8 @@ export default function CaptureTypeScreen() {
             value={rawText}
             onChangeText={setRawText}
             placeholder="Wat wil je vastleggen?"
-            placeholderTextColor={palette.mutedSoft}
-            textAlignVertical="top"
-            style={[styles.input, { color: palette.text }]}
+            variant="capture"
+            style={styles.input}
           />
         </View>
 
@@ -566,12 +563,6 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    marginTop: spacing.xl,
-    fontSize: typography.roles.sectionTitle.size,
-    lineHeight: typography.roles.sectionTitle.lineHeight,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    minHeight: 0,
   },
   footer: {
     paddingTop: spacing.lg,

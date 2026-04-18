@@ -1,9 +1,10 @@
 import * as DocumentPicker from "expo-document-picker";
 import { readAsStringAsync } from "expo-file-system/legacy";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 
+import { BackgroundTaskStatusCard } from "@/components/feedback/background-task-status-card";
 import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
@@ -23,15 +24,17 @@ import {
 } from "@/components/ui/settings-screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
+    fetchImportBackgroundTaskById,
+    fetchLatestImportBackgroundTask,
     invokeMarkdownImport,
     isChatGptMarkdownImportEnabled,
     parseImportMarkdownFile,
-    refreshImportedChatGptDerivedContent,
     summarizePreviewDate,
 } from "@/services";
 import type {
-    ChatGptImportRefreshProgress,
     ImportedMarkdownPreview,
+    ImportBackgroundTask,
+  MarkdownImportMode,
 } from "@/services/import";
 import { colorTokens, radius, spacing } from "@/theme";
 
@@ -43,14 +46,7 @@ type ResultStatus = {
   detail?: string;
 };
 
-type ImportProgressState = {
-  status: ChatGptImportRefreshProgress;
-  current: number;
-  total: number;
-  detailCurrent?: number | null;
-  detailTotal?: number | null;
-  detailLabel?: string | null;
-};
+const BACKGROUND_POLL_MS = 3500;
 
 async function readImportedMarkdown(uri: string): Promise<string> {
   if (
@@ -93,84 +89,6 @@ function formatEntryLabel(preview: ImportedMarkdownPreview | null): string {
   return preview.format === "journal_archive" ? "Entries" : "Berichten";
 }
 
-function formatProgressLabel(
-  progress: ImportProgressState | null,
-): string | null {
-  if (!progress) {
-    return null;
-  }
-
-  const first = progress.status.charAt(0).toUpperCase();
-  return `${first}${progress.status.slice(1)}`;
-}
-
-function toDisplayProgress(
-  status: ChatGptImportRefreshProgress,
-  current?: number,
-  total?: number,
-): ImportProgressState {
-  const safeTotal =
-    typeof total === "number" && Number.isFinite(total) && total > 0
-      ? Math.max(1, Math.round(total))
-      : null;
-  const safeCurrent =
-    safeTotal && typeof current === "number" && Number.isFinite(current)
-      ? Math.min(safeTotal, Math.max(0, Math.round(current)))
-      : null;
-
-  if (status === "markdownbestand analyseren") {
-    return { status, current: 1, total: 5 };
-  }
-
-  if (status === "importbestand voorbereiden") {
-    return { status, current: 2, total: 5 };
-  }
-
-  if (status === "entries importeren") {
-    return { status, current: 3, total: 5 };
-  }
-
-  if (status === "dagboekdagen opbouwen") {
-    return {
-      status,
-      current: 4,
-      total: 5,
-      detailCurrent: safeCurrent,
-      detailTotal: safeTotal,
-      detailLabel:
-        safeCurrent !== null && safeTotal !== null
-          ? `Dag ${safeCurrent} van ${safeTotal}`
-          : null,
-    };
-  }
-
-  if (status === "weekreflecties verversen") {
-    return {
-      status,
-      current: 5,
-      total: 5,
-      detailCurrent: safeCurrent,
-      detailTotal: safeTotal,
-      detailLabel:
-        safeCurrent !== null && safeTotal !== null
-          ? `Weekreflectie ${safeCurrent} van ${safeTotal}`
-          : null,
-    };
-  }
-
-  return {
-    status,
-    current: 5,
-    total: 5,
-    detailCurrent: safeCurrent,
-    detailTotal: safeTotal,
-    detailLabel:
-      safeCurrent !== null && safeTotal !== null
-        ? `Maandreflectie ${safeCurrent} van ${safeTotal}`
-        : null,
-  };
-}
-
 export default function SettingsImportScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
@@ -180,7 +98,9 @@ export default function SettingsImportScreen() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [replaceConfirmVisible, setReplaceConfirmVisible] = useState(false);
   const [resultStatus, setResultStatus] = useState<ResultStatus | null>(null);
-  const [progressState, setProgressState] = useState<ImportProgressState | null>(null);
+  const [backgroundTask, setBackgroundTask] = useState<ImportBackgroundTask | null>(null);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const importEnabled = isChatGptMarkdownImportEnabled();
 
@@ -201,8 +121,88 @@ export default function SettingsImportScreen() {
     setPreview(null);
     setResultStatus(null);
     setReplaceConfirmVisible(false);
-    setProgressState(null);
   }
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!importEnabled) {
+        return;
+      }
+
+      try {
+        const latest = await fetchLatestImportBackgroundTask();
+        if (!cancelled) {
+          setBackgroundTask(latest);
+          if (latest?.status === "queued" || latest?.status === "running") {
+            setCurrentTaskId(latest.id);
+          }
+        }
+      } catch {
+        // Stil falen; importflow blijft bruikbaar.
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [importEnabled]);
+
+  useEffect(() => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+
+    if (!currentTaskId) {
+      return;
+    }
+
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const nextTask = await fetchImportBackgroundTaskById(currentTaskId);
+        if (cancelled || !nextTask) {
+          return;
+        }
+
+        setBackgroundTask(nextTask);
+        if (nextTask.status !== "queued" && nextTask.status !== "running") {
+          setCurrentTaskId(null);
+          setFlowState(nextTask.status === "failed" ? "error" : "success");
+          setResultStatus({
+            tone: nextTask.status === "failed" ? "error" : nextTask.warningCount > 0 ? "info" : "success",
+            message:
+              nextTask.status === "failed"
+                ? "Import afgerond met aandachtspunten."
+                : "Import en naverwerking zijn afgerond.",
+            detail:
+              nextTask.errorMessage ??
+              (nextTask.warningCount > 0
+                ? `${nextTask.warningCount} stap(pen) vroegen aandacht.`
+                : undefined),
+          });
+        }
+      } catch {
+        // Stil falen; volgende poll pakt het op.
+      }
+    };
+
+    void poll();
+    pollTimerRef.current = setInterval(() => {
+      void poll();
+    }, BACKGROUND_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [currentTaskId]);
 
   async function handlePickFile() {
     if (!importEnabled) {
@@ -259,7 +259,7 @@ export default function SettingsImportScreen() {
     }
   }
 
-  async function runImport(replaceExisting = false) {
+  async function runImport(importMode?: MarkdownImportMode) {
     if (!preview || !importEnabled) {
       return;
     }
@@ -267,44 +267,27 @@ export default function SettingsImportScreen() {
     setFlowState("loading");
     setResultStatus(null);
     setReplaceConfirmVisible(false);
-    setProgressState(toDisplayProgress("markdownbestand analyseren"));
 
     try {
-      setProgressState(toDisplayProgress("importbestand voorbereiden"));
-      setProgressState(toDisplayProgress("entries importeren"));
-
       const result = await invokeMarkdownImport({
         preview,
-        replaceExisting,
+        importMode,
       });
 
       if (result.requiresReplaceConfirmation) {
         setReplaceConfirmVisible(true);
         setFlowState("selected");
-        setProgressState(null);
         return;
       }
 
-      const refreshWarnings = await refreshImportedChatGptDerivedContent({
-        impactedDates: result.impactedDates,
-        onProgress: (nextStatus, current, total) => {
-          setProgressState(toDisplayProgress(nextStatus, current, total));
-        },
-      });
-
-      const tone = refreshWarnings.length > 0 ? "info" : "success";
+      setBackgroundTask(result.backgroundTask);
+      setCurrentTaskId(result.backgroundTask.id);
+      setFlowState("selected");
       setResultStatus({
-        tone,
-        message:
-          result.removedCount > 0
-            ? `Import vervangen. ${result.importedCount} entries toegevoegd.`
-            : `Importeren gelukt. ${result.importedCount} entries toegevoegd.`,
-        detail:
-          refreshWarnings.length > 0
-            ? `${refreshWarnings.length} aandachtspunt(en) bij naverwerking.`
-            : undefined,
+        tone: "info",
+        message: "Import gestart. We werken je dagboek op de achtergrond bij.",
+        detail: "Je kunt dit scherm sluiten. De voortgang blijft zichtbaar op Vandaag.",
       });
-      setFlowState("success");
     } catch (error) {
       setResultStatus({
         tone: "error",
@@ -312,8 +295,6 @@ export default function SettingsImportScreen() {
         detail: error instanceof Error ? error.message : "Onbekende fout.",
       });
       setFlowState("error");
-    } finally {
-      setProgressState(null);
     }
   }
 
@@ -446,13 +427,34 @@ export default function SettingsImportScreen() {
             <ThemedView style={styles.actions}>
               <PrimaryButton
                 label="Importeer bestanden"
-                onPress={() => void runImport(false)}
+                onPress={() => void runImport()}
               />
               <SecondaryButton
                 label="Andere bestanden kiezen"
                 onPress={resetToIdle}
               />
             </ThemedView>
+          </SurfaceSection>
+        ) : null}
+
+        {importEnabled &&
+        backgroundTask &&
+        (backgroundTask.status === "queued" ||
+          backgroundTask.status === "running") ? (
+          <SurfaceSection
+            title="Import voortgang"
+            subtitle="Deze verwerking draait door op de achtergrond."
+          >
+            <BackgroundTaskStatusCard
+              title="Import loopt door"
+              body="Je dagboek wordt bijgewerkt. Je kunt naar Vandaag gaan terwijl dit doorgaat."
+              status={backgroundTask.status}
+              progressCurrent={backgroundTask.progressCurrent}
+              progressTotal={backgroundTask.progressTotal}
+              detailLabel={backgroundTask.detailLabel}
+              actionLabel="Ga naar Vandaag"
+              onPressAction={() => router.replace("/(tabs)")}
+            />
           </SurfaceSection>
         ) : null}
 
@@ -531,26 +533,34 @@ export default function SettingsImportScreen() {
 
         <ConfirmDialog
           visible={importEnabled && replaceConfirmVisible}
-          title="Eerdere import vervangen?"
-          message="Voor deze importbron is al een import gedaan. Wil je die vervangen?"
-          cancelLabel="Annuleren"
-          confirmLabel="Vervangen"
+          title="Import aanpassen"
+          message="Voor deze importbron is al een import gedaan. Kies hoe je wilt doorgaan."
+          detail="Vervangen en toevoegen verwerkt alleen nieuwe of aangepaste momenten. Alleen de modus Alles vervangen zal ontbrekende oude items verwijderen."
+          actions={[
+            {
+              key: "cancel",
+              label: "Annuleren",
+              onPress: () => setReplaceConfirmVisible(false),
+            },
+            {
+              key: "merge_changed",
+              label: "Vervangen en toevoegen",
+              onPress: () => void runImport("merge_changed"),
+            },
+            {
+              key: "replace_all",
+              label: "Alles vervangen",
+              tone: "destructive",
+              onPress: () => void runImport("replace_all"),
+            },
+          ]}
           processing={flowState === "loading"}
           onCancel={() => setReplaceConfirmVisible(false)}
-          onConfirm={() => void runImport(true)}
+          onConfirm={() => void runImport("replace_all")}
         />
       </ScreenContainer>
 
-      <ProcessingScreen
-        visible={importEnabled && flowState === "loading"}
-        variant="chatgpt-import"
-        statusOverride={formatProgressLabel(progressState)}
-        progressCurrent={progressState?.current ?? null}
-        progressTotal={progressState?.total ?? null}
-        detailProgressCurrent={progressState?.detailCurrent ?? null}
-        detailProgressTotal={progressState?.detailTotal ?? null}
-        detailProgressLabel={progressState?.detailLabel ?? null}
-      />
+      <ProcessingScreen visible={importEnabled && flowState === "loading"} variant="chatgpt-import" />
     </>
   );
 }

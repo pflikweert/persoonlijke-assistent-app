@@ -4,10 +4,13 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
+  type StyleProp,
   type ScrollViewProps,
   type TextInputProps,
+  type TextStyle,
   type ViewStyle,
 } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -198,6 +201,26 @@ function getStateToneColors(
   };
 }
 
+function toneIconName(tone: StateTone): keyof typeof MaterialIcons.glyphMap {
+  if (tone === "error") {
+    return "error-outline";
+  }
+  if (tone === "warning") {
+    return "warning-amber";
+  }
+  if (tone === "success") {
+    return "check-circle-outline";
+  }
+  if (tone === "loading") {
+    return "hourglass-empty";
+  }
+  if (tone === "empty") {
+    return "inbox";
+  }
+
+  return "info-outline";
+}
+
 export function SurfaceSection({
   title,
   subtitle,
@@ -240,11 +263,17 @@ export function PrimaryButton({
   onPress,
   disabled = false,
   className,
+  style,
+  labelStyle,
+  icon,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   className?: string;
+  style?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
+  icon?: keyof typeof MaterialIcons.glyphMap;
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
@@ -258,12 +287,22 @@ export function PrimaryButton({
         styles.primaryButton,
         { backgroundColor: palette.primaryStrong },
         disabled && styles.buttonDisabled,
+        style,
       ]}
     >
+      {icon ? (
+        <MaterialIcons
+          name={icon}
+          size={16}
+          color={palette.primaryOn}
+          style={styles.primaryButtonIcon}
+        />
+      ) : null}
       <ThemedText
         type="ctaLabel"
         lightColor={palette.primaryOn}
         darkColor={palette.primaryOn}
+        style={labelStyle}
       >
         {label}
       </ThemedText>
@@ -276,14 +315,21 @@ export function SecondaryButton({
   onPress,
   disabled = false,
   className,
+  icon,
+  size = "compact",
+  tone = "default",
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   className?: string;
+  icon?: keyof typeof MaterialIcons.glyphMap;
+  size?: "compact" | "cta";
+  tone?: "default" | "destructive";
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const textColor = tone === "destructive" ? palette.destructiveSoftText : palette.text;
 
   return (
     <Pressable
@@ -292,11 +338,27 @@ export function SecondaryButton({
       className={className}
       style={[
         styles.secondaryButton,
-        { backgroundColor: palette.surfaceLowest },
+        size === "cta" ? styles.secondaryButtonCta : null,
+        {
+          backgroundColor:
+            tone === "destructive"
+              ? palette.destructiveSoftBackground
+              : palette.surfaceLowest,
+        },
         disabled && styles.buttonDisabled,
       ]}
     >
-      <ThemedText type="defaultSemiBold">{label}</ThemedText>
+      {icon ? (
+        <MaterialIcons
+          name={icon}
+          size={16}
+          color={textColor}
+          style={styles.secondaryButtonIcon}
+        />
+      ) : null}
+      <ThemedText type="defaultSemiBold" style={{ color: textColor }}>
+        {label}
+      </ThemedText>
     </Pressable>
   );
 }
@@ -396,46 +458,88 @@ export function StateBlock({
       className={className}
       style={[
         styles.stateBlock,
+        tone === "error" ? styles.stateBlockError : null,
         {
           backgroundColor: toneColors.background,
           borderColor: toneColors.border,
         },
       ]}
     >
-      {shouldShowToneLabel && label ? (
-        <ThemedText
-          type="meta"
-          lightColor={toneColors.title}
-          darkColor={toneColors.title}
-        >
-          {label}
-        </ThemedText>
+      {tone === "error" ? (
+        <ThemedView
+          style={[
+            styles.stateAccent,
+            { backgroundColor: `${toneColors.title}B3` },
+          ]}
+        />
       ) : null}
-      <ThemedText
-        type="defaultSemiBold"
-        lightColor={toneColors.body}
-        darkColor={toneColors.body}
-      >
-        {message}
-      </ThemedText>
-      {detail ? (
-        <ThemedText
-          type="bodySecondary"
-          lightColor={toneColors.body}
-          darkColor={toneColors.body}
-        >
-          {detail}
-        </ThemedText>
-      ) : null}
-      {meta ? (
-        <ThemedText
-          type="caption"
-          lightColor={toneColors.meta}
-          darkColor={toneColors.meta}
-        >
-          {meta}
-        </ThemedText>
-      ) : null}
+
+      <ThemedView style={styles.stateContent}>
+        {tone === "error" ? (
+          <>
+            <ThemedView style={styles.stateErrorIconRow}>
+              <MaterialIcons
+                name={toneIconName(tone)}
+                size={16}
+                color={toneColors.title}
+                style={styles.stateToneIcon}
+              />
+            </ThemedView>
+            <ThemedText
+              type="defaultSemiBold"
+              lightColor={toneColors.body}
+              darkColor={toneColors.body}
+            >
+              {message}
+            </ThemedText>
+          </>
+        ) : (
+          <ThemedView style={styles.stateHeaderRow}>
+            <MaterialIcons
+              name={toneIconName(tone)}
+              size={16}
+              color={toneColors.title}
+              style={styles.stateToneIcon}
+            />
+            <ThemedView style={styles.stateTextStack}>
+              {shouldShowToneLabel && label ? (
+                <ThemedText
+                  type="meta"
+                  lightColor={toneColors.title}
+                  darkColor={toneColors.title}
+                >
+                  {label}
+                </ThemedText>
+              ) : null}
+              <ThemedText
+                type="defaultSemiBold"
+                lightColor={toneColors.body}
+                darkColor={toneColors.body}
+              >
+                {message}
+              </ThemedText>
+            </ThemedView>
+          </ThemedView>
+        )}
+        {detail ? (
+          <ThemedText
+            type="bodySecondary"
+            lightColor={toneColors.body}
+            darkColor={toneColors.body}
+          >
+            {detail}
+          </ThemedText>
+        ) : null}
+        {meta ? (
+          <ThemedText
+            type="caption"
+            lightColor={toneColors.meta}
+            darkColor={toneColors.meta}
+          >
+            {meta}
+          </ThemedText>
+        ) : null}
+      </ThemedView>
     </ThemedView>
   );
 }
@@ -507,13 +611,20 @@ const styles = StyleSheet.create({
   sectionFooter: {
     marginTop: spacing.xs,
   },
+  primaryButtonIcon: {
+    marginRight: spacing.xs,
+  },
   primaryButton: {
     minHeight: sizing.ctaHeight,
     borderRadius: radius.pill,
     alignItems: "center",
+    flexDirection: "row",
     justifyContent: "center",
+    gap: spacing.xs,
     paddingHorizontal: spacing.xl,
-    ...shadows.cta,
+  },
+  secondaryButtonIcon: {
+    marginTop: 1,
   },
   secondaryButton: {
     minHeight: sizing.ctaCompactHeight,
@@ -521,6 +632,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  secondaryButtonCta: {
+    minHeight: sizing.ctaHeight,
   },
   buttonDisabled: {
     opacity: 0.55,
@@ -543,8 +659,37 @@ const styles = StyleSheet.create({
   stateBlock: {
     borderWidth: borders.subtle,
     borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    gap: spacing.inline,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: spacing.sm,
+  },
+  stateBlockError: {
+    borderWidth: 0,
+  },
+  stateAccent: {
+    width: 3,
+    borderRadius: radius.pill,
+  },
+  stateContent: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  stateHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.xs,
+  },
+  stateErrorIconRow: {
+    minHeight: 18,
+    justifyContent: "center",
+  },
+  stateTextStack: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  stateToneIcon: {
+    marginTop: 1,
   },
 });

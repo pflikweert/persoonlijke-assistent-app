@@ -5,8 +5,11 @@ import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CaptureIntro, CaptureBackHeader } from "@/components/ui/capture-screen-primitives";
-import { ThemedText } from "@/components/themed-text";
-import { ScreenContainer } from "@/components/ui/screen-primitives";
+import {
+  ScreenContainer,
+  SecondaryButton,
+  StateBlock,
+} from "@/components/ui/screen-primitives";
 import { colorTokens, spacing } from "@/theme";
 
 import {
@@ -19,9 +22,19 @@ export default function CaptureStartScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const insets = useSafeAreaInsets();
-  const { date } = useLocalSearchParams<CaptureRouteParams>();
+  const { date, validation } = useLocalSearchParams<CaptureRouteParams>();
   const journalDate = resolveCaptureJournalDate(date);
   const params = buildCaptureParams(journalDate);
+  const validationCode = Array.isArray(validation)
+    ? (validation[0] ?? "")
+    : (validation ?? "");
+
+  const validationMessage =
+    validationCode === "short"
+      ? "Opname is te kort. Neem minimaal 5 seconden op."
+      : validationCode === "no_speech"
+        ? "We hoorden nog geen duidelijke tekst. Neem opnieuw op of kies typen."
+        : null;
 
   function handleClose() {
     if (router.canGoBack()) {
@@ -44,6 +57,16 @@ export default function CaptureStartScreen() {
       <View
         style={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]}
       >
+        {validationMessage ? (
+          <View style={styles.validationBlock}>
+            <StateBlock
+              tone="error"
+              message={validationMessage}
+              detail="Kies opnieuw opnemen of typ je moment."
+            />
+          </View>
+        ) : null}
+
         <CaptureIntro title="Leg iets vast" style={styles.copyBlock} />
 
         <View style={styles.actions}>
@@ -59,21 +82,12 @@ export default function CaptureStartScreen() {
             <MaterialIcons name="mic" size={40} color={palette.primaryOn} />
           </Pressable>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Of typ je moment"
+          <SecondaryButton
+            label="Of typ je moment"
+            size="cta"
             onPress={() => router.push({ pathname: "/capture/type", params })}
-            style={styles.secondaryLink}
-          >
-            <ThemedText
-              type="bodySecondary"
-              lightColor={palette.muted}
-              darkColor={palette.muted}
-              style={styles.secondaryLinkText}
-            >
-              Of typ je moment
-            </ThemedText>
-          </Pressable>
+            className="w-full"
+          />
         </View>
       </View>
     </ScreenContainer>
@@ -87,12 +101,16 @@ const styles = StyleSheet.create({
   },
   copyBlock: {
     alignItems: "center",
+    marginTop: spacing.md,
     paddingTop: spacing.xs,
+  },
+  validationBlock: {
+    marginBottom: spacing.md,
   },
   actions: {
     marginTop: spacing.xxxl,
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.xl,
   },
   primaryMicButton: {
     width: 112,
@@ -100,14 +118,5 @@ const styles = StyleSheet.create({
     borderRadius: 56,
     alignItems: "center",
     justifyContent: "center",
-  },
-  secondaryLink: {
-    minHeight: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.sm,
-  },
-  secondaryLinkText: {
-    textAlign: "center",
   },
 });
