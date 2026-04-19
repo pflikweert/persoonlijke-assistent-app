@@ -3,6 +3,15 @@
 ## Doel
 Dit document is de enige statuswaarheid voor implementatierealiteit.
 
+## Obsidian links
+- [[open-points]]
+- [[20-planning/20-active-phase|Active phase]]
+- [[20-planning/30-now-next-later|Now / Next / Later]]
+- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
+- [[10-strategy/README|Strategy hub]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
+
 Bronnen voor deze status:
 1. bestaande projectdocs (scope/planning)
 2. actuele codebase (bewijs van implementatie)

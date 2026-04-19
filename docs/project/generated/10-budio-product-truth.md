@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-19T12:46:04.529Z
-Source Commit: af82c40
+Build Timestamp (UTC): 2026-04-19T13:05:23.760Z
+Source Commit: b3a523c
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -46,6 +46,14 @@ Regel:
 - deze lagen sturen focus en executie
 - ze vervangen niet automatisch canonieke productwaarheid
 - statusclaims blijven bewijs-gebonden in `current-status.md`
+
+### Obsidian graph hubs
+- [[10-strategy/README|Strategy hub]]
+- [[20-planning/README|Planning hub]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
+- [[current-status|Current status]]
+- [[open-points|Open points]]
 
 ## 1) Canonieke handmatige documenten (leidend)
 1. `docs/project/master-project.md`
@@ -166,6 +174,11 @@ Regels:
 - geen generieke memory-bank boom toevoegen
 - geen duplicatie van canonieke docs
 - `current-status.md` blijft de enige statuswaarheid
+
+## Obsidian graph — snelle start
+- Gebruik hubs als startpunt: [[10-strategy/README]], [[20-planning/README]], [[30-research/README]], [[40-ideas/README]].
+- Gebruik status-ankers: [[current-status]] en [[open-points]].
+- Mapstructuur alleen is niet genoeg; links tussen notities bouwen de graph-clusters.
 
 ---
 
@@ -453,6 +466,15 @@ Zolang deze lagen niet productmatig bewezen en expliciet in scope zijn, blijven 
 ## Doel
 Dit document is de enige statuswaarheid voor implementatierealiteit.
 
+## Obsidian links
+- [[open-points]]
+- [[20-planning/20-active-phase|Active phase]]
+- [[20-planning/30-now-next-later|Now / Next / Later]]
+- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
+- [[10-strategy/README|Strategy hub]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
+
 Bronnen voor deze status:
 1. bestaande projectdocs (scope/planning)
 2. actuele codebase (bewijs van implementatie)
@@ -587,6 +609,15 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 
 ## Doel
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
+
+## Obsidian links
+- [[current-status]]
+- [[20-planning/20-active-phase|Active phase]]
+- [[20-planning/30-now-next-later|Now / Next / Later]]
+- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
+- [[10-strategy/30-research-map|Research map]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
 
 ## Echt open (niet aangetroffen in code als productfeature)
 1. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
@@ -2240,6 +2271,16 @@ Fase 1.2 hardening + structurering van project operating system.
 2. Docs/planning/ideas structuur professionaliseren voor focus en automatisering.
 3. Voorbereiden op volgende fase (commerciële brug) zonder die nu al te forceren.
 
+## Obsidian links
+- [[README|Planning hub]]
+- [[10-roadmap-phases|Roadmap phases]]
+- [[30-now-next-later|Now / Next / Later]]
+- [[40-deviations-and-decisions|Deviations and decisions]]
+- [[../current-status|Current status]]
+- [[../open-points|Open points]]
+- [[../10-strategy/README|Strategy hub]]
+- [[../40-ideas/README|Ideas workspace]]
+
 ## In focus (Now)
 - Stabiliteit, UX-consistentie, outputkwaliteit en releasebewijs.
 - Duidelijke planninglaag (`roadmap`, `active`, `now-next-later`, `deviations`).
@@ -2265,6 +2306,18 @@ Fase 1.2 hardening + structurering van project operating system.
 
 ## Doel
 Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadministratie.
+
+## Obsidian links
+- [[README|Planning hub]]
+- [[20-active-phase|Active phase]]
+- [[40-deviations-and-decisions|Deviations and decisions]]
+- [[../current-status|Current status]]
+- [[../open-points|Open points]]
+- [[../40-ideas/README|Ideas workspace]]
+- [[../40-ideas/10-product/30-conversation-aware-ingest-and-interpretation]]
+- [[../40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation]]
+- [[../40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening]]
+- [[../40-ideas/40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export]]
 
 ## Now
 - Hardeningkwaliteit en evidence-first releaseproofing.
@@ -2299,6 +2352,14 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 
 ## Doel
 Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit traceerbaar blijft.
+
+## Obsidian links
+- [[README|Planning hub]]
+- [[20-active-phase|Active phase]]
+- [[30-now-next-later|Now / Next / Later]]
+- [[../current-status|Current status]]
+- [[../open-points|Open points]]
+- [[../10-strategy/README|Strategy hub]]
 
 ## Gebruik
 - Elke structurele koerswijziging krijgt hier een korte entry.

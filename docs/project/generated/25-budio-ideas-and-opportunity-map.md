@@ -2,8 +2,8 @@
 
 # Budio Ideas and Opportunity Map
 
-Build Timestamp (UTC): 2026-04-19T12:46:04.529Z
-Source Commit: af82c40
+Build Timestamp (UTC): 2026-04-19T13:05:23.760Z
+Source Commit: b3a523c
 
 Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -59,6 +59,21 @@ Belangrijk:
 - Actieve focus: `docs/project/20-planning/20-active-phase.md`.
 - Open gaps/risico’s: `docs/project/open-points.md`.
 - Codewaarheid: `docs/project/current-status.md`.
+
+## Obsidian graph hubs
+- [[../README|Project hub]]
+- [[../10-strategy/README|Strategy hub]]
+- [[../20-planning/README|Planning hub]]
+- [[../30-research/README|Research hub]]
+- [[00-ideas-inbox|Ideas inbox]]
+
+## Belangrijke idea nodes
+- [[10-product/20-budio-brainstorm-workspace-for-builders]]
+- [[10-product/30-conversation-aware-ingest-and-interpretation]]
+- [[30-ai-and-aiqs/40-aiqs-modular-flow-control-plane]]
+- [[30-ai-and-aiqs/50-source-aware-routing-and-evaluation]]
+- [[40-platform-and-architecture/50-security-posture-and-continuous-hardening]]
+- [[40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export]]
 
 ## Template (kopiëren per idee)
 

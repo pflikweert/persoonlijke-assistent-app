@@ -16,6 +16,14 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 4. **Control plane verdieping**
    - AIQS doorontwikkelen als governance-laag
 
+## Obsidian links
+- [[README|Strategy hub]]
+- [[10-long-term-strategy|Lange termijn strategie]]
+- [[30-research-map|Research map]]
+- [[../30-research/20-budio-12-maandenpropositie-en-mvp-route|Research: 12 maanden propositie en MVP-route]]
+- [[../20-planning/30-now-next-later|Now / Next / Later]]
+- [[../20-planning/40-deviations-and-decisions|Deviations and decisions]]
+
 ## Werkwijze
 - Werk kanban-achtig met `Now / Next / Later`.
 - Herprioritering is toegestaan, mits vastgelegd in planning/deviation docs.

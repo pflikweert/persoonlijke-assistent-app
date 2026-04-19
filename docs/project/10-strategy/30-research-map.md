@@ -3,6 +3,14 @@
 ## Doel
 Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 
+## Obsidian links
+- [[README|Strategy hub]]
+- [[../30-research/README|Research hub]]
+- [[../20-planning/README|Planning hub]]
+- [[../20-planning/20-active-phase|Active phase]]
+- [[../20-planning/30-now-next-later|Now / Next / Later]]
+- [[../40-ideas/README|Ideas workspace]]
+
 ## Lezen in volgorde
 1. `docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md`
 2. `docs/project/30-research/20-budio-12-maandenpropositie-en-mvp-route.md`

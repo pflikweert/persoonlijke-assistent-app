@@ -2,8 +2,8 @@
 
 # Budio Strategy and Research
 
-Build Timestamp (UTC): 2026-04-19T12:46:04.529Z
-Source Commit: af82c40
+Build Timestamp (UTC): 2026-04-19T13:05:23.760Z
+Source Commit: b3a523c
 
 Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -37,6 +37,14 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 2. Dagboeklaag + reflectielaag blijven de basis van vertrouwen en continuïteit.
 3. Commerciële groei vraagt een brug van capture naar hergebruikbare output.
 4. AIQS ontwikkelt door als governance/control plane, niet als eindgebruikerschat.
+
+## Obsidian links
+- [[README|Strategy hub]]
+- [[20-12-month-plan|12-maanden plan]]
+- [[30-research-map|Research map]]
+- [[../30-research/README|Research hub]]
+- [[../20-planning/20-active-phase|Active phase]]
+- [[../20-planning/30-now-next-later|Now / Next / Later]]
 
 ## Strategische spanningen om bewust te managen
 - Rustige MVP-ervaring vs uitbreidingen naar output/workflows.
@@ -74,6 +82,14 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 4. **Control plane verdieping**
    - AIQS doorontwikkelen als governance-laag
 
+## Obsidian links
+- [[README|Strategy hub]]
+- [[10-long-term-strategy|Lange termijn strategie]]
+- [[30-research-map|Research map]]
+- [[../30-research/20-budio-12-maandenpropositie-en-mvp-route|Research: 12 maanden propositie en MVP-route]]
+- [[../20-planning/30-now-next-later|Now / Next / Later]]
+- [[../20-planning/40-deviations-and-decisions|Deviations and decisions]]
+
 ## Werkwijze
 - Werk kanban-achtig met `Now / Next / Later`.
 - Herprioritering is toegestaan, mits vastgelegd in planning/deviation docs.
@@ -89,6 +105,14 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 
 ## Doel
 Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
+
+## Obsidian links
+- [[README|Strategy hub]]
+- [[../30-research/README|Research hub]]
+- [[../20-planning/README|Planning hub]]
+- [[../20-planning/20-active-phase|Active phase]]
+- [[../20-planning/30-now-next-later|Now / Next / Later]]
+- [[../40-ideas/README|Ideas workspace]]
 
 ## Lezen in volgorde
 1. `docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md`

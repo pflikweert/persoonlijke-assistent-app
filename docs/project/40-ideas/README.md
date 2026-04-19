@@ -32,6 +32,21 @@ Belangrijk:
 - Open gaps/risico’s: `docs/project/open-points.md`.
 - Codewaarheid: `docs/project/current-status.md`.
 
+## Obsidian graph hubs
+- [[../README|Project hub]]
+- [[../10-strategy/README|Strategy hub]]
+- [[../20-planning/README|Planning hub]]
+- [[../30-research/README|Research hub]]
+- [[00-ideas-inbox|Ideas inbox]]
+
+## Belangrijke idea nodes
+- [[10-product/20-budio-brainstorm-workspace-for-builders]]
+- [[10-product/30-conversation-aware-ingest-and-interpretation]]
+- [[30-ai-and-aiqs/40-aiqs-modular-flow-control-plane]]
+- [[30-ai-and-aiqs/50-source-aware-routing-and-evaluation]]
+- [[40-platform-and-architecture/50-security-posture-and-continuous-hardening]]
+- [[40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export]]
+
 ## Template (kopiëren per idee)
 
 ```md

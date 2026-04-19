@@ -3,6 +3,14 @@
 ## Doel
 Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit traceerbaar blijft.
 
+## Obsidian links
+- [[README|Planning hub]]
+- [[20-active-phase|Active phase]]
+- [[30-now-next-later|Now / Next / Later]]
+- [[../current-status|Current status]]
+- [[../open-points|Open points]]
+- [[../10-strategy/README|Strategy hub]]
+
 ## Gebruik
 - Elke structurele koerswijziging krijgt hier een korte entry.
 - Kleine lage-impact afwijkingen mogen direct, maar worden alsnog achteraf gelogd.

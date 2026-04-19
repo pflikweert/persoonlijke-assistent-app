@@ -14,6 +14,14 @@ Regel:
 - ze vervangen niet automatisch canonieke productwaarheid
 - statusclaims blijven bewijs-gebonden in `current-status.md`
 
+### Obsidian graph hubs
+- [[10-strategy/README|Strategy hub]]
+- [[20-planning/README|Planning hub]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
+- [[current-status|Current status]]
+- [[open-points|Open points]]
+
 ## 1) Canonieke handmatige documenten (leidend)
 1. `docs/project/master-project.md`
 2. `docs/project/product-vision-mvp.md`
@@ -133,3 +141,8 @@ Regels:
 - geen generieke memory-bank boom toevoegen
 - geen duplicatie van canonieke docs
 - `current-status.md` blijft de enige statuswaarheid
+
+## Obsidian graph — snelle start
+- Gebruik hubs als startpunt: [[10-strategy/README]], [[20-planning/README]], [[30-research/README]], [[40-ideas/README]].
+- Gebruik status-ankers: [[current-status]] en [[open-points]].
+- Mapstructuur alleen is niet genoeg; links tussen notities bouwen de graph-clusters.

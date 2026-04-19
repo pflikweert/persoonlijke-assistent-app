@@ -3,6 +3,15 @@
 ## Doel
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
+## Obsidian links
+- [[current-status]]
+- [[20-planning/20-active-phase|Active phase]]
+- [[20-planning/30-now-next-later|Now / Next / Later]]
+- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
+- [[10-strategy/30-research-map|Research map]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
+
 ## Echt open (niet aangetroffen in code als productfeature)
 1. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
 

@@ -3,6 +3,18 @@
 ## Doel
 Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadministratie.
 
+## Obsidian links
+- [[README|Planning hub]]
+- [[20-active-phase|Active phase]]
+- [[40-deviations-and-decisions|Deviations and decisions]]
+- [[../current-status|Current status]]
+- [[../open-points|Open points]]
+- [[../40-ideas/README|Ideas workspace]]
+- [[../40-ideas/10-product/30-conversation-aware-ingest-and-interpretation]]
+- [[../40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation]]
+- [[../40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening]]
+- [[../40-ideas/40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export]]
+
 ## Now
 - Hardeningkwaliteit en evidence-first releaseproofing.
 - Project operating system structuur in `docs/project/**` consolideren.

@@ -8,6 +8,16 @@ Fase 1.2 hardening + structurering van project operating system.
 2. Docs/planning/ideas structuur professionaliseren voor focus en automatisering.
 3. Voorbereiden op volgende fase (commerciële brug) zonder die nu al te forceren.
 
+## Obsidian links
+- [[README|Planning hub]]
+- [[10-roadmap-phases|Roadmap phases]]
+- [[30-now-next-later|Now / Next / Later]]
+- [[40-deviations-and-decisions|Deviations and decisions]]
+- [[../current-status|Current status]]
+- [[../open-points|Open points]]
+- [[../10-strategy/README|Strategy hub]]
+- [[../40-ideas/README|Ideas workspace]]
+
 ## In focus (Now)
 - Stabiliteit, UX-consistentie, outputkwaliteit en releasebewijs.
 - Duidelijke planninglaag (`roadmap`, `active`, `now-next-later`, `deviations`).

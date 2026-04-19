@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-19T12:46:04.529Z
-Source Commit: af82c40
+Build Timestamp (UTC): 2026-04-19T13:05:23.760Z
+Source Commit: b3a523c
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -39,6 +39,14 @@ Regel:
 - deze lagen sturen focus en executie
 - ze vervangen niet automatisch canonieke productwaarheid
 - statusclaims blijven bewijs-gebonden in `current-status.md`
+
+### Obsidian graph hubs
+- [[10-strategy/README|Strategy hub]]
+- [[20-planning/README|Planning hub]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
+- [[current-status|Current status]]
+- [[open-points|Open points]]
 
 ## 1) Canonieke handmatige documenten (leidend)
 1. `docs/project/master-project.md`
@@ -159,6 +167,11 @@ Regels:
 - geen generieke memory-bank boom toevoegen
 - geen duplicatie van canonieke docs
 - `current-status.md` blijft de enige statuswaarheid
+
+## Obsidian graph — snelle start
+- Gebruik hubs als startpunt: [[10-strategy/README]], [[20-planning/README]], [[30-research/README]], [[40-ideas/README]].
+- Gebruik status-ankers: [[current-status]] en [[open-points]].
+- Mapstructuur alleen is niet genoeg; links tussen notities bouwen de graph-clusters.
 
 ---
 
@@ -446,6 +459,15 @@ Zolang deze lagen niet productmatig bewezen en expliciet in scope zijn, blijven 
 ## Doel
 Dit document is de enige statuswaarheid voor implementatierealiteit.
 
+## Obsidian links
+- [[open-points]]
+- [[20-planning/20-active-phase|Active phase]]
+- [[20-planning/30-now-next-later|Now / Next / Later]]
+- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
+- [[10-strategy/README|Strategy hub]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
+
 Bronnen voor deze status:
 1. bestaande projectdocs (scope/planning)
 2. actuele codebase (bewijs van implementatie)
@@ -580,6 +602,15 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 
 ## Doel
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
+
+## Obsidian links
+- [[current-status]]
+- [[20-planning/20-active-phase|Active phase]]
+- [[20-planning/30-now-next-later|Now / Next / Later]]
+- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
+- [[10-strategy/30-research-map|Research map]]
+- [[30-research/README|Research hub]]
+- [[40-ideas/README|Ideas workspace]]
 
 ## Echt open (niet aangetroffen in code als productfeature)
 1. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
