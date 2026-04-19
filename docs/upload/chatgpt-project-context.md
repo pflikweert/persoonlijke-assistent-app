@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-19T11:34:36.447Z
-Source Commit: d4ac7cd
+Build Timestamp (UTC): 2026-04-19T11:47:20.423Z
+Source Commit: 22c9aaf
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

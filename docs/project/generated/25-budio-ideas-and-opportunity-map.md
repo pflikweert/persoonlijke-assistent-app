@@ -2,8 +2,8 @@
 
 # Budio Ideas and Opportunity Map
 
-Build Timestamp (UTC): 2026-04-19T11:34:36.447Z
-Source Commit: d4ac7cd
+Build Timestamp (UTC): 2026-04-19T11:47:20.423Z
+Source Commit: 22c9aaf
 
 Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -119,6 +119,8 @@ Lage-frictie plek om nieuwe ideeën direct vast te leggen zonder contextverlies.
 - [2026-04-19] Budio brainstorm/workspace module voor builders/kleine teams als mogelijk productspoor.
 - [2026-04-19] Conversation-aware ingest en interpretation layer (WhatsApp/iMessage/Telegram/mail/transcript) — gepromoveerd naar `10-product/30-conversation-aware-ingest-and-interpretation.md`.
 - [2026-04-19] Source-aware AIQS routing en evaluation (source type als first-class metadata) — gepromoveerd naar `30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`.
+- [2026-04-19] Security posture + continuous hardening (RLS, secrets, pentest, AI-pentest alternatief voor Aikido) — gepromoveerd naar `40-platform-and-architecture/50-security-posture-and-continuous-hardening.md`.
+- [2026-04-19] Trust & security charter voor gebruikers (web + app transparantie "Nico-proof") — gepromoveerd naar `10-product/40-trust-and-security-charter.md`.
 
 ---
 

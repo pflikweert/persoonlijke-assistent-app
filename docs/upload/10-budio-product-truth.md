@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-19T11:34:36.447Z
-Source Commit: d4ac7cd
+Build Timestamp (UTC): 2026-04-19T11:47:20.423Z
+Source Commit: 22c9aaf
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -2278,6 +2278,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - AI governance/operations bundle mogelijk compacter maken met focus op execution-samenvatting.
 - Eerste expliciete commerciële brug (capture -> hergebruikbare output) als afgebakende pilot verkennen.
 - Conversation-aware ingest (copy/paste fase 1) en source-aware AIQS-evaluatie verkennen als afgebakend spoor (zie `40-ideas/10-product/30-conversation-aware-ingest-and-interpretation.md` en `40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`).
+- Security posture baseline + trust charter als gecombineerd spoor verkennen (zie `40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md` en `40-ideas/10-product/40-trust-and-security-charter.md`). Voor een dagboekapp is vertrouwen productwaarde, geen achtergrond-polish.
 
 ## Later
 - Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.

@@ -3,15 +3,13 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet } from "react-native";
 
-import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { DestructiveConfirmSheetContent } from "@/components/feedback/destructive-confirm-sheet";
+import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
+import { ScreenContainer } from "@/components/ui/screen-primitives";
 import { SettingsScreenHeader } from "@/components/ui/settings-screen-primitives";
-import {
-    ScreenContainer,
-} from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
     classifyUnknownError,
@@ -22,7 +20,13 @@ import {
 import { colorTokens, radius, spacing } from "@/theme";
 
 type SettingsRoute = {
-  key: "export" | "import" | "audio" | "regeneration" | "ai-quality-studio";
+  key:
+    | "export"
+    | "import"
+    | "audio"
+    | "obsidian"
+    | "regeneration"
+    | "ai-quality-studio";
   label: string;
   description: string;
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -30,6 +34,7 @@ type SettingsRoute = {
     | "/settings-export"
     | "/settings-import"
     | "/settings-audio"
+    | "/settings-obsidian"
     | "/settings-regeneration"
     | "/settings-ai-quality-studio";
 };
@@ -85,6 +90,14 @@ const ADMIN_AI_QUALITY_ROUTE: SettingsRoute = {
   route: "/settings-ai-quality-studio",
 };
 
+const ADMIN_OBSIDIAN_ROUTE: SettingsRoute = {
+  key: "obsidian",
+  label: "Obsidian integratie",
+  description: "Stel standaard vault en notitie in voor Obsidian.",
+  icon: "folder",
+  route: "/settings-obsidian",
+};
+
 const DELETE_ROW: RowItem = {
   key: "delete-all",
   label: "Verwijder alles",
@@ -120,7 +133,9 @@ function SettingsRow({
           name={item.icon}
           size={18}
           style={styles.menuRowIcon}
-          color={item.destructive ? palette.destructiveSoftText : palette.primary}
+          color={
+            item.destructive ? palette.destructiveSoftText : palette.primary
+          }
         />
 
         <ThemedView style={styles.menuTextWrap}>
@@ -197,10 +212,7 @@ export default function SettingsScreen() {
     };
   }, []);
 
-  const adminRoutes = useMemo(
-    () => [ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE],
-    [],
-  );
+  const adminRoutes = useMemo(() => [ADMIN_ROUTE, ADMIN_OBSIDIAN_ROUTE, ADMIN_AI_QUALITY_ROUTE], []);
 
   const deleteSheetVisible = deleteSheetState !== "closed";
   const canCloseDeleteSheet =
@@ -258,7 +270,7 @@ export default function SettingsScreen() {
               <SettingsRow
                 key={item.key}
                 item={item}
-                onPress={() => router.push(item.route)}
+                onPress={() => router.push(item.route as any)}
               />
             ))}
           </ThemedView>
@@ -284,7 +296,7 @@ export default function SettingsScreen() {
                 <SettingsRow
                   key={item.key}
                   item={item}
-                  onPress={() => router.push(item.route)}
+                  onPress={() => router.push(item.route as any)}
                 />
               ))}
             </ThemedView>

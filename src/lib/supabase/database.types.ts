@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.4"
-  }
   public: {
     Tables: {
       admin_regeneration_job_steps: {
@@ -185,6 +180,305 @@ export type Database = {
           },
         ]
       }
+      ai_live_generation_log: {
+        Row: {
+          created_at: string
+          flow_id: string
+          id: string
+          metadata_json: Json
+          model: string
+          request_id: string
+          source_record_id: string
+          source_type: Database["public"]["Enums"]["ai_test_case_source_type"]
+          target_record_id: string
+          target_table: string
+          task_id: string
+          task_version_id: string
+        }
+        Insert: {
+          created_at?: string
+          flow_id: string
+          id?: string
+          metadata_json?: Json
+          model: string
+          request_id: string
+          source_record_id: string
+          source_type: Database["public"]["Enums"]["ai_test_case_source_type"]
+          target_record_id: string
+          target_table: string
+          task_id: string
+          task_version_id: string
+        }
+        Update: {
+          created_at?: string
+          flow_id?: string
+          id?: string
+          metadata_json?: Json
+          model?: string
+          request_id?: string
+          source_record_id?: string
+          source_type?: Database["public"]["Enums"]["ai_test_case_source_type"]
+          target_record_id?: string
+          target_table?: string
+          task_id?: string
+          task_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_live_generation_log_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_live_generation_log_task_version_id_fkey"
+            columns: ["task_version_id"]
+            isOneToOne: false
+            referencedRelation: "ai_task_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_task_versions: {
+        Row: {
+          became_live_at: string | null
+          changelog: string | null
+          config_json: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          locked_at: string | null
+          max_items: number | null
+          min_items: number | null
+          model: string
+          output_schema_json: Json
+          prompt_template: string
+          status: Database["public"]["Enums"]["ai_task_version_status"]
+          system_instructions: string
+          task_id: string
+          updated_at: string
+          version_number: number
+        }
+        Insert: {
+          became_live_at?: string | null
+          changelog?: string | null
+          config_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          max_items?: number | null
+          min_items?: number | null
+          model: string
+          output_schema_json?: Json
+          prompt_template: string
+          status?: Database["public"]["Enums"]["ai_task_version_status"]
+          system_instructions?: string
+          task_id: string
+          updated_at?: string
+          version_number: number
+        }
+        Update: {
+          became_live_at?: string | null
+          changelog?: string | null
+          config_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          max_items?: number | null
+          min_items?: number | null
+          model?: string
+          output_schema_json?: Json
+          prompt_template?: string
+          status?: Database["public"]["Enums"]["ai_task_version_status"]
+          system_instructions?: string
+          task_id?: string
+          updated_at?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_task_versions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          input_type: Database["public"]["Enums"]["ai_task_input_type"]
+          is_active: boolean
+          key: string
+          label: string
+          output_type: Database["public"]["Enums"]["ai_task_output_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          input_type: Database["public"]["Enums"]["ai_task_input_type"]
+          is_active?: boolean
+          key: string
+          label: string
+          output_type?: Database["public"]["Enums"]["ai_task_output_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          input_type?: Database["public"]["Enums"]["ai_task_input_type"]
+          is_active?: boolean
+          key?: string
+          label?: string
+          output_type?: Database["public"]["Enums"]["ai_task_output_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_test_cases: {
+        Row: {
+          created_at: string
+          id: string
+          is_golden: boolean
+          label: string
+          source_record_id: string
+          source_type: Database["public"]["Enums"]["ai_test_case_source_type"]
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_golden?: boolean
+          label: string
+          source_record_id: string
+          source_type: Database["public"]["Enums"]["ai_test_case_source_type"]
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_golden?: boolean
+          label?: string
+          source_record_id?: string
+          source_type?: Database["public"]["Enums"]["ai_test_case_source_type"]
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_test_cases_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_test_runs: {
+        Row: {
+          completion_tokens: number | null
+          config_snapshot_json: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          input_snapshot_json: Json
+          latency_ms: number | null
+          model_snapshot: string
+          output_json: Json | null
+          output_schema_snapshot_json: Json
+          output_text: string | null
+          prompt_snapshot: string
+          prompt_tokens: number | null
+          reviewer_label: Database["public"]["Enums"]["ai_review_label"] | null
+          reviewer_notes: string | null
+          status: Database["public"]["Enums"]["ai_test_run_status"]
+          system_instructions_snapshot: string
+          task_id: string
+          task_version_id: string
+          test_case_id: string
+          total_tokens: number | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          config_snapshot_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_snapshot_json?: Json
+          latency_ms?: number | null
+          model_snapshot: string
+          output_json?: Json | null
+          output_schema_snapshot_json?: Json
+          output_text?: string | null
+          prompt_snapshot: string
+          prompt_tokens?: number | null
+          reviewer_label?: Database["public"]["Enums"]["ai_review_label"] | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["ai_test_run_status"]
+          system_instructions_snapshot?: string
+          task_id: string
+          task_version_id: string
+          test_case_id: string
+          total_tokens?: number | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          config_snapshot_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_snapshot_json?: Json
+          latency_ms?: number | null
+          model_snapshot?: string
+          output_json?: Json | null
+          output_schema_snapshot_json?: Json
+          output_text?: string | null
+          prompt_snapshot?: string
+          prompt_tokens?: number | null
+          reviewer_label?: Database["public"]["Enums"]["ai_review_label"] | null
+          reviewer_notes?: string | null
+          status?: Database["public"]["Enums"]["ai_test_run_status"]
+          system_instructions_snapshot?: string
+          task_id?: string
+          task_version_id?: string
+          test_case_id?: string
+          total_tokens?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_test_runs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "ai_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_test_runs_task_version_id_fkey"
+            columns: ["task_version_id"]
+            isOneToOne: false
+            referencedRelation: "ai_task_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_test_runs_test_case_id_fkey"
+            columns: ["test_case_id"]
+            isOneToOne: false
+            referencedRelation: "ai_test_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       day_journals: {
         Row: {
           generation_meta: Json
@@ -275,9 +569,9 @@ export type Database = {
           id: string
           import_external_message_id: string | null
           import_file_name: string | null
-          journal_date: string | null
           import_source_ref: string | null
           import_source_type: string | null
+          journal_date: string | null
           raw_text: string | null
           source_type: string
           transcript_text: string | null
@@ -295,9 +589,9 @@ export type Database = {
           id?: string
           import_external_message_id?: string | null
           import_file_name?: string | null
-          journal_date?: string | null
           import_source_ref?: string | null
           import_source_type?: string | null
+          journal_date?: string | null
           raw_text?: string | null
           source_type: string
           transcript_text?: string | null
@@ -315,9 +609,9 @@ export type Database = {
           id?: string
           import_external_message_id?: string | null
           import_file_name?: string | null
-          journal_date?: string | null
           import_source_ref?: string | null
           import_source_type?: string | null
+          journal_date?: string | null
           raw_text?: string | null
           source_type?: string
           transcript_text?: string | null
@@ -370,18 +664,96 @@ export type Database = {
         }
         Relationships: []
       }
+      user_background_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          detail_current: number | null
+          detail_label: string | null
+          detail_total: number | null
+          error_message: string | null
+          id: string
+          last_update_at: string
+          notice_dismissed_at: string | null
+          notice_seen_at: string | null
+          payload: Json
+          phase: string
+          progress_current: number
+          progress_total: number
+          source_ref: string | null
+          started_at: string | null
+          status: string
+          task_type: string
+          updated_at: string
+          user_id: string
+          warning_count: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          detail_current?: number | null
+          detail_label?: string | null
+          detail_total?: number | null
+          error_message?: string | null
+          id?: string
+          last_update_at?: string
+          notice_dismissed_at?: string | null
+          notice_seen_at?: string | null
+          payload?: Json
+          phase?: string
+          progress_current?: number
+          progress_total?: number
+          source_ref?: string | null
+          started_at?: string | null
+          status?: string
+          task_type: string
+          updated_at?: string
+          user_id: string
+          warning_count?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          detail_current?: number | null
+          detail_label?: string | null
+          detail_total?: number | null
+          error_message?: string | null
+          id?: string
+          last_update_at?: string
+          notice_dismissed_at?: string | null
+          notice_seen_at?: string | null
+          payload?: Json
+          phase?: string
+          progress_current?: number
+          progress_total?: number
+          source_ref?: string | null
+          started_at?: string | null
+          status?: string
+          task_type?: string
+          updated_at?: string
+          user_id?: string
+          warning_count?: number
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
+          obsidian_default_note: string | null
+          obsidian_vault_path: string | null
           save_audio_recordings: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
+          obsidian_default_note?: string | null
+          obsidian_vault_path?: string | null
           save_audio_recordings?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
+          obsidian_default_note?: string | null
+          obsidian_vault_path?: string | null
           save_audio_recordings?: boolean
           updated_at?: string
           user_id?: string
@@ -393,10 +765,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_get_openai_debug_storage_settings: {
+        Args: never
+        Returns: {
+          flow_overrides_json: Json
+          id: number
+          master_enabled: boolean
+          master_expires_at: string
+          updated_at: string
+        }[]
+      }
+      admin_upsert_openai_debug_storage_settings: {
+        Args: {
+          p_flow_overrides_json: Json
+          p_master_enabled: boolean
+          p_master_expires_at: string
+          p_updated_by: string
+        }
+        Returns: {
+          flow_overrides_json: Json
+          id: number
+          master_enabled: boolean
+          master_expires_at: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      ai_review_label: "better" | "equal" | "worse" | "fail"
+      ai_task_input_type: "entry" | "day" | "week" | "month"
+      ai_task_output_type: "text" | "json" | "text_list"
+      ai_task_version_status: "draft" | "testing" | "live" | "archived"
+      ai_test_case_source_type: "entry" | "day" | "week" | "month"
+      ai_test_run_status: "queued" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -523,6 +924,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      ai_review_label: ["better", "equal", "worse", "fail"],
+      ai_task_input_type: ["entry", "day", "week", "month"],
+      ai_task_output_type: ["text", "json", "text_list"],
+      ai_task_version_status: ["draft", "testing", "live", "archived"],
+      ai_test_case_source_type: ["entry", "day", "week", "month"],
+      ai_test_run_status: ["queued", "completed", "failed"],
+    },
   },
 } as const
+
