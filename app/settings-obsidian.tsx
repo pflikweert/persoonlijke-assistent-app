@@ -21,6 +21,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
     classifyUnknownError,
     fetchUserObsidianPreferences,
+    isObsidianSettingsEnabled,
     updateUserObsidianPreferences,
 } from "@/services";
 import { colorTokens, radius, spacing } from "@/theme";
@@ -28,6 +29,7 @@ import { colorTokens, radius, spacing } from "@/theme";
 export default function SettingsObsidianScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const obsidianEnabled = isObsidianSettingsEnabled();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -86,6 +88,40 @@ export default function SettingsObsidianScreen() {
   }
 
   const isBusy = loading || saving;
+
+  if (!obsidianEnabled) {
+    return (
+      <ScreenContainer
+        scrollable
+        backgroundTone="flat"
+        contentContainerStyle={styles.scrollContent}
+      >
+        <SettingsScreenHeader
+          title="Obsidian integratie"
+          subtitle="Deze instelling staat uit."
+          onBack={() => router.replace("/settings")}
+          onMenu={() => setMenuVisible(true)}
+        />
+
+        <StateBlock
+          tone="info"
+          message="Obsidian instellingen zijn momenteel uitgeschakeld."
+          detail="Zet EXPO_PUBLIC_VERCEL_FLAG_OBSIDIAN_SETTINGS op true om dit scherm te tonen."
+        />
+
+        <SecondaryButton
+          label="Terug naar instellingen"
+          onPress={() => router.replace("/settings")}
+        />
+
+        <FullscreenMenuOverlay
+          visible={menuVisible}
+          currentRouteKey="settings"
+          onRequestClose={() => setMenuVisible(false)}
+        />
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer

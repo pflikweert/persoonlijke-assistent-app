@@ -14,3 +14,7 @@ export function isChatGptMarkdownImportEnabled(): boolean {
   return isTruthyFlag(process.env.EXPO_PUBLIC_VERCEL_FLAG_CHATGPT_MARKDOWN_IMPORT);
 }
 
+export function isObsidianSettingsEnabled(): boolean {
+  return isTruthyFlag(process.env.EXPO_PUBLIC_VERCEL_FLAG_OBSIDIAN_SETTINGS);
+}
+

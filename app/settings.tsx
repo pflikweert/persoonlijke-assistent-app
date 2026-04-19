@@ -15,6 +15,7 @@ import {
     classifyUnknownError,
     hasAdminAiQualityStudioAccess,
     hasAdminRegenerationAccess,
+    isObsidianSettingsEnabled,
     resetAllUserData,
 } from "@/services";
 import { colorTokens, radius, spacing } from "@/theme";
@@ -170,6 +171,7 @@ function SettingsRow({
 export default function SettingsScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const obsidianEnabled = isObsidianSettingsEnabled();
   const [menuVisible, setMenuVisible] = useState(false);
   const [, setAdminAccess] = useState<boolean | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -212,7 +214,13 @@ export default function SettingsScreen() {
     };
   }, []);
 
-  const adminRoutes = useMemo(() => [ADMIN_ROUTE, ADMIN_OBSIDIAN_ROUTE, ADMIN_AI_QUALITY_ROUTE], []);
+  const adminRoutes = useMemo(
+    () =>
+      obsidianEnabled
+        ? [ADMIN_ROUTE, ADMIN_OBSIDIAN_ROUTE, ADMIN_AI_QUALITY_ROUTE]
+        : [ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE],
+    [obsidianEnabled],
+  );
 
   const deleteSheetVisible = deleteSheetState !== "closed";
   const canCloseDeleteSheet =

@@ -55,7 +55,10 @@ export {
     type SelectableDay,
     type SelectablePeriod
 } from "./export";
-export { isChatGptMarkdownImportEnabled } from "./feature-flags";
+export {
+    isChatGptMarkdownImportEnabled,
+    isObsidianSettingsEnabled,
+} from "./feature-flags";
 export { classifyUnknownError, FunctionFlowError } from "./function-error";
 export {
     dismissImportBackgroundTaskNotice,
