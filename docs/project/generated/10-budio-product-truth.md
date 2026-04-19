@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-19T13:35:47.478Z
-Source Commit: b30bc50
+Build Timestamp (UTC): 2026-04-19T17:27:40.667Z
+Source Commit: 158faa5
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -524,6 +524,7 @@ Gecontroleerd op:
 | AIQS prompt-assist preview voor `entry_cleanup` (admin-only) | Editor hardening | **Aanwezig** | server-side action `prompt_assist_preview` + client service/types + draft editor met single-target apply, inline diff en issue-signalen zonder brede chat-UI. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
 | Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
+| Foundation polish: editorial typography + selective ambient backgrounds | Shared design-system hardening | **Aanwezig** | `theme/tokens.ts` bevat nu expliciete typography-roles inclusief display title en gedeelde `ambient/subtle/flat` background tokens; `components/themed-text.tsx`, `components/ui/app-background.tsx`, `components/ui/home-screen-primitives.tsx`, `components/ui/auth-screen-primitives.tsx` en Today (`app/(tabs)/index.tsx`) gebruiken deze foundation. |
 | Branded productlaag “Budio Vandaag” in shell/auth/menu | Niet als losse MVP-feature benoemd in vroege projectdocs | **Aanwezig** | branded login/header/menu/splash doorgevoerd in `app/sign-in.tsx`, `components/ui/auth-screen-primitives.tsx`, `components/navigation/fullscreen-menu-overlay.tsx`, `app/(tabs)/index.tsx`, `app.json`. |
 
 ## Fase 1.2 status
@@ -2347,6 +2348,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Open points
 - Ideas workspace
 - ../40-ideas/10-product/30-conversation-aware-ingest-and-interpretation
+- ../40-ideas/10-product/50-structured-export-and-obsidian-archive
 - ../40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation
 - ../40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening
 - ../40-ideas/40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export
@@ -2366,6 +2368,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Eerste expliciete commerciële brug (capture -> hergebruikbare output) als afgebakende pilot verkennen.
 - Conversation-aware ingest (copy/paste fase 1) en source-aware AIQS-evaluatie verkennen als afgebakend spoor (zie `40-ideas/10-product/30-conversation-aware-ingest-and-interpretation.md` en `40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`).
 - Security posture baseline + trust charter als gecombineerd spoor verkennen (zie `40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md` en `40-ideas/10-product/40-trust-and-security-charter.md`). Voor een dagboekapp is vertrouwen productwaarde, geen achtergrond-polish.
+- Server-side structured export als Obsidian-compatibel archief verkennen: markdown-first, mapstructuur per jaar/maand/week/dag/moment, optionele audio-export en zip-artifact via background job (zie `40-ideas/10-product/50-structured-export-and-obsidian-archive.md`).
 
 ## Later
 - Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.

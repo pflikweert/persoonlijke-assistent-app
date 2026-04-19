@@ -11,6 +11,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - [[../open-points|Open points]]
 - [[../40-ideas/README|Ideas workspace]]
 - [[../40-ideas/10-product/30-conversation-aware-ingest-and-interpretation]]
+- [[../40-ideas/10-product/50-structured-export-and-obsidian-archive]]
 - [[../40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation]]
 - [[../40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening]]
 - [[../40-ideas/40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export]]
@@ -30,6 +31,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Eerste expliciete commerciële brug (capture -> hergebruikbare output) als afgebakende pilot verkennen.
 - Conversation-aware ingest (copy/paste fase 1) en source-aware AIQS-evaluatie verkennen als afgebakend spoor (zie `40-ideas/10-product/30-conversation-aware-ingest-and-interpretation.md` en `40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`).
 - Security posture baseline + trust charter als gecombineerd spoor verkennen (zie `40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md` en `40-ideas/10-product/40-trust-and-security-charter.md`). Voor een dagboekapp is vertrouwen productwaarde, geen achtergrond-polish.
+- Server-side structured export als Obsidian-compatibel archief verkennen: markdown-first, mapstructuur per jaar/maand/week/dag/moment, optionele audio-export en zip-artifact via background job (zie `40-ideas/10-product/50-structured-export-and-obsidian-archive.md`).
 
 ## Later
 - Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.

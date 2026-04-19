@@ -40,28 +40,22 @@ Deze pagina is een **inventory + afsprakenlaag**:
 
 ### 1) Dialogs
 
-#### `components/feedback/confirm-dialog.tsx`
-- Type: centered confirm dialog.
-- Animatie: `fade`.
-- Backdrop: `ModalBackdrop` (`center`).
-- Gebruik:
-  - `app/entry/[id].tsx`
-  - `app/settings-import.tsx`
-  - `app/capture/type.tsx`
+Geen actieve centered confirm-dialogs voor bevestigingsflows.
 
 ### 2) Sheets
 
 #### `components/feedback/destructive-confirm-sheet.tsx`
-- Type: bottom destructive sheet.
+- Type: shared bottom confirm-sheet (algemeen + destructive variant).
 - Animatie: `fade` + bottom layout via backdrop.
 - Backdrop: `ModalBackdrop` (`bottom`).
 - Gebruik:
+  - `app/settings.tsx`
+  - `app/settings-export.tsx`
+  - `app/settings-import.tsx`
+  - `app/entry/[id].tsx`
+  - `app/capture/type.tsx`
   - `app/capture/record.tsx`
   - `app/settings-ai-quality-studio/[taskKey]/draft/[version].tsx`
-
-#### Screen-local sheet in `app/settings.tsx`
-- Type: bottom sheet variant (screen-local implementatie).
-- Opmerking: overlapt functioneel met destructive sheet patroon, maar is niet volledig gedeeld via de shared component.
 
 ### 3) Selector modals
 
@@ -113,17 +107,24 @@ Deze pagina is een **inventory + afsprakenlaag**:
 
 ## Huidige referentie per use-case
 
-- **Korte bevestiging** → `ConfirmDialog`
-- **Destructive bevestiging** → `DestructiveConfirmSheet`
+- **Alle bevestigingen (ook niet-destructive)** → `ConfirmSheet` uit `components/feedback/destructive-confirm-sheet.tsx`
+- **Destructive bevestiging** → `DestructiveConfirmSheet` of `ConfirmSheet` met destructive actie(s)
 - **Selectie uit lijst (dag/week/maand)** → `SelectorModalShell` + selector variant
 - **Volledig schermmenu** → `FullscreenMenuOverlay`
 - **Volledige editorflow** → `TextEditorModal`
 - **Navigator-level modal route** → Stack `presentation: "modal"`
 
+## Verplichte confirmatiestandaard (hard rule)
+
+- Gebruik voor nieuwe bevestigingsvragen **altijd** de shared bottom-sheet primitive uit `components/feedback/destructive-confirm-sheet.tsx`.
+- Gebruik **geen** centered confirm-dialogs voor bevestigingsflows.
+- Voeg geen screen-local confirm-sheet implementaties toe als de shared primitive het use-case kan dekken.
+- Als een flow meerdere keuzes heeft (bijv. 3 acties), gebruik `ConfirmSheet` met `actions`.
+- Als een flow expliciet destructive is, gebruik destructive toon/icoon via `ConfirmSheet` of `DestructiveConfirmSheet`.
+
 ## Open unificatiepunten (bewust zichtbaar)
 
 - Reflections selector (`app/(tabs)/reflections.tsx`) gebruikt een eigen slide-up patroon en is nog niet op dezelfde shared shell als `SelectorModalShell`-familie.
-- `app/settings.tsx` heeft een screen-local destructive sheet-variant naast de shared destructive sheet.
 - AIQS draft assist panel is screen-local en geen gedeelde modal primitive.
 
 Deze punten zijn niet per definitie fout, maar staan hier expliciet zodat toekomstige unificatie gericht en bewust kan gebeuren.

@@ -228,6 +228,8 @@ Characteristics:
 
 - calm, not flashy
 
+- editorial and premium through restraint, not decoration
+
 Implementation recipe:
 
 Light mode:
@@ -250,6 +252,14 @@ Dark mode:
 
 - Optional vignette: `rgba(0, 0, 0, 0.16)` from bottom edge only
 
+Rules:
+
+- Keep the visible atmosphere to a soft upper light pool and a restrained vertical veil.
+
+- Do not add diagonal spotlight effects, loud multi-color glows, or decorative shell drama.
+
+- Today and auth can share this ambient recipe; detail, capture, and settings-like flows should not inherit it by default.
+
 ### Subtle
 
 Use for:
@@ -268,6 +278,8 @@ Characteristics:
 
 - nearly flat, but not cold
 
+- warmer and richer than flat, but clearly less atmospheric than ambient
+
 Implementation recipe:
 
 Light mode:
@@ -276,15 +288,23 @@ Light mode:
 
 - Soft blend: `linear-gradient(180deg, #FAF9F4 0%, #F4F3F0 100%)`
 
-- Accent veil (optional): `rgba(230, 184, 0, 0.06)` at top 20-30%
+- Accent veil (optional): `rgba(230, 184, 0, 0.05)` at top 20-30%
 
 Dark mode:
 
 - Base: `#171714`
 
-- Soft blend: `linear-gradient(180deg, #171714 0%, #201F1C 100%)`
+- Soft blend: `linear-gradient(180deg, #171714 0%, #1D1B18 100%)`
 
-- Accent veil (optional): `rgba(243, 197, 58, 0.06)` at top 20-30%
+- Accent veil (optional): `rgba(243, 197, 58, 0.055)` at top 20-30%
+
+Rules:
+
+- Subtle is not a weaker ambient spotlight.
+
+- Avoid visible radial light-pool behavior in subtle mode.
+
+- Use subtle when the screen needs warmth and refinement without page-level atmosphere.
 
 ### Flat
 
@@ -310,21 +330,33 @@ Characteristics:
 
 - minimal visual interference
 
+- paper-soft rather than clinically flat
+
 Implementation recipe:
 
 Light mode:
 
 - Primary flat base: `#FAF9F4`
 
-- Optional alternate for grouped utility areas: `#F4F3F0`
+- Paper-soft blend target: `#F7F5EE`
 
-- No background gradients
+- Allow only an ultra-soft tonal blend when needed for calmness.
+
+- Never let flat read as atmospheric or visibly gradient-led.
+
+Rules:
+
+- Flat should stay the quietest background mode in the system.
+
+- Detail, capture, settings and content-heavy routes should prefer this mode by default.
+
+- Full-page routes should use the shared background foundation unless they are special shell or overlay wrappers.
 
 Dark mode:
 
 - Primary flat base: `#171714`
 
-- Optional alternate for grouped utility areas: `#201F1C`
+- Paper-soft blend target: `#1A1916`
 
 - No background gradients
 
@@ -524,6 +556,8 @@ Style:
 
 ### Type roles
 
+- Display title: `38 / 44`, weight `700`, letter spacing `-0.9`
+
 - Screen title: `34 / 40`, weight `700`, letter spacing `-0.5`
 
 - Section title: `20 / 26`, weight `600`, letter spacing `-0.2`
@@ -549,6 +583,10 @@ Rules:
 - on capture and entry screens, clarity wins over editorial flourish
 
 - long text belongs in reading contexts, not in entry-first screens
+
+- use the display title role only for hero-first screens such as Today and auth
+
+- do not imitate Spotify branding, licensed fonts or Spotify-specific type behavior
 
 ---
 

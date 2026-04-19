@@ -2,7 +2,11 @@ import { File, Paths } from "expo-file-system";
 import { Platform } from "react-native";
 
 import { ensureAuthenticatedUserSession } from "@/services/auth";
-import { createClientFlowId } from "@/services/function-error";
+import {
+  createClientFlowId,
+  FunctionFlowError,
+  isFunctionErrorPayload,
+} from "@/services/function-error";
 import { getSupabaseBrowserClient } from "@/src/lib/supabase";
 import type { Json, Tables } from "@/src/lib/supabase/database.types";
 
@@ -77,6 +81,7 @@ export type ArchiveExportPreview = {
   isSparse: boolean;
   days: number;
   entries: number;
+  audioEntries: number;
   weekReflections: number;
   monthReflections: number;
 };
@@ -92,6 +97,70 @@ export type ArchiveExportResult =
       weekReflections: number;
       monthReflections: number;
     };
+
+export type BackgroundTaskStatus =
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+type ArchiveExportTaskRow = {
+  id: string;
+  task_type: string;
+  status: string;
+  phase: string;
+  progress_current: number;
+  progress_total: number;
+  detail_current: number | null;
+  detail_total: number | null;
+  detail_label: string | null;
+  warning_count: number;
+  error_message: string | null;
+  notice_dismissed_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  result_storage_path: string | null;
+  result_file_name: string | null;
+  result_mime_type: string | null;
+  result_size_bytes: number | null;
+  result_payload: Json;
+};
+
+export type ArchiveExportTask = {
+  id: string;
+  taskType: "archive_export";
+  status: BackgroundTaskStatus;
+  phase: string;
+  progressCurrent: number;
+  progressTotal: number;
+  detailCurrent: number | null;
+  detailTotal: number | null;
+  detailLabel: string | null;
+  warningCount: number;
+  errorMessage: string | null;
+  noticeDismissedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resultStoragePath: string | null;
+  resultFileName: string | null;
+  resultMimeType: string | null;
+  resultSizeBytes: number | null;
+  resultPayload: Json;
+};
+
+export type StructuredArchiveExportInput = {
+  scope: DateScope;
+  includeMoments: boolean;
+  includeDays: boolean;
+  includeWeeks: boolean;
+  includeMonths: boolean;
+  includeAudio: boolean;
+};
 
 const PAGE_SIZE = 500;
 
@@ -599,6 +668,90 @@ function saveToLocalDocument(fileName: string, contents: string): string {
   return file.uri;
 }
 
+function mapArchiveExportTask(row: ArchiveExportTaskRow): ArchiveExportTask {
+  const status: BackgroundTaskStatus =
+    row.status === "running" ||
+    row.status === "completed" ||
+    row.status === "failed" ||
+    row.status === "cancelled"
+      ? row.status
+      : "queued";
+
+  return {
+    id: row.id,
+    taskType: "archive_export",
+    status,
+    phase: row.phase || "queued",
+    progressCurrent: Math.max(0, Number(row.progress_current ?? 0)),
+    progressTotal: Math.max(0, Number(row.progress_total ?? 0)),
+    detailCurrent:
+      typeof row.detail_current === "number" && Number.isFinite(row.detail_current)
+        ? Math.max(0, Math.round(row.detail_current))
+        : null,
+    detailTotal:
+      typeof row.detail_total === "number" && Number.isFinite(row.detail_total)
+        ? Math.max(0, Math.round(row.detail_total))
+        : null,
+    detailLabel: row.detail_label ?? null,
+    warningCount: Math.max(0, Number(row.warning_count ?? 0)),
+    errorMessage: row.error_message ?? null,
+    noticeDismissedAt: row.notice_dismissed_at ?? null,
+    startedAt: row.started_at ?? null,
+    completedAt: row.completed_at ?? null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    resultStoragePath: row.result_storage_path ?? null,
+    resultFileName: row.result_file_name ?? null,
+    resultMimeType: row.result_mime_type ?? null,
+    resultSizeBytes:
+      typeof row.result_size_bytes === "number" && Number.isFinite(row.result_size_bytes)
+        ? Math.max(0, Math.round(row.result_size_bytes))
+        : null,
+    resultPayload: row.result_payload ?? {},
+  };
+}
+
+function parseFunctionMessage(parsed: unknown): string | null {
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+  const error = (parsed as { error?: unknown }).error;
+  if (typeof error === "string" && error.length > 0) {
+    return error;
+  }
+  const message = (parsed as { message?: unknown }).message;
+  return typeof message === "string" && message.length > 0 ? message : null;
+}
+
+async function parseFunctionInvokeError(error: unknown, fallback: string): Promise<never> {
+  if (!error || typeof error !== "object") {
+    throw new Error(fallback);
+  }
+
+  const context = (error as { context?: unknown }).context;
+  if (!(context instanceof Response)) {
+    throw new Error(error instanceof Error ? error.message : fallback);
+  }
+
+  const text = await context.text();
+  if (!text) {
+    throw new Error(fallback);
+  }
+
+  try {
+    const parsed = JSON.parse(text) as unknown;
+    if (isFunctionErrorPayload(parsed)) {
+      throw new FunctionFlowError(parsed);
+    }
+    throw new Error(parseFunctionMessage(parsed) ?? text);
+  } catch (nextError) {
+    if (nextError instanceof FunctionFlowError || nextError instanceof Error) {
+      throw nextError;
+    }
+    throw new Error(text);
+  }
+}
+
 async function loadSnapshotForScope(scope: DateScope): Promise<ExportSnapshot> {
   const [rawEntries, normalizedEntries, days, reflections] = await Promise.all([
     fetchAllRawEntries(),
@@ -633,6 +786,7 @@ export async function previewArchiveScope(scope: DateScope): Promise<ArchiveExpo
     isSparse: snapshot.days.length === 0 && snapshot.entries.length <= 2,
     days: snapshot.days.length,
     entries: snapshot.entries.length,
+    audioEntries: snapshot.entries.filter((entry) => entry.sourceType === "audio").length,
     weekReflections: snapshot.weekReflections.length,
     monthReflections: snapshot.monthReflections.length,
   };
@@ -732,4 +886,151 @@ export async function downloadUserArchive(scope: DateScope = ALL_DATE_SCOPE): Pr
     weekReflections: snapshot.weekReflections.length,
     monthReflections: snapshot.monthReflections.length,
   };
+}
+
+export async function startStructuredArchiveExport(
+  input: StructuredArchiveExportInput,
+): Promise<ArchiveExportTask> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
+  }
+
+  const flowId = createClientFlowId("export-archive");
+  await ensureAuthenticatedUserSession({ flowId, source: "export-archive" });
+
+  const { data, error } = await supabase.functions.invoke<{
+    status: "ok";
+    flow: "start-user-export";
+    backgroundTask: ArchiveExportTaskRow;
+  }>("start-user-export", {
+    headers: {
+      "x-flow-id": flowId,
+    },
+    body: {
+      mode: "structured",
+      scope: input.scope,
+      includeMoments: input.includeMoments,
+      includeDays: input.includeDays,
+      includeWeeks: input.includeWeeks,
+      includeMonths: input.includeMonths,
+      includeAudio: input.includeAudio,
+    },
+  });
+
+  if (error) {
+    await parseFunctionInvokeError(error, "Structured export starten mislukt.");
+  }
+
+  if (!data || data.status !== "ok" || data.flow !== "start-user-export" || !data.backgroundTask) {
+    throw new Error("Ongeldige response van start-user-export.");
+  }
+
+  return mapArchiveExportTask(data.backgroundTask);
+}
+
+export async function fetchLatestArchiveExportTask(): Promise<ArchiveExportTask | null> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
+  }
+
+  const { data, error } = await supabase
+    .from("user_background_tasks" as any)
+    .select(
+      "id, task_type, status, phase, progress_current, progress_total, detail_current, detail_total, detail_label, warning_count, error_message, notice_dismissed_at, started_at, completed_at, created_at, updated_at, result_storage_path, result_file_name, result_mime_type, result_size_bytes, result_payload",
+    )
+    .eq("task_type", "archive_export")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+  if (!data) {
+    return null;
+  }
+
+  return mapArchiveExportTask(data as unknown as ArchiveExportTaskRow);
+}
+
+export async function fetchArchiveExportTaskById(taskId: string): Promise<ArchiveExportTask | null> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
+  }
+
+  const id = taskId.trim();
+  if (!id) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("user_background_tasks" as any)
+    .select(
+      "id, task_type, status, phase, progress_current, progress_total, detail_current, detail_total, detail_label, warning_count, error_message, notice_dismissed_at, started_at, completed_at, created_at, updated_at, result_storage_path, result_file_name, result_mime_type, result_size_bytes, result_payload",
+    )
+    .eq("id", id)
+    .eq("task_type", "archive_export")
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+  if (!data) {
+    return null;
+  }
+
+  return mapArchiveExportTask(data as unknown as ArchiveExportTaskRow);
+}
+
+export async function dismissArchiveExportTaskNotice(taskId: string): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
+  }
+
+  const id = taskId.trim();
+  if (!id) {
+    return;
+  }
+
+  const timestamp = new Date().toISOString();
+  const { error } = await supabase
+    .from("user_background_tasks" as any)
+    .update({
+      notice_dismissed_at: timestamp,
+      updated_at: timestamp,
+      last_update_at: timestamp,
+    })
+    .eq("id", id)
+    .eq("task_type", "archive_export");
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function getArchiveExportDownloadUrl(task: ArchiveExportTask): Promise<string> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
+  }
+
+  if (!task.resultStoragePath) {
+    throw new Error("Er is nog geen exportbestand beschikbaar voor deze taak.");
+  }
+
+  const { data, error } = await supabase.storage
+    .from("user-exports")
+    .createSignedUrl(task.resultStoragePath, 60 * 15, {
+      ...(task.resultFileName ? { download: task.resultFileName } : {}),
+    });
+
+  if (error || !data?.signedUrl) {
+    throw error ?? new Error("Kon geen downloadlink maken.");
+  }
+
+  return data.signedUrl;
 }

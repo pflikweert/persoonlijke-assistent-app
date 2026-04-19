@@ -11,6 +11,7 @@ import {
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { DetailScreenHero } from "@/components/ui/detail-screen-primitives";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { ScreenContainer, StateBlock } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -218,23 +219,15 @@ export default function DaysScreen() {
         <ScreenHeader
           surface="transparent"
           leftAction={
-            <ThemedView style={styles.titleStack}>
-              <ThemedView style={styles.titleLockup}>
-                <ThemedText type="sectionTitle" style={styles.titlePrimary}>
-                  Kies
-                </ThemedText>
-                <ThemedText
-                  type="sectionTitle"
-                  style={[styles.titleSecondary, { color: palette.mutedSoft }]}
-                >
-                  een dag
-                </ThemedText>
-              </ThemedView>
+            <ThemedView style={styles.brandLockup}>
+              <ThemedText type="sectionTitle" style={styles.brandPrimary}>
+                Budio
+              </ThemedText>
               <ThemedText
-                type="bodySecondary"
-                style={[styles.headerSubtitle, { color: palette.muted }]}
+                type="sectionTitle"
+                style={[styles.brandSecondary, { color: palette.mutedSoft }]}
               >
-                Overzicht van je recente dagen.
+                Dagen
               </ThemedText>
             </ThemedView>
           }
@@ -251,6 +244,12 @@ export default function DaysScreen() {
       }
       contentContainerStyle={styles.scrollContent}
     >
+      <DetailScreenHero
+        title="Dagen"
+        subtitle="Kies een dag om terug te lezen."
+        style={styles.hero}
+      />
+
       {loading ? (
         <InlineLoadingOverlay
           message="Archief laden..."
@@ -290,26 +289,23 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },
-  titleLockup: {
+  brandLockup: {
     flexDirection: "row",
     alignItems: "baseline",
     gap: spacing.xs,
   },
-  titleStack: {
-    gap: spacing.xs,
-  },
-  titlePrimary: {
+  brandPrimary: {
     fontSize: 24,
     lineHeight: 28,
     letterSpacing: -0.4,
   },
-  titleSecondary: {
+  brandSecondary: {
     fontSize: 24,
     lineHeight: 28,
     fontWeight: "400",
     letterSpacing: -0.4,
   },
-  headerSubtitle: {
-    lineHeight: 22,
+  hero: {
+    marginBottom: spacing.sm,
   },
 });

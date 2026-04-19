@@ -44,14 +44,21 @@ export {
 } from "./entries";
 export {
     ALL_DATE_SCOPE,
+    dismissArchiveExportTaskNotice,
     describeDateScope,
     downloadUserArchive,
+    fetchArchiveExportTaskById,
+    fetchLatestArchiveExportTask,
+    getArchiveExportDownloadUrl,
     listSelectableDays,
     listSelectableMonths,
     listSelectableWeeks,
     previewArchiveScope,
+    startStructuredArchiveExport,
+    type ArchiveExportTask,
     type ArchiveExportPreview,
     type DateScope,
+    type StructuredArchiveExportInput,
     type SelectableDay,
     type SelectablePeriod
 } from "./export";

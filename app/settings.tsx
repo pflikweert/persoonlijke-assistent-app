@@ -3,13 +3,16 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet } from "react-native";
 
-import { DestructiveConfirmSheetContent } from "@/components/feedback/destructive-confirm-sheet";
+import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
 import { ScreenContainer } from "@/components/ui/screen-primitives";
-import { SettingsScreenHeader } from "@/components/ui/settings-screen-primitives";
+import {
+  SettingsPageHero,
+  SettingsTopNav,
+} from "@/components/ui/settings-screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
     classifyUnknownError,
@@ -48,7 +51,7 @@ type RowItem = {
   destructive?: boolean;
 };
 
-type DeleteSheetState = "closed" | "confirm" | "loading" | "success" | "error";
+type DeleteSheetState = "closed" | "loading" | "success" | "error";
 
 const ARCHIVE_ROUTES: SettingsRoute[] = [
   {
@@ -175,6 +178,7 @@ export default function SettingsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [, setAdminAccess] = useState<boolean | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleteSheetState, setDeleteSheetState] =
     useState<DeleteSheetState>("closed");
   const [deleteErrorDetail, setDeleteErrorDetail] = useState<string | null>(
@@ -224,7 +228,6 @@ export default function SettingsScreen() {
 
   const deleteSheetVisible = deleteSheetState !== "closed";
   const canCloseDeleteSheet =
-    deleteSheetState === "confirm" ||
     deleteSheetState === "success" ||
     deleteSheetState === "error";
 
@@ -242,6 +245,7 @@ export default function SettingsScreen() {
       return;
     }
 
+    setDeleteConfirmVisible(false);
     setDeleteSheetState("loading");
     setDeleteErrorDetail(null);
 
@@ -261,12 +265,17 @@ export default function SettingsScreen() {
         scrollable
         backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
+        fixedHeader={
+          <SettingsTopNav
+            onBack={() => router.back()}
+            onMenu={() => setMenuVisible(true)}
+            title="Instellingen"
+          />
+        }
       >
-        <SettingsScreenHeader
+        <SettingsPageHero
           title="Instellingen"
           subtitle="Beheer je archief en gegevens."
-          onBack={() => router.back()}
-          onMenu={() => setMenuVisible(true)}
         />
 
         <ThemedView style={styles.sectionGroup}>
@@ -290,7 +299,7 @@ export default function SettingsScreen() {
           </ThemedText>
           <SettingsRow
             item={DELETE_ROW}
-            onPress={() => setDeleteSheetState("confirm")}
+            onPress={() => setDeleteConfirmVisible(true)}
           />
         </ThemedView>
 
@@ -348,17 +357,6 @@ export default function SettingsScreen() {
                 { backgroundColor: palette.separator },
               ]}
             />
-
-            {deleteSheetState === "confirm" ? (
-              <DestructiveConfirmSheetContent
-                title="Weet je zeker dat je alles wilt verwijderen?"
-                message="Je momenten, dagen en reflecties worden verwijderd. Dit kun je niet ongedaan maken."
-                secondaryLabel="Annuleren"
-                confirmLabel="Verwijder alles"
-                onCancel={closeDeleteSheet}
-                onConfirm={() => void handleConfirmDeleteAll()}
-              />
-            ) : null}
 
             {deleteSheetState === "loading" ? (
               <>
@@ -490,6 +488,28 @@ export default function SettingsScreen() {
           </ThemedView>
         </ModalBackdrop>
       </Modal>
+
+      <ConfirmSheet
+        visible={deleteConfirmVisible}
+        title="Weet je zeker dat je alles wilt verwijderen?"
+        message="Je momenten, dagen en reflecties worden verwijderd. Dit kun je niet ongedaan maken."
+        actions={[
+          {
+            key: "cancel",
+            label: "Annuleren",
+            onPress: () => setDeleteConfirmVisible(false),
+          },
+          {
+            key: "confirm",
+            label: "Verwijder alles",
+            tone: "destructive",
+            icon: "delete-forever",
+            onPress: () => void handleConfirmDeleteAll(),
+          },
+        ]}
+        onCancel={() => setDeleteConfirmVisible(false)}
+        onConfirm={() => void handleConfirmDeleteAll()}
+      />
     </>
   );
 }

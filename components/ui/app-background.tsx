@@ -1,52 +1,16 @@
 import { Platform, StyleSheet, View, type ViewStyle } from "react-native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import Svg, {
+  Defs,
+  LinearGradient,
+  RadialGradient,
+  Rect,
+  Stop,
+} from "react-native-svg";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { pageBackgrounds } from "@/theme";
 
 export type AppBackgroundTone = "ambient" | "subtle" | "flat";
-
-const APP_BACKGROUND_PRESETS = {
-  ambient: {
-    light: {
-      gradientColors: ["#FAF9F4", "#F5F0E4", "#EFE8D7"] as const,
-      goldStrong: "rgba(230,184,0,0.08)",
-      goldSoft: "rgba(230,184,0,0.035)",
-      plumStrong: "rgba(126,85,96,0.035)",
-      plumSoft: "rgba(126,85,96,0.014)",
-    },
-    dark: {
-      gradientColors: ["#11110F", "#171612", "#231D1A"] as const,
-      goldStrong: "rgba(224,180,58,0.09)",
-      goldSoft: "rgba(224,180,58,0.04)",
-      plumStrong: "rgba(76,46,56,0.08)",
-      plumSoft: "rgba(76,46,56,0.04)",
-    },
-  },
-  subtle: {
-    light: {
-      gradientColors: ["#FAF9F4", "#F8F5EC", "#F4F0E5"] as const,
-      goldStrong: "rgba(230,184,0,0.025)",
-      goldSoft: "rgba(230,184,0,0.012)",
-      plumStrong: "rgba(126,85,96,0.012)",
-      plumSoft: "rgba(126,85,96,0.006)",
-    },
-    dark: {
-      gradientColors: ["#11110F", "#12110F", "#14120F"] as const,
-      goldStrong: "rgba(224,180,58,0.04)",
-      goldSoft: "rgba(224,180,58,0.02)",
-      plumStrong: "rgba(76,46,56,0.03)",
-      plumSoft: "rgba(76,46,56,0.015)",
-    },
-  },
-  flat: {
-    light: {
-      baseColor: "#FAF9F4",
-    },
-    dark: {
-      baseColor: "#11110F",
-    },
-  },
-} as const;
 
 export function AppBackground({
   tone = "subtle",
@@ -55,25 +19,90 @@ export function AppBackground({
 }) {
   const scheme = useColorScheme() ?? "light";
 
-  if (tone === "flat") {
+  if (tone === "ambient") {
+    const preset = pageBackgrounds.ambient[scheme];
+
+    if (Platform.OS === "web") {
+      const webGradientStyle: ViewStyle = {
+        backgroundImage: [
+          `linear-gradient(180deg, ${preset.veilTop} 0%, ${preset.veilMid} 42%, ${preset.veilBottom} 100%)`,
+          `radial-gradient(125% 92% at 20% 2%, ${preset.radialInner} 0%, ${preset.radialMid} 54%, ${preset.radialOuter} 100%)`,
+          `linear-gradient(180deg, ${preset.baseColor} 0%, ${preset.baseColor} 100%)`,
+        ].join(", "),
+      } as unknown as ViewStyle;
+
+      return (
+        <View style={[styles.background, webGradientStyle, { pointerEvents: "none" }]} />
+      );
+    }
+
     return (
-      <View
-        style={[
-          styles.background,
-          { backgroundColor: APP_BACKGROUND_PRESETS.flat[scheme].baseColor, pointerEvents: "none" },
-        ]}
-      />
+      <Svg pointerEvents="none" style={styles.background}>
+        <Defs>
+          <LinearGradient id="appBaseAmbient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={preset.baseColor} />
+            <Stop offset="100%" stopColor={preset.baseColor} />
+          </LinearGradient>
+          <RadialGradient id="appLightPoolAmbient" cx="22%" cy="4%" rx="76%" ry="62%">
+            <Stop offset="0%" stopColor={preset.radialInner} />
+            <Stop offset="58%" stopColor={preset.radialMid} />
+            <Stop offset="100%" stopColor={preset.radialOuter} />
+          </RadialGradient>
+          <LinearGradient id="appVeilAmbient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={preset.veilTop} />
+            <Stop offset="42%" stopColor={preset.veilMid} />
+            <Stop offset="100%" stopColor={preset.veilBottom} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#appBaseAmbient)" />
+        <Rect width="100%" height="100%" fill="url(#appLightPoolAmbient)" />
+        <Rect width="100%" height="100%" fill="url(#appVeilAmbient)" />
+      </Svg>
     );
   }
 
-  const preset = APP_BACKGROUND_PRESETS[tone][scheme];
+  if (tone === "flat") {
+    const preset = pageBackgrounds.flat[scheme];
+
+    if (Platform.OS === "web") {
+      const webGradientStyle: ViewStyle = {
+        backgroundImage: [
+          `linear-gradient(180deg, ${preset.topTone} 0%, rgba(255,255,255,0) 18%)`,
+          `linear-gradient(180deg, ${preset.baseColor} 0%, ${preset.softBlendColor} 100%)`,
+        ].join(", "),
+      } as unknown as ViewStyle;
+
+      return (
+        <View style={[styles.background, webGradientStyle, { pointerEvents: "none" }]} />
+      );
+    }
+
+    return (
+      <Svg pointerEvents="none" style={styles.background}>
+        <Defs>
+          <LinearGradient id="appBaseFlat" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={preset.baseColor} />
+            <Stop offset="100%" stopColor={preset.softBlendColor} />
+          </LinearGradient>
+          <LinearGradient id="appTopToneFlat" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={preset.topTone} />
+            <Stop offset="18%" stopColor="rgba(255,255,255,0)" />
+            <Stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#appBaseFlat)" />
+        <Rect width="100%" height="100%" fill="url(#appTopToneFlat)" />
+      </Svg>
+    );
+  }
+
+  const preset = pageBackgrounds.subtle[scheme];
 
   if (Platform.OS === "web") {
     const webGradientStyle: ViewStyle = {
       backgroundImage: [
-        `radial-gradient(circle at 82% 16%, ${preset.goldStrong} 0%, ${preset.goldSoft} 24%, rgba(224,180,58,0) 52%)`,
-        `radial-gradient(circle at 12% 88%, ${preset.plumStrong} 0%, ${preset.plumSoft} 26%, rgba(76,46,56,0) 56%)`,
-        `linear-gradient(135deg, ${preset.gradientColors[0]} 0%, ${preset.gradientColors[1]} 52%, ${preset.gradientColors[2]} 100%)`,
+        `linear-gradient(180deg, ${preset.topTone} 0%, ${preset.midTone} 28%, ${preset.bottomTone} 100%)`,
+        `linear-gradient(180deg, ${preset.baseColor} 0%, ${preset.softBlendColor} 100%)`,
       ].join(", "),
     } as unknown as ViewStyle;
 
@@ -85,23 +114,18 @@ export function AppBackground({
   return (
     <Svg pointerEvents="none" style={styles.background}>
       <Defs>
-        <LinearGradient id="appGradient" x1="100%" y1="0%" x2="0%" y2="100%">
-          <Stop offset="0%" stopColor={preset.gradientColors[0]} />
-          <Stop offset="52%" stopColor={preset.gradientColors[1]} />
-          <Stop offset="100%" stopColor={preset.gradientColors[2]} />
+        <LinearGradient id="appBaseSubtle" x1="0%" y1="0%" x2="0%" y2="100%">
+          <Stop offset="0%" stopColor={preset.baseColor} />
+          <Stop offset="100%" stopColor={preset.softBlendColor} />
         </LinearGradient>
-        <LinearGradient id="appGoldGlow" x1="100%" y1="0%" x2="24%" y2="52%">
-          <Stop offset="0%" stopColor={preset.goldStrong} />
-          <Stop offset="100%" stopColor="rgba(224,180,58,0)" />
-        </LinearGradient>
-        <LinearGradient id="appPlumHaze" x1="0%" y1="100%" x2="58%" y2="42%">
-          <Stop offset="0%" stopColor={preset.plumStrong} />
-          <Stop offset="100%" stopColor="rgba(76,46,56,0)" />
+        <LinearGradient id="appWarmSupportSubtle" x1="0%" y1="0%" x2="0%" y2="100%">
+          <Stop offset="0%" stopColor={preset.topTone} />
+          <Stop offset="28%" stopColor={preset.midTone} />
+          <Stop offset="100%" stopColor={preset.bottomTone} />
         </LinearGradient>
       </Defs>
-      <Rect width="100%" height="100%" fill="url(#appGradient)" />
-      <Rect width="100%" height="100%" fill="url(#appGoldGlow)" />
-      <Rect width="100%" height="100%" fill="url(#appPlumHaze)" />
+      <Rect width="100%" height="100%" fill="url(#appBaseSubtle)" />
+      <Rect width="100%" height="100%" fill="url(#appWarmSupportSubtle)" />
     </Svg>
   );
 }

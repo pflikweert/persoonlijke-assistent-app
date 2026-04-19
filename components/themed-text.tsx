@@ -13,6 +13,7 @@ export type ThemedTextProps = TextProps & {
     | 'defaultSemiBold'
     | 'subtitle'
     | 'link'
+    | 'displayTitle'
     | 'screenTitle'
     | 'sectionTitle'
     | 'body'
@@ -50,6 +51,7 @@ export function ThemedText({
       style={[
         { color: roleColor },
         type === 'default' || type === 'body' ? styles.body : undefined,
+        type === 'displayTitle' ? styles.displayTitle : undefined,
         type === 'title' || type === 'screenTitle' ? styles.screenTitle : undefined,
         type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
         type === 'subtitle' || type === 'sectionTitle' ? styles.sectionTitle : undefined,
@@ -79,6 +81,13 @@ const styles = StyleSheet.create({
     fontFamily: typography.families.sans,
     fontWeight: typography.weight.semibold,
     letterSpacing: typography.roles.body.letterSpacing,
+  },
+  displayTitle: {
+    fontSize: typography.roles.displayTitle.size,
+    lineHeight: typography.roles.displayTitle.lineHeight,
+    fontFamily: typography.families.sans,
+    fontWeight: typography.roles.displayTitle.weight,
+    letterSpacing: typography.roles.displayTitle.letterSpacing,
   },
   screenTitle: {
     fontSize: typography.roles.screenTitle.size,

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
+import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import { TextEntryEditor } from "@/components/feedback/text-entry-editor";
 import {
@@ -501,12 +501,29 @@ export default function CaptureTypeScreen() {
           />
         </View>
 
-        <ConfirmDialog
+        <ConfirmSheet
           visible={discardVisible}
           title="Tekst niet opslaan?"
           message="Deze tekst is nog niet vastgelegd."
-          cancelLabel="Blijf hier"
-          confirmLabel="Niet opslaan"
+          actions={[
+            {
+              key: "cancel",
+              label: "Blijf hier",
+              onPress: () => setDiscardVisible(false),
+            },
+            {
+              key: "confirm",
+              label: "Niet opslaan",
+              tone: "destructive",
+              icon: "delete-forever",
+              onPress: () => {
+                setDiscardVisible(false);
+                setRawText("");
+                setError(null);
+                goBackToStart();
+              },
+            },
+          ]}
           onCancel={() => setDiscardVisible(false)}
           onConfirm={() => {
             setDiscardVisible(false);

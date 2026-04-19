@@ -63,10 +63,9 @@ export function ArchiveGroupedList({
                 onPress={item.onPress}
                 style={[
                   styles.row,
-                  {
-                    borderColor: item.selected ? `${selectedAccent}CC` : 'transparent',
-                    borderWidth: item.selected ? 1 : 0,
-                  },
+                  item.selected
+                    ? { backgroundColor: palette.surfaceLow }
+                    : null,
                 ]}>
                 <View style={[styles.dateColumn, isCompact ? styles.dateColumnCompact : null]}>
                   <ThemedText type="caption" style={[styles.weekday, { color: palette.mutedSoft }]}>
@@ -88,10 +87,18 @@ export function ArchiveGroupedList({
                 <ThemedView
                   style={[
                     styles.snippetColumn,
-                    { borderLeftColor: `${palette.separator}A6` },
+                    { borderLeftColor: `${palette.separator}8C` },
                   ]}
                 >
-                  <ThemedText numberOfLines={resolvedSnippetLines} type="bodySecondary" style={[styles.snippet, { color: palette.muted }]}>
+                  <ThemedText
+                    numberOfLines={resolvedSnippetLines}
+                    type="bodySecondary"
+                    style={[
+                      styles.snippet,
+                      {
+                        color: item.selected ? palette.text : palette.muted,
+                      },
+                    ]}>
                     {item.snippet}
                   </ThemedText>
                 </ThemedView>
@@ -135,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: spacing.sm,
     borderRadius: 14,
   },
   dateColumn: {
@@ -157,6 +164,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1,
     paddingLeft: spacing.md,
     justifyContent: 'center',
+    minHeight: 52,
   },
   snippet: {},
   chevron: {

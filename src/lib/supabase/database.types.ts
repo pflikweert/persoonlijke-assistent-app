@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       admin_regeneration_job_steps: {
@@ -671,8 +696,10 @@ export type Database = {
           detail_current: number | null
           detail_label: string | null
           detail_total: number | null
+          download_expires_at: string | null
           error_message: string | null
           id: string
+          input_payload: Json
           last_update_at: string
           notice_dismissed_at: string | null
           notice_seen_at: string | null
@@ -680,6 +707,11 @@ export type Database = {
           phase: string
           progress_current: number
           progress_total: number
+          result_file_name: string | null
+          result_mime_type: string | null
+          result_payload: Json | null
+          result_size_bytes: number | null
+          result_storage_path: string | null
           source_ref: string | null
           started_at: string | null
           status: string
@@ -694,8 +726,10 @@ export type Database = {
           detail_current?: number | null
           detail_label?: string | null
           detail_total?: number | null
+          download_expires_at?: string | null
           error_message?: string | null
           id?: string
+          input_payload?: Json
           last_update_at?: string
           notice_dismissed_at?: string | null
           notice_seen_at?: string | null
@@ -703,6 +737,11 @@ export type Database = {
           phase?: string
           progress_current?: number
           progress_total?: number
+          result_file_name?: string | null
+          result_mime_type?: string | null
+          result_payload?: Json | null
+          result_size_bytes?: number | null
+          result_storage_path?: string | null
           source_ref?: string | null
           started_at?: string | null
           status?: string
@@ -717,8 +756,10 @@ export type Database = {
           detail_current?: number | null
           detail_label?: string | null
           detail_total?: number | null
+          download_expires_at?: string | null
           error_message?: string | null
           id?: string
+          input_payload?: Json
           last_update_at?: string
           notice_dismissed_at?: string | null
           notice_seen_at?: string | null
@@ -726,6 +767,11 @@ export type Database = {
           phase?: string
           progress_current?: number
           progress_total?: number
+          result_file_name?: string | null
+          result_mime_type?: string | null
+          result_payload?: Json | null
+          result_size_bytes?: number | null
+          result_storage_path?: string | null
           source_ref?: string | null
           started_at?: string | null
           status?: string
@@ -923,6 +969,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       ai_review_label: ["better", "equal", "worse", "fail"],
@@ -934,4 +983,3 @@ export const Constants = {
     },
   },
 } as const
-

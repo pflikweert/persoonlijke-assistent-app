@@ -2,8 +2,8 @@
 
 # Budio UI System and Design Truth
 
-Build Timestamp (UTC): 2026-04-19T13:35:47.478Z
-Source Commit: b30bc50
+Build Timestamp (UTC): 2026-04-19T17:27:40.667Z
+Source Commit: 158faa5
 
 Doel: primaire UI/designbundle met designregels, tokens en implementatieguardrails.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,7 +15,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - Tab bar background tokens: light #FAF9F6EE; dark #171714EE.
 - Destructive soft colors: light #F6E8E5 / #C62929 / #ECC1BF; dark #4B2D2B / #FFB4AB / #7E5A56.
 - Key spacing: page 24, content 32, section 32, cluster 12, inline 8.
-- Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/26, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
+- Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/27, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
 
 ## MVP Design Spec (excerpt)
 # MVP Design Spec v1.2.1 — Capture First
@@ -197,6 +197,10 @@ Reflection generation handled outside MVP design phase.
 - readable
 - calm
 - no UI-heavy labels
+- keep the existing sans base: `Inter` on web, system sans on native
+- hero-first screens may use a stronger editorial display title inside that same sans family
+- body/meta hierarchy should come from calmer line-height, tracking and spacing, not from extra surface mass
+- do not imitate Spotify branding, licensed fonts or brand-specific type behavior
 
 ### Icons
 - minimal
@@ -240,14 +244,7 @@ Not allowed:
 ### Clean-first
 - Default UI is clean-first.
 - Use spacing, hierarchy, typography and tonal contrast before extra containers.
-- Section labels sit on the page background unless a design ref explicitly shows a surface.
-- Rows and cards stay light; avoid excessive height, padding and visual mass.
-- Decorative borders, extra inner fills and nested surfaces are opt-in, not default.
-
-### Dark Mode
-- Dark mode preserves the structure and calm of the light design ref.
-- Do not solve dark mode by adding extra mass, extra panels or heavier containers.
--
+- Section labels sit on the page background unless a design ref explicit
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
@@ -441,8 +438,8 @@ Rules:
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-19T13:35:47.478Z
-Source Commit: b30bc50
+Build Timestamp (UTC): 2026-04-19T17:27:40.667Z
+Source Commit: 158faa5
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -482,7 +479,7 @@ Afgeleid uit `theme/tokens.ts`; die file blijft de enige tokenbron.
 - Tab bar background tokens: light #FAF9F6EE; dark #171714EE.
 - Destructive soft colors: light #F6E8E5 / #C62929 / #ECC1BF; dark #4B2D2B / #FFB4AB / #7E5A56.
 - Key spacing: page 24, content 32, section 32, cluster 12, inline 8.
-- Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/26, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
+- Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/27, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
 
 ## Per-page Markdown Refs
 Deze markdown refs onder `design_refs/1.2.1/**` zijn meegenomen als aanvullende design input wanneer aanwezig.

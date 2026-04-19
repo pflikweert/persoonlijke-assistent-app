@@ -2,8 +2,8 @@
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-19T13:35:47.478Z
-Source Commit: b30bc50
+Build Timestamp (UTC): 2026-04-19T17:27:40.667Z
+Source Commit: 158faa5
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -43,7 +43,7 @@ Afgeleid uit `theme/tokens.ts`; die file blijft de enige tokenbron.
 - Tab bar background tokens: light #FAF9F6EE; dark #171714EE.
 - Destructive soft colors: light #F6E8E5 / #C62929 / #ECC1BF; dark #4B2D2B / #FFB4AB / #7E5A56.
 - Key spacing: page 24, content 32, section 32, cluster 12, inline 8.
-- Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/26, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
+- Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/27, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
 
 ## Per-page Markdown Refs
 Deze markdown refs onder `design_refs/1.2.1/**` zijn meegenomen als aanvullende design input wanneer aanwezig.
@@ -78,10 +78,19 @@ Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze gen
   - `ambient`: auth, splash/loaders, processing states, Today, hero-first and empty states.
   - `subtle`: supporting overlays and screens that need light warmth without visible atmosphere.
   - `flat`: capture screens and content-heavy/utility/detail screens.
+- Ambient uses a warm base, a soft upper light pool and a restrained vertical veil.
+- Ambient should feel calm and premium, not decorative or brand-loud.
+- Today is ambient by default because it is a hero-first entry screen.
+- Auth may share the same ambient recipe; utility/detail/settings-like screens stay flatter.
+- `subtle` is a warm support layer, not a weaker ambient spotlight.
+- `subtle` may use a restrained tonal blend and faint top warmth, but should avoid visible radial atmosphere.
+- `flat` may use paper-soft tonal blending, but must still read as visually the quietest mode.
+- `flat` must never feel decorative, atmospheric or visibly gradient-first.
 - Capture screens (`idle`, `voice`, `typing`) prioritize clarity; avoid visible ambient gradients.
 - Content-heavy screens (day detail, week/month detail, settings-like utility flows) stay flatter.
 - Header and footer remain calmer than page content and never carry decorative ambient gradients.
 - Header, page and footer must form one coherent theme hierarchy in both light and dark mode.
+- Full-page routes should use the shared background-mode foundation consistently unless they are a special modal, overlay or shell wrapper.
 
 ### Header + Hero
 - Top navigation is navigation only.

@@ -13,9 +13,10 @@ import {
     SurfaceSection,
 } from "@/components/ui/screen-primitives";
 import {
-    SettingsScreenHeader,
+    SettingsPageHero,
     SettingsStateBody,
     SettingsStateIcon,
+    SettingsTopNav,
 } from "@/components/ui/settings-screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -95,12 +96,17 @@ export default function SettingsObsidianScreen() {
         scrollable
         backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
+        fixedHeader={
+          <SettingsTopNav
+            onBack={() => router.replace("/settings")}
+            onMenu={() => setMenuVisible(true)}
+            title="Instellingen"
+          />
+        }
       >
-        <SettingsScreenHeader
+        <SettingsPageHero
           title="Obsidian integratie"
           subtitle="Deze instelling staat uit."
-          onBack={() => router.replace("/settings")}
-          onMenu={() => setMenuVisible(true)}
         />
 
         <StateBlock
@@ -128,12 +134,17 @@ export default function SettingsObsidianScreen() {
       scrollable
       backgroundTone="flat"
       contentContainerStyle={styles.scrollContent}
+      fixedHeader={
+        <SettingsTopNav
+          onBack={() => router.back()}
+          onMenu={() => setMenuVisible(true)}
+          title="Instellingen"
+        />
+      }
     >
-      <SettingsScreenHeader
+      <SettingsPageHero
         title="Obsidian integratie"
         subtitle="Stel standaard vault en notitie in voor Obsidian."
-        onBack={() => router.back()}
-        onMenu={() => setMenuVisible(true)}
       />
 
       <SurfaceSection title="Vault pad">

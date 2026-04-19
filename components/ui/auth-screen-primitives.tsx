@@ -63,7 +63,7 @@ export function AuthHero({
   return (
     <View style={[styles.hero, style]}>
       <ThemedText
-        type="screenTitle"
+        type="displayTitle"
         style={[styles.headline, compactViewport && styles.headlineCompact]}
       >
         {title}
@@ -190,21 +190,21 @@ const styles = StyleSheet.create({
   },
   headline: {
     textAlign: "center",
-    fontSize: 40,
-    lineHeight: 44,
     maxWidth: "100%",
   },
   headlineCompact: {
-    fontSize: 34,
-    lineHeight: 38,
+    fontSize: typography.roles.screenTitle.size,
+    lineHeight: typography.roles.screenTitle.lineHeight,
+    letterSpacing: typography.roles.screenTitle.letterSpacing,
   },
   subtitle: {
     textAlign: "center",
     maxWidth: "100%",
-    fontSize: typography.roles.body.size + 1,
-    lineHeight: typography.roles.body.lineHeight + 3,
+    fontSize: typography.roles.bodySecondary.size,
+    lineHeight: typography.roles.bodySecondary.lineHeight + 2,
+    letterSpacing: typography.roles.bodySecondary.letterSpacing,
   },
   subtitleCompact: {
-    lineHeight: typography.roles.body.lineHeight + 1,
+    lineHeight: typography.roles.bodySecondary.lineHeight,
   },
 });

@@ -42,6 +42,7 @@ Belangrijk:
 ## Belangrijke idea nodes
 - [[10-product/20-budio-brainstorm-workspace-for-builders]]
 - [[10-product/30-conversation-aware-ingest-and-interpretation]]
+- [[10-product/50-structured-export-and-obsidian-archive]]
 - [[30-ai-and-aiqs/40-aiqs-modular-flow-control-plane]]
 - [[30-ai-and-aiqs/50-source-aware-routing-and-evaluation]]
 - [[40-platform-and-architecture/50-security-posture-and-continuous-hardening]]

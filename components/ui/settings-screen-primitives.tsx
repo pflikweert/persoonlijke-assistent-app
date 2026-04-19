@@ -224,6 +224,20 @@ export function AdminPageHero({ title, subtitle }: { title: string; subtitle: st
   );
 }
 
+export function SettingsPageHero({ title, subtitle }: { title: string; subtitle: string }) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+
+  return (
+    <ThemedView style={styles.hero}>
+      <ThemedText type="screenTitle">{title}</ThemedText>
+      <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+        {subtitle}
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
 export function SettingsHeaderIconButton({
   icon,
   accessibilityLabel,

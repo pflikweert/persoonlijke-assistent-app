@@ -38,6 +38,15 @@ type DetailSectionHeaderProps = {
   style?: ViewStyle;
 };
 
+type DetailReadingSectionProps = {
+  icon?: ComponentProps<typeof MaterialIcons>["name"];
+  title: string;
+  trailingAction?: ReactNode;
+  children: ReactNode;
+  style?: ViewStyle;
+  contentStyle?: ViewStyle;
+};
+
 export function DetailScreenHero({
   title,
   subtitle,
@@ -124,6 +133,26 @@ export function DetailSectionHeader({
   );
 }
 
+export function DetailReadingSection({
+  icon = "auto-awesome",
+  title,
+  trailingAction,
+  children,
+  style,
+  contentStyle,
+}: DetailReadingSectionProps) {
+  return (
+    <ThemedView style={[styles.readingSection, style]}>
+      <DetailSectionHeader
+        icon={icon}
+        title={title}
+        trailingAction={trailingAction}
+      />
+      <ThemedView style={contentStyle}>{children}</ThemedView>
+    </ThemedView>
+  );
+}
+
 export function DetailTertiaryAction({
   label,
   onPress,
@@ -196,6 +225,9 @@ const styles = StyleSheet.create({
   },
   readingBlock: {
     marginBottom: spacing.xxxl,
+  },
+  readingSection: {
+    gap: spacing.md,
   },
   detailSectionHeaderRow: {
     flexDirection: "row",

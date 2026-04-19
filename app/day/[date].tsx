@@ -10,14 +10,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Platform,
-  ScrollView,
-  StyleSheet
+  StyleSheet,
+  type ScrollView,
 } from "react-native";
 
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import { TextEditorModal } from "@/components/feedback/text-editor-modal";
-import { DayEditorialPanel } from "@/components/journal/day-editorial-panel";
+import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary-inset";
 import { EditorialNarrativeBlock } from "@/components/journal/editorial-narrative-block";
 import { MomentsTimelineSection } from "@/components/journal/moments-timeline-section";
 import { ReflectionTeaserCard } from "@/components/journal/reflection-teaser-card";
@@ -29,13 +29,17 @@ import {
 } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { AppBackground } from "@/components/ui/app-background";
 import { CopyIconButton } from "@/components/ui/copy-icon-button";
 import {
-  SectionLabelRow,
+  DetailSectionHeader,
+  DetailReadingSection,
 } from "@/components/ui/detail-screen-primitives";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
-import { SecondaryButton, StateBlock } from "@/components/ui/screen-primitives";
+import {
+  ScreenContainer,
+  SecondaryButton,
+  StateBlock,
+} from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   fetchDayJournalByDate,
@@ -542,56 +546,89 @@ export default function DayDetailScreen() {
   }
 
   return (
-    <ThemedView style={styles.screen}>
-      <AppBackground tone="flat" />
-      <Stack.Screen options={{ headerShown: false }} />
-      <ScreenHeader
-        leftAction={
-          <ThemedView style={styles.headerTitleStack}>
-            <ThemedView style={styles.headerTitleLockup}>
-              <ThemedText type="sectionTitle" style={styles.headerTitlePrimary}>
-                {dayHeading}
-              </ThemedText>
-              <ThemedText
-                type="sectionTitle"
-                style={[styles.headerTitleSecondary, { color: palette.mutedSoft }]}
-              >
-                dag
-              </ThemedText>
-            </ThemedView>
-            <ThemedText
-              type="bodySecondary"
-              style={[styles.headerSubtitle, { color: palette.muted }]}
-            >
-              {readableDate}
-            </ThemedText>
-          </ThemedView>
+    <>
+      <ScreenContainer
+        scrollable
+        scrollRef={scrollRef}
+        backgroundTone="flat"
+        contentContainerStyle={styles.scrollContent}
+        fixedHeader={
+          <>
+            <Stack.Screen options={{ headerShown: false }} />
+            <ScreenHeader
+              leftAction={
+                <ThemedView style={styles.headerTitleStack}>
+                  <ThemedView style={styles.headerTitleLockup}>
+                    <ThemedText type="sectionTitle" style={styles.headerTitlePrimary}>
+                      {dayHeading}
+                    </ThemedText>
+                    <ThemedText
+                      type="sectionTitle"
+                      style={[styles.headerTitleSecondary, { color: palette.mutedSoft }]}
+                    >
+                      dag
+                    </ThemedText>
+                  </ThemedView>
+                  <ThemedText
+                    type="bodySecondary"
+                    style={[styles.headerSubtitle, { color: palette.muted }]}
+                  >
+                    {readableDate}
+                  </ThemedText>
+                </ThemedView>
+              }
+              rightAction={
+                <ThemedView style={styles.headerActions}>
+                  <HeaderIconButton
+                    accessibilityRole="button"
+                    accessibilityLabel="Kies dag"
+                    onPress={() => router.push("/days")}
+                  >
+                    <MaterialIcons
+                      name="calendar-today"
+                      size={18}
+                      color={palette.primary}
+                    />
+                  </HeaderIconButton>
+                  <HeaderIconButton
+                    accessibilityRole="button"
+                    accessibilityLabel="Open menu"
+                    onPress={() => setMenuVisible(true)}
+                  >
+                    <MaterialIcons name="menu" size={20} color={palette.primary} />
+                  </HeaderIconButton>
+                </ThemedView>
+              }
+              surface="transparent"
+            />
+          </>
         }
-        rightAction={
-          <ThemedView style={styles.headerActions}>
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Kies dag"
-              onPress={() => router.push("/days")}
-            >
-              <MaterialIcons
-                name="calendar-today"
-                size={18}
-                color={palette.primary}
-              />
-            </HeaderIconButton>
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Open menu"
-              onPress={() => setMenuVisible(true)}
-            >
-              <MaterialIcons name="menu" size={20} color={palette.primary} />
-            </HeaderIconButton>
-          </ThemedView>
+        fixedFooter={
+          <BottomTabBarStandalone
+            activeKey={
+              menuRouteKey === "capture"
+                ? "capture"
+                : menuRouteKey === "reflections"
+                  ? "reflections"
+                  : "today"
+            }
+            onSelect={(key) => {
+              if (key === "capture") {
+                router.push("/capture");
+                return;
+              }
+              if (key === "reflections") {
+                router.replace({
+                  pathname: "/reflections",
+                  params: { period: "week", anchorDate: journalDate },
+                });
+                return;
+              }
+              router.replace("/(tabs)");
+            }}
+          />
         }
-        surface="transparent"
-      />
-      <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
+      >
         {showProcessedBanner ? (
           <ThemedView style={styles.processedRow}>
             <ThemedView
@@ -629,91 +666,90 @@ export default function DayDetailScreen() {
         ) : null}
 
         {!loading && !error && summary ? (
-          <DayEditorialPanel text={summary} />
+          <DayJournalSummaryInset text={summary} />
         ) : null}
 
         {!loading && !error && narrativeText ? (
-          <EditorialNarrativeBlock
+          <DetailReadingSection
             title="Dagverhaal"
-            text={narrativeText}
-            action={
+            trailingAction={
               <CopyIconButton
                 payload={dayJournalCopyPayload}
                 copyLabel="Kopieer dagjournaal"
                 copiedLabel="Dagjournaal gekopieerd"
               />
             }
-          />
+          >
+            <EditorialNarrativeBlock text={narrativeText} />
+          </DetailReadingSection>
         ) : null}
 
         {!loading && !error && insightText ? (
-          <ThemedView
-            lightColor="transparent"
-            darkColor="transparent"
-            style={[styles.insightBlock, { borderLeftColor: palette.primary }]}
-          >
-            <SectionLabelRow
-              icon="auto-awesome"
-              iconSize={14}
-              label="INZICHT"
-              textType="caption"
-              color={palette.primary}
-              labelStyle={styles.insightLabel}
-            />
-            <ThemedText
-              type="bodySecondary"
-              style={[styles.insightText, { color: palette.muted }]}
+          <DetailReadingSection title="Inzicht">
+            <ThemedView
+              lightColor="transparent"
+              darkColor="transparent"
+              style={[styles.insightBlock, { borderLeftColor: palette.primary }]}
             >
-              {insightText}
-            </ThemedText>
-          </ThemedView>
+              <ThemedText
+                type="bodySecondary"
+                style={[styles.insightText, { color: palette.muted }]}
+              >
+                {insightText}
+              </ThemedText>
+            </ThemedView>
+          </DetailReadingSection>
         ) : null}
 
         {!loading && !error && previewSections.length > 0 ? (
-          <ThemedView
-            lightColor="transparent"
-            darkColor="transparent"
-            style={styles.keyPointsBlock}
-          >
-            <ThemedText type="meta" style={{ color: palette.primary }}>
-              Kernpunten
-            </ThemedText>
-            <ThemedView style={styles.keyPointsList}>
-              {previewSections.map((section, index) => (
-                <ThemedView
-                  key={`${section}-${index}`}
-                  style={styles.keyPointRow}
-                >
+          <DetailReadingSection title="Kernpunten">
+            <ThemedView
+              lightColor="transparent"
+              darkColor="transparent"
+              style={styles.keyPointsBlock}
+            >
+              <ThemedView style={styles.keyPointsList}>
+                {previewSections.map((section, index) => (
                   <ThemedView
-                    style={[
-                      styles.dot,
-                      { backgroundColor: palette.primaryStrong },
-                    ]}
-                  />
-                  <ThemedText type="bodySecondary" style={styles.keyPointText}>
-                    {section}
-                  </ThemedText>
-                </ThemedView>
-              ))}
+                    key={`${section}-${index}`}
+                    style={styles.keyPointRow}
+                  >
+                    <ThemedView
+                      style={[
+                        styles.dot,
+                        { backgroundColor: palette.primaryStrong },
+                      ]}
+                    />
+                    <ThemedText type="bodySecondary" style={styles.keyPointText}>
+                      {section}
+                    </ThemedText>
+                  </ThemedView>
+                ))}
+              </ThemedView>
             </ThemedView>
-          </ThemedView>
+          </DetailReadingSection>
         ) : null}
 
         {!loading && !error && visibleEntries.length > 0 ? (
-          <MomentsTimelineSection
-            title="Individuele momenten"
-            entries={visibleEntries}
-            style={styles.momentsBlock}
-            focusedEntryId={focusedEntryId}
-            onEntryLayout={handleEntryLayout}
-            onEntryPress={(entry) =>
-              router.push({
-                pathname: "/entry/[id]",
-                params: { id: entry.id, source: "day", date: journalDate },
-              })
-            }
-            previewText={(entry) => entry.summary_short || entry.body}
-          />
+          <ThemedView style={styles.momentsSection}>
+            <DetailSectionHeader
+              icon="auto-awesome"
+              title="Individuele momenten"
+            />
+            <MomentsTimelineSection
+              entries={visibleEntries}
+              style={styles.momentsBlock}
+              focusedEntryId={focusedEntryId}
+              onEntryLayout={handleEntryLayout}
+              onEntryPress={(entry) =>
+                router.push({
+                  pathname: "/entry/[id]",
+                  params: { id: entry.id, source: "day", date: journalDate },
+                })
+              }
+              previewText={(entry) => entry.summary_short || entry.body}
+            />
+          </ThemedView>
         ) : null}
 
         <TextEditorModal
@@ -770,32 +806,7 @@ export default function DayDetailScreen() {
             ) : null}
           </ThemedView>
         ) : null}
-      </ScrollView>
-
-      <BottomTabBarStandalone
-        activeKey={
-          menuRouteKey === "capture"
-            ? "capture"
-            : menuRouteKey === "reflections"
-              ? "reflections"
-              : "today"
-        }
-        onSelect={(key) => {
-          if (key === "capture") {
-            router.push("/capture");
-            return;
-          }
-          if (key === "reflections") {
-            router.replace({
-              pathname: "/reflections",
-              params: { period: "week", anchorDate: journalDate },
-            });
-            return;
-          }
-          router.replace("/(tabs)");
-        }}
-      />
-
+      </ScreenContainer>
       <FullscreenMenuOverlay
         visible={menuVisible}
         currentRouteKey={menuRouteKey}
@@ -804,14 +815,11 @@ export default function DayDetailScreen() {
         }}
         onRequestClose={() => setMenuVisible(false)}
       />
-    </ThemedView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: spacing.page,
     paddingTop: spacing.page,
@@ -862,13 +870,8 @@ const styles = StyleSheet.create({
     paddingRight: spacing.sm,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
-    marginBottom: spacing.xl,
     borderLeftWidth: 2,
-    gap: spacing.xs,
-  },
-  insightLabel: {
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
+    gap: spacing.sm,
   },
   insightText: {
     fontStyle: "italic",
@@ -878,7 +881,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     gap: spacing.lg,
-    marginBottom: spacing.xl,
   },
   keyPointsList: {
     gap: spacing.md,
@@ -899,6 +901,9 @@ const styles = StyleSheet.create({
   },
   momentsBlock: {
     marginBottom: spacing.md,
+  },
+  momentsSection: {
+    gap: spacing.md,
   },
   bottomActionWrap: {
     alignItems: "center",

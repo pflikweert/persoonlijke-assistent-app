@@ -16,6 +16,7 @@ export interface FunctionErrorPayload {
     | 'regenerate-day-journal'
     | 'renormalize-entry'
     | 'import-chatgpt-markdown'
+    | 'start-user-export'
     | 'admin-regeneration-job'
     | 'admin-ai-quality-studio';
   requestId: string;

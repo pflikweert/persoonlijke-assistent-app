@@ -5,7 +5,7 @@ import { StyleSheet } from "react-native";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { RadioChoiceGroup } from "@/components/ui/radio-choice-group";
+import { ChoiceInputGroup } from "@/components/ui/radio-choice-group";
 import {
   PrimaryButton,
   ScreenContainer,
@@ -13,9 +13,10 @@ import {
   SurfaceSection,
 } from "@/components/ui/screen-primitives";
 import {
-  SettingsScreenHeader,
+  SettingsPageHero,
   SettingsStateBody,
   SettingsStateIcon,
+  SettingsTopNav,
 } from "@/components/ui/settings-screen-primitives";
 import {
   classifyUnknownError,
@@ -92,12 +93,17 @@ export default function SettingsAudioScreen() {
       scrollable
       backgroundTone="flat"
       contentContainerStyle={styles.scrollContent}
+      fixedHeader={
+        <SettingsTopNav
+          onBack={() => router.back()}
+          onMenu={() => setMenuVisible(true)}
+          title="Instellingen"
+        />
+      }
     >
-      <SettingsScreenHeader
+      <SettingsPageHero
         title="Audio-opnames bewaren"
         subtitle="Beheer opslag van originele audiobestanden."
-        onBack={() => router.back()}
-        onMenu={() => setMenuVisible(true)}
       />
 
       <SurfaceSection title="Opslag voorkeur">
@@ -116,7 +122,7 @@ export default function SettingsAudioScreen() {
             />
           ) : (
             <ThemedView style={styles.radioWrap}>
-              <RadioChoiceGroup
+              <ChoiceInputGroup
                 options={[
                   {
                     key: "off",

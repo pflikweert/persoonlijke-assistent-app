@@ -16,7 +16,7 @@ export type TimelineMomentEntry = {
 };
 
 type MomentsTimelineSectionProps = {
-  title: string;
+  title?: string;
   entries: TimelineMomentEntry[];
   rightLabel?: string;
   focusedEntryId?: string | null;
@@ -45,16 +45,22 @@ export function MomentsTimelineSection({
 
   return (
     <ThemedView style={[styles.section, style]}>
-      <ThemedView style={styles.headerRow}>
-        <ThemedText type="meta" style={[styles.title, { color: palette.primary }]}>
-          {title}
-        </ThemedText>
-        {rightLabel ? (
-          <ThemedText type="caption" style={[styles.rightLabel, { color: palette.mutedSoft }]}>
-            {rightLabel}
-          </ThemedText>
-        ) : null}
-      </ThemedView>
+      {title || rightLabel ? (
+        <ThemedView style={styles.headerRow}>
+          {title ? (
+            <ThemedText type="meta" style={[styles.title, { color: palette.primary }]}>
+              {title}
+            </ThemedText>
+          ) : (
+            <ThemedView />
+          )}
+          {rightLabel ? (
+            <ThemedText type="caption" style={[styles.rightLabel, { color: palette.mutedSoft }]}>
+              {rightLabel}
+            </ThemedText>
+          ) : null}
+        </ThemedView>
+      ) : null}
 
       <ThemedView style={styles.list}>
         {entries.map((entry, index) => (

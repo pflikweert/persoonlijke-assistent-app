@@ -177,6 +177,10 @@ Reflection generation handled outside MVP design phase.
 - readable
 - calm
 - no UI-heavy labels
+- keep the existing sans base: `Inter` on web, system sans on native
+- hero-first screens may use a stronger editorial display title inside that same sans family
+- body/meta hierarchy should come from calmer line-height, tracking and spacing, not from extra surface mass
+- do not imitate Spotify branding, licensed fonts or brand-specific type behavior
 
 ### Icons
 - minimal
@@ -236,10 +240,19 @@ Not allowed:
   - `ambient`: auth, splash/loaders, processing states, Today, hero-first and empty states.
   - `subtle`: supporting overlays and screens that need light warmth without visible atmosphere.
   - `flat`: capture screens and content-heavy/utility/detail screens.
+- Ambient uses a warm base, a soft upper light pool and a restrained vertical veil.
+- Ambient should feel calm and premium, not decorative or brand-loud.
+- Today is ambient by default because it is a hero-first entry screen.
+- Auth may share the same ambient recipe; utility/detail/settings-like screens stay flatter.
+- `subtle` is a warm support layer, not a weaker ambient spotlight.
+- `subtle` may use a restrained tonal blend and faint top warmth, but should avoid visible radial atmosphere.
+- `flat` may use paper-soft tonal blending, but must still read as visually the quietest mode.
+- `flat` must never feel decorative, atmospheric or visibly gradient-first.
 - Capture screens (`idle`, `voice`, `typing`) prioritize clarity; avoid visible ambient gradients.
 - Content-heavy screens (day detail, week/month detail, settings-like utility flows) stay flatter.
 - Header and footer remain calmer than page content and never carry decorative ambient gradients.
 - Header, page and footer must form one coherent theme hierarchy in both light and dark mode.
+- Full-page routes should use the shared background-mode foundation consistently unless they are a special modal, overlay or shell wrapper.
 
 ### Header + Hero
 - Top navigation is navigation only.

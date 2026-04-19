@@ -60,6 +60,7 @@ Gecontroleerd op:
 | AIQS prompt-assist preview voor `entry_cleanup` (admin-only) | Editor hardening | **Aanwezig** | server-side action `prompt_assist_preview` + client service/types + draft editor met single-target apply, inline diff en issue-signalen zonder brede chat-UI. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
 | Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
+| Foundation polish: editorial typography + selective ambient backgrounds | Shared design-system hardening | **Aanwezig** | `theme/tokens.ts` bevat nu expliciete typography-roles inclusief display title en gedeelde `ambient/subtle/flat` background tokens; `components/themed-text.tsx`, `components/ui/app-background.tsx`, `components/ui/home-screen-primitives.tsx`, `components/ui/auth-screen-primitives.tsx` en Today (`app/(tabs)/index.tsx`) gebruiken deze foundation. |
 | Branded productlaag “Budio Vandaag” in shell/auth/menu | Niet als losse MVP-feature benoemd in vroege projectdocs | **Aanwezig** | branded login/header/menu/splash doorgevoerd in `app/sign-in.tsx`, `components/ui/auth-screen-primitives.tsx`, `components/navigation/fullscreen-menu-overlay.tsx`, `app/(tabs)/index.tsx`, `app.json`. |
 
 ## Fase 1.2 status

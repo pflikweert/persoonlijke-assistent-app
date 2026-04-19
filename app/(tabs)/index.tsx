@@ -1,5 +1,5 @@
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
-import { DayEditorialPanel } from "@/components/journal/day-editorial-panel";
+import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary-inset";
 import { MomentsTimelineSection } from "@/components/journal/moments-timeline-section";
 import { ReflectionTeaserCard } from "@/components/journal/reflection-teaser-card";
 import { ScreenHeader } from "@/components/layout/screen-header";
@@ -13,7 +13,6 @@ import {
   HomeStatusLine,
 } from "@/components/ui/home-screen-primitives";
 import {
-  MetaText,
   PrimaryButton,
   ScreenContainer,
   StateBlock,
@@ -120,7 +119,7 @@ export default function TodayScreen() {
   return (
     <ScreenContainer
       scrollable
-      backgroundTone="subtle"
+      backgroundTone="ambient"
       fixedHeader={
         <ScreenHeader
           leftAction={
@@ -188,20 +187,20 @@ export default function TodayScreen() {
           detail={error}
         />
       ) : null}
-      {!loading && !error && !hasUsableTodaySummary ? (
-        <DayEditorialPanel
-          text={
-            '"Je dag is nog een leeg canvas. Er is ruimte voor de kleine dingen die later betekenis krijgen."'
-          }
-        />
-      ) : null}
-
-      {!loading && !error && hasUsableTodaySummary ? (
-        <DayEditorialPanel
-          text={summary?.trim() ?? ""}
-          numberOfLines={4}
-          onPress={() => router.push(`/day/${todayDate}`)}
-        />
+      {!loading && !error ? (
+        <ThemedView style={styles.summarySection}>
+          {hasUsableTodaySummary ? (
+            <Pressable onPress={() => router.push(`/day/${todayDate}`)}>
+              <DayJournalSummaryInset text={summary?.trim() ?? ""} />
+            </Pressable>
+          ) : (
+            <DayJournalSummaryInset
+              text={
+                "Je dag is nog een leeg canvas. Er is ruimte voor de kleine dingen die later betekenis krijgen."
+              }
+            />
+          )}
+        </ThemedView>
       ) : null}
 
       {!loading && !error && todayEntries.length > 0 ? (
@@ -231,11 +230,19 @@ export default function TodayScreen() {
             router.push(`/day/${latestPreviousJournal.journal_date}`)
           }
         >
-          <ThemedView style={styles.previousSummaryBlock}>
-            <MetaText>
+          <ThemedView
+            style={[
+              styles.previousSummaryBlock,
+              { borderLeftColor: scheme === "dark" ? "#B8A47A" : "#8A6A1F" },
+            ]}
+          >
+            <ThemedText
+              type="meta"
+              style={[styles.previousSummaryMeta, { color: palette.primary }]}
+            >
               Laatste dag ·{" "}
               {formatShortDate(latestPreviousJournal.journal_date)}
-            </MetaText>
+            </ThemedText>
             <ThemedText
               type="bodySecondary"
               style={[styles.compactText, { color: palette.muted }]}
@@ -355,16 +362,22 @@ const styles = StyleSheet.create({
   recentBlock: {
     marginTop: spacing.lg,
   },
+  summarySection: {
+    marginTop: spacing.xs,
+  },
   previousSummaryBlock: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
     gap: spacing.xs,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.xs,
+    paddingLeft: spacing.md,
+    borderLeftWidth: 2,
+  },
+  previousSummaryMeta: {
+    letterSpacing: 0.3,
   },
   reflectTeaserBlock: {
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
   },
   reflectTeaserItem: {
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
   },
 });

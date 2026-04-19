@@ -10,7 +10,7 @@ import {
   ArchiveGroupedList,
   type ArchiveGroupedListSection,
 } from "@/components/journal/archive-grouped-list";
-import { DayEditorialPanel } from "@/components/journal/day-editorial-panel";
+import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary-inset";
 import { EditorialNarrativeBlock } from "@/components/journal/editorial-narrative-block";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
@@ -18,8 +18,9 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { CopyIconButton } from "@/components/ui/copy-icon-button";
 import {
+  DetailReadingSection,
+  DetailSectionHeader,
   DetailScreenHero,
-  SectionLabelRow,
 } from "@/components/ui/detail-screen-primitives";
 import {
   HeaderIconButton,
@@ -67,6 +68,10 @@ function parseAnchorDate(
 
 function periodTypeLabel(periodType: PeriodType): string {
   return periodType === "week" ? "Week" : "Maand";
+}
+
+function narrativeSectionTitle(periodType: PeriodType): string {
+  return periodType === "week" ? "Weekverhaal" : "Maandverhaal";
 }
 
 function weekHero(periodStart: string): { title: string; subtitle: string } {
@@ -699,28 +704,33 @@ export default function ReflectionsScreen() {
                     />
                   ) : (
                     <>
-                      <DayEditorialPanel text={activeReflection.summary_text} />
+                      <DayJournalSummaryInset
+                        text={activeReflection.summary_text}
+                      />
 
                       {activeReflection.narrative_text?.trim() ? (
-                        <EditorialNarrativeBlock
-                          title={narrativeTitle ?? undefined}
-                          text={activeReflection.narrative_text}
-                          action={
+                        <DetailReadingSection
+                          title={narrativeSectionTitle(activePeriod)}
+                          trailingAction={
                             <CopyIconButton
                               payload={reflectionCopyPayload}
                               copyLabel={`Kopieer ${activePeriod === "week" ? "week" : "maand"}reflectie`}
                               copiedLabel={`${activePeriod === "week" ? "Week" : "Maand"}reflectie gekopieerd`}
                             />
                           }
-                        />
+                        >
+                          <EditorialNarrativeBlock
+                            title={narrativeTitle ?? undefined}
+                            text={activeReflection.narrative_text}
+                          />
+                        </DetailReadingSection>
                       ) : null}
 
                       {cleanHighlights.length > 0 ? (
                         <ThemedView style={styles.highlightList}>
-                          <SectionLabelRow
+                          <DetailSectionHeader
                             icon="auto-awesome"
-                            label="Belangrijkste gebeurtenissen"
-                            color={palette.primary}
+                            title="Belangrijkste gebeurtenissen"
                           />
                           {cleanHighlights.map((item, index) => {
                             const split = splitHighlightText(item);
@@ -790,10 +800,9 @@ export default function ReflectionsScreen() {
 
                       {cleanReflectionPoints.length > 0 ? (
                         <ThemedView style={styles.highlightList}>
-                          <SectionLabelRow
+                          <DetailSectionHeader
                             icon="auto-awesome"
-                            label="Reflectiepunten"
-                            color={palette.primary}
+                            title="Reflectiepunten"
                           />
                           <ThemedView style={styles.reflectionPointsCard}>
                             {cleanReflectionPoints.map((item, index) => (
@@ -921,13 +930,13 @@ const styles = StyleSheet.create({
   },
   periodSwitch: {
     marginTop: spacing.sm,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   readingCanvas: {
-    gap: spacing.xl,
+    gap: spacing.section,
   },
   highlightList: {
-    gap: spacing.lg,
+    gap: spacing.md,
   },
   highlightEditorialRow: {
     flexDirection: "row",
@@ -939,11 +948,11 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   highlightIndex: {
-    fontSize: 42,
-    lineHeight: 42,
-    fontWeight: "300",
+    fontSize: 36,
+    lineHeight: 38,
+    fontWeight: "400",
     fontStyle: "italic",
-    letterSpacing: 0.2,
+    letterSpacing: -0.2,
   },
   highlightTrackCol: {
     width: 12,
@@ -964,7 +973,7 @@ const styles = StyleSheet.create({
   highlightEditorialContent: {
     flex: 1,
     gap: spacing.xxs,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.lg,
   },
   highlightTitle: {
     fontWeight: "400",
@@ -988,8 +997,8 @@ const styles = StyleSheet.create({
   },
   reflectionPointText: {
     fontStyle: "italic",
-    fontSize: 20,
-    lineHeight: 34,
+    fontSize: 19,
+    lineHeight: 32,
     letterSpacing: -0.2,
     fontWeight: "400",
   },
@@ -998,5 +1007,6 @@ const styles = StyleSheet.create({
   },
   bottomActionWrap: {
     marginTop: spacing.xs,
+    alignItems: "center",
   },
 });

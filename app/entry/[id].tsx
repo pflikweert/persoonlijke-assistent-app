@@ -9,10 +9,11 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet } from "react-native";
 
-import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
+import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import { TextEditorModal } from "@/components/feedback/text-editor-modal";
+import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary-inset";
 import { EditorialNarrativeBlock } from "@/components/journal/editorial-narrative-block";
 import { EntryAudioPlayer } from "@/components/journal/entry-audio-player";
 import { ScreenHeader } from "@/components/layout/screen-header";
@@ -574,19 +575,7 @@ export default function EntryCompletionScreen() {
 
             {showAssistantCopy ? (
               <ThemedView style={styles.summarySectionBlock}>
-                <ThemedView
-                  style={[
-                    styles.summaryHighlight,
-                    { borderLeftColor: scheme === "dark" ? "#B8A47A" : "#8A6A1F" },
-                  ]}
-                >
-                  <ThemedText
-                    type="defaultSemiBold"
-                    style={[styles.summaryText, { color: palette.text }]}
-                  >
-                    {summaryShortText}
-                  </ThemedText>
-                </ThemedView>
+                <DayJournalSummaryInset text={summaryShortText} />
               </ThemedView>
             ) : null}
 
@@ -695,12 +684,24 @@ export default function EntryCompletionScreen() {
           onSubmit={() => void handleSaveEdit()}
         />
       </ScreenContainer>
-      <ConfirmDialog
+      <ConfirmSheet
         visible={deleteConfirmVisible}
         title="Moment verwijderen?"
         message="Weet je zeker dat je dit moment wilt verwijderen? Dit kun je niet ongedaan maken."
-        cancelLabel="Annuleren"
-        confirmLabel="Verwijderen"
+        actions={[
+          {
+            key: "cancel",
+            label: "Annuleren",
+            onPress: () => setDeleteConfirmVisible(false),
+          },
+          {
+            key: "confirm",
+            label: "Verwijderen",
+            tone: "destructive",
+            icon: "delete-forever",
+            onPress: () => void runDeleteFlow(),
+          },
+        ]}
         processing={deleting}
         onCancel={() => setDeleteConfirmVisible(false)}
         onConfirm={() => void runDeleteFlow()}
@@ -739,17 +740,8 @@ const styles = StyleSheet.create({
   summarySectionBlock: {
     marginBottom: spacing.xl,
   },
-  summaryHighlight: {
-    borderLeftWidth: 2,
-    paddingLeft: spacing.md,
-  },
   primarySectionSpacing: {
     marginBottom: spacing.xl,
-  },
-  summaryText: {
-    fontSize: 21,
-    lineHeight: 33,
-    fontStyle: "italic",
   },
   narrativeBlock: {
     marginBottom: spacing.xs,

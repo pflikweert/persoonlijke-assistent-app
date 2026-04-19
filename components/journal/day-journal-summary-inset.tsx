@@ -1,25 +1,33 @@
-import { StyleSheet, type ViewStyle } from 'react-native';
+import { StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colorTokens, radius, spacing, typography } from '@/theme';
+import { colorTokens, spacing } from '@/theme';
 
 type DayJournalSummaryInsetProps = {
   text: string;
   style?: ViewStyle;
+  textStyle?: TextStyle;
 };
 
-export function DayJournalSummaryInset({ text, style }: DayJournalSummaryInsetProps) {
+export function DayJournalSummaryInset({
+  text,
+  style,
+  textStyle,
+}: DayJournalSummaryInsetProps) {
   const scheme = useColorScheme() ?? 'light';
+  const accentColor = scheme === 'dark' ? '#B8A47A' : '#8A6A1F';
   const palette = colorTokens[scheme];
 
   return (
     <ThemedView
-      lightColor={colorTokens.light.surfaceLowest}
-      darkColor={colorTokens.dark.surfaceLow}
-      style={[styles.summaryInset, { borderLeftColor: `${palette.primary}55` }, style]}>
-      <ThemedText type="bodySecondary" style={styles.summaryInsetText}>
+      lightColor="transparent"
+      darkColor="transparent"
+      style={[styles.summaryInset, { borderLeftColor: accentColor }, style]}>
+      <ThemedText
+        type="defaultSemiBold"
+        style={[styles.summaryInsetText, { color: palette.text }, textStyle]}>
         {text}
       </ThemedText>
     </ThemedView>
@@ -29,14 +37,11 @@ export function DayJournalSummaryInset({ text, style }: DayJournalSummaryInsetPr
 const styles = StyleSheet.create({
   summaryInset: {
     borderLeftWidth: 2,
-    borderTopRightRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingLeft: spacing.md,
   },
   summaryInsetText: {
     fontStyle: 'italic',
-    lineHeight: typography.roles.bodySecondary.lineHeight + 3,
+    fontSize: 21,
+    lineHeight: 33,
   },
 });
-

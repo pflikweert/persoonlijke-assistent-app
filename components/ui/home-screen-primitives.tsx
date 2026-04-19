@@ -26,7 +26,7 @@ export function HomeHeroIntro({
 
   return (
     <ThemedView style={[styles.hero, style]}>
-      <ThemedText type="screenTitle" style={styles.heroTitle}>
+      <ThemedText type="displayTitle" style={styles.heroTitle}>
         {title}
       </ThemedText>
       <ThemedText type="bodySecondary" style={[styles.heroCopy, { color: palette.muted }]}>
@@ -82,7 +82,7 @@ export function HomeReflectionPreviewFrame({
     <ThemedView
       style={[
         styles.reflectTeaserFrame,
-        { borderTopColor: palette.border },
+        { borderTopColor: `${palette.separator}B8` },
         style,
       ]}
     >
@@ -94,7 +94,7 @@ export function HomeReflectionPreviewFrame({
 const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
-    gap: spacing.xxs,
+    gap: spacing.xs,
     paddingTop: spacing.xs,
   },
   heroTitle: {
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
-    paddingTop: spacing.md,
+    paddingTop: spacing.lg,
     gap: spacing.md,
   },
 });

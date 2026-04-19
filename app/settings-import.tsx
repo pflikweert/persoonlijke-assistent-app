@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 
 import { BackgroundTaskStatusCard } from "@/components/feedback/background-task-status-card";
-import { ConfirmDialog } from "@/components/feedback/confirm-dialog";
+import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
@@ -18,9 +18,10 @@ import {
     SurfaceSection,
 } from "@/components/ui/screen-primitives";
 import {
-  SettingsScreenHeader,
+  SettingsPageHero,
   SettingsStateBody,
   SettingsStateIcon,
+  SettingsTopNav,
 } from "@/components/ui/settings-screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -304,12 +305,17 @@ export default function SettingsImportScreen() {
         scrollable
         backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
+        fixedHeader={
+          <SettingsTopNav
+            onBack={() => router.back()}
+            onMenu={() => setMenuVisible(true)}
+            title="Instellingen"
+          />
+        }
       >
-        <SettingsScreenHeader
+        <SettingsPageHero
           title="Importeren"
           subtitle="Importeer eerder geschreven bestanden."
-          onBack={() => router.back()}
-          onMenu={() => setMenuVisible(true)}
         />
 
         {!importEnabled ? (
@@ -531,7 +537,7 @@ export default function SettingsImportScreen() {
           onRequestClose={() => setMenuVisible(false)}
         />
 
-        <ConfirmDialog
+        <ConfirmSheet
           visible={importEnabled && replaceConfirmVisible}
           title="Import aanpassen"
           message="Voor deze importbron is al een import gedaan. Kies hoe je wilt doorgaan."
@@ -551,6 +557,7 @@ export default function SettingsImportScreen() {
               key: "replace_all",
               label: "Alles vervangen",
               tone: "destructive",
+              icon: "autorenew",
               onPress: () => void runImport("replace_all"),
             },
           ]}

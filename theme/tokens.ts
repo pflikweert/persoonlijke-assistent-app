@@ -55,6 +55,57 @@ export const colorTokens = {
   },
 } as const;
 
+export const pageBackgrounds = {
+  ambient: {
+    light: {
+      baseColor: "#FAF9F4",
+      radialInner: "#FFFFFF",
+      radialMid: "#FBF8F1",
+      radialOuter: "#F1EEE6",
+      veilTop: "rgba(230, 184, 0, 0.10)",
+      veilMid: "rgba(230, 184, 0, 0.035)",
+      veilBottom: "rgba(214, 194, 152, 0.14)",
+    },
+    dark: {
+      baseColor: "#171714",
+      radialInner: "#2A2823",
+      radialMid: "#1D1C18",
+      radialOuter: "#171714",
+      veilTop: "rgba(243, 197, 58, 0.14)",
+      veilMid: "rgba(243, 197, 58, 0.04)",
+      veilBottom: "rgba(92, 85, 72, 0.20)",
+    },
+  },
+  subtle: {
+    light: {
+      baseColor: "#FAF9F4",
+      softBlendColor: "#F4F3F0",
+      topTone: "rgba(230, 184, 0, 0.05)",
+      midTone: "rgba(230, 184, 0, 0.015)",
+      bottomTone: "rgba(214, 194, 152, 0.05)",
+    },
+    dark: {
+      baseColor: "#171714",
+      softBlendColor: "#1D1B18",
+      topTone: "rgba(243, 197, 58, 0.055)",
+      midTone: "rgba(243, 197, 58, 0.018)",
+      bottomTone: "rgba(92, 85, 72, 0.07)",
+    },
+  },
+  flat: {
+    light: {
+      baseColor: "#FAF9F4",
+      softBlendColor: "#F7F5EE",
+      topTone: "rgba(255, 255, 255, 0.18)",
+    },
+    dark: {
+      baseColor: "#171714",
+      softBlendColor: "#1A1916",
+      topTone: "rgba(255, 255, 255, 0.025)",
+    },
+  },
+} as const;
+
 export const spacing = {
   xxs: 2,
   xs: 4,
@@ -151,47 +202,53 @@ export const typography = {
     },
   }),
   roles: {
+    displayTitle: {
+      size: 38,
+      lineHeight: 44,
+      weight: "700",
+      letterSpacing: -0.9,
+    },
     screenTitle: {
       size: 34,
       lineHeight: 40,
       weight: "700",
-      letterSpacing: -0.5,
+      letterSpacing: -0.55,
     },
     sectionTitle: {
       size: 20,
       lineHeight: 26,
       weight: "600",
-      letterSpacing: -0.2,
+      letterSpacing: -0.25,
     },
     body: {
       size: 16,
-      lineHeight: 26,
+      lineHeight: 27,
       weight: "400",
-      letterSpacing: -0.1,
+      letterSpacing: -0.12,
     },
     bodySecondary: {
       size: 15,
       lineHeight: 24,
       weight: "400",
-      letterSpacing: -0.1,
+      letterSpacing: -0.08,
     },
     caption: {
       size: 12,
       lineHeight: 18,
       weight: "500",
-      letterSpacing: 0.2,
+      letterSpacing: 0.15,
     },
     meta: {
       size: 11,
       lineHeight: 16,
       weight: "600",
-      letterSpacing: 1.1,
+      letterSpacing: 0.9,
     },
     ctaLabel: {
       size: 16,
       lineHeight: 20,
       weight: "700",
-      letterSpacing: 0.2,
+      letterSpacing: 0.12,
     },
   },
   size: {

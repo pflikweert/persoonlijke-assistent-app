@@ -1,16 +1,19 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform, Share, StyleSheet } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import * as Linking from "expo-linking";
 
 import {
   ExportPeriodSelectorModal,
   type ExportPeriodSelectorTab,
 } from "@/components/feedback/export-period-selector-modal";
+import { BackgroundTaskStatusCard } from "@/components/feedback/background-task-status-card";
+import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { NoticeCard } from "@/components/ui/notice-card";
-import { RadioChoiceGroup } from "@/components/ui/radio-choice-group";
+import { ChoiceInputGroup } from "@/components/ui/radio-choice-group";
 import {
   PrimaryButton,
   ScreenContainer,
@@ -19,19 +22,26 @@ import {
   SurfaceSection,
 } from "@/components/ui/screen-primitives";
 import {
-  SettingsScreenHeader,
+  SettingsPageHero,
   SettingsStateBody,
   SettingsStateIcon,
+  SettingsTopNav,
 } from "@/components/ui/settings-screen-primitives";
 import {
   ALL_DATE_SCOPE,
   classifyUnknownError,
   describeDateScope,
   downloadUserArchive,
+  dismissArchiveExportTaskNotice,
+  fetchArchiveExportTaskById,
+  fetchLatestArchiveExportTask,
+  getArchiveExportDownloadUrl,
   listSelectableDays,
   listSelectableMonths,
   listSelectableWeeks,
   previewArchiveScope,
+  startStructuredArchiveExport,
+  type ArchiveExportTask,
   type ArchiveExportPreview,
   type DateScope,
   type SelectableDay,
@@ -42,6 +52,9 @@ import { colorTokens, radius, spacing } from "@/theme";
 
 type ExportState = "choose" | "review" | "loading" | "success" | "error";
 type ExportMode = "all" | "period";
+type ExportFormat = "single" | "structured";
+
+const BACKGROUND_POLL_MS = 3500;
 
 type ExportResultMeta = {
   fileUri?: string;
@@ -54,6 +67,12 @@ export default function SettingsExportScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [state, setState] = useState<ExportState>("choose");
   const [mode, setMode] = useState<ExportMode>("all");
+  const [format, setFormat] = useState<ExportFormat>("single");
+  const [includeMoments, setIncludeMoments] = useState(true);
+  const [includeDays, setIncludeDays] = useState(true);
+  const [includeWeeks, setIncludeWeeks] = useState(true);
+  const [includeMonths, setIncludeMonths] = useState(true);
+  const [includeAudio, setIncludeAudio] = useState(false);
   const [periodSelectorVisible, setPeriodSelectorVisible] = useState(false);
   const [periodSelectorTab, setPeriodSelectorTab] =
     useState<ExportPeriodSelectorTab>("day");
@@ -62,6 +81,11 @@ export default function SettingsExportScreen() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resultMeta, setResultMeta] = useState<ExportResultMeta | null>(null);
+  const [archiveTask, setArchiveTask] = useState<ArchiveExportTask | null>(null);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [replaceStructuredExportVisible, setReplaceStructuredExportVisible] = useState(false);
+  const [replaceStructuredExportBusy, setReplaceStructuredExportBusy] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [days, setDays] = useState<SelectableDay[]>([]);
   const [dayLoading, setDayLoading] = useState(false);
@@ -86,6 +110,92 @@ export default function SettingsExportScreen() {
       url: fileUri,
     });
   }
+
+  const hasStructuredSelection = includeMoments || includeDays || includeWeeks || includeMonths;
+  const canToggleAudio = preview?.entries ? preview.entries > 0 : true;
+  const activeArchiveTask =
+    archiveTask && !archiveTask.noticeDismissedAt ? archiveTask : null;
+  const hasStructuredTaskLoading =
+    activeArchiveTask?.status === "queued" || activeArchiveTask?.status === "running";
+  const hasStructuredTaskCompleted = activeArchiveTask?.status === "completed";
+  const showIdleState = state === "choose" && !hasStructuredTaskLoading && !hasStructuredTaskCompleted;
+  const showPreparingState = state === "loading" || hasStructuredTaskLoading;
+  const showReadyState = hasStructuredTaskCompleted;
+  const readyFileName = activeArchiveTask?.resultFileName ?? "Exportbestand";
+  const readyFileTypeLabel =
+    activeArchiveTask?.resultMimeType === "application/zip"
+      ? "ZIP archief (.zip)"
+      : "Markdownbestand (.md)";
+  const structuredWarningsCount =
+    activeArchiveTask && activeArchiveTask.status === "completed"
+      ? Array.isArray((activeArchiveTask.resultPayload as { warnings?: unknown })?.warnings)
+        ? ((activeArchiveTask.resultPayload as { warnings?: unknown }).warnings as unknown[]).length
+        : activeArchiveTask.warningCount
+      : 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const latest = await fetchLatestArchiveExportTask();
+        if (cancelled || !latest) {
+          return;
+        }
+        setArchiveTask(latest);
+        if (latest.status === "queued" || latest.status === "running") {
+          setCurrentTaskId(latest.id);
+        }
+      } catch {
+        // Stil falen; exportflow blijft bruikbaar.
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+
+    if (!currentTaskId) {
+      return;
+    }
+
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const nextTask = await fetchArchiveExportTaskById(currentTaskId);
+        if (cancelled || !nextTask) {
+          return;
+        }
+        setArchiveTask(nextTask);
+        if (nextTask.status !== "queued" && nextTask.status !== "running") {
+          setCurrentTaskId(null);
+        }
+      } catch {
+        // Stil falen; volgende poll pakt het op.
+      }
+    };
+
+    void poll();
+    pollTimerRef.current = setInterval(() => {
+      void poll();
+    }, BACKGROUND_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [currentTaskId]);
 
   function applyScope(nextScope: DateScope) {
     setScope(nextScope);
@@ -183,6 +293,11 @@ export default function SettingsExportScreen() {
   }
 
   async function handlePrepareReview() {
+    if (format === "structured" && !hasStructuredSelection) {
+      setErrorMessage("Kies minimaal één onderdeel voor gestructureerde export.");
+      return;
+    }
+
     setPreviewLoading(true);
     setErrorMessage(null);
     setState("review");
@@ -198,6 +313,10 @@ export default function SettingsExportScreen() {
   }
 
   async function handleDownload() {
+    if (format !== "single") {
+      return;
+    }
+
     if (state === "loading") {
       return;
     }
@@ -216,6 +335,7 @@ export default function SettingsExportScreen() {
           isSparse: false,
           days: 0,
           entries: 0,
+          audioEntries: 0,
           weekReflections: 0,
           monthReflections: 0,
         });
@@ -238,21 +358,128 @@ export default function SettingsExportScreen() {
 
   const scopeDescription = describeDateScope(scope);
 
+  async function handleStartStructuredExport() {
+    if (!hasStructuredSelection) {
+      setErrorMessage("Kies minimaal één onderdeel voor gestructureerde export.");
+      return;
+    }
+
+    setState("loading");
+    setErrorMessage(null);
+
+    try {
+      const task = await startStructuredArchiveExport({
+        scope,
+        includeMoments,
+        includeDays,
+        includeWeeks,
+        includeMonths,
+        includeAudio,
+      });
+      setArchiveTask(task);
+      setCurrentTaskId(task.id);
+      setState("success");
+    } catch (error) {
+      const parsed = classifyUnknownError(error);
+      setErrorMessage(parsed.message);
+      setState("error");
+    }
+  }
+
+  async function handleDownloadStructuredArtifact() {
+    if (!activeArchiveTask) {
+      return;
+    }
+    const url = await getArchiveExportDownloadUrl(activeArchiveTask);
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    await Linking.openURL(url);
+  }
+
+  async function handleConfirmReplaceStructuredExport() {
+    if (!activeArchiveTask) {
+      setReplaceStructuredExportVisible(false);
+      setState("choose");
+      return;
+    }
+
+    setReplaceStructuredExportBusy(true);
+    setErrorMessage(null);
+    try {
+      await dismissArchiveExportTaskNotice(activeArchiveTask.id);
+      setArchiveTask((previous) =>
+        previous
+          ? {
+              ...previous,
+              noticeDismissedAt: new Date().toISOString(),
+            }
+          : previous,
+      );
+      setCurrentTaskId(null);
+      setState("choose");
+      setReplaceStructuredExportVisible(false);
+    } catch (error) {
+      const parsed = classifyUnknownError(error);
+      setErrorMessage(parsed.message);
+      setReplaceStructuredExportVisible(false);
+    } finally {
+      setReplaceStructuredExportBusy(false);
+    }
+  }
+
+  function renderStateHero({
+    icon,
+    eyebrow,
+    title,
+    subtitle,
+  }: {
+    icon: keyof typeof MaterialIcons.glyphMap;
+    eyebrow?: string;
+    title: string;
+    subtitle: string;
+  }) {
+    return (
+      <ThemedView style={styles.stateHeroWrap}>
+        <ThemedView style={[styles.stateHeroIconCircle, { backgroundColor: palette.surfaceLow }]}>
+          <MaterialIcons name={icon} size={42} color={palette.primary} />
+        </ThemedView>
+        {eyebrow ? (
+          <ThemedText type="meta" style={{ color: palette.primary }}>
+            {eyebrow}
+          </ThemedText>
+        ) : null}
+        <ThemedText type="screenTitle" style={styles.stateHeroTitle}>
+          {title}
+        </ThemedText>
+        <ThemedText type="bodySecondary" style={[styles.stateHeroSubtitle, { color: palette.muted }]}> 
+          {subtitle}
+        </ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
     <>
       <ScreenContainer
         scrollable
         backgroundTone="flat"
         contentContainerStyle={styles.scrollContent}
+        fixedHeader={
+          <SettingsTopNav
+            onBack={() => router.back()}
+            onMenu={() => setMenuVisible(true)}
+            title="Instellingen"
+          />
+        }
       >
-        <SettingsScreenHeader
+        <SettingsPageHero
           title="Archief downloaden"
-          subtitle="Kies wat je wilt bewaren."
-          onBack={() => router.back()}
-          onMenu={() => setMenuVisible(true)}
+          subtitle="Kies wat je wilt meenemen naar je eigen archief."
         />
 
-        {state === "choose" ? (
+        {showIdleState ? (
           <ThemedView style={styles.stack}>
             <SurfaceSection title="Wat wil je bewaren?">
               <SettingsStateBody>
@@ -263,7 +490,7 @@ export default function SettingsExportScreen() {
                 />
 
                 <ThemedView style={styles.selectorWrap}>
-                  <RadioChoiceGroup
+                  <ChoiceInputGroup
                     options={[
                       {
                         key: "all",
@@ -293,25 +520,91 @@ export default function SettingsExportScreen() {
               </SettingsStateBody>
             </SurfaceSection>
 
+            <SurfaceSection title="Exportvorm">
+              <ChoiceInputGroup
+                options={[
+                  {
+                    key: "single",
+                    label: "Eén bestand",
+                    description: "Direct downloaden als één markdownbestand.",
+                    active: format === "single",
+                    onPress: () => setFormat("single"),
+                  },
+                  {
+                    key: "structured",
+                    label: "Gestructureerde export",
+                    description: "Server-side export als markdownstructuur (zip bij meerdere files).",
+                    active: format === "structured",
+                    onPress: () => setFormat("structured"),
+                  },
+                ]}
+              />
+
+              {format === "structured" ? (
+                <ThemedView style={styles.structuredOptionsWrap}>
+                  <ChoiceInputGroup
+                    inputType="checkbox"
+                    options={[
+                      {
+                        key: "moments",
+                        label: "Momenten",
+                        active: includeMoments,
+                        onPress: () => setIncludeMoments((value) => !value),
+                      },
+                      {
+                        key: "days",
+                        label: "Dagen",
+                        active: includeDays,
+                        onPress: () => setIncludeDays((value) => !value),
+                      },
+                      {
+                        key: "weeks",
+                        label: "Weken",
+                        active: includeWeeks,
+                        onPress: () => setIncludeWeeks((value) => !value),
+                      },
+                      {
+                        key: "months",
+                        label: "Maanden",
+                        active: includeMonths,
+                        onPress: () => setIncludeMonths((value) => !value),
+                      },
+                      {
+                        key: "audio",
+                        label: "Audio meenemen",
+                        active: includeAudio,
+                        disabled: !canToggleAudio,
+                        onPress: () => {
+                          if (!canToggleAudio) {
+                            return;
+                          }
+                          setIncludeAudio((value) => !value);
+                        },
+                      },
+                    ]}
+                  />
+                </ThemedView>
+              ) : null}
+            </SurfaceSection>
+
             <SurfaceSection title="Gekozen selectie" subtitle={scopeDescription.title}>
               <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
                 {scopeDescription.subtitle}
               </ThemedText>
-              <PrimaryButton label="Verder" onPress={() => void handlePrepareReview()} />
+              <PrimaryButton label="Controleer selectie" onPress={() => void handlePrepareReview()} />
             </SurfaceSection>
-
-            <NoticeCard body="Je bewaart je selectie als een leesbaar bestand." />
           </ThemedView>
         ) : null}
 
         {state === "review" ? (
-          <SurfaceSection title="Controleer je selectie" subtitle={scopeDescription.title}>
+          <SurfaceSection title="Controleer je export" subtitle={scopeDescription.title}>
             <SettingsStateBody>
-              <SettingsStateIcon
-                icon="fact-check"
-                iconColor={palette.primary}
-                backgroundColor={palette.surfaceLow}
-              />
+              {renderStateHero({
+                icon: "fact-check",
+                eyebrow: "Controle",
+                title: "Klaar om te starten",
+                subtitle: "Check je selectie en start daarna je export.",
+              })}
 
               <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
                 {scopeDescription.subtitle}
@@ -338,20 +631,29 @@ export default function SettingsExportScreen() {
               ) : null}
 
               {!previewLoading && !errorMessage && preview?.hasContent ? (
-                <ThemedView style={styles.countsWrap}>
-                  <ThemedText type="meta">Inhoud</ThemedText>
-                  <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                    Dagen: {preview.days}
-                  </ThemedText>
-                  <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                    Entries: {preview.entries}
-                  </ThemedText>
-                  <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                    Weekreflecties: {preview.weekReflections}
-                  </ThemedText>
-                  <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                    Maandreflecties: {preview.monthReflections}
-                  </ThemedText>
+                <ThemedView style={styles.metaGrid}>
+                  <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                    <ThemedText type="meta">Dagen</ThemedText>
+                    <ThemedText type="defaultSemiBold">{preview.days}</ThemedText>
+                  </ThemedView>
+                  <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                    <ThemedText type="meta">Momenten</ThemedText>
+                    <ThemedText type="defaultSemiBold">{preview.entries}</ThemedText>
+                  </ThemedView>
+                  {includeAudio ? (
+                    <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                      <ThemedText type="meta">Audiofragmenten</ThemedText>
+                      <ThemedText type="defaultSemiBold">{preview.audioEntries}</ThemedText>
+                    </ThemedView>
+                  ) : null}
+                  <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                    <ThemedText type="meta">Weekreflecties</ThemedText>
+                    <ThemedText type="defaultSemiBold">{preview.weekReflections}</ThemedText>
+                  </ThemedView>
+                  <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                    <ThemedText type="meta">Maandreflecties</ThemedText>
+                    <ThemedText type="defaultSemiBold">{preview.monthReflections}</ThemedText>
+                  </ThemedView>
                 </ThemedView>
               ) : null}
 
@@ -365,9 +667,17 @@ export default function SettingsExportScreen() {
 
               <ThemedView style={styles.actionsWrap}>
                 <PrimaryButton
-                  label="Download selectie"
-                  onPress={() => void handleDownload()}
-                  disabled={!preview?.hasContent || previewLoading}
+                  label={format === "single" ? "Download nu" : "Start export op achtergrond"}
+                  onPress={() =>
+                    format === "single"
+                      ? void handleDownload()
+                      : void handleStartStructuredExport()
+                  }
+                  disabled={
+                    !preview?.hasContent ||
+                    previewLoading ||
+                    (format === "structured" && !hasStructuredSelection)
+                  }
                 />
                 <SecondaryButton
                   label="Selectie aanpassen"
@@ -383,23 +693,47 @@ export default function SettingsExportScreen() {
           </SurfaceSection>
         ) : null}
 
-        {state === "loading" ? (
-          <SurfaceSection title="Downloaden" subtitle="Bestand wordt voorbereid.">
+        {showPreparingState ? (
+          <SurfaceSection>
             <SettingsStateBody>
-              <SettingsStateIcon
-                icon="hourglass-empty"
-                iconColor={palette.primary}
-                backgroundColor={palette.surfaceLow}
-              />
-              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                Een moment geduld.
-              </ThemedText>
+              {renderStateHero({
+                icon: "hourglass-empty",
+                title: "Archief downloaden",
+                subtitle: "Bestand wordt voorbereid. Een moment geduld.",
+              })}
+
+              <ThemedView style={styles.metaGrid}>
+                <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                  <ThemedText type="meta">Type</ThemedText>
+                  <ThemedText type="defaultSemiBold">{format === "single" ? "Markdown (.md)" : "ZIP archief (.zip)"}</ThemedText>
+                </ThemedView>
+                <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                  <ThemedText type="meta">Inhoud</ThemedText>
+                  <ThemedText type="defaultSemiBold">
+                    {preview ? `${preview.entries} momenten, ${preview.days} dagen` : "Je selectie wordt verwerkt"}
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+
+              {hasStructuredTaskLoading ? (
+                <BackgroundTaskStatusCard
+                  title="Export wordt voorbereid"
+                  body="Je kunt dit scherm verlaten. We blijven de voortgang bijhouden."
+                  status={activeArchiveTask?.status === "queued" ? "queued" : "running"}
+                  progressCurrent={activeArchiveTask?.progressCurrent ?? 0}
+                  progressTotal={activeArchiveTask?.progressTotal ?? 1}
+                  detailLabel={activeArchiveTask?.detailLabel}
+                />
+              ) : null}
             </SettingsStateBody>
           </SurfaceSection>
         ) : null}
 
-        {state === "success" ? (
-          <SurfaceSection title="Download klaar" subtitle="Je selectie staat voor je klaar.">
+        {state === "success" && format === "single" ? (
+          <SurfaceSection
+            title="Download klaar"
+            subtitle="Je selectie staat voor je klaar."
+          >
             <SettingsStateBody>
               <SettingsStateIcon
                 icon="check-circle-outline"
@@ -419,13 +753,56 @@ export default function SettingsExportScreen() {
                   />
                 ) : null}
                 <SecondaryButton
-                  label="Andere selectie"
+                  label="Nieuwe export maken"
                   icon="arrow-back"
                   size="cta"
                   onPress={() => {
                     setState("choose");
                     setErrorMessage(null);
                   }}
+                />
+              </ThemedView>
+            </SettingsStateBody>
+          </SurfaceSection>
+        ) : null}
+
+        {showReadyState ? (
+          <SurfaceSection>
+            <SettingsStateBody>
+              {renderStateHero({
+                icon: "check-circle-outline",
+                eyebrow: "Download klaar",
+                title: "Archief downloaden",
+                subtitle: "Je bestand staat voor je klaar.",
+              })}
+
+              <ThemedView style={styles.metaGrid}>
+                <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                  <ThemedText type="meta">Bestandstype</ThemedText>
+                  <ThemedText type="defaultSemiBold">{readyFileTypeLabel}</ThemedText>
+                </ThemedView>
+                <ThemedView style={[styles.metaCard, { backgroundColor: palette.surfaceLow }]}> 
+                  <ThemedText type="meta">Bestandsnaam</ThemedText>
+                  <ThemedText type="defaultSemiBold" numberOfLines={2}>{readyFileName}</ThemedText>
+                </ThemedView>
+              </ThemedView>
+
+              {structuredWarningsCount > 0 ? (
+                <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                  Waarschuwingen: {structuredWarningsCount}
+                </ThemedText>
+              ) : null}
+              <ThemedView style={styles.actionsWrap}>
+                <PrimaryButton
+                  label="Download export"
+                  icon="download"
+                  onPress={() => void handleDownloadStructuredArtifact()}
+                />
+                <SecondaryButton
+                  label="Nieuwe export maken"
+                  icon="arrow-back"
+                  size="cta"
+                  onPress={() => setReplaceStructuredExportVisible(true)}
                 />
               </ThemedView>
             </SettingsStateBody>
@@ -444,7 +821,14 @@ export default function SettingsExportScreen() {
                 {errorMessage ?? "Probeer het zo opnieuw."}
               </ThemedText>
               <ThemedView style={styles.actionsWrap}>
-                <PrimaryButton label="Probeer opnieuw" onPress={() => void handleDownload()} />
+                <PrimaryButton
+                  label="Probeer opnieuw"
+                  onPress={() =>
+                    format === "single"
+                      ? void handleDownload()
+                      : void handleStartStructuredExport()
+                  }
+                />
                 <SecondaryButton
                   label="Selectie aanpassen"
                   icon="arrow-back"
@@ -506,6 +890,30 @@ export default function SettingsExportScreen() {
           setPeriodSelectorVisible(false);
         }}
       />
+
+      <ConfirmSheet
+        visible={replaceStructuredExportVisible}
+        title="Nieuwe export starten?"
+        message="Je huidige export wordt gesloten als je een nieuwe selectie wilt maken."
+        detail="Je kunt het huidige bestand nog steeds bewaren als je het eerst downloadt."
+        processing={replaceStructuredExportBusy}
+        actions={[
+          {
+            key: "cancel",
+            label: "Doorgaan met huidige export",
+            onPress: () => setReplaceStructuredExportVisible(false),
+          },
+          {
+            key: "confirm",
+            label: "Nieuwe export maken",
+            tone: "destructive",
+            icon: "autorenew",
+            onPress: () => void handleConfirmReplaceStructuredExport(),
+          },
+        ]}
+        onCancel={() => setReplaceStructuredExportVisible(false)}
+        onConfirm={() => void handleConfirmReplaceStructuredExport()}
+      />
     </>
   );
 }
@@ -521,15 +929,44 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     width: "100%",
   },
-  countsWrap: {
-    width: "100%",
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.xxs,
-  },
   actionsWrap: {
     width: "100%",
     gap: spacing.sm,
+  },
+  structuredOptionsWrap: {
+    width: "100%",
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  stateHeroWrap: {
+    width: "100%",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingBottom: spacing.sm,
+  },
+  stateHeroIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+  },
+  stateHeroTitle: {
+    textAlign: "center",
+  },
+  stateHeroSubtitle: {
+    textAlign: "center",
+    maxWidth: 420,
+  },
+  metaGrid: {
+    width: "100%",
+    gap: spacing.sm,
+  },
+  metaCard: {
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.xxs,
   },
 });
