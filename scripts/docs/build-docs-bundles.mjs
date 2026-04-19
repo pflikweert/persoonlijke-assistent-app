@@ -1042,6 +1042,26 @@ async function writeOutputs(outputs) {
   }
 }
 
+async function cleanUploadDirectory(outputs) {
+  const uploadRoot = absolute('docs/upload');
+  await fs.mkdir(uploadRoot, { recursive: true });
+
+  // Start from a clean upload directory so stale files from older bundle layouts
+  // cannot survive between runs.
+  const entries = await fs.readdir(uploadRoot, { withFileTypes: true });
+  for (const entry of entries) {
+    await fs.rm(path.join(uploadRoot, entry.name), { recursive: true, force: true });
+  }
+
+  // Recreate nested directories required by current outputs (if any).
+  for (const relativePath of outputs.keys()) {
+    if (!relativePath.startsWith('docs/upload/')) {
+      continue;
+    }
+    await fs.mkdir(path.dirname(absolute(relativePath)), { recursive: true });
+  }
+}
+
 async function verifyOutputs(outputs) {
   const errors = [];
 
@@ -1081,6 +1101,7 @@ async function main() {
     return;
   }
 
+  await cleanUploadDirectory(outputs);
   await writeOutputs(outputs);
 }
 
