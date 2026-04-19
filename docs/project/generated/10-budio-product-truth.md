@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-19T17:27:40.667Z
-Source Commit: 158faa5
+Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
+Source Commit: 361182d
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -41,6 +41,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 
 - `docs/project/10-strategy/**` = lange termijn richting (horizon)
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
+- `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
 
 Regel:
@@ -51,6 +52,7 @@ Regel:
 ### Obsidian graph hubs
 - Strategy hub
 - Planning hub
+- Tasks hub
 - Research hub
 - Ideas workspace
 - Current status
@@ -113,6 +115,14 @@ Regel:
 - afwijkingen op actieve fase worden vastgelegd in `planning/40-deviations-and-decisions.md`
 - planning is richtinggevend voor werkvolgorde, maar statuswaarheid blijft code/bewijs-gedreven
 
+## 3e) Task-documenten (operationele uitvoeringslaag)
+- `docs/project/25-tasks/**`
+
+Regel:
+- task-docs zijn operationeel voor de huidige fase en ondergeschikt aan canonieke productwaarheid en actieve planning
+- open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
+- `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
+
 ## 4) Standaard upload naar ChatGPT Project / Stitch
 Upload standaard de bestanden uit `docs/upload/`:
 1. `docs/upload/00-budio-upload-manifest.md`
@@ -138,6 +148,7 @@ Legacy compatibiliteit:
 - `docs/project/archive/**`
 - `docs/design/archive/**`
 - `docs/dev/**`
+- `docs/project/25-tasks/**`
 - setup/run-notities zonder canonieke productwaarheid
 
 ## 6) Onderhoudsflow
@@ -611,6 +622,15 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 # Open Points — Resterend Werk
 
 ## Doel
+<!-- TASK_OVERVIEW:START -->
+_Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/25-tasks/**`._
+
+| Taak | Status | Prioriteit | Fase | Korte omschrijving |
+| --- | --- | --- | --- | --- |
+| [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Ready | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
+| [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
+<!-- TASK_OVERVIEW:END -->
+
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
 ## Obsidian links
@@ -2135,16 +2155,19 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 1. `docs/project/README.md`
 2. `AGENTS.md`
 3. taakrelevante canonieke docs in `docs/project/**`
-4. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
-5. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
+4. bij niet-triviale uitvoertaken: `docs/project/open-points.md` + relevante taskfile in `docs/project/25-tasks/**`
+5. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
+6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
 
 Regels:
 - `docs/project/**` = canonieke projectwaarheid.
+- `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
+- Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
 
 ## Design-implementatie guardrails (operationeel)
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
@@ -2160,9 +2183,11 @@ Regels:
   - always-on gedrag: `AGENTS.md`
   - domeinspecifieke herhaalpatronen: `.agents/skills/**`
   - operationele workflow: `docs/dev/cline-workflow.md` + `docs/dev/memory-bank.md`
+  - taakworkflow: `docs/dev/task-lifecycle-workflow.md`
   - tijdelijke sessiecontext: `docs/dev/active-context.md`
   - statuswaarheid: `docs/project/current-status.md`
   - echte gaps/onzekerheden: `docs/project/open-points.md`
+  - operationele taken: `docs/project/25-tasks/**`
 
 ## Active context tussen sessies
 - `docs/dev/active-context.md` is een lichte brug tussen Cline-sessies.
@@ -2187,6 +2212,7 @@ Regels:
 - tijdelijke sessiecontext → `docs/dev/active-context.md`
 - statusrealiteit (bewijsbaar) → `docs/project/current-status.md`
 - echte gaps/onzekerheden → `docs/project/open-points.md`
+- operationele uitvoeringstaken → `docs/project/25-tasks/**`
 
 ## Wanneer Plan mode
 Gebruik Plan mode bij:
@@ -2216,6 +2242,7 @@ Gebruik Act mode voor:
 ## Verify-regel
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Commit alleen na geslaagde verify.
 
 ## Supabase migratie-uitvoering (verplicht)
@@ -2297,12 +2324,18 @@ Eén overzicht van projectfases met status, zonder detail-overload.
 # Active phase (uitvoeringsfocus)
 
 ## Actieve fase
-Fase 1.2 hardening + structurering van project operating system.
+Transitiemaand: consumer beta afronden + brugpilot definiëren.
 
 ## Doel van deze fase
-1. Huidige capture-first productkwaliteit betrouwbaar houden.
-2. Docs/planning/ideas structuur professionaliseren voor focus en automatisering.
-3. Voorbereiden op volgende fase (commerciële brug) zonder die nu al te forceren.
+1. Consumer beta afronden met expliciet release- en runtimebewijs.
+2. 1.2B outputkwaliteit expliciet maken als afgebakende kwaliteitsset.
+3. 1.2E beta-readiness expliciet maken als bewijs-gedreven readiness set.
+4. Een kleine commerciële brugpilot definiëren zonder brede Pro- of Business-activatie.
+
+## Korte samenvatting van deze maand
+De komende maand is een smalle overgangsstap tussen de huidige capture-first beta en de latere commerciële richting.
+De kern blijft consumer beta afronden met bewijs.
+Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaande entry/day bronlaag.
 
 ## Obsidian links
 - Planning hub
@@ -2315,14 +2348,20 @@ Fase 1.2 hardening + structurering van project operating system.
 - Ideas workspace
 
 ## In focus (Now)
-- Stabiliteit, UX-consistentie, outputkwaliteit en releasebewijs.
-- Duidelijke planninglaag (`roadmap`, `active`, `now-next-later`, `deviations`).
-- Gestructureerde idee-capture met één file per idee.
+- Proof-first consumer beta afronden op basis van actuele runtime-realiteit in `current-status.md`.
+- 1.2B outputkwaliteit expliciteren als concrete kwaliteitsset met afrondcriteria.
+- 1.2E beta-readiness expliciteren als concrete checklist met bewijsregel.
+- Een review-first brugpilot definiëren vanuit bestaande entry/day bronlaag:
+  - bron = entry, day narrative, day summary
+  - focus = copy/export/content transform
+  - doel = beoordelen of de bestaande bronlaag bruikbare reviewbare output kan opleveren
 
 ## Niet in focus (nu niet trekken)
-- Volledige productverbreding naar alle future-state modules tegelijk.
-- Monolithische AI-oplossing over alle domeinen.
-- Grote productpivot zonder expliciet besluit.
+- Scheduler, autopost en multi-channel publishing.
+- Teams, Business/Private en usage billing.
+- AIQS control-plane verbreding als actieve fase.
+- Brede Pro-roadmap of productverbreding voorbij de afgebakende brugpilot.
+- Research behandelen alsof het al canonieke productwaarheid is.
 
 ## Flexibele afwijkingsregel
 - Kleine afwijkingen met lage impact mogen direct, maar moeten achteraf in `planning/40-deviations-and-decisions.md`.
@@ -2330,6 +2369,8 @@ Fase 1.2 hardening + structurering van project operating system.
 
 ## Bewijsregel
 - Claims over “gereed” alleen met code- of runtimebewijs.
+- `current-status.md` blijft leidend voor code-realiteit.
+- `open-points.md` blijft leidend voor open gaten en onzekerheden.
 
 ---
 
@@ -2347,34 +2388,26 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Current status
 - Open points
 - Ideas workspace
-- ../40-ideas/10-product/30-conversation-aware-ingest-and-interpretation
-- ../40-ideas/10-product/50-structured-export-and-obsidian-archive
-- ../40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation
-- ../40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening
-- ../40-ideas/40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export
 
 ## Now
-- Hardeningkwaliteit en evidence-first releaseproofing.
-- Project operating system structuur in `docs/project/**` consolideren.
-- Idea capture structureren (inbox + één-file-per-idee).
-- Upload use-case matrix operationaliseren en primaire bundle-volgorde stabiliseren.
-- Bundlescript hardening op curated build-truth paden (drift-preventie).
+- Consumer beta afronden met expliciet bewijs op de bestaande capture-first runtime.
+- 1.2B outputkwaliteit expliciteren en afronden als concrete kwaliteitsset.
+- 1.2E beta-readiness expliciteren en afronden als concrete readiness set.
+- Review-first brugpilot definiëren vanuit bestaande entry/day bronlaag:
+  - focus op copy/export/content transform
+  - geen publishing- of scheduler-laag
+- Operating-system onderhoud alleen doen als ondersteunend werk voor bovenstaande focus.
 
 ## Next
-- Product-truth bundle compacter maken (minder duplicatie, minder self-reference).
-- Legacy `upload-manifest.md` herpositioneren als extended/compatibility manifest.
-- Design/UI truth bundle compositie verfijnen (minder excerpt-volume, meer gerichte guardrail-samenvatting).
-- AI governance/operations bundle mogelijk compacter maken met focus op execution-samenvatting.
-- Eerste expliciete commerciële brug (capture -> hergebruikbare output) als afgebakende pilot verkennen.
-- Conversation-aware ingest (copy/paste fase 1) en source-aware AIQS-evaluatie verkennen als afgebakend spoor (zie `40-ideas/10-product/30-conversation-aware-ingest-and-interpretation.md` en `40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`).
-- Security posture baseline + trust charter als gecombineerd spoor verkennen (zie `40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md` en `40-ideas/10-product/40-trust-and-security-charter.md`). Voor een dagboekapp is vertrouwen productwaarde, geen achtergrond-polish.
-- Server-side structured export als Obsidian-compatibel archief verkennen: markdown-first, mapstructuur per jaar/maand/week/dag/moment, optionele audio-export en zip-artifact via background job (zie `40-ideas/10-product/50-structured-export-and-obsidian-archive.md`).
+- Eerste afbakening of verkenning van de brugpilot na bewijs op de consumer beta.
+- Kleine vervolgkeuzes rond review-first output op basis van entry/day bronmateriaal.
+- Alleen ondersteunend docs- en bundle-onderhoud dat nodig is om de actieve focus helder te houden.
 
 ## Later
-- Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.
-- VS Code plugin + MCP/API bridge als operationele bouwlaag realiseren.
-- Budio brainstorm workspace als aparte productmodule valideren.
-- Budio Pro markdown workspace + Obsidian export/koppeling alleen als later export-first integratiespoor (geen productie-sync nu).
+- Volledige modulaire flow-architectuur productiseren.
+- Brede Pro-laag, Business/Private en control-plane verdieping activeren.
+- Scheduler, autopost en multi-channel publishing verkennen.
+- Usage billing, credits, top-ups en bredere commerciële operationele laag activeren.
 
 ## Parking lot
 - Nieuwe ideeën eerst kort in `docs/project/40-ideas/00-ideas-inbox.md`.
@@ -2411,6 +2444,14 @@ Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit tr
 - **Vervolgactie**: welke docs/code moeten worden aangepast
 
 ## Entries
+
+### 2026-04-19 — Actieve maandfocus herijkt naar transitiemaand
+- **Type**: decision
+- **Van plan/document**: `planning/20-active-phase.md` en `planning/30-now-next-later.md`
+- **Wijziging**: eerdere maandfocus op generieke hardening + docs/operating-system werk wordt formeel vervangen door een transitiemaand met consumer beta bewijs, expliciete 1.2B/1.2E en een afgebakende review-first brugpilot
+- **Waarom**: runtime-realiteit en researchrichting lopen uit fase met de oude planning; de codebasis is al sterk in capture/hardening, terwijl outputkwaliteit, beta-readiness en commerciële brug nog expliciete planning missen
+- **Impact**: docs
+- **Vervolgactie**: active phase en now/next/later alignen; strategy-horizon alleen licht aanscherpen zodat de eerstvolgende maand geen brede Pro-activatie suggereert
 
 ### 2026-04-19 — Lean operating system expliciet toegevoegd aan projectdocs
 - **Type**: decision

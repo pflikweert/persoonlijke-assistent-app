@@ -1,0 +1,206 @@
+import path from 'node:path';
+import {
+  CONCRETE_CHECKLIST_HEADING,
+  PLUGIN_OWNED_FRONTMATTER_FIELDS,
+  TASK_OPTIONAL_FIELDS,
+  TASK_REQUIRED_FIELDS,
+} from './constants';
+import type {
+  CreateTaskInput,
+  FrontmatterValue,
+  ParsedTaskFile,
+  TaskFieldPatch,
+  TaskStatus,
+} from './types';
+
+const H1_PATTERN = /^# /;
+const CHECKLIST_PATTERN = /^- \[( |x|X)\] /;
+
+export function applyTaskFieldPatch(task: ParsedTaskFile, patch: TaskFieldPatch): string {
+  const nextFrontmatter = {
+    ...task.frontmatterValues,
+  };
+
+  if (patch.title !== undefined) {
+    nextFrontmatter.title = patch.title.trim();
+  }
+  if (patch.status !== undefined) {
+    nextFrontmatter.status = patch.status;
+  }
+  if (patch.priority !== undefined) {
+    nextFrontmatter.priority = patch.priority;
+  }
+  if (patch.summary !== undefined) {
+    nextFrontmatter.summary = patch.summary.trim();
+  }
+  if (patch.tags !== undefined) {
+    nextFrontmatter.tags = patch.tags;
+  }
+  if (patch.dueDate !== undefined) {
+    nextFrontmatter.due_date = patch.dueDate;
+  }
+  if (patch.sortOrder !== undefined) {
+    nextFrontmatter.sort_order = patch.sortOrder;
+  }
+  if (patch.updatedAt !== undefined) {
+    nextFrontmatter.updated_at = patch.updatedAt;
+  }
+
+  const nextBodyLines = [...task.bodyLines];
+  if (patch.title !== undefined) {
+    if (task.firstHeadingLineIndex !== null) {
+      nextBodyLines[task.firstHeadingLineIndex] = `# ${patch.title.trim()}`;
+    } else {
+      nextBodyLines.unshift(`# ${patch.title.trim()}`, '');
+    }
+  }
+
+  return `${serializeFrontmatter(nextFrontmatter, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
+}
+
+export function applyChecklistToggle(
+  task: ParsedTaskFile,
+  checklistIndex: number,
+  checked: boolean,
+): string {
+  const nextBodyLines = [...task.bodyLines];
+  const absoluteLineIndex = task.checklistLineIndexes[checklistIndex];
+  if (absoluteLineIndex === undefined) {
+    throw new Error(`Checklist item ${checklistIndex} does not exist in task ${task.id}.`);
+  }
+
+  const line = nextBodyLines[absoluteLineIndex];
+  if (!CHECKLIST_PATTERN.test(line)) {
+    throw new Error(`Checklist line ${checklistIndex} is no longer a checkbox in task ${task.id}.`);
+  }
+
+  nextBodyLines[absoluteLineIndex] = line.replace(
+    CHECKLIST_PATTERN,
+    checked ? '- [x] ' : '- [ ] ',
+  );
+
+  return `${serializeFrontmatter(task.frontmatterValues, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
+}
+
+export function buildNewTaskContent(input: CreateTaskInput & { id: string; updatedAt: string }): string {
+  const frontmatterOrder = [...TASK_REQUIRED_FIELDS, ...TASK_OPTIONAL_FIELDS];
+  const frontmatter = {
+    id: input.id,
+    title: input.title.trim(),
+    status: input.status,
+    phase: input.phase ?? 'transitiemaand-consumer-beta',
+    priority: input.priority ?? 'p2',
+    source: input.source ?? 'docs/project/open-points.md',
+    updated_at: input.updatedAt,
+    summary: input.summary?.trim() ?? '',
+    tags: input.tags ?? [],
+    due_date: input.dueDate ?? null,
+    sort_order: null,
+  };
+
+  return `${serializeFrontmatter(frontmatter, frontmatterOrder)}# ${input.title.trim()}
+
+## Probleem / context
+Beschrijf kort welk concreet gat, risico of uitvoeringsprobleem deze taak oplost.
+
+## Gewenste uitkomst
+Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
+
+## Waarom nu
+- Waarom deze taak nu relevant is voor de actieve fase.
+
+## In scope
+- Concreet werk dat binnen deze taak valt.
+
+## Buiten scope
+- Werk dat bewust niet in deze taak zit.
+
+## ${CONCRETE_CHECKLIST_HEADING}
+- [ ] Eerste concrete stap
+- [ ] Tweede concrete stap
+
+## Blockers / afhankelijkheden
+- Geen of nog te bepalen.
+
+## Verify / bewijs
+- Noem hier de relevante verify-, runtime- of doc-bewijzen.
+
+## Relevante links
+- \`docs/project/open-points.md\`
+`;
+}
+
+export function buildTargetPathForStatus(
+  currentPath: string,
+  workspaceRoot: string,
+  tasksRootRelative: string,
+  targetStatus: TaskStatus,
+): string {
+  const relativePath = path.relative(workspaceRoot, currentPath);
+  const fileName = path.basename(currentPath);
+  const targetFolder = targetStatus === 'done' ? 'done' : 'open';
+  return path.resolve(workspaceRoot, tasksRootRelative, targetFolder, fileName);
+}
+
+function serializeFrontmatter(
+  frontmatterValues: Record<string, FrontmatterValue>,
+  frontmatterOrder: string[],
+): string {
+  const orderedKeys = [
+    ...frontmatterOrder,
+    ...TASK_REQUIRED_FIELDS,
+    ...TASK_OPTIONAL_FIELDS,
+    ...PLUGIN_OWNED_FRONTMATTER_FIELDS,
+  ].filter((key, index, array) => array.indexOf(key) === index);
+
+  const lines = orderedKeys
+    .filter((key) => Object.prototype.hasOwnProperty.call(frontmatterValues, key))
+    .filter((key) => shouldEmitFrontmatterValue(frontmatterValues[key]))
+    .map((key) => `${key}: ${serializeFrontmatterValue(frontmatterValues[key])}`);
+
+  return `---\n${lines.join('\n')}\n---\n\n`;
+}
+
+function shouldEmitFrontmatterValue(value: FrontmatterValue | undefined): boolean {
+  if (value === undefined) {
+    return false;
+  }
+
+  if (value === null) {
+    return true;
+  }
+
+  if (Array.isArray(value)) {
+    return true;
+  }
+
+  return true;
+}
+
+function serializeFrontmatterValue(value: FrontmatterValue): string {
+  if (value === null) {
+    return 'null';
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => quoteIfNeeded(item)).join(', ')}]`;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return quoteIfNeeded(value);
+}
+
+function quoteIfNeeded(input: string): string {
+  if (input === '') {
+    return '""';
+  }
+
+  if (/[:#[\],'"\\]/.test(input) || /^\s|\s$/.test(input)) {
+    return JSON.stringify(input);
+  }
+
+  return input;
+}

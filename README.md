@@ -58,6 +58,7 @@ npm run typecheck
 `npm run dev` is lokaal-only: start/checkt lokale Supabase stack, start lokale functions runtime, en start daarna Expo.
 Er gebeurt geen remote Supabase deploy vanuit `npm run dev`.
 Los opruimen van de functions runtime kan met `npm run dev:stop`. Function logs staan in `/tmp/supabase-functions.log`.
+`npm run dev` forceert ook lokale Supabase auth-env voor Expo, zodat cloud-keys uit bijvoorbeeld Vercel `.env.local` niet stilletjes de authflow overnemen.
 
 ## Env-overzicht
 - `.env.example`: template met verwachte variabelen en geen secrets.
@@ -137,10 +138,11 @@ npx supabase gen types typescript --linked --schema public > src/lib/supabase/da
 
 ## Supabase dashboard en mail
 - Lokaal dashboard: `http://127.0.0.1:54323`
-- Lokale mail inbox: `http://127.0.0.1:54324`
+- Lokale Mailpit inbox: `http://127.0.0.1:54324`
 - Start de lokale Supabase stack met `npx supabase start` als je Studio en Mailpit open wilt hebben.
 - Als je lokale database nog geen tabellen heeft, draai dan `npx supabase db reset` nadat de stack draait.
 - Lokale magic links worden niet naar Gmail verstuurd. Ze worden vastgehouden in Mailpit.
+- Gebruik Mailpit als enige lokale bron van waarheid voor auth-mails; verwacht tijdens local development niets in je echte inbox.
 - Voor Expo web is de lokale redirect-URL nu `http://localhost:8081` of `http://127.0.0.1:8081`.
 - Voor een echte e-mail in Gmail moet je de cloud-omgeving gebruiken en SMTP instellen voor dat project.
 
@@ -197,21 +199,27 @@ curl -i http://127.0.0.1:54321/functions/v1/generate-reflection \
 3. Vraag de magic link aan in de app.
 4. Open `http://127.0.0.1:54324` om de e-mail te bekijken en de link te openen.
 5. Gebruik je echte Gmail inbox alleen als je naar `cloud` schakelt en SMTP voor dat project instelt.
+6. Gebruik `npm run verify:local-auth-mail` als gerichte smoketest voor OTP-aanvraag + Mailpit-ontvangst.
 
 ## Lokale E2E verify
+Gebruik `npm run verify:local-auth-mail` om de product-authflow lokaal te verifiëren:
+- trigger dezelfde OTP-route als de app gebruikt
+- poll Mailpit voor de nieuwe magic-link mail
+- fail met duidelijke diagnostiek als de OTP-call slaagt maar Mailpit leeg blijft
+
 Gebruik `npm run verify:local-flow` om de text-only slice automatisch te verifiëren:
-- signup
+- signup via directe auth bootstrap voor testdoeleinden
 - submit naar `process-entry`
 - check op records in `entries_raw`, `entries_normalized` en `day_journals`
 
 Gebruik `npm run verify:local-audio-flow` om het audio pad automatisch te verifiëren:
-- signup
+- signup via directe auth bootstrap voor testdoeleinden
 - submit audio payload naar `process-entry`
 - check op `entries_raw.source_type='audio'` + transcript
 - check op records in `entries_normalized` en `day_journals`
 
 Gebruik `npm run verify:local-reflection-flow` om week/maandreflecties automatisch te verifiëren:
-- signup
+- signup via directe auth bootstrap voor testdoeleinden
 - seed van `day_journals`
 - generate voor `week` en `month`
 - check op records in `period_reflections`

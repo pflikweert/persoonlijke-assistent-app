@@ -27,6 +27,14 @@ Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit tr
 
 ## Entries
 
+### 2026-04-19 — Actieve maandfocus herijkt naar transitiemaand
+- **Type**: decision
+- **Van plan/document**: `planning/20-active-phase.md` en `planning/30-now-next-later.md`
+- **Wijziging**: eerdere maandfocus op generieke hardening + docs/operating-system werk wordt formeel vervangen door een transitiemaand met consumer beta bewijs, expliciete 1.2B/1.2E en een afgebakende review-first brugpilot
+- **Waarom**: runtime-realiteit en researchrichting lopen uit fase met de oude planning; de codebasis is al sterk in capture/hardening, terwijl outputkwaliteit, beta-readiness en commerciële brug nog expliciete planning missen
+- **Impact**: docs
+- **Vervolgactie**: active phase en now/next/later alignen; strategy-horizon alleen licht aanscherpen zodat de eerstvolgende maand geen brede Pro-activatie suggereert
+
 ### 2026-04-19 — Lean operating system expliciet toegevoegd aan projectdocs
 - **Type**: decision
 - **Van plan/document**: impliciete root-structuur in `docs/project/`

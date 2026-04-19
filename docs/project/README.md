@@ -7,6 +7,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 
 - `docs/project/10-strategy/**` = lange termijn richting (horizon)
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
+- `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
 
 Regel:
@@ -17,6 +18,7 @@ Regel:
 ### Obsidian graph hubs
 - [[10-strategy/README|Strategy hub]]
 - [[20-planning/README|Planning hub]]
+- [[25-tasks/README|Tasks hub]]
 - [[30-research/README|Research hub]]
 - [[40-ideas/README|Ideas workspace]]
 - [[current-status|Current status]]
@@ -79,6 +81,14 @@ Regel:
 - afwijkingen op actieve fase worden vastgelegd in `planning/40-deviations-and-decisions.md`
 - planning is richtinggevend voor werkvolgorde, maar statuswaarheid blijft code/bewijs-gedreven
 
+## 3e) Task-documenten (operationele uitvoeringslaag)
+- `docs/project/25-tasks/**`
+
+Regel:
+- task-docs zijn operationeel voor de huidige fase en ondergeschikt aan canonieke productwaarheid en actieve planning
+- open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
+- `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
+
 ## 4) Standaard upload naar ChatGPT Project / Stitch
 Upload standaard de bestanden uit `docs/upload/`:
 1. `docs/upload/00-budio-upload-manifest.md`
@@ -104,6 +114,7 @@ Legacy compatibiliteit:
 - `docs/project/archive/**`
 - `docs/design/archive/**`
 - `docs/dev/**`
+- `docs/project/25-tasks/**`
 - setup/run-notities zonder canonieke productwaarheid
 
 ## 6) Onderhoudsflow

@@ -1,0 +1,314 @@
+import path from 'node:path';
+import { CONCRETE_CHECKLIST_HEADING, TASK_PRIORITIES, TASK_STATUSES } from './constants';
+import type {
+  ChecklistItem,
+  FileVersion,
+  FrontmatterValue,
+  ParsedTaskFile,
+  TaskBucket,
+  TaskPriority,
+  TaskSectionRange,
+  TaskStatus,
+} from './types';
+
+const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---\n?/;
+const HEADING_PATTERN = /^## (.+)$/;
+const CHECKLIST_PATTERN = /^- \[( |x|X)\] (.+)$/;
+const H1_PATTERN = /^# (.+)$/;
+
+export function normalizeLineEndings(input: string): string {
+  return input.replace(/\r\n?/g, '\n');
+}
+
+export function parseTaskFile(input: {
+  absolutePath: string;
+  relativePath: string;
+  content: string;
+  version: FileVersion;
+}): ParsedTaskFile {
+  const content = normalizeLineEndings(input.content);
+  const { frontmatterOrder, frontmatterValues, body } = parseFrontmatter(content);
+  const bodyLines = body.split('\n');
+  const sections = parseSections(bodyLines);
+  const firstHeadingLineIndex = bodyLines.findIndex((line) => H1_PATTERN.test(line));
+  const checklistSection = sections.get(CONCRETE_CHECKLIST_HEADING.toLowerCase());
+  const { checklist, checklistLineIndexes } = parseChecklist(checklistSection?.lines ?? []);
+
+  const bucket = inferBucket(input.relativePath);
+  const id = readRequiredString(frontmatterValues.id, 'id', input.relativePath);
+  const titleFromFrontmatter = readRequiredString(frontmatterValues.title, 'title', input.relativePath);
+  const titleFromHeading =
+    firstHeadingLineIndex >= 0 ? bodyLines[firstHeadingLineIndex].replace(/^# /, '').trim() : '';
+  const title = titleFromFrontmatter || titleFromHeading;
+  const status = readTaskStatus(frontmatterValues.status, input.relativePath);
+  const priority = readTaskPriority(frontmatterValues.priority, input.relativePath);
+  const phase = readRequiredString(frontmatterValues.phase, 'phase', input.relativePath);
+  const source = readRequiredString(frontmatterValues.source, 'source', input.relativePath);
+  const updatedAt = readRequiredString(frontmatterValues.updated_at, 'updated_at', input.relativePath);
+  const summary = readOptionalString(frontmatterValues.summary) ?? deriveSummary(sections);
+  const tags = readStringArray(frontmatterValues.tags);
+  const dueDate = readOptionalString(frontmatterValues.due_date);
+  const sortOrder = readOptionalNumber(frontmatterValues.sort_order);
+  const excerpt = buildExcerpt(summary);
+  const hasBody = body.trim().length > 0;
+
+  return {
+    id,
+    title,
+    status,
+    phase,
+    priority,
+    source,
+    updatedAt,
+    summary,
+    tags,
+    dueDate,
+    sortOrder,
+    checklist,
+    bucket,
+    sourcePath: input.absolutePath,
+    relativePath: input.relativePath,
+    folder: path.dirname(input.relativePath),
+    body,
+    raw: content,
+    excerpt,
+    hasBody,
+    lastModified: new Date(input.version.mtimeMs).toISOString(),
+    version: input.version,
+    frontmatterValues,
+    frontmatterOrder,
+    bodyLines,
+    sections,
+    firstHeadingLineIndex: firstHeadingLineIndex >= 0 ? firstHeadingLineIndex : null,
+    checklistLineIndexes: checklistSection
+      ? checklistLineIndexes.map((index) => checklistSection.contentStartLine + index)
+      : [],
+  };
+}
+
+function parseFrontmatter(content: string): {
+  frontmatterOrder: string[];
+  frontmatterValues: Record<string, FrontmatterValue>;
+  body: string;
+} {
+  const match = content.match(FRONTMATTER_PATTERN);
+  if (!match) {
+    throw new Error('Task file is missing frontmatter.');
+  }
+
+  const frontmatterLines = match[1].split('\n');
+  const frontmatterValues: Record<string, FrontmatterValue> = {};
+  const frontmatterOrder: string[] = [];
+
+  for (const rawLine of frontmatterLines) {
+    const line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf(':');
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    const value = line.slice(separatorIndex + 1).trim();
+    frontmatterOrder.push(key);
+    frontmatterValues[key] = parseFrontmatterValue(value);
+  }
+
+  return {
+    frontmatterOrder,
+    frontmatterValues,
+    body: content.slice(match[0].length),
+  };
+}
+
+function parseFrontmatterValue(rawValue: string): FrontmatterValue {
+  if (!rawValue) {
+    return '';
+  }
+
+  if (/^\[.*\]$/.test(rawValue)) {
+    const inner = rawValue.slice(1, -1).trim();
+    if (!inner) {
+      return [];
+    }
+
+    return inner
+      .split(',')
+      .map((part) => stripQuotes(part.trim()))
+      .filter(Boolean);
+  }
+
+  if (rawValue === 'true') {
+    return true;
+  }
+
+  if (rawValue === 'false') {
+    return false;
+  }
+
+  if (/^-?\d+$/.test(rawValue)) {
+    return Number(rawValue);
+  }
+
+  return stripQuotes(rawValue);
+}
+
+function parseSections(bodyLines: string[]): Map<string, TaskSectionRange> {
+  const sections = new Map<string, TaskSectionRange>();
+  let currentHeading: string | null = null;
+  let currentStartLine = -1;
+  let currentContentStartLine = -1;
+
+  for (let index = 0; index < bodyLines.length; index += 1) {
+    const line = bodyLines[index];
+    const headingMatch = line.match(HEADING_PATTERN);
+    if (!headingMatch) {
+      continue;
+    }
+
+    if (currentHeading) {
+      sections.set(currentHeading.toLowerCase(), {
+        heading: currentHeading,
+        startLine: currentStartLine,
+        contentStartLine: currentContentStartLine,
+        endLineExclusive: index,
+        lines: bodyLines.slice(currentContentStartLine, index),
+      });
+    }
+
+    currentHeading = headingMatch[1].trim();
+    currentStartLine = index;
+    currentContentStartLine = index + 1;
+  }
+
+  if (currentHeading) {
+    sections.set(currentHeading.toLowerCase(), {
+      heading: currentHeading,
+      startLine: currentStartLine,
+      contentStartLine: currentContentStartLine,
+      endLineExclusive: bodyLines.length,
+      lines: bodyLines.slice(currentContentStartLine),
+    });
+  }
+
+  return sections;
+}
+
+function parseChecklist(lines: string[]): {
+  checklist: ChecklistItem[];
+  checklistLineIndexes: number[];
+} {
+  const checklist: ChecklistItem[] = [];
+  const checklistLineIndexes: number[] = [];
+
+  lines.forEach((line, index) => {
+    const match = line.match(CHECKLIST_PATTERN);
+    if (!match) {
+      return;
+    }
+
+    checklist.push({
+      index: checklist.length,
+      checked: match[1].toLowerCase() === 'x',
+      text: match[2].trim(),
+    });
+    checklistLineIndexes.push(index);
+  });
+
+  return { checklist, checklistLineIndexes };
+}
+
+function readRequiredString(value: FrontmatterValue, field: string, relativePath: string): string {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error(`Task ${relativePath} is missing required field "${field}".`);
+  }
+
+  return value.trim();
+}
+
+function readOptionalString(value: FrontmatterValue | undefined): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function readOptionalNumber(value: FrontmatterValue | undefined): number | null {
+  return typeof value === 'number' ? value : null;
+}
+
+function readStringArray(value: FrontmatterValue | undefined): string[] {
+  return Array.isArray(value) ? value.map((item) => String(item).trim()).filter(Boolean) : [];
+}
+
+function readTaskStatus(value: FrontmatterValue, relativePath: string): TaskStatus {
+  if (typeof value !== 'string' || !TASK_STATUSES.includes(value as TaskStatus)) {
+    throw new Error(`Task ${relativePath} has invalid status.`);
+  }
+
+  return value as TaskStatus;
+}
+
+function readTaskPriority(value: FrontmatterValue, relativePath: string): TaskPriority {
+  if (typeof value !== 'string' || !TASK_PRIORITIES.includes(value as TaskPriority)) {
+    throw new Error(`Task ${relativePath} has invalid priority.`);
+  }
+
+  return value as TaskPriority;
+}
+
+function stripQuotes(input: string): string {
+  if (
+    (input.startsWith('"') && input.endsWith('"')) ||
+    (input.startsWith("'") && input.endsWith("'"))
+  ) {
+    return input.slice(1, -1);
+  }
+
+  return input;
+}
+
+function inferBucket(relativePath: string): TaskBucket {
+  return relativePath.includes(`${path.sep}done${path.sep}`) || relativePath.startsWith(`done${path.sep}`)
+    ? 'done'
+    : relativePath.includes('/done/')
+      ? 'done'
+      : 'open';
+}
+
+function deriveSummary(sections: Map<string, TaskSectionRange>): string {
+  const desired = extractFirstParagraph(
+    sections.get('gewenste uitkomst')?.lines ?? sections.get('probleem / context')?.lines ?? [],
+  );
+  return desired || 'Nog geen korte samenvatting.';
+}
+
+function extractFirstParagraph(lines: string[]): string {
+  const collected: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (collected.length > 0) {
+        break;
+      }
+      continue;
+    }
+    collected.push(trimmed);
+  }
+
+  return collected.join(' ').trim();
+}
+
+function buildExcerpt(summary: string): string {
+  if (summary.length <= 180) {
+    return summary;
+  }
+
+  return `${summary.slice(0, 177).trimEnd()}...`;
+}

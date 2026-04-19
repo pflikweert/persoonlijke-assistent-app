@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit",
     "test:chatgpt-markdown-import": "node scripts/test-chatgpt-markdown-import.mjs",
     "test:reflection-helpers": "node scripts/test-reflection-helpers.mjs",
+    "verify:local-auth-mail": "sh ./scripts/verify-local-auth-mail.sh",
     "verify:local-chatgpt-import": "./scripts/verify-local-chatgpt-import.sh",
     "verify:local-flow": "./scripts/verify-local-flow.sh",
     "verify:local-midnight-flow": "./scripts/verify-local-midnight-flow.sh",

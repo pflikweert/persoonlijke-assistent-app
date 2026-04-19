@@ -62,10 +62,12 @@ Voor AI-gedrag, prompting en evaluatie:
 - **Cline in VS Code** gebruik je voor repo-analyse, plan, code/docs-wijzigingen, verify en commit.
 - Productwaarheid en toolingwaarheid blijven gescheiden:
   - `docs/project/**` = canonieke projectwaarheid
+  - `docs/project/25-tasks/**` = operationele taaklaag voor huidige fase-uitvoering
   - `docs/dev/**` = operationele workflowafspraken
   - `docs/upload/**` = generated uploadartefacten, nooit canonieke bron
 - Start-of-session guardrail:
   - lees eerst `docs/project/README.md`
+  - check bij non-triviale uitvoering daarna `docs/project/open-points.md` en relevante taskfiles in `docs/project/25-tasks/**`
   - check `docs/dev/active-context.md` alleen bij non-triviale/onderbroken/multi-file taken
   - sla `active-context.md` over bij kleine, volledig afgebakende fixes
 - Bij onderbroken of herhaalde patch-rondes: bevestig eerst de actuele file state (small-read/diff) vóór je verder wijzigt.
@@ -74,6 +76,8 @@ Voor AI-gedrag, prompting en evaluatie:
 - Canonieke docs blijven altijd leidend boven `docs/dev/active-context.md`.
 - Structurele workflowlearnings horen in `AGENTS.md` of `docs/dev/**`, niet in productdocs.
 - Is een learning taak-/domeinspecifiek en herhaalbaar, leg die vast in een bestaande skill (niet in AGENTS).
+- Voor "nieuwe taak": maak eerst een taskfile aan vanuit `docs/project/25-tasks/_template.md`.
+- Voor verwijzing op taaktitel: open eerst de overeenkomstige taskfile; gebruik `id` als fallback bij ambiguiteit.
 
 ## Skill-selectie
 
@@ -146,6 +150,7 @@ Bij wijzigingen aan canonieke docs:
 - `docs/upload/**` is generated uploadoutput voor de gebruiker; gebruik deze map niet als canonieke agentbron.
 - Standaard uploadset staat in `docs/upload/upload-manifest.md` en bevat ChatGPT Project context, MVP design spec en Stitch design context.
 - Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
+- Bij taskstatuswijzigingen of taakverplaatsing naar `done/`: werk taskfile + relevante planning/open-points context bij en draai daarna ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 
 Bij wijzigingen in admin-regeneratie:
 

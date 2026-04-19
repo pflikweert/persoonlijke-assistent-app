@@ -29,8 +29,22 @@ function formatMissingMessage(scope: 'public' | 'server', missingKeys: string[])
 type SupabaseTarget = 'local' | 'cloud';
 
 function getSupabaseTarget(): SupabaseTarget {
-  const rawTarget = process.env.EXPO_PUBLIC_SUPABASE_TARGET?.trim().toLowerCase() ?? 'cloud';
+  const rawTarget = process.env.EXPO_PUBLIC_SUPABASE_TARGET?.trim().toLowerCase() ?? 'local';
   return rawTarget === 'local' ? 'local' : 'cloud';
+}
+
+function hasExplicitTarget(): boolean {
+  return (process.env.EXPO_PUBLIC_SUPABASE_TARGET?.trim().length ?? 0) > 0;
+}
+
+function getLegacyPublicValues(): {
+  url: string;
+  publishableKey: string;
+} {
+  return {
+    url: process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? '',
+    publishableKey: process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? '',
+  };
 }
 
 function getTargetedPublicValues(target: SupabaseTarget): {
@@ -62,11 +76,12 @@ function getTargetedPublicValues(target: SupabaseTarget): {
 export function getSupabasePublicEnv(): PublicSupabaseEnv | null {
   const target = getSupabaseTarget();
   const targeted = getTargetedPublicValues(target);
-  const legacyUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? '';
-  const legacyKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? '';
+  const legacy = getLegacyPublicValues();
+  const allowLegacyFallback = !hasExplicitTarget() && target !== 'local';
 
-  const url = targeted.url || legacyUrl;
-  const publishableKey = targeted.publishableKey || legacyKey;
+  const url = targeted.url || (allowLegacyFallback ? legacy.url : '');
+  const publishableKey =
+    targeted.publishableKey || (allowLegacyFallback ? legacy.publishableKey : '');
 
   const missing: string[] = [];
   if (!url) {
@@ -92,16 +107,16 @@ export function getSupabaseServerEnv(): ServerSupabaseEnv | null {
   const secretKey = process.env.APP_SUPABASE_SERVICE_ROLE_KEY?.trim() ?? '';
   const target = getSupabaseTarget();
   const targeted = getTargetedPublicValues(target);
-  const legacyUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? '';
-  const legacyKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? '';
+  const legacy = getLegacyPublicValues();
+  const allowLegacyFallback = !hasExplicitTarget() && target !== 'local';
 
   if (!publicEnv || !secretKey) {
     const missing: string[] = [];
     if (!publicEnv) {
-      if (!(targeted.url || legacyUrl)) {
+      if (!(targeted.url || (allowLegacyFallback ? legacy.url : ''))) {
         missing.push(targeted.expectedNames[0]);
       }
-      if (!(targeted.publishableKey || legacyKey)) {
+      if (!(targeted.publishableKey || (allowLegacyFallback ? legacy.publishableKey : ''))) {
         missing.push(targeted.expectedNames[1]);
       }
     }

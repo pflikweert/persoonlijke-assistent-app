@@ -11,16 +11,19 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 1. `docs/project/README.md`
 2. `AGENTS.md`
 3. taakrelevante canonieke docs in `docs/project/**`
-4. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
-5. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
+4. bij niet-triviale uitvoertaken: `docs/project/open-points.md` + relevante taskfile in `docs/project/25-tasks/**`
+5. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
+6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
 
 Regels:
 - `docs/project/**` = canonieke projectwaarheid.
+- `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
+- Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
 
 ## Design-implementatie guardrails (operationeel)
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
@@ -36,9 +39,11 @@ Regels:
   - always-on gedrag: `AGENTS.md`
   - domeinspecifieke herhaalpatronen: `.agents/skills/**`
   - operationele workflow: `docs/dev/cline-workflow.md` + `docs/dev/memory-bank.md`
+  - taakworkflow: `docs/dev/task-lifecycle-workflow.md`
   - tijdelijke sessiecontext: `docs/dev/active-context.md`
   - statuswaarheid: `docs/project/current-status.md`
   - echte gaps/onzekerheden: `docs/project/open-points.md`
+  - operationele taken: `docs/project/25-tasks/**`
 
 ## Active context tussen sessies
 - `docs/dev/active-context.md` is een lichte brug tussen Cline-sessies.
@@ -63,6 +68,7 @@ Regels:
 - tijdelijke sessiecontext → `docs/dev/active-context.md`
 - statusrealiteit (bewijsbaar) → `docs/project/current-status.md`
 - echte gaps/onzekerheden → `docs/project/open-points.md`
+- operationele uitvoeringstaken → `docs/project/25-tasks/**`
 
 ## Wanneer Plan mode
 Gebruik Plan mode bij:
@@ -92,6 +98,7 @@ Gebruik Act mode voor:
 ## Verify-regel
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Commit alleen na geslaagde verify.
 
 ## Supabase migratie-uitvoering (verplicht)

@@ -560,13 +560,13 @@ export default function DayDetailScreen() {
                 <ThemedView style={styles.headerTitleStack}>
                   <ThemedView style={styles.headerTitleLockup}>
                     <ThemedText type="sectionTitle" style={styles.headerTitlePrimary}>
-                      {dayHeading}
+                      Budio
                     </ThemedText>
                     <ThemedText
                       type="sectionTitle"
                       style={[styles.headerTitleSecondary, { color: palette.mutedSoft }]}
                     >
-                      dag
+                      {dayHeading}
                     </ThemedText>
                   </ThemedView>
                   <ThemedText

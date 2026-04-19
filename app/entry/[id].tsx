@@ -17,6 +17,7 @@ import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary
 import { EditorialNarrativeBlock } from "@/components/journal/editorial-narrative-block";
 import { EntryAudioPlayer } from "@/components/journal/entry-audio-player";
 import { ScreenHeader } from "@/components/layout/screen-header";
+import { BottomTabBarStandalone } from "@/components/navigation/BottomTabBar";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
@@ -510,6 +511,22 @@ export default function EntryCompletionScreen() {
     <>
       <ScreenContainer
         scrollable
+        fixedFooter={
+          <BottomTabBarStandalone
+            activeKey="today"
+            onSelect={(key) => {
+              if (key === "capture") {
+                router.push("/capture");
+                return;
+              }
+              if (key === "reflections") {
+                router.push("/(tabs)/reflections");
+                return;
+              }
+              router.push("/(tabs)");
+            }}
+          />
+        }
         backgroundTone="subtle"
         fixedHeader={
           isProcessing ? null : (
@@ -648,17 +665,6 @@ export default function EntryCompletionScreen() {
               <SecondaryButton
                 label={dayActionLabel}
                 onPress={() => goToDayDetail({ includeEntryFocus: true })}
-              />
-              <DetailTertiaryAction
-                label="Nog een moment opnemen"
-                uppercase={false}
-                textType="bodySecondary"
-                onPress={() =>
-                  router.push({
-                    pathname: "/capture",
-                    params: { date: dayDate },
-                  })
-                }
               />
               <DetailTertiaryAction
                 onPress={handleDelete}

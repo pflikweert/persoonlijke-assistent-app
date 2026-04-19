@@ -245,7 +245,7 @@ export default function DaysScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       <DetailScreenHero
-        title="Dagen"
+        title="Kies een dag"
         subtitle="Kies een dag om terug te lezen."
         style={styles.hero}
       />

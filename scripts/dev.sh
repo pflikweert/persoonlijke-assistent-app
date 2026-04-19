@@ -5,8 +5,10 @@ ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 START_SCRIPT="$ROOT_DIR/scripts/supabase-functions-start.sh"
 STOP_SCRIPT="$ROOT_DIR/scripts/dev-stop.sh"
 EXPO_PORT="${EXPO_PORT:-8081}"
+STATUS_ENV_FILE="$(mktemp)"
 
 cleanup() {
+  rm -f "$STATUS_ENV_FILE"
   "$STOP_SCRIPT"
 }
 
@@ -46,6 +48,28 @@ fi
 
 echo "Checking/starting local Supabase stack..."
 npx supabase start
+
+npx supabase status -o env >"$STATUS_ENV_FILE"
+
+LOCAL_API_URL="$(
+  awk -F= '$1 == "API_URL" { value = substr($0, index($0, "=") + 1); gsub(/^"|"$/, "", value); print value; exit }' "$STATUS_ENV_FILE"
+)"
+LOCAL_PUBLISHABLE_KEY="$(
+  awk -F= '$1 == "PUBLISHABLE_KEY" { value = substr($0, index($0, "=") + 1); gsub(/^"|"$/, "", value); print value; exit }' "$STATUS_ENV_FILE"
+)"
+
+if [ -z "$LOCAL_API_URL" ] || [ -z "$LOCAL_PUBLISHABLE_KEY" ]; then
+  echo "Could not resolve local Supabase auth env from 'supabase status -o env'."
+  exit 1
+fi
+
+export EXPO_PUBLIC_SUPABASE_TARGET="local"
+export EXPO_PUBLIC_SUPABASE_LOCAL_URL="$LOCAL_API_URL"
+export EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY="$LOCAL_PUBLISHABLE_KEY"
+
+echo "Using local Supabase auth env for Expo:"
+echo "  EXPO_PUBLIC_SUPABASE_TARGET=$EXPO_PUBLIC_SUPABASE_TARGET"
+echo "  EXPO_PUBLIC_SUPABASE_LOCAL_URL=$EXPO_PUBLIC_SUPABASE_LOCAL_URL"
 
 "$START_SCRIPT"
 

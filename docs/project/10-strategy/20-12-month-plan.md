@@ -7,9 +7,13 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 1. **Validatie en hardening**
    - capture-first kern stabiel houden
    - kwaliteit en betrouwbaarheid aantoonbaar verbeteren
+   - eerstvolgende maand = consumer beta afronden met expliciet bewijs
+   - 1.2B outputkwaliteit en 1.2E beta-readiness eerst expliciteren voordat de horizon verbreedt
 2. **Commerciële brug**
    - van capture naar hergebruikbare output-flow(s)
    - eerste duidelijke wedge valideren
+   - start smal met een review-first pilot vanuit entry/day bronlaag
+   - geen brede Pro-activering in de eerstvolgende maand
 3. **Modulaire flow-denkwijze**
    - geen monolithische AI-oplossing
    - flow-specifieke contracts/evaluatie/routing
@@ -30,3 +34,4 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 
 ## Relatie met research
 - Onderliggende strategische argumentatie staat in `docs/project/30-research/**`.
+- Research is richtinggevend voor de horizon, maar wordt niet automatisch actieve planning of canonieke productwaarheid.

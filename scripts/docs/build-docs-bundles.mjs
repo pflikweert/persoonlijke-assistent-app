@@ -9,6 +9,8 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../..');
 
 const outputPaths = {
+  canonicalOpenPoints: 'docs/project/open-points.md',
+  canonicalTaskHub: 'docs/project/25-tasks/README.md',
   uploadManifestV2: 'docs/upload/00-budio-upload-manifest.md',
   uploadProductTruth: 'docs/upload/10-budio-product-truth.md',
   uploadStrategyResearch: 'docs/upload/20-budio-strategy-and-research.md',
@@ -53,6 +55,19 @@ let researchSources = [];
 let strategySources = [];
 let planningSources = [];
 let ideaSources = [];
+let taskSources = [];
+
+const taskStatusOrder = ['backlog', 'ready', 'in_progress', 'blocked', 'done'];
+const taskPriorityOrder = ['p1', 'p2', 'p3'];
+const taskRequiredFields = ['id', 'title', 'status', 'phase', 'priority', 'source', 'updated_at'];
+const taskOverviewMarkers = {
+  start: '<!-- TASK_OVERVIEW:START -->',
+  end: '<!-- TASK_OVERVIEW:END -->',
+};
+const taskIndexMarkers = {
+  start: '<!-- TASK_INDEX:START -->',
+  end: '<!-- TASK_INDEX:END -->',
+};
 
 const buildTruth = {
   // NOTE: this build-truth index is intentionally hand-curated for high-signal upload context.
@@ -389,6 +404,196 @@ async function discoverProjectLayerSources() {
       title: sourceTitleFromPath(sourcePath),
     })),
   };
+}
+
+async function discoverTaskSources() {
+  const groups = [
+    ['open', 'docs/project/25-tasks/open'],
+    ['done', 'docs/project/25-tasks/done'],
+  ];
+  const results = [];
+
+  for (const [bucket, root] of groups) {
+    const files = await listMarkdownFiles(root, { recursive: true, excludeDirs: ['.obsidian'] });
+    for (const sourcePath of files.sort((a, b) => a.localeCompare(b))) {
+      results.push({
+        path: sourcePath,
+        bucket,
+      });
+    }
+  }
+
+  return results;
+}
+
+function parseFrontmatter(content) {
+  const normalized = normalizeLf(content);
+  const match = normalized.match(/^---\n([\s\S]*?)\n---\n?/);
+  if (!match) {
+    return { metadata: null, body: normalized.trim() };
+  }
+
+  const metadata = {};
+  for (const rawLine of match[1].split('\n')) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) {
+      continue;
+    }
+    const separatorIndex = line.indexOf(':');
+    if (separatorIndex === -1) {
+      continue;
+    }
+    const key = line.slice(0, separatorIndex).trim();
+    const value = line.slice(separatorIndex + 1).trim();
+    metadata[key] = value.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1');
+  }
+
+  return {
+    metadata,
+    body: normalized.slice(match[0].length).trim(),
+  };
+}
+
+function extractMarkdownSection(content, heading) {
+  const normalized = normalizeLf(content);
+  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`^## ${escapedHeading}\\n([\\s\\S]*?)(?=^## |\\Z)`, 'm');
+  const match = normalized.match(pattern);
+  return match?.[1]?.trim() ?? '';
+}
+
+function collapseInline(text) {
+  return normalizeLf(text).replace(/\s+/g, ' ').trim();
+}
+
+function summarizeTaskBody(body) {
+  const preferred = extractMarkdownSection(body, 'Gewenste uitkomst');
+  const fallback = extractMarkdownSection(body, 'Probleem / context');
+  const source = collapseInline(preferred || fallback);
+  if (!source) {
+    return 'Nog geen samenvatting beschikbaar.';
+  }
+  return source.length > 140 ? `${source.slice(0, 137).trim()}...` : source;
+}
+
+function statusLabel(status) {
+  const labels = {
+    backlog: 'Backlog',
+    ready: 'Ready',
+    in_progress: 'In Progress',
+    blocked: 'Blocked',
+    done: 'Done',
+  };
+  return labels[status] ?? status;
+}
+
+function priorityRank(priority) {
+  const index = taskPriorityOrder.indexOf(priority);
+  return index === -1 ? taskPriorityOrder.length : index;
+}
+
+function statusRank(status) {
+  const index = taskStatusOrder.indexOf(status);
+  return index === -1 ? taskStatusOrder.length : index;
+}
+
+function escapeTableCell(value) {
+  return String(value ?? '').replace(/\|/g, '\\|');
+}
+
+function replaceMarkedSection(content, markers, replacement) {
+  const normalized = normalizeLf(content);
+  const startIndex = normalized.indexOf(markers.start);
+  const endIndex = normalized.indexOf(markers.end);
+
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+    throw new Error(`docs:bundle failed: markers ontbreken of zijn ongeldig: ${markers.start} / ${markers.end}`);
+  }
+
+  const before = normalized.slice(0, startIndex + markers.start.length);
+  const after = normalized.slice(endIndex);
+  return `${before}\n${replacement.trim()}\n${after}`.trimEnd() + '\n';
+}
+
+function parseTaskSource(source) {
+  const { metadata, body } = parseFrontmatter(source.content);
+  const issues = [];
+
+  if (!metadata) {
+    issues.push('mist frontmatter');
+  }
+
+  for (const field of taskRequiredFields) {
+    if (!metadata?.[field]) {
+      issues.push(`mist veld '${field}'`);
+    }
+  }
+
+  const status = metadata?.status ?? '';
+  const priority = metadata?.priority ?? '';
+  if (status && !taskStatusOrder.includes(status)) {
+    issues.push(`onbekende status '${status}'`);
+  }
+  if (priority && !taskPriorityOrder.includes(priority)) {
+    issues.push(`onbekende prioriteit '${priority}'`);
+  }
+
+  if (metadata?.updated_at && !/^\d{4}-\d{2}-\d{2}$/.test(metadata.updated_at)) {
+    issues.push(`ongeldige updated_at '${metadata.updated_at}'`);
+  }
+
+  const inDoneFolder = source.path.startsWith('docs/project/25-tasks/done/');
+  if (status === 'done' && !inDoneFolder) {
+    issues.push("status 'done' mag alleen in done/");
+  }
+  if (status && status !== 'done' && inDoneFolder) {
+    issues.push(`status '${status}' mag niet in done/`);
+  }
+
+  return {
+    path: source.path,
+    bucket: source.bucket,
+    metadata: metadata ?? {},
+    body,
+    issues,
+    summary: summarizeTaskBody(body),
+  };
+}
+
+function validateTasks(tasks) {
+  const errors = [];
+  const ids = new Map();
+  const titles = new Map();
+
+  for (const task of tasks) {
+    if (task.issues.length > 0) {
+      errors.push(`${task.path}: ${task.issues.join('; ')}`);
+    }
+
+    const id = task.metadata.id;
+    if (id) {
+      const duplicate = ids.get(id);
+      if (duplicate) {
+        errors.push(`duplicate task id '${id}' in ${duplicate} en ${task.path}`);
+      } else {
+        ids.set(id, task.path);
+      }
+    }
+
+    const title = task.metadata.title;
+    if (title) {
+      const duplicate = titles.get(title);
+      if (duplicate) {
+        errors.push(`duplicate task title '${title}' in ${duplicate} en ${task.path}`);
+      } else {
+        titles.set(title, task.path);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`docs:bundle failed: taakvalidatie mislukt:\n${errors.map((item) => `- ${item}`).join('\n')}`);
+  }
 }
 
 function stripObsidianLinks(content) {
@@ -910,6 +1115,86 @@ function renderUploadManifest({ buildTimestamp, commitHash }) {
     .trim()}\n`;
 }
 
+function sortTasks(tasks) {
+  return [...tasks].sort((a, b) => {
+    const priorityDiff = priorityRank(a.metadata.priority) - priorityRank(b.metadata.priority);
+    if (priorityDiff !== 0) {
+      return priorityDiff;
+    }
+
+    const statusDiff = statusRank(a.metadata.status) - statusRank(b.metadata.status);
+    if (statusDiff !== 0) {
+      return statusDiff;
+    }
+
+    return String(a.metadata.title).localeCompare(String(b.metadata.title));
+  });
+}
+
+function renderTaskTable(tasks, { linkPrefix = '', includeDone = true } = {}) {
+  const filtered = includeDone ? tasks : tasks.filter((task) => task.metadata.status !== 'done');
+  const ordered = sortTasks(filtered);
+
+  if (ordered.length === 0) {
+    return '_Geen taken gevonden._';
+  }
+
+  return [
+    '| Taak | Status | Prioriteit | Fase | Korte omschrijving |',
+    '| --- | --- | --- | --- | --- |',
+    ...ordered.map((task) => {
+      const taskRelativePath = task.path.replace('docs/project/25-tasks/', '');
+      const linkTarget = `${linkPrefix}${taskRelativePath}`;
+      return `| [${escapeTableCell(task.metadata.title)}](${linkTarget}) | ${statusLabel(task.metadata.status)} | ${escapeTableCell(task.metadata.priority)} | ${escapeTableCell(task.metadata.phase)} | ${escapeTableCell(task.summary)} |`;
+    }),
+  ].join('\n');
+}
+
+function renderTaskIndex(tasks) {
+  const groups = taskStatusOrder.map((status) => ({
+    status,
+    title: statusLabel(status),
+    tasks: sortTasks(tasks.filter((task) => task.metadata.status === status)),
+  }));
+
+  const blocks = ['_Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._'];
+
+  for (const group of groups) {
+    blocks.push('', `### ${group.title}`);
+    if (group.tasks.length === 0) {
+      blocks.push('', '_Geen taken._');
+      continue;
+    }
+
+    blocks.push(
+      '',
+      '| Taak | Prioriteit | Fase | Korte omschrijving |',
+      '| --- | --- | --- | --- |',
+      ...group.tasks.map((task) => {
+        const linkTarget = task.path.replace('docs/project/25-tasks/', '');
+        return `| [${escapeTableCell(task.metadata.title)}](${linkTarget}) | ${escapeTableCell(task.metadata.priority)} | ${escapeTableCell(task.metadata.phase)} | ${escapeTableCell(task.summary)} |`;
+      }),
+    );
+  }
+
+  return blocks.join('\n').trim();
+}
+
+function renderOpenPointsWithTaskOverview(openPointsSource, tasks) {
+  const openTasks = tasks.filter((task) => task.metadata.status !== 'done');
+  const replacement = [
+    '_Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/25-tasks/**`._',
+    '',
+    renderTaskTable(openTasks, { linkPrefix: '25-tasks/', includeDone: false }),
+  ].join('\n');
+
+  return replaceMarkedSection(openPointsSource, taskOverviewMarkers, replacement);
+}
+
+function renderTaskHub(taskHubSource, tasks) {
+  return replaceMarkedSection(taskHubSource, taskIndexMarkers, renderTaskIndex(tasks));
+}
+
 async function loadBundleInputs() {
   const loadedProjectSources = [];
   for (const source of projectSources) {
@@ -936,7 +1221,20 @@ async function loadBundleInputs() {
     loadedIdeaSources.push({ ...source, content: await readText(source.path) });
   }
 
+  const loadedTaskSources = [];
+  for (const source of taskSources) {
+    const content = await readText(source.path);
+    loadedTaskSources.push({
+      ...source,
+      content,
+      task: parseTaskSource({ ...source, content }),
+    });
+  }
+  validateTasks(loadedTaskSources.map((item) => item.task));
+
   const agents = await readText('AGENTS.md');
+  const openPointsSource = await readText('docs/project/open-points.md');
+  const taskHubSource = await readText('docs/project/25-tasks/README.md');
   const mvpDesignSpec = await readText('docs/design/mvp-design-spec-1.2.1.md');
   const ethosDesign = await readText('design_refs/1.2.1/ethos_ivory/DESIGN.md');
   const stitchWorkflow = await readText('docs/dev/stitch-workflow.md');
@@ -949,6 +1247,9 @@ async function loadBundleInputs() {
     loadedStrategySources,
     loadedPlanningSources,
     loadedIdeaSources,
+    loadedTaskSources,
+    openPointsSource,
+    taskHubSource,
     appendixSummary: extractAgentsSummary(agents, [
       'Canonieke projectdocs',
       'Canonieke designbronnen (MVP 1.2.1)',
@@ -982,9 +1283,23 @@ function assertDiscoveredSources() {
 }
 
 function renderOutputs(inputs, metadata) {
+  const taskEntries = inputs.loadedTaskSources.map((item) => item.task);
+  const canonicalOpenPoints = renderOpenPointsWithTaskOverview(
+    inputs.openPointsSource,
+    taskEntries,
+  );
+  const canonicalTaskHub = renderTaskHub(
+    inputs.taskHubSource,
+    taskEntries,
+  );
+  const loadedProjectSources = inputs.loadedProjectSources.map((source) =>
+    source.path === 'docs/project/open-points.md'
+      ? { ...source, content: canonicalOpenPoints.trim() }
+      : source,
+  );
   const chatgptProjectContext = renderProjectBundle({
     ...metadata,
-    loadedSources: inputs.loadedProjectSources,
+    loadedSources: loadedProjectSources,
     appendixSummary: inputs.appendixSummary,
   });
   const budioResearch = renderResearchBundle({
@@ -1001,7 +1316,7 @@ function renderOutputs(inputs, metadata) {
   const uploadManifest = renderUploadManifest(metadata);
   const primaryProductTruth = renderProductTruthBundle({
     ...metadata,
-    loadedProjectSources: inputs.loadedProjectSources,
+    loadedProjectSources,
     loadedPlanningSources: inputs.loadedPlanningSources,
   });
   const primaryStrategyResearch = renderStrategyResearchBundle({
@@ -1032,6 +1347,8 @@ function renderOutputs(inputs, metadata) {
   const primaryManifest = renderPrimaryUploadManifest(metadata);
 
   return new Map([
+    [outputPaths.canonicalOpenPoints, canonicalOpenPoints],
+    [outputPaths.canonicalTaskHub, canonicalTaskHub],
     [outputPaths.chatgptProjectContext, chatgptProjectContext],
     [outputPaths.generatedProductTruth, primaryProductTruth],
     [outputPaths.generatedStrategyResearch, primaryStrategyResearch],
@@ -1067,8 +1384,12 @@ async function assertRequiredSourcesExist(pageMarkdownRefs) {
     ...strategySources.map((item) => item.path),
     ...planningSources.map((item) => item.path),
     ...ideaSources.map((item) => item.path),
+    ...taskSources.map((item) => item.path),
     ...designSources,
+    'docs/project/25-tasks/README.md',
+    'docs/project/25-tasks/_template.md',
     'docs/dev/stitch-workflow.md',
+    'docs/dev/task-lifecycle-workflow.md',
     ...pageMarkdownRefs,
   ];
 
@@ -1144,6 +1465,7 @@ async function verifyOutputs(outputs) {
 async function main() {
   const isCheckMode = process.argv.includes('--check');
   const discovered = await discoverProjectLayerSources();
+  taskSources = await discoverTaskSources();
   strategySources = discovered.strategy;
   planningSources = discovered.planning;
   researchSources = discovered.research;

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "upload/00-budio-upload-manifest.md",
+                "file": "project/25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00-budio-upload-manifest"
+              "title": "1-2e-beta-readiness-expliciteren-en-afronden"
             }
           }
         ]
@@ -186,6 +186,16 @@
   },
   "active": "9132288e05cd2f6d",
   "lastOpenFiles": [
+    "project/25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md",
+    "project/25-tasks/README.md",
+    "upload/00-budio-upload-manifest.md",
+    "dev/task-lifecycle-workflow.md",
+    "project/25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md",
+    "project/25-tasks/done/actieve-maandplanning-herijkt-naar-transitiemaand.md",
+    "project/25-tasks/open",
+    "project/25-tasks/done",
+    "project/25-tasks/_template.md",
+    "project/25-tasks",
     "README.md",
     "project/40-ideas/10-product/50-structured-export-and-obsidian-archive.md",
     "design/generated/stitch-design-context.md",

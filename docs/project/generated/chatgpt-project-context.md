@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-19T17:27:40.667Z
-Source Commit: 158faa5
+Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
+Source Commit: 361182d
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -33,6 +33,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 
 - `docs/project/10-strategy/**` = lange termijn richting (horizon)
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
+- `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
 
 Regel:
@@ -43,6 +44,7 @@ Regel:
 ### Obsidian graph hubs
 - Strategy hub
 - Planning hub
+- Tasks hub
 - Research hub
 - Ideas workspace
 - Current status
@@ -105,6 +107,14 @@ Regel:
 - afwijkingen op actieve fase worden vastgelegd in `planning/40-deviations-and-decisions.md`
 - planning is richtinggevend voor werkvolgorde, maar statuswaarheid blijft code/bewijs-gedreven
 
+## 3e) Task-documenten (operationele uitvoeringslaag)
+- `docs/project/25-tasks/**`
+
+Regel:
+- task-docs zijn operationeel voor de huidige fase en ondergeschikt aan canonieke productwaarheid en actieve planning
+- open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
+- `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
+
 ## 4) Standaard upload naar ChatGPT Project / Stitch
 Upload standaard de bestanden uit `docs/upload/`:
 1. `docs/upload/00-budio-upload-manifest.md`
@@ -130,6 +140,7 @@ Legacy compatibiliteit:
 - `docs/project/archive/**`
 - `docs/design/archive/**`
 - `docs/dev/**`
+- `docs/project/25-tasks/**`
 - setup/run-notities zonder canonieke productwaarheid
 
 ## 6) Onderhoudsflow
@@ -603,6 +614,15 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 # Open Points — Resterend Werk
 
 ## Doel
+<!-- TASK_OVERVIEW:START -->
+_Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/25-tasks/**`._
+
+| Taak | Status | Prioriteit | Fase | Korte omschrijving |
+| --- | --- | --- | --- | --- |
+| [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Ready | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
+| [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
+<!-- TASK_OVERVIEW:END -->
+
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
 ## Obsidian links
@@ -2127,16 +2147,19 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 1. `docs/project/README.md`
 2. `AGENTS.md`
 3. taakrelevante canonieke docs in `docs/project/**`
-4. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
-5. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
+4. bij niet-triviale uitvoertaken: `docs/project/open-points.md` + relevante taskfile in `docs/project/25-tasks/**`
+5. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
+6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
 
 Regels:
 - `docs/project/**` = canonieke projectwaarheid.
+- `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
+- Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
 
 ## Design-implementatie guardrails (operationeel)
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
@@ -2152,9 +2175,11 @@ Regels:
   - always-on gedrag: `AGENTS.md`
   - domeinspecifieke herhaalpatronen: `.agents/skills/**`
   - operationele workflow: `docs/dev/cline-workflow.md` + `docs/dev/memory-bank.md`
+  - taakworkflow: `docs/dev/task-lifecycle-workflow.md`
   - tijdelijke sessiecontext: `docs/dev/active-context.md`
   - statuswaarheid: `docs/project/current-status.md`
   - echte gaps/onzekerheden: `docs/project/open-points.md`
+  - operationele taken: `docs/project/25-tasks/**`
 
 ## Active context tussen sessies
 - `docs/dev/active-context.md` is een lichte brug tussen Cline-sessies.
@@ -2179,6 +2204,7 @@ Regels:
 - tijdelijke sessiecontext → `docs/dev/active-context.md`
 - statusrealiteit (bewijsbaar) → `docs/project/current-status.md`
 - echte gaps/onzekerheden → `docs/project/open-points.md`
+- operationele uitvoeringstaken → `docs/project/25-tasks/**`
 
 ## Wanneer Plan mode
 Gebruik Plan mode bij:
@@ -2208,6 +2234,7 @@ Gebruik Act mode voor:
 ## Verify-regel
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Commit alleen na geslaagde verify.
 
 ## Supabase migratie-uitvoering (verplicht)
@@ -2270,6 +2297,7 @@ Gebruik Act mode voor:
 - `docs/upload/**` is generated uploadoutput voor de gebruiker; gebruik deze map niet als canonieke agentbron.
 - Standaard uploadset staat in `docs/upload/upload-manifest.md` en bevat ChatGPT Project context, MVP design spec en Stitch design context.
 - Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
+- Bij taskstatuswijzigingen of taakverplaatsing naar `done/`: werk taskfile + relevante planning/open-points context bij en draai daarna ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - documenteer altijd zichtbaarheidsregel (admin-only) en allowlist-mechanisme
 - documenteer relevante env-vars (`ADMIN_REGEN_ALLOWLIST_USER_IDS`, `ADMIN_REGEN_INTERNAL_TOKEN`)
 

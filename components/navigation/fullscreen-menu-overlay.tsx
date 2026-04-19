@@ -154,7 +154,10 @@ export function FullscreenMenuOverlay({
           style={styles.menuHeader}
           leftAction={
             <ThemedView style={styles.brandLockup}>
-              <ThemedText type="sectionTitle" style={styles.brandPrimary}>
+              <ThemedText
+                type="sectionTitle"
+                style={[styles.brandPrimary, { color: palette.text }]}
+              >
                 Budio
               </ThemedText>
               <ThemedText

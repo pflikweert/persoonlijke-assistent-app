@@ -41,7 +41,9 @@ pnpm-debug.log*
 # IDE/editor
 .vscode/*
 !.vscode/extensions.json
+!.vscode/launch.json
 !.vscode/settings.json
+!.vscode/tasks.json
 .idea/
 
 # Keys/certificates

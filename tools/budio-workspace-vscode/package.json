@@ -1,0 +1,131 @@
+{
+  "name": "budio-workspace-vscode",
+  "displayName": "Budio Workspace",
+  "description": "Local VS Code kanban board for Budio task markdown files.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:budioWorkspace.openBoard",
+    "onCommand:budioWorkspace.openListView",
+    "onCommand:budioWorkspace.openSettings",
+    "onView:budioWorkspace.launcher"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "budioWorkspace.openBoard",
+        "title": "Budio Workspace: Open Board"
+      },
+      {
+        "command": "budioWorkspace.openListView",
+        "title": "Budio Workspace: Open List View"
+      },
+      {
+        "command": "budioWorkspace.openSettings",
+        "title": "Budio Workspace: Open Settings"
+      },
+      {
+        "command": "budioWorkspace.refreshBoard",
+        "title": "Budio Workspace: Refresh Board"
+      },
+      {
+        "command": "budioWorkspace.newTask",
+        "title": "Budio Workspace: New Task"
+      }
+    ],
+    "configuration": {
+      "title": "Budio Workspace",
+      "properties": {
+        "budioWorkspace.tasksRoot": {
+          "type": "string",
+          "default": "docs/project/25-tasks",
+          "description": "Relative path to the task root folder."
+        },
+        "budioWorkspace.columns": {
+          "type": "array",
+          "default": [
+            "backlog",
+            "ready",
+            "in_progress",
+            "blocked",
+            "done"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "backlog",
+              "ready",
+              "in_progress",
+              "blocked",
+              "done"
+            ]
+          },
+          "description": "Columns shown in the board."
+        },
+        "budioWorkspace.showDoneColumn": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the done column is visible."
+        },
+        "budioWorkspace.defaultSort": {
+          "type": "string",
+          "default": "manual",
+          "enum": [
+            "manual",
+            "due_date",
+            "priority",
+            "updated_at",
+            "alphabetical"
+          ],
+          "description": "Default board and list sort order."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "budioWorkspace",
+          "title": "Budio Workspace",
+          "icon": "media/activity-bar.svg"
+        }
+      ]
+    },
+    "views": {
+      "budioWorkspace": [
+        {
+          "type": "webview",
+          "id": "budioWorkspace.launcher",
+          "name": "Launcher"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "npm run clean && npm run build:extension && npm run build:webview",
+    "build:extension": "tsc -p tsconfig.json",
+    "build:webview": "node esbuild.mjs",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build:extension && node --test dist/test/**/*.test.js"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "@types/react": "^19.1.14",
+    "@types/react-dom": "^19.1.9",
+    "@types/vscode": "^1.99.1",
+    "esbuild": "^0.25.9",
+    "typescript": "^5.9.2"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "budio-workspace: build",
+      "type": "npm",
+      "script": "build",
+      "path": "tools/budio-workspace-vscode",
+      "group": "build",
+      "problemMatcher": "$tsc"
+    }
+  ]
+}

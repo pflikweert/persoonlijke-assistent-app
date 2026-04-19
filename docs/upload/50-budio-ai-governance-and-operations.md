@@ -2,8 +2,8 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-19T17:27:40.667Z
-Source Commit: 158faa5
+Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
+Source Commit: 361182d
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -183,16 +183,19 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 1. `docs/project/README.md`
 2. `AGENTS.md`
 3. taakrelevante canonieke docs in `docs/project/**`
-4. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
-5. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
+4. bij niet-triviale uitvoertaken: `docs/project/open-points.md` + relevante taskfile in `docs/project/25-tasks/**`
+5. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
+6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
 
 Regels:
 - `docs/project/**` = canonieke projectwaarheid.
+- `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
+- Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
 
 ## Design-implementatie guardrails (operationeel)
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
@@ -208,9 +211,11 @@ Regels:
   - always-on gedrag: `AGENTS.md`
   - domeinspecifieke herhaalpatronen: `.agents/skills/**`
   - operationele workflow: `docs/dev/cline-workflow.md` + `docs/dev/memory-bank.md`
+  - taakworkflow: `docs/dev/task-lifecycle-workflow.md`
   - tijdelijke sessiecontext: `docs/dev/active-context.md`
   - statuswaarheid: `docs/project/current-status.md`
   - echte gaps/onzekerheden: `docs/project/open-points.md`
+  - operationele taken: `docs/project/25-tasks/**`
 
 ## Active context tussen sessies
 - `docs/dev/active-context.md` is een lichte brug tussen Cline-sessies.
@@ -231,17 +236,7 @@ Regels:
 - canonieke waarheid → `docs/project/**`
 - operationele workflow → `docs/dev/**`
 - always-on gedrag → `AGENTS.md`
-- taak-/domeinspecifieke herhaalpatronen → skills
-- tijdelijke sessiecontext → `docs/dev/active-context.md`
-- statusrealiteit (bewijsbaar) → `docs/project/current-status.md`
-- echte gaps/onzekerheden → `docs/project/open-points.md`
-
-## Wanneer Plan mode
-Gebruik Plan mode bij:
-- bugs met onduidelijke oorzaak
-- multi-file wijzigingen
-- migraties
-- taken met duidelijke scope-/archite
+- ta
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 

@@ -1,6 +1,15 @@
 # Open Points — Resterend Werk
 
 ## Doel
+<!-- TASK_OVERVIEW:START -->
+_Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/25-tasks/**`._
+
+| Taak | Status | Prioriteit | Fase | Korte omschrijving |
+| --- | --- | --- | --- | --- |
+| [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Ready | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
+| [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
+<!-- TASK_OVERVIEW:END -->
+
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
 ## Obsidian links

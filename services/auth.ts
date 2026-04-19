@@ -143,8 +143,26 @@ export async function sendMagicLink(email: string): Promise<void> {
   });
 
   if (error) {
-    throw error;
+    throw normalizeMagicLinkError(error);
   }
+}
+
+function normalizeMagicLinkError(error: Error): Error {
+  const message = error.message.toLowerCase();
+
+  if (message.includes('rate') || message.includes('too many') || message.includes('over_email_send_rate_limit')) {
+    return new Error('Je hebt net al een inloglink aangevraagd. Wacht heel even en probeer het dan opnieuw.');
+  }
+
+  if (message.includes('invalid email') || message.includes('email_address_invalid')) {
+    return new Error('Controleer je e-mailadres en probeer opnieuw.');
+  }
+
+  if (message.includes('smtp') || message.includes('email address not authorized') || message.includes('mailer')) {
+    return new Error('De mailservice reageert nu niet goed. Controleer je lokale Supabase-mailsetup en probeer daarna opnieuw.');
+  }
+
+  return error;
 }
 
 export async function signOutUser(): Promise<void> {
