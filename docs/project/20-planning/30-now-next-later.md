@@ -16,6 +16,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Design/UI truth bundle compositie verfijnen (minder excerpt-volume, meer gerichte guardrail-samenvatting).
 - AI governance/operations bundle mogelijk compacter maken met focus op execution-samenvatting.
 - Eerste expliciete commerciële brug (capture -> hergebruikbare output) als afgebakende pilot verkennen.
+- Conversation-aware ingest (copy/paste fase 1) en source-aware AIQS-evaluatie verkennen als afgebakend spoor (zie `40-ideas/10-product/30-conversation-aware-ingest-and-interpretation.md` en `40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`).
 
 ## Later
 - Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.

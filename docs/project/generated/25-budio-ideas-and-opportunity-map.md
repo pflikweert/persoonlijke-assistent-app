@@ -2,8 +2,8 @@
 
 # Budio Ideas and Opportunity Map
 
-Build Timestamp (UTC): 2026-04-19T09:32:53.595Z
-Source Commit: f964f12
+Build Timestamp (UTC): 2026-04-19T11:34:36.447Z
+Source Commit: d4ac7cd
 
 Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -117,6 +117,8 @@ Lage-frictie plek om nieuwe ideeën direct vast te leggen zonder contextverlies.
 - [2026-04-19] VS Code plugin die repo + Budio productiecontext combineert via MCP/API.
 - [2026-04-19] AIQS opdelen in flow-families met eigen contracts/evals i.p.v. één generieke laag.
 - [2026-04-19] Budio brainstorm/workspace module voor builders/kleine teams als mogelijk productspoor.
+- [2026-04-19] Conversation-aware ingest en interpretation layer (WhatsApp/iMessage/Telegram/mail/transcript) — gepromoveerd naar `10-product/30-conversation-aware-ingest-and-interpretation.md`.
+- [2026-04-19] Source-aware AIQS routing en evaluation (source type als first-class metadata) — gepromoveerd naar `30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`.
 
 ---
 

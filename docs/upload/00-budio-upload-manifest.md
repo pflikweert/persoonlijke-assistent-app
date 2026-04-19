@@ -2,8 +2,8 @@
 
 # Budio Upload Manifest
 
-Build Timestamp (UTC): 2026-04-19T09:32:53.595Z
-Source Commit: f964f12
+Build Timestamp (UTC): 2026-04-19T11:34:36.447Z
+Source Commit: d4ac7cd
 
 ## Primaire uploadset (aanbevolen)
 
