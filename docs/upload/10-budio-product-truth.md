@@ -1,11 +1,11 @@
 # DO NOT EDIT - GENERATED FILE
 
-# ChatGPT Project Context
+# Budio Product Truth
 
 Build Timestamp (UTC): 2026-04-19T09:32:53.595Z
 Source Commit: f964f12
 
-Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
+Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
@@ -18,7 +18,14 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/copy-instructions.md
 - docs/project/ai-quality-studio.md
 - docs/dev/cline-workflow.md
-- AGENTS.md
+- docs/project/20-planning/10-roadmap-phases.md
+- docs/project/20-planning/20-active-phase.md
+- docs/project/20-planning/30-now-next-later.md
+- docs/project/20-planning/40-deviations-and-decisions.md
+
+## Leesregel
+- Dit is de primaire bron voor scope, status en uitvoering binnen de huidige fase.
+- Strategische verdieping staat in de strategy/research bundle.
 
 ---
 
@@ -2199,57 +2206,115 @@ Gebruik Act mode voor:
 
 ---
 
-## Korte Appendix - Projectkritische AGENTS-punten
+## Roadmap Fases
 
-### Canonieke projectdocs
-- `docs/project/master-project.md`
-- `docs/project/product-vision-mvp.md`
-- `docs/project/current-status.md`
-- `docs/project/open-points.md`
-- `docs/project/content-processing-rules.md`
-- `docs/project/copy-instructions.md`
-- `docs/project/ai-quality-studio.md`
-- `master-project.md` = product, scope, fasekaart, beslisregels
-- `product-vision-mvp.md` = productgedrag en guardrails
-- `current-status.md` = enige statuswaarheid voor code-realiteit
-- `open-points.md` = resterende gaps en onzekerheden
-- `content-processing-rules.md` = canonieke inhouds- en outputregels
-- `copy-instructions.md` = canonieke copy-, tone-of-voice- en microcopyregels
-- `ai-quality-studio.md` = canonieke AI-governance voor prompting, evaluatie en kwaliteit
-- volg altijd `docs/project/ai-quality-studio.md`
+# Roadmap phases (lean)
 
-### Canonieke designbronnen (MVP 1.2.1)
-- `docs/design/mvp-design-spec-1.2.1.md` is leidend voor MVP-designbeslissingen.
-- `design_refs/1.2.1/ethos_ivory/DESIGN.md` is leidend voor foundations.
-- `design_refs/1.2.1/*/code.html` en `design_refs/1.2.1/*/screen.png` zijn leidend per scherm.
-- Als een schermmap in `design_refs/1.2.1/**` een `.md` design-note heeft, gebruik die ook als aanvullende per-scherm designinput.
-- `docs/design/archive/phase-1.3-design-direction.md` is verouderd en niet leidend.
+## Doel
+Eén overzicht van projectfases met status, zonder detail-overload.
 
-### Docs-workflow
-- werk eerst de handmatige docs bij
-- houd ook root `README.md` synchroon met actuele runtime/feature-realiteit
-- draai daarna:
-- `npm run docs:bundle`
-- `npm run docs:bundle:verify`
-- `docs/upload/**` is generated uploadoutput voor de gebruiker; gebruik deze map niet als canonieke agentbron.
-- Standaard uploadset staat in `docs/upload/upload-manifest.md` en bevat ChatGPT Project context, MVP design spec en Stitch design context.
-- Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
-- documenteer altijd zichtbaarheidsregel (admin-only) en allowlist-mechanisme
-- documenteer relevante env-vars (`ADMIN_REGEN_ALLOWLIST_USER_IDS`, `ADMIN_REGEN_INTERNAL_TOKEN`)
+## Fasekaart
+| Fase | Doel | Status |
+|---|---|---|
+| Fase 1 (kernlus) | capture -> dagboeklaag -> reflecties bouwen | afgerond als basis |
+| Fase 1.2 (hardening) | stabiliteit, kwaliteit, UX, vertrouwen, beta-readiness | actief afgerond in delen / bewijsgedreven |
+| Fase 2 (commerciële brug) | capture -> hergebruik -> reviewbare output pilots | next |
+| Fase 3 (modulaire flows) | flow-families met eigen contracts/evals | later |
 
-### Security
-- `OPENAI_API_KEY` blijft altijd server-side.
-- Commit nooit secrets, tokens of lokale env-bestanden.
-- Bouw geen client-side OpenAI-calls met geheime sleutels.
+## Regel
+- Alleen `planning/20-active-phase.md` bepaalt wat nu actief focusgebied is.
 
-### Kwaliteit
-- `npm run lint`
-- `npm run typecheck`
-- Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask.
-- Assume the local dev server is already running.
-- Never prefix local dev-server commands with `CI=1`.
-- For validation, use one-shot commands only, such as:
-- `npm run lint`
-- `npm run typecheck`
-- project verify scripts
-- If a live server is required, tell me the exact command to run manually instead of running it yourself (example: `npx expo start --web --localhost`).
+---
+
+## Active Phase
+
+# Active phase (uitvoeringsfocus)
+
+## Actieve fase
+Fase 1.2 hardening + structurering van project operating system.
+
+## Doel van deze fase
+1. Huidige capture-first productkwaliteit betrouwbaar houden.
+2. Docs/planning/ideas structuur professionaliseren voor focus en automatisering.
+3. Voorbereiden op volgende fase (commerciële brug) zonder die nu al te forceren.
+
+## In focus (Now)
+- Stabiliteit, UX-consistentie, outputkwaliteit en releasebewijs.
+- Duidelijke planninglaag (`roadmap`, `active`, `now-next-later`, `deviations`).
+- Gestructureerde idee-capture met één file per idee.
+
+## Niet in focus (nu niet trekken)
+- Volledige productverbreding naar alle future-state modules tegelijk.
+- Monolithische AI-oplossing over alle domeinen.
+- Grote productpivot zonder expliciet besluit.
+
+## Flexibele afwijkingsregel
+- Kleine afwijkingen met lage impact mogen direct, maar moeten achteraf in `planning/40-deviations-and-decisions.md`.
+- Structurele afwijkingen eerst als besluit/deviation vastleggen, daarna active-phase updaten.
+
+## Bewijsregel
+- Claims over “gereed” alleen met code- of runtimebewijs.
+
+---
+
+## Now / Next / Later
+
+# Now / Next / Later
+
+## Doel
+Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadministratie.
+
+## Now
+- Hardeningkwaliteit en evidence-first releaseproofing.
+- Project operating system structuur in `docs/project/**` consolideren.
+- Idea capture structureren (inbox + één-file-per-idee).
+- Upload use-case matrix operationaliseren en primaire bundle-volgorde stabiliseren.
+- Bundlescript hardening op curated build-truth paden (drift-preventie).
+
+## Next
+- Product-truth bundle compacter maken (minder duplicatie, minder self-reference).
+- Legacy `upload-manifest.md` herpositioneren als extended/compatibility manifest.
+- Design/UI truth bundle compositie verfijnen (minder excerpt-volume, meer gerichte guardrail-samenvatting).
+- AI governance/operations bundle mogelijk compacter maken met focus op execution-samenvatting.
+- Eerste expliciete commerciële brug (capture -> hergebruikbare output) als afgebakende pilot verkennen.
+
+## Later
+- Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.
+- VS Code plugin + MCP/API bridge als operationele bouwlaag realiseren.
+- Budio brainstorm workspace als aparte productmodule valideren.
+
+## Parking lot
+- Nieuwe ideeën eerst kort in `docs/project/40-ideas/00-ideas-inbox.md`.
+
+---
+
+## Deviations and Decisions
+
+# Deviations and decisions
+
+## Doel
+Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit traceerbaar blijft.
+
+## Gebruik
+- Elke structurele koerswijziging krijgt hier een korte entry.
+- Kleine lage-impact afwijkingen mogen direct, maar worden alsnog achteraf gelogd.
+
+## Template
+
+### [YYYY-MM-DD] Titel
+- **Type**: deviation | decision
+- **Van plan/document**: (bijv. `planning/20-active-phase.md`)
+- **Wijziging**: wat verandert er
+- **Waarom**: context/redenering
+- **Impact**: product | ui | services | supabase | docs
+- **Vervolgactie**: welke docs/code moeten worden aangepast
+
+## Entries
+
+### 2026-04-19 — Lean operating system expliciet toegevoegd aan projectdocs
+- **Type**: decision
+- **Van plan/document**: impliciete root-structuur in `docs/project/`
+- **Wijziging**: introductie van `strategy/`, `planning/` en `ideas/` als vaste operating system lagen
+- **Waarom**: focus en traceerbaarheid verbeteren; ideeën, planning en canonieke waarheid scheiden
+- **Impact**: docs
+- **Vervolgactie**: bundelstrategie in volgende stap herschrijven op nieuwe structuur

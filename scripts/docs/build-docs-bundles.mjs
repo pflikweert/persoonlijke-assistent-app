@@ -9,9 +9,24 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../..');
 
 const outputPaths = {
+  uploadManifestV2: 'docs/upload/00-budio-upload-manifest.md',
+  uploadProductTruth: 'docs/upload/10-budio-product-truth.md',
+  uploadStrategyResearch: 'docs/upload/20-budio-strategy-and-research.md',
+  uploadIdeasOpportunity: 'docs/upload/25-budio-ideas-and-opportunity-map.md',
+  uploadBuildTruth: 'docs/upload/30-budio-build-truth.md',
+  uploadUiDesignTruth: 'docs/upload/40-budio-ui-system-and-design-truth.md',
+  uploadAiGovernanceOps: 'docs/upload/50-budio-ai-governance-and-operations.md',
+  generatedProductTruth: 'docs/project/generated/10-budio-product-truth.md',
+  generatedStrategyResearch: 'docs/project/generated/20-budio-strategy-and-research.md',
+  generatedIdeasOpportunity: 'docs/project/generated/25-budio-ideas-and-opportunity-map.md',
+  generatedBuildTruth: 'docs/project/generated/30-budio-build-truth.md',
+  generatedUiDesignTruth: 'docs/project/generated/40-budio-ui-system-and-design-truth.md',
+  generatedAiGovernanceOps: 'docs/project/generated/50-budio-ai-governance-and-operations.md',
   chatgptProjectContext: 'docs/project/generated/chatgpt-project-context.md',
+  budioResearch: 'docs/project/generated/budio-research.md',
   stitchDesignContext: 'docs/design/generated/stitch-design-context.md',
   uploadChatgptProjectContext: 'docs/upload/chatgpt-project-context.md',
+  uploadBudioResearch: 'docs/upload/budio-research.md',
   uploadAiQualityStudio: 'docs/upload/ai-quality-studio.md',
   uploadClineWorkflow: 'docs/upload/cline-workflow.md',
   uploadStitchWorkflow: 'docs/upload/stitch-workflow.md',
@@ -33,6 +48,140 @@ const projectSources = [
   { path: 'docs/dev/cline-workflow.md', title: 'Cline Workflow Afspraken' },
 ];
 
+const researchSources = [
+  {
+    path: 'docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md',
+    title: 'Richting, Positionering en Kansanalyse',
+  },
+  {
+    path: 'docs/project/30-research/20-budio-12-maandenpropositie-en-mvp-route.md',
+    title: '12-maandenpropositie en MVP-route',
+  },
+  {
+    path: 'docs/project/30-research/30-budio-podcaster-solo-expert-wedge-plan.md',
+    title: 'Podcaster / Solo-expert Wedge Plan',
+  },
+  {
+    path: 'docs/project/30-research/40-budio-future-state-architectuur-en-verdienmodel.md',
+    title: 'Future-state Architectuur en Verdienmodel',
+  },
+  {
+    path: 'docs/project/30-research/50-budio-future-state-analyse-en-aiqs-control-plane.md',
+    title: 'Future-state Analyse en AIQS Control Plane',
+  },
+  {
+    path: 'docs/project/30-research/60-budio-marktkans-purple-cow-en-mrr.md',
+    title: 'Marktkans, Purple Cow en MRR',
+  },
+];
+
+const strategySources = [
+  { path: 'docs/project/10-strategy/10-long-term-strategy.md', title: 'Lange Termijn Strategie' },
+  { path: 'docs/project/10-strategy/20-12-month-plan.md', title: '12-Maanden Plan' },
+  { path: 'docs/project/10-strategy/30-research-map.md', title: 'Research Map' },
+];
+
+const planningSources = [
+  { path: 'docs/project/20-planning/10-roadmap-phases.md', title: 'Roadmap Fases' },
+  { path: 'docs/project/20-planning/20-active-phase.md', title: 'Active Phase' },
+  { path: 'docs/project/20-planning/30-now-next-later.md', title: 'Now / Next / Later' },
+  { path: 'docs/project/20-planning/40-deviations-and-decisions.md', title: 'Deviations and Decisions' },
+];
+
+const ideaSources = [
+  { path: 'docs/project/40-ideas/README.md', title: 'Ideas Workspace' },
+  { path: 'docs/project/40-ideas/00-ideas-inbox.md', title: 'Ideas Inbox' },
+  {
+    path: 'docs/project/40-ideas/40-platform-and-architecture/10-lean-project-operating-system-for-repo.md',
+    title: 'Idea - Lean Project Operating System',
+  },
+  {
+    path: 'docs/project/40-ideas/40-platform-and-architecture/20-vscode-project-copilot-plugin.md',
+    title: 'Idea - VS Code Project Copilot Plugin',
+  },
+  {
+    path: 'docs/project/40-ideas/40-platform-and-architecture/30-budio-modular-intelligence-workspace.md',
+    title: 'Idea - Modular Intelligence Workspace',
+  },
+  {
+    path: 'docs/project/40-ideas/40-platform-and-architecture/40-vscode-plugin-with-budio-runtime-bridge.md',
+    title: 'Idea - VS Code Runtime Bridge',
+  },
+  {
+    path: 'docs/project/40-ideas/30-ai-and-aiqs/40-aiqs-modular-flow-control-plane.md',
+    title: 'Idea - AIQS Modular Flow Control Plane',
+  },
+  {
+    path: 'docs/project/40-ideas/10-product/20-budio-brainstorm-workspace-for-builders.md',
+    title: 'Idea - Budio Brainstorm Workspace',
+  },
+];
+
+const buildTruth = {
+  // NOTE: this build-truth index is intentionally hand-curated for high-signal upload context.
+  // Keep this list focused; add/remove entries deliberately when architecture changes.
+  routes: [
+    'app/_layout.tsx',
+    'app/sign-in.tsx',
+    'app/(tabs)/index.tsx',
+    'app/(tabs)/days.tsx',
+    'app/(tabs)/reflections.tsx',
+    'app/capture/index.tsx',
+    'app/capture/record.tsx',
+    'app/capture/type.tsx',
+    'app/day/[date].tsx',
+    'app/entry/[id].tsx',
+    'app/settings.tsx',
+    'app/settings-export.tsx',
+    'app/settings-import.tsx',
+    'app/settings-audio.tsx',
+    'app/settings-regeneration.tsx',
+    'app/settings-ai-quality-studio.tsx',
+    'app/settings-ai-quality-studio/[taskKey].tsx',
+  ],
+  components: [
+    'components/ui/screen-primitives.tsx',
+    'components/ui/settings-screen-primitives.tsx',
+    'components/ui/auth-screen-primitives.tsx',
+    'components/ui/capture-screen-primitives.tsx',
+    'components/ui/detail-screen-primitives.tsx',
+    'components/ui/home-screen-primitives.tsx',
+    'components/ui/modal-backdrop.tsx',
+    'components/navigation/BottomTabBar.tsx',
+    'components/navigation/fullscreen-menu-overlay.tsx',
+    'components/feedback/background-task-notice.tsx',
+    'components/feedback/background-task-status-card.tsx',
+    'components/journal/archive-grouped-list.tsx',
+  ],
+  services: [
+    'services/auth.ts',
+    'services/entries.ts',
+    'services/day-journals.ts',
+    'services/reflections.ts',
+    'services/export.ts',
+    'services/import/chatgpt-markdown.ts',
+    'services/user-preferences.ts',
+    'services/admin-regeneration.ts',
+    'services/ai-quality-studio.ts',
+    'services/reset.ts',
+  ],
+  functions: [
+    'supabase/functions/process-entry/index.ts',
+    'supabase/functions/renormalize-entry/index.ts',
+    'supabase/functions/regenerate-day-journal/index.ts',
+    'supabase/functions/generate-reflection/index.ts',
+    'supabase/functions/import-chatgpt-markdown/index.ts',
+    'supabase/functions/admin-regeneration-job/index.ts',
+    'supabase/functions/admin-ai-quality-studio/index.ts',
+  ],
+  contracts: [
+    'server-contracts/index.ts',
+    'server-contracts/ai/index.ts',
+    'supabase/migrations/20260416125000_user_background_tasks.sql',
+    'supabase/migrations/20260418101500_entry_audio_storage_and_user_preferences.sql',
+  ],
+};
+
 const designSources = [
   'docs/design/mvp-design-spec-1.2.1.md',
   'design_refs/1.2.1/ethos_ivory/DESIGN.md',
@@ -44,14 +193,54 @@ const designSources = [
 
 const uploadSet = [
   {
+    path: outputPaths.uploadManifestV2,
+    type: 'generated manifest',
+    flow: 'Primary upload guidance',
+  },
+  {
+    path: outputPaths.uploadProductTruth,
+    type: 'generated primary bundle',
+    flow: 'Product/scope/status truth',
+  },
+  {
+    path: outputPaths.uploadStrategyResearch,
+    type: 'generated primary bundle',
+    flow: 'Strategy and research',
+  },
+  {
+    path: outputPaths.uploadIdeasOpportunity,
+    type: 'generated primary bundle',
+    flow: 'Ideas and opportunity map',
+  },
+  {
+    path: outputPaths.uploadBuildTruth,
+    type: 'generated primary bundle',
+    flow: 'Build/code architecture truth',
+  },
+  {
+    path: outputPaths.uploadUiDesignTruth,
+    type: 'generated primary bundle',
+    flow: 'UI system and design truth',
+  },
+  {
+    path: outputPaths.uploadAiGovernanceOps,
+    type: 'generated primary bundle',
+    flow: 'AI governance and operations',
+  },
+  {
     path: outputPaths.uploadChatgptProjectContext,
-    type: 'generated upload copy',
-    flow: 'ChatGPT Project',
+    type: 'legacy generated upload copy',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadAiQualityStudio,
-    type: 'canonical upload copy',
-    flow: 'ChatGPT Project',
+    type: 'legacy canonical upload copy',
+    flow: 'Legacy compatibility',
+  },
+  {
+    path: outputPaths.uploadBudioResearch,
+    type: 'legacy generated upload copy',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadClineWorkflow,
@@ -309,6 +498,283 @@ function renderProjectBundle({ buildTimestamp, commitHash, loadedSources, append
   return `${blocks.join('\n').trim()}\n`;
 }
 
+function renderSectionedSources(loadedSources) {
+  const blocks = [];
+  for (const source of loadedSources) {
+    blocks.push('', '---', '', `## ${source.title}`, '', source.content);
+  }
+  return blocks;
+}
+
+function renderResearchBundle({ buildTimestamp, commitHash, loadedResearchSources }) {
+  const sourceList = researchSources.map((item) => item.path);
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio Research',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: geordende researchbundle als strategische input voor planherijking, zonder canonieke MVP-docs te overschrijven.',
+    }),
+    '',
+    '## Bronbestanden (vaste volgorde)',
+    ...sourceList.map((item) => `- ${item}`),
+    '',
+    '## Interpretatieregel',
+    '- Dit is een researchbundle en geen vervanging van canonieke MVP-waarheid in `docs/project/**`.',
+    '- Gebruik dit document voor richting, kansen, sequencing en commerciële hypotheses.',
+  ];
+
+  for (const source of loadedResearchSources) {
+    blocks.push('', '---', '', `## ${source.title}`, '', source.content);
+  }
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderProductTruthBundle({
+  buildTimestamp,
+  commitHash,
+  loadedProjectSources,
+  loadedPlanningSources,
+}) {
+  const sourceList = [
+    ...projectSources.map((item) => item.path),
+    ...planningSources.map((item) => item.path),
+  ];
+
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio Product Truth',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.',
+    }),
+    '',
+    '## Bronbestanden (vaste volgorde)',
+    ...sourceList.map((item) => `- ${item}`),
+    '',
+    '## Leesregel',
+    '- Dit is de primaire bron voor scope, status en uitvoering binnen de huidige fase.',
+    '- Strategische verdieping staat in de strategy/research bundle.',
+    ...renderSectionedSources(loadedProjectSources),
+    ...renderSectionedSources(loadedPlanningSources),
+  ];
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderStrategyResearchBundle({
+  buildTimestamp,
+  commitHash,
+  loadedStrategySources,
+  loadedResearchSources,
+}) {
+  const sourceList = [
+    ...strategySources.map((item) => item.path),
+    ...researchSources.map((item) => item.path),
+  ];
+
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio Strategy and Research',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.',
+    }),
+    '',
+    '## Bronbestanden (vaste volgorde)',
+    ...sourceList.map((item) => `- ${item}`),
+    '',
+    '## Leesregel',
+    '- Strategie/research zijn richtinggevend, maar wijzigen niet automatisch actieve MVP-scope.',
+    '- Doorvertaling naar uitvoering loopt via planning-docs en decision-log.',
+    ...renderSectionedSources(loadedStrategySources),
+    ...renderSectionedSources(loadedResearchSources),
+  ];
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderIdeasOpportunityBundle({ buildTimestamp, commitHash, loadedIdeaSources }) {
+  const sourceList = [...ideaSources.map((item) => item.path)];
+
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio Ideas and Opportunity Map',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.',
+    }),
+    '',
+    '## Bronbestanden (vaste volgorde)',
+    ...sourceList.map((item) => `- ${item}`),
+    '',
+    '## Leesregel',
+    '- Ideas zijn voorstelruimte en niet automatisch actieve planning of canonieke productwaarheid.',
+    '- Promotie naar actieve uitvoering loopt via `docs/project/20-planning/**` en expliciete decisions.',
+    ...renderSectionedSources(loadedIdeaSources),
+  ];
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderBuildTruthBundle({ buildTimestamp, commitHash }) {
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio Build Truth',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire buildbundle met routes, componentarchitectuur, services, runtime functions en contracts.',
+    }),
+    '',
+    '## App Routes (kern)',
+    ...buildTruth.routes.map((item) => `- ${item}`),
+    '',
+    '## Shared Components (kern)',
+    ...buildTruth.components.map((item) => `- ${item}`),
+    '',
+    '## Services (kern)',
+    ...buildTruth.services.map((item) => `- ${item}`),
+    '',
+    '## Supabase Functions (kern)',
+    ...buildTruth.functions.map((item) => `- ${item}`),
+    '',
+    '## Contracts en Datagrondslag (kern)',
+    ...buildTruth.contracts.map((item) => `- ${item}`),
+    '',
+    '## Gebruik',
+    '- Gebruik deze bundle voor codewijzigingsplanning, impactanalyse en repo-aligned implementatieprompts.',
+  ];
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderUiDesignTruthBundle({
+  buildTimestamp,
+  commitHash,
+  stitchDesignContext,
+  mvpDesignSpec,
+  ethosDesign,
+  tokenSnapshot,
+}) {
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio UI System and Design Truth',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire UI/designbundle met designregels, tokens en implementatieguardrails.',
+    }),
+    '',
+    '## Token Snapshot',
+    tokenSnapshot,
+    '',
+    '## MVP Design Spec (excerpt)',
+    compactExcerpt(mvpDesignSpec, 3500),
+    '',
+    '## Ethos Foundation (excerpt)',
+    compactExcerpt(ethosDesign, 2600),
+    '',
+    '## Compact Design Context',
+    compactExcerpt(stitchDesignContext, 4200),
+  ];
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderAiGovernanceOpsBundle({
+  buildTimestamp,
+  commitHash,
+  aiQualityStudio,
+  clineWorkflow,
+  stitchWorkflow,
+}) {
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio AI Governance and Operations',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.',
+    }),
+    '',
+    '## AI Quality Studio Governance (excerpt)',
+    compactExcerpt(aiQualityStudio, 5200),
+    '',
+    '## Cline Workflow (excerpt)',
+    compactExcerpt(clineWorkflow, 3200),
+    '',
+    '## Stitch Workflow (excerpt)',
+    compactExcerpt(stitchWorkflow, 3200),
+  ];
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderPrimaryUploadManifest({ buildTimestamp, commitHash }) {
+  const primaryRows = uploadSet.filter((item) => item.path.startsWith('docs/upload/0') || item.path.startsWith('docs/upload/1') || item.path.startsWith('docs/upload/2') || item.path.startsWith('docs/upload/3') || item.path.startsWith('docs/upload/4') || item.path.startsWith('docs/upload/5'));
+
+  return `${[
+    '# DO NOT EDIT - GENERATED FILE',
+    '',
+    '# Budio Upload Manifest',
+    '',
+    `Build Timestamp (UTC): ${buildTimestamp}`,
+    `Source Commit: ${commitHash}`,
+    '',
+    '## Primaire uploadset (aanbevolen)',
+    '',
+    '| Bestand | Type | Flow |',
+    '| --- | --- | --- |',
+    ...primaryRows.map((item) => `| \`${item.path}\` | ${item.type} | ${item.flow} |`),
+    '',
+    '## Use-case matrix (aanbevolen subsets)',
+    '',
+    '| Use-case | Aanbevolen bestanden |',
+    '| --- | --- |',
+    `| Strategie-review | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadProductTruth}\`, \`${outputPaths.uploadStrategyResearch}\`, \`${outputPaths.uploadAiGovernanceOps}\` |`,
+    `| Planherziening / opportunity review | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadStrategyResearch}\`, \`${outputPaths.uploadIdeasOpportunity}\` |`,
+    `| Code/build review | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadProductTruth}\`, \`${outputPaths.uploadBuildTruth}\` |`,
+    `| Design/Stitch handoff | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadUiDesignTruth}\`, \`${outputPaths.uploadMvpDesignSpec}\`, \`${outputPaths.uploadEthosIvoryDesign}\`, \`${outputPaths.uploadStitchDesignContext}\` |`,
+    `| Volledige primaire context | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadProductTruth}\`, \`${outputPaths.uploadStrategyResearch}\`, \`${outputPaths.uploadIdeasOpportunity}\`, \`${outputPaths.uploadBuildTruth}\`, \`${outputPaths.uploadUiDesignTruth}\`, \`${outputPaths.uploadAiGovernanceOps}\` |`,
+    '',
+    '## Legacy uploadset',
+    '- Legacy bestanden blijven aanwezig voor compatibiliteit maar zijn niet de primaire set.',
+  ].join('\n')}\n`;
+}
+
+async function assertBuildTruthPathsExist() {
+  const groups = [
+    ['routes', buildTruth.routes],
+    ['components', buildTruth.components],
+    ['services', buildTruth.services],
+    ['functions', buildTruth.functions],
+    ['contracts', buildTruth.contracts],
+  ];
+
+  const missing = [];
+  for (const [groupName, paths] of groups) {
+    for (const source of paths) {
+      if (!(await pathExists(source))) {
+        missing.push(`${groupName}: ${source}`);
+      }
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error(
+      `docs:bundle failed: ontbrekende build-truth paden (curated lijst):\n${missing
+        .map((item) => `- ${item}`)
+        .join('\n')}`,
+    );
+  }
+}
+
 function renderDesignContext({
   buildTimestamp,
   commitHash,
@@ -415,6 +881,26 @@ async function loadBundleInputs() {
     loadedProjectSources.push({ ...source, content: await readText(source.path) });
   }
 
+  const loadedResearchSources = [];
+  for (const source of researchSources) {
+    loadedResearchSources.push({ ...source, content: await readText(source.path) });
+  }
+
+  const loadedStrategySources = [];
+  for (const source of strategySources) {
+    loadedStrategySources.push({ ...source, content: await readText(source.path) });
+  }
+
+  const loadedPlanningSources = [];
+  for (const source of planningSources) {
+    loadedPlanningSources.push({ ...source, content: await readText(source.path) });
+  }
+
+  const loadedIdeaSources = [];
+  for (const source of ideaSources) {
+    loadedIdeaSources.push({ ...source, content: await readText(source.path) });
+  }
+
   const agents = await readText('AGENTS.md');
   const mvpDesignSpec = await readText('docs/design/mvp-design-spec-1.2.1.md');
   const ethosDesign = await readText('design_refs/1.2.1/ethos_ivory/DESIGN.md');
@@ -424,6 +910,10 @@ async function loadBundleInputs() {
 
   return {
     loadedProjectSources,
+    loadedResearchSources,
+    loadedStrategySources,
+    loadedPlanningSources,
+    loadedIdeaSources,
     appendixSummary: extractAgentsSummary(agents, [
       'Canonieke projectdocs',
       'Canonieke designbronnen (MVP 1.2.1)',
@@ -445,6 +935,10 @@ function renderOutputs(inputs, metadata) {
     loadedSources: inputs.loadedProjectSources,
     appendixSummary: inputs.appendixSummary,
   });
+  const budioResearch = renderResearchBundle({
+    ...metadata,
+    loadedResearchSources: inputs.loadedResearchSources,
+  });
   const stitchDesignContext = renderDesignContext({
     ...metadata,
     mvpDesignSpec: inputs.mvpDesignSpec,
@@ -453,11 +947,57 @@ function renderOutputs(inputs, metadata) {
     pageMarkdownRefs: inputs.pageMarkdownRefs,
   });
   const uploadManifest = renderUploadManifest(metadata);
+  const primaryProductTruth = renderProductTruthBundle({
+    ...metadata,
+    loadedProjectSources: inputs.loadedProjectSources,
+    loadedPlanningSources: inputs.loadedPlanningSources,
+  });
+  const primaryStrategyResearch = renderStrategyResearchBundle({
+    ...metadata,
+    loadedStrategySources: inputs.loadedStrategySources,
+    loadedResearchSources: inputs.loadedResearchSources,
+  });
+  const primaryIdeasOpportunity = renderIdeasOpportunityBundle({
+    ...metadata,
+    loadedIdeaSources: inputs.loadedIdeaSources,
+  });
+  const primaryBuildTruth = renderBuildTruthBundle(metadata);
+  const primaryUiDesignTruth = renderUiDesignTruthBundle({
+    ...metadata,
+    stitchDesignContext,
+    mvpDesignSpec: inputs.mvpDesignSpec,
+    ethosDesign: inputs.ethosDesign,
+    tokenSnapshot: inputs.tokenSnapshot,
+  });
+  const primaryAiGovernanceOps = renderAiGovernanceOpsBundle({
+    ...metadata,
+    aiQualityStudio:
+      inputs.loadedProjectSources.find((item) => item.path === 'docs/project/ai-quality-studio.md')?.content ?? '',
+    clineWorkflow:
+      inputs.loadedProjectSources.find((item) => item.path === 'docs/dev/cline-workflow.md')?.content ?? '',
+    stitchWorkflow: inputs.stitchWorkflow,
+  });
+  const primaryManifest = renderPrimaryUploadManifest(metadata);
 
   return new Map([
     [outputPaths.chatgptProjectContext, chatgptProjectContext],
+    [outputPaths.generatedProductTruth, primaryProductTruth],
+    [outputPaths.generatedStrategyResearch, primaryStrategyResearch],
+    [outputPaths.generatedIdeasOpportunity, primaryIdeasOpportunity],
+    [outputPaths.generatedBuildTruth, primaryBuildTruth],
+    [outputPaths.generatedUiDesignTruth, primaryUiDesignTruth],
+    [outputPaths.generatedAiGovernanceOps, primaryAiGovernanceOps],
+    [outputPaths.budioResearch, budioResearch],
     [outputPaths.stitchDesignContext, stitchDesignContext],
     [outputPaths.uploadChatgptProjectContext, chatgptProjectContext],
+    [outputPaths.uploadManifestV2, primaryManifest],
+    [outputPaths.uploadProductTruth, primaryProductTruth],
+    [outputPaths.uploadStrategyResearch, primaryStrategyResearch],
+    [outputPaths.uploadIdeasOpportunity, primaryIdeasOpportunity],
+    [outputPaths.uploadBuildTruth, primaryBuildTruth],
+    [outputPaths.uploadUiDesignTruth, primaryUiDesignTruth],
+    [outputPaths.uploadAiGovernanceOps, primaryAiGovernanceOps],
+    [outputPaths.uploadBudioResearch, budioResearch],
     [outputPaths.uploadAiQualityStudio, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/project/ai-quality-studio.md')?.content?.trim() ?? ''}\n`],
     [outputPaths.uploadClineWorkflow, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/dev/cline-workflow.md')?.content?.trim() ?? ''}\n`],
     [outputPaths.uploadStitchWorkflow, `${inputs.stitchWorkflow.trim()}\n`],
@@ -471,6 +1011,10 @@ function renderOutputs(inputs, metadata) {
 async function assertRequiredSourcesExist(pageMarkdownRefs) {
   const requiredSources = [
     ...projectSources.map((item) => item.path),
+    ...researchSources.map((item) => item.path),
+    ...strategySources.map((item) => item.path),
+    ...planningSources.map((item) => item.path),
+    ...ideaSources.map((item) => item.path),
     ...designSources,
     'docs/dev/stitch-workflow.md',
     ...pageMarkdownRefs,
@@ -486,6 +1030,8 @@ async function assertRequiredSourcesExist(pageMarkdownRefs) {
   if (missing.length > 0) {
     throw new Error(`docs:bundle failed: ontbrekende bronfiles:\n${missing.map((item) => `- ${item}`).join('\n')}`);
   }
+
+  await assertBuildTruthPathsExist();
 }
 
 async function writeOutputs(outputs) {

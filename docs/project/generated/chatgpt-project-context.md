@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-18T19:02:53.385Z
-Source Commit: 4867208
+Build Timestamp (UTC): 2026-04-19T09:32:53.595Z
+Source Commit: f964f12
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -24,9 +24,21 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 ## Docs-Hiërarchie Samenvatting
 
-# Projectdocs — Waarheidshiërarchie
+# Projectdocs — Waarheidshiërarchie en Operating System
 
-Deze map bevat de actieve projectwaarheid voor scope, richting en status.
+Deze map bevat de actieve projectwaarheid voor scope, richting en status,
+plus een lean operating system voor strategie, planning en ideeën.
+
+## 0) Lean operating system (nieuw)
+
+- `docs/project/10-strategy/**` = lange termijn richting (horizon)
+- `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
+- `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
+
+Regel:
+- deze lagen sturen focus en executie
+- ze vervangen niet automatisch canonieke productwaarheid
+- statusclaims blijven bewijs-gebonden in `current-status.md`
 
 ## 1) Canonieke handmatige documenten (leidend)
 1. `docs/project/master-project.md`
@@ -41,8 +53,13 @@ Deze map bevat de actieve projectwaarheid voor scope, richting en status.
 Aanvulling:
 - `docs/project/ai-quality-studio.md` is de centrale AI governance-laag voor AI-gedrag, promptbeheer en evaluatie.
 
+Overgangsnoot:
+- Canonieke docs staan nu nog op rootniveau van `docs/project/`.
+- De nieuwe structuur (`10-strategy/`, `20-planning/`, `40-ideas/`) wordt vanaf nu gebruikt om richting/focus/ideeën gescheiden te beheren.
+
 ## 2) Generated documenten (afgeleid, niet leidend)
 - `docs/project/generated/chatgpt-project-context.md`
+- `docs/project/generated/budio-research.md`
 - `docs/design/generated/stitch-design-context.md`
 - `docs/upload/**`
 
@@ -56,24 +73,50 @@ Regel:
 - `docs/design/archive/**`
 - `docs/dev/archive/**`
 
+## 3b) Research-documenten (strategische input, niet canonieke MVP-waarheid)
+- `docs/project/30-research/**`
+
+Regel:
+- research-documenten zijn bedoeld als richting-, markt- en scenario-input
+- ze vervangen niet automatisch de canonieke MVP-kaders in `master-project.md` en `product-vision-mvp.md`
+- feitelijke implementatierealiteit blijft in `current-status.md` en `open-points.md`
+
+## 3c) Ideas-documenten (gestructureerde ideecapture, niet canonieke waarheid)
+- `docs/project/40-ideas/**`
+
+Regel:
+- `ideas/00-ideas-inbox.md` is snelle capture (ruw)
+- gepromoveerde ideeën krijgen één file per idee in categorie-submap
+- ideas zijn voorstelruimte; alleen na besluit + bewijs doorstromen naar planning/status/canonieke docs
+
+## 3d) Planning-documenten (actieve focuslaag)
+- `docs/project/20-planning/**`
+
+Regel:
+- `planning/20-active-phase.md` is de huidige focuslaag voor uitvoering
+- afwijkingen op actieve fase worden vastgelegd in `planning/40-deviations-and-decisions.md`
+- planning is richtinggevend voor werkvolgorde, maar statuswaarheid blijft code/bewijs-gedreven
+
 ## 4) Standaard upload naar ChatGPT Project / Stitch
 Upload standaard de bestanden uit `docs/upload/`:
-1. `docs/upload/chatgpt-project-context.md`
-2. `docs/upload/ai-quality-studio.md`
-3. `docs/upload/cline-workflow.md`
-4. `docs/upload/stitch-workflow.md`
-5. `docs/upload/mvp-design-spec-1.2.1.md`
-6. `docs/upload/stitch-design-context.md`
-7. `docs/upload/upload-manifest.md`
+1. `docs/upload/00-budio-upload-manifest.md`
+2. `docs/upload/10-budio-product-truth.md`
+3. `docs/upload/20-budio-strategy-and-research.md`
+4. `docs/upload/25-budio-ideas-and-opportunity-map.md`
+5. `docs/upload/30-budio-build-truth.md`
+6. `docs/upload/40-budio-ui-system-and-design-truth.md`
+7. `docs/upload/50-budio-ai-governance-and-operations.md`
 
 Reden:
-- de bundle bevat compacte projectcontext
-- AI Quality Studio governance wordt als canonieke upload-copy apart meegenomen
-- Cline workflow-afspraken staan als aparte upload-copy klaar voor uitvoeringscontext
-- Stitch-workflow-afspraken staan als aparte upload-copy klaar voor Stitch/ChatGPT handoff
-- de design spec blijft apart leidend voor MVP-designbesluiten
-- de Stitch design context bevat compacte design-handoff zonder alle docs te dupliceren
-- het manifest maakt de uploadset controleerbaar
+- de uploadset is logisch geordend (00/10/20/30/40/50) voor vaste leesvolgorde
+- productwaarheid, strategie/research, build-truth, UI/design en AI-governance zijn expliciet gescheiden
+- ideas/opportunity mapping is expliciet gescheiden van strategy/research
+- het manifest maakt de primaire uploadset controleerbaar
+- use-case subsets staan in `docs/upload/00-budio-upload-manifest.md`
+
+Legacy compatibiliteit:
+- Bestaande legacy uploadfiles (zoals `chatgpt-project-context.md`, `budio-research.md`, `upload-manifest.md`) blijven beschikbaar voor bestaande workflows,
+  maar de 00/10/20/30/40/50-set is de primaire standaard.
 
 ## 5) Wat je normaal niet hoeft te uploaden
 - `docs/project/archive/**`
@@ -425,7 +468,7 @@ Gecontroleerd op:
 | Onderwerp | Oorspronkelijk plan | Code-status | Conclusie |
 |---|---|---|---|
 | Auth (magic link) | In scope | **Aanwezig** | `app/sign-in.tsx`, `services/auth.ts`, auth-gating in `app/_layout.tsx`. |
-| Capture tekst | In scope | **Aanwezig** | `submitTextEntry` + capture UI in `app/(tabs)/capture.tsx`, `services/entries.ts`. |
+| Capture tekst | In scope | **Aanwezig** | `submitTextEntry` + capture UI in `app/capture/index.tsx` en `app/capture/type.tsx`, met servicekoppeling in `services/entries.ts`. |
 | Capture audio | In scope | **Aanwezig** | recorder + audio-submit + payload guards in capture/services. |
 | Intake flow | Kernflow | **Aanwezig** | `supabase/functions/process-entry/index.ts` + client invoke. |
 | Entry hernormalisatie bij edit | Hardening-onderdeel | **Aanwezig** | `renormalize-entry` function + dagdetail editpad. |
@@ -435,6 +478,8 @@ Gecontroleerd op:
 | “Opnieuw samenvatten” als zichtbare knop | Genoemd in documentatie | **Deels aanwezig** | heropbouw bestaat functioneel, expliciete zichtbare knop niet hard aangetroffen. |
 | ChatGPT markdown import | Niet kern in oorspronkelijke scope | **Aanwezig (feature-flagged)** | `app/settings.tsx`, `services/import/*`, `import-chatgpt-markdown` function + migrationkolommen. |
 | Instellingen-submenu | Gevraagd in beheerflow | **Aanwezig** | `app/settings.tsx` toont submenu met `Archief downloaden`, `Importeren`, `Verwijder alles` en admin-only `Data opnieuw verwerken`. |
+| Audio-opslagvoorkeur + opnamebewaring | Niet expliciet in vroeg MVP-plan uitgewerkt | **Aanwezig** | `app/settings-audio.tsx`, `services/user-preferences.ts`, migration `20260418101500_entry_audio_storage_and_user_preferences.sql` met `user_preferences`, audio metadata op `entries_raw` en private `entry-audio` bucket policies. |
+| User background tasks voor import-status | Hardening-uitbreiding buiten oorspronkelijke kernformule | **Aanwezig** | migration `20260416125000_user_background_tasks.sql` + UI-componenten `components/feedback/background-task-*` + import/services-koppeling voor voortgang en notice-state. |
 | Admin globale regeneratiejob | Gevraagd in beheerflow | **Aanwezig** | `app/settings-regeneration.tsx`, `services/admin-regeneration.ts`, `supabase/functions/admin-regeneration-job/index.ts`. |
 | OpenAI Batch API verwerking | Vereiste voor schaal/efficiëntie | **Aanwezig** | batch-upload + create/poll/apply + retry-pad op `error_file_id` in `admin-regeneration-job`. |
 | Voortgang/status per datatype | Vereiste voor transparantie | **Aanwezig** | teller- en fasevelden (`total/queued/openai_completed/applied/failed/remaining/phase`) in job-steps + UI. |
@@ -449,6 +494,7 @@ Gecontroleerd op:
 | AIQS prompt-assist preview voor `entry_cleanup` (admin-only) | Editor hardening | **Aanwezig** | server-side action `prompt_assist_preview` + client service/types + draft editor met single-target apply, inline diff en issue-signalen zonder brede chat-UI. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
 | Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
+| Branded productlaag “Budio Vandaag” in shell/auth/menu | Niet als losse MVP-feature benoemd in vroege projectdocs | **Aanwezig** | branded login/header/menu/splash doorgevoerd in `app/sign-in.tsx`, `components/ui/auth-screen-primitives.tsx`, `components/navigation/fullscreen-menu-overlay.tsx`, `app/(tabs)/index.tsx`, `app.json`. |
 
 ## Fase 1.2 status
 | Subfase | Status | Onderbouwing |
@@ -504,11 +550,24 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 - Er is een operationele workflowdoc toegevoegd: `docs/dev/cline-workflow.md`.
 - Er is een lichte repo-eigen memory-bank/active-context workflow vastgelegd in `docs/dev/memory-bank.md` en `docs/dev/active-context.md` (operationeel, niet-canoniek).
 
+## Delta-audit (laatste 2 weken codewijzigingen)
+- Capture/detail-flows zijn verder gepolijst met audio-afspeelcomponent (`components/journal/entry-audio-player.tsx`), verfijnde modals en rustiger feedbackstates.
+- Settings-informatiearchitectuur is uitgebreid met aparte audio-instellingen (`app/settings-audio.tsx`) naast export/import/delete/admin.
+- Importflow gebruikt nu expliciet background task infrastructuur (`user_background_tasks`) voor voortgang/notices i.p.v. enkel schermgebonden status.
+- AIQS adminflow is verdiept met editor- en readmodelverbeteringen, prompt-assist en debug-opslagfundering.
+- Supabase hardening is uitgebreid met securityfixes op `search_path` en extra datafundering (`entries_normalized.updated_at`, audio storage metadata/policies).
+- UI-shell/branding is zichtbaarder door branded auth/header/menu/splash doorvertaling.
+
 ## Recente regressie-learnings (april 2026)
 - Admin-access UI mag alleen `Geen toegang` tonen bij expliciete auth-codes (`AUTH_UNAUTHORIZED`/`AUTH_MISSING`), niet bij generieke netwerk- of loadfouten.
 - Allowlist parsing in edge functions moet gequote env-waarden (`"uuid"`, `'uuid'`) normaliseren om false `Forbidden` te voorkomen.
 - Prompt-editor newline/paragraph normalisatie moet editor-overstijgend consistent blijven; sectiewissels mogen geen lege-regel-migratie veroorzaken.
 - AIQS token-editor blijft bewust compact: helperblok “Gebruikte tokens” verwijderd en editor-surface blijft licht voor leesbaarheid in dark mode.
+
+## Strategische afwijking t.o.v. nieuw researchpakket
+- De huidige runtime is sterker in capture/hardening dan in commerciële output-conversie: de app levert aantoonbaar capture, daglaag, reflecties, import/export, audio-opslagoptie en admin-governance.
+- De in research beschreven Pro-wedge (capture -> review -> publiceerbare output) is nog niet productmatig als eindgebruikersflow geland.
+- AIQS is al een sterke admin control-laag, maar nog niet de volledige future-state control plane met breed task-registry, usage-economie en product-tiering in runtime.
 
 ## Samenvatting
 De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only settingspad toegevoegd voor globale herverwerking via OpenAI Batch API, inclusief persistente jobstatus en per-type voortgang. Voor 1.2D zijn settings export/import/delete nu functioneel bewezen binnen deze afgesloten scope (handmatige flow-validatie + runtime/API-bewijs van service- en data-effecten). Onvoldoende bewezen claims buiten deze scope blijven expliciet onzeker.
@@ -532,20 +591,43 @@ Toelichting:
 ## Deels open (nog niet hard afgerond)
 1. 1.2B outputkwaliteit als complete afgeronde kwaliteitsset.
 2. 1.2E private-beta readiness met volledige runtime-doorloop van de releasechecklist in light + dark mode.
+3. Commerciële brug van capture naar publiceerbare output (Pro-wedge) is strategisch uitgewerkt in research, maar nog niet als eindgebruikersflow productmatig geland.
+4. Nieuwe 00/10/20/30/40/50 uploadbundels zijn nu primair ingericht, maar teamworkflow moet nog expliciet op deze primaire set standaardiseren (legacy blijft nog aanwezig).
 
 ## Onzeker
 1. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
 2. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
 3. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
 
+## Afwijkingen tussen huidig MVP-plan en runtime-realiteit
+
+### Functionaliteit-afwijkingen (al gebouwd t.o.v. oudere docs)
+1. Audio-opslagvoorkeur per gebruiker is toegevoegd (aan/uit bewaren van originele opnames), inclusief storage- en metadatafundering.
+2. Import/background task infrastructuur is toegevoegd met `user_background_tasks` en voortgang/notices in UI.
+3. Settings IA is verbreed met aparte audio-instellingen naast export/import/delete en admin-routes.
+4. Supabase hardening bevat extra security- en dataconsistentie-aanpassingen (search_path-fixes, `entries_normalized.updated_at`) die niet als afzonderlijke productcapabilities in het oudere MVP-plan stonden.
+
+### UI/UX-afwijkingen (al zichtbaar in product)
+1. Branded laag “Budio Vandaag” is doorgevoerd in auth/header/menu/splash en ligt nu nadrukkelijker op merkidentiteit dan in eerdere MVP-docs stond.
+2. Shell-polish (menu/topnav/background consistency) is verder doorgevoerd dan de oorspronkelijke minimale MVP-beschrijving.
+3. Capture/detail/settings UX bevat nu uitgebreidere status- en feedbackstates (background notices, selector-modals, audio playback), waardoor de runtime-ervaring rijker is dan de vroege MVP-baseline.
+
+### Strategische afwijkingen (research vs huidige productrealiteit)
+1. Research stuurt op Pro-wedge (capture -> review -> output/publicatievoorbereiding), maar die flow ontbreekt nog als concrete gebruikersfunctionaliteit.
+2. Research stuurt op usage/credits/tiering en commerciële stuurinformatie; runtime bevat dit nog niet als productlaag.
+3. AIQS is sterk als admin-governance, maar nog niet de volledige control plane zoals in future-state research beschreven.
+
 ## Prioriteit
 1. Maak completion-criteria voor 1.2A/1.2B/1.2C/1.2E expliciet en toetsbaar.
-2. Los onzekerheden op met hard bewijs; anders onzeker laten.
+2. Maak expliciet besluitbaar welke MVP-afwijkingen worden geformaliseerd in volgende planupdate (zonder huidige canonieke plannen nu te herschrijven).
+3. Los onzekerheden op met hard bewijs; anders onzeker laten.
+4. Beslis expliciet welke research-gedreven afwijkingen (Pro-wedge, flow-modulariteit, AIQS control-plane verdieping) in de volgende planronde naar `planning/next` promoveren.
 
 ## Risico’s
 1. Scope-creep richting brede assistent.
 2. Verwarring tussen tooling en productfeature.
 3. Te snelle status-upgrade van onbewezen claims.
+4. Strategische drift: capture-machine blijft groeien zonder commerciële outputbrug te operationaliseren.
 
 ## Later project — import volledig laten doorlopen op de achtergrond
 
