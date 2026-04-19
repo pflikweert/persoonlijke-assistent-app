@@ -20,6 +20,7 @@ Toelichting:
 1. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
 2. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
 3. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
+4. Repo versus productie-deploy boundary is nog niet expliciet genoeg: welke repo-artefacten (docs/workflow/Obsidian-werkbestanden) mogen versioned zijn maar horen nooit in runtime/deploypad terecht te komen.
 
 ## Afwijkingen tussen huidig MVP-plan en runtime-realiteit
 

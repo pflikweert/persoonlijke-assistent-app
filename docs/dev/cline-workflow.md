@@ -20,6 +20,7 @@ Regels:
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
+- Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
 
 ## Design-implementatie guardrails (operationeel)
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.

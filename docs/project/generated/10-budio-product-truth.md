@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-19T11:47:20.423Z
-Source Commit: 22c9aaf
+Build Timestamp (UTC): 2026-04-19T12:41:24.423Z
+Source Commit: a829204
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -605,6 +605,7 @@ Toelichting:
 1. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
 2. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
 3. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
+4. Repo versus productie-deploy boundary is nog niet expliciet genoeg: welke repo-artefacten (docs/workflow/Obsidian-werkbestanden) mogen versioned zijn maar horen nooit in runtime/deploypad terecht te komen.
 
 ## Afwijkingen tussen huidig MVP-plan en runtime-realiteit
 
@@ -2108,6 +2109,7 @@ Regels:
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
+- Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
 
 ## Design-implementatie guardrails (operationeel)
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
@@ -2284,6 +2286,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.
 - VS Code plugin + MCP/API bridge als operationele bouwlaag realiseren.
 - Budio brainstorm workspace als aparte productmodule valideren.
+- Budio Pro markdown workspace + Obsidian export/koppeling alleen als later export-first integratiespoor (geen productie-sync nu).
 
 ## Parking lot
 - Nieuwe ideeën eerst kort in `docs/project/40-ideas/00-ideas-inbox.md`.

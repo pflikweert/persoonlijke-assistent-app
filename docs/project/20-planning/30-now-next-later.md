@@ -23,6 +23,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Volledige modulaire flow-architectuur (journal/project-code/podcast/coaches) productiseren.
 - VS Code plugin + MCP/API bridge als operationele bouwlaag realiseren.
 - Budio brainstorm workspace als aparte productmodule valideren.
+- Budio Pro markdown workspace + Obsidian export/koppeling alleen als later export-first integratiespoor (geen productie-sync nu).
 
 ## Parking lot
 - Nieuwe ideeën eerst kort in `docs/project/40-ideas/00-ideas-inbox.md`.
