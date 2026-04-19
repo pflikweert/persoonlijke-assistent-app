@@ -2,13 +2,14 @@
 
 # Budio Research
 
-Build Timestamp (UTC): 2026-04-19T13:05:23.760Z
-Source Commit: b3a523c
+Build Timestamp (UTC): 2026-04-19T13:35:47.478Z
+Source Commit: b30bc50
 
 Doel: geordende researchbundle als strategische input voor planherijking, zonder canonieke MVP-docs te overschrijven.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
+- docs/project/30-research/README.md
 - docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md
 - docs/project/30-research/20-budio-12-maandenpropositie-en-mvp-route.md
 - docs/project/30-research/30-budio-podcaster-solo-expert-wedge-plan.md
@@ -22,7 +23,30 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 ---
 
-## Richting, Positionering en Kansanalyse
+## README
+
+# Research hub
+
+## Doel
+Navigatiehub voor strategische researchinput in vaste leesvolgorde.
+
+## Lezen in volgorde
+- [[10-budio-richting-positionering-en-kansanalyse|10, Richting, positionering en kansanalyse]]
+- [[20-budio-12-maandenpropositie-en-mvp-route|20, 12 maanden propositie en MVP-route]]
+- [[30-budio-podcaster-solo-expert-wedge-plan|30, Podcaster / solo-expert wedge plan]]
+- [[40-budio-future-state-architectuur-en-verdienmodel|40, Future-state architectuur en verdienmodel]]
+- [[50-budio-future-state-analyse-en-aiqs-control-plane|50, Future-state analyse en AIQS control plane]]
+- [[60-budio-marktkans-purple-cow-en-mrr|60, Marktkans, Purple Cow en MRR]]
+
+## Verbonden lagen
+- [[../10-strategy/README|Strategy hub]]
+- [[../20-planning/README|Planning hub]]
+- [[../40-ideas/README|Ideas workspace]]
+- [[../README|Project hub]]
+
+---
+
+## Budio Richting Positionering En Kansanalyse
 
 # Budio-richting: kansanalyse en positionering
 
@@ -306,7 +330,7 @@ Als Budio die ruwe oorsprong goed vangt, ordent en vertaalt, dan heb je iets dat
 
 ---
 
-## 12-maandenpropositie en MVP-route
+## Budio 12 Maandenpropositie En Mvp Route
 
 # Budio 12-maandenplan
 ## Eén concrete propositie, doelgroep, pricing en MVP
@@ -718,7 +742,7 @@ Budio Vandaag wordt een laagdrempelige capture-ingang, en Budio Pro wordt de laa
 
 ---
 
-## Podcaster / Solo-expert Wedge Plan
+## Budio Podcaster Solo Expert Wedge Plan
 
 # Budio — scherpe podcaster / solo-expert wedge uitgewerkt
 
@@ -1466,7 +1490,7 @@ En dát is precies waar de kans zit.
 
 ---
 
-## Future-state Architectuur en Verdienmodel
+## Budio Future State Architectuur En Verdienmodel
 
 # Budio future-state architectuur + verdienmodel
 
@@ -1877,7 +1901,7 @@ Wel:
 
 ---
 
-## Future-state Analyse en AIQS Control Plane
+## Budio Future State Analyse En Aiqs Control Plane
 
 # Budio — future-state analyse, 12-maandenrichting en AIQS-architectuur
 
@@ -2703,7 +2727,7 @@ Die zit in:
 
 ---
 
-## Marktkans, Purple Cow en MRR
+## Budio Marktkans Purple Cow En Mrr
 
 # Budio — marktresearch, purple cow, groeikansen en omzetpotentie
 

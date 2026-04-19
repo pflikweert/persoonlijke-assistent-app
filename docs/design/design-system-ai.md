@@ -1,5 +1,10 @@
 # Design System AI — NativeWind Hardening Rules (Fase 1.2)
 
+## Obsidian links
+- [[mvp-design-spec-1.2.1|MVP design spec]]
+- [[component-mapping|Component mapping]]
+- [[../README|Docs hub]]
+
 ## 1) Doel en status
 
 - Doel: bindende implementatieregels voor UI-styling tijdens NativeWind-invoering zonder redesign.

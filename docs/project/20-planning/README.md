@@ -4,13 +4,13 @@
 Navigatiehub voor actieve uitvoeringsfocus, roadmap en afwijkingsbesluiten.
 
 ## Kernnotities
-- [Roadmap fases](./10-roadmap-phases.md)
-- [Active phase](./20-active-phase.md)
-- [Now / Next / Later](./30-now-next-later.md)
-- [Deviations and decisions](./40-deviations-and-decisions.md)
+- [[10-roadmap-phases|Roadmap fases]]
+- [[20-active-phase|Active phase]]
+- [[30-now-next-later|Now / Next / Later]]
+- [[40-deviations-and-decisions|Deviations and decisions]]
 
 ## Verbonden lagen
-- [Strategy hub](../10-strategy/README.md)
-- [Research hub](../30-research/README.md)
-- [Ideas workspace](../40-ideas/README.md)
-- [Project hub](../README.md)
+- [[../10-strategy/README|Strategy hub]]
+- [[../30-research/README|Research hub]]
+- [[../40-ideas/README|Ideas workspace]]
+- [[../README|Project hub]]

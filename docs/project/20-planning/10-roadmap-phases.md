@@ -3,6 +3,14 @@
 ## Doel
 Eén overzicht van projectfases met status, zonder detail-overload.
 
+## Obsidian links
+- [[README|Planning hub]]
+- [[20-active-phase|Active phase]]
+- [[30-now-next-later|Now / Next / Later]]
+- [[40-deviations-and-decisions|Deviations and decisions]]
+- [[../current-status|Current status]]
+- [[../open-points|Open points]]
+
 ## Fasekaart
 | Fase | Doel | Status |
 |---|---|---|

@@ -4,11 +4,11 @@
 Navigatiehub voor strategische richting en horizonkeuzes.
 
 ## Kernnotities
-- [Lange termijn strategie](./10-long-term-strategy.md)
-- [12-maanden plan](./20-12-month-plan.md)
-- [Research map](./30-research-map.md)
+- [[10-long-term-strategy|Lange termijn strategie]]
+- [[20-12-month-plan|12-maanden plan]]
+- [[30-research-map|Research map]]
 
 ## Verbonden lagen
-- [Planning hub](../20-planning/README.md)
-- [Research hub](../30-research/README.md)
-- [Project hub](../README.md)
+- [[../20-planning/README|Planning hub]]
+- [[../30-research/README|Research hub]]
+- [[../README|Project hub]]

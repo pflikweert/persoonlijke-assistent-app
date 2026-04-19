@@ -38,6 +38,7 @@ Toelichting:
 2. Import/background task infrastructuur is toegevoegd met `user_background_tasks` en voortgang/notices in UI.
 3. Settings IA is verbreed met aparte audio-instellingen naast export/import/delete en admin-routes.
 4. Supabase hardening bevat extra security- en dataconsistentie-aanpassingen (search_path-fixes, `entries_normalized.updated_at`) die niet als afzonderlijke productcapabilities in het oudere MVP-plan stonden.
+5. Obsidian settings-route is technisch aanwezig maar standaard uitgezet achter feature flag (`enableObsidianSettings`), waardoor runtime-capability en zichtbare productscope uit elkaar lopen.
 
 ### UI/UX-afwijkingen (al zichtbaar in product)
 1. Branded laag “Budio Vandaag” is doorgevoerd in auth/header/menu/splash en ligt nu nadrukkelijker op merkidentiteit dan in eerdere MVP-docs stond.

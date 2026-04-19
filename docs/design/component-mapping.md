@@ -1,5 +1,10 @@
 # Component Mapping — Design refs ↔ Shared UI (Fase 1.2)
 
+## Obsidian links
+- [[mvp-design-spec-1.2.1|MVP design spec]]
+- [[design-system-ai|Design system AI]]
+- [[../README|Docs hub]]
+
 ## 1) Doel
 
 Concreet vastleggen hoe Stitch/design refs worden vertaald naar bestaande shared components, zodat implementatie consistent en zonder design drift gebeurt.

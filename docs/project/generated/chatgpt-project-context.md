@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-19T13:05:23.760Z
-Source Commit: b3a523c
+Build Timestamp (UTC): 2026-04-19T13:35:47.478Z
+Source Commit: b30bc50
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -41,12 +41,12 @@ Regel:
 - statusclaims blijven bewijs-gebonden in `current-status.md`
 
 ### Obsidian graph hubs
-- [[10-strategy/README|Strategy hub]]
-- [[20-planning/README|Planning hub]]
-- [[30-research/README|Research hub]]
-- [[40-ideas/README|Ideas workspace]]
-- [[current-status|Current status]]
-- [[open-points|Open points]]
+- Strategy hub
+- Planning hub
+- Research hub
+- Ideas workspace
+- Current status
+- Open points
 
 ## 1) Canonieke handmatige documenten (leidend)
 1. `docs/project/master-project.md`
@@ -169,8 +169,8 @@ Regels:
 - `current-status.md` blijft de enige statuswaarheid
 
 ## Obsidian graph — snelle start
-- Gebruik hubs als startpunt: [[10-strategy/README]], [[20-planning/README]], [[30-research/README]], [[40-ideas/README]].
-- Gebruik status-ankers: [[current-status]] en [[open-points]].
+- Gebruik hubs als startpunt: 10-strategy/README, 20-planning/README, 30-research/README, 40-ideas/README.
+- Gebruik status-ankers: current-status en open-points.
 - Mapstructuur alleen is niet genoeg; links tussen notities bouwen de graph-clusters.
 
 ---
@@ -460,13 +460,13 @@ Zolang deze lagen niet productmatig bewezen en expliciet in scope zijn, blijven 
 Dit document is de enige statuswaarheid voor implementatierealiteit.
 
 ## Obsidian links
-- [[open-points]]
-- [[20-planning/20-active-phase|Active phase]]
-- [[20-planning/30-now-next-later|Now / Next / Later]]
-- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
-- [[10-strategy/README|Strategy hub]]
-- [[30-research/README|Research hub]]
-- [[40-ideas/README|Ideas workspace]]
+- open-points
+- Active phase
+- Now / Next / Later
+- Deviations and decisions
+- Strategy hub
+- Research hub
+- Ideas workspace
 
 Bronnen voor deze status:
 1. bestaande projectdocs (scope/planning)
@@ -575,6 +575,7 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 ## Delta-audit (laatste 2 weken codewijzigingen)
 - Capture/detail-flows zijn verder gepolijst met audio-afspeelcomponent (`components/journal/entry-audio-player.tsx`), verfijnde modals en rustiger feedbackstates.
 - Settings-informatiearchitectuur is uitgebreid met aparte audio-instellingen (`app/settings-audio.tsx`) naast export/import/delete/admin.
+- Obsidian-settingspad is technisch toegevoegd maar default-off gezet achter feature flag (`enableObsidianSettings`) en staat daarmee buiten de standaard productroute.
 - Importflow gebruikt nu expliciet background task infrastructuur (`user_background_tasks`) voor voortgang/notices i.p.v. enkel schermgebonden status.
 - AIQS adminflow is verdiept met editor- en readmodelverbeteringen, prompt-assist en debug-opslagfundering.
 - Supabase hardening is uitgebreid met securityfixes op `search_path` en extra datafundering (`entries_normalized.updated_at`, audio storage metadata/policies).
@@ -604,13 +605,13 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
 ## Obsidian links
-- [[current-status]]
-- [[20-planning/20-active-phase|Active phase]]
-- [[20-planning/30-now-next-later|Now / Next / Later]]
-- [[20-planning/40-deviations-and-decisions|Deviations and decisions]]
-- [[10-strategy/30-research-map|Research map]]
-- [[30-research/README|Research hub]]
-- [[40-ideas/README|Ideas workspace]]
+- current-status
+- Active phase
+- Now / Next / Later
+- Deviations and decisions
+- Research map
+- Research hub
+- Ideas workspace
 
 ## Echt open (niet aangetroffen in code als productfeature)
 1. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
@@ -638,6 +639,7 @@ Toelichting:
 2. Import/background task infrastructuur is toegevoegd met `user_background_tasks` en voortgang/notices in UI.
 3. Settings IA is verbreed met aparte audio-instellingen naast export/import/delete en admin-routes.
 4. Supabase hardening bevat extra security- en dataconsistentie-aanpassingen (search_path-fixes, `entries_normalized.updated_at`) die niet als afzonderlijke productcapabilities in het oudere MVP-plan stonden.
+5. Obsidian settings-route is technisch aanwezig maar standaard uitgezet achter feature flag (`enableObsidianSettings`), waardoor runtime-capability en zichtbare productscope uit elkaar lopen.
 
 ### UI/UX-afwijkingen (al zichtbaar in product)
 1. Branded laag “Budio Vandaag” is doorgevoerd in auth/header/menu/splash en ligt nu nadrukkelijker op merkidentiteit dan in eerdere MVP-docs stond.

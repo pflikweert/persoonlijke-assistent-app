@@ -2,16 +2,18 @@
 
 # Budio Strategy and Research
 
-Build Timestamp (UTC): 2026-04-19T13:05:23.760Z
-Source Commit: b3a523c
+Build Timestamp (UTC): 2026-04-19T13:35:47.478Z
+Source Commit: b30bc50
 
 Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
+- docs/project/10-strategy/README.md
 - docs/project/10-strategy/10-long-term-strategy.md
 - docs/project/10-strategy/20-12-month-plan.md
 - docs/project/10-strategy/30-research-map.md
+- docs/project/30-research/README.md
 - docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md
 - docs/project/30-research/20-budio-12-maandenpropositie-en-mvp-route.md
 - docs/project/30-research/30-budio-podcaster-solo-expert-wedge-plan.md
@@ -25,7 +27,26 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 ---
 
-## Lange Termijn Strategie
+## README
+
+# Strategy hub
+
+## Doel
+Navigatiehub voor strategische richting en horizonkeuzes.
+
+## Kernnotities
+- Lange termijn strategie
+- 12-maanden plan
+- Research map
+
+## Verbonden lagen
+- Planning hub
+- Research hub
+- Project hub
+
+---
+
+## Long Term Strategy
 
 # Lange termijn strategie (Horizon)
 
@@ -39,12 +60,12 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 4. AIQS ontwikkelt door als governance/control plane, niet als eindgebruikerschat.
 
 ## Obsidian links
-- [[README|Strategy hub]]
-- [[20-12-month-plan|12-maanden plan]]
-- [[30-research-map|Research map]]
-- [[../30-research/README|Research hub]]
-- [[../20-planning/20-active-phase|Active phase]]
-- [[../20-planning/30-now-next-later|Now / Next / Later]]
+- Strategy hub
+- 12-maanden plan
+- Research map
+- Research hub
+- Active phase
+- Now / Next / Later
 
 ## Strategische spanningen om bewust te managen
 - Rustige MVP-ervaring vs uitbreidingen naar output/workflows.
@@ -62,7 +83,7 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 
 ---
 
-## 12-Maanden Plan
+## 12 Month Plan
 
 # 12-maanden plan (strategische horizon)
 
@@ -83,12 +104,12 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
    - AIQS doorontwikkelen als governance-laag
 
 ## Obsidian links
-- [[README|Strategy hub]]
-- [[10-long-term-strategy|Lange termijn strategie]]
-- [[30-research-map|Research map]]
-- [[../30-research/20-budio-12-maandenpropositie-en-mvp-route|Research: 12 maanden propositie en MVP-route]]
-- [[../20-planning/30-now-next-later|Now / Next / Later]]
-- [[../20-planning/40-deviations-and-decisions|Deviations and decisions]]
+- Strategy hub
+- Lange termijn strategie
+- Research map
+- Research: 12 maanden propositie en MVP-route
+- Now / Next / Later
+- Deviations and decisions
 
 ## Werkwijze
 - Werk kanban-achtig met `Now / Next / Later`.
@@ -107,12 +128,12 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 
 ## Obsidian links
-- [[README|Strategy hub]]
-- [[../30-research/README|Research hub]]
-- [[../20-planning/README|Planning hub]]
-- [[../20-planning/20-active-phase|Active phase]]
-- [[../20-planning/30-now-next-later|Now / Next / Later]]
-- [[../40-ideas/README|Ideas workspace]]
+- Strategy hub
+- Research hub
+- Planning hub
+- Active phase
+- Now / Next / Later
+- Ideas workspace
 
 ## Lezen in volgorde
 1. `docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md`
@@ -134,7 +155,30 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 
 ---
 
-## Richting, Positionering en Kansanalyse
+## README
+
+# Research hub
+
+## Doel
+Navigatiehub voor strategische researchinput in vaste leesvolgorde.
+
+## Lezen in volgorde
+- 10, Richting, positionering en kansanalyse
+- 20, 12 maanden propositie en MVP-route
+- 30, Podcaster / solo-expert wedge plan
+- 40, Future-state architectuur en verdienmodel
+- 50, Future-state analyse en AIQS control plane
+- 60, Marktkans, Purple Cow en MRR
+
+## Verbonden lagen
+- Strategy hub
+- Planning hub
+- Ideas workspace
+- Project hub
+
+---
+
+## Budio Richting Positionering En Kansanalyse
 
 # Budio-richting: kansanalyse en positionering
 
@@ -418,7 +462,7 @@ Als Budio die ruwe oorsprong goed vangt, ordent en vertaalt, dan heb je iets dat
 
 ---
 
-## 12-maandenpropositie en MVP-route
+## Budio 12 Maandenpropositie En Mvp Route
 
 # Budio 12-maandenplan
 ## Eén concrete propositie, doelgroep, pricing en MVP
@@ -830,7 +874,7 @@ Budio Vandaag wordt een laagdrempelige capture-ingang, en Budio Pro wordt de laa
 
 ---
 
-## Podcaster / Solo-expert Wedge Plan
+## Budio Podcaster Solo Expert Wedge Plan
 
 # Budio — scherpe podcaster / solo-expert wedge uitgewerkt
 
@@ -1578,7 +1622,7 @@ En dát is precies waar de kans zit.
 
 ---
 
-## Future-state Architectuur en Verdienmodel
+## Budio Future State Architectuur En Verdienmodel
 
 # Budio future-state architectuur + verdienmodel
 
@@ -1989,7 +2033,7 @@ Wel:
 
 ---
 
-## Future-state Analyse en AIQS Control Plane
+## Budio Future State Analyse En Aiqs Control Plane
 
 # Budio — future-state analyse, 12-maandenrichting en AIQS-architectuur
 
@@ -2815,7 +2859,7 @@ Die zit in:
 
 ---
 
-## Marktkans, Purple Cow en MRR
+## Budio Marktkans Purple Cow En Mrr
 
 # Budio — marktresearch, purple cow, groeikansen en omzetpotentie
 

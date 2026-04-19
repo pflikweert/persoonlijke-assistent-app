@@ -36,7 +36,7 @@ const outputPaths = {
   uploadManifest: 'docs/upload/upload-manifest.md',
 };
 
-const projectSources = [
+const projectCoreSources = [
   { path: 'docs/project/README.md', title: 'Docs-Hiërarchie Samenvatting' },
   { path: 'docs/project/master-project.md', title: 'Hoofd Projectdocument' },
   { path: 'docs/project/product-vision-mvp.md', title: 'Productvisie Aanscherping' },
@@ -48,74 +48,11 @@ const projectSources = [
   { path: 'docs/dev/cline-workflow.md', title: 'Cline Workflow Afspraken' },
 ];
 
-const researchSources = [
-  {
-    path: 'docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md',
-    title: 'Richting, Positionering en Kansanalyse',
-  },
-  {
-    path: 'docs/project/30-research/20-budio-12-maandenpropositie-en-mvp-route.md',
-    title: '12-maandenpropositie en MVP-route',
-  },
-  {
-    path: 'docs/project/30-research/30-budio-podcaster-solo-expert-wedge-plan.md',
-    title: 'Podcaster / Solo-expert Wedge Plan',
-  },
-  {
-    path: 'docs/project/30-research/40-budio-future-state-architectuur-en-verdienmodel.md',
-    title: 'Future-state Architectuur en Verdienmodel',
-  },
-  {
-    path: 'docs/project/30-research/50-budio-future-state-analyse-en-aiqs-control-plane.md',
-    title: 'Future-state Analyse en AIQS Control Plane',
-  },
-  {
-    path: 'docs/project/30-research/60-budio-marktkans-purple-cow-en-mrr.md',
-    title: 'Marktkans, Purple Cow en MRR',
-  },
-];
-
-const strategySources = [
-  { path: 'docs/project/10-strategy/10-long-term-strategy.md', title: 'Lange Termijn Strategie' },
-  { path: 'docs/project/10-strategy/20-12-month-plan.md', title: '12-Maanden Plan' },
-  { path: 'docs/project/10-strategy/30-research-map.md', title: 'Research Map' },
-];
-
-const planningSources = [
-  { path: 'docs/project/20-planning/10-roadmap-phases.md', title: 'Roadmap Fases' },
-  { path: 'docs/project/20-planning/20-active-phase.md', title: 'Active Phase' },
-  { path: 'docs/project/20-planning/30-now-next-later.md', title: 'Now / Next / Later' },
-  { path: 'docs/project/20-planning/40-deviations-and-decisions.md', title: 'Deviations and Decisions' },
-];
-
-const ideaSources = [
-  { path: 'docs/project/40-ideas/README.md', title: 'Ideas Workspace' },
-  { path: 'docs/project/40-ideas/00-ideas-inbox.md', title: 'Ideas Inbox' },
-  {
-    path: 'docs/project/40-ideas/40-platform-and-architecture/10-lean-project-operating-system-for-repo.md',
-    title: 'Idea - Lean Project Operating System',
-  },
-  {
-    path: 'docs/project/40-ideas/40-platform-and-architecture/20-vscode-project-copilot-plugin.md',
-    title: 'Idea - VS Code Project Copilot Plugin',
-  },
-  {
-    path: 'docs/project/40-ideas/40-platform-and-architecture/30-budio-modular-intelligence-workspace.md',
-    title: 'Idea - Modular Intelligence Workspace',
-  },
-  {
-    path: 'docs/project/40-ideas/40-platform-and-architecture/40-vscode-plugin-with-budio-runtime-bridge.md',
-    title: 'Idea - VS Code Runtime Bridge',
-  },
-  {
-    path: 'docs/project/40-ideas/30-ai-and-aiqs/40-aiqs-modular-flow-control-plane.md',
-    title: 'Idea - AIQS Modular Flow Control Plane',
-  },
-  {
-    path: 'docs/project/40-ideas/10-product/20-budio-brainstorm-workspace-for-builders.md',
-    title: 'Idea - Budio Brainstorm Workspace',
-  },
-];
+let projectSources = [...projectCoreSources];
+let researchSources = [];
+let strategySources = [];
+let planningSources = [];
+let ideaSources = [];
 
 const buildTruth = {
   // NOTE: this build-truth index is intentionally hand-curated for high-signal upload context.
@@ -362,6 +299,104 @@ async function listDesignMarkdownRefs() {
   return discovered;
 }
 
+function toTitleCase(input) {
+  return input
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function sourceTitleFromPath(relativePath) {
+  const baseName = path.basename(relativePath, '.md');
+  const cleaned = baseName
+    .replace(/^\d+[-_]?/, '')
+    .replace(/[-_]+/g, ' ')
+    .trim();
+  return toTitleCase(cleaned || baseName);
+}
+
+async function listMarkdownFiles(relativeRoot, options = {}) {
+  const {
+    recursive = false,
+    excludeDirs = ['archive', 'generated', '.obsidian'],
+  } = options;
+
+  const rootAbsolute = absolute(relativeRoot);
+  const results = [];
+
+  async function walk(directory) {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const entry of entries) {
+      const fullPath = path.join(directory, entry.name);
+      const relativePath = path.relative(repoRoot, fullPath);
+
+      if (entry.isDirectory()) {
+        if (excludeDirs.includes(entry.name)) {
+          continue;
+        }
+        if (recursive) {
+          await walk(fullPath);
+        }
+        continue;
+      }
+
+      if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+        results.push(relativePath);
+      }
+    }
+  }
+
+  await walk(rootAbsolute);
+  return results;
+}
+
+function prioritizeReadme(paths) {
+  return [...paths].sort((a, b) => {
+    const aIsReadme = path.basename(a).toLowerCase() === 'readme.md';
+    const bIsReadme = path.basename(b).toLowerCase() === 'readme.md';
+    if (aIsReadme && !bIsReadme) return -1;
+    if (!aIsReadme && bIsReadme) return 1;
+    return a.localeCompare(b);
+  });
+}
+
+async function discoverProjectLayerSources() {
+  const [strategyFiles, planningFiles, researchFiles, ideaFiles] = await Promise.all([
+    listMarkdownFiles('docs/project/10-strategy'),
+    listMarkdownFiles('docs/project/20-planning'),
+    listMarkdownFiles('docs/project/30-research'),
+    listMarkdownFiles('docs/project/40-ideas', { recursive: true }),
+  ]);
+
+  return {
+    strategy: prioritizeReadme(strategyFiles).map((sourcePath) => ({
+      path: sourcePath,
+      title: sourceTitleFromPath(sourcePath),
+    })),
+    planning: prioritizeReadme(planningFiles).map((sourcePath) => ({
+      path: sourcePath,
+      title: sourceTitleFromPath(sourcePath),
+    })),
+    research: prioritizeReadme(researchFiles).map((sourcePath) => ({
+      path: sourcePath,
+      title: sourceTitleFromPath(sourcePath),
+    })),
+    ideas: prioritizeReadme(ideaFiles).map((sourcePath) => ({
+      path: sourcePath,
+      title: sourceTitleFromPath(sourcePath),
+    })),
+  };
+}
+
+function stripObsidianLinks(content) {
+  return normalizeLf(content)
+    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
+    .replace(/\[\[([^\]]+)\]\]/g, '$1');
+}
+
 function extractAgentsSummary(agentsContent, allowedHeaders) {
   const lines = normalizeLf(agentsContent).split('\n');
   const sections = new Map();
@@ -488,7 +523,7 @@ function renderProjectBundle({ buildTimestamp, commitHash, loadedSources, append
   ];
 
   for (const source of loadedSources) {
-    blocks.push('', '---', '', `## ${source.title}`, '', source.content);
+    blocks.push('', '---', '', `## ${source.title}`, '', stripObsidianLinks(source.content));
   }
 
   if (appendixSummary) {
@@ -501,7 +536,7 @@ function renderProjectBundle({ buildTimestamp, commitHash, loadedSources, append
 function renderSectionedSources(loadedSources) {
   const blocks = [];
   for (const source of loadedSources) {
-    blocks.push('', '---', '', `## ${source.title}`, '', source.content);
+    blocks.push('', '---', '', `## ${source.title}`, '', stripObsidianLinks(source.content));
   }
   return blocks;
 }
@@ -929,6 +964,23 @@ async function loadBundleInputs() {
   };
 }
 
+function assertDiscoveredSources() {
+  const checks = [
+    ['strategy', strategySources],
+    ['planning', planningSources],
+    ['research', researchSources],
+    ['ideas', ideaSources],
+  ];
+
+  const missing = checks
+    .filter(([, list]) => !Array.isArray(list) || list.length === 0)
+    .map(([name]) => name);
+
+  if (missing.length > 0) {
+    throw new Error(`docs:bundle failed: geen markdown gevonden in projectlagen: ${missing.join(', ')}`);
+  }
+}
+
 function renderOutputs(inputs, metadata) {
   const chatgptProjectContext = renderProjectBundle({
     ...metadata,
@@ -1091,6 +1143,13 @@ async function verifyOutputs(outputs) {
 
 async function main() {
   const isCheckMode = process.argv.includes('--check');
+  const discovered = await discoverProjectLayerSources();
+  strategySources = discovered.strategy;
+  planningSources = discovered.planning;
+  researchSources = discovered.research;
+  ideaSources = discovered.ideas;
+  projectSources = [...projectCoreSources];
+  assertDiscoveredSources();
   const metadata = await resolveBuildMetadata(isCheckMode);
   const inputs = await loadBundleInputs();
   await assertRequiredSourcesExist(inputs.pageMarkdownRefs);
