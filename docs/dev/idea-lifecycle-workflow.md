@@ -20,6 +20,9 @@ Dit document is operationeel en niet-canoniek voor productscope/status.
 3. **Geen automatische waarheidspromotie**: idea-docs zijn voorstelruimte.
 4. **Planning alleen bij focusimpact**: update `20-planning/30-now-next-later.md` alleen als het idee echt werkvolgorde raakt.
 5. **Statusclaims alleen op bewijs**: `current-status.md` pas bij bewezen runtime/code-realiteit.
+6. **Epic-candidate eerst**: ideeën op epic/projectniveau blijven idea-files tot expliciete promotie naar concrete bouwtaak.
+7. **Context-first routing**: default-context is Budio app + AIQS; routeer alleen naar Jarvis/plugin-sporen als intentie daar logisch op wijst.
+8. **Twijfelprotocol**: hoge-impact twijfel eerst afstemmen; lage-impact twijfel expliciet als aanname labelen.
 
 ## Standaardflow
 

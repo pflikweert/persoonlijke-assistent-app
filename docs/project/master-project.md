@@ -61,6 +61,19 @@ Buiten scope:
 - taken/agenda/reminders
 - realtime voice als productmodus
 
+## Strategische splitsing (vanaf april 2026)
+
+Naast de bestaande capture-first productkern loopt de uitvoering in twee expliciete sporen:
+
+1. `Budio Jarvis` (internal-only, founder-only)
+   - inzet in Budio app + Budio Workspace
+   - local-first taken zoals cleanup/interpunctie/tagging
+   - geen publieke productbelofte in de huidige horizon
+2. `Knowledge Hub + AIQS` (intern eerst, later publiek inzetbaar)
+   - source ingest (PDF/audio/foto)
+   - source-grounded retrieval met citations
+   - expert-knowledge packs en evaluatie via AIQS
+
 ## Fasekaart
 
 ### Fase 0
@@ -83,12 +96,20 @@ Release-1 hardening in subfases:
 
 Deze fase blijft hardening en is geen verbreding van productscope.
 
+### Fase 2A (internal Jarvis)
+
+Founder-only R&D-spoor voor interne intelligentie in app + workspace.
+
+### Fase 2B (Knowledge Hub + AIQS)
+
+Brongebaseerde kwaliteits- en kennislaag als publiek-relevant fundament.
+
 ## Beslisregels
 
 1. Capture-first blijft leidend.
 2. Dagboeklaag blijft canonieke productlaag.
-3. Geen scope-creep naar brede assistent.
-4. Geen nieuwe app-architectuur binnen deze fase.
+3. Jarvis blijft internal-only tot expliciet nieuw strategisch besluit.
+4. Publieke AI-innovatie loopt primair via Knowledge Hub + AIQS, niet via Jarvis.
 5. Twijfelgevallen worden niet als waarheid vastgezet zonder bewijs.
 6. AI-gedrag en promptbeheer volgen `docs/project/ai-quality-studio.md`.
 

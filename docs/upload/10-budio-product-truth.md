@@ -2,14 +2,13 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
-Source Commit: b4e34cb
+Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
+Source Commit: 8e1ee5c
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
-
 - docs/project/README.md
 - docs/project/master-project.md
 - docs/project/product-vision-mvp.md
@@ -24,9 +23,10 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/20-planning/20-active-phase.md
 - docs/project/20-planning/30-now-next-later.md
 - docs/project/20-planning/40-deviations-and-decisions.md
+- docs/project/20-planning/50-budio-workspace-plugin-focus.md
+- docs/project/20-planning/60-april-2026-ideeen-prioritering-en-learning-loop.md
 
 ## Leesregel
-
 - Dit is de primaire bron voor scope, status en uitvoering binnen de huidige fase.
 - Strategische verdieping staat in de strategy/research bundle.
 
@@ -128,6 +128,7 @@ Regel:
 Regel:
 
 - `planning/20-active-phase.md` is de huidige focuslaag voor uitvoering
+- `planning/50-budio-workspace-plugin-focus.md` borgt de plugin als ondersteunend uitvoeringsspoor in de actuele fase
 - afwijkingen op actieve fase worden vastgelegd in `planning/40-deviations-and-decisions.md`
 - planning is richtinggevend voor werkvolgorde, maar statuswaarheid blijft code/bewijs-gedreven
 
@@ -288,6 +289,19 @@ Buiten scope:
 - taken/agenda/reminders
 - realtime voice als productmodus
 
+## Strategische splitsing (vanaf april 2026)
+
+Naast de bestaande capture-first productkern loopt de uitvoering in twee expliciete sporen:
+
+1. `Budio Jarvis` (internal-only, founder-only)
+   - inzet in Budio app + Budio Workspace
+   - local-first taken zoals cleanup/interpunctie/tagging
+   - geen publieke productbelofte in de huidige horizon
+2. `Knowledge Hub + AIQS` (intern eerst, later publiek inzetbaar)
+   - source ingest (PDF/audio/foto)
+   - source-grounded retrieval met citations
+   - expert-knowledge packs en evaluatie via AIQS
+
 ## Fasekaart
 
 ### Fase 0
@@ -310,12 +324,20 @@ Release-1 hardening in subfases:
 
 Deze fase blijft hardening en is geen verbreding van productscope.
 
+### Fase 2A (internal Jarvis)
+
+Founder-only R&D-spoor voor interne intelligentie in app + workspace.
+
+### Fase 2B (Knowledge Hub + AIQS)
+
+Brongebaseerde kwaliteits- en kennislaag als publiek-relevant fundament.
+
 ## Beslisregels
 
 1. Capture-first blijft leidend.
 2. Dagboeklaag blijft canonieke productlaag.
-3. Geen scope-creep naar brede assistent.
-4. Geen nieuwe app-architectuur binnen deze fase.
+3. Jarvis blijft internal-only tot expliciet nieuw strategisch besluit.
+4. Publieke AI-innovatie loopt primair via Knowledge Hub + AIQS, niet via Jarvis.
 5. Twijfelgevallen worden niet als waarheid vastgezet zonder bewijs.
 6. AI-gedrag en promptbeheer volgen `docs/project/ai-quality-studio.md`.
 
@@ -543,7 +565,7 @@ Gecontroleerd op:
 ## Bewijsmatrix (docsplan vs code)
 
 | Onderwerp | Oorspronkelijk plan | Code-status | Conclusie |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Auth (magic link) | In scope | **Aanwezig** | `app/sign-in.tsx`, `services/auth.ts`, auth-gating in `app/_layout.tsx`. |
 | Capture tekst | In scope | **Aanwezig** | `submitTextEntry` + capture UI in `app/capture/index.tsx` en `app/capture/type.tsx`, met servicekoppeling in `services/entries.ts`. |
 | Capture audio | In scope | **Aanwezig** | recorder + audio-submit + payload guards in capture/services. |
@@ -577,7 +599,7 @@ Gecontroleerd op:
 ## Fase 1.2 status
 
 | Subfase | Status | Onderbouwing |
-|---|---|---|
+| --- | --- | --- |
 | 1.2A Stabiliteit/foutafhandeling | **Aanwezig** | tracing, foutafhandeling en verify-commando’s zijn aanwezig en actief gebruikt in hardening-passes. |
 | 1.2B Outputkwaliteit | **Deels aanwezig** | contracts/guardrails/quality-checks aanwezig; eindstatus “afgerond” niet hard vastgelegd. |
 | 1.2C UX-polish | **Aanwezig** | kernflows en shared shell/primitives zijn gepolijst met bron-first fixes en mode-aware guardrails. |
@@ -657,6 +679,7 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 - De huidige runtime is sterker in capture/hardening dan in commerciële output-conversie: de app levert aantoonbaar capture, daglaag, reflecties, import/export, audio-opslagoptie en admin-governance.
 - De in research beschreven Pro-wedge (capture -> review -> publiceerbare output) is nog niet productmatig als eindgebruikersflow geland.
 - AIQS is al een sterke admin control-laag, maar nog niet de volledige future-state control plane met breed task-registry, usage-economie en product-tiering in runtime.
+- Strategische koers is per 20 april 2026 formeel gesplitst in twee sporen: `Jarvis` internal-only (founder use) en `Knowledge Hub + AIQS` als publiek-relevante ontwikkellijn; dit is nu documentair besloten, maar nog niet als volledige runtime-implementatie geland.
 
 ## Samenvatting
 
@@ -674,8 +697,14 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 
 | Taak | Status | Prioriteit | Fase | Korte omschrijving |
 | --- | --- | --- | --- | --- |
-| [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Ready | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
+| [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Ready | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
+| [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
+| [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
+| [AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)](25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md) | Backlog | p2 | transitiemaand-consumer-beta | AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.... |
+| [Budio webapp compatible maken](25-tasks/open/budio-webapp-compatible-maken.md) | Backlog | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
+| [Docs scheiden naar private repo (strategie + migratieplan)](25-tasks/open/docs-private-repo-scheiding-en-migratieplan.md) | Backlog | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
+| [niet vergeten](25-tasks/open/niet-vergeten.md) | Backlog | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
@@ -703,12 +732,13 @@ Toelichting:
 
 1. 1.2B outputkwaliteit als complete afgeronde kwaliteitsset.
 2. 1.2E private-beta readiness met volledige runtime-doorloop van de releasechecklist in light + dark mode.
-3. Commerciële brug van capture naar publiceerbare output (Pro-wedge) is strategisch uitgewerkt in research, maar nog niet als eindgebruikersflow productmatig geland.
-4. Nieuwe 00/10/20/30/40/50 uploadbundels zijn nu primair ingericht, maar teamworkflow moet nog expliciet op deze primaire set standaardiseren (legacy blijft nog aanwezig).
+3. Internal Jarvis-baseline (founder-only) is alleen als research-lane actief (max 1 dag/week) en nog niet volledig uitgewerkt.
+4. Knowledge Hub voor AIQS (PDF/audio/foto, grounding, citations) blijft hoge prioriteit, maar staat gepland voor volgend kwartaal.
+5. Nieuwe 00/10/20/30/40/50 uploadbundels zijn nu primair ingericht, maar teamworkflow moet nog expliciet op deze primaire set standaardiseren (legacy blijft nog aanwezig).
 
 ## Onzeker
 
-1. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
+1. Tempo en diepte van Jarvis internal uitbreidingen voor planning/podcast/builder-workflows.
 2. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
 3. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
 4. Repo versus productie-deploy boundary is nog niet expliciet genoeg: welke repo-artefacten (docs/workflow/Obsidian-werkbestanden) mogen versioned zijn maar horen nooit in runtime/deploypad terecht te komen.
@@ -737,17 +767,18 @@ Toelichting:
 
 ## Prioriteit
 
-1. Maak completion-criteria voor 1.2A/1.2B/1.2C/1.2E expliciet en toetsbaar.
-2. Maak expliciet besluitbaar welke MVP-afwijkingen worden geformaliseerd in volgende planupdate (zonder huidige canonieke plannen nu te herschrijven).
-3. Los onzekerheden op met hard bewijs; anders onzeker laten.
-4. Beslis expliciet welke research-gedreven afwijkingen (Pro-wedge, flow-modulariteit, AIQS control-plane verdieping) in de volgende planronde naar `planning/next` promoveren.
+1. Plan A primair afronden: AIQS-basis + 1.2B/1.2E bewijsgedreven completion.
+2. Plan B beperkt uitvoeren: Jarvis internal-only researchlane binnen weekbudget.
+3. Knowledge Hub inhoudelijk voorbereiden als next-quarter high-prio traject.
+4. Verbind podcast/builder-wedge expliciet aan publieke roadmapkeuzes.
+5. Los resterende onzekerheden op met hard bewijs; anders onzeker laten.
 
 ## Risico’s
 
-1. Scope-creep richting brede assistent.
+1. Scope-creep waarbij Jarvis alsnog impliciet publieke feature wordt.
 2. Verwarring tussen tooling en productfeature.
 3. Te snelle status-upgrade van onbewezen claims.
-4. Strategische drift: capture-machine blijft groeien zonder commerciële outputbrug te operationaliseren.
+4. Strategische drift: te veel interne Jarvis-focus zonder publiek-relevante Knowledge Hub voortgang.
 
 ## Later project — import volledig laten doorlopen op de achtergrond
 
@@ -1388,20 +1419,27 @@ De studio is **geen**:
 
 ## 3. Strategische aanscherping (april 2026)
 
-De eerstvolgende studiofase draait **niet** primair om rollout of live runtime-integratie.
+De eerstvolgende studiofase draait **niet** primair om brede rollout of live runtime-integratie.
 
 De eerstvolgende studiofase draait om één kernvraag:
 
 **Is een nieuwe promptversie aantoonbaar beter dan de huidige basis?**
 
+Vanaf de strategische splitsing (20 april 2026) geldt aanvullend:
+
+- AIQS prioriteert `Knowledge Hub`-fundering (source ingest, grounding, citations).
+- AIQS ondersteunt publieke wedge-validatie op builders/podcasters.
+- `Jarvis` blijft internal-only founderplatform en is geen publieke AIQS-productbelofte.
+
 Daarom is de bindende prioriteit nu:
 
 1. testen binnen de studio
 2. vergelijkbaar valideren van kandidaat-output vs runtime-basis
-3. evaluatie-uitkomsten opslaan als bewijs
-4. editor-ervaring en task-consistentie gelijktrekken
-5. admin UX op desktop/fullscreen verbeteren zonder mobiel te breken
-6. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
+3. source-aware evaluatie op grounding en citation-fidelity toevoegen
+4. evaluatie-uitkomsten opslaan als bewijs
+5. editor-ervaring en task-consistentie gelijktrekken
+6. admin UX op desktop/fullscreen verbeteren zonder mobiel te breken
+7. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
 
 Dit betekent expliciet:
 
@@ -2398,6 +2436,16 @@ Regels:
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
+- Scope-routing is context-first:
+  - default-context: Budio app + AIQS
+  - bepaal scope via intentie/formulering (doel, doelgroep, omgeving, planningimpact), niet alleen op keyword-match
+  - routeer naar Jarvis/plugin-spoor zodra de intentie daar logisch op wijst, ook zonder expliciete termen
+- Twijfelprotocol:
+  - hoge-impact twijfel (planning, roadmap, idea/task-classificatie): eerst korte afstemming met de gebruiker
+  - lage-impact twijfel: redelijke aanname doen en die expliciet labelen in plan/doc
+- Strategie/planning wijzig je nooit stilzwijgend:
+  - geen mutaties in `docs/project/10-strategy/**` of `docs/project/20-planning/**` zonder expliciete user-approval of expliciet overlegbesluit in dezelfde sessie
+  - bij koerswijziging altijd eerst voorstel + impact + advies, daarna pas mutatie
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
 - Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
@@ -2490,6 +2538,13 @@ Gebruik Act mode voor:
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Commit alleen na geslaagde verify.
 
+## VS Code plugin toepassen (verplicht)
+
+- Bij wijzigingen in `tools/budio-workspace-vscode/**` altijd de plugin opnieuw toepassen op de normale VS Code-workspace.
+- Standaardcommando in `tools/budio-workspace-vscode/`:
+  - `npm run apply:workspace`
+- Dit voert build + vsix package + lokale install + VS Code refresh uit in één flow.
+
 ## Supabase migratie-uitvoering (verplicht)
 
 - Bij wijzigingen in `supabase/migrations/**` voert Cline/Codex de lokale DB-stap standaard zelf uit: `npx supabase db push --local` (of `npx supabase db reset` wanneer nodig).
@@ -2532,6 +2587,8 @@ Navigatiehub voor actieve uitvoeringsfocus, roadmap en afwijkingsbesluiten.
 - Roadmap fases
 - Active phase
 - Now / Next / Later
+- Budio Workspace plugin focus
+- April 2026 ideeënprioritering en learning loop
 - Deviations and decisions
 
 ## Verbonden lagen
@@ -2563,11 +2620,13 @@ Eén overzicht van projectfases met status, zonder detail-overload.
 ## Fasekaart
 
 | Fase | Doel | Status |
-|---|---|---|
+| --- | --- | --- |
 | Fase 1 (kernlus) | capture -> dagboeklaag -> reflecties bouwen | afgerond als basis |
-| Fase 1.2 (hardening) | stabiliteit, kwaliteit, UX, vertrouwen, beta-readiness | actief afgerond in delen / bewijsgedreven |
-| Fase 2 (commerciële brug) | capture -> hergebruik -> reviewbare output pilots | next |
-| Fase 3 (modulaire flows) | flow-families met eigen contracts/evals | later |
+| Fase 1.2 (hardening) | stabiliteit, kwaliteit, UX, vertrouwen, beta-readiness | afgerond in delen / blijft onderhoudsspoor |
+| Fase 2A (Jarvis intern) | founder-only local-first intelligence in app + workspace | idee/research lane (geen actieve bouwtaak) |
+| Fase 2B (Knowledge Hub + AIQS) | source ingest, grounding, citations en quality loop | later na Fase 3 (high-prio idee) |
+| Fase 3 (publieke wedge) | builders/podcasters: kennisgestuurde outputworkflows | next (uitvoeringsprioriteit boven 2B) |
+| Fase 4 (opschaling) | bredere productisering/commerciële lagen | later |
 
 ## Regel
 
@@ -2581,26 +2640,31 @@ Eén overzicht van projectfases met status, zonder detail-overload.
 
 ## Actieve fase
 
-Transitiemaand: consumer beta afronden + brugpilot definiëren.
+Dual active planning met wijzigingscontrole:
+
+- Plan A (primair): huidige fase-afspraken met AIQS-basis eerst
+- Plan B (secundair): Jarvis research-lane, maximaal 1 dag per week
 
 ## Doel van deze fase
 
-1. Consumer beta afronden met expliciet release- en runtimebewijs.
-2. 1.2B outputkwaliteit expliciet maken als afgebakende kwaliteitsset.
-3. 1.2E beta-readiness expliciet maken als bewijs-gedreven readiness set.
-4. Een kleine commerciële brugpilot definiëren zonder brede Pro- of Business-activatie.
+1. Plan A primair uitvoeren: AIQS-basis en lopende faseafspraken afronden met bewijs.
+2. Plan B beperkt uitvoeren: Jarvis internal-only als researchspoor (idee/epic-candidate, geen bouwtaak).
+3. Knowledge Hub hoog op de roadmap houden als epic-candidate, maar niet als actieve uitvoeringsscope in Q2 2026.
+4. Fase 3 krijgt uitvoeringsprioriteit boven Fase 2B.
+5. Strategische/planningswijzigingen alleen doorvoeren na expliciete user-approval of expliciet overlegbesluit.
 
 ## Korte samenvatting van deze maand
 
-De komende maand is een smalle overgangsstap tussen de huidige capture-first beta en de latere commerciële richting.
-De kern blijft consumer beta afronden met bewijs.
-Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaande entry/day bronlaag.
+De oorspronkelijke fasefocus blijft primair actief (AIQS-basis en lopende betrouwbaarheidstaken).
+Jarvis draait parallel als gecontroleerd intern researchspoor met harde capaciteitlimiet.
+Knowledge Hub blijft een high-prio richting, maar staat gepland voor na dit kwartaal.
 
 ## Obsidian links
 
 - Planning hub
 - Roadmap phases
 - Now / Next / Later
+- Budio Workspace plugin focus
 - Deviations and decisions
 - Current status
 - Open points
@@ -2609,21 +2673,23 @@ Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaan
 
 ## In focus (Now)
 
-- Proof-first consumer beta afronden op basis van actuele runtime-realiteit in `current-status.md`.
-- 1.2B outputkwaliteit expliciteren als concrete kwaliteitsset met afrondcriteria.
-- 1.2E beta-readiness expliciteren als concrete checklist met bewijsregel.
-- Een review-first brugpilot definiëren vanuit bestaande entry/day bronlaag:
-  - bron = entry, day narrative, day summary
-  - focus = copy/export/content transform
-  - doel = beoordelen of de bestaande bronlaag bruikbare reviewbare output kan opleveren
+- Plan A (primair):
+  - AIQS-basis afronden (stabiliteit, logging/quality governance en bestaande faseafspraken)
+  - 1.2B/1.2E afronding als bewijsgedreven onderhoudsspoor
+  - Budio Workspace plugin inzetten voor dagelijkse focus op bestaande open AIQS- en hardeningtaken
+- Plan B (secondary lane):
+  - Jarvis internal-only research in app + workspace (idee/epic-candidate)
+  - harde capaciteitslimiet: maximaal 1 dag per week
+  - promotie naar bouwtaak pas na expliciet besluit
 
 ## Niet in focus (nu niet trekken)
 
-- Scheduler, autopost en multi-channel publishing.
-- Teams, Business/Private en usage billing.
-- AIQS control-plane verbreding als actieve fase.
-- Brede Pro-roadmap of productverbreding voorbij de afgebakende brugpilot.
-- Research behandelen alsof het al canonieke productwaarheid is.
+- Knowledge Hub als actieve build-scope in Q2 2026.
+- Jarvis publiek uitrollen als productfeature.
+- Marketingpositionering van Jarvis richting eindgebruikers.
+- Teams, Business/Private en usage billing als primaire fasefocus.
+- Scheduler/autopost/multi-channel publishing buiten builder/podcast validatie.
+- Research behandelen alsof het automatisch runtime-realiteit is zonder bewijs.
 
 ## Flexibele afwijkingsregel
 
@@ -2650,6 +2716,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 
 - Planning hub
 - Active phase
+- Budio Workspace plugin focus
 - Deviations and decisions
 - Current status
 - Open points
@@ -2657,26 +2724,25 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 
 ## Now
 
-- Consumer beta afronden met expliciet bewijs op de bestaande capture-first runtime.
-- 1.2B outputkwaliteit expliciteren en afronden als concrete kwaliteitsset.
-- 1.2E beta-readiness expliciteren en afronden als concrete readiness set.
-- Review-first brugpilot definiëren vanuit bestaande entry/day bronlaag:
-  - focus op copy/export/content transform
-  - geen publishing- of scheduler-laag
-- Operating-system onderhoud alleen doen als ondersteunend werk voor bovenstaande focus.
+- Plan A (primair): AIQS-basis en lopende faseafspraken afronden met bewijs.
+- 1.2B en 1.2E afronding als onderhoudsspoor binnen de huidige fase.
+- Plan B (secondary): Jarvis internal-only researchlane als idee/epic-candidate (geen bouwtaak), max 1 dag per week.
+- Budio Workspace plugin gebruiken als dagelijkse uitvoeringslaag met prioriteit op Plan A.
 
 ## Next
 
-- Eerste afbakening of verkenning van de brugpilot na bewijs op de consumer beta.
-- Kleine vervolgkeuzes rond review-first output op basis van entry/day bronmateriaal.
-- Alleen ondersteunend docs- en bundle-onderhoud dat nodig is om de actieve focus helder te houden.
+- Fase 3 builders/podcasters uitvoeren als eerstvolgende prioriteit.
+- Knowledge Hub (hoog-prio) inhoudelijk voorbereiden als epic-candidate voor fase na Fase 3.
+- Scope en evaluatiecriteria voor Knowledge Hub + AIQS concretiseren (grounding/citations/relevance) zonder taakpromotie in Q2.
+- Competitor benchmark sprint (Wispr Flow + NotebookLM) plannen als researchspoor na AIQS-live (harde gate, geen `Now`-bouwscope).
+- Jarvis interne workflowuitbreiding alleen binnen afgesproken researchcapaciteit.
 
 ## Later
 
-- Volledige modulaire flow-architectuur productiseren.
-- Brede Pro-laag, Business/Private en control-plane verdieping activeren.
-- Scheduler, autopost en multi-channel publishing verkennen.
-- Usage billing, credits, top-ups en bredere commerciële operationele laag activeren.
+- Mogelijke externalisatie van Jarvis pas na expliciet strategisch besluit.
+- Verdere productisering van Knowledge Hub + AIQS als brede kennisbanklaag.
+- Brede Pro-laag, Business/Private en commerciële operatie opschalen op basis van bewijs.
+- Scheduler/autopost pas oppakken als builder/podcast wedge bewezen is.
 
 ## Parking lot
 
@@ -2719,6 +2785,51 @@ Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit tr
 
 ## Entries
 
+### 2026-04-21 — Competitor benchmark als expliciet Next researchspoor (na AIQS-live)
+
+- **Type**: decision
+- **Van plan/document**: `docs/project/20-planning/30-now-next-later.md`, `docs/project/30-research/70-wisprflow-notebooklm-benchmark-na-aiqs-live.md`, `docs/project/40-ideas/10-product/60-capture-ux-benchmark-implementatiekansen-wispr-notebooklm.md`
+- **Wijziging**: Wispr Flow + NotebookLM benchmark is formeel vastgelegd als dual benchmark researchspoor met decision matrix (`kopieren`, `aanpassen`, `niet-onze-markt`) en harde AIQS-live gate; geen actieve `Now` bouwscope
+- **Waarom**: concurrentie-inzichten gericht benutten zonder scope-creep of premature taakpromotie
+- **Impact**: docs, planning, product, aiqs
+- **Vervolgactie**: na AIQS-live benchmark sprint starten en per patroon promotiecriteria toetsen voordat iets naar tasklaag gaat
+
+### 2026-04-20 — Governance aangescherpt naar context-first routing
+
+- **Type**: decision
+- **Van plan/document**: `docs/dev/cline-workflow.md`, `docs/dev/idea-lifecycle-workflow.md`, `docs/dev/task-lifecycle-workflow.md`, `AGENTS.md`
+- **Wijziging**: scope-routing is gewijzigd van te strikte keyword-interpretatie naar context-first routing met default op Budio app + AIQS; Jarvis/plugin blijven aparte sporen op basis van intentie; twijfelprotocol toegevoegd (hoge-impact afstemmen, lage-impact expliciete aanname)
+- **Waarom**: voorkomt foutieve scope-classificatie, houdt samenwerking natuurlijk en borgt tegelijk traceerbare beslissingen bij planning- of roadmapimpact
+- **Impact**: docs, governance, planning
+- **Vervolgactie**: inspiratie-items over schrijfstijl/auto-cleanup classificeren onder Budio app + AIQS-compatibele ideas, niet onder Jarvis tenzij expliciet/contextueel herpositioneerd
+
+### 2026-04-20 — Herstel naar dual active planning + approval-gated wijzigingen
+
+- **Type**: decision
+- **Van plan/document**: `planning/20-active-phase.md`, `planning/30-now-next-later.md`, `strategy/10-long-term-strategy.md`
+- **Wijziging**: planning is gecorrigeerd naar dual active uitvoering: Plan A primair (AIQS-basis + huidige faseafspraken), Plan B secundair (Jarvis research-lane, max 1 dag/week); Knowledge Hub blijft high-prio, maar niet als actieve scope in Q2 2026
+- **Waarom**: expliciete gebruikersinstructie om originele planning niet te verliezen en koerswijzigingen alleen samen en gecontroleerd door te voeren
+- **Impact**: docs, planning, strategy, tasks, governance
+- **Vervolgactie**: wijzigingscontrole expliciet vastleggen in operationele workflowdocs (`docs/dev/**` en `AGENTS.md`) zodat strategische mutaties approval-gated blijven
+
+### 2026-04-20 — Strategische splitsing naar Internal Jarvis + Publieke Knowledge Hub
+
+- **Type**: decision
+- **Van plan/document**: `planning/20-active-phase.md`, `planning/30-now-next-later.md`, `strategy/10-long-term-strategy.md`
+- **Wijziging**: fasefocus is omgezet van transitiemaand/brugpilot naar een tweesporenstrategie met `Jarvis` als founder-only intern platform en `Knowledge Hub + AIQS` als versneld publiek-relevant spoor
+- **Waarom**: oprichter wil Jarvis eerst intern benutten als geheime bouw- en testlaag; publieke AI-waarde moet eerder via source-grounded Knowledge Hub en AIQS-kwaliteit komen
+- **Impact**: docs, planning, aiqs, workspace-plugin-focus
+- **Vervolgactie**: nieuwe 25-tasks voor Jarvis-baseline en Knowledge Hub/AIQS foundation toevoegen en active phase/roadmap hierop alignen
+
+### 2026-04-20 — Budio Workspace plugin van idee naar actief fase-werkspoor
+
+- **Type**: decision
+- **Van plan/document**: `planning/20-active-phase.md` en `planning/30-now-next-later.md`
+- **Wijziging**: de Budio Workspace plugin wordt niet langer alleen als idee behandeld, maar als expliciet ondersteunend werkspoor binnen de transitiemaand
+- **Waarom**: betere focus, minder context-switching en sterkere uitvoerbaarheid voor de huidige maanddoelen (consumer beta bewijs, 1.2B, 1.2E en brugpilot-definitie)
+- **Impact**: docs
+- **Vervolgactie**: plugin-focusdoc toevoegen in planning en actieve fase + now/next/later + planning-hub navigatie hierop alignen
+
 ### 2026-04-19 — Actieve maandfocus herijkt naar transitiemaand
 
 - **Type**: decision
@@ -2736,3 +2847,234 @@ Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit tr
 - **Waarom**: focus en traceerbaarheid verbeteren; ideeën, planning en canonieke waarheid scheiden
 - **Impact**: docs
 - **Vervolgactie**: bundelstrategie in volgende stap herschrijven op nieuwe structuur
+
+---
+
+## Budio Workspace Plugin Focus
+
+# Budio Workspace plugin focus (gesplitste strategie)
+
+## Doel
+
+De Budio Workspace plugin expliciet inzetten als actief werkspoor voor dual active planning, met Plan A (AIQS-basis) als hoofdfocus en Plan B (Jarvis researchlane) als begrensde nevenbaan.
+
+## Rol in de huidige fase
+
+De plugin is in deze fase zowel operationele toolinglaag als internal Jarvis-experimentruimte.
+Het is geen nieuwe productwaarheid en vervangt de canonieke projectdocs niet.
+
+Wat de plugin nu moet ondersteunen:
+
+- duidelijk overzicht van open/in-progress/done werk
+- snelle verwijzing van planning naar concrete taakuitvoering
+- minder context-switching tussen planning, taken en uitvoering
+- voorspelbare workflow voor prioritering en voortgang
+- founder-only Jarvis workflows voor softwareplanning, productbouw en podcastwerk
+
+## Afbakening en guardrails
+
+- Geen runtime- of deploykoppeling met Budio app, Supabase of productiepad.
+- Jarvis blijft internal-only; geen publieke feature-uitrol vanuit pluginwerk.
+- Geen onbegrensde verbreding naar brede Pro-, Business- of Private-roadmap.
+- Geen pricing, usage billing, credits of top-ups als primaire pluginfocus.
+- Research en idee-docs blijven richtinggevend; niet automatisch canonieke productwaarheid.
+
+## Now / Next / Later (plugin)
+
+### Now
+
+- Plugin inzetten als dagelijkse focuslaag bovenop `docs/project/25-tasks/**`.
+- Board/list/workflow prioriteren op Plan A-taken (AIQS-basis + lopende faseafspraken).
+- Jarvis-werk expliciet begrenzen als researchlane (max 1 dag/week).
+- Knowledge Hub alleen voorbereiden als roadmap-input, niet als actieve Q2-build.
+
+### Next
+
+- Jarvis uitbreiden als founder-assistive laag voor planning/podcast/builder flows.
+- AI alleen als assistive laag (suggesties), niet als autonome planningswaarheid.
+- Start actieve Knowledge Hub-uitvoering (source ingest/citations) vanaf volgend kwartaal.
+
+### Later
+
+- Verdere intelligente workspace-automatisering pas na bewijs op huidige fase.
+- Grotere uitbreidingen (bredere orkestratie, diepe AI-flowkoppeling) pas na expliciete herprioritering.
+
+## Relatie met actieve fase
+
+De plugin is ondersteunend aan de gesplitste fase-doelen:
+
+1. Plan A primair uitvoeren (AIQS-basis)
+2. Jarvis researchlane gecontroleerd en begrensd uitvoeren
+3. Knowledge Hub als next-quarter high-prio traject voorbereiden
+
+## Obsidian links
+
+- Planning hub
+- Active phase
+- Now / Next / Later
+- Deviations and decisions
+- Tasks hub
+- Open points
+
+---
+
+## April 2026 Ideeen Prioritering En Learning Loop
+
+# April 2026 — Ideeënprioritering, roadmap en learning loop
+
+> Noot (2026-04-20): deze prioritering blijft als historische onderbouwing bestaan, maar de actieve roadmap is formeel herijkt naar de gesplitste strategie (`Jarvis` internal-only + `Knowledge Hub + AIQS` publiek-relevant). Raadpleeg hiervoor primair `20-active-phase.md`, `30-now-next-later.md` en `10-roadmap-phases.md`.
+
+## Doel
+
+Deze notitie vertaalt de april-2026 ideeënlijst naar een uitvoerbare, scopebewuste roadmap die past binnen de huidige productkaders:
+
+- capture-first
+- dagboeklaag centraal
+- evidence-first iteratie
+- geen verbreding naar brede assistent/chat/agent in de huidige fase
+
+## Besliscriteria
+
+Per idee zijn twee scores toegekend op schaal 1-5:
+
+- **MVP-waarde**: essentieel voor eerste lancering van Budio Vandaag?
+- **Strategische fit**: draagt het direct bij aan builder-onafhankelijkheid, brongetrouwe contentcreatie en een houdbaar verdienmodel?
+
+## Prioritering per idee
+
+| Idee                                | MVP-waarde | Strategische fit | Categorie                           | Korte motivatie                                                           | Impact op huidige roadmap                           |
+| ----------------------------------- | ---------- | ---------------- | ----------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
+| Momentopnames en transcriptie       | 5          | 5                | Core Roadmap (Nu)                   | Kern van de productbelofte: snel vastleggen en brongetrouw verwerken.     | Blijft P1 in 1.2B outputkwaliteit.                  |
+| Multimodale bijlagen                | 2          | 4                | Future Expansion (Later)            | Waardevol voor rijkere context, maar te veel extra complexiteit voor MVP. | Pas na stabiele kernflow.                           |
+| Swipe-navigatie                     | 4          | 4                | Core Roadmap (Nu)                   | Versterkt rustig teruglezen over momenten/dagen/weken/maanden.            | UX-polish binnen huidige hardening.                 |
+| Walkthrough-gids                    | 3          | 3                | Future Expansion (Later)            | Nuttig voor onboarding, niet kritisch voor kernwaarde.                    | Alleen oppakken bij aantoonbare onboarding-frictie. |
+| Leren van correcties (diffs)        | 4          | 5                | Core Roadmap (Nu)                   | Bouwt een kwaliteitsflywheel op basis van echte correcties.               | Nu als admin-governed learning loop via AIQS.       |
+| To-do lijst integratie              | 1          | 2                | Non-Strategic                       | Trekt richting agenda/reminder-product i.p.v. dagboekmachine.             | Nu niet meenemen; scope-creep risico.               |
+| Historisch geheugen (Neocortex/HTM) | 1          | 3                | Internal Learning & Experimentation | Interessant R&D-spoor, maar niet nodig voor MVP-bewijs.                   | Alleen intern experimenteren.                       |
+| Themadetectie en categorisering     | 2          | 4                | Future Expansion (Later)            | Sterk voor archiefstructuur, maar geen launch-noodzaak.                   | Post-MVP verrijkingslaag.                           |
+| Automatische tagging                | 2          | 4                | Future Expansion (Later)            | Verhoogt vindbaarheid en hergebruik, niet kern voor eerste release.       | Later bovenop stabiele dagboeklaag.                 |
+| Relatie- en profielanalyse          | 1          | 2                | Non-Strategic                       | Stuurt richting personal CRM/life graph buiten huidige claim.             | Parkeren.                                           |
+| Datumlogica verbetering             | 4          | 5                | Core Roadmap (Nu)                   | Essentieel voor brongetrouwe tijdsinterpretatie in dag- en reflectielaag. | Hoort direct in 1.2B kwaliteitsset.                 |
+| Lokaal LLM (privacy)                | 2          | 3                | Internal Learning & Experimentation | Strategisch interessant, maar technisch zwaar voor huidige fase.          | Alleen intern op beperkte subtaken.                 |
+| Cinematic podcast generatie         | 1          | 4                | Future Expansion (Later)            | Sterk voor later creator-spoor, maar buiten huidige MVP-kern.             | Pas na bewezen review-first outputbrug.             |
+| Social Media Agent                  | 1          | 3                | Future Expansion (Later)            | Als volledige agent te breed; als draft-assist later mogelijk.            | Later, eerst review-first drafts zonder autopost.   |
+| Stijl-analyse (tweede brein)        | 2          | 4                | Future Expansion (Later)            | Interessant voor authenticiteit in output, niet noodzakelijk voor launch. | Later als outputverrijking.                         |
+| Fotogeneratie templates             | 1          | 3                | Future Expansion (Later)            | Zinvol na bewezen output/publicatieflow, niet eerder.                     | Lage prioriteit in huidige fase.                    |
+| AI Quality Studio                   | 4          | 5                | Core Roadmap (Nu)                   | Cruciale admin-only kwaliteits- en governance-laag.                       | Verdiepen voor compare/evaluatie/traceability.      |
+| Business-variant voor creatieven    | 1          | 4                | Future Expansion (Later)            | Interessante productvariant na bewezen founder- en creator-wedge.         | Later productspoor, niet nu.                        |
+| Token-verdienmodel                  | 4          | 5                | Core Roadmap (Nu)                   | Financiële onafhankelijkheid vraagt directe usage- en kostenmeting.       | Nu metering, pricing/tiering pas later live.        |
+
+## Categorie-overzicht
+
+### Core Roadmap (Nu)
+
+1. Momentopnames en transcriptie
+2. Swipe-navigatie
+3. Leren van correcties (diffs)
+4. Datumlogica verbetering
+5. AI Quality Studio
+6. Token-verdienmodel (minimaal als interne meteringlaag)
+
+### Internal Learning & Experimentation
+
+1. Historisch geheugen (Neocortex/HTM)
+2. Lokaal LLM (privacy)
+
+### Future Expansion (Later)
+
+1. Multimodale bijlagen
+2. Walkthrough-gids
+3. Themadetectie en categorisering
+4. Automatische tagging
+5. Cinematic podcast generatie
+6. Social Media Agent (eerst als draft-assist)
+7. Stijl-analyse
+8. Fotogeneratie templates
+9. Business-variant voor creatieven
+
+### Non-Strategic
+
+1. To-do lijst integratie
+2. Relatie- en profielanalyse
+
+## Vernieuwd roadmap-overzicht
+
+### Fase A — Nu: consumer beta hardening + meetbare betrouwbaarheid
+
+Doel: kernlus betrouwbaar, brongetrouw en kosteninzichtelijk maken.
+
+- transcriptie-hardening
+- datumlogica correctheid
+- correctie-diff vastlegging
+- swipe-navigatie polish
+- AIQS compare/evaluatie voor kwaliteitsverbeteringen
+- token/cost metering per AI-task
+
+### Fase B — Next: review-first brugpilot naar output
+
+Doel: valideren of de bestaande bronlaag bruikbare creator-output kan leveren.
+
+- review-first content transforms vanuit entry/day
+- kleine outputformats testen (post-draft/script-aanzet)
+- geen scheduler/autopost/multi-channel publishing
+- stijlconsistentie beperkt verkennen
+
+### Fase C — Later: uitbreiding boven bewezen kern
+
+- multimodale bijlagen
+- tagging/themadetectie
+- style layer
+- social draft tooling
+- business-variant voor creatieven/coaches
+
+### Fase D — Parallel learning tracks (intern)
+
+- lokaal LLM
+- HTM/neocortex
+
+Deze tracks leveren leerwinst, maar zijn geen releaseverplichting.
+
+## Learning loop (bindende werkwijze)
+
+1. **Capture**: rauwe input via audio/tekst.
+2. **Process**: transcriptie, cleanup, dagboekopbouw.
+3. **Review**: gebruiker/admin signaleert fouten of stijlverlies.
+4. **Diff capture**: correcties als gestructureerde feedback vastleggen.
+5. **AIQS compare**: kandidaatprompt/run vergelijken met runtime-baseline.
+6. **Decision**: alleen uitrollen bij aantoonbare winst.
+7. **Cost gate**: token- en latency-impact meewegen vóór uitrol.
+
+## Token- en kosteneconomie (nu starten)
+
+### Nu verplicht meten
+
+Per AI-task (`entry_cleanup`, `day_narrative`, `reflection`, latere transforms):
+
+- model
+- input/output tokens
+- geschatte kosten
+- latency
+- retry/rerun rate
+- kwaliteitsuitkomst (bijv. correctiedruk)
+
+Per gebruiker/segment:
+
+- captures per dag/week/maand
+- tokens per actieve gebruiker
+- kosten per actieve gebruiker
+- heavy-user patronen
+
+### Fasering verdienmodel
+
+1. **Nu**: interne metering en besluitinformatie (geen brede pricinglaunch).
+2. **Next**: beperkte bundel-/top-up hypotheses valideren.
+3. **Later**: expliciete tiering en pricing-activering op basis van bewijs.
+
+## Obsidian links
+
+- Active phase
+- Now / Next / Later
+- Deviations and decisions
+- Budio Workspace plugin focus
+- Open points
+- Ideas workspace

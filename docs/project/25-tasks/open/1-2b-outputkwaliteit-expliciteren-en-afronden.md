@@ -1,16 +1,19 @@
 ---
 id: task-1-2b-outputkwaliteit
 title: 1.2B outputkwaliteit expliciteren en afronden
-status: ready
+status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-04-19
+updated_at: 2026-04-20
 summary: Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als voldoende goed geldt.
 tags: [consumer-beta, outputkwaliteit]
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
+
+
 
 
 

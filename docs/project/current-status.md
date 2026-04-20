@@ -153,6 +153,7 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 - De huidige runtime is sterker in capture/hardening dan in commerciële output-conversie: de app levert aantoonbaar capture, daglaag, reflecties, import/export, audio-opslagoptie en admin-governance.
 - De in research beschreven Pro-wedge (capture -> review -> publiceerbare output) is nog niet productmatig als eindgebruikersflow geland.
 - AIQS is al een sterke admin control-laag, maar nog niet de volledige future-state control plane met breed task-registry, usage-economie en product-tiering in runtime.
+- Strategische koers is per 20 april 2026 formeel gesplitst in twee sporen: `Jarvis` internal-only (founder use) en `Knowledge Hub + AIQS` als publiek-relevante ontwikkellijn; dit is nu documentair besloten, maar nog niet als volledige runtime-implementatie geland.
 
 ## Samenvatting
 

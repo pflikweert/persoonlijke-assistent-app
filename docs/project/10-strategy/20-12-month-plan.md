@@ -6,21 +6,19 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 
 ## Structuur
 
-1. **Validatie en hardening**
-   - capture-first kern stabiel houden
-   - kwaliteit en betrouwbaarheid aantoonbaar verbeteren
-   - eerstvolgende maand = consumer beta afronden met expliciet bewijs
-   - 1.2B outputkwaliteit en 1.2E beta-readiness eerst expliciteren voordat de horizon verbreedt
-2. **Commerciële brug**
-   - van capture naar hergebruikbare output-flow(s)
-   - eerste duidelijke wedge valideren
-   - start smal met een review-first pilot vanuit entry/day bronlaag
-   - geen brede Pro-activering in de eerstvolgende maand
-3. **Modulaire flow-denkwijze**
-   - geen monolithische AI-oplossing
-   - flow-specifieke contracts/evaluatie/routing
-4. **Control plane verdieping**
-   - AIQS doorontwikkelen als governance-laag
+1. **Q2 2026 (huidig kwartaal) — Plan A eerst**
+   - AIQS-basis en lopende faseafspraken afronden met bewijs
+   - Jarvis alleen als intern researchspoor (max 1 dag per week)
+   - Knowledge Hub wel voorbereiden, maar nog niet actief als bouwscope
+2. **Q3 2026 — Knowledge Hub activatie**
+   - start actieve uitvoering op Knowledge Hub + AIQS (source ingest, grounding, citations)
+   - builder/podcast use-cases als eerste publieke validatierichting
+3. **Q4 2026 — Productisering**
+   - Knowledge Hub beta op geselecteerde scenario’s
+   - AIQS evaluaties verbreden op relevance, citation fidelity en kwaliteitswinst
+4. **Q1 2027 — Schaal en optimalisatie**
+   - Knowledge Hub + AIQS learning loop aanscherpen op kwaliteit/kosten/latency
+   - Jarvis blijft intern tenzij expliciet nieuw strategisch besluit
 
 ## Obsidian links
 
@@ -35,6 +33,8 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 
 - Werk kanban-achtig met `Now / Next / Later`.
 - Herprioritering is toegestaan, mits vastgelegd in planning/deviation docs.
+- Jarvis blijft minimaal 12 maanden internal-only tenzij expliciete decision entry dit wijzigt.
+- Geen strategie- of planningmutaties zonder expliciete user-approval of expliciet overlegbesluit.
 
 ## Relatie met research
 

@@ -7,9 +7,13 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 ## Richting
 
 1. Budio blijft capture-first als productkern.
-2. Dagboeklaag + reflectielaag blijven de basis van vertrouwen en continuïteit.
-3. Commerciële groei vraagt een brug van capture naar hergebruikbare output.
-4. AIQS ontwikkelt door als governance/control plane, niet als eindgebruikerschat.
+2. De strategische uitvoering volgt dual active planning:
+   - Plan A (primair): bestaande fase-afspraken en AIQS-basis.
+   - Plan B (secundair): `Budio Jarvis` als internal-only founderplatform met beperkte researchcapaciteit.
+3. `Knowledge Hub + AIQS` blijft hoge prioriteit voor publieke waarde, maar activeert pas na Q2 2026 als build-scope.
+4. Publieke productontwikkeling prioriteert podcast- en builder-use-cases.
+5. AIQS ontwikkelt door als governance/control plane, niet als eindgebruikerschat.
+6. Jarvis is geen actieve publieke productbelofte in de komende jaren zonder expliciet nieuw besluit.
 
 ## Obsidian links
 
@@ -22,14 +26,17 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 
 ## Strategische spanningen om bewust te managen
 
-- Rustige MVP-ervaring vs uitbreidingen naar output/workflows.
+- Interne innovatie via Jarvis vs heldere publieke productbelofte.
 - Build speed vs evidence-first besluitvorming.
 - Enkelvoudige appidentiteit vs modulaire flow-architectuur.
+- Bronrijke AI-ervaring vs kosten- en latencydiscipline.
 
 ## Niet doen
 
 - Generieke “één AI-oplossing voor alles” bouwen.
 - Scope uitbreiden zonder expliciete fase- of decision-log vastlegging.
+- Jarvis stilzwijgend als publieke feature behandelen.
+- Strategie/planning wijzigen zonder expliciete user-approval of expliciet overlegbesluit.
 
 ## Relatie met andere docs
 

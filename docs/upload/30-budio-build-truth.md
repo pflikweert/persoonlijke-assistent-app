@@ -2,14 +2,13 @@
 
 # Budio Build Truth
 
-Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
-Source Commit: b4e34cb
+Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
+Source Commit: 8e1ee5c
 
 Doel: primaire buildbundle met routes, componentarchitectuur, services, runtime functions en contracts.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## App Routes (kern)
-
 - app/_layout.tsx
 - app/sign-in.tsx
 - app/(tabs)/index.tsx
@@ -29,7 +28,6 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - app/settings-ai-quality-studio/[taskKey].tsx
 
 ## Shared Components (kern)
-
 - components/ui/screen-primitives.tsx
 - components/ui/settings-screen-primitives.tsx
 - components/ui/auth-screen-primitives.tsx
@@ -44,7 +42,6 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - components/journal/archive-grouped-list.tsx
 
 ## Services (kern)
-
 - services/auth.ts
 - services/entries.ts
 - services/day-journals.ts
@@ -57,7 +54,6 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - services/reset.ts
 
 ## Supabase Functions (kern)
-
 - supabase/functions/process-entry/index.ts
 - supabase/functions/renormalize-entry/index.ts
 - supabase/functions/regenerate-day-journal/index.ts
@@ -67,12 +63,10 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - supabase/functions/admin-ai-quality-studio/index.ts
 
 ## Contracts en Datagrondslag (kern)
-
 - server-contracts/index.ts
 - server-contracts/ai/index.ts
 - supabase/migrations/20260416125000_user_background_tasks.sql
 - supabase/migrations/20260418101500_entry_audio_storage_and_user_preferences.sql
 
 ## Gebruik
-
 - Gebruik deze bundle voor codewijzigingsplanning, impactanalyse en repo-aligned implementatieprompts.

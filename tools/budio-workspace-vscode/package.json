@@ -3,6 +3,11 @@
   "displayName": "Budio Workspace",
   "description": "Local VS Code kanban board for Budio task markdown files.",
   "version": "0.0.1",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:pflikweert/persoonlijke-assistent-app.git"
+  },
   "private": true,
   "publisher": "local",
   "engines": {
@@ -12,7 +17,6 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:budioWorkspace.openBoard",
     "onCommand:budioWorkspace.openListView",
     "onCommand:budioWorkspace.openSettings",
     "onView:budioWorkspace.launcher"

@@ -61,6 +61,7 @@ export function App(): React.JSX.Element {
   const [formState, setFormState] = useState<MetadataFormState | null>(null);
   const [viewport, setViewport] = useState<ViewportKind>(getViewportKind);
   const [detailOpen, setDetailOpen] = useState<boolean>(getViewportKind() === 'desktop');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
@@ -244,6 +245,7 @@ export function App(): React.JSX.Element {
   }, [selectedTask?.id, selectedTask?.version.hash, selectedTask?.version.mtimeMs]);
 
   const dragEnabled = !hasActiveFiltering(search, filters) && sort === 'manual';
+  const hasActiveFilters = hasActiveFiltering('', filters) || sort !== 'manual';
 
   if (!snapshot) {
     return <div className="state-shell">Taken laden...</div>;
@@ -260,10 +262,36 @@ export function App(): React.JSX.Element {
 
       <main className="workspace-shell">
         <header className="topbar">
-          <div className="topbar-copy">
-            <div className="eyebrow">Budio Workspace</div>
-            <h1>{snapshot.workspaceName}</h1>
-            <p>{snapshot.tasksRoot}</p>
+          <div className="topbar-main">
+            <div className="topbar-title-wrap">
+              <div className="topbar-title">Board</div>
+              <div className="eyebrow">Budio Workspace</div>
+            </div>
+
+            <div className="topbar-main-actions">
+              <button
+                className="primary-button"
+                onClick={() => vscode.postMessage({ type: 'createTask', status: 'ready' })}
+              >
+                Nieuwe taak
+              </button>
+              <button className={`ghost-button ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((open) => !open)}>
+                Filter {hasActiveFilters ? '•' : ''}
+              </button>
+              <button className="ghost-button" onClick={() => vscode.postMessage({ type: 'refreshBoard' })}>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div className="topbar-search-row">
+            <input
+              ref={searchRef}
+              className="search-input"
+              placeholder="Zoek op titel, tag of body..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
             <div className="header-stats">
               <StatusChip>{snapshot.totalTasks} taken</StatusChip>
               <StatusChip>{snapshot.openTaskCount} open</StatusChip>
@@ -271,85 +299,101 @@ export function App(): React.JSX.Element {
             </div>
           </div>
 
-          <div className="topbar-actions">
-            <div className="topbar-controls topbar-controls-primary">
-              <input
-                ref={searchRef}
-                className="search-input"
-                placeholder="Zoek op titel, tag of body..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-              <select
-                value={filters.status}
-                onChange={(event) => updateFilters({ status: event.target.value as Filters['status'] })}
-              >
-                <option value="all">Alle statussen</option>
-                {snapshot.settings.columns.map((status) => (
-                  <option key={status} value={status}>
-                    {STATUS_LABELS[status]}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filters.priority}
-                onChange={(event) => updateFilters({ priority: event.target.value as Filters['priority'] })}
-              >
-                <option value="all">Alle prioriteiten</option>
-                <option value="p1">P1</option>
-                <option value="p2">P2</option>
-                <option value="p3">P3</option>
-              </select>
-              <select value={filters.tag} onChange={(event) => updateFilters({ tag: event.target.value })}>
-                <option value="all">Alle tags</option>
-                {tags.map((tag) => (
-                  <option key={tag} value={tag}>
-                    {tag}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filters.due}
-                onChange={(event) => updateFilters({ due: event.target.value as DueFilter })}
-              >
-                <option value="all">Alle data</option>
-                <option value="today">Vandaag</option>
-                <option value="overdue">Over tijd</option>
-                <option value="no_date">Geen datum</option>
-              </select>
-            </div>
+          {filtersOpen ? (
+            <div className="filter-panel">
+              <div className="filter-grid">
+                <label>
+                  <span>Status</span>
+                  <select
+                    value={filters.status}
+                    onChange={(event) => updateFilters({ status: event.target.value as Filters['status'] })}
+                  >
+                    <option value="all">Alle statussen</option>
+                    {snapshot.settings.columns.map((status) => (
+                      <option key={status} value={status}>
+                        {STATUS_LABELS[status]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Prioriteit</span>
+                  <select
+                    value={filters.priority}
+                    onChange={(event) => updateFilters({ priority: event.target.value as Filters['priority'] })}
+                  >
+                    <option value="all">Alle prioriteiten</option>
+                    <option value="p1">P1</option>
+                    <option value="p2">P2</option>
+                    <option value="p3">P3</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Tag</span>
+                  <select value={filters.tag} onChange={(event) => updateFilters({ tag: event.target.value })}>
+                    <option value="all">Alle tags</option>
+                    {tags.map((tag) => (
+                      <option key={tag} value={tag}>
+                        {tag}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Datum</span>
+                  <select
+                    value={filters.due}
+                    onChange={(event) => updateFilters({ due: event.target.value as DueFilter })}
+                  >
+                    <option value="all">Alle data</option>
+                    <option value="today">Vandaag</option>
+                    <option value="overdue">Over tijd</option>
+                    <option value="no_date">Geen datum</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Sortering</span>
+                  <select value={sort} onChange={(event) => setSort(event.target.value as TaskSort)}>
+                    <option value="manual">Manual</option>
+                    <option value="due_date">Due date</option>
+                    <option value="priority">Priority</option>
+                    <option value="updated_at">Recent gewijzigd</option>
+                    <option value="alphabetical">Alfabetisch</option>
+                  </select>
+                </label>
+              </div>
 
-            <div className="topbar-controls topbar-controls-secondary">
-              <select value={sort} onChange={(event) => setSort(event.target.value as TaskSort)}>
-                <option value="manual">Manual</option>
-                <option value="due_date">Due date</option>
-                <option value="priority">Priority</option>
-                <option value="updated_at">Recent gewijzigd</option>
-                <option value="alphabetical">Alfabetisch</option>
-              </select>
-              <button
-                className={`ghost-button ${filters.onlyOpen ? 'active' : ''}`}
-                onClick={() => updateFilters({ onlyOpen: !filters.onlyOpen })}
-              >
-                Alleen open
-              </button>
-              <button
-                className={`ghost-button ${filters.onlyChecklistOpen ? 'active' : ''}`}
-                onClick={() => updateFilters({ onlyChecklistOpen: !filters.onlyChecklistOpen })}
-              >
-                Checklist open
-              </button>
-              <button className="ghost-button" onClick={() => vscode.postMessage({ type: 'refreshBoard' })}>
-                Refresh
-              </button>
-              <button
-                className="primary-button"
-                onClick={() => vscode.postMessage({ type: 'createTask', status: 'ready' })}
-              >
-                Nieuwe taak
-              </button>
+              <div className="filter-toggles">
+                <button
+                  className={`ghost-button ${filters.onlyOpen ? 'active' : ''}`}
+                  onClick={() => updateFilters({ onlyOpen: !filters.onlyOpen })}
+                >
+                  Alleen open
+                </button>
+                <button
+                  className={`ghost-button ${filters.onlyChecklistOpen ? 'active' : ''}`}
+                  onClick={() => updateFilters({ onlyChecklistOpen: !filters.onlyChecklistOpen })}
+                >
+                  Checklist open
+                </button>
+              </div>
+
+              <div className="filter-panel-actions">
+                <button
+                  className="ghost-button"
+                  onClick={() => {
+                    setFilters(EMPTY_FILTERS);
+                    setSort('manual');
+                  }}
+                >
+                  Reset filters
+                </button>
+                <button className="ghost-button" onClick={() => setFiltersOpen(false)}>
+                  Sluiten
+                </button>
+              </div>
             </div>
-          </div>
+          ) : null}
         </header>
 
         <section className="status-strip">
@@ -392,19 +436,6 @@ export function App(): React.JSX.Element {
                         <h2>{column.label}</h2>
                         <span>{column.count}</span>
                       </div>
-                      {column.key !== 'done' ? (
-                        <button
-                          className="mini-button"
-                          onClick={() =>
-                            vscode.postMessage({
-                              type: 'createTask',
-                              status: column.key as Exclude<TaskStatus, 'done'>,
-                            })
-                          }
-                        >
-                          Add card
-                        </button>
-                      ) : null}
                     </div>
 
                     <div className="column-cards">
@@ -445,7 +476,9 @@ export function App(): React.JSX.Element {
                             >
                               <div className="card-header">
                                 <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
-                                {card.dueDate ? <span className={dueClassName(card.dueDate)}>{card.dueDate}</span> : null}
+                                <span className="task-ref" title={card.id}>
+                                  {formatTaskRef(card.id)}
+                                </span>
                               </div>
 
                               <h3>{card.title}</h3>
@@ -465,9 +498,7 @@ export function App(): React.JSX.Element {
                               {hasMeta ? (
                                 <div className="meta-row compact card-meta">
                                   {card.checklistProgress.total > 0 ? (
-                                    <span>
-                                      Checklist {card.checklistProgress.completed}/{card.checklistProgress.total}
-                                    </span>
+                                    <span>{checklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}</span>
                                   ) : null}
                                   {card.dueDate ? <span>{dueLabel(card.dueDate)}</span> : null}
                                 </div>
@@ -602,6 +633,9 @@ export function App(): React.JSX.Element {
                     <p>{selectedTask.relativePath}</p>
                     <div className="detail-meta-chips">
                       <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
+                      <span className="task-ref" title={selectedTask.id}>
+                        {formatTaskRef(selectedTask.id)}
+                      </span>
                       <span className="tag-pill">{STATUS_LABELS[selectedTask.status]}</span>
                       {selectedTask.dueDate ? <span className={dueClassName(selectedTask.dueDate)}>{selectedTask.dueDate}</span> : null}
                     </div>
@@ -976,4 +1010,26 @@ function dueLabel(dueDate: string): string {
     return 'Over tijd';
   }
   return dueDate;
+}
+
+function checklistProgressLabel(completed: number, total: number): string {
+  if (total <= 0) {
+    return 'Geen checklist';
+  }
+
+  const percent = Math.round((completed / total) * 100);
+  return `${percent}% checklist (${completed}/${total})`;
+}
+
+function formatTaskRef(taskId: string): string {
+  const base = taskId.replace(/^task-/, '');
+  if (!base) {
+    return 'TASK';
+  }
+
+  if (base.length <= 16) {
+    return base.toUpperCase();
+  }
+
+  return `${base.slice(0, 16).toUpperCase()}…`;
 }

@@ -2,14 +2,13 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
-Source Commit: b4e34cb
+Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
+Source Commit: 8e1ee5c
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## AI Quality Studio Governance (excerpt)
-
 # AI Quality Studio (Canoniek)
 
 ## Canonieke status
@@ -89,20 +88,27 @@ De studio is **geen**:
 
 ## 3. Strategische aanscherping (april 2026)
 
-De eerstvolgende studiofase draait **niet** primair om rollout of live runtime-integratie.
+De eerstvolgende studiofase draait **niet** primair om brede rollout of live runtime-integratie.
 
 De eerstvolgende studiofase draait om één kernvraag:
 
 **Is een nieuwe promptversie aantoonbaar beter dan de huidige basis?**
 
+Vanaf de strategische splitsing (20 april 2026) geldt aanvullend:
+
+- AIQS prioriteert `Knowledge Hub`-fundering (source ingest, grounding, citations).
+- AIQS ondersteunt publieke wedge-validatie op builders/podcasters.
+- `Jarvis` blijft internal-only founderplatform en is geen publieke AIQS-productbelofte.
+
 Daarom is de bindende prioriteit nu:
 
 1. testen binnen de studio
 2. vergelijkbaar valideren van kandidaat-output vs runtime-basis
-3. evaluatie-uitkomsten opslaan als bewijs
-4. editor-ervaring en task-consistentie gelijktrekken
-5. admin UX op desktop/fullscreen verbeteren zonder mobiel te breken
-6. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
+3. source-aware evaluatie op grounding en citation-fidelity toevoegen
+4. evaluatie-uitkomsten opslaan als bewijs
+5. editor-ervaring en task-consistentie gelijktrekken
+6. admin UX op desktop/fullscreen verbeteren zonder mobiel te breken
+7. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
 
 Dit betekent expliciet:
 
@@ -160,31 +166,11 @@ Als output deze grenzen schendt, is dat een **kwaliteitsfout**, ongeacht modelsc
 
 ---
 
-## 6. Huidige code-realiteit (status april 2026)
-
-Deze sectie beschrijft wat nu aantoonbaar gebouwd is en wat strategisch relevant is voor de volgende fase.
-
-### 6.1 Datamodel (aanwezig)
-
-Tabellen:
-
-- `ai_tasks`
-- `ai_task_versions`
-- `ai_test_cases`
-- `ai_test_runs`
-- `ai_live_generation_log`
-
-Aanwezig in schema:
-
-- enums voor input/output/status/review/source
-- UUID PK’s, FK’s, timestamps
-- 1 live versie per task
-- oplopende versionin
+## 6. Huidige code-realiteit (status april
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
 ## Cline Workflow (excerpt)
-
 # Cline workflow (operationeel)
 
 ## Doel
@@ -212,6 +198,16 @@ Regels:
 - `docs/dev/**` = workflowafspraken.
 - `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
+- Scope-routing is context-first:
+  - default-context: Budio app + AIQS
+  - bepaal scope via intentie/formulering (doel, doelgroep, omgeving, planningimpact), niet alleen op keyword-match
+  - routeer naar Jarvis/plugin-spoor zodra de intentie daar logisch op wijst, ook zonder expliciete termen
+- Twijfelprotocol:
+  - hoge-impact twijfel (planning, roadmap, idea/task-classificatie): eerst korte afstemming met de gebruiker
+  - lage-impact twijfel: redelijke aanname doen en die expliciet labelen in plan/doc
+- Strategie/planning wijzig je nooit stilzwijgend:
+  - geen mutaties in `docs/project/10-strategy/**` of `docs/project/20-planning/**` zonder expliciete user-approval of expliciet overlegbesluit in dezelfde sessie
+  - bij koerswijziging altijd eerst voorstel + impact + advies, daarna pas mutatie
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
 - Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
@@ -235,37 +231,11 @@ Regels:
   - taakworkflow: `docs/dev/task-lifecycle-workflow.md`
   - tijdelijke sessiecontext: `docs/dev/active-context.md`
   - statuswaarheid: `docs/project/current-status.md`
-  - echte gaps/onzekerheden: `docs/project/open-points.md`
-  - operationele taken: `docs/project/25-tasks/**`
-
-## Active context tussen sessies
-
-- `docs/dev/active-context.md` is een lichte brug tussen Cline-sessies.
-- Gebruik actief bij:
-  - non-triviale taken
-  - onderbroken sessies
-  - multi-file werk
-  - taken waar recente learnings/WIP of docs-updates relevant zijn
-- Meestal niet nodig bij:
-  - kleine, volledig afgebakende fixes zonder sessieafhankelijkheid
-
-Regels:
-
-- `active-context.md` is niet canoniek en niet de statuswaarheid.
-- Verwijs naar canonieke docs in plaats van inhoud te kopiëren.
-- Promoveer alleen stabiele learnings naar `AGENTS.md`, skills of `docs/dev/**`.
-
-## Beslisregels per laag
-
-- canonieke waarheid → `docs/project/**`
-- operationele workflow → `docs/dev/**`
-- always-on gedrag → `AGENTS.md`
-- ta
+  - echte gaps/onz
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
 ## Stitch Workflow (excerpt)
-
 # Stitch workflow (operationeel)
 
 _Status: operationele workflow, niet-canonieke productwaarheid_
@@ -362,6 +332,6 @@ Expliciet verbieden in prompts:
 ## Kleur- en UI-regels voor Stitch
 
 - Warm neutral base blijft leidend
-- Gold is in principe voor **primaire CTA** en klei
+- Gold is in principe voor **primaire C
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]

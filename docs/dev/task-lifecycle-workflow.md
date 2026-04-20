@@ -28,6 +28,9 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 3. Open taken leven in `docs/project/25-tasks/open/`.
 4. Alleen taken met status `done` mogen in `docs/project/25-tasks/done/` staan.
 5. `open-points.md` blijft voor gaps, risico's en onzekerheden; het taakoverzicht daarbinnen is afgeleid.
+6. Idee vs taak: als flow nog niet bestaat, plugin-ondersteuning ontbreekt, of de scope nog epic-niveau is -> eerst `40-ideas/**` (epic-candidate), pas daarna taakpromotie.
+7. Scope-routing is context-first: default-context is Budio app + AIQS; Jarvis/plugin alleen als intentie daar logisch op wijst.
+8. Bij classificatietwijfel: hoge-impact eerst afstemmen, lage-impact als expliciete aanname vastleggen.
 
 ## Standaardflow
 

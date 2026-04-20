@@ -2,31 +2,33 @@
 
 # Budio Ideas and Opportunity Map
 
-Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
-Source Commit: b4e34cb
+Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
+Source Commit: 8e1ee5c
 
 Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
-
 - docs/project/40-ideas/README.md
 - docs/project/40-ideas/00-ideas-inbox.md
 - docs/project/40-ideas/10-product/20-budio-brainstorm-workspace-for-builders.md
 - docs/project/40-ideas/10-product/30-conversation-aware-ingest-and-interpretation.md
 - docs/project/40-ideas/10-product/40-trust-and-security-charter.md
 - docs/project/40-ideas/10-product/50-structured-export-and-obsidian-archive.md
+- docs/project/40-ideas/10-product/60-capture-ux-benchmark-implementatiekansen-wispr-notebooklm.md
 - docs/project/40-ideas/30-ai-and-aiqs/40-aiqs-modular-flow-control-plane.md
 - docs/project/40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md
+- docs/project/40-ideas/30-ai-and-aiqs/60-knowledge-hub-aiqs-foundation.md
 - docs/project/40-ideas/40-platform-and-architecture/10-lean-project-operating-system-for-repo.md
 - docs/project/40-ideas/40-platform-and-architecture/20-vscode-project-copilot-plugin.md
 - docs/project/40-ideas/40-platform-and-architecture/30-budio-modular-intelligence-workspace.md
 - docs/project/40-ideas/40-platform-and-architecture/40-vscode-plugin-with-budio-runtime-bridge.md
 - docs/project/40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md
 - docs/project/40-ideas/40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export.md
+- docs/project/40-ideas/40-platform-and-architecture/70-budio-workspace-plugin-decision-board.md
+- docs/project/40-ideas/40-platform-and-architecture/80-jarvis-internal-research-lane.md
 
 ## Leesregel
-
 - Ideas zijn voorstelruimte en niet automatisch actieve planning of canonieke productwaarheid.
 - Promotie naar actieve uitvoering loopt via `docs/project/20-planning/**` en expliciete decisions.
 
@@ -157,6 +159,10 @@ Lage-frictie plek om nieuwe ideeën direct vast te leggen zonder contextverlies.
 - [2026-04-19] Security posture + continuous hardening (RLS, secrets, pentest, AI-pentest alternatief voor Aikido), gepromoveerd naar 40-platform-and-architecture/50-security-posture-and-continuous-hardening.
 - [2026-04-19] Trust & security charter voor gebruikers (web + app transparantie "Nico-proof"), gepromoveerd naar 10-product/40-trust-and-security-charter.
 - [2026-04-19] Budio Pro markdown workspace + Obsidian export als later integratiespoor, gepromoveerd naar 40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export.
+- [2026-04-20] Jarvis internal research lane (founder-only), gepromoveerd naar 40-platform-and-architecture/80-jarvis-internal-research-lane als epic-candidate (geen bouwtaak).
+- [2026-04-20] Knowledge Hub + AIQS foundation (PDF/audio/foto), gepromoveerd naar 30-ai-and-aiqs/60-knowledge-hub-aiqs-foundation als epic-candidate (Q3+).
+- [2026-04-20] Inspiratie (Wispr Flow screenshots): user-configureerbare auto-cleanup + schrijfstijlprofielen classificeren onder Budio app + AIQS-compatibele ideas (niet Jarvis by default).
+- [2026-04-21] Capture UX benchmark implementatiekansen (Wispr Flow + NotebookLM), gepromoveerd naar 10-product/60-capture-ux-benchmark-implementatiekansen-wispr-notebooklm als epic-candidate (research-first, na AIQS-live).
 
 ---
 
@@ -634,6 +640,70 @@ budio-export-YYYYMMDD-HHmm.zip
 
 ---
 
+## Capture Ux Benchmark Implementatiekansen Wispr Notebooklm
+
+# Capture UX benchmark implementatiekansen (Wispr Flow + NotebookLM learnings)
+
+## Status
+
+candidate
+
+## Type
+
+product
+
+## Horizon
+
+next
+
+## Korte samenvatting
+
+Epic-candidate om na AIQS-live gericht benchmark-learnings (Wispr capture-executie + NotebookLM source-trust) te vertalen naar Budio app + AIQS implementatiekansen.
+
+## Probleem
+
+We zien sterke patronen bij Wispr Flow en NotebookLM, maar zonder expliciete benchmarkbeslissingen ontstaat risico op:
+
+- ad-hoc featurekeuzes
+- scope-ruis
+- te snelle taakpromotie zonder heldere fit/risico-afweging
+
+## Waarom interessant
+
+- Versterkt Budio's capture-ervaring zonder de AIQS-kwaliteitslaag los te laten.
+- Maakt expliciet wat we wel/niet overnemen van concurrenten.
+- Houdt de roadmap scherp: inspiratie naar besluitbaar kader i.p.v. losse ideeen.
+
+## Relatie met huidige docs
+
+- Sluit aan op planning `Next` na AIQS-live.
+- Leunt op research-brief `30-research/70-wisprflow-notebooklm-benchmark-na-aiqs-live.md`.
+- Houdt classificatie in ideas-laag tot promotiecriteria zijn gehaald.
+
+## Epic-candidate
+
+- Ja, dit is een epic-candidate (pre-task).
+- Promotie naar taak pas na benchmark sprint + expliciet user-besluit.
+
+## Mogelijke impact
+
+- product
+- aiqs
+- ui
+- docs
+
+## Open vragen
+
+- Welke patronen moeten als eerste naar concrete task-candidates (cleanup-levels, style-profielen, dictionary/snippets)?
+- Welke AIQS-evaluatiecriteria zijn minimaal verplicht voor promotie?
+- Welke patronen markeren we definitief als niet-onze-markt?
+
+## Volgende stap
+
+Voer na AIQS-live een timeboxed competitor benchmark sprint uit met decision matrix (`kopieren / aanpassen / niet-onze-markt`) en leg promotiecriteria vast per patroon.
+
+---
+
 ## Aiqs Modular Flow Control Plane
 
 # AIQS modular flow control plane
@@ -799,6 +869,65 @@ Compare-view laat expliciet zien:
 - Detail-spec voor source type metadata door de keten (capture → process-entry → normalized → AIQS testbed).
 - Kleine AIQS-contractschets voor `conversation_*` tasks en/of source-aware `entry_cleanup` extensie, zonder runtime-werk te starten.
 - Expliciete evaluatiecasesuggestie voor compare-runs (chat eigen stem, chat andermans stem, mixed thread, single speaker note).
+
+---
+
+## Knowledge Hub Aiqs Foundation
+
+# Knowledge Hub + AIQS foundation (source ingest + citations)
+
+## Status
+
+candidate
+
+## Type
+
+ai-aiqs
+
+## Horizon
+
+later
+
+## Korte samenvatting
+
+Leg Knowledge Hub + AIQS vast als high-prio epic-candidate voor brongebaseerde ingest (PDF/audio/foto), grounding en citations, met start na Q2 2026.
+
+## Probleem
+
+Knowledge Hub is strategisch essentieel, maar nog niet klaar als uitvoerbare bouwtaak in dit kwartaal. Te vroege taakpromotie maakt planning instabiel en verdringt actieve fasewerkzaamheden.
+
+## Waarom interessant
+
+- Versterkt AIQS als kennis-hart dat bijna elk project raakt.
+- Maakt brongebonden outputkwaliteit meetbaar en schaalbaar.
+- Ondersteunt de publieke wedge op builders/podcasters wanneer fasevolgorde dat toelaat.
+
+## Relatie met huidige docs
+
+- Blijft high-prio richting in planning (`Next`), maar niet als actieve Q2-bouwscope.
+- Moet aansluiten op AIQS-governance en source-aware evaluatie.
+
+## Epic-candidate
+
+- Ja, dit is een epic-candidate (pre-task).
+- Promotie naar taak pas na expliciet kwartaalbesluit en concrete flowdefinitie.
+
+## Mogelijke impact
+
+- aiqs
+- services
+- docs
+- platform-architecture
+
+## Open vragen
+
+- Wat is de minimale Knowledge Hub v1-definitie voor promotie naar taak?
+- Welke volgorde krijgt source ingest (PDF/audio/foto) bij start na Q2?
+- Welke AIQS-evaluatiecriteria zijn verplicht voor eerste bouwfase?
+
+## Volgende stap
+
+Definieer een compacte promotiechecklist (entry criteria + acceptatiecriteria) voor Q3-start, zonder nu al taskuitvoering te openen.
 
 ---
 
@@ -1250,3 +1379,133 @@ Belangrijk:
 ## Volgende stap
 
 - Later: conceptspec voor export-only markdown workspace in Budio Pro, met expliciete truth-boundaries en conflictbeleid.
+
+---
+
+## Budio Workspace Plugin Decision Board
+
+# Budio Workspace plugin decision board voor strategische prioritering
+
+## Status
+
+candidate
+
+## Type
+
+internal-tooling
+
+## Horizon
+
+next
+
+## Korte samenvatting
+
+Voeg in de Budio Workspace plugin een PM/strategy decision board toe met één overzichtstabel voor ideeprioritering, categorie, roadmap-impact en beslisstatus.
+
+## Probleem
+
+Strategische ideeselectie leeft nu verspreid over planning-notities, ideas-files en sessie-uitwerking. Daardoor kost prioritering extra context-switching en is besluitvorming minder snel traceerbaar.
+
+## Waarom interessant
+
+- maakt de prioritering uit `20-planning/60-april-2026-ideeen-prioritering-en-learning-loop.md` direct operationeel
+- ondersteunt founder-flow (snel beslissen) én teamleesbaarheid (waarom iets nu/later is)
+- versterkt evidence-first uitvoering zonder productscope te verbreden
+
+## Relatie met huidige docs
+
+- sluit aan op `docs/project/20-planning/50-budio-workspace-plugin-focus.md`
+- gebruikt categorieën uit `docs/project/40-ideas/README.md`
+- gebruikt roadmap-status uit `docs/project/20-planning/30-now-next-later.md`
+
+## Voorstel voor minimum kolommen
+
+- idee
+- mvp-waarde (1-5)
+- strategische fit (1-5)
+- categorie (core/learning/later/non-strategic)
+- roadmap-impact (now/next/later)
+- status (open/in review/besloten)
+- eigenaar
+- laatste update
+
+## Guardrails
+
+- interne plugin-tooling, geen end-user feature in Budio Vandaag
+- geen runtime/deploykoppeling nodig voor MVP
+- geen pricing of billing-engine bouwen in plugin; alleen besluitondersteuning
+
+## Mogelijke impact
+
+- tooling
+- docs
+- planning discipline
+
+## Open vragen
+
+- handmatig ingevulde tabel of gekoppeld aan markdown/frontmatter?
+- alleen leesboard of ook inline status-updates?
+- minimale audittrail: hoe wordt een besluitmoment vastgelegd?
+
+## Volgende stap
+
+Smal prototype in plugin met read-only tabel op basis van planning/ideas-notities, daarna pas edit-flow bepalen.
+
+---
+
+## Jarvis Internal Research Lane
+
+# Jarvis internal research lane (founder-only)
+
+## Status
+
+candidate
+
+## Type
+
+internal-tooling
+
+## Horizon
+
+next
+
+## Korte samenvatting
+
+Leg `Budio Jarvis` vast als intern researchspoor voor founder-use in app + workspace, zonder promotie naar actieve bouwtaak zolang de onderliggende flows/plugin-ondersteuning nog ontbreken.
+
+## Probleem
+
+Jarvis is strategisch belangrijk, maar de benodigde flow- en pluginfundering bestaat nog niet als concrete bouwscope. Als dit te vroeg als taak wordt geclassificeerd, ontstaat schijnprecisie en planningruis.
+
+## Waarom interessant
+
+- Versterkt lokaal experimenteren voor softwareplanning, productbouw en podcastwerk.
+- Bouwt een interne kennis- en toolingsvoorsprong zonder publieke productdruk.
+- Houdt capaciteit beheersbaar via research-lane limiet (max 1 dag/week in Q2 2026).
+
+## Relatie met huidige docs
+
+- Sluit aan op dual active planning in `20-planning/20-active-phase.md`.
+- Blijft buiten actieve tasklaag tot expliciete promotiebeslissing.
+
+## Epic-candidate
+
+- Ja, dit is een epic-candidate (pre-task).
+- Promotie naar taak pas nadat flow-definitie en plugin-ondersteuning voldoende concreet zijn.
+
+## Mogelijke impact
+
+- docs
+- aiqs
+- platform-architecture
+- internal-tooling
+
+## Open vragen
+
+- Welke minimale Jarvis-flow moet als eerste bewezen worden (planning, podcast of codebouw)?
+- Welke pluginuitbreiding is minimaal nodig om van idee naar uitvoerbare taak te gaan?
+- Welke succescriteria bepalen promotie van idea -> task?
+
+## Volgende stap
+
+Werk een promotie-gate uit (entry criteria) voor dit epic-candidate idee in planning/workflow, zonder runtime- of productscope te activeren.

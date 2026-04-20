@@ -2,6 +2,11 @@
   "name": "persoonlijke-assistent-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:pflikweert/persoonlijke-assistent-app.git"
+  },
   "scripts": {
     "dev": "./scripts/dev.sh",
     "dev:stop": "./scripts/dev-stop.sh",

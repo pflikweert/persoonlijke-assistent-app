@@ -77,20 +77,27 @@ De studio is **geen**:
 
 ## 3. Strategische aanscherping (april 2026)
 
-De eerstvolgende studiofase draait **niet** primair om rollout of live runtime-integratie.
+De eerstvolgende studiofase draait **niet** primair om brede rollout of live runtime-integratie.
 
 De eerstvolgende studiofase draait om één kernvraag:
 
 **Is een nieuwe promptversie aantoonbaar beter dan de huidige basis?**
 
+Vanaf de strategische splitsing (20 april 2026) geldt aanvullend:
+
+- AIQS prioriteert `Knowledge Hub`-fundering (source ingest, grounding, citations).
+- AIQS ondersteunt publieke wedge-validatie op builders/podcasters.
+- `Jarvis` blijft internal-only founderplatform en is geen publieke AIQS-productbelofte.
+
 Daarom is de bindende prioriteit nu:
 
 1. testen binnen de studio
 2. vergelijkbaar valideren van kandidaat-output vs runtime-basis
-3. evaluatie-uitkomsten opslaan als bewijs
-4. editor-ervaring en task-consistentie gelijktrekken
-5. admin UX op desktop/fullscreen verbeteren zonder mobiel te breken
-6. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
+3. source-aware evaluatie op grounding en citation-fidelity toevoegen
+4. evaluatie-uitkomsten opslaan als bewijs
+5. editor-ervaring en task-consistentie gelijktrekken
+6. admin UX op desktop/fullscreen verbeteren zonder mobiel te breken
+7. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
 
 Dit betekent expliciet:
 

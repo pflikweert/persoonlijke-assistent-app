@@ -2,14 +2,13 @@
 
 # Budio UI System and Design Truth
 
-Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
-Source Commit: b4e34cb
+Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
+Source Commit: 8e1ee5c
 
 Doel: primaire UI/designbundle met designregels, tokens en implementatieguardrails.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Token Snapshot
-
 - Light core surfaces: background #FAF9F4, surfaceLow #F4F3F0, surface #EFEEEB, surfaceLowest #FFFFFF, surfaceHigh #E9E8E5.
 - Dark core surfaces: background #171714, surface #201F1C, surfaceLow #2B2925, surfaceLowest #34322D, surfaceHigh #262521.
 - Primary / CTA gradient: light #F0C115 -> #E6B800; dark #F3C53A -> #D7A91B.
@@ -19,7 +18,6 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/27, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
 
 ## MVP Design Spec (excerpt)
-
 # MVP Design Spec v1.2.1 — Capture First
 
 ## Version
@@ -283,12 +281,11 @@ Not allowed:
 
 - Default UI is clean-first.
 - Use spacing, hierarchy, typography and tonal contrast before extra containers.
-- Section labels sit on the page background unless a design ref explicit
+- Section labels sit on the page ba
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
 ## Ethos Foundation (excerpt)
-
 # Budio Vandaag — Design System Handoff (MVP)
 
 ## 1. Purpose
@@ -474,19 +471,17 @@ Rules:
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
 ## Compact Design Context
-
 # DO NOT EDIT - GENERATED FILE
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
-Source Commit: b4e34cb
+Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
+Source Commit: 8e1ee5c
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
-
 - docs/design/mvp-design-spec-1.2.1.md
 - design_refs/1.2.1/ethos_ivory/DESIGN.md
 - theme/tokens.ts
@@ -502,7 +497,6 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - design_refs/1.2.1/today_branded_header/DESIGN.md
 
 ## Handoff Samenvatting
-
 - Capture-first blijft leidend: de app is een snelle, rustige persoonlijke thinking tool, geen dashboard of chatinterface.
 - Today is een entry point: de primaire CTA krijgt de meeste visuele aandacht; reflectie en recente context blijven secundair.
 - Clean-first UI: spacing, typografie, hiërarchie en tonal contrast gaan vóór extra containers.
@@ -514,7 +508,6 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - Header, page en footer vormen per mode één coherent geheel; header/footer blijven rustiger dan de page.
 
 ## Current Token Snapshot
-
 Afgeleid uit `theme/tokens.ts`; die file blijft de enige tokenbron.
 
 - Light core surfaces: background #FAF9F4, surfaceLow #F4F3F0, surface #EFEEEB, surfaceLowest #FFFFFF, surfaceHigh #E9E8E5.
@@ -526,7 +519,6 @@ Afgeleid uit `theme/tokens.ts`; die file blijft de enige tokenbron.
 - Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/27, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
 
 ## Per-page Markdown Refs
-
 Deze markdown refs onder `design_refs/1.2.1/**` zijn meegenomen als aanvullende design input wanneer aanwezig.
 
 - design_refs/1.2.1/auth_branded/DESIGN.md
@@ -540,7 +532,6 @@ Deze markdown refs onder `design_refs/1.2.1/**` zijn meegenomen als aanvullende 
 Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze generated handoff houdt alleen de verwijzingen compact bij.
 
 ## Design Guardrails
-
 ### Clean-first
 
 - Default UI is clean-first.
@@ -560,6 +551,6 @@ Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze gen
 - Page atmosphere is selective, not global.
 - Background modes are mode-aware; never apply a dark ambient treatment unchanged in light mode.
 - Use three background modes:
-  - `ambient`: auth, splash/load
+  - `ambient`: auth, splash/l
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]

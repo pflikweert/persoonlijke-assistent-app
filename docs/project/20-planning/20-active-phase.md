@@ -2,26 +2,31 @@
 
 ## Actieve fase
 
-Transitiemaand: consumer beta afronden + brugpilot definiëren.
+Dual active planning met wijzigingscontrole:
+
+- Plan A (primair): huidige fase-afspraken met AIQS-basis eerst
+- Plan B (secundair): Jarvis research-lane, maximaal 1 dag per week
 
 ## Doel van deze fase
 
-1. Consumer beta afronden met expliciet release- en runtimebewijs.
-2. 1.2B outputkwaliteit expliciet maken als afgebakende kwaliteitsset.
-3. 1.2E beta-readiness expliciet maken als bewijs-gedreven readiness set.
-4. Een kleine commerciële brugpilot definiëren zonder brede Pro- of Business-activatie.
+1. Plan A primair uitvoeren: AIQS-basis en lopende faseafspraken afronden met bewijs.
+2. Plan B beperkt uitvoeren: Jarvis internal-only als researchspoor (idee/epic-candidate, geen bouwtaak).
+3. Knowledge Hub hoog op de roadmap houden als epic-candidate, maar niet als actieve uitvoeringsscope in Q2 2026.
+4. Fase 3 krijgt uitvoeringsprioriteit boven Fase 2B.
+5. Strategische/planningswijzigingen alleen doorvoeren na expliciete user-approval of expliciet overlegbesluit.
 
 ## Korte samenvatting van deze maand
 
-De komende maand is een smalle overgangsstap tussen de huidige capture-first beta en de latere commerciële richting.
-De kern blijft consumer beta afronden met bewijs.
-Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaande entry/day bronlaag.
+De oorspronkelijke fasefocus blijft primair actief (AIQS-basis en lopende betrouwbaarheidstaken).
+Jarvis draait parallel als gecontroleerd intern researchspoor met harde capaciteitlimiet.
+Knowledge Hub blijft een high-prio richting, maar staat gepland voor na dit kwartaal.
 
 ## Obsidian links
 
 - [[README|Planning hub]]
 - [[10-roadmap-phases|Roadmap phases]]
 - [[30-now-next-later|Now / Next / Later]]
+- [[50-budio-workspace-plugin-focus|Budio Workspace plugin focus]]
 - [[40-deviations-and-decisions|Deviations and decisions]]
 - [[../current-status|Current status]]
 - [[../open-points|Open points]]
@@ -30,21 +35,23 @@ Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaan
 
 ## In focus (Now)
 
-- Proof-first consumer beta afronden op basis van actuele runtime-realiteit in `current-status.md`.
-- 1.2B outputkwaliteit expliciteren als concrete kwaliteitsset met afrondcriteria.
-- 1.2E beta-readiness expliciteren als concrete checklist met bewijsregel.
-- Een review-first brugpilot definiëren vanuit bestaande entry/day bronlaag:
-  - bron = entry, day narrative, day summary
-  - focus = copy/export/content transform
-  - doel = beoordelen of de bestaande bronlaag bruikbare reviewbare output kan opleveren
+- Plan A (primair):
+  - AIQS-basis afronden (stabiliteit, logging/quality governance en bestaande faseafspraken)
+  - 1.2B/1.2E afronding als bewijsgedreven onderhoudsspoor
+  - Budio Workspace plugin inzetten voor dagelijkse focus op bestaande open AIQS- en hardeningtaken
+- Plan B (secondary lane):
+  - Jarvis internal-only research in app + workspace (idee/epic-candidate)
+  - harde capaciteitslimiet: maximaal 1 dag per week
+  - promotie naar bouwtaak pas na expliciet besluit
 
 ## Niet in focus (nu niet trekken)
 
-- Scheduler, autopost en multi-channel publishing.
-- Teams, Business/Private en usage billing.
-- AIQS control-plane verbreding als actieve fase.
-- Brede Pro-roadmap of productverbreding voorbij de afgebakende brugpilot.
-- Research behandelen alsof het al canonieke productwaarheid is.
+- Knowledge Hub als actieve build-scope in Q2 2026.
+- Jarvis publiek uitrollen als productfeature.
+- Marketingpositionering van Jarvis richting eindgebruikers.
+- Teams, Business/Private en usage billing als primaire fasefocus.
+- Scheduler/autopost/multi-channel publishing buiten builder/podcast validatie.
+- Research behandelen alsof het automatisch runtime-realiteit is zonder bewijs.
 
 ## Flexibele afwijkingsregel
 

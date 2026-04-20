@@ -78,6 +78,15 @@ Voor AI-gedrag, prompting en evaluatie:
 - Is een learning taak-/domeinspecifiek en herhaalbaar, leg die vast in een bestaande skill (niet in AGENTS).
 - Voor "nieuwe taak": maak eerst een taskfile aan vanuit `docs/project/25-tasks/_template.md`.
 - Voor verwijzing op taaktitel: open eerst de overeenkomstige taskfile; gebruik `id` als fallback bij ambiguiteit.
+- Scope-routing is context-first:
+  - default-context is Budio app + AIQS
+  - bepaal scope op intentie/formulering (doel, doelgroep, omgeving, planningimpact), niet alleen op letterlijke keywords
+  - Jarvis/plugin zijn aparte sporen zodra de intentie daar logisch op wijst, ook zonder exacte keyword-match
+  - bij hoge-impact twijfel (planning, roadmap, idea/task-classificatie): eerst kort afstemmen
+  - bij lage-impact twijfel: maak een redelijke aanname en label die expliciet in plan/doc
+- Wijzig strategie/planning nooit stilzwijgend:
+  - geen mutaties in `docs/project/10-strategy/**` of `docs/project/20-planning/**` zonder expliciete gebruikersvraag of expliciet overlegbesluit in dezelfde sessie
+  - bij voorgestelde koerswijzigingen eerst voorstel + impact + advies, daarna pas muteren
 
 ## Skill-selectie
 

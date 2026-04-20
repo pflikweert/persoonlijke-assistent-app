@@ -9,8 +9,13 @@ updated_at: 2026-04-20
 summary: "Implementeer PWA-installatieprompt voor webgebruikers om de app als desktop-app te installeren, met modal, cookie-onthouding en instellingenoptie."
 tags: [pwa, webapp, installatie, modal, cookie]
 due_date: null
-sort_order: 1
+sort_order: 3
 ---
+
+
+
+
+
 
 
 

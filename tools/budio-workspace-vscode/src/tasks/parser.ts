@@ -129,6 +129,10 @@ function parseFrontmatterValue(rawValue: string): FrontmatterValue {
     return '';
   }
 
+  if (rawValue === 'null') {
+    return null;
+  }
+
   if (/^\[.*\]$/.test(rawValue)) {
     const inner = rawValue.slice(1, -1).trim();
     if (!inner) {

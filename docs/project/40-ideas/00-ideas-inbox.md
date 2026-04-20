@@ -25,3 +25,7 @@ Lage-frictie plek om nieuwe ideeën direct vast te leggen zonder contextverlies.
 - [2026-04-19] Security posture + continuous hardening (RLS, secrets, pentest, AI-pentest alternatief voor Aikido), gepromoveerd naar [[40-platform-and-architecture/50-security-posture-and-continuous-hardening]].
 - [2026-04-19] Trust & security charter voor gebruikers (web + app transparantie "Nico-proof"), gepromoveerd naar [[10-product/40-trust-and-security-charter]].
 - [2026-04-19] Budio Pro markdown workspace + Obsidian export als later integratiespoor, gepromoveerd naar [[40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export]].
+- [2026-04-20] Jarvis internal research lane (founder-only), gepromoveerd naar [[40-platform-and-architecture/80-jarvis-internal-research-lane]] als epic-candidate (geen bouwtaak).
+- [2026-04-20] Knowledge Hub + AIQS foundation (PDF/audio/foto), gepromoveerd naar [[30-ai-and-aiqs/60-knowledge-hub-aiqs-foundation]] als epic-candidate (Q3+).
+- [2026-04-20] Inspiratie (Wispr Flow screenshots): user-configureerbare auto-cleanup + schrijfstijlprofielen classificeren onder Budio app + AIQS-compatibele ideas (niet Jarvis by default).
+- [2026-04-21] Capture UX benchmark implementatiekansen (Wispr Flow + NotebookLM), gepromoveerd naar [[10-product/60-capture-ux-benchmark-implementatiekansen-wispr-notebooklm]] als epic-candidate (research-first, na AIQS-live).

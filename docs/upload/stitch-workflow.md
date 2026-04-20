@@ -114,7 +114,7 @@ Werk altijd in deze volgorde:
 
 ### Fase 2 — Core product screens
 
-4. Today
+1. Today
 2. day detail / dagboek
 3. weekreflectie
 4. maandreflectie
@@ -122,7 +122,7 @@ Werk altijd in deze volgorde:
 
 ### Fase 3 — Handoff naar repo
 
-9. beste variant selecteren
+1. beste variant selecteren
 2. designkeuzes samenvatten
 3. relevante `design_refs/**` of nieuwe brand refs bijwerken
 4. docs/bundle opnieuw genereren

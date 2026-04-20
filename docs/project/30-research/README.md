@@ -12,6 +12,7 @@ Navigatiehub voor strategische researchinput in vaste leesvolgorde.
 - [[40-budio-future-state-architectuur-en-verdienmodel|40, Future-state architectuur en verdienmodel]]
 - [[50-budio-future-state-analyse-en-aiqs-control-plane|50, Future-state analyse en AIQS control plane]]
 - [[60-budio-marktkans-purple-cow-en-mrr|60, Marktkans, Purple Cow en MRR]]
+- [[70-wisprflow-notebooklm-benchmark-na-aiqs-live|70, Wispr Flow + NotebookLM benchmark (na AIQS-live)]]
 
 ## Verbonden lagen
 

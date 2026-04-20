@@ -92,6 +92,7 @@ Regel:
 Regel:
 
 - `planning/20-active-phase.md` is de huidige focuslaag voor uitvoering
+- `planning/50-budio-workspace-plugin-focus.md` borgt de plugin als ondersteunend uitvoeringsspoor in de actuele fase
 - afwijkingen op actieve fase worden vastgelegd in `planning/40-deviations-and-decisions.md`
 - planning is richtinggevend voor werkvolgorde, maar statuswaarheid blijft code/bewijs-gedreven
 

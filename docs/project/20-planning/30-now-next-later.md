@@ -8,6 +8,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 
 - [[README|Planning hub]]
 - [[20-active-phase|Active phase]]
+- [[50-budio-workspace-plugin-focus|Budio Workspace plugin focus]]
 - [[40-deviations-and-decisions|Deviations and decisions]]
 - [[../current-status|Current status]]
 - [[../open-points|Open points]]
@@ -15,26 +16,25 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 
 ## Now
 
-- Consumer beta afronden met expliciet bewijs op de bestaande capture-first runtime.
-- 1.2B outputkwaliteit expliciteren en afronden als concrete kwaliteitsset.
-- 1.2E beta-readiness expliciteren en afronden als concrete readiness set.
-- Review-first brugpilot definiëren vanuit bestaande entry/day bronlaag:
-  - focus op copy/export/content transform
-  - geen publishing- of scheduler-laag
-- Operating-system onderhoud alleen doen als ondersteunend werk voor bovenstaande focus.
+- Plan A (primair): AIQS-basis en lopende faseafspraken afronden met bewijs.
+- 1.2B en 1.2E afronding als onderhoudsspoor binnen de huidige fase.
+- Plan B (secondary): Jarvis internal-only researchlane als idee/epic-candidate (geen bouwtaak), max 1 dag per week.
+- Budio Workspace plugin gebruiken als dagelijkse uitvoeringslaag met prioriteit op Plan A.
 
 ## Next
 
-- Eerste afbakening of verkenning van de brugpilot na bewijs op de consumer beta.
-- Kleine vervolgkeuzes rond review-first output op basis van entry/day bronmateriaal.
-- Alleen ondersteunend docs- en bundle-onderhoud dat nodig is om de actieve focus helder te houden.
+- Fase 3 builders/podcasters uitvoeren als eerstvolgende prioriteit.
+- Knowledge Hub (hoog-prio) inhoudelijk voorbereiden als epic-candidate voor fase na Fase 3.
+- Scope en evaluatiecriteria voor Knowledge Hub + AIQS concretiseren (grounding/citations/relevance) zonder taakpromotie in Q2.
+- Competitor benchmark sprint (Wispr Flow + NotebookLM) plannen als researchspoor na AIQS-live (harde gate, geen `Now`-bouwscope).
+- Jarvis interne workflowuitbreiding alleen binnen afgesproken researchcapaciteit.
 
 ## Later
 
-- Volledige modulaire flow-architectuur productiseren.
-- Brede Pro-laag, Business/Private en control-plane verdieping activeren.
-- Scheduler, autopost en multi-channel publishing verkennen.
-- Usage billing, credits, top-ups en bredere commerciële operationele laag activeren.
+- Mogelijke externalisatie van Jarvis pas na expliciet strategisch besluit.
+- Verdere productisering van Knowledge Hub + AIQS als brede kennisbanklaag.
+- Brede Pro-laag, Business/Private en commerciële operatie opschalen op basis van bewijs.
+- Scheduler/autopost pas oppakken als builder/podcast wedge bewezen is.
 
 ## Parking lot
 

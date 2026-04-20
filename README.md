@@ -22,6 +22,11 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 - Docs markdown lint: `npm run docs:lint`
 - Docs markdown lint autofix: `npm run docs:lint:fix`
 
+## License en gebruiksrechten
+- Deze repository is **source-visible maar niet open source**.
+- Gebruik, kopiëren, aanpassen, distribueren of commercieel hergebruik is niet toegestaan zonder voorafgaande schriftelijke toestemming.
+- Zie `LICENSE` (root) voor de volledige voorwaarden.
+
 ## Contributor workflow (kort)
 - Check eerst `docs/project/README.md` en daarna `AGENTS.md` voor scope, waarheid en werkwijze.
 - Gebruik **ChatGPT Projects** voor strategie/review/promptontwerp; gebruik **Cline in VS Code** voor repo-uitvoering.
@@ -34,6 +39,11 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 - Draai verify vóór commit (`npm run lint`, `npm run typecheck`, en bij canonieke docs ook docs bundle + verify).
 - Bij docs-updates: draai ook `npm run docs:lint` (en waar nodig `npm run docs:lint:fix`).
 - Houd productdocs vrij van toolingsruis; operationele workflowafspraken horen in `docs/dev/**`.
+
+## Security automation (secrets)
+- `OPENAI_API_KEY` en andere secrets blijven altijd server-side en mogen nooit hardcoded in clientcode staan.
+- CI draait een secret scan op push/PR via `.github/workflows/secret-scan.yml` (TruffleHog).
+- Zet in GitHub ook Secret Scanning + Push Protection aan voor extra blokkade vóór merge.
 
 ## Lokale startcommando's
 ```bash
