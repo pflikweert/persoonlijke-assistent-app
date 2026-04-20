@@ -1,7 +1,9 @@
 # Budio — future-state analyse, 12-maandenrichting en AIQS-architectuur
 
 ## Doel van dit document
+
 Dit document bundelt:
+
 - waar Budio nu staat ten opzichte van het 12-maandenplan en de richtingsanalyse
 - de toekomstige rol van AI Quality Studio (AIQS)
 - een scherpe future-state architectuur in 3 lagen: consumer, Pro en private/regulated
@@ -15,6 +17,7 @@ Dit document bundelt:
 Budio staat nu productmatig op een sterke **capture-first basis**, niet op een uitgewerkte Pro-contentmachine.
 
 De huidige kern is:
+
 - snelle tekst- en audiocapture
 - server-side verwerking
 - daglaag / narratieve dagboeklaag
@@ -23,6 +26,7 @@ De huidige kern is:
 - een al opvallend volwassen admin AI-governance-laag via AIQS
 
 Dat betekent:
+
 - **de intake-machine staat er al**
 - **de kwaliteitsmachine staat in opbouw**
 - **de omzetmachine staat nog niet scherp genoeg in het product**
@@ -32,6 +36,7 @@ De belangrijkste strategische waarheid:
 **Vandaag is nu nog de validatielaag. Niet de volledige eindmarkt.**
 
 De consumenten-MVP is dus zinvol, maar alleen als die bewust gebruikt wordt om te leren:
+
 - capturen mensen echt vaak genoeg?
 - komt men terug?
 - vertrouwen mensen de AI-structuur?
@@ -46,6 +51,7 @@ Als dat laatste waar blijkt, dan ontstaat de echte commerciële route:
 ## 2. De echte strategische positie van Budio
 
 Budio moet niet eindigen als:
+
 - nog een journaling app
 - nog een AI social tool
 - nog een autopost machine
@@ -56,6 +62,7 @@ De sterkste positie is:
 **Budio = capture-first intelligence stack**
 
 Voor mensen die ruwe gedachten, audio, dagen, ideeën en expertise willen omzetten in:
+
 - overzicht
 - betekenisvolle terugblik
 - werkbare output
@@ -63,6 +70,7 @@ Voor mensen die ruwe gedachten, audio, dagen, ideeën en expertise willen omzett
 - zonder hun eigen stem kwijt te raken
 
 De kernmoat zit waarschijnlijk in 4 dingen:
+
 1. context
 2. geheugen / memory
 3. review en governance
@@ -75,7 +83,9 @@ Daarom is AIQS strategisch veel belangrijker dan alleen promptbeheer.
 ## 3. Wat AIQS nu is en wat het moet worden
 
 ## Wat AIQS nu is
+
 AIQS is nu vooral:
+
 - admin-only
 - task-first
 - contract-first
@@ -87,9 +97,11 @@ Dat is goed.
 Maar dit is nog vooral de **eerste kwaliteitsschil**.
 
 ## Wat AIQS moet worden
+
 AIQS moet uitgroeien tot de **control plane van Budio intelligence**.
 
 Niet zichtbaar als product voor eindgebruikers, maar intern de plek waar je beheert:
+
 - welke AI-taken bestaan
 - welke outputcontracten gelden
 - welke modellen per taak zijn toegestaan
@@ -103,6 +115,7 @@ Niet zichtbaar als product voor eindgebruikers, maar intern de plek waar je behe
 AIQS wordt dan niet alleen prompting-governance, maar:
 
 ### AIQS future capabilities
+
 1. **task registry**
    - cleanup
    - summary
@@ -160,15 +173,19 @@ AIQS wordt dan niet alleen prompting-governance, maar:
 # Laag 1 — Consumer
 
 ## Doel
+
 Laagdrempelig, rustig, persoonlijk capture-product.
 
 ## Productnaam
+
 **Budio Vandaag**
 
 ## Belofte
+
 Leg je dag snel vast. Zie hem later rustig terug.
 
 ## Kern
+
 - tekstcapture
 - audiocapture
 - cleanup
@@ -179,14 +196,17 @@ Leg je dag snel vast. Zie hem later rustig terug.
 - beperkte hergebruikacties als brugfunctie
 
 ## AI-doel in deze laag
+
 Niet “slim” lijken.
 Wel:
+
 - rustig structureren
 - terugleesbaarheid vergroten
 - lage frictie
 - vertrouwen opbouwen
 
 ## Toekomstige AI-functies in consumer
+
 - maak hier een korte post van
 - maak hier een caption van
 - maak hier een ruwe note van
@@ -194,13 +214,16 @@ Wel:
 - optioneel lokale eerste-pass cleanup op supported devices
 
 ## Privacy-principe
+
 - cloud default, privacy-bewust
 - local assist waar mogelijk
 - heldere export/delete controls
 - geen medische of therapeutische positionering
 
 ## Commerciële rol
+
 Consumer is:
+
 - validatielaag
 - instaplaag
 - merkbouwlaag
@@ -213,12 +236,15 @@ Niet de sterkste omzetlaag op zichzelf.
 # Laag 2 — Pro
 
 ## Doel
+
 Van ruwe capture naar werkbare, publiceerbare output.
 
 ## Productnaam
+
 **Budio Pro**
 
 ## Primaire doelgroep
+
 - solo experts
 - podcasters
 - coaches
@@ -228,9 +254,11 @@ Van ruwe capture naar werkbare, publiceerbare output.
 - knowledge creators
 
 ## Belofte
+
 Denk hardop. Budio maakt er werkbare content van.
 
 ## Kern
+
 - alles uit consumer
 - betere capture-to-content flows
 - format packs
@@ -242,10 +270,12 @@ Denk hardop. Budio maakt er werkbare content van.
 - usage inzicht
 
 ## Belangrijkste nieuwe capability
+
 De input is niet alleen archief.
 De input wordt **grondstof voor output**.
 
 Bijvoorbeeld:
+
 - dag -> LinkedIn post
 - voice note -> short-form script
 - losse ideeën -> podcast outline
@@ -253,19 +283,23 @@ Bijvoorbeeld:
 - meeting note -> samenvatting + follow-up concept
 
 ## AI-doel in deze laag
+
 - kwaliteit + snelheid
 - stembehoud
 - contextbehoud
 - review before publish
 
 ## Productregel
+
 Niet automatisch alles posten.
 Wel:
+
 - auto-prepare
 - human approve
 - smart publish
 
 ## Commerciële rol
+
 Dit is de eerste echte kern van de omzetmachine.
 
 ---
@@ -273,14 +307,17 @@ Dit is de eerste echte kern van de omzetmachine.
 # Laag 3 — Private / Regulated
 
 ## Doel
+
 Budio voor privacygevoelige en professioneel gereguleerde omgevingen.
 
 ## Mogelijke namen
+
 - **Budio Private**
 - **Budio Business**
 - **Budio Sovereign**
 
 ## Doelgroepen
+
 - kleine zorg- of begeleidingspraktijken
 - coaches/therapeuten met hoge privacy-eisen
 - consultancy/bureaus met vertrouwelijke klantinformatie
@@ -288,9 +325,11 @@ Budio voor privacygevoelige en professioneel gereguleerde omgevingen.
 - later mogelijk enterprise-achtige teams
 
 ## Belofte
+
 Dezelfde capture- en outputkracht, maar met strengere controle, routing en governance.
 
 ## Kern
+
 - private workspace
 - admin controls
 - data residency / routing policies
@@ -303,13 +342,16 @@ Dezelfde capture- en outputkracht, maar met strengere controle, routing en gover
 - strengere export- en retentionregels
 
 ## AI-doel in deze laag
+
 Niet eerst “meer features”, maar:
+
 - meer controle
 - meer privacy
 - meer governance
 - meer deployopties
 
 ## Inference-opties
+
 - EU-cloud only
 - private cloud routing
 - model allowlist per workspace
@@ -317,6 +359,7 @@ Niet eerst “meer features”, maar:
 - later optioneel on-prem / self-hosted gateway
 
 ## Commerciële rol
+
 Dit is niet de eerste wedge.
 Maar het is wel de sterkste high-ARPU laag zodra governance, privacy en teamflows echt goed zitten.
 
@@ -327,6 +370,7 @@ Maar het is wel de sterkste high-ARPU laag zodra governance, privacy en teamflow
 Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 
 ### A. Experience layer
+
 - app UX
 - capture UX
 - archive UX
@@ -334,6 +378,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - export / publish UX
 
 ### B. Intelligence execution layer
+
 - transcription
 - cleanup
 - summaries
@@ -344,6 +389,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - model routing
 
 ### C. Governance layer
+
 - AIQS
 - task registry
 - evals
@@ -354,6 +400,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - audit
 
 ### D. Usage and billing layer
+
 - plans
 - monthly entitlements
 - credit ledger
@@ -363,6 +410,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - quota enforcement
 
 ### E. Privacy and policy layer
+
 - consent / disclosure
 - retention policy
 - residency routing
@@ -374,16 +422,19 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 ## 6. Verdienmodel — abonnement + usage credits
 
 ## Belangrijk productprincipe
+
 Naar gebruikers toe verkoop je idealiter **credits** of **AI-verbruik**.
 Niet ruwe provider-tokens.
 
 Waarom:
+
 - begrijpelijker
 - stabieler ondanks modelwissels
 - beter voor prijssturing
 - makkelijker te bundelen per plan
 
 Intern registreer je wél:
+
 - input tokens
 - output tokens
 - cached tokens waar relevant
@@ -393,6 +444,7 @@ Intern registreer je wél:
 - geschatte kostprijs
 
 Dus:
+
 - **extern = credits**
 - **intern = usage truth**
 
@@ -403,9 +455,11 @@ Dus:
 # 1. Free
 
 ## Doel
+
 Instap, validatie, productleren.
 
 ## Inbegrepen
+
 - basis capture
 - tekst
 - korte audio
@@ -415,6 +469,7 @@ Instap, validatie, productleren.
 - beperkt aantal AI-acties per maand
 
 ## Grenzen
+
 - audio max **3 minuten** per opname
 - lagere maandelijkse credits
 - tragere of goedkopere modelrouting waar acceptabel
@@ -422,6 +477,7 @@ Instap, validatie, productleren.
 - beperkte hergebruikacties
 
 ## Rol
+
 - lage drempel
 - merkintro
 - geen royale bundel
@@ -432,9 +488,11 @@ Instap, validatie, productleren.
 # 2. Plus
 
 ## Doel
+
 Betaalde consument die vooral rust, archief en AI-structuur wil.
 
 ## Inbegrepen
+
 - alles uit Free
 - meer maandelijkse credits
 - langere audio
@@ -443,11 +501,13 @@ Betaalde consument die vooral rust, archief en AI-structuur wil.
 - iets meer hergebruikmogelijkheden
 
 ## Grenzen
+
 - audio max **5 minuten** per opname
 - geen geavanceerde content-workflows
 - geen uitgebreide review queue
 
 ## Richtprijs
+
 Denk aan: **€9–€14 p/m**
 
 ---
@@ -455,9 +515,11 @@ Denk aan: **€9–€14 p/m**
 # 3. Pro
 
 ## Doel
+
 Solo expert / creator die ruwe input omzet naar output.
 
 ## Inbegrepen
+
 - alles uit Plus
 - content transforms
 - kanaalspecifieke outputs
@@ -468,10 +530,12 @@ Solo expert / creator die ruwe input omzet naar output.
 - meer credits
 
 ## Grenzen
+
 - audio max **10 minuten** per opname
 - individuele gebruiker / beperkte workspace
 
 ## Richtprijs
+
 Denk aan: **€29–€49 p/m**
 
 Dit is waarschijnlijk de eerste sweet spot.
@@ -481,9 +545,11 @@ Dit is waarschijnlijk de eerste sweet spot.
 # 4. Private / Business
 
 ## Doel
+
 Privacy-intensief, teammatig of zwaarder gebruik.
 
 ## Inbegrepen
+
 - alles uit Pro
 - lange meeting captures
 - team/workspace controls
@@ -494,15 +560,19 @@ Privacy-intensief, teammatig of zwaarder gebruik.
 - prioriteit / support
 
 ## Grenzen
+
 - per workspace, seat of usage bundle
 - extra governancekosten terecht doorberekenen
 
 ## Opnamegrens
+
 - **60 minuten of langer** per opname / meeting
 - eventueel hoger per plan of add-on
 
 ## Richtprijs
+
 Denk aan:
+
 - **€99–€249 p/m per workspace startpunt**
 - of **€39–€99 p/m per seat**
 - afhankelijk van privacy/gateway/support eisen
@@ -512,16 +582,20 @@ Denk aan:
 ## 8. Credits en top-ups
 
 ## Model
+
 Elke betaalde tier krijgt:
+
 - een maandelijkse bundel credits
 - optionele losse top-up packs
 - optionele auto-recharge
 
 ## Slim ontwerp
+
 Niet te royaal bundelen.
 Wel royaal genoeg dat het grootste deel van normale gebruikers niet dagelijks tegen limieten aanloopt.
 
 ## Aanbevolen gedrag
+
 - credits verversen maandelijks
 - beperkt rollover toegestaan, bijvoorbeeld max 25%
 - auto-recharge optioneel
@@ -529,6 +603,7 @@ Wel royaal genoeg dat het grootste deel van normale gebruikers niet dagelijks te
 - waarschuwingen bij 50%, 80%, 100%
 
 ## Auto-recharge voorbeeld
+
 - als creditbalans onder drempel X komt
 - koop automatisch pack Y
 - tot maximaal maandlimiet Z
@@ -536,6 +611,7 @@ Wel royaal genoeg dat het grootste deel van normale gebruikers niet dagelijks te
 Dit voorkomt frustratie zonder open eindrisico.
 
 ## Add-on types
+
 1. extra AI credits
 2. extra lange audio packs
 3. premium model packs
@@ -548,18 +624,21 @@ Dit voorkomt frustratie zonder open eindrisico.
 Niet elke AI-actie hoeft hetzelfde te kosten.
 
 ### Lage kost / hoge frequentie
+
 - cleanup
 - korte samenvatting
 - titelvoorstel
 - caption seed
 
 ### Middel
+
 - dagnarratief
 - reflectie
 - rewrite per kanaal
 - outline
 
 ### Hoog
+
 - lange audio transcriptie
 - meeting synthese
 - multi-output generation
@@ -567,6 +646,7 @@ Niet elke AI-actie hoeft hetzelfde te kosten.
 - top-tier modellen
 
 Daarom moet je intern werken met:
+
 - kostclassificatie per taak
 - planpolicy per taak
 - modelrouting per taak
@@ -578,6 +658,7 @@ Daarom moet je intern werken met:
 Dit moet je **nu al** doen, niet later.
 
 Per AI-call moet vanaf MVP minimaal worden gelogd:
+
 - `user_id`
 - `workspace_id` of null
 - `task_key`
@@ -606,6 +687,7 @@ Per AI-call moet vanaf MVP minimaal worden gelogd:
 - `credits_charged`
 
 Als local inferentie draait en provider-tokens niet bestaan, log dan:
+
 - `local_compute_class`
 - `audio_seconds`
 - `chars_in/chars_out` of andere surrogate usage units
@@ -620,6 +702,7 @@ Maak een eigen usage-truthlaag.
 ## 11. Aanbevolen datalaag voor usage en billing
 
 ### Nieuwe kernobjecten
+
 1. `ai_usage_events`
    - 1 record per AI-call of AI-subcall
 
@@ -642,7 +725,9 @@ Maak een eigen usage-truthlaag.
    - interne kostprijsformules per model/provider/periode
 
 ### Waarom deze scheiding goed is
+
 Omdat je dan later:
+
 - kosten kunt analyseren
 - prijsmodellen kunt wijzigen
 - credits kunt herrekenen
@@ -655,6 +740,7 @@ Omdat je dan later:
 AIQS moet later niet alleen kwaliteit tonen, maar ook:
 
 ### Per task
+
 - aantal calls
 - succesratio
 - gemiddelde latency
@@ -664,18 +750,21 @@ AIQS moet later niet alleen kwaliteit tonen, maar ook:
 - cost drift over tijd
 
 ### Per model
+
 - totaal gebruik
 - gemiddelde kost
 - kwaliteit vs kost
 - fallback gebruik
 
 ### Per plan
+
 - gemiddelde cost-to-serve
 - heavy-user patroon
 - meest gebruikte functies
 - risico op negatieve marge
 
 ### Per gebruiker / workspace
+
 - usage trend per maand
 - credits verbruikt
 - credits gekocht
@@ -683,12 +772,14 @@ AIQS moet later niet alleen kwaliteit tonen, maar ook:
 - outlier detectie
 
 ### Per AI-task versie
+
 - kwaliteitsscore
 - kostverandering
 - tokenverandering
 - latencyverandering
 
 Dat maakt AIQS uiteindelijk een combinatie van:
+
 - prompt governance
 - quality evals
 - usage intelligence
@@ -699,6 +790,7 @@ Dat maakt AIQS uiteindelijk een combinatie van:
 ## 13. Future-state AIQS inzichten die commercieel echt tellen
 
 AIQS moet straks vragen kunnen beantwoorden als:
+
 - welke taak kost het meest?
 - welke taak geeft de meeste waarde?
 - welk model is te duur voor Free of Plus?
@@ -719,19 +811,23 @@ Dit is belangrijk:
 Niet elk plan hoeft dezelfde modelkwaliteit te krijgen.
 
 ### Consumer
+
 - cheaper-by-default waar veilig
 - local first-pass waar mogelijk
 - premium only when needed
 
 ### Pro
+
 - hogere kwaliteit als default op contentkritische taken
 - fallback naar goedkopere route op niet-zichtbare tussenstappen
 
 ### Private / Regulated
+
 - routing volgens beleid, niet alleen kost
 - privacy en residency kunnen zwaarder wegen dan marge per call
 
 Dus per taak definieer je:
+
 - primary model
 - fallback model
 - local eligibility
@@ -744,6 +840,7 @@ Dus per taak definieer je:
 ## 15. Harde productkeuzes die ik zou maken
 
 ## Ja
+
 - credits extern, tokens intern
 - usage logging vanaf dag 1
 - AIQS uitbreiden met usage- en cost-inzichten
@@ -753,6 +850,7 @@ Dus per taak definieer je:
 - private/privacy als premium laag
 
 ## Nee
+
 - raw provider tokens direct als consumentenpricing
 - onbeperkte Free tier
 - full auto posting als kernbelofte
@@ -765,6 +863,7 @@ Dus per taak definieer je:
 ## 16. Aanbevolen 12-maandenvolgorde
 
 ### Fase 1 — Nu / MVP hardening
+
 - usage logging per call toevoegen
 - model/config snapshot loggen
 - input/output tokens loggen
@@ -773,23 +872,27 @@ Dus per taak definieer je:
 - eerste AIQS usage tab intern bouwen
 
 ### Fase 2 — Consumer launch
+
 - Free + Plus structureren
 - basis credit- en limietmodel
 - opnamegrenzen actief afdwingen
 - zichtbare maar simpele usage indicatie voor gebruiker
 
 ### Fase 3 — Brug naar Pro
+
 - eerste content transform acties
 - review queue light
 - Pro-plan met hogere limieten en betere outputs
 
 ### Fase 4 — Margin control
+
 - top-ups
 - auto-recharge
 - cost-to-serve dashboards in AIQS
 - plan tuning op basis van echte usage
 
 ### Fase 5 — Private / Regulated
+
 - workspace policies
 - EU/private routing
 - langere meeting capture
@@ -802,11 +905,13 @@ Dus per taak definieer je:
 De juiste toekomst voor Budio is waarschijnlijk:
 
 ### Frontstage
+
 - **Budio Vandaag** voor consumer capture en reflectie
 - **Budio Pro** voor capture-to-content en output workflows
 - **Budio Private / Business** voor privacy-intensieve en gereguleerde contexten
 
 ### Backstage
+
 - **AIQS als intelligence control plane**
 - **usage + billing truthlaag vanaf MVP**
 - **credits extern, tokens intern**
@@ -814,9 +919,9 @@ De juiste toekomst voor Budio is waarschijnlijk:
 
 De grootste strategische winst zit niet in “meer AI”.
 Die zit in:
+
 - betere routing
 - betere governance
 - betere review
 - beter kosteninzicht
 - en een productlijn die logisch oploopt van consumer naar Pro naar private.
-

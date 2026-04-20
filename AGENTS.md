@@ -143,6 +143,7 @@ Voor AI-gedrag, prompting en evaluatie:
 Bij wijzigingen aan canonieke docs:
 
 - werk eerst de handmatige docs bij
+- draai `npm run docs:lint` (en waar nodig `npm run docs:lint:fix`)
 - houd ook root `README.md` synchroon met actuele runtime/feature-realiteit
 - draai daarna:
   - `npm run docs:bundle`
@@ -233,3 +234,10 @@ Voer na relevante wijzigingen uit:
   - `npm run typecheck`
   - project verify scripts
 - If a live server is required, tell me the exact command to run manually instead of running it yourself (example: `npx expo start --web --localhost`).
+
+## VS Code plugin workflow (Budio Workspace)
+
+- Bij wijzigingen in `tools/budio-workspace-vscode/**` altijd direct de plugin opnieuw toepassen op de normale workspace.
+- Gebruik hiervoor in `tools/budio-workspace-vscode/` standaard:
+  - `npm run apply:workspace`
+- Deze stap omvat build + vsix package + local install + VS Code refresh en is verplicht voordat werk aan de plugin als "klaar" wordt gemeld.

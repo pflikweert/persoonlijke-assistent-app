@@ -3,23 +3,29 @@
 _Status: operationele workflow, niet-canonieke productwaarheid_
 
 ## Doel
+
 Deze workflow beschrijft hoe we Stitch gebruiken voor merk- en schermwerk binnen **Budio Vandaag**, zodat:
+
 - designwerk consistent blijft met bestaande product- en designguardrails
 - ChatGPT betere Stitch-prompts kan schrijven
 - Cline uitkomsten gestructureerd kan opnemen in repo-docs en design refs
 - Stitch-output niet direct als waarheid in code of docs belandt zonder selectie en handoff
 
 ## Plaats in de docs-hiërarchie
+
 Dit document is een **workflowdoc** en hoort in:
 
 `docs/dev/stitch-workflow.md`
 
 Niet in:
+
 - `docs/project/**` → canonieke productwaarheid
 - `docs/upload/**` → generated uploadartefacten
 
 ## Relatie met leidende bronnen
+
 Stitch werkt altijd binnen deze kaders:
+
 - `docs/design/mvp-design-spec-1.2.1.md`
 - `design_refs/1.2.1/ethos_ivory/DESIGN.md`
 - `theme/tokens.ts`
@@ -28,6 +34,7 @@ Stitch werkt altijd binnen deze kaders:
 - `docs/upload/stitch-design-context.md` alleen als compacte upload/handoff, niet als waarheid
 
 ## Kernprincipes
+
 1. **Capture-first blijft leidend**
    - Geen dashboardisering
    - Geen chat- of coachgevoel
@@ -54,6 +61,7 @@ Stitch werkt altijd binnen deze kaders:
    - Niet alleen woorden als “calm”, “premium” of “editorial” geven
 
 ## Officiële merkregels voor Stitch
+
 Gebruik in Stitch altijd deze merkregels, tenzij later expliciet aangepast in canonieke design refs:
 
 - Parent brand: `Budio`
@@ -67,13 +75,16 @@ Gebruik in Stitch altijd deze merkregels, tenzij later expliciet aangepast in ca
   - nieuwe descriptoren of submerken
 
 ## Assetregels
+
 Gebruik altijd een vaste asset-set per Stitch-sessie:
+
 - huidige Budio Vandaag-logo SVG/PNG
 - relevante bestaande Stitch-screen of referentiebeeld
 - relevante design ref of screenshot uit repo
 - vaste promptregels uit dit document
 
 Expliciet verbieden in prompts:
+
 - do not invent a new logo
 - do not invent a new symbol
 - do not rename the brand
@@ -81,6 +92,7 @@ Expliciet verbieden in prompts:
 - do not create website concepts unless explicitly requested
 
 ## Kleur- en UI-regels voor Stitch
+
 - Warm neutral base blijft leidend
 - Gold is in principe voor **primaire CTA** en kleine merkaccenten
 - Gold niet als dominante verflaag op elk scherm
@@ -91,57 +103,72 @@ Expliciet verbieden in prompts:
 - Dark mode volgt dezelfde compositie als light mode
 
 ## Stitch-werkvolgorde
+
 Werk altijd in deze volgorde:
 
 ### Fase 1 — Foundation
+
 1. brand foundation
 2. auth
 3. topnav / app shell
 
 ### Fase 2 — Core product screens
-4. Today
-5. day detail / dagboek
-6. weekreflectie
-7. maandreflectie
-8. settings/about
+
+1. Today
+2. day detail / dagboek
+3. weekreflectie
+4. maandreflectie
+5. settings/about
 
 ### Fase 3 — Handoff naar repo
-9. beste variant selecteren
-10. designkeuzes samenvatten
-11. relevante `design_refs/**` of nieuwe brand refs bijwerken
-12. docs/bundle opnieuw genereren
+
+1. beste variant selecteren
+2. designkeuzes samenvatten
+3. relevante `design_refs/**` of nieuwe brand refs bijwerken
+4. docs/bundle opnieuw genereren
 
 ## Vast promptformat voor Stitch
+
 Gebruik voor Stitch standaard dit blokformat:
 
 ### 1. Goal
+
 Wat dit scherm moet oplossen.
 
 ### 2. Screen
+
 Noem exact één scherm of één board.
 
 ### 3. Use exact assets
+
 Noem expliciet welke logo’s/referenties gebruikt moeten worden.
 
 ### 4. Brand rules
+
 Merknaam, lockup, assetbeperkingen.
 
 ### 5. Product rules
+
 Capture-first, geen dashboard, geen chat, geen AI-branding, etc.
 
 ### 6. Keep
+
 Wat behouden moet blijven uit een vorige versie.
 
 ### 7. Change
+
 Wat moet veranderen.
 
 ### 8. Do not
+
 Wat Stitch expliciet niet mag doen.
 
 ### 9. Deliver
+
 Wat voor output je wilt zien.
 
 ## Correction loop
+
 Na iedere eerste generatie volgt een correctieronde met dit type instructie:
 
 - keep the overall layout structure
@@ -152,36 +179,44 @@ Na iedere eerste generatie volgt een correctieronde met dit type instructie:
 - make the screen more implementation-friendly and less conceptual
 
 ## Reviewkader voor Stitch-output
+
 Beoordeel iedere Stitch-uitkomst op deze vaste punten:
 
 ### Merk
+
 - gebruikt het exact `Budio Vandaag`?
 - gebruikt het het juiste logo/icoon?
 - verzint het geen extra merklaag?
 - blijft de parent/product-relatie helder?
 
 ### Productfit
+
 - blijft het capture-first?
 - heeft het 1 duidelijke primaire actie waar relevant?
 - voelt het niet als dashboard, coach of chat?
 
 ### Shell / compositie
+
 - is topnav navigation-only?
 - zit titel/supporting copy onder de nav?
 - blijft de compositie clean-first?
 
 ### Kleur
+
 - is goud beperkt en hiërarchisch gebruikt?
 - blijven achtergronden warm en rustig?
 - wordt dark mode niet zwaarder dan light mode?
 
 ### Buildability
+
 - is het een app-scherm en geen merkposter?
 - is het geloofwaardig voor implementatie?
 - is het bruikbaar als design ref voor Cline?
 
 ## Wanneer Stitch-output naar repo mag
+
 Stitch-output gaat pas door naar repo wanneer:
+
 - het scherm productmatig klopt
 - merk en naam consistent zijn
 - de shellregels gevolgd zijn
@@ -189,6 +224,7 @@ Stitch-output gaat pas door naar repo wanneer:
 - er een duidelijke keuze is gemaakt: dit is de referentievariant
 
 ## Hoe Stitch-output in repo landt
+
 Stitch-output wordt niet rauw opgeslagen als waarheid.
 Gebruik deze vertaling:
 
@@ -201,6 +237,7 @@ Gebruik deze vertaling:
    - `npm run docs:bundle:verify`
 
 ## Implementatieguardrails voor repo-handoff
+
 - `theme/tokens.ts` blijft de enige tokenbron voor implementatie.
 - Gebruik eerst bestaande shared primitives/patronen; maak alleen een nieuw shared component bij een echt herhaalbaar patroon over meerdere schermen.
 - Stop geen screen-specifieke designregels in generieke shared primitives.
@@ -208,20 +245,27 @@ Gebruik deze vertaling:
 - Noem stylingwerk pas klaar na check in light én dark mode tegen de relevante design refs.
 
 ## Aanbevolen repo-structuur voor dit onderwerp
+
 ### Canonieke workflowbron
+
 - `docs/dev/stitch-workflow.md`
 
 ### Generated upload copy
+
 - `docs/upload/stitch-workflow.md`
 
 ### Eventuele brand refs
+
 - `design_refs/brand/budio-vandaag/**`
 
 ### Bestaande compacte handoff
+
 - `docs/upload/stitch-design-context.md`
 
 ## Wat in de upload bundle moet
+
 Voeg `docs/upload/stitch-workflow.md` toe als workflow-upload voor:
+
 - ChatGPT Project
 - Stitch-handoff
 - eventuele Cline-context
@@ -229,7 +273,9 @@ Voeg `docs/upload/stitch-workflow.md` toe als workflow-upload voor:
 Werk ook het upload manifest bij zodat deze file in de uploadset zichtbaar wordt.
 
 ## ChatGPT-regels voor Stitch-prompts
+
 Als ChatGPT prompts schrijft voor Stitch, moet het:
+
 - altijd 1 scherm tegelijk doen
 - altijd harde merkregels opnemen
 - altijd exacte asset-regels opnemen
@@ -239,7 +285,9 @@ Als ChatGPT prompts schrijft voor Stitch, moet het:
 - na ieder scherm een korte review geven: sterk / zwak / volgende correctie
 
 ## Cline-regels voor Stitch-MCP gebruik
+
 Cline mag Stitch of Stitch-MCP alleen gebruiken binnen deze grenzen:
+
 - voor designexploratie, varianten en handoff
 - niet als vervanging van canonieke projectdocs
 - niet als automatische waarheidsschrijver
@@ -248,11 +296,13 @@ Cline mag Stitch of Stitch-MCP alleen gebruiken binnen deze grenzen:
 - resultaten terugvertalen naar docs/design refs
 
 Belangrijk:
+
 - MCP-setup kan lokaal verschillen
 - de repo legt daarom **workflowregels** vast, geen harde environment-specifieke commando’s als die niet bewezen zijn
 - documenteer MCP-gebruik op taakniveau en gedragsniveau, niet met onbewezen shell- of configdetails
 
 ## Niet doen
+
 - meerdere hoofdschermen tegelijk vragen
 - merknaam laten variëren
 - nieuw logo of nieuw symbool laten verzinnen
@@ -262,7 +312,9 @@ Belangrijk:
 - generated uploadbestanden handmatig als bron gaan gebruiken
 
 ## Definition of done per Stitch-scherm
+
 Een Stitch-scherm is pas klaar als:
+
 - merk klopt
 - productfit klopt
 - shell/logica klopt
@@ -271,6 +323,7 @@ Een Stitch-scherm is pas klaar als:
 - er een duidelijke repo-handoff klaarstaat
 
 ## Appendix A — Korte prompttemplate voor ChatGPT om Stitch-prompts te maken
+
 Gebruik dit format:
 
 ```text
@@ -315,6 +368,7 @@ Deliver:
 ```
 
 ## Appendix B — Korte correctieprompt voor Stitch
+
 ```text
 Keep the overall screen structure.
 Use the uploaded Budio Vandaag brand asset exactly.

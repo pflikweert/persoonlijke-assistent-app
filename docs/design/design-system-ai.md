@@ -1,6 +1,7 @@
 # Design System AI — NativeWind Hardening Rules (Fase 1.2)
 
 ## Obsidian links
+
 - [[mvp-design-spec-1.2.1|MVP design spec]]
 - [[component-mapping|Component mapping]]
 - [[../README|Docs hub]]

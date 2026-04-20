@@ -1,27 +1,33 @@
 # Security posture and continuous hardening
 
 ## Status
+
 idea
 
 ## Type
+
 platform-architecture
 
 ## Horizon
+
 next
 
 ## Korte samenvatting
+
 Budio verwerkt hoog privacy-gevoelige content (dagboek, audio, conversaties, reflecties).
 Daarom moet er een expliciet, herhaalbaar security-posture-spoor komen dat technische hardening, administratieve discipline en periodieke (AI-)pentesting combineert, zonder afhankelijk te zijn van dure enterprise-tools zoals Aikido.
 
 Doel: "Nico-proof" vertrouwen — ook de meest kritische gebruiker durft zijn gedachten aan Budio toe te vertrouwen, omdat de barrières voor misbruik realistisch en aantoonbaar hoog zijn.
 
 ## Probleem
+
 - Dagboek + AI + cloud raakt drie angstgebieden tegelijk: data-leak, AI-training met mijn data, cloud-compromise.
 - Enterprise-tools (bijv. Aikido AI-pentest per release) zijn niet passend qua budget voor MVP/solo-fase.
 - Zonder expliciet vastgelegd security-posture-spoor blijven hardening-acties adhoc en niet herhaalbaar.
 - Zonder expliciete trust-communicatie denken (potentiële) gebruikers dat risico onbekend of onbeheerd is, ook als techniek redelijk op orde is.
 
 ## Waarom interessant
+
 - Vertrouwen is het *product* voor een dagboek/journal-app, niet alleen een kwaliteitseigenschap.
 - Goede baseline is haalbaar met grotendeels gratis/low-cost tooling (Supabase RLS, Vercel envs, Snyk free, GitHub secret scanning, TruffleHog, OWASP Mobile Top 10).
 - Sluit direct aan op de research-richting `private/regulated` als premium differentiator.
@@ -30,6 +36,7 @@ Doel: "Nico-proof" vertrouwen — ook de meest kritische gebruiker durft zijn ge
 ## Scope van dit idee (3 lagen + communicatie)
 
 ### Laag 1 — Technische barrières (code/runtime)
+
 Focus op verifieerbare, reproduceerbare maatregelen:
 
 1. **Row Level Security (RLS) als heilige laag**
@@ -69,6 +76,7 @@ Focus op verifieerbare, reproduceerbare maatregelen:
    - Disable preview-deploy public exposure van gevoelige paden.
 
 ### Laag 2 — Administratieve beveiliging (secrets & operations)
+
 1. **Secrets hygiëne**
    - `.env.local` + `.env.local.example` als lokale bron (al aanwezig).
    - Geen secrets in git; pre-commit check met TruffleHog of git-secrets.
@@ -84,6 +92,7 @@ Focus op verifieerbare, reproduceerbare maatregelen:
    - Handmatige restore-test minstens jaarlijks.
 
 ### Laag 3 — Periodieke (AI-)pentest / verification (betaalbaar)
+
 Doel: zonder Aikido AI-pentest-licentie toch consistente, herhaalbare security-verificatie.
 
 1. **Static/dep scanning (CI of lokaal)**
@@ -111,15 +120,18 @@ Doel: zonder Aikido AI-pentest-licentie toch consistente, herhaalbare security-v
    - Optioneel small bounty via HackerOne/Intigriti wanneer productie-gebruikersbasis groeit.
 
 ## Trust communication (expliciet)
+
 Zie ook het productidee `40-ideas/10-product/40-trust-and-security-charter.md` voor de gebruikersgerichte uitwerking.
 
 Kernpunten om later in web en in-app te communiceren:
+
 - **Jouw ogen alleen**: wat is versleuteld, hoe en met welke sleutels.
 - **AI zonder oordeel**: OpenAI zero-retention / no-training setting voor API gebruik expliciet maken.
 - **Open kaart**: welke providers (Supabase, Vercel, OpenAI) en waarom.
 - **Exit/controle**: export + delete-all blijven first-class rechten (al aanwezig in 1.2D).
 
 ## Relatie met huidige code-realiteit
+
 - Bestaand sterk punt: admin-only afscherming via allowlist + server-side checks (`app/settings-regeneration.tsx`, functions).
 - Bestaand sterk punt: `OPENAI_API_KEY` strikt server-side per `AGENTS.md`.
 - Bestaand sterk punt: private `entry-audio` bucket met signed URLs.
@@ -128,10 +140,12 @@ Kernpunten om later in web en in-app te communiceren:
 - Gap: E2EE nog niet onderzocht; betekent dat Budio-operators technisch dagboek-text kunnen zien.
 
 ## Relatie met AIQS
+
 - AIQS-promptpaden zijn admin-only; toch moet AI-pentest expliciet ook hier landen (prompt-injection via runtime invoer).
 - Source-aware routing (zie `40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md`) vergroot attack surface (conversatie-input) en vraagt vooraf expliciete guardrails.
 
 ## Mogelijke impact
+
 - services
 - supabase
 - docs
@@ -140,6 +154,7 @@ Kernpunten om later in web en in-app te communiceren:
 - infra / tooling (CI, scanning, secrets)
 
 ## Open vragen
+
 - E2EE vs. server-side AI-verwerking: accepteren we dat Budio baseline níet E2EE is, mét expliciete transparantie, en maken we E2EE een later premium spoor?
 - Welke minimale RLS-test harness is haalbaar in `scripts/verify-local-*` zonder runtime fragility?
 - Welke pentest-cadans is realistisch (elke minor, elke major, kwartaal)?
@@ -147,6 +162,7 @@ Kernpunten om later in web en in-app te communiceren:
 - Welke onderdelen landen in `docs/project/**` (canoniek) vs `docs/dev/**` (runbook/tooling)?
 
 ## Volgende stap
+
 - Security charter opstellen als product-facing doc (via separate idea doc).
 - Runbook/checklist voor hardening in `docs/dev/security-hardening.md` concipiëren (niet nu, pas na akkoord).
 - Minimale RLS-smoke-check-spike inschatten (tijd/impact).

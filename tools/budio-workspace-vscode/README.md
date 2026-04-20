@@ -12,11 +12,15 @@ Lokale VS Code board-plugin voor `docs/project/25-tasks/**/*.md`.
 - `npm run build`
 - `npm run typecheck`
 - `npm run test`
+- `npm run apply:workspace` (build + package + install + VS Code refresh)
 
 ## Starten in VS Code
 1. Open deze repo in VS Code.
 2. Run `Run Budio Workspace Extension` vanuit Run and Debug.
 3. Open daarna `Budio Workspace: Open Board` via command palette.
+
+## Workflowregel
+- Bij elke wijziging in `tools/budio-workspace-vscode/**` altijd `npm run apply:workspace` uitvoeren in deze map, zodat de normale workspace direct de nieuwste extensionversie heeft.
 
 ## MVP
 - board + list + settings views

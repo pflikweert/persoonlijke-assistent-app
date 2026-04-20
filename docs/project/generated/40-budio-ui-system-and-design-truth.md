@@ -2,13 +2,14 @@
 
 # Budio UI System and Design Truth
 
-Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
-Source Commit: 361182d
+Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
+Source Commit: b4e34cb
 
 Doel: primaire UI/designbundle met designregels, tokens en implementatieguardrails.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Token Snapshot
+
 - Light core surfaces: background #FAF9F4, surfaceLow #F4F3F0, surface #EFEEEB, surfaceLowest #FFFFFF, surfaceHigh #E9E8E5.
 - Dark core surfaces: background #171714, surface #201F1C, surfaceLow #2B2925, surfaceLowest #34322D, surfaceHigh #262521.
 - Primary / CTA gradient: light #F0C115 -> #E6B800; dark #F3C53A -> #D7A91B.
@@ -18,23 +19,28 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/27, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
 
 ## MVP Design Spec (excerpt)
+
 # MVP Design Spec v1.2.1 — Capture First
 
 ## Version
+
 v1.2.1 — Based on validated Stitch design direction  
 Status: FINAL for implementation
 
 ---
 
 ## Core Principle
+
 This product is **capture-first**.
 
 Not:
+
 - a dashboard
 - a coach
 - a chat interface
 
 But:
+
 - a fast, calm, personal thinking tool
 
 ---
@@ -42,15 +48,18 @@ But:
 ## 1. Today Screen
 
 ### Goal
+
 Immediate clarity + start action
 
 ### Rules
+
 - 1 primary CTA: “Nieuwe entry”
 - CTA dominates visual hierarchy (≈70%)
 - No second CTA
 - No dashboard stacking
 
 ### Structure
+
 - minimal top bar
 - hero + CTA
 - small status line
@@ -63,7 +72,9 @@ Immediate clarity + start action
 ## 2. Capture (Core System)
 
 ### Model
+
 Single screen, 3 states:
+
 1. Idle
 2. Voice
 3. Typing
@@ -73,10 +84,12 @@ Single screen, 3 states:
 ## 2.1 Idle
 
 User understands immediately:
+
 - tap mic → record
 - tap screen → type
 
 Elements:
+
 - large mic button (primary)
 - guidance: “Spreek of begin met typen”
 - visible writing canvas
@@ -86,12 +99,14 @@ Elements:
 ## 2.2 Voice State
 
 Required:
+
 - active waveform
 - primary action: “Klaar / Stop”
 - secondary: “Annuleer”
 - clear recording feedback
 
 Not included:
+
 - pause
 - live transcript
 - editing tools
@@ -101,6 +116,7 @@ Not included:
 ## 2.3 Typing State
 
 Required:
+
 - large text area
 - keyboard visible
 - primary action: “Klaar / Opslaan”
@@ -108,6 +124,7 @@ Required:
 - mic still visible (secondary)
 
 Not allowed:
+
 - toolbars
 - formatting
 - multiple actions
@@ -117,9 +134,11 @@ Not allowed:
 ## 3. Post Entry Screen
 
 ### Goal
+
 Completion + satisfaction
 
 ### Structure
+
 - “Vandaag” + date
 - narrative text (clean)
 - small reflection
@@ -127,6 +146,7 @@ Completion + satisfaction
 - optional delete (hidden)
 
 ### Rules
+
 - no input field
 - no edit mode by default
 - subtle reveal / completion feeling
@@ -136,14 +156,17 @@ Completion + satisfaction
 ## 4. Days Overview
 
 ### Goal
+
 Retention
 
 ### Structure
+
 - list (not cards)
 - grouped by month
 - date + 1 line summary
 
 ### Rules
+
 - no analytics
 - no widgets
 - no heavy UI
@@ -153,20 +176,24 @@ Retention
 ## 5. Reflection Screen
 
 ### Goal
+
 Insight, not analytics
 
 ### Structure
+
 - title + period
 - short summary
 - narrative reflection
 - 2–3 subtle highlights
 
 ### Not allowed
+
 - graphs
 - percentages
 - dashboards
 
 ### Backend TODO
+
 Reflection generation handled outside MVP design phase.
 
 ---
@@ -174,15 +201,19 @@ Reflection generation handled outside MVP design phase.
 ## 6. Design Rules
 
 ### Primary Action
+
 - one per screen/state
 
 ### Cards
+
 - not default pattern
 
 ### Whitespace
+
 - functional, not decorative
 
 ### Capture clarity
+
 - affordances must be obvious
 
 ---
@@ -190,10 +221,12 @@ Reflection generation handled outside MVP design phase.
 ## 7. Visual System
 
 ### Colors
+
 - warm neutral base
 - gold for primary action only
 
 ### Typography
+
 - readable
 - calm
 - no UI-heavy labels
@@ -203,6 +236,7 @@ Reflection generation handled outside MVP design phase.
 - do not imitate Spotify branding, licensed fonts or brand-specific type behavior
 
 ### Icons
+
 - minimal
 - mic icon large in capture
 
@@ -211,11 +245,13 @@ Reflection generation handled outside MVP design phase.
 ## 8. Motion
 
 Allowed:
+
 - state transitions
 - subtle feedback
 - completion feeling
 
 Not allowed:
+
 - flashy animations
 - Interactieve elementen (zoals buttons en inputs) mogen nooit meebewegen met decoratieve motion
 
@@ -224,6 +260,7 @@ Not allowed:
 ## 9. Scope (MVP)
 
 ### Included
+
 - Today
 - Capture (all states)
 - Post-entry
@@ -231,6 +268,7 @@ Not allowed:
 - Reflection UI shell
 
 ### Excluded
+
 - AI chat
 - analytics
 - advanced editing
@@ -242,6 +280,7 @@ Not allowed:
 ## 10. Implementation Guardrails
 
 ### Clean-first
+
 - Default UI is clean-first.
 - Use spacing, hierarchy, typography and tonal contrast before extra containers.
 - Section labels sit on the page background unless a design ref explicit
@@ -249,6 +288,7 @@ Not allowed:
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
 ## Ethos Foundation (excerpt)
+
 # Budio Vandaag — Design System Handoff (MVP)
 
 ## 1. Purpose
@@ -434,17 +474,19 @@ Rules:
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
 ## Compact Design Context
+
 # DO NOT EDIT - GENERATED FILE
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
-Source Commit: 361182d
+Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
+Source Commit: b4e34cb
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
+
 - docs/design/mvp-design-spec-1.2.1.md
 - design_refs/1.2.1/ethos_ivory/DESIGN.md
 - theme/tokens.ts
@@ -460,6 +502,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - design_refs/1.2.1/today_branded_header/DESIGN.md
 
 ## Handoff Samenvatting
+
 - Capture-first blijft leidend: de app is een snelle, rustige persoonlijke thinking tool, geen dashboard of chatinterface.
 - Today is een entry point: de primaire CTA krijgt de meeste visuele aandacht; reflectie en recente context blijven secundair.
 - Clean-first UI: spacing, typografie, hiërarchie en tonal contrast gaan vóór extra containers.
@@ -471,6 +514,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - Header, page en footer vormen per mode één coherent geheel; header/footer blijven rustiger dan de page.
 
 ## Current Token Snapshot
+
 Afgeleid uit `theme/tokens.ts`; die file blijft de enige tokenbron.
 
 - Light core surfaces: background #FAF9F4, surfaceLow #F4F3F0, surface #EFEEEB, surfaceLowest #FFFFFF, surfaceHigh #E9E8E5.
@@ -482,6 +526,7 @@ Afgeleid uit `theme/tokens.ts`; die file blijft de enige tokenbron.
 - Key type roles: screenTitle 34/40, weight 700; sectionTitle 20/26, weight 600; body 16/27, weight 400; bodySecondary 15/24, weight 400; meta 11/16, weight 600; ctaLabel 16/20, weight 700.
 
 ## Per-page Markdown Refs
+
 Deze markdown refs onder `design_refs/1.2.1/**` zijn meegenomen als aanvullende design input wanneer aanwezig.
 
 - design_refs/1.2.1/auth_branded/DESIGN.md
@@ -495,7 +540,9 @@ Deze markdown refs onder `design_refs/1.2.1/**` zijn meegenomen als aanvullende 
 Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze generated handoff houdt alleen de verwijzingen compact bij.
 
 ## Design Guardrails
+
 ### Clean-first
+
 - Default UI is clean-first.
 - Use spacing, hierarchy, typography and tonal contrast before extra containers.
 - Section labels sit on the page background unless a design ref explicitly shows a surface.
@@ -503,11 +550,13 @@ Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze gen
 - Decorative borders, extra inner fills and nested surfaces are opt-in, not default.
 
 ### Dark Mode
+
 - Dark mode preserves the structure and calm of the light design ref.
 - Do not solve dark mode by adding extra mass, extra panels or heavier containers.
 - Shift tone and contrast; keep composition lightweight.
 
 ### Background Modes
+
 - Page atmosphere is selective, not global.
 - Background modes are mode-aware; never apply a dark ambient treatment unchanged in light mode.
 - Use three background modes:

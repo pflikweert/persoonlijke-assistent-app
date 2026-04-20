@@ -112,8 +112,12 @@
     "build": "npm run clean && npm run build:extension && npm run build:webview",
     "build:extension": "tsc -p tsconfig.json",
     "build:webview": "node esbuild.mjs",
+    "package:vsix": "npx --yes vsce package -o budio-workspace-vscode.vsix",
+    "install:workspace": "code --install-extension budio-workspace-vscode.vsix --force",
+    "refresh:vscode": "osascript -e 'tell application \"Visual Studio Code\" to activate' -e 'tell application \"System Events\" to keystroke \"r\" using command down' || code --reuse-window ../..",
+    "apply:workspace": "npm run build && npm run package:vsix && npm run install:workspace && npm run refresh:vscode",
     "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.webview.json --noEmit",
     "test": "npm run build:extension && node --test dist/test/**/*.test.js"
   },
   "dependencies": {

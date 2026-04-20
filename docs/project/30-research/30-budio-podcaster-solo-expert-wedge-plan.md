@@ -1,15 +1,18 @@
 # Budio — scherpe podcaster / solo-expert wedge uitgewerkt
 
 ## Doel van dit document
+
 Dit document werkt het plan concreet uit voor de gekozen wedge:
 
 **podcasters + solo experts**
 met:
+
 - founder-led onboarding
 - review-first content-workflows
 - Budio als capture-first product dat begint vóór de klassieke contenttooling
 
 Het doel is niet om “nog een AI social tool” te maken, maar een productflow die logisch voelt voor iemand die:
+
 - veel denkt
 - veel praat
 - veel ruwe input heeft
@@ -21,6 +24,7 @@ Het doel is niet om “nog een AI social tool” te maken, maar een productflow 
 ## 1. De kernkeuze
 
 De juiste wedge is niet:
+
 - “iedereen die content maakt”
 - brede journaling-consumenten
 - direct teams / enterprise
@@ -31,6 +35,7 @@ De juiste wedge is:
 **mensen die al waardevolle ruwe input hebben, maar geen strakke workflow hebben om daar snel bruikbare output van te maken.**
 
 Daarom passen deze doelgroepen goed:
+
 - podcasters
 - solo experts
 - coaches
@@ -52,6 +57,7 @@ De belofte wordt dan:
 Een podcaster verwacht niet alleen transcriptie.
 
 Die verwacht uiteindelijk:
+
 - idee-capture vóór opname
 - structuur voor aflevering of thema
 - transcript of schone samenvatting na opname
@@ -67,6 +73,7 @@ Die verwacht uiteindelijk:
 Belangrijk:
 de podcaster wil meestal **niet** dat AI alles volledig autonoom post.
 Wat hij of zij wél wil:
+
 - snelheid
 - minder handwerk
 - consistente toon
@@ -75,6 +82,7 @@ Wat hij of zij wél wil:
 - mens houdt laatste regie
 
 ### Hun echte frustraties
+
 - ideeën kwijt raken
 - losse voice notes zonder systeem
 - na opname te veel handwerk
@@ -91,12 +99,14 @@ Wat hij of zij wél wil:
 Een solo expert denkt anders dan een podcaster, maar de onderliggende behoefte is bijna hetzelfde.
 
 Voorbeelden:
+
 - een coach loopt na een sessie of wandeling met 6 ideeën
 - een consultant spreekt notities in na klantgesprekken
 - een trainer heeft losse anekdotes, frameworks en observaties
 - een ervaringsdeskundige wil verhalen omzetten naar content zonder zichzelf te verliezen
 
 Die gebruiker verwacht:
+
 - snelle capture
 - context bewaren
 - thought-to-post of thought-to-outline
@@ -108,6 +118,7 @@ Die gebruiker verwacht:
 - rustige opslag van ruwe input en hergebruik
 
 ### Hun echte frustraties
+
 - ideeën komen op slechte momenten
 - schrijven kost energie
 - losse notities worden nooit content
@@ -122,12 +133,15 @@ Bestaande tools beginnen vaak ná de opname of ná het transcript.
 Budio moet eerder beginnen.
 
 ## Traditionele flow
+
 opname -> transcript -> show notes -> clips -> posts
 
 ## Budio-flow
+
 ruwe gedachte / voice note / dagboek / losse context -> structureren -> review -> output -> distributie
 
 Dat betekent:
+
 - Budio moet goed zijn vóór de editor
 - Budio moet niet alleen “repurpose” doen
 - Budio moet vooral **pre-content chaos** reduceren
@@ -159,6 +173,7 @@ Dit moet niet voelen als een zwaar instellingenformulier.
 Wel als een slimme setup.
 
 ### Wat je vastlegt
+
 - naam van de show
 - type show (interview / solo / educatief / persoonlijk / nieuws / verhaal)
 - doelgroep
@@ -181,6 +196,7 @@ Wel als een slimme setup.
 - voorbeeldcontent die “klinkt als mij”
 
 ### Wat Budio hieruit maakt
+
 - een show profile
 - tone profile
 - output presets
@@ -188,7 +204,9 @@ Wel als een slimme setup.
 - review defaults
 
 ### Waarom dit belangrijk is
+
 De gebruiker verwacht niet telkens opnieuw uit te leggen:
+
 - wat de show is
 - voor wie het is
 - hoe de toon moet zijn
@@ -203,6 +221,7 @@ Dus:
 Dit is waar Budio echt moet winnen.
 
 Een podcaster heeft vaak:
+
 - losse ideeën
 - hooks
 - mogelijke gespreksonderwerpen
@@ -211,7 +230,9 @@ Een podcaster heeft vaak:
 - mini-observaties die later bruikbaar blijken
 
 ### In Budio moet dit zo werken
+
 Op het home-scherm:
+
 - 1 dominante actie: **Leg iets vast**
 - tekst of voice
 - supersnel
@@ -223,6 +244,7 @@ Op het home-scherm:
   - of “nog niet indelen”
 
 ### Wat Budio na capture doet
+
 - transcriptie / cleanup
 - kernidee eruit halen
 - eventueel 1–3 labels voorstellen
@@ -234,7 +256,9 @@ Op het home-scherm:
   - contentgrondstof
 
 ### Waarom dit sterk is
+
 De gebruiker voelt:
+
 - mijn ruwe gedachten worden niet weggegooid
 - ik hoef nog niet direct te produceren
 - later kan ik dit terugvinden en gebruiken
@@ -246,7 +270,9 @@ De gebruiker voelt:
 Wanneer genoeg ruwe input bestaat, moet Budio helpen structureren.
 
 ### Functionaliteit
+
 De gebruiker kiest bijvoorbeeld:
+
 - “maak hiervan een aflevering-outline”
 - “maak hiervan 5 mogelijke onderwerpen”
 - “bundel deze 6 voice notes tot één episode concept”
@@ -254,8 +280,10 @@ De gebruiker kiest bijvoorbeeld:
 - “maak een interview prep outline”
 
 ### Outputvorm
+
 Niet één grote lap tekst.
 Wel:
+
 - titelopties
 - kernbelofte van de episode
 - segmenten / hoofdstukken
@@ -265,9 +293,11 @@ Wel:
 - snippet kandidaten
 
 ### Productregel
+
 Budio geeft **voorstellen**, geen eindbeslissingen.
 
 Dus:
+
 - kiesbaar
 - combineerbaar
 - herschrijfbaar
@@ -280,6 +310,7 @@ Dus:
 Voor podcasters is dit de tweede grote waardezone.
 
 ### Ingest-mogelijkheden
+
 - audio upload
 - video upload
 - RSS episode koppelen
@@ -287,6 +318,7 @@ Voor podcasters is dit de tweede grote waardezone.
 - meeting / interview opname import
 
 ### Wat Budio hierna doet
+
 - transcriptie
 - cleanup
 - hoofdstukdetectie
@@ -301,6 +333,7 @@ Voor podcasters is dit de tweede grote waardezone.
 - korte socials
 
 ### Cruciaal verschil
+
 Budio moet niet alleen “hier is wat AI-output”.
 Budio moet het structureren als een **review queue**.
 
@@ -311,7 +344,9 @@ Budio moet het structureren als een **review queue**.
 Dit is misschien wel het belangrijkste scherm van de hele Pro-richting.
 
 ### Wat de gebruiker hier ziet
+
 Per opname of per contentbatch:
+
 - Show notes
 - Titelopties
 - Hooks
@@ -333,6 +368,7 @@ Maar als duidelijke kaarten / output-items met status:
 - gepubliceerd
 
 ### Wat de gebruiker moet kunnen
+
 - snel scannen
 - openen
 - licht bewerken
@@ -343,8 +379,10 @@ Maar als duidelijke kaarten / output-items met status:
 - markeren als “dit klinkt wel / niet als mij”
 
 ### Waarom dit essentieel is
+
 Creators willen geen black box.
 Ze willen:
+
 - snelheid
 - overzicht
 - regie
@@ -362,7 +400,9 @@ De gebruiker wil niet alleen tekst.
 De gebruiker wil output die al logisch is voor het kanaal.
 
 ### Voorbeelden
+
 #### Voor podcast
+
 - show notes
 - timestamps
 - episode summary
@@ -371,28 +411,33 @@ De gebruiker wil output die al logisch is voor het kanaal.
 - outro summary
 
 #### Voor LinkedIn
+
 - thought-leadership post
 - lijstpost
 - verhaalvorm
 - observatie + les
 
 #### Voor nieuwsbrief
+
 - intro alinea
 - onderwerpregel suggesties
 - kerninzichten
 - CTA-idee
 
 #### Voor short-form socials
+
 - hook
 - quote
 - caption
 - korte clipbeschrijving
 
 ### Productregel
+
 Niet klakkeloos crossposten.
 Wel kanaalspecifiek herschrijven.
 
 Dus:
+
 - YouTube ≠ LinkedIn
 - podcast summary ≠ nieuwsbrief intro
 - clip text ≠ caption ≠ title
@@ -407,6 +452,7 @@ Sterker nog:
 dat zou te vroeg kunnen zijn.
 
 ### Eerst voldoende
+
 - copy
 - export
 - markdown / text export
@@ -415,6 +461,7 @@ dat zou te vroeg kunnen zijn.
 - “klaar voor publicatie”
 
 ### Later
+
 - publish integrations
 - direct doorzetten
 - content calendar
@@ -433,6 +480,7 @@ dan
 Een goede podcaster wil dat het systeem over tijd slimmer wordt.
 
 ### Wat Budio moet onthouden
+
 - welke formats vaak gekozen worden
 - welke toon vaak wordt goedgekeurd
 - welke output vaak wordt weggegooid
@@ -442,14 +490,17 @@ Een goede podcaster wil dat het systeem over tijd slimmer wordt.
 - welke style-rules de gebruiker impliciet volgt
 
 ### Wat Budio daar functioneel mee doet
+
 - betere default voorstellen
 - betere tone matching
 - sneller juiste outputvorm kiezen
 - minder generieke tekst
 
 ### Niet doen
+
 Niet doen alsof AI “alles weet”.
 Wel:
+
 - zichtbaar leren van goedgekeurde output
 - transparant maken wat voorkeur is geworden
 
@@ -460,7 +511,9 @@ Wel:
 De solo-expert flow lijkt erop, maar start vaak minder vanuit afleveringen en meer vanuit gedachten, lessen en klantwerk.
 
 ## Stap 1 — Setup
+
 De gebruiker vult in:
+
 - expertisegebied
 - doelgroep
 - vaste thema’s
@@ -469,7 +522,9 @@ De gebruiker vult in:
 - woorden / claims die niet passen
 
 ## Stap 2 — Snelle capture
+
 Bijvoorbeeld:
+
 - na een klantgesprek
 - tijdens een wandeling
 - na een lezing
@@ -480,7 +535,9 @@ Bijvoorbeeld:
 De gebruiker spreekt 1–5 minuten in.
 
 ## Stap 3 — Budio structureert
+
 Budio stelt voor:
+
 - kerninzicht
 - 3 posthoeken
 - 1 nieuwsbriefseed
@@ -488,13 +545,17 @@ Budio stelt voor:
 - 1 “bewaar voor later”-notitie
 
 ## Stap 4 — Review queue
+
 De expert kiest:
+
 - welke variant voelt het meest als mij
 - wat moet zachter / scherper
 - welke kanalen passen hierbij
 
 ## Stap 5 — Output
+
 Bijvoorbeeld:
+
 - LinkedIn post
 - nieuwsbrief-opener
 - workshop-observatie
@@ -502,7 +563,9 @@ Bijvoorbeeld:
 - script voor talking head video
 
 ## Stap 6 — Archief + hergebruik
+
 Alles blijft vindbaar als:
+
 - ruwe note
 - contentseed
 - gepubliceerd idee
@@ -510,6 +573,7 @@ Alles blijft vindbaar als:
 - terugkerend thema
 
 ### Het grote voordeel voor deze doelgroep
+
 De expert hoeft niet in “contentmodus” te stappen om content te maken.
 Budio vangt eerst het denken.
 Dat is de kern.
@@ -521,10 +585,13 @@ Dat is de kern.
 In de eerste 10–25 Pro-klanten moet je dit niet als volledig self-serve product behandelen.
 
 ## Wel doen
+
 Founder-led onboarding.
 
 ### Waarom
+
 Omdat je nog moet leren:
+
 - waar echte pijn zit
 - welke outputs het meest waardevol zijn
 - welke toneproblemen terugkomen
@@ -532,7 +599,9 @@ Omdat je nog moet leren:
 - welk moment in de workflow de meeste waarde levert
 
 ## Aanbevolen onboardingflow
+
 ### Call 1 — intake
+
 - wie ben je
 - wat maak je
 - waar loop je vast
@@ -541,6 +610,7 @@ Omdat je nog moet leren:
 - welke output zou direct waarde geven
 
 ### Daarna configureer je samen
+
 - show / brand profile
 - tone profile
 - format pack
@@ -548,12 +618,14 @@ Omdat je nog moet leren:
 - kanaalprioriteiten
 
 ### Eerste week
+
 - gebruiker levert 3–5 echte inputs
 - jij helpt de eerste output-run begeleiden
 - je kijkt waar frictie zit
 - je scherpt presets aan
 
 ### Wat dit oplevert
+
 - hogere succesratio
 - betere productlearnings
 - sneller bewijs van waarde
@@ -567,6 +639,7 @@ Omdat je nog moet leren:
 Voor deze wedge zijn dit de **minimum verwachtingen**:
 
 ## Must-have
+
 - supersnelle capture
 - transcript / cleanup
 - context bewaren
@@ -578,6 +651,7 @@ Voor deze wedge zijn dit de **minimum verwachtingen**:
 - goede mobiele flow
 
 ## Strong should-have
+
 - presets per show / expert
 - format packs
 - quote / hook extraction
@@ -586,6 +660,7 @@ Voor deze wedge zijn dit de **minimum verwachtingen**:
 - hergebruik van oudere input
 
 ## Later
+
 - scheduler
 - team approvals
 - analytics
@@ -598,38 +673,45 @@ Voor deze wedge zijn dit de **minimum verwachtingen**:
 # 9. Welke schermen Budio hiervoor nodig heeft
 
 ## 1. Home / Capture
+
 - 1 primaire CTA
 - snelle tekst / voice
 - recente items
 - geen dashboard-overload
 
 ## 2. Input detail
+
 - transcript / cleanup
 - labels
 - context
 - link naar serie / show / thema
 
 ## 3. Batch / Project view
+
 - bundel van inputs rond 1 episode / thema / contentbatch
 
 ## 4. Review queue
+
 - outputkaarten per format
 - status per item
 - quick approve / edit / regenerate
 
 ## 5. Output detail
+
 - editor-light
 - kanaalvariant
 - tone controls
 - export / copy
 
 ## 6. Profile / Presets
+
 - show profile
 - tone profile
 - formats
 - defaults
 
 ## 7. Archive / Memory
+
 - ideeën
 - gebruikte output
 - gepubliceerde content seeds
@@ -643,7 +725,9 @@ AIQS is niet het gebruikersproduct.
 Maar voor deze wedge is AIQS strategisch onmisbaar.
 
 ## Waarom
+
 Omdat je voor podcasters en solo experts wilt kunnen sturen op:
+
 - outputkwaliteit
 - stembehoud
 - kostprijs per taak
@@ -654,6 +738,7 @@ Omdat je voor podcasters en solo experts wilt kunnen sturen op:
 - best werkende formats per task
 
 ## Wat AIQS intern moet ondersteunen
+
 - taskversies voor:
   - cleanup
   - outline
@@ -678,6 +763,7 @@ Jij ziet in AIQS of die workflow ook echt economisch en kwalitatief klopt.
 # 11. Wat ik productmatig nu wél en níet zou bouwen
 
 ## Nu wel
+
 1. snelle capture
 2. goede cleanup
 3. project/batch logica
@@ -690,6 +776,7 @@ Jij ziet in AIQS of die workflow ook echt economisch en kwalitatief klopt.
 10. AIQS task- en usage-inzicht
 
 ## Nu niet
+
 1. volledige social scheduler
 2. team workspace eerst
 3. enterprise governance als hoofdspoor
@@ -705,12 +792,15 @@ Jij ziet in AIQS of die workflow ook echt economisch en kwalitatief klopt.
 Als je dit echt goed wilt verkopen, dan moet de productzin eenvoudig zijn:
 
 ## Voor podcasters
+
 **Van ruwe voice notes en afleveringen naar reviewbare show notes, posts en clips — zonder generieke AI-copy.**
 
 ## Voor solo experts
+
 **Leg je ideeën vast wanneer ze ontstaan. Budio zet ze om in reviewbare content in jouw toon.**
 
 ## Overkoepelend
+
 **Budio begint niet bij de post, maar bij het ruwe denken dat eraan voorafgaat.**
 
 ---
@@ -735,6 +825,7 @@ De wedge werkt als je drie dingen goed doet:
 
 Dan wordt Budio geen generieke AI-tool,
 maar een product dat logisch past tussen:
+
 - ruwe gedachten
 - opnames
 - expertise

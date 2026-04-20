@@ -19,6 +19,8 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 - Generated Stitch design context: `docs/design/generated/stitch-design-context.md`
 - Build bundle: `npm run docs:bundle`
 - Verify bundle-sync: `npm run docs:bundle:verify`
+- Docs markdown lint: `npm run docs:lint`
+- Docs markdown lint autofix: `npm run docs:lint:fix`
 
 ## Contributor workflow (kort)
 - Check eerst `docs/project/README.md` en daarna `AGENTS.md` voor scope, waarheid en werkwijze.
@@ -30,6 +32,7 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 - Werk docs alleen bij op de juiste laag (canoniek, workflow, sessiecontext of status).
 - Start geen langlopende dev servers tenzij expliciet gevraagd.
 - Draai verify vóór commit (`npm run lint`, `npm run typecheck`, en bij canonieke docs ook docs bundle + verify).
+- Bij docs-updates: draai ook `npm run docs:lint` (en waar nodig `npm run docs:lint:fix`).
 - Houd productdocs vrij van toolingsruis; operationele workflowafspraken horen in `docs/dev/**`.
 
 ## Lokale startcommando's

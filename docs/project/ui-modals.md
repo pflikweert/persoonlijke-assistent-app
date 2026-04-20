@@ -3,6 +3,7 @@
 Doel van deze pagina: één verwijspagina voor alle huidige modal-/sheet-/overlaypatronen in de app.
 
 Deze pagina is een **inventory + afsprakenlaag**:
+
 - wat bestaat er nu
 - welk component is leidend
 - waar wordt het gebruikt
@@ -19,6 +20,7 @@ Deze pagina is een **inventory + afsprakenlaag**:
 ## Shared primitives (leidend)
 
 ### `components/ui/modal-backdrop.tsx`
+
 - Type: shared backdrop primitive.
 - Rol: scrim + outside-press gedrag voor centered en bottom overlays.
 - Layoutopties:
@@ -26,6 +28,7 @@ Deze pagina is een **inventory + afsprakenlaag**:
   - `bottom`
 
 ### `components/feedback/selector-modal-shell.tsx`
+
 - Type: shared selector shell.
 - Rol: gedeelde shell voor selector-modals (day/week/month varianten).
 - Huidig gedrag:
@@ -45,6 +48,7 @@ Geen actieve centered confirm-dialogs voor bevestigingsflows.
 ### 2) Sheets
 
 #### `components/feedback/destructive-confirm-sheet.tsx`
+
 - Type: shared bottom confirm-sheet (algemeen + destructive variant).
 - Animatie: `fade` + bottom layout via backdrop.
 - Backdrop: `ModalBackdrop` (`bottom`).
@@ -60,22 +64,26 @@ Geen actieve centered confirm-dialogs voor bevestigingsflows.
 ### 3) Selector modals
 
 #### `components/feedback/day-selector-modal.tsx`
+
 - Type: selector modal (dag).
 - Base: `SelectorModalShell`.
 - Gebruik:
   - `components/feedback/date-range-selector-modal.tsx`
 
 #### `components/feedback/period-selector-modal.tsx`
+
 - Type: selector modal (week/maand generic).
 - Base: `SelectorModalShell`.
 
 #### `components/feedback/export-period-selector-modal.tsx`
+
 - Type: selector modal met tabs (dag/week/maand) voor export.
 - Base: `SelectorModalShell`.
 - Gebruik:
   - `app/settings-export.tsx`
 
 #### Inline selector in `app/(tabs)/reflections.tsx`
+
 - Type: slide-up selector (week/maand) met full-screen modal-opbouw.
 - Animatie: `slide`.
 - Opmerking: momenteel eigen implementatie, nog niet op dezelfde shared shell als de selector-modals hierboven.
@@ -83,11 +91,13 @@ Geen actieve centered confirm-dialogs voor bevestigingsflows.
 ### 4) Fullscreen overlays
 
 #### `components/navigation/fullscreen-menu-overlay.tsx`
+
 - Type: fullscreen navigatie-overlay.
 - Animatie: `fade`.
 - Gebruik: brede inzet over tabs, day detail en settings/admin schermen.
 
 #### `components/feedback/text-editor-modal.tsx`
+
 - Type: fullscreen editor modal.
 - Animatie: `slide`.
 - Gebruik:
@@ -95,6 +105,7 @@ Geen actieve centered confirm-dialogs voor bevestigingsflows.
   - `app/entry/[id].tsx`
 
 #### AIQS assist panel (screen-local)
+
 - Bestand: `app/settings-ai-quality-studio/[taskKey]/draft/[version].tsx`
 - Type: screen-local modal panel.
 - Animatie: `fade`.
@@ -102,6 +113,7 @@ Geen actieve centered confirm-dialogs voor bevestigingsflows.
 ### 5) Route-level modal
 
 #### Expo Stack modal route
+
 - Bestand: `app/_layout.tsx` (`presentation: "modal"`) + `app/modal.tsx`.
 - Type: route-presentatie via navigator, niet via losse component-modal.
 

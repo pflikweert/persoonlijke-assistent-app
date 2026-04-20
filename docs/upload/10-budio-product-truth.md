@@ -2,13 +2,14 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
-Source Commit: 361182d
+Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
+Source Commit: b4e34cb
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
+
 - docs/project/README.md
 - docs/project/master-project.md
 - docs/project/product-vision-mvp.md
@@ -25,6 +26,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/20-planning/40-deviations-and-decisions.md
 
 ## Leesregel
+
 - Dit is de primaire bron voor scope, status en uitvoering binnen de huidige fase.
 - Strategische verdieping staat in de strategy/research bundle.
 
@@ -45,11 +47,13 @@ plus een lean operating system voor strategie, planning en ideeën.
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
 
 Regel:
+
 - deze lagen sturen focus en executie
 - ze vervangen niet automatisch canonieke productwaarheid
 - statusclaims blijven bewijs-gebonden in `current-status.md`
 
 ### Obsidian graph hubs
+
 - Strategy hub
 - Planning hub
 - Tasks hub
@@ -59,6 +63,7 @@ Regel:
 - Open points
 
 ## 1) Canonieke handmatige documenten (leidend)
+
 1. `docs/project/master-project.md`
 2. `docs/project/product-vision-mvp.md`
 3. `docs/project/current-status.md`
@@ -69,62 +74,77 @@ Regel:
 8. `docs/project/ai-quality-studio.md`
 
 Aanvulling:
+
 - `docs/project/ai-quality-studio.md` is de centrale AI governance-laag voor AI-gedrag, promptbeheer en evaluatie.
 
 Overgangsnoot:
+
 - Canonieke docs staan nu nog op rootniveau van `docs/project/`.
 - De nieuwe structuur (`10-strategy/`, `20-planning/`, `40-ideas/`) wordt vanaf nu gebruikt om richting/focus/ideeën gescheiden te beheren.
 
 ## 2) Generated documenten (afgeleid, niet leidend)
+
 - `docs/project/generated/chatgpt-project-context.md`
 - `docs/project/generated/budio-research.md`
 - `docs/design/generated/stitch-design-context.md`
 - `docs/upload/**`
 
 Regel:
+
 - handmatige docs zijn de bron
 - generated docs zijn afgeleide output
 - `docs/upload/**` is alleen bedoeld als kant-en-klare uploadset voor de gebruiker; agents gebruiken deze map niet als canonieke bron
 
 ## 3) Archive-only (niet leidend)
+
 - `docs/project/archive/**`
 - `docs/design/archive/**`
 - `docs/dev/archive/**`
 
 ## 3b) Research-documenten (strategische input, niet canonieke MVP-waarheid)
+
 - `docs/project/30-research/**`
 
 Regel:
+
 - research-documenten zijn bedoeld als richting-, markt- en scenario-input
 - ze vervangen niet automatisch de canonieke MVP-kaders in `master-project.md` en `product-vision-mvp.md`
 - feitelijke implementatierealiteit blijft in `current-status.md` en `open-points.md`
 
 ## 3c) Ideas-documenten (gestructureerde ideecapture, niet canonieke waarheid)
+
 - `docs/project/40-ideas/**`
 
 Regel:
+
 - `ideas/00-ideas-inbox.md` is snelle capture (ruw)
 - gepromoveerde ideeën krijgen één file per idee in categorie-submap
 - ideas zijn voorstelruimte; alleen na besluit + bewijs doorstromen naar planning/status/canonieke docs
 
 ## 3d) Planning-documenten (actieve focuslaag)
+
 - `docs/project/20-planning/**`
 
 Regel:
+
 - `planning/20-active-phase.md` is de huidige focuslaag voor uitvoering
 - afwijkingen op actieve fase worden vastgelegd in `planning/40-deviations-and-decisions.md`
 - planning is richtinggevend voor werkvolgorde, maar statuswaarheid blijft code/bewijs-gedreven
 
 ## 3e) Task-documenten (operationele uitvoeringslaag)
+
 - `docs/project/25-tasks/**`
 
 Regel:
+
 - task-docs zijn operationeel voor de huidige fase en ondergeschikt aan canonieke productwaarheid en actieve planning
 - open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
 - `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
 
 ## 4) Standaard upload naar ChatGPT Project / Stitch
+
 Upload standaard de bestanden uit `docs/upload/`:
+
 1. `docs/upload/00-budio-upload-manifest.md`
 2. `docs/upload/10-budio-product-truth.md`
 3. `docs/upload/20-budio-strategy-and-research.md`
@@ -134,6 +154,7 @@ Upload standaard de bestanden uit `docs/upload/`:
 7. `docs/upload/50-budio-ai-governance-and-operations.md`
 
 Reden:
+
 - de uploadset is logisch geordend (00/10/20/30/40/50) voor vaste leesvolgorde
 - productwaarheid, strategie/research, build-truth, UI/design en AI-governance zijn expliciet gescheiden
 - ideas/opportunity mapping is expliciet gescheiden van strategy/research
@@ -141,10 +162,12 @@ Reden:
 - use-case subsets staan in `docs/upload/00-budio-upload-manifest.md`
 
 Legacy compatibiliteit:
+
 - Bestaande legacy uploadfiles (zoals `chatgpt-project-context.md`, `budio-research.md`, `upload-manifest.md`) blijven beschikbaar voor bestaande workflows,
   maar de 00/10/20/30/40/50-set is de primaire standaard.
 
 ## 5) Wat je normaal niet hoeft te uploaden
+
 - `docs/project/archive/**`
 - `docs/design/archive/**`
 - `docs/dev/**`
@@ -152,12 +175,14 @@ Legacy compatibiliteit:
 - setup/run-notities zonder canonieke productwaarheid
 
 ## 6) Onderhoudsflow
+
 1. Werk eerst de handmatige canonieke docs bij.
 2. Draai `npm run docs:bundle`.
 3. Controleer met `npm run docs:bundle:verify`.
 4. Commit canonieke docs + generated output samen.
 
 ## 7) Werken met ChatGPT Projects + Cline
+
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
 - **Cline in VS Code**: repo-analyse, plan, wijzigingen, verify en commit.
 - Leidende waarheid voor product/scope/status staat in `docs/project/**`.
@@ -172,9 +197,11 @@ Legacy compatibiliteit:
   - niet in productdocs als toolingsruis
 
 ## 8) Repo-eigen Memory Bank (workflow, geen extra waarheid)
+
 Deze repo gebruikt een lichte memory-bank workflow als uitvoerhulp, zonder tweede waarheidshiërarchie.
 
 Relatie tussen lagen:
+
 - `docs/project/**` = canonieke waarheid (product/scope/status)
 - `AGENTS.md` = always-on uitvoerregels
 - `.agents/skills/**` = taak-/domeinspecifieke herhaalpatronen
@@ -183,11 +210,13 @@ Relatie tussen lagen:
 - `docs/dev/active-context.md` = tijdelijke sessiecontext (niet-canoniek)
 
 Regels:
+
 - geen generieke memory-bank boom toevoegen
 - geen duplicatie van canonieke docs
 - `current-status.md` blijft de enige statuswaarheid
 
 ## Obsidian graph — snelle start
+
 - Gebruik hubs als startpunt: 10-strategy/README, 20-planning/README, 30-research/README, 40-ideas/README.
 - Gebruik status-ankers: current-status en open-points.
 - Mapstructuur alleen is niet genoeg; links tussen notities bouwen de graph-clusters.
@@ -476,9 +505,11 @@ Zolang deze lagen niet productmatig bewezen en expliciet in scope zijn, blijven 
 # Current Status — Codegevalideerd
 
 ## Doel
+
 Dit document is de enige statuswaarheid voor implementatierealiteit.
 
 ## Obsidian links
+
 - open-points
 - Active phase
 - Now / Next / Later
@@ -488,11 +519,14 @@ Dit document is de enige statuswaarheid voor implementatierealiteit.
 - Ideas workspace
 
 Bronnen voor deze status:
+
 1. bestaande projectdocs (scope/planning)
 2. actuele codebase (bewijs van implementatie)
 
 ## Auditbasis
+
 Gecontroleerd op:
+
 - `docs/**`, `README.md`, `docs/README.md`, `AGENTS.md`
 - `.agents/skills/**`
 - `app/**`, `components/**`, `services/**`
@@ -500,12 +534,14 @@ Gecontroleerd op:
 - `scripts/**`, `package.json`
 
 ## Statuslabels
+
 - **Aanwezig**: hard aantoonbaar in code
 - **Deels aanwezig**: aantoonbare onderdelen, maar niet volledig bewezen als afgerond
 - **Niet aangetroffen**: geen implementatie gevonden
 - **Onzeker**: bewijs onvoldoende
 
 ## Bewijsmatrix (docsplan vs code)
+
 | Onderwerp | Oorspronkelijk plan | Code-status | Conclusie |
 |---|---|---|---|
 | Auth (magic link) | In scope | **Aanwezig** | `app/sign-in.tsx`, `services/auth.ts`, auth-gating in `app/_layout.tsx`. |
@@ -539,6 +575,7 @@ Gecontroleerd op:
 | Branded productlaag “Budio Vandaag” in shell/auth/menu | Niet als losse MVP-feature benoemd in vroege projectdocs | **Aanwezig** | branded login/header/menu/splash doorgevoerd in `app/sign-in.tsx`, `components/ui/auth-screen-primitives.tsx`, `components/navigation/fullscreen-menu-overlay.tsx`, `app/(tabs)/index.tsx`, `app.json`. |
 
 ## Fase 1.2 status
+
 | Subfase | Status | Onderbouwing |
 |---|---|---|
 | 1.2A Stabiliteit/foutafhandeling | **Aanwezig** | tracing, foutafhandeling en verify-commando’s zijn aanwezig en actief gebruikt in hardening-passes. |
@@ -552,6 +589,7 @@ Gecontroleerd op:
 Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met runtime-bewijs (light + dark) en check tegen relevante `design_refs/1.2.1/**`.
 
 ### Kernflow-routes
+
 - [ ] Auth/login: route opent zonder layoutbreuk; copy compact; geen zware enclosing card.
 - [ ] Today: primaire CTA visueel dominant; statusregel compact; recente context secundair.
 - [ ] Capture (idle/voice/typing): affordance direct duidelijk; geen toolbars/live transcript/pause-uitbreiding.
@@ -568,31 +606,37 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 - [ ] Fullscreen menu/shell/tab bar: header/page/footer coherent; menu/backdrop rustig.
 
 ### Theming en shell
+
 - [ ] Light/dark delen dezelfde compositie; dark mode voegt geen extra massa/lagen toe.
 - [ ] Header en footer rustiger dan page background; geen decoratieve shell-randen als default.
 - [ ] Background modes zijn selectief en mode-aware (`ambient`, `subtle`, `flat`).
 - [ ] Content-heavy screens blijven `flat` en clean-first.
 
 ### Copy en UX-guardrails
+
 - [ ] Copy is kort, menselijk, direct; geen AI/coach/productivity-taal.
 - [ ] Geen dubbele uitleg rond dezelfde primaire actie.
 - [ ] Geen dashboardisering/assistentdrift in overview- en reflection-flows.
 
 ### Evidence-regel
+
 - [ ] Werk wordt pas “klaar” genoemd na: routecheck + light/dark runtime-check + vergelijking met relevante design refs.
 
 ## Correcties op eerdere ruis
+
 - Foutieve padverwijzing gecorrigeerd: `docs/project/docs/project/master-project.md` bestaat niet; correct is `docs/project/master-project.md`.
 - Productfeature, dev-tooling en verify-tooling zijn expliciet onderscheiden.
 - Tooling-aanwezigheid telt niet automatisch als gebruikersfeature.
 
 ## Workflow/docs realiteit (april 2026)
+
 - Rolverdeling ChatGPT Projects (strategie/review/promptontwerp) vs Cline (repo-uitvoering) is nu expliciet vastgelegd in `AGENTS.md`.
 - Scheiding tussen canonieke projectdocs (`docs/project/**`), workflowdocs (`docs/dev/**`) en uploadartefacten (`docs/upload/**`) is expliciet aangescherpt.
 - Er is een operationele workflowdoc toegevoegd: `docs/dev/cline-workflow.md`.
 - Er is een lichte repo-eigen memory-bank/active-context workflow vastgelegd in `docs/dev/memory-bank.md` en `docs/dev/active-context.md` (operationeel, niet-canoniek).
 
 ## Delta-audit (laatste 2 weken codewijzigingen)
+
 - Capture/detail-flows zijn verder gepolijst met audio-afspeelcomponent (`components/journal/entry-audio-player.tsx`), verfijnde modals en rustiger feedbackstates.
 - Settings-informatiearchitectuur is uitgebreid met aparte audio-instellingen (`app/settings-audio.tsx`) naast export/import/delete/admin.
 - Obsidian-settingspad is technisch toegevoegd maar default-off gezet achter feature flag (`enableObsidianSettings`) en staat daarmee buiten de standaard productroute.
@@ -602,17 +646,20 @@ Gebruik deze checklist voor proof-first release/hardening. Vink alleen af met ru
 - UI-shell/branding is zichtbaarder door branded auth/header/menu/splash doorvertaling.
 
 ## Recente regressie-learnings (april 2026)
+
 - Admin-access UI mag alleen `Geen toegang` tonen bij expliciete auth-codes (`AUTH_UNAUTHORIZED`/`AUTH_MISSING`), niet bij generieke netwerk- of loadfouten.
 - Allowlist parsing in edge functions moet gequote env-waarden (`"uuid"`, `'uuid'`) normaliseren om false `Forbidden` te voorkomen.
 - Prompt-editor newline/paragraph normalisatie moet editor-overstijgend consistent blijven; sectiewissels mogen geen lege-regel-migratie veroorzaken.
 - AIQS token-editor blijft bewust compact: helperblok “Gebruikte tokens” verwijderd en editor-surface blijft licht voor leesbaarheid in dark mode.
 
 ## Strategische afwijking t.o.v. nieuw researchpakket
+
 - De huidige runtime is sterker in capture/hardening dan in commerciële output-conversie: de app levert aantoonbaar capture, daglaag, reflecties, import/export, audio-opslagoptie en admin-governance.
 - De in research beschreven Pro-wedge (capture -> review -> publiceerbare output) is nog niet productmatig als eindgebruikersflow geland.
 - AIQS is al een sterke admin control-laag, maar nog niet de volledige future-state control plane met breed task-registry, usage-economie en product-tiering in runtime.
 
 ## Samenvatting
+
 De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only settingspad toegevoegd voor globale herverwerking via OpenAI Batch API, inclusief persistente jobstatus en per-type voortgang. Voor 1.2D zijn settings export/import/delete nu functioneel bewezen binnen deze afgesloten scope (handmatige flow-validatie + runtime/API-bewijs van service- en data-effecten). Onvoldoende bewezen claims buiten deze scope blijven expliciet onzeker.
 
 ---
@@ -634,6 +681,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
 
 ## Obsidian links
+
 - current-status
 - Active phase
 - Now / Next / Later
@@ -643,19 +691,23 @@ Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis v
 - Ideas workspace
 
 ## Echt open (niet aangetroffen in code als productfeature)
+
 1. Self-service beheer van adminrechten in product-UI ontbreekt; huidige toegang loopt via server-side allowlist env.
 
 Toelichting:
+
 - bestaande dump/export scripts zijn developer tooling, geen gebruikersfeature.
 - settings export/import/delete zijn functioneel aanwezig en voor deze scope bewezen.
 
 ## Deels open (nog niet hard afgerond)
+
 1. 1.2B outputkwaliteit als complete afgeronde kwaliteitsset.
 2. 1.2E private-beta readiness met volledige runtime-doorloop van de releasechecklist in light + dark mode.
 3. Commerciële brug van capture naar publiceerbare output (Pro-wedge) is strategisch uitgewerkt in research, maar nog niet als eindgebruikersflow productmatig geland.
 4. Nieuwe 00/10/20/30/40/50 uploadbundels zijn nu primair ingericht, maar teamworkflow moet nog expliciet op deze primaire set standaardiseren (legacy blijft nog aanwezig).
 
 ## Onzeker
+
 1. Expliciete aparte post-capture assistentlaag als zelfstandige feature.
 2. Import-verify robuustheid door ontbrekende chatgpt-import fixture.
 3. Volledige handmatige UI-smoke voor alle settings-states (hub/export/import/delete) is nog niet als apart bewijsartefact vastgelegd.
@@ -664,6 +716,7 @@ Toelichting:
 ## Afwijkingen tussen huidig MVP-plan en runtime-realiteit
 
 ### Functionaliteit-afwijkingen (al gebouwd t.o.v. oudere docs)
+
 1. Audio-opslagvoorkeur per gebruiker is toegevoegd (aan/uit bewaren van originele opnames), inclusief storage- en metadatafundering.
 2. Import/background task infrastructuur is toegevoegd met `user_background_tasks` en voortgang/notices in UI.
 3. Settings IA is verbreed met aparte audio-instellingen naast export/import/delete en admin-routes.
@@ -671,22 +724,26 @@ Toelichting:
 5. Obsidian settings-route is technisch aanwezig maar standaard uitgezet achter feature flag (`enableObsidianSettings`), waardoor runtime-capability en zichtbare productscope uit elkaar lopen.
 
 ### UI/UX-afwijkingen (al zichtbaar in product)
+
 1. Branded laag “Budio Vandaag” is doorgevoerd in auth/header/menu/splash en ligt nu nadrukkelijker op merkidentiteit dan in eerdere MVP-docs stond.
 2. Shell-polish (menu/topnav/background consistency) is verder doorgevoerd dan de oorspronkelijke minimale MVP-beschrijving.
 3. Capture/detail/settings UX bevat nu uitgebreidere status- en feedbackstates (background notices, selector-modals, audio playback), waardoor de runtime-ervaring rijker is dan de vroege MVP-baseline.
 
 ### Strategische afwijkingen (research vs huidige productrealiteit)
+
 1. Research stuurt op Pro-wedge (capture -> review -> output/publicatievoorbereiding), maar die flow ontbreekt nog als concrete gebruikersfunctionaliteit.
 2. Research stuurt op usage/credits/tiering en commerciële stuurinformatie; runtime bevat dit nog niet als productlaag.
 3. AIQS is sterk als admin-governance, maar nog niet de volledige control plane zoals in future-state research beschreven.
 
 ## Prioriteit
+
 1. Maak completion-criteria voor 1.2A/1.2B/1.2C/1.2E expliciet en toetsbaar.
 2. Maak expliciet besluitbaar welke MVP-afwijkingen worden geformaliseerd in volgende planupdate (zonder huidige canonieke plannen nu te herschrijven).
 3. Los onzekerheden op met hard bewijs; anders onzeker laten.
 4. Beslis expliciet welke research-gedreven afwijkingen (Pro-wedge, flow-modulariteit, AIQS control-plane verdieping) in de volgende planronde naar `planning/next` promoveren.
 
 ## Risico’s
+
 1. Scope-creep richting brede assistent.
 2. Verwarring tussen tooling en productfeature.
 3. Te snelle status-upgrade van onbewezen claims.
@@ -695,35 +752,44 @@ Toelichting:
 ## Later project — import volledig laten doorlopen op de achtergrond
 
 ### Status
+
 Later onderzoeken. Niet voor huidige fase.
 
 ### Waarom
+
 Het echte importeren van entries draait server-side zodra de request loopt.
 De naverwerking daarna is nu nog afhankelijk van het open importscherm of actieve app-sessie.
 Daardoor is dit nog geen volledige fire-and-forget achtergrondtaak.
 
 ### Gewenste eindrichting
+
 Import moet volledig server-side kunnen doorlopen, ook als:
+
 - de gebruiker het scherm sluit
 - de app naar de achtergrond gaat
 - de verbinding kort wegvalt na het starten
 
 ### Doel
+
 Een robuustere importflow waarbij:
+
 - entry-import start via één gebruikersactie
 - afgeleide verwerking daarna zelfstandig doorloopt
 - dagboekdagen, weekreflecties en maandreflecties niet meer afhankelijk zijn van actieve client-state
 
 ### Buiten scope nu
+
 Niet in fase 1.2.
 Dit raakt architectuur, job-afhandeling en betrouwbaarheid van achtergrondverwerking.
 
 ### Waarom later waardevol
+
 - betrouwbaardere importervaring
 - minder afhankelijkheid van open scherm of actieve app
 - logisch vervolg op importfeature zodra MVP/hardening stabiel is
 
 ### Open vragen voor later
+
 - server-side jobmodel of queue
 - statusopvolging voor gebruiker
 - retry-gedrag bij mislukte naverwerking
@@ -736,13 +802,16 @@ Dit raakt architectuur, job-afhandeling en betrouwbaarheid van achtergrondverwer
 # Content & Narrative Processing Rules (Canoniek)
 
 > Relatie met AI governance:
+>
 > - Deze regels zijn onderdeel van het AI Quality Studio-contract.
 > - Bij conflict geldt:
 >   - `content-processing-rules.md` is leidend voor inhoud en laagcontracten.
 >   - `ai-quality-studio.md` is leidend voor tooling, prompting-governance en evaluatieproces.
 
 ## Doel
+
 Dit document is het bindende gedragscontract voor contentverwerking in drie lagen:
+
 1. `entries_normalized.body`
 2. `day_journals.narrative_text`
 3. `day_journals.summary`
@@ -750,83 +819,108 @@ Dit document is het bindende gedragscontract voor contentverwerking in drie lage
 Dit is de canonieke content-regeldoc voor MVP en fase 1.2B.
 
 ## Waarom dit document leidend is
+
 Deze regels sluiten direct aan op:
+
 - server contracts en guardrails in `process-entry`, `regenerate-day-journal`, `renormalize-entry`, `generate-reflection`
 - quality-verify checks in `scripts/verify-local-output-quality.sh`
 
 ## Kernregel
+
 De engine structureert en verwoordt, maar voegt geen nieuwe betekenis toe.
 
 ## Laagcontracten
+
 ### 1) `entries_normalized.body`
+
 Doel:
+
 - volledige opgeschoonde entrytekst behouden
 
 Mag:
+
 - ruis/stotteren/kleine taalfouten opschonen
 - betekenisloze dubbele herhaling reduceren
 
 Mag niet:
+
 - samenvatten
 - merkbaar inkorten
 - parafraseren naar generieke AI-tekst
 - nieuwe claims toevoegen
 
 ### 2) `day_journals.narrative_text`
+
 Doel:
+
 - volledige verhalende dagtekst over alle betekenisvolle dagmomenten
 
 Moet:
+
 - brongebonden blijven
 - ik-vorm volgen waar bron in ik-vorm is
 - betekenisvolle momenten behouden
 - rustige, natuurlijke leesbaarheid hebben
 
 Mag niet:
+
 - functioneren als samenvatting
 - verslaggever-/derdepersoonstonen introduceren
 - verzonnen brugzinnen, oorzaken of inzichten toevoegen
 - therapie/diagnose/coachtaal gebruiken
 
 ### 3) `day_journals.summary`
+
 Doel:
+
 - korte, compacte dagsamenvatting voor snelle oriëntatie
 
 Moet:
+
 - duidelijk korter zijn dan narrative
 - concreet en feitelijk blijven
 
 Mag niet:
+
 - rol van narrative overnemen
 - nieuwe interpretatie of niet-brongebonden inhoud introduceren
 
 ## Aanvullend contract — `period_reflections`
+
 Doel:
+
 - compacte periodieke synthese op basis van day journals
 
 Moet:
+
 - brongebonden blijven op `day_journals`
 - samenvatting, highlights en reflectiepunten compact en bruikbaar houden
 
 Mag niet:
+
 - therapeutische of diagnostische taal gebruiken
 - inhoud verzinnen buiten de bron
 - standaard vervallen in todo-achtige actiepunten of checklisttaal
 
 ## Aanvullend contract — directe assistentlaag na capture (indien gebruikt)
+
 Doel:
+
 - korte ondersteuning direct rond vastleggen
 
 Moet:
+
 - kort en ondersteunend zijn
 - niet-canoniek blijven t.o.v. dagboeklaag
 - rustige, niet-therapeutische toon gebruiken
 
 Mag niet:
+
 - automatisch dagboeklaag vervuilen
 - de productervaring verschuiven naar open chatmodus
 
 ## Scheidingsregel tussen lagen
+
 - `entries_normalized.body` = volledige opgeschoonde bronlaag van één entry
 - `day_journals.narrative_text` = volledige dagverhaallaag
 - `day_journals.summary` = compacte samenvattingslaag
@@ -836,19 +930,23 @@ Mag niet:
 Als `summary` en `narrative_text` functioneel hetzelfde worden, is dat contractbreuk.
 
 ## Toonregels
+
 Gewenst:
+
 - rustig Nederlands
 - concreet
 - niet-meta
 - niet-generiek AI
 
 Ongewenst:
+
 - psychologische duiding als feit
 - therapietaal
 - management-/rapporttaal
 - meta-zinnen over “de notities” of aantallen als inhoudsvuller
 
 ## Acceptatiecriteria
+
 1. Betekenisvolle broninhoud blijft behouden in `entries_normalized.body`.
 2. `narrative_text` bevat alle relevante dagmomenten zonder verzinsels.
 3. `summary` is korter en compacter dan `narrative_text`.
@@ -857,7 +955,9 @@ Ongewenst:
 6. Geen marker-leak of fallback-tekst als inhoud in dagboek/reflectie.
 
 ## Implementatiekoppeling
+
 Primair geraakt door:
+
 - `supabase/functions/process-entry/index.ts`
 - `supabase/functions/regenerate-day-journal/index.ts`
 - `supabase/functions/renormalize-entry/index.ts`
@@ -866,6 +966,7 @@ Primair geraakt door:
 - `scripts/verify-local-output-quality.sh`
 
 ## Buiten scope
+
 - nieuwe AI-flowarchitectuur
 - stijlclone-engine
 - extra tabellen of migrations voor deze regels
@@ -1215,11 +1316,13 @@ Hij helpt je rustig je dag vast te leggen.
 Dit document is de **leidende bron voor AI-gedrag, promptbeheer, evaluatie en runtime-governance** binnen dit project.
 
 Bij conflict geldt:
+
 - `docs/project/content-processing-rules.md` is leidend voor **inhoudscontracten en grensgedrag van output**
 - `docs/project/ai-quality-studio.md` is leidend voor **AI-tooling, prompting, evaluatie, versiebeheer, rollout en runtime-governance**
 - andere projectdocs verwijzen hiernaar voor AI-gedrag en promptbeheer
 
 Dit document beschrijft zowel:
+
 - de huidige werkende tussenarchitectuur
 - als de gewenste eindrichting voor een volwassen AI quality platform-laag
 - en de **bindende bouwvolgorde** voor de volgende studio-fase
@@ -1231,6 +1334,7 @@ Dit document beschrijft zowel:
 AI Quality Studio is een **admin-only AI quality en prompting governance tool**.
 
 Doel:
+
 - AI-output betrouwbaar verbeteren
 - prompt- en modelwijzigingen beheersbaar maken
 - testbaar en reproduceerbaar itereren op echte brondata
@@ -1238,6 +1342,7 @@ Doel:
 - runtime-gedrag later gecontroleerd uit code-baseline naar DB-live binding brengen
 
 De studio is:
+
 - task-first
 - contract-first
 - result-first
@@ -1245,6 +1350,7 @@ De studio is:
 - server-side only
 
 De studio is **geen**:
+
 - end-user feature
 - brede assistentlaag
 - generieke AI per scherm
@@ -1256,6 +1362,7 @@ De studio is **geen**:
 ## 2. Scopekader
 
 ### In scope
+
 - Werk per **AI-task**, niet per scherm
 - Versioning per task
 - Runtime-baseline import uit code
@@ -1268,6 +1375,7 @@ De studio is **geen**:
 - Admin UX voor mobiel én desktop/fullscreen gebruik
 
 ### Buiten scope
+
 - Client-side OpenAI calls
 - End-user debug- of beheerfeatures
 - Brede chat/coach/agent-ervaring
@@ -1287,6 +1395,7 @@ De eerstvolgende studiofase draait om één kernvraag:
 **Is een nieuwe promptversie aantoonbaar beter dan de huidige basis?**
 
 Daarom is de bindende prioriteit nu:
+
 1. testen binnen de studio
 2. vergelijkbaar valideren van kandidaat-output vs runtime-basis
 3. evaluatie-uitkomsten opslaan als bewijs
@@ -1295,6 +1404,7 @@ Daarom is de bindende prioriteit nu:
 6. lifecycle, rollout, runtime-koppeling en live monitoring pas daarna verder uitbouwen
 
 Dit betekent expliciet:
+
 - testbaarheid gaat vóór rollout-volume
 - evidence gaat vóór dashboard-polish
 - editor-consistentie gaat vóór nieuwe promptfeatures
@@ -1338,6 +1448,7 @@ Dit betekent expliciet:
 Volgt `docs/project/content-processing-rules.md`.
 
 Kernscheiding:
+
 - `entry_cleanup` ≠ samenvatting
 - entry-normalization loopt als één compound flow (`entry_cleanup`) voor `title`, `body`, `summary_short`
 - `day_narrative` ≠ `day_summary`
@@ -1353,7 +1464,9 @@ Als output deze grenzen schendt, is dat een **kwaliteitsfout**, ongeacht modelsc
 Deze sectie beschrijft wat nu aantoonbaar gebouwd is en wat strategisch relevant is voor de volgende fase.
 
 ### 6.1 Datamodel (aanwezig)
+
 Tabellen:
+
 - `ai_tasks`
 - `ai_task_versions`
 - `ai_test_cases`
@@ -1361,6 +1474,7 @@ Tabellen:
 - `ai_live_generation_log`
 
 Aanwezig in schema:
+
 - enums voor input/output/status/review/source
 - UUID PK’s, FK’s, timestamps
 - 1 live versie per task
@@ -1369,10 +1483,13 @@ Aanwezig in schema:
 - seed van 12 canonieke tasks
 
 ### 6.2 Edge function (aanwezig)
+
 Function:
+
 - `admin-ai-quality-studio`
 
 Huidige acties:
+
 - `access`
 - `list_tasks`
 - `get_task_detail`
@@ -1386,15 +1503,18 @@ Huidige acties:
 - `get_compare_view`
 
 Auth:
+
 - allowlist + internal token patroon, server-side gehandhaafd
 
 ### 6.3 App-beheerlagen (aanwezig)
+
 - task hub
 - task detail / versions
 - draft editor
 - test / compare
 
 ### 6.4 Entry_cleanup contract-first editor (aanwezig, maar voor op generieke editorlaag)
+
 - `entry_cleanup` volgt nu expliciet een contract-first editorstructuur:
   - **alleen taakinstructie bewerkbaar**
   - input/system/response/model contractlagen zichtbaar als read-only
@@ -1411,6 +1531,7 @@ Auth:
 **Belangrijke conclusie:** `entry_cleanup` is nu inhoudelijk sterker dan de rest van de editors. Dat is goed voor die task, maar nog geen uniforme studio-abstraction.
 
 ### 6.5 Admin detail-shell polish (aanwezig, maar desktop-ervaring nog niet goed genoeg)
+
 - gedeelde admin topnavigatie is visueel en technisch gecentreerd en navigation-only gebleven
 - gedeelde sticky action footer is nu een compact, herbruikbaar admin pattern met duidelijke hiërarchie:
   - primary
@@ -1421,6 +1542,7 @@ Auth:
 **Belangrijke conclusie:** huidige adminschermen zijn nog te veel als mobiele breedte gefixeerd, ook op desktop. Dat beperkt de studio-waarde op grotere schermen en fullscreen gebruik.
 
 ### 6.5b Prompt Assist in draft editor (`entry_cleanup`) (aanwezig, beperkte scope)
+
 - prompt assist draait admin-only binnen de bestaande draft editorlaag
 - assist is task-first en contract-first:
   - analyse gebruikt volledige promptcontext (`system rules`, `general instruction`, `field rules`, outputcontract, taskmetadata)
@@ -1431,6 +1553,7 @@ Auth:
 **Belangrijke conclusie:** assist is bewust een lokale editor-hardening en geen autonome prompt-optimizer of generieke chatlaag.
 
 ### 6.6 Runtime-baseline model (aanwezig, transitie)
+
 - runtime-definities worden nu opgebouwd vanuit code
 - baseline import schrijft deze als `live` naar studio-DB
 - runtime zelf leest nog niet uit studio-DB
@@ -1450,6 +1573,7 @@ De studio moet in de volgende bouwstap vooral deze dingen beter maken:
 5. ik kan die uitkomst later terugvinden per task, versie en case
 
 Zolang dit niet stevig staat, zijn de volgende zaken **te vroeg als hoofdfocus**:
+
 - live production review
 - rollout-gates tot in detail
 - runtime DB-binding
@@ -1462,6 +1586,7 @@ Zolang dit niet stevig staat, zijn de volgende zaken **te vroeg als hoofdfocus**
 De studio bewerkt **taakinstructies**, niet ruwe request/payload blobs.
 
 ### Bindende scheiding
+
 Elke bewerkbare taskversie bestaat conceptueel uit deze lagen:
 
 1. **Taakinstructie**
@@ -1488,7 +1613,9 @@ Elke bewerkbare taskversie bestaat conceptueel uit deze lagen:
    - temperature / response_format / andere toegestane parameters
 
 ### Bindende UI-regel
+
 De hoofd-editor toont:
+
 - taakinstructie
 - taskdoel
 - model
@@ -1496,14 +1623,17 @@ De hoofd-editor toont:
 - versiecontext
 
 De hoofd-editor toont **niet**:
+
 - volledige request payloads
 - raw placeholders als hoofdinhoud
 - baseline metadata als primaire bewerklaag
 
 ### Aanscherping voor de volgende fase
+
 De `entry_cleanup` editor is de referentie voor de volgende editorronde.
 
 Dat betekent:
+
 - andere edit-schermen moeten hier conceptueel naartoe convergeren
 - hardcoded afwijkingen per task moeten worden afgebouwd
 - gedeelde editorprimitives moeten task-compatibel worden, niet alleen `entry_cleanup`-specifiek
@@ -1516,12 +1646,14 @@ Dat betekent:
 Niet elke studio-task is een volledig losse runtime prompt.
 
 Daarom moet elke task conceptueel deze velden hebben:
+
 - `runtime_family`
 - `composition_role`: `standalone | compound_member`
 - `managed_output_field`
 - `affected_output_fields`
 
 ### Voorbeelden
+
 - `entry_cleanup`
   - runtime_family: `entry_normalization`
   - composition_role: `compound_member`
@@ -1539,7 +1671,9 @@ Daarom moet elke task conceptueel deze velden hebben:
   - composition_role: meestal `compound_member`
 
 ### Bindende representatieregel
+
 Als een task onderdeel is van een gedeelde runtime-family:
+
 - toon dat expliciet
 - toon ook wat die wijziging beïnvloedt
 - doe niet alsof het een volledig autonome prompt is als dat niet zo is
@@ -1549,9 +1683,11 @@ Als een task onderdeel is van een gedeelde runtime-family:
 ## 10. Output discipline
 
 ### Richting
+
 Waar output gestructureerd moet zijn, is **Structured Outputs / JSON Schema** de voorkeursrichting.
 
 ### Regels
+
 - outputtype expliciet vastleggen:
   - `text`
   - `object`
@@ -1562,7 +1698,9 @@ Waar output gestructureerd moet zijn, is **Structured Outputs / JSON Schema** de
 - task-scherm, instructie en schema mogen elkaar niet tegenspreken
 
 ### Voorbeeld
+
 Als `day_narrative` in studio één output representeert, dan moet:
+
 - het scherm dat eerlijk tonen
 - het schema dat ondersteunen
 - of expliciet zichtbaar zijn dat het onderdeel is van een compound runtime-family
@@ -1572,17 +1710,21 @@ Als `day_narrative` in studio één output representeert, dan moet:
 ## 11. Model policy
 
 ### Productie
+
 - productie gebruikt **pinned model snapshots**
 - geen vrije modelkeuze in runtime
 - modelupgrade is een rollout-beslissing, geen gewone promptedit
 
 ### Studio
+
 - modelkeuze in studio gebeurt via **allowlist**, niet vrije tekst
 - alleen goedgekeurde modellen zijn testbaar
 - modelwijziging moet zichtbaar meeversien
 
 ### Logging
+
 Elke test run en latere runtime write moet minimaal vastleggen:
+
 - model
 - versie / snapshot
 - relevante config
@@ -1592,12 +1734,15 @@ Elke test run en latere runtime write moet minimaal vastleggen:
 ## 12. Runtime-baseline import en tijdelijke dubbele waarheid
 
 ### Huidige overgangsregel
+
 De studio gebruikt nu een **runtime baseline import** uit code:
+
 - code blijft runtime source-of-truth
 - studio importeert een mirror naar `ai_task_versions`
 - drafts starten vanuit deze runtime-basis
 
 ### Bindende regels
+
 - runtime-baseline import mag nooit stil bestaande afwijkende live versies overschrijven
 - conflicts moeten expliciet worden gerapporteerd
 - baseline metadata moet zichtbaar maken:
@@ -1607,10 +1752,13 @@ De studio gebruikt nu een **runtime baseline import** uit code:
   - `output_field`
 
 ### Doel
+
 De studio moet een geloofwaardige live-basis tonen zonder productie al DB-driven te maken.
 
 ### Strategische aanscherping
+
 Zolang runtime nog hardcoded is en niet versiegestuurd uit de studio leest:
+
 - blijft testvalidatie belangrijker dan live-review tooling
 - blijft compare tegen runtime-basis voldoende voor de eerstvolgende fase
 - blijven live-resultaten, reviewer queues en runtime dashboards een latere laag
@@ -1622,7 +1770,9 @@ Zolang runtime nog hardcoded is en niet versiegestuurd uit de studio leest:
 Evaluatie gebeurt in lagen, in vaste volgorde.
 
 ### Laag 1 — Contract checks
+
 Hard rules, bijvoorbeeld:
+
 - `entry_cleanup` mag niet samenvatten
 - `day_summary` moet compacter zijn dan `day_narrative`
 - reflectiepunten mogen geen advieslaag worden
@@ -1631,20 +1781,25 @@ Hard rules, bijvoorbeeld:
 - verboden taal / verboden meta-zinnen
 
 ### Laag 2 — Pairwise compare
+
 Standaard menselijke vergelijking tussen:
+
 - runtime-basis / huidige productie-uitkomst
 - draft / candidate output
 
 Labels:
+
 - `beter`
 - `gelijk`
 - `slechter`
 - `fout`
 
 ### Laag 3 — Evaluation result opslag
+
 Pairwise compare en contractuitkomsten mogen niet alleen tijdelijke UI-output zijn.
 
 Per run/case/versie moet de studio evaluatie-uitkomsten structureel kunnen opslaan, zodat zichtbaar wordt:
+
 - welke versie beter scoort
 - welke cases regressies tonen
 - welke fouten terugkomen
@@ -1653,7 +1808,9 @@ Per run/case/versie moet de studio evaluatie-uitkomsten structureel kunnen opsla
 **Bindende richting:** evaluatie wordt een first-class objectlaag, niet alleen een schermactie.
 
 ### Laag 4 — Curated regression sets
+
 Voor elke belangrijke task geleidelijk opbouwen:
+
 - goldens
 - edge cases
 - noisy input
@@ -1663,9 +1820,11 @@ Voor elke belangrijke task geleidelijk opbouwen:
 - afwijkende talen / rare input
 
 ### Laag 5 — Automated graders
+
 Pas later toevoegen.
 
 Regels:
+
 - nooit de enige bron van waarheid
 - pas ná curated regressiesets
 - alleen ondersteunend aan contract checks + human review
@@ -1677,6 +1836,7 @@ Regels:
 De studio heeft een expliciete evaluatie-objectlaag nodig.
 
 Minimale richting:
+
 - evaluatie hoort bij task
 - evaluatie hoort bij taskversion
 - evaluatie hoort bij testcase of testbron
@@ -1684,6 +1844,7 @@ Minimale richting:
 - evaluatie kan contractmatig, handmatig en later geautomatiseerd zijn
 
 ### Minimale veldenrichting
+
 - `task_id`
 - `task_version_id`
 - `test_run_id`
@@ -1696,6 +1857,7 @@ Minimale richting:
 - reviewer / actor waar relevant
 
 ### Waarom dit bindend is
+
 Zonder evaluatie-objectlaag blijft de studio goed in testen, maar zwak in kwaliteitsbewijs.
 
 ---
@@ -1703,21 +1865,27 @@ Zonder evaluatie-objectlaag blijft de studio goed in testen, maar zwak in kwalit
 ## 15. Human review protocol
 
 ### Standaardreview
+
 De default reviewvorm is **pairwise**:
+
 - runtime-basis vs draft/candidate
 
 ### Labels
+
 - `beter`
 - `gelijk`
 - `slechter`
 - `fout`
 
 ### Verplichtingen
+
 - note verplicht bij `slechter` of `fout`
 - review gebeurt op compacte rubric, niet op los gevoel
 
 ### Rubric
+
 Minimaal beoordelen op:
+
 - contracttrouw
 - natuurlijkheid
 - helderheid
@@ -1725,6 +1893,7 @@ Minimaal beoordelen op:
 - compactheid waar relevant
 
 ### Aanscherping
+
 De reviewactie moet opslaan als bewijslaag en niet alleen in de compare-UI blijven hangen.
 
 ---
@@ -1734,6 +1903,7 @@ De reviewactie moet opslaan als bewijslaag en niet alleen in de compare-UI blijv
 Bronselectie is onderdeel van kwaliteit, niet alleen een UI-detail.
 
 ### Regels
+
 - testdata moet representatief zijn
 - default sortering: recent + bruikbaar
 - fallback/lege records mogen niet dominant zijn
@@ -1741,7 +1911,9 @@ Bronselectie is onderdeel van kwaliteit, niet alleen een UI-detail.
 - bronselectie moet compacte preview + zoek/filter ondersteunen
 
 ### Richting
+
 Volgende fase:
+
 - curated saved cases
 - goldens
 - regressiesets per task
@@ -1752,6 +1924,7 @@ Volgende fase:
 ## 17. Version lifecycle governance
 
 ### Gewenste lifecycle
+
 - `draft`
 - `candidate`
 - `approved`
@@ -1760,17 +1933,21 @@ Volgende fase:
 - optioneel `shadow`
 
 ### Governance-regels
+
 - promote naar live alleen na voldoende evidence
 - rollbackpad moet bestaan vóór runtime DB-binding
 - modelwijzigingen en promptwijzigingen horen in dezelfde lifecycle-governance
 
 ### Evidence voor promote (richtlijn)
+
 Minimaal:
+
 - contract checks passeren
 - pairwise review uitgevoerd
 - relevante curated cases gecontroleerd
 
 ### Aanscherping voor huidige fase
+
 Deze lifecycle blijft bindende richting, maar is **niet** de eerstvolgende bouwfocus. Eerst moet test- en validatiebewijs in de studio zelf stevig staan.
 
 ---
@@ -1780,7 +1957,9 @@ Deze lifecycle blijft bindende richting, maar is **niet** de eerstvolgende bouwf
 De studio moet compatibel blijven met een centrale prompt registry of prompt object model.
 
 ### Regels
+
 Promptstructuur moet logisch opgesplitst blijven in:
+
 - instruction
 - system
 - input template
@@ -1788,6 +1967,7 @@ Promptstructuur moet logisch opgesplitst blijven in:
 - config
 
 ### Verboden richting
+
 - monolithische request blobs als enige bewerkbare eenheid
 - prompttekst waarin payload assembly, placeholders en taakdoel door elkaar lopen
 
@@ -1808,7 +1988,9 @@ Promptstructuur moet logisch opgesplitst blijven in:
    - gecontroleerde herberekening na rollout
 
 ### Aanscherping
+
 Voor de volgende fase is de kernvolgorde:
+
 - eerst single interactive goed
 - daarna curated batch evaluation
 - production-derived en live regeneration pas later zwaarder uitwerken
@@ -1820,11 +2002,13 @@ Voor de volgende fase is de kernvolgorde:
 Nog niet leidend voor implementatie, wel bindend als technische richting.
 
 ### Regels
+
 - vaste delen vroeg in prompt
 - variabele input later in prompt
 - prefixstabiliteit is gewenst
 
 ### Doel
+
 - lagere latency
 - lagere kosten
 - stabielere uitvoering bij herhaling
@@ -1836,12 +2020,14 @@ Nog niet leidend voor implementatie, wel bindend als technische richting.
 Elke latere runtime-write moet versie-lineage dragen.
 
 Doel:
+
 - reproduceerbaarheid
 - impactanalyse
 - rollback
 - veilige regeneration
 
 Minimaal te koppelen:
+
 - `task_version`
 - `requestId`
 - `flowId`
@@ -1851,6 +2037,7 @@ Minimaal te koppelen:
 `ai_live_generation_log` is hiervoor de structurele richting, niet alleen debug-data.
 
 ### Aanscherping
+
 Dit blijft belangrijk, maar is **niet** de eerstvolgende prioriteit zolang runtime nog niet DB-live uit de studio leest.
 
 ---
@@ -1860,6 +2047,7 @@ Dit blijft belangrijk, maar is **niet** de eerstvolgende prioriteit zolang runti
 AI Quality Studio is een admin-tool en mag daarom anders werken dan de eindgebruikersapp.
 
 ### Regels
+
 - mobiel moet goed bruikbaar blijven
 - desktop mag niet kunstmatig klein blijven
 - fullscreen gebruik op desktop moet actief ondersteund worden
@@ -1868,6 +2056,7 @@ AI Quality Studio is een admin-tool en mag daarom anders werken dan de eindgebru
 - behoud duidelijke hiërarchie en focus; geen generieke enterprise-zwaarte
 
 ### Concreet betekent dit
+
 - task detail en draft editor mogen op desktop breder openen dan de app-shell
 - compare-views mogen naast elkaar staan op grotere schermen
 - testresultaten en contractnotices mogen op desktop zichtbaar zijn zonder overmatig scrollen
@@ -1875,6 +2064,7 @@ AI Quality Studio is een admin-tool en mag daarom anders werken dan de eindgebru
 - fullscreen mag gebruikt worden voor productiviteit, niet alleen voor esthetiek
 
 ### Niet doen
+
 - admin 1-op-1 behandelen als consumentenscherm
 - alles centreren in een smalle mobile-column op grote schermen
 - desktop oplossen met alleen grotere marges zonder informatiearchitectuur aan te passen
@@ -1884,6 +2074,7 @@ AI Quality Studio is een admin-tool en mag daarom anders werken dan de eindgebru
 ## 23. Bekende beperkingen (huidige fase)
 
 Niet volledig aanwezig:
+
 - promote-to-live workflow
 - rollback flow
 - reviewer labeling flow in UI als persistente bewijslaag
@@ -1937,6 +2128,7 @@ Niet volledig aanwezig:
 ## 26. Prioriteitenvolgorde (bindend advies)
 
 ### Fase A — Nu eerst bouwen
+
 1. **Testen en valideren binnen de tool als primaire lus**
    - draft wijzigen
    - bron kiezen
@@ -1959,24 +2151,27 @@ Niet volledig aanwezig:
    - mobiel niet breken
 
 ### Fase B — Daarna uitbreiden
+
 5. **Curated testsets / regressiesets per task**
    - saved cases
    - goldens
    - edge/noisy cases
    - batch evals
 
-6. **Version governance verder dichtzetten**
+2. **Version governance verder dichtzetten**
    - candidate / approved / live beter afbakenen
    - promote-evidence expliciet tonen
 
 ### Fase C — Pas daarna
+
 7. **Runtime lineage en DB-live binding verder uitwerken**
    - pas na sterke test/evidence-lus
 
-8. **Live testen/resultaten/beoordelingen toevoegen**
+2. **Live testen/resultaten/beoordelingen toevoegen**
    - pas wanneer runtime daadwerkelijk zinnig koppelbaar is aan task versions uit de studio
 
 ### Fase D — Als laatste
+
 9. **Kwaliteitsdashboard bouwen**
    - pas bouwen wanneer er echte evaluatiedata, trends en aggregaties zijn
    - dashboard is eindlaag, niet startpunt
@@ -1986,38 +2181,49 @@ Niet volledig aanwezig:
 ## 27. Concrete next steps om nu te bouwen
 
 ### Stap 1 — Compare en validatie echt afmaken
+
 Doel:
+
 - in de studio aantoonbaar kunnen zeggen of een draft beter is dan de basis
 
 Bouwen:
+
 - compare-view afronden als primaire werkmodus
 - expliciete reviewactie inbouwen: `beter`, `gelijk`, `slechter`, `fout`
 - verplichte notitie bij `slechter` of `fout`
 - contract checks zichtbaar in dezelfde evaluatieflow
 
 Nog niet bouwen:
+
 - zware live dashboards
 - rollout automation
 
 ### Stap 2 — Evaluation results persistent maken
+
 Doel:
+
 - evaluatie wordt bewijslaag
 
 Bouwen:
+
 - opslagmodel voor evaluatie-uitkomsten
 - koppeling aan task, versie, run en case
 - historisch terugvindbare beoordelingen
 - simpele aggregaties per versie: pass/fail, beter/gelijk/slechter/fout
 
 Nog niet bouwen:
+
 - complexe auto graders
 - brede analyticslaag
 
 ### Stap 3 — Editors gelijktrekken
+
 Doel:
+
 - `entry_cleanup` niet als uitzondering laten bestaan
 
 Bouwen:
+
 - audit van alle bestaande prompt-editschermen
 - bepalen wat nog hardcoded of task-specifiek is
 - gedeelde editor-secties harmoniseren:
@@ -2029,14 +2235,18 @@ Bouwen:
 - task-metadata gebruiken waar taakverschillen echt bestaan
 
 Nog niet bouwen:
+
 - vrije payload editors
 - raw JSON blob editing als hoofdmodus
 
 ### Stap 4 — Admin desktop/fullscreen UX verbeteren
+
 Doel:
+
 - AIQS wordt op desktop daadwerkelijk prettiger en sneller om mee te werken
 
 Bouwen:
+
 - bredere layoutregels voor admin
 - detail/editor/test schermen geschikt maken voor grotere schermen
 - split of multi-column waar compare dat ondersteunt
@@ -2044,26 +2254,34 @@ Bouwen:
 - fullscreen als ondersteunde werkmodus behandelen
 
 Nog niet bouwen:
+
 - designpolish zonder workflowverbetering
 
 ### Stap 5 — Curated testsets en batch evaluatie
+
 Doel:
+
 - minder handmatig dezelfde cases zoeken
 
 Bouwen:
+
 - saved cases
 - golden/edge/noisy labels
 - N-case batch runs per task/version
 - regressie-indicatie op dezelfde set
 
 Nog niet bouwen:
+
 - live beoordelingsqueues op productie-output
 
 ### Stap 6 — Pas later runtime/live en dashboard
+
 Doel:
+
 - pas toevoegen wanneer de onderlaag klopt
 
 Later bouwen:
+
 - runtime-koppeling aan echte studio versions
 - live result reviews
 - reviewer queues op productie-output
@@ -2075,6 +2293,7 @@ Later bouwen:
 ## 28. Samenvatting
 
 AI Quality Studio is nu een werkende admin-hardening basis met:
+
 - taskbeheer
 - baseline import
 - drafting
@@ -2084,6 +2303,7 @@ AI Quality Studio is nu een werkende admin-hardening basis met:
 De volgende volwassen stap is **niet** meer UI-volume of direct live runtimebeheer.
 
 De volgende volwassen stap is:
+
 - aantoonbaar testen in de tool
 - evaluatie-uitkomsten opslaan als bewijs
 - editors gelijktrekken
@@ -2091,6 +2311,7 @@ De volgende volwassen stap is:
 - daarna pas regressiesets, lifecycle-verdieping, runtime-lineage en live-kwaliteit
 
 Zo blijft de studio:
+
 - contractvast
 - reproduceerbaar
 - beheersbaar voor admins
@@ -2106,36 +2327,44 @@ Doel: voorkomen dat dezelfde regressies terugkomen in AIQS editor- en admin-acce
 ### 29.1 Access-state mag geen netwerkfout als “geen toegang” framen
 
 Regel:
+
 - `adminAccess=false` mag alleen bij expliciete auth-codes (`AUTH_UNAUTHORIZED` of `AUTH_MISSING`).
 - Generieke load/invoke/netwerkfouten blijven een laadfout, geen autorisatie-uitkomst.
 
 Waarom:
+
 - anders ontstaat false-negative “Geen toegang” voor echte allowlisted admins.
 
 ### 29.2 Allowlist parsing moet robuust zijn voor gequote env-waarden
 
 Regel:
+
 - allowlist parsing in edge functions moet omringende quotes strippen op bron- én itemniveau.
 
 Waarom:
+
 - lokale `.env.local` waarden staan vaak als `"uuid"`; zonder quote-strip faalt user-id match en krijg je onterechte `Forbidden`.
 
 ### 29.3 Prompt-editor normalisatie moet editor-overstijgend consistent zijn
 
 Regel:
+
 - newline/paragraph normalisatie moet identiek blijven tussen visual editor en sectieparsering.
 - sectiewissels mogen geen “lege regel migratie” veroorzaken.
 
 Waarom:
+
 - inconsistente representatie (lege regels direct toevoegen vs buffered toepassen) veroorzaakt drift: regel weg in editor A, lege regel terug in editor B.
 
 ### 29.4 UI-regel voor deze editor
 
 Regel:
+
 - “Gebruikte tokens” hulpblok is verwijderd uit de editor-surface.
 - editor-surface blijft licht/thematisch leesbaar in dark mode.
 
 Waarom:
+
 - minder visuele ruis, minder dubbelheid, en stabiel contrast voor tekstbewerking.
 
 ---
@@ -2145,13 +2374,16 @@ Waarom:
 # Cline workflow (operationeel)
 
 ## Doel
+
 Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productwaarheid te vervuilen.
 
 ## Rolverdeling
+
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
 - **Cline in VS Code**: repo-analyse, plan, wijzigingen, verify en commit.
 
 ## Bronnenvolgorde
+
 1. `docs/project/README.md`
 2. `AGENTS.md`
 3. taakrelevante canonieke docs in `docs/project/**`
@@ -2160,6 +2392,7 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
 
 Regels:
+
 - `docs/project/**` = canonieke projectwaarheid.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
@@ -2170,6 +2403,7 @@ Regels:
 - Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
 
 ## Design-implementatie guardrails (operationeel)
+
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
 - Gebruik eerst bestaande shared primitives/patronen; voeg alleen een nieuw shared component toe bij een echt herhaalbaar patroon over meerdere schermen.
 - Stop geen screen-specifieke designregels in generieke shared primitives.
@@ -2177,6 +2411,7 @@ Regels:
 - Verify stylingwerk altijd in light én dark mode tegen relevante design refs voordat het “klaar” is.
 
 ## Repo-eigen Memory Bank workflow
+
 - Onze memory bank is een **workflowlaag**, geen extra waarheidshiërarchie.
 - Verdeling:
   - canonieke waarheid: `docs/project/**`
@@ -2190,6 +2425,7 @@ Regels:
   - operationele taken: `docs/project/25-tasks/**`
 
 ## Active context tussen sessies
+
 - `docs/dev/active-context.md` is een lichte brug tussen Cline-sessies.
 - Gebruik actief bij:
   - non-triviale taken
@@ -2200,11 +2436,13 @@ Regels:
   - kleine, volledig afgebakende fixes zonder sessieafhankelijkheid
 
 Regels:
+
 - `active-context.md` is niet canoniek en niet de statuswaarheid.
 - Verwijs naar canonieke docs in plaats van inhoud te kopiëren.
 - Promoveer alleen stabiele learnings naar `AGENTS.md`, skills of `docs/dev/**`.
 
 ## Beslisregels per laag
+
 - canonieke waarheid → `docs/project/**`
 - operationele workflow → `docs/dev/**`
 - always-on gedrag → `AGENTS.md`
@@ -2215,14 +2453,18 @@ Regels:
 - operationele uitvoeringstaken → `docs/project/25-tasks/**`
 
 ## Wanneer Plan mode
+
 Gebruik Plan mode bij:
+
 - bugs met onduidelijke oorzaak
 - multi-file wijzigingen
 - migraties
 - taken met duidelijke scope-/architectuurrisico’s
 
 ## Wanneer Act mode
+
 Gebruik Act mode voor:
+
 - gerichte implementatie
 - kleine fixes met duidelijke file-scope
 - verify en afronding
@@ -2230,38 +2472,45 @@ Gebruik Act mode voor:
 ## Promptpatronen
 
 ### Kleine fixes
+
 - Houd input compact: doel + scope + files.
 - Werk cheap-first: kleinste werkende wijziging.
 - Geen scope-uitbreiding tijdens implementatie.
 
 ### Multi-file werk
+
 - Begin met expliciete todo/checklist.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
 
 ## Verify-regel
+
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Commit alleen na geslaagde verify.
 
 ## Supabase migratie-uitvoering (verplicht)
+
 - Bij wijzigingen in `supabase/migrations/**` voert Cline/Codex de lokale DB-stap standaard zelf uit: `npx supabase db push --local` (of `npx supabase db reset` wanneer nodig).
 - Ook wanneer een taak leunt op een **al bestaande maar lokaal nog niet toegepaste** migratie (bijv. nieuwe tabel/kolom ontbreekt in runtime), voert Cline/Codex alsnog direct `npx supabase db push --local` uit.
 - Vraag deze stap niet terug aan de gebruiker als de CLI hem veilig non-interactief kan uitvoeren.
 
 ## Dev-server policy
+
 - Start geen langlopende dev servers tenzij expliciet gevraagd.
 - Gebruik geen `CI=1` prefix voor lokale dev-server commando’s.
 - Als live server nodig is: geef alleen het handmatige commando aan de gebruiker.
 
 ## Lessen uit sessies (stabiel, herbruikbaar)
+
 - Bevestig bij onderbroken sessies altijd eerst de actuele file state (small read/diff) vóór nieuwe patches.
 - Houd productwaarheid, toolingafspraken en uploadartefacten strikt gescheiden.
 - Verhoog status/docs alleen met hard bewijs uit code, runtime of canonieke docs.
 - Verwerk workflowlearnings in `AGENTS.md` of `docs/dev/**`, niet in productinhoud.
 
 ## Valkuilen om te vermijden
+
 - Verder patchen op oude context na interrupties.
 - Te brede patches zonder eerst klein te valideren waar de wijziging exact landt.
 - `docs/upload/**` gebruiken als bron van waarheid.
@@ -2275,15 +2524,18 @@ Gebruik Act mode voor:
 # Planning hub
 
 ## Doel
+
 Navigatiehub voor actieve uitvoeringsfocus, roadmap en afwijkingsbesluiten.
 
 ## Kernnotities
+
 - Roadmap fases
 - Active phase
 - Now / Next / Later
 - Deviations and decisions
 
 ## Verbonden lagen
+
 - Strategy hub
 - Research hub
 - Ideas workspace
@@ -2296,9 +2548,11 @@ Navigatiehub voor actieve uitvoeringsfocus, roadmap en afwijkingsbesluiten.
 # Roadmap phases (lean)
 
 ## Doel
+
 Eén overzicht van projectfases met status, zonder detail-overload.
 
 ## Obsidian links
+
 - Planning hub
 - Active phase
 - Now / Next / Later
@@ -2307,6 +2561,7 @@ Eén overzicht van projectfases met status, zonder detail-overload.
 - Open points
 
 ## Fasekaart
+
 | Fase | Doel | Status |
 |---|---|---|
 | Fase 1 (kernlus) | capture -> dagboeklaag -> reflecties bouwen | afgerond als basis |
@@ -2315,6 +2570,7 @@ Eén overzicht van projectfases met status, zonder detail-overload.
 | Fase 3 (modulaire flows) | flow-families met eigen contracts/evals | later |
 
 ## Regel
+
 - Alleen `planning/20-active-phase.md` bepaalt wat nu actief focusgebied is.
 
 ---
@@ -2324,20 +2580,24 @@ Eén overzicht van projectfases met status, zonder detail-overload.
 # Active phase (uitvoeringsfocus)
 
 ## Actieve fase
+
 Transitiemaand: consumer beta afronden + brugpilot definiëren.
 
 ## Doel van deze fase
+
 1. Consumer beta afronden met expliciet release- en runtimebewijs.
 2. 1.2B outputkwaliteit expliciet maken als afgebakende kwaliteitsset.
 3. 1.2E beta-readiness expliciet maken als bewijs-gedreven readiness set.
 4. Een kleine commerciële brugpilot definiëren zonder brede Pro- of Business-activatie.
 
 ## Korte samenvatting van deze maand
+
 De komende maand is een smalle overgangsstap tussen de huidige capture-first beta en de latere commerciële richting.
 De kern blijft consumer beta afronden met bewijs.
 Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaande entry/day bronlaag.
 
 ## Obsidian links
+
 - Planning hub
 - Roadmap phases
 - Now / Next / Later
@@ -2348,6 +2608,7 @@ Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaan
 - Ideas workspace
 
 ## In focus (Now)
+
 - Proof-first consumer beta afronden op basis van actuele runtime-realiteit in `current-status.md`.
 - 1.2B outputkwaliteit expliciteren als concrete kwaliteitsset met afrondcriteria.
 - 1.2E beta-readiness expliciteren als concrete checklist met bewijsregel.
@@ -2357,6 +2618,7 @@ Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaan
   - doel = beoordelen of de bestaande bronlaag bruikbare reviewbare output kan opleveren
 
 ## Niet in focus (nu niet trekken)
+
 - Scheduler, autopost en multi-channel publishing.
 - Teams, Business/Private en usage billing.
 - AIQS control-plane verbreding als actieve fase.
@@ -2364,10 +2626,12 @@ Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaan
 - Research behandelen alsof het al canonieke productwaarheid is.
 
 ## Flexibele afwijkingsregel
+
 - Kleine afwijkingen met lage impact mogen direct, maar moeten achteraf in `planning/40-deviations-and-decisions.md`.
 - Structurele afwijkingen eerst als besluit/deviation vastleggen, daarna active-phase updaten.
 
 ## Bewijsregel
+
 - Claims over “gereed” alleen met code- of runtimebewijs.
 - `current-status.md` blijft leidend voor code-realiteit.
 - `open-points.md` blijft leidend voor open gaten en onzekerheden.
@@ -2379,9 +2643,11 @@ Daarna wordt precies één review-first brugpilot gedefinieerd vanuit de bestaan
 # Now / Next / Later
 
 ## Doel
+
 Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadministratie.
 
 ## Obsidian links
+
 - Planning hub
 - Active phase
 - Deviations and decisions
@@ -2390,6 +2656,7 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Ideas workspace
 
 ## Now
+
 - Consumer beta afronden met expliciet bewijs op de bestaande capture-first runtime.
 - 1.2B outputkwaliteit expliciteren en afronden als concrete kwaliteitsset.
 - 1.2E beta-readiness expliciteren en afronden als concrete readiness set.
@@ -2399,17 +2666,20 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 - Operating-system onderhoud alleen doen als ondersteunend werk voor bovenstaande focus.
 
 ## Next
+
 - Eerste afbakening of verkenning van de brugpilot na bewijs op de consumer beta.
 - Kleine vervolgkeuzes rond review-first output op basis van entry/day bronmateriaal.
 - Alleen ondersteunend docs- en bundle-onderhoud dat nodig is om de actieve focus helder te houden.
 
 ## Later
+
 - Volledige modulaire flow-architectuur productiseren.
 - Brede Pro-laag, Business/Private en control-plane verdieping activeren.
 - Scheduler, autopost en multi-channel publishing verkennen.
 - Usage billing, credits, top-ups en bredere commerciële operationele laag activeren.
 
 ## Parking lot
+
 - Nieuwe ideeën eerst kort in `docs/project/40-ideas/00-ideas-inbox.md`.
 
 ---
@@ -2419,9 +2689,11 @@ Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadmi
 # Deviations and decisions
 
 ## Doel
+
 Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit traceerbaar blijft.
 
 ## Obsidian links
+
 - Planning hub
 - Active phase
 - Now / Next / Later
@@ -2430,12 +2702,14 @@ Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit tr
 - Strategy hub
 
 ## Gebruik
+
 - Elke structurele koerswijziging krijgt hier een korte entry.
 - Kleine lage-impact afwijkingen mogen direct, maar worden alsnog achteraf gelogd.
 
 ## Template
 
 ### [YYYY-MM-DD] Titel
+
 - **Type**: deviation | decision
 - **Van plan/document**: (bijv. `planning/20-active-phase.md`)
 - **Wijziging**: wat verandert er
@@ -2446,6 +2720,7 @@ Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit tr
 ## Entries
 
 ### 2026-04-19 — Actieve maandfocus herijkt naar transitiemaand
+
 - **Type**: decision
 - **Van plan/document**: `planning/20-active-phase.md` en `planning/30-now-next-later.md`
 - **Wijziging**: eerdere maandfocus op generieke hardening + docs/operating-system werk wordt formeel vervangen door een transitiemaand met consumer beta bewijs, expliciete 1.2B/1.2E en een afgebakende review-first brugpilot
@@ -2454,6 +2729,7 @@ Logboek van bewuste afwijkingen op actieve fase/planning, zodat flexibiliteit tr
 - **Vervolgactie**: active phase en now/next/later alignen; strategy-horizon alleen licht aanscherpen zodat de eerstvolgende maand geen brede Pro-activatie suggereert
 
 ### 2026-04-19 — Lean operating system expliciet toegevoegd aan projectdocs
+
 - **Type**: decision
 - **Van plan/document**: impliciete root-structuur in `docs/project/`
 - **Wijziging**: introductie van `strategy/`, `planning/` en `ideas/` als vaste operating system lagen

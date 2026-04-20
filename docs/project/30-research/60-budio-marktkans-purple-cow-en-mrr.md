@@ -1,7 +1,9 @@
 # Budio — marktresearch, purple cow, groeikansen en omzetpotentie
 
 ## Doel
+
 Dit document zet de eerdere marktreview om in een compacte strategische notitie voor Budio, met:
+
 - oordeel over de 4 gemaakte documenten
 - markt kans
 - purple cow
@@ -16,6 +18,7 @@ Dit document zet de eerdere marktreview om in een compacte strategische notitie 
 Ja, dit **kan** de toekomst van Budio zijn.
 
 Maar alleen als Budio **niet** eindigt als:
+
 - nog een journaling app
 - nog een AI social tool
 - nog een autopost machine
@@ -25,6 +28,7 @@ De sterkste richting is:
 **voice-first capture -> context -> review -> publiceerbare output**
 
 Voor:
+
 - podcasters
 - solo experts
 - coaches
@@ -33,6 +37,7 @@ Voor:
 - knowledge creators
 
 De 4 documenten zijn inhoudelijk behoorlijk consistent:
+
 - consumenten-MVP als validatielaag
 - daarna een Pro-wedge
 - daarna pas private / regulated
@@ -50,6 +55,7 @@ de architectuur is scherper beschreven dan de wedge.
 De markt onder deze richting is echt.
 
 Wat de buitenwereld bevestigt:
+
 - creators gebruiken massaal AI
 - mobiel en voice worden belangrijker
 - podcasters en knowledge creators vormen een serieuze markt
@@ -60,6 +66,7 @@ De relevante marktkans zit dus niet vooral in “nog een contenttool”, maar in
 **wat gebeurt er vóór de contenttool?**
 
 Dus:
+
 - voordat iemand gaat editen
 - voordat iemand clips maakt
 - voordat iemand captions schrijft
@@ -72,6 +79,7 @@ Daar zit de kans voor Budio.
 ## 3. Purple cow
 
 De purple cow van Budio is **niet**:
+
 - AI op zichzelf
 - credits
 - top-ups
@@ -90,6 +98,7 @@ Nog scherper:
 **Budio zet pre-content input om in publiceerbare output, mét context, stembehoud en review.**
 
 Dat is anders dan tools die pas beginnen wanneer er al:
+
 - een transcript is
 - een opname is
 - een video is
@@ -104,6 +113,7 @@ De echte onderscheidende lijn is dus:
 ## 4. Waarom dit kansrijk is
 
 Deze richting is kansrijk omdat deze doelgroep:
+
 - veel ruwe input heeft
 - weinig tijd heeft
 - wel zichtbaar wil zijn
@@ -112,6 +122,7 @@ Deze richting is kansrijk omdat deze doelgroep:
 - sneller betaalt dan brede consumenten
 
 Vooral deze segmenten zijn interessant:
+
 1. podcasters
 2. coaches
 3. consultants
@@ -131,26 +142,32 @@ De echte omzetkans zit in:
 ## 5. Groei kansen
 
 ### Kans 1 — Podcasters
+
 Dit is waarschijnlijk de scherpste eerste wedge.
 
 Waarom:
+
 - veel ruwe input
 - veel hergebruik nodig
 - veel kanaalvertalingen nodig
 - hoge waarde van tijdsbesparing
 
 ### Kans 2 — Solo experts
+
 Mensen die veel denken, praten, adviseren en publiceren,
 maar vastlopen tussen idee en output.
 
 ### Kans 3 — Privacy-first differentiatie
+
 Later kan Budio zich onderscheiden met:
+
 - local-first waar mogelijk
 - review-first
 - strakkere privacy
 - private / regulated laag
 
 ### Kans 4 — Business / private workspaces
+
 Niet als eerste wedge,
 wel als latere premium laag met hogere ARPU.
 
@@ -159,16 +176,20 @@ wel als latere premium laag met hogere ARPU.
 ## 6. Grootste risico’s
 
 ### 1. Te breed gaan
+
 Consumer + Pro + Business tegelijk verkopen is te veel.
 
 ### 2. Te generiek worden
+
 “AI content tool” is niet scherp genoeg.
 
 ### 3. Te vroeg enterprise denken
+
 Private / regulated is later interessant,
 maar niet de eerste motor.
 
 ### 4. Te weinig commerciële brug
+
 Als Budio alleen goed blijft in capture en reflectie,
 maar de brug naar output niet sterk maakt,
 dan blijft de omzet beperkt.
@@ -178,6 +199,7 @@ dan blijft de omzet beperkt.
 ## 7. Voorzichtige maand omzetpotentie
 
 ### Scenario A — vooral consumer journaling
+
 Als Budio vooral een rustige capture- en reflectie-app blijft,
 dan is een voorzichtige inschatting na 12 maanden:
 
@@ -187,7 +209,9 @@ Dat is niet nul,
 maar ook geen grote SaaS-machine.
 
 ### Scenario B — hybride lijn met echte Pro-wedge
+
 Als je:
+
 - consumer als instap gebruikt
 - één echte “maak hier iets van”-brug bouwt
 - daarna gericht verkoopt aan podcasters en solo experts
@@ -197,6 +221,7 @@ dan is een voorzichtige maar geloofwaardige range:
 **ongeveer €3.000 tot €8.000 MRR**
 
 Voorbeeld:
+
 - 100 Plus-gebruikers × €12 = €1.200
 - 50 Pro-gebruikers × €39 = €1.950
 - 2 Business/private workspaces × €149 = €298
@@ -217,6 +242,7 @@ dan is dit tegen maand 12 realistisch:
 **ongeveer €8.000 tot €15.000 MRR**
 
 Voorbeeld:
+
 - 160 Plus × €12 = €1.920
 - 140 Pro × €39 = €5.460
 - 6 Business/private × €149 = €894
@@ -231,6 +257,7 @@ Met top-ups of auto-recharge kan dat nog hoger worden.
 ## 9. Wat ik niet geloof in 12 maanden
 
 Ik geloof **niet** in:
+
 - €20k+ MRR uit een brede journaling-app
 - grote businessomzet zonder eerst een Pro-wedge te bewijzen
 - “voor iedereen die content maakt”
@@ -244,11 +271,13 @@ Dat is te breed en te optimistisch.
 
 De toekomst van Budio is geloofwaardig als:
 
-### Niet:
+### Niet
+
 - een brede consumer journaling-app
 - nog een AI social tool
 
-### Wel:
+### Wel
+
 - een voice-first capture-to-content product
 - voor podcasters en solo experts
 - met review
@@ -277,7 +306,9 @@ In gewone taal:
 de voorspelbare omzet die elke maand terugkomt uit abonnementen.
 
 ### Voorbeeld
+
 Als je hebt:
+
 - 100 klanten op €12 per maand
 - 50 klanten op €39 per maand
 
@@ -290,16 +321,20 @@ Totaal:
 **€3.150 MRR**
 
 ### Belangrijk
+
 MRR is meestal:
+
 - **wel** abonnementsgeld
 - **niet automatisch** losse eenmalige omzet
 
 Dus:
+
 - maandabonnementen tellen mee
 - een eenmalige top-up telt meestal niet mee als pure MRR
 - losse implementatie of service-inkomsten tellen meestal ook niet mee
 
 Voor Budio is het slim om onderscheid te maken tussen:
+
 1. **MRR**
    - vaste abonnementen
 2. **usage omzet**

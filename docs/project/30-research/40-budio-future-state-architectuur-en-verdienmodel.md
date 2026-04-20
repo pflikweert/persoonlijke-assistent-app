@@ -5,6 +5,7 @@
 Jullie staan nu op een sterke **capture-first basis** met een al serieuze admin AI-governance-laag, maar nog niet op de echte commerciële Pro-machine.
 
 De huidige productwaarheid is bewust smal:
+
 - snelle capture
 - dagboeklaag
 - reflecties
@@ -26,6 +27,7 @@ De juiste toekomstlijn is:
 Productmatig staan jullie nog niet op **Budio als content operating system**, maar op een sterke **capture-first dagboekmachine met een opvallend volwassen AI-backoffice**.
 
 De kernlus staat:
+
 - auth
 - tekst/audio capture
 - server-side verwerking
@@ -50,12 +52,14 @@ De commerciële brug is nog niet scherp genoeg in het product.
 Dit blijft de rustige capture-ingang.
 
 Doel:
+
 - laagdrempelig gebruik
 - routine opbouwen
 - capture-gedrag valideren
 - laten voelen waarom het product waarde heeft
 
 ### Rol van deze laag
+
 - tekst en audio snel vastleggen
 - daglaag teruglezen
 - week- en maandreflecties
@@ -64,7 +68,9 @@ Doel:
 - beperkte AI-hulp
 
 ### Abonnementen in deze laag
+
 #### Free
+
 - basis capture
 - beperkte reflectie
 - max **3 minuten audio per opname**
@@ -73,6 +79,7 @@ Doel:
 - geen zware hergebruik-workflows
 
 #### Plus
+
 - uitgebreidere capture
 - meer archiefwaarde
 - langere audio, bijvoorbeeld **5 minuten**
@@ -81,9 +88,11 @@ Doel:
 - iets meer AI-transforms
 
 ### Doel van Free
+
 Free moet bruikbaar zijn, maar niet zo ruim dat zware gebruikers gratis blijven.
 
 De functie van Free is:
+
 - product leren kennen
 - routine bouwen
 - waarde bewijzen
@@ -101,6 +110,7 @@ Dit is:
 **van ruwe input naar werkbare output**
 
 Voor:
+
 - solo experts
 - podcasters
 - coaches
@@ -110,6 +120,7 @@ Voor:
 - knowledge creators
 
 ### Wat deze laag moet kunnen
+
 - postvoorstellen
 - captions
 - LinkedIn-versies
@@ -121,11 +132,14 @@ Voor:
 - export / publish-prep
 
 ### Audio-idee
+
 - max **10 minuten audio per opname** als logische Pro-limiet
 
 ### Waarom dit de omzetlaag is
+
 Hier gaat het niet alleen om opslaan of reflecteren.
 Hier gaat het om:
+
 - tijdsbesparing
 - mentale frictie verlagen
 - sneller publiceren
@@ -133,6 +147,7 @@ Hier gaat het om:
 - van ruwe capture naar bruikbare output
 
 ### Harde commerciële waarheid
+
 De pure consumenten-journalingversie gaat waarschijnlijk niet efficiënt veel geld opleveren.
 
 De eerste echte geldmachine zit in:
@@ -143,6 +158,7 @@ De eerste echte geldmachine zit in:
 # 3. Private / Regulated
 
 Dit is de premium laag voor:
+
 - privacy
 - governance
 - langere werksessies
@@ -151,6 +167,7 @@ Dit is de premium laag voor:
 - private modelrouting
 
 ### Voor wie
+
 - business users
 - kleine teams
 - privacygevoelige professionals
@@ -158,6 +175,7 @@ Dit is de premium laag voor:
 - later mogelijk regulated use cases
 
 ### Wat deze laag moet kunnen
+
 - lange meeting-opnames
 - transcriptie van sessies
 - volledige review- en audit-trace
@@ -168,9 +186,11 @@ Dit is de premium laag voor:
 - later eventueel self-hosted / private deployment
 
 ### Audio-idee
+
 - **60 minuten of langer** per opname / meeting
 
 ### Belangrijke positie
+
 Dit is niet de eerste wedge.
 Maar dit is wel de laag met de hoogste potentiële ARPU zodra privacy en governance echt productwaarde worden.
 
@@ -187,15 +207,18 @@ De juiste commerciële vorm is:
 - limieten per plan op functionaliteit én gebruik
 
 ### Belangrijk principe
+
 Naar buiten toe moet je **geen ruwe provider-tokens** verkopen.
 
 Gebruik extern liever:
+
 - credits
 - AI-verbruik
 - maandelijkse bundel
 - extra top-up
 
 Gebruik intern wél:
+
 - input tokens
 - output tokens
 - cached tokens waar relevant
@@ -204,7 +227,9 @@ Gebruik intern wél:
 - cost per call
 
 ### Waarom dit slim is
+
 Zo kun je:
+
 - modellen wisselen zonder je pricing kapot te maken
 - planlimieten slim sturen
 - top-ups en auto-recharge logisch aanbieden
@@ -215,6 +240,7 @@ Zo kun je:
 ## Voorbeeld abonnementslijn
 
 ## Free
+
 - basis capture
 - daglaag
 - beperkte reflectie
@@ -224,6 +250,7 @@ Zo kun je:
 - geen zware export of Pro-workflows
 
 ## Plus
+
 - uitgebreidere capture
 - betere terugblik
 - langere audio, bijvoorbeeld 5 minuten
@@ -232,6 +259,7 @@ Zo kun je:
 - iets ruimere AI-verwerking
 
 ## Pro
+
 - 10 minuten audio
 - content transforms
 - review queue
@@ -241,6 +269,7 @@ Zo kun je:
 - top-ups en auto-recharge
 
 ## Private / Business
+
 - 60+ minuten meeting capture
 - workspace governance
 - privacy routing
@@ -257,6 +286,7 @@ Dit moet je **nu al** vastleggen per AI-call.
 Niet later.
 
 ### Minimale usage truth per call
+
 - user_id
 - workspace_id of account scope
 - task_key
@@ -280,7 +310,9 @@ Niet later.
 - target record
 
 ### Waarom dit nu belangrijk is
+
 Omdat je dan later niet hoeft te gokken:
+
 - wat kost een gebruiker echt?
 - welke feature trekt de meeste marge weg?
 - welk plan is te ruim?
@@ -304,6 +336,7 @@ Het moet uitgroeien tot:
 - rollout control
 
 ### AIQS moet straks ook kunnen tonen
+
 - usage per task
 - usage per model
 - usage per gebruiker / workspace
@@ -319,10 +352,12 @@ Het moet uitgroeien tot:
 - welke taken negatieve marge trekken
 
 ### Belangrijke verschuiving
+
 Niet alleen:
 “welke prompt is beter?”
 
 Maar ook:
+
 - welke taak is winstgevend?
 - waar kan een goedkoper model?
 - waar is local inferentie goed genoeg?
@@ -336,6 +371,7 @@ Maar ook:
 De grootste gemiste kans is niet méér AI.
 
 De grootste gemiste kans is:
+
 - geen echte usage truthlaag
 - nog geen scherpe brug van capture naar betaalde output-workflows
 - nog geen duidelijke review queue als productfeature
@@ -350,6 +386,7 @@ Dus:
 ## De rol van AIQS in de toekomst
 
 Vandaag is AIQS vooral:
+
 - admin-only
 - task-first
 - contract-first
@@ -361,6 +398,7 @@ In de toekomst moet AIQS worden:
 ## De intelligence control plane van Budio
 
 Niet zichtbaar voor de eindgebruiker, maar wel de plek waar je beheert:
+
 - welke AI-taken bestaan
 - welke modellen per taak mogen draaien
 - welke privacy-regels per taak gelden
@@ -387,12 +425,15 @@ De juiste lijn voor Budio is:
 - **AIQS** als control plane voor kwaliteit én marge
 
 ### Het echte businessmodel
+
 Niet:
+
 - een brede journaling-app
 - een losse AI-social-tool
 - full autonomous posting
 
 Wel:
+
 - capture-first
 - review-first
 - credits per abonnement
@@ -403,4 +444,5 @@ Wel:
 - content-conversie als echte omzetlaag
 
 ### Samenvatting in één zin
+
 **Budio verdient straks niet vooral aan journaling, maar aan het betrouwbaar en privacy-bewust omzetten van ruwe capture naar bruikbare output, met AIQS als machinekamer voor kwaliteit, routing en marge.**

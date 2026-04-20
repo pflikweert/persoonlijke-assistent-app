@@ -2,8 +2,8 @@
 
 # Budio Upload Manifest
 
-Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
-Source Commit: 361182d
+Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
+Source Commit: b4e34cb
 
 ## Primaire uploadset (aanbevolen)
 
@@ -28,4 +28,5 @@ Source Commit: 361182d
 | Volledige primaire context | `docs/upload/00-budio-upload-manifest.md`, `docs/upload/10-budio-product-truth.md`, `docs/upload/20-budio-strategy-and-research.md`, `docs/upload/25-budio-ideas-and-opportunity-map.md`, `docs/upload/30-budio-build-truth.md`, `docs/upload/40-budio-ui-system-and-design-truth.md`, `docs/upload/50-budio-ai-governance-and-operations.md` |
 
 ## Legacy uploadset
+
 - Legacy bestanden blijven aanwezig voor compatibiliteit maar zijn niet de primaire set.

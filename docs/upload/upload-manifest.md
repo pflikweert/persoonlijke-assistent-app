@@ -2,8 +2,8 @@
 
 # Upload Manifest
 
-Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
-Source Commit: 361182d
+Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
+Source Commit: b4e34cb
 
 ## Standaard Uploadset
 
@@ -27,6 +27,7 @@ Source Commit: 361182d
 | `docs/upload/upload-manifest.md` | generated manifest | Upload completeness check |
 
 ## Regels
+
 - Upload naar ChatGPT Project standaard de contextbestanden uit `docs/upload/**` plus dit manifest indien completeness-check gewenst is.
 - Gebruik `docs/upload/**` niet als canonieke bron voor agents; lees de handmatige bronbestanden en draai de bundle opnieuw.
 - Voor Stitch/design-handoff hoort `docs/upload/stitch-design-context.md` bij de uploadset.

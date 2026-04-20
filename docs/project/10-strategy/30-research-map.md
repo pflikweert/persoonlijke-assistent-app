@@ -1,9 +1,11 @@
 # Research map (strategie-input)
 
 ## Doel
+
 Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 
 ## Obsidian links
+
 - [[README|Strategy hub]]
 - [[../30-research/README|Research hub]]
 - [[../20-planning/README|Planning hub]]
@@ -12,6 +14,7 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 - [[../40-ideas/README|Ideas workspace]]
 
 ## Lezen in volgorde
+
 1. `docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md`
 2. `docs/project/30-research/20-budio-12-maandenpropositie-en-mvp-route.md`
 3. `docs/project/30-research/30-budio-podcaster-solo-expert-wedge-plan.md`
@@ -20,6 +23,7 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 6. `docs/project/30-research/60-budio-marktkans-purple-cow-en-mrr.md`
 
 ## Gebruik
+
 - Research is strategische input, geen automatische scope-beslissing.
 - Doorvertaling naar uitvoering loopt via:
   - `docs/project/20-planning/20-active-phase.md`
@@ -27,4 +31,5 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
   - `docs/project/20-planning/40-deviations-and-decisions.md`
 
 ## Relatie met ideas
+
 - Concrete initiatieven uit research kunnen als aparte ideeën landen in `docs/project/40-ideas/**`.

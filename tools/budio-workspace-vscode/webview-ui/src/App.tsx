@@ -12,6 +12,7 @@ import { vscode } from './vscode';
 
 type ViewMode = 'board' | 'list' | 'settings';
 type DueFilter = 'all' | 'today' | 'overdue' | 'no_date';
+type ViewportKind = 'desktop' | 'tablet' | 'small';
 
 interface Filters {
   status: 'all' | TaskStatus;
@@ -58,8 +59,32 @@ export function App(): React.JSX.Element {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{ status: TaskStatus; index: number } | null>(null);
   const [formState, setFormState] = useState<MetadataFormState | null>(null);
+  const [viewport, setViewport] = useState<ViewportKind>(getViewportKind);
+  const [detailOpen, setDetailOpen] = useState<boolean>(getViewportKind() === 'desktop');
   const searchRef = useRef<HTMLInputElement | null>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
+
+  const detailMode = viewport === 'desktop' ? 'pinned' : 'toggle';
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport(getViewportKind());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (detailMode === 'pinned') {
+      setDetailOpen(true);
+      return;
+    }
+
+    if (!selectedTaskId) {
+      setDetailOpen(false);
+    }
+  }, [detailMode, selectedTaskId]);
 
   useEffect(() => {
     const handler = (event: MessageEvent<HostToWebviewMessage>) => {
@@ -72,6 +97,9 @@ export function App(): React.JSX.Element {
         }
         if (message.focusTaskId) {
           setSelectedTaskId(message.focusTaskId);
+          if (getViewportKind() !== 'desktop') {
+            setDetailOpen(true);
+          }
         } else if (!selectedTaskId && message.snapshot.allCards[0]) {
           setSelectedTaskId(message.snapshot.allCards[0].id);
         }
@@ -116,45 +144,6 @@ export function App(): React.JSX.Element {
     return () => window.removeEventListener('message', handler);
   }, [selectedTaskId]);
 
-  useEffect(() => {
-    const handleKeyboard = (event: KeyboardEvent) => {
-      const activeElement = document.activeElement;
-      const typing =
-        activeElement instanceof HTMLInputElement ||
-        activeElement instanceof HTMLTextAreaElement ||
-        activeElement instanceof HTMLSelectElement;
-      if (typing) {
-        return;
-      }
-
-      if (event.key === '/') {
-        event.preventDefault();
-        searchRef.current?.focus();
-        return;
-      }
-
-      if (event.key.toLowerCase() === 'n') {
-        event.preventDefault();
-        vscode.postMessage({ type: 'createTask', status: 'ready' });
-        return;
-      }
-
-      if (event.key.toLowerCase() === 'e' && selectedTask) {
-        event.preventDefault();
-        titleRef.current?.focus();
-        return;
-      }
-
-      if (event.key === 'Enter' && selectedTask && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id });
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyboard);
-    return () => window.removeEventListener('keydown', handleKeyboard);
-  });
-
   const tags = useMemo(() => {
     const values = new Set<string>();
     snapshot?.allCards.forEach((card) => {
@@ -191,6 +180,54 @@ export function App(): React.JSX.Element {
     null;
 
   useEffect(() => {
+    const handleKeyboard = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const typing =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement instanceof HTMLSelectElement;
+      if (typing) {
+        return;
+      }
+
+      if (event.key === '/') {
+        event.preventDefault();
+        searchRef.current?.focus();
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'n') {
+        event.preventDefault();
+        vscode.postMessage({ type: 'createTask', status: 'ready' });
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'e' && selectedTask) {
+        event.preventDefault();
+        if (detailMode === 'toggle') {
+          setDetailOpen(true);
+        }
+        titleRef.current?.focus();
+        return;
+      }
+
+      if (event.key === 'Escape' && detailMode === 'toggle' && detailOpen) {
+        event.preventDefault();
+        setDetailOpen(false);
+        return;
+      }
+
+      if (event.key === 'Enter' && selectedTask && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [detailMode, detailOpen, selectedTask]);
+
+  useEffect(() => {
     if (!selectedTask) {
       setFormState(null);
       return;
@@ -204,7 +241,7 @@ export function App(): React.JSX.Element {
       tags: selectedTask.tags.join(', '),
       dueDate: selectedTask.dueDate ?? '',
     });
-  }, [selectedTask?.id]);
+  }, [selectedTask?.id, selectedTask?.version.hash, selectedTask?.version.mtimeMs]);
 
   const dragEnabled = !hasActiveFiltering(search, filters) && sort === 'manual';
 
@@ -213,96 +250,126 @@ export function App(): React.JSX.Element {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell viewport-${viewport} detail-${detailMode}`}>
       <aside className="icon-rail">
         <IconButton active={activeView === 'board'} label="Board" onClick={() => switchView('board')} />
         <IconButton active={activeView === 'list'} label="List" onClick={() => switchView('list')} />
-        <IconButton
-          active={activeView === 'settings'}
-          label="Settings"
-          onClick={() => switchView('settings')}
-        />
+        <IconButton active={activeView === 'settings'} label="Settings" onClick={() => switchView('settings')} />
         <IconButton active={false} label="Refresh" onClick={() => vscode.postMessage({ type: 'refreshBoard' })} />
       </aside>
 
       <main className="workspace-shell">
         <header className="topbar">
-          <div>
+          <div className="topbar-copy">
             <div className="eyebrow">Budio Workspace</div>
             <h1>{snapshot.workspaceName}</h1>
             <p>{snapshot.tasksRoot}</p>
+            <div className="header-stats">
+              <StatusChip>{snapshot.totalTasks} taken</StatusChip>
+              <StatusChip>{snapshot.openTaskCount} open</StatusChip>
+              <StatusChip>{snapshot.doneTaskCount} done</StatusChip>
+            </div>
           </div>
-          <div className="topbar-controls">
-            <input
-              ref={searchRef}
-              className="search-input"
-              placeholder="Zoek op titel, tag of body..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <select value={filters.status} onChange={(event) => updateFilters({ status: event.target.value as Filters['status'] })}>
-              <option value="all">Alle statussen</option>
-              {snapshot.settings.columns.map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABELS[status]}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filters.priority}
-              onChange={(event) => updateFilters({ priority: event.target.value as Filters['priority'] })}
-            >
-              <option value="all">Alle prioriteiten</option>
-              <option value="p1">P1</option>
-              <option value="p2">P2</option>
-              <option value="p3">P3</option>
-            </select>
-            <select value={filters.tag} onChange={(event) => updateFilters({ tag: event.target.value })}>
-              <option value="all">Alle tags</option>
-              {tags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {tag}
-                </option>
-              ))}
-            </select>
-            <select value={filters.due} onChange={(event) => updateFilters({ due: event.target.value as DueFilter })}>
-              <option value="all">Alle data</option>
-              <option value="today">Vandaag</option>
-              <option value="overdue">Over tijd</option>
-              <option value="no_date">Geen datum</option>
-            </select>
-            <select value={sort} onChange={(event) => setSort(event.target.value as TaskSort)}>
-              <option value="manual">Manual</option>
-              <option value="due_date">Due date</option>
-              <option value="priority">Priority</option>
-              <option value="updated_at">Recent gewijzigd</option>
-              <option value="alphabetical">Alfabetisch</option>
-            </select>
-            <button className="ghost-button" onClick={() => vscode.postMessage({ type: 'refreshBoard' })}>
-              Refresh
-            </button>
-            <button className="primary-button" onClick={() => vscode.postMessage({ type: 'createTask', status: 'ready' })}>
-              Nieuwe taak
-            </button>
+
+          <div className="topbar-actions">
+            <div className="topbar-controls topbar-controls-primary">
+              <input
+                ref={searchRef}
+                className="search-input"
+                placeholder="Zoek op titel, tag of body..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <select
+                value={filters.status}
+                onChange={(event) => updateFilters({ status: event.target.value as Filters['status'] })}
+              >
+                <option value="all">Alle statussen</option>
+                {snapshot.settings.columns.map((status) => (
+                  <option key={status} value={status}>
+                    {STATUS_LABELS[status]}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filters.priority}
+                onChange={(event) => updateFilters({ priority: event.target.value as Filters['priority'] })}
+              >
+                <option value="all">Alle prioriteiten</option>
+                <option value="p1">P1</option>
+                <option value="p2">P2</option>
+                <option value="p3">P3</option>
+              </select>
+              <select value={filters.tag} onChange={(event) => updateFilters({ tag: event.target.value })}>
+                <option value="all">Alle tags</option>
+                {tags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filters.due}
+                onChange={(event) => updateFilters({ due: event.target.value as DueFilter })}
+              >
+                <option value="all">Alle data</option>
+                <option value="today">Vandaag</option>
+                <option value="overdue">Over tijd</option>
+                <option value="no_date">Geen datum</option>
+              </select>
+            </div>
+
+            <div className="topbar-controls topbar-controls-secondary">
+              <select value={sort} onChange={(event) => setSort(event.target.value as TaskSort)}>
+                <option value="manual">Manual</option>
+                <option value="due_date">Due date</option>
+                <option value="priority">Priority</option>
+                <option value="updated_at">Recent gewijzigd</option>
+                <option value="alphabetical">Alfabetisch</option>
+              </select>
+              <button
+                className={`ghost-button ${filters.onlyOpen ? 'active' : ''}`}
+                onClick={() => updateFilters({ onlyOpen: !filters.onlyOpen })}
+              >
+                Alleen open
+              </button>
+              <button
+                className={`ghost-button ${filters.onlyChecklistOpen ? 'active' : ''}`}
+                onClick={() => updateFilters({ onlyChecklistOpen: !filters.onlyChecklistOpen })}
+              >
+                Checklist open
+              </button>
+              <button className="ghost-button" onClick={() => vscode.postMessage({ type: 'refreshBoard' })}>
+                Refresh
+              </button>
+              <button
+                className="primary-button"
+                onClick={() => vscode.postMessage({ type: 'createTask', status: 'ready' })}
+              >
+                Nieuwe taak
+              </button>
+            </div>
           </div>
         </header>
 
         <section className="status-strip">
-          <span>{snapshot.totalTasks} taken</span>
-          <span>{snapshot.openTaskCount} open</span>
-          <span>{snapshot.doneTaskCount} done</span>
-          {!dragEnabled ? <span>Drag/drop is beschikbaar in manual view zonder actieve filters.</span> : null}
-          {savingTaskId ? <span>Opslaan...</span> : null}
-          {notice ? <span>{notice}</span> : null}
-          {error ? <span className="error-copy">{error}</span> : null}
+          {!dragEnabled ? <StatusChip>Drag/drop alleen in manual zonder filters</StatusChip> : null}
+          {detailMode === 'toggle' && selectedTask ? (
+            <button className="ghost-button detail-toggle-button" onClick={() => setDetailOpen((current) => !current)}>
+              {detailOpen ? 'Sluit details' : 'Open details'}
+            </button>
+          ) : null}
+          {savingTaskId ? <StatusChip>Opslaan...</StatusChip> : null}
+          {notice ? <StatusChip>{notice}</StatusChip> : null}
+          {error ? <StatusChip danger>{error}</StatusChip> : null}
         </section>
 
-        <div className="content-shell">
+        <div className={`content-shell ${detailMode === 'toggle' ? 'content-shell-toggle' : 'content-shell-pinned'}`}>
           <section className="main-pane">
             {activeView === 'board' ? (
               <div className="board-canvas">
                 {visibleColumns.map((column) => (
-                  <div
+                  <section
                     className="board-column"
                     key={column.key}
                     onDragOver={(event) => {
@@ -321,14 +388,19 @@ export function App(): React.JSX.Element {
                     }}
                   >
                     <div className="column-header">
-                      <div>
+                      <div className="column-heading">
                         <h2>{column.label}</h2>
                         <span>{column.count}</span>
                       </div>
                       {column.key !== 'done' ? (
                         <button
                           className="mini-button"
-                          onClick={() => vscode.postMessage({ type: 'createTask', status: column.key })}
+                          onClick={() =>
+                            vscode.postMessage({
+                              type: 'createTask',
+                              status: column.key as Exclude<TaskStatus, 'done'>,
+                            })
+                          }
                         >
                           Add card
                         </button>
@@ -336,101 +408,123 @@ export function App(): React.JSX.Element {
                     </div>
 
                     <div className="column-cards">
-                      {column.cards.map((card, index) => (
-                        <div key={card.id}>
-                          {dropIndicator?.status === column.key && dropIndicator.index === index ? (
-                            <div className="drop-indicator" />
-                          ) : null}
-                          <article
-                            className={`task-card ${selectedTask?.id === card.id ? 'selected' : ''}`}
-                            draggable={dragEnabled}
-                            onDragStart={() => setDragState({ taskId: card.id, sourceStatus: card.status })}
-                            onDragEnd={() => {
-                              setDragState(null);
-                              setDropIndicator(null);
-                            }}
-                            onDragOver={(event) => {
-                              if (!dragEnabled || !dragState) {
-                                return;
-                              }
-                              event.preventDefault();
-                              setDropIndicator({ status: column.key, index });
-                            }}
-                            onDrop={(event) => {
-                              if (!dragEnabled || !dragState) {
-                                return;
-                              }
-                              event.preventDefault();
-                              commitMove(column.key, index);
-                            }}
-                            onClick={() => setSelectedTaskId(card.id)}
-                            onDoubleClick={() => vscode.postMessage({ type: 'openSourceFile', taskId: card.id })}
-                          >
-                            <div className="card-header">
-                              <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
-                              <span className="muted-copy">{formatUpdatedAt(card.updatedAt)}</span>
-                            </div>
-                            <h3>{card.title}</h3>
-                            <p>{card.excerpt}</p>
-                            <div className="meta-row">
-                              {card.tags.map((tag) => (
-                                <span key={tag} className="tag-pill">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                            <div className="meta-row compact">
-                              {card.checklistProgress.total > 0 ? (
-                                <span>
-                                  Checklist {card.checklistProgress.completed}/{card.checklistProgress.total}
-                                </span>
+                      {column.cards.map((card, index) => {
+                        const visibleTags = card.tags.slice(0, 2);
+                        const hiddenTagCount = Math.max(card.tags.length - visibleTags.length, 0);
+                        const hasMeta = Boolean(card.dueDate) || card.checklistProgress.total > 0;
+
+                        return (
+                          <div key={card.id}>
+                            {dropIndicator?.status === column.key && dropIndicator.index === index ? (
+                              <div className="drop-indicator" />
+                            ) : null}
+                            <article
+                              className={`task-card ${selectedTask?.id === card.id ? 'selected' : ''}`}
+                              draggable={dragEnabled}
+                              onDragStart={() => setDragState({ taskId: card.id, sourceStatus: card.status })}
+                              onDragEnd={() => {
+                                setDragState(null);
+                                setDropIndicator(null);
+                              }}
+                              onDragOver={(event) => {
+                                if (!dragEnabled || !dragState) {
+                                  return;
+                                }
+                                event.preventDefault();
+                                setDropIndicator({ status: column.key, index });
+                              }}
+                              onDrop={(event) => {
+                                if (!dragEnabled || !dragState) {
+                                  return;
+                                }
+                                event.preventDefault();
+                                commitMove(column.key, index);
+                              }}
+                              onClick={() => selectTask(card.id)}
+                              onDoubleClick={() => vscode.postMessage({ type: 'openSourceFile', taskId: card.id })}
+                            >
+                              <div className="card-header">
+                                <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
+                                {card.dueDate ? <span className={dueClassName(card.dueDate)}>{card.dueDate}</span> : null}
+                              </div>
+
+                              <h3>{card.title}</h3>
+                              <p className="card-summary">{card.excerpt}</p>
+
+                              {(visibleTags.length > 0 || hiddenTagCount > 0) && (
+                                <div className="meta-row card-tags">
+                                  {visibleTags.map((tag) => (
+                                    <span key={tag} className="tag-pill">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                  {hiddenTagCount > 0 ? <span className="tag-pill muted-tag">+{hiddenTagCount}</span> : null}
+                                </div>
+                              )}
+
+                              {hasMeta ? (
+                                <div className="meta-row compact card-meta">
+                                  {card.checklistProgress.total > 0 ? (
+                                    <span>
+                                      Checklist {card.checklistProgress.completed}/{card.checklistProgress.total}
+                                    </span>
+                                  ) : null}
+                                  {card.dueDate ? <span>{dueLabel(card.dueDate)}</span> : null}
+                                </div>
                               ) : null}
-                              {card.dueDate ? <span className={dueClassName(card.dueDate)}>{card.dueDate}</span> : null}
-                              <span>{card.relativePath}</span>
-                            </div>
-                          </article>
-                        </div>
-                      ))}
+                            </article>
+                          </div>
+                        );
+                      })}
+
                       {dropIndicator?.status === column.key && dropIndicator.index === column.cards.length ? (
                         <div className="drop-indicator" />
                       ) : null}
+
                       {column.cards.length === 0 ? <div className="empty-state">Geen kaarten in deze kolom.</div> : null}
                     </div>
-                  </div>
+                  </section>
                 ))}
               </div>
             ) : null}
 
             {activeView === 'list' ? (
               <div className="list-shell">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Titel</th>
-                      <th>Status</th>
-                      <th>Priority</th>
-                      <th>Due</th>
-                      <th>Checklist</th>
-                      <th>Pad</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCards.map((card) => (
-                      <tr key={card.id} onClick={() => setSelectedTaskId(card.id)}>
-                        <td>{card.title}</td>
-                        <td>{STATUS_LABELS[card.status]}</td>
-                        <td>{card.priority.toUpperCase()}</td>
-                        <td>{card.dueDate ?? '—'}</td>
-                        <td>
-                          {card.checklistProgress.total > 0
-                            ? `${card.checklistProgress.completed}/${card.checklistProgress.total}`
-                            : '—'}
-                        </td>
-                        <td>{card.relativePath}</td>
+                <div className="list-table-shell">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Titel</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Due</th>
+                        <th>Checklist</th>
+                        <th>Pad</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredCards.map((card) => (
+                        <tr key={card.id} onClick={() => selectTask(card.id)}>
+                          <td>
+                            <div className="list-title-cell">
+                              <strong>{card.title}</strong>
+                              <span>{card.excerpt}</span>
+                            </div>
+                          </td>
+                          <td>{STATUS_LABELS[card.status]}</td>
+                          <td>{card.priority.toUpperCase()}</td>
+                          <td>{card.dueDate ?? '—'}</td>
+                          <td>
+                            {card.checklistProgress.total > 0
+                              ? `${card.checklistProgress.completed}/${card.checklistProgress.total}`
+                              : '—'}
+                          </td>
+                          <td>{card.relativePath}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : null}
 
@@ -485,16 +579,39 @@ export function App(): React.JSX.Element {
             ) : null}
           </section>
 
-          <aside className="detail-pane">
+          {detailMode === 'toggle' ? (
+            <button
+              type="button"
+              className={`detail-backdrop ${detailOpen ? 'visible' : ''}`}
+              aria-label="Sluit details"
+              onClick={() => setDetailOpen(false)}
+            />
+          ) : null}
+
+          <aside
+            className={`detail-pane ${detailMode === 'toggle' ? 'detail-pane-toggle' : 'detail-pane-pinned'} ${
+              detailOpen ? 'open' : ''
+            }`}
+          >
             {selectedTask && formState ? (
               <>
                 <div className="detail-header">
-                  <div>
+                  <div className="detail-copy">
                     <div className="eyebrow">Task detail</div>
                     <h2>{selectedTask.title}</h2>
                     <p>{selectedTask.relativePath}</p>
+                    <div className="detail-meta-chips">
+                      <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
+                      <span className="tag-pill">{STATUS_LABELS[selectedTask.status]}</span>
+                      {selectedTask.dueDate ? <span className={dueClassName(selectedTask.dueDate)}>{selectedTask.dueDate}</span> : null}
+                    </div>
                   </div>
                   <div className="detail-actions">
+                    {detailMode === 'toggle' ? (
+                      <button className="ghost-button" onClick={() => setDetailOpen(false)}>
+                        Sluit
+                      </button>
+                    ) : null}
                     <button
                       className="ghost-button"
                       onClick={() => vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id })}
@@ -519,11 +636,7 @@ export function App(): React.JSX.Element {
                 <div className="detail-form">
                   <label>
                     <span>Titel</span>
-                    <input
-                      ref={titleRef}
-                      value={formState.title}
-                      onChange={(event) => patchForm({ title: event.target.value })}
-                    />
+                    <input ref={titleRef} value={formState.title} onChange={(event) => patchForm({ title: event.target.value })} />
                   </label>
 
                   <div className="form-grid">
@@ -564,21 +677,33 @@ export function App(): React.JSX.Element {
 
                   <label>
                     <span>Due date</span>
-                    <input
-                      type="date"
-                      value={formState.dueDate}
-                      onChange={(event) => patchForm({ dueDate: event.target.value })}
-                    />
+                    <input type="date" value={formState.dueDate} onChange={(event) => patchForm({ dueDate: event.target.value })} />
                   </label>
 
                   <label>
                     <span>Korte samenvatting</span>
-                    <textarea
-                      rows={4}
-                      value={formState.summary}
-                      onChange={(event) => patchForm({ summary: event.target.value })}
-                    />
+                    <textarea rows={4} value={formState.summary} onChange={(event) => patchForm({ summary: event.target.value })} />
                   </label>
+
+                  <div className="detail-section">
+                    <strong>Bronbestand</strong>
+                    <span className="detail-path">{selectedTask.relativePath}</span>
+                  </div>
+
+                  <div className="detail-section">
+                    <strong>Alle tags</strong>
+                    <div className="meta-row detail-tag-grid">
+                      {selectedTask.tags.length > 0 ? (
+                        selectedTask.tags.map((tag) => (
+                          <span key={tag} className="tag-pill">
+                            {tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="muted-copy">Geen tags.</span>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="checklist-block">
                     <h3>Checklist</h3>
@@ -611,13 +736,15 @@ export function App(): React.JSX.Element {
                     <pre>{selectedTask.bodyPreview || 'Geen preview beschikbaar.'}</pre>
                   </div>
 
-                  <button className="primary-button" onClick={saveMetadata}>
+                  <button className="primary-button save-button" onClick={saveMetadata}>
                     Save metadata
                   </button>
                 </div>
               </>
             ) : (
-              <div className="empty-detail">Selecteer een kaart om details te bekijken.</div>
+              <div className="empty-detail">
+                {detailMode === 'toggle' ? 'Open een kaart om details te bekijken.' : 'Selecteer een kaart om details te bekijken.'}
+              </div>
             )}
           </aside>
         </div>
@@ -691,6 +818,13 @@ export function App(): React.JSX.Element {
     setDragState(null);
     setDropIndicator(null);
   }
+
+  function selectTask(taskId: string): void {
+    setSelectedTaskId(taskId);
+    if (detailMode === 'toggle') {
+      setDetailOpen(true);
+    }
+  }
 }
 
 function IconButton(props: { active: boolean; label: string; onClick: () => void }): React.JSX.Element {
@@ -699,6 +833,21 @@ function IconButton(props: { active: boolean; label: string; onClick: () => void
       {props.label}
     </button>
   );
+}
+
+function StatusChip(props: { children: React.ReactNode; danger?: boolean }): React.JSX.Element {
+  return <span className={props.danger ? 'status-chip status-chip-danger' : 'status-chip'}>{props.children}</span>;
+}
+
+function getViewportKind(): ViewportKind {
+  const width = window.innerWidth;
+  if (width < 768) {
+    return 'small';
+  }
+  if (width < 1180) {
+    return 'tablet';
+  }
+  return 'desktop';
 }
 
 function hasActiveFiltering(search: string, filters: Filters): boolean {
@@ -800,10 +949,6 @@ function compareDue(left: string | null, right: string | null): number {
   return 0;
 }
 
-function formatUpdatedAt(value: string): string {
-  return value;
-}
-
 function splitTags(input: string): string[] {
   return input
     .split(',')
@@ -820,4 +965,15 @@ function dueClassName(dueDate: string): string {
     return 'due-badge today';
   }
   return 'due-badge';
+}
+
+function dueLabel(dueDate: string): string {
+  const today = new Date().toISOString().slice(0, 10);
+  if (dueDate === today) {
+    return 'Vandaag';
+  }
+  if (dueDate < today) {
+    return 'Over tijd';
+  }
+  return dueDate;
 }

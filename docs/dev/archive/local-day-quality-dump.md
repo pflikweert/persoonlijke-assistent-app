@@ -9,6 +9,7 @@ node scripts/export-day-quality-dump.mjs --day=2026-04-02
 ```
 
 Output (default):
+
 - `docs/dev/day-2026-04-02-quality-dump.md`
 
 ## 2) Gefilterde dump voor 1 user
@@ -18,6 +19,7 @@ node scripts/export-day-quality-dump.mjs --day=2026-04-02 --user=ce4bf648-cba9-4
 ```
 
 Output (default):
+
 - `docs/dev/day-2026-04-02-quality-dump-user-ce4bf648.md`
 
 ## 3) User-id vinden van je lokale flow
@@ -42,4 +44,5 @@ node scripts/export-day-quality-dump.mjs \
 ## 5) Relevante lokale URL
 
 Voor de gevraagde testdag:
+
 - `http://localhost:8081/day/2026-04-02`

@@ -1,16 +1,19 @@
 # Tasks hub
 
 ## Doel
+
 Operationele taaklaag voor de huidige fase.
 Deze map is bedoeld voor uitvoeringssturing, niet als nieuwe canonieke productwaarheid.
 
 ## Workflow
+
 1. Maak een nieuwe taak aan in `docs/project/25-tasks/open/` vanuit `_template.md`.
 2. Houd `status`, `updated_at` en checklist actueel tijdens uitvoering.
 3. Verplaats een taak pas naar `docs/project/25-tasks/done/` wanneer de status `done` is.
 4. Draai daarna `npm run docs:bundle` en `npm run docs:bundle:verify`.
 
 ## Statusmodel
+
 - `backlog`
 - `ready`
 - `in_progress`

@@ -1,9 +1,11 @@
 # Local Supabase Flow
 
 ## Doel
+
 Kleine, veilige scheiding tussen lokale development en productie deploy van Supabase Edge Functions.
 
 ## Wat gebeurt lokaal
+
 - `npm run dev`:
   - start/checkt lokale Supabase stack (`npx supabase start`)
   - start lokale functions runtime (`supabase functions serve --env-file .env.local`) in background
@@ -13,6 +15,7 @@ Kleine, veilige scheiding tussen lokale development en productie deploy van Supa
   - lokale Supabase stack blijft draaien
 
 ## Na codewijzigingen: wat moet je doen?
+
 - Alleen frontend/app code gewijzigd:
   - meestal niets extra's; anders Expo restart
 - `supabase/functions/**` gewijzigd:
@@ -22,6 +25,7 @@ Kleine, veilige scheiding tussen lokale development en productie deploy van Supa
   - regenereer waar nodig types
 
 ## Productie deploy
+
 - Productie deploy van Supabase Edge Functions gaat alleen via GitHub Actions:
   - `.github/workflows/deploy.yml`
 - Vereiste secrets:
@@ -29,6 +33,7 @@ Kleine, veilige scheiding tussen lokale development en productie deploy van Supa
   - `SUPABASE_PROJECT_REF`
 
 ## Env-hygiëne
+
 - Gebruik `.env.local` alleen voor lokale development.
 - Commit nooit echte secrets.
 - Startpunt voor lokaal invullen:

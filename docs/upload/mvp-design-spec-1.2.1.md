@@ -1,20 +1,24 @@
 # MVP Design Spec v1.2.1 — Capture First
 
 ## Version
+
 v1.2.1 — Based on validated Stitch design direction  
 Status: FINAL for implementation
 
 ---
 
 ## Core Principle
+
 This product is **capture-first**.
 
 Not:
+
 - a dashboard
 - a coach
 - a chat interface
 
 But:
+
 - a fast, calm, personal thinking tool
 
 ---
@@ -22,15 +26,18 @@ But:
 ## 1. Today Screen
 
 ### Goal
+
 Immediate clarity + start action
 
 ### Rules
+
 - 1 primary CTA: “Nieuwe entry”
 - CTA dominates visual hierarchy (≈70%)
 - No second CTA
 - No dashboard stacking
 
 ### Structure
+
 - minimal top bar
 - hero + CTA
 - small status line
@@ -43,7 +50,9 @@ Immediate clarity + start action
 ## 2. Capture (Core System)
 
 ### Model
+
 Single screen, 3 states:
+
 1. Idle
 2. Voice
 3. Typing
@@ -53,10 +62,12 @@ Single screen, 3 states:
 ## 2.1 Idle
 
 User understands immediately:
+
 - tap mic → record
 - tap screen → type
 
 Elements:
+
 - large mic button (primary)
 - guidance: “Spreek of begin met typen”
 - visible writing canvas
@@ -66,12 +77,14 @@ Elements:
 ## 2.2 Voice State
 
 Required:
+
 - active waveform
 - primary action: “Klaar / Stop”
 - secondary: “Annuleer”
 - clear recording feedback
 
 Not included:
+
 - pause
 - live transcript
 - editing tools
@@ -81,6 +94,7 @@ Not included:
 ## 2.3 Typing State
 
 Required:
+
 - large text area
 - keyboard visible
 - primary action: “Klaar / Opslaan”
@@ -88,6 +102,7 @@ Required:
 - mic still visible (secondary)
 
 Not allowed:
+
 - toolbars
 - formatting
 - multiple actions
@@ -97,9 +112,11 @@ Not allowed:
 ## 3. Post Entry Screen
 
 ### Goal
+
 Completion + satisfaction
 
 ### Structure
+
 - “Vandaag” + date
 - narrative text (clean)
 - small reflection
@@ -107,6 +124,7 @@ Completion + satisfaction
 - optional delete (hidden)
 
 ### Rules
+
 - no input field
 - no edit mode by default
 - subtle reveal / completion feeling
@@ -116,14 +134,17 @@ Completion + satisfaction
 ## 4. Days Overview
 
 ### Goal
+
 Retention
 
 ### Structure
+
 - list (not cards)
 - grouped by month
 - date + 1 line summary
 
 ### Rules
+
 - no analytics
 - no widgets
 - no heavy UI
@@ -133,20 +154,24 @@ Retention
 ## 5. Reflection Screen
 
 ### Goal
+
 Insight, not analytics
 
 ### Structure
+
 - title + period
 - short summary
 - narrative reflection
 - 2–3 subtle highlights
 
 ### Not allowed
+
 - graphs
 - percentages
 - dashboards
 
 ### Backend TODO
+
 Reflection generation handled outside MVP design phase.
 
 ---
@@ -154,15 +179,19 @@ Reflection generation handled outside MVP design phase.
 ## 6. Design Rules
 
 ### Primary Action
+
 - one per screen/state
 
 ### Cards
+
 - not default pattern
 
 ### Whitespace
+
 - functional, not decorative
 
 ### Capture clarity
+
 - affordances must be obvious
 
 ---
@@ -170,10 +199,12 @@ Reflection generation handled outside MVP design phase.
 ## 7. Visual System
 
 ### Colors
+
 - warm neutral base
 - gold for primary action only
 
 ### Typography
+
 - readable
 - calm
 - no UI-heavy labels
@@ -183,6 +214,7 @@ Reflection generation handled outside MVP design phase.
 - do not imitate Spotify branding, licensed fonts or brand-specific type behavior
 
 ### Icons
+
 - minimal
 - mic icon large in capture
 
@@ -191,11 +223,13 @@ Reflection generation handled outside MVP design phase.
 ## 8. Motion
 
 Allowed:
+
 - state transitions
 - subtle feedback
 - completion feeling
 
 Not allowed:
+
 - flashy animations
 - Interactieve elementen (zoals buttons en inputs) mogen nooit meebewegen met decoratieve motion
 
@@ -204,6 +238,7 @@ Not allowed:
 ## 9. Scope (MVP)
 
 ### Included
+
 - Today
 - Capture (all states)
 - Post-entry
@@ -211,6 +246,7 @@ Not allowed:
 - Reflection UI shell
 
 ### Excluded
+
 - AI chat
 - analytics
 - advanced editing
@@ -222,6 +258,7 @@ Not allowed:
 ## 10. Implementation Guardrails
 
 ### Clean-first
+
 - Default UI is clean-first.
 - Use spacing, hierarchy, typography and tonal contrast before extra containers.
 - Section labels sit on the page background unless a design ref explicitly shows a surface.
@@ -229,11 +266,13 @@ Not allowed:
 - Decorative borders, extra inner fills and nested surfaces are opt-in, not default.
 
 ### Dark Mode
+
 - Dark mode preserves the structure and calm of the light design ref.
 - Do not solve dark mode by adding extra mass, extra panels or heavier containers.
 - Shift tone and contrast; keep composition lightweight.
 
 ### Background Modes
+
 - Page atmosphere is selective, not global.
 - Background modes are mode-aware; never apply a dark ambient treatment unchanged in light mode.
 - Use three background modes:
@@ -255,12 +294,14 @@ Not allowed:
 - Full-page routes should use the shared background-mode foundation consistently unless they are a special modal, overlay or shell wrapper.
 
 ### Header + Hero
+
 - Top navigation is navigation only.
 - Page titles and supporting copy belong in a hero below the topnav by default.
 - Use two header modes: main-screen header and detail-screen header.
 - Do not press titles next to back buttons unless a design ref explicitly shows it.
 
 ### Surfaces + Auth
+
 - Destructive treatments may use accent, but stay calm and no heavier than needed.
 - Destructieve bevestigingen gebruiken altijd dezelfde modal/sheet component
 - Shared primitives must not introduce default borders, fills or heavy surfaces.
@@ -269,6 +310,7 @@ Not allowed:
 - Prefer code-based gradients over image backgrounds when they are calmer and more consistent.
 
 ### Proof-first
+
 - A design implementation is not “done” on code shape alone.
 - Verify against relevant `design_refs/1.2.1/**` plus light and dark runtime behavior before calling it finished.
 - If a `design_refs/1.2.1/**` screen folder contains a `.md` note, treat it as additional screen-level design input next to `code.html` and `screen.png`.
@@ -290,6 +332,7 @@ Not allowed:
 ## Final Rule
 
 If something adds complexity without improving:
+
 - clarity
 - speed
 - calm

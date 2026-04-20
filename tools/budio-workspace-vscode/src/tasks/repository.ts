@@ -31,7 +31,10 @@ export class TaskRepository {
     assertVersion(task, expectedVersion);
 
     const nextPath = patch.status
-      ? buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, patch.status)
+      ? await resolveUniqueTargetPath(
+          buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, patch.status),
+          task.sourcePath,
+        )
       : task.sourcePath;
     const nextContent = applyTaskFieldPatch(task, patch);
 
@@ -86,10 +89,10 @@ export class TaskRepository {
       });
     });
 
-    destinationIds.forEach((id, index) => {
+    for (const [index, id] of destinationIds.entries()) {
       const destinationTask = id === task.id ? task : taskMap.get(id);
       if (!destinationTask) {
-        return;
+        continue;
       }
 
       const patch: TaskFieldPatch = {
@@ -103,11 +106,14 @@ export class TaskRepository {
 
       const nextPath =
         id === task.id
-          ? buildTargetPathForStatus(
+          ? await resolveUniqueTargetPath(
+              buildTargetPathForStatus(
+                destinationTask.sourcePath,
+                this.workspaceRoot,
+                this.tasksRootRelative,
+                input.targetStatus,
+              ),
               destinationTask.sourcePath,
-              this.workspaceRoot,
-              this.tasksRootRelative,
-              input.targetStatus,
             )
           : destinationTask.sourcePath;
 
@@ -117,7 +123,7 @@ export class TaskRepository {
         targetPath: nextPath,
         content,
       });
-    });
+    }
 
     for (const write of writes.values()) {
       await writeTaskFile(write.sourcePath, write.targetPath, write.content);
@@ -134,7 +140,6 @@ export class TaskRepository {
     const tasks = await this.scan();
     const now = new Date().toISOString().slice(0, 10);
     const slug = slugify(input.title);
-    const id = `task-${slug}`;
     const openFolder = path.resolve(this.workspaceRoot, this.tasksRootRelative, 'open');
     await fs.mkdir(openFolder, { recursive: true });
 
@@ -146,6 +151,7 @@ export class TaskRepository {
     }
 
     const phase = input.phase ?? mostCommonPhase(tasks) ?? 'transitiemaand-consumer-beta';
+    const id = `task-${path.basename(candidate, '.md')}`;
     const content = buildNewTaskContent({
       ...input,
       id,
@@ -194,6 +200,24 @@ async function exists(filePath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function resolveUniqueTargetPath(candidate: string, sourcePath: string): Promise<string> {
+  if (candidate === sourcePath) {
+    return candidate;
+  }
+
+  let nextCandidate = candidate;
+  let suffix = 2;
+
+  while (await exists(nextCandidate)) {
+    const extension = path.extname(candidate);
+    const baseName = path.basename(candidate, extension);
+    nextCandidate = path.join(path.dirname(candidate), `${baseName}-${suffix}${extension}`);
+    suffix += 1;
+  }
+
+  return nextCandidate;
 }
 
 function slugify(input: string): string {

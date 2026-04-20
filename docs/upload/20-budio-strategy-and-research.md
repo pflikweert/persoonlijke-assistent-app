@@ -2,13 +2,14 @@
 
 # Budio Strategy and Research
 
-Build Timestamp (UTC): 2026-04-19T21:55:17.808Z
-Source Commit: 361182d
+Build Timestamp (UTC): 2026-04-19T22:50:07.890Z
+Source Commit: b4e34cb
 
 Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
+
 - docs/project/10-strategy/README.md
 - docs/project/10-strategy/10-long-term-strategy.md
 - docs/project/10-strategy/20-12-month-plan.md
@@ -22,6 +23,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/30-research/60-budio-marktkans-purple-cow-en-mrr.md
 
 ## Leesregel
+
 - Strategie/research zijn richtinggevend, maar wijzigen niet automatisch actieve MVP-scope.
 - Doorvertaling naar uitvoering loopt via planning-docs en decision-log.
 
@@ -32,14 +34,17 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 # Strategy hub
 
 ## Doel
+
 Navigatiehub voor strategische richting en horizonkeuzes.
 
 ## Kernnotities
+
 - Lange termijn strategie
 - 12-maanden plan
 - Research map
 
 ## Verbonden lagen
+
 - Planning hub
 - Research hub
 - Project hub
@@ -51,15 +56,18 @@ Navigatiehub voor strategische richting en horizonkeuzes.
 # Lange termijn strategie (Horizon)
 
 ## Doel
+
 Deze strategie beschrijft de duurzame richting van Budio over meerdere fases heen.
 
 ## Richting
+
 1. Budio blijft capture-first als productkern.
 2. Dagboeklaag + reflectielaag blijven de basis van vertrouwen en continuïteit.
 3. Commerciële groei vraagt een brug van capture naar hergebruikbare output.
 4. AIQS ontwikkelt door als governance/control plane, niet als eindgebruikerschat.
 
 ## Obsidian links
+
 - Strategy hub
 - 12-maanden plan
 - Research map
@@ -68,15 +76,18 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 - Now / Next / Later
 
 ## Strategische spanningen om bewust te managen
+
 - Rustige MVP-ervaring vs uitbreidingen naar output/workflows.
 - Build speed vs evidence-first besluitvorming.
 - Enkelvoudige appidentiteit vs modulaire flow-architectuur.
 
 ## Niet doen
+
 - Generieke “één AI-oplossing voor alles” bouwen.
 - Scope uitbreiden zonder expliciete fase- of decision-log vastlegging.
 
 ## Relatie met andere docs
+
 - Canonieke productwaarheid: `docs/project/master-project.md`.
 - Actieve uitvoering: `docs/project/20-planning/20-active-phase.md`.
 - Strategische input: `docs/project/30-research/**`.
@@ -88,9 +99,11 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 # 12-maanden plan (strategische horizon)
 
 ## Doel
+
 Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in kalenderdata.
 
 ## Structuur
+
 1. **Validatie en hardening**
    - capture-first kern stabiel houden
    - kwaliteit en betrouwbaarheid aantoonbaar verbeteren
@@ -108,6 +121,7 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
    - AIQS doorontwikkelen als governance-laag
 
 ## Obsidian links
+
 - Strategy hub
 - Lange termijn strategie
 - Research map
@@ -116,10 +130,12 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 - Deviations and decisions
 
 ## Werkwijze
+
 - Werk kanban-achtig met `Now / Next / Later`.
 - Herprioritering is toegestaan, mits vastgelegd in planning/deviation docs.
 
 ## Relatie met research
+
 - Onderliggende strategische argumentatie staat in `docs/project/30-research/**`.
 - Research is richtinggevend voor de horizon, maar wordt niet automatisch actieve planning of canonieke productwaarheid.
 
@@ -130,9 +146,11 @@ Een flexibele horizon voor richting over 12 maanden, zonder pseudo-precisie in k
 # Research map (strategie-input)
 
 ## Doel
+
 Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 
 ## Obsidian links
+
 - Strategy hub
 - Research hub
 - Planning hub
@@ -141,6 +159,7 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 - Ideas workspace
 
 ## Lezen in volgorde
+
 1. `docs/project/30-research/10-budio-richting-positionering-en-kansanalyse.md`
 2. `docs/project/30-research/20-budio-12-maandenpropositie-en-mvp-route.md`
 3. `docs/project/30-research/30-budio-podcaster-solo-expert-wedge-plan.md`
@@ -149,6 +168,7 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 6. `docs/project/30-research/60-budio-marktkans-purple-cow-en-mrr.md`
 
 ## Gebruik
+
 - Research is strategische input, geen automatische scope-beslissing.
 - Doorvertaling naar uitvoering loopt via:
   - `docs/project/20-planning/20-active-phase.md`
@@ -156,6 +176,7 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
   - `docs/project/20-planning/40-deviations-and-decisions.md`
 
 ## Relatie met ideas
+
 - Concrete initiatieven uit research kunnen als aparte ideeën landen in `docs/project/40-ideas/**`.
 
 ---
@@ -165,9 +186,11 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 # Research hub
 
 ## Doel
+
 Navigatiehub voor strategische researchinput in vaste leesvolgorde.
 
 ## Lezen in volgorde
+
 - 10, Richting, positionering en kansanalyse
 - 20, 12 maanden propositie en MVP-route
 - 30, Podcaster / solo-expert wedge plan
@@ -176,6 +199,7 @@ Navigatiehub voor strategische researchinput in vaste leesvolgorde.
 - 60, Marktkans, Purple Cow en MRR
 
 ## Verbonden lagen
+
 - Strategy hub
 - Planning hub
 - Ideas workspace
@@ -188,9 +212,11 @@ Navigatiehub voor strategische researchinput in vaste leesvolgorde.
 # Budio-richting: kansanalyse en positionering
 
 ## Korte conclusie
+
 Ja, deze richting is kansrijk, **maar alleen als Budio niet wordt gepositioneerd als nog een AI social tool**.
 
 De sterke positie van Budio ligt niet in:
+
 - alleen posts maken
 - alleen clips genereren
 - alleen automatisch publiceren
@@ -211,12 +237,14 @@ Maar:
 ## Waarom dit kansrijk is
 
 De meeste bestaande tools beginnen pas laat in de keten:
+
 - hier is een video
 - maak clips
 - schrijf caption
 - plan post
 
 Budio kan eerder beginnen:
+
 - hier is mijn dagboek
 - hier is mijn voice note
 - hier is mijn idee
@@ -227,8 +255,10 @@ Budio kan eerder beginnen:
 Dat verschil is belangrijk.
 
 ### De insight
+
 Voor jou is een dagboek niet alleen reflectie.
 Het is ook:
+
 - bronmateriaal
 - creatief geheugen
 - verhalende context
@@ -243,6 +273,7 @@ Dat is een sterk uitgangspunt.
 ## Waar Budio níet in moet veranderen
 
 ### Niet doen
+
 - nog een AI social media tool bouwen
 - generieke auto-post machine maken
 - alles volledig autonoom laten posten
@@ -263,6 +294,7 @@ Dat is te druk, te generiek en te vervangbaar.
 Voor mensen die al kennis, verhalen of expertise hebben, maar vastlopen tussen ruwe input en consistente publicatie.
 
 ### Wat Budio dan doet
+
 - snelle capture van gedachten, dagboek, audio en losse ideeën
 - AI-opschoning en structurering
 - omzetting naar formats
@@ -281,7 +313,9 @@ Niet: “iedereen die social doet”.
 De beste eerste markt is:
 
 ## Solo experts en kleine knowledge creators
+
 Denk aan:
+
 - podcasters
 - coaches
 - consultants
@@ -292,7 +326,9 @@ Denk aan:
 - kleine bureaus
 
 ### Waarom dit segment sterk is
+
 Deze groep:
+
 - heeft veel ruwe input
 - heeft weinig tijd
 - wil wel zichtbaar zijn
@@ -308,6 +344,7 @@ Deze groep:
 Volledig autonome posting klinkt slim, maar is als kernbelofte zwak.
 
 ### Waarom
+
 - platforms belonen originaliteit
 - generieke AI-output voelt snel leeg
 - massaproductie maakt content minder geloofwaardig
@@ -315,10 +352,13 @@ Volledig autonome posting klinkt slim, maar is als kernbelofte zwak.
 - review is voor veel professionals geen bug, maar een eis
 
 ### Juiste productfilosofie
+
 Niet:
+
 - autopost everything
 
 Wel:
+
 - auto-prepare
 - human approve
 - smart publish
@@ -334,6 +374,7 @@ De grootste waarde zit waarschijnlijk niet in de generator zelf.
 De echte waarde zit in deze lagen:
 
 ## 1. De contextlaag
+
 - waarom bestaat dit stuk content?
 - voor wie is het?
 - welk doel dient het?
@@ -341,32 +382,39 @@ De echte waarde zit in deze lagen:
 - welke serie of rubriek is dit?
 
 ## 2. De memorylaag
+
 - welke thema’s herhalen?
 - welke toon werkt?
 - welke posts deden het goed?
 - wat wil iemand wel of juist niet meer zeggen?
 
 ## 3. De reviewlaag
+
 - voorstellen genereren
 - rustig aanpassen
 - goedkeuren
 - eigen stem behouden
 
 ## 4. Kanaalspecifieke vertaling
+
 Geen domme crosspost-machine.
 Maar:
+
 - YouTube Shorts anders dan Instagram
 - LinkedIn anders dan podcast-caption
 - nieuwsbrief anders dan story-tekst
 
 ## 5. Feedbackloop
+
 - wat werkte?
 - wat werd opgeslagen?
 - wat trok kijktijd?
 - wat leverde reacties of leads op?
 
 ## 6. Governance / transparantie / logging
+
 Niet sexy, wel waardevol:
+
 - wat is door AI voorgesteld?
 - wat is aangepast?
 - wat is gepubliceerd?
@@ -377,6 +425,7 @@ Niet sexy, wel waardevol:
 ## Mogelijke productstructuur
 
 ## Fase 1 — Creator / Solo Pro
+
 - capture
 - dagboek
 - voice notes
@@ -387,6 +436,7 @@ Niet sexy, wel waardevol:
 - eenvoudige publishflow
 
 ## Fase 2 — Pro / Studio
+
 - series en formats
 - brand voice
 - content calendar
@@ -395,6 +445,7 @@ Niet sexy, wel waardevol:
 - lichte teamreview
 
 ## Fase 3 — Teams
+
 - meerdere gebruikers
 - rollen
 - approvals
@@ -417,7 +468,8 @@ Een eenvoudige consumenten-MVP zoals **“lekker makkelijk je dagboek bijhouden�
 
 Niet als eindstrategie voor snelle grote omzet.
 
-### De consumententest is vooral nuttig om te leren:
+### De consumententest is vooral nuttig om te leren
+
 - gebruiken mensen het echt meerdere keren per week?
 - werkt voice + tekst capture?
 - helpt automatische structurering?
@@ -437,6 +489,7 @@ Als dat werkt, is dat een sterke opstap naar de Pro-richting.
 ## Hard ja / nee
 
 ## Ja
+
 - capture-first
 - review-first
 - creator / expert als eerste wedge
@@ -446,6 +499,7 @@ Als dat werkt, is dat een sterke opstap naar de Pro-richting.
 - consumenten-MVP als validatielaag
 
 ## Nee
+
 - generic AI social automation
 - direct brede B2B-propositie
 - full autonomous posting als kernbelofte
@@ -470,9 +524,11 @@ Als Budio die ruwe oorsprong goed vangt, ordent en vertaalt, dan heb je iets dat
 ## Budio 12 Maandenpropositie En Mvp Route
 
 # Budio 12-maandenplan
+
 ## Eén concrete propositie, doelgroep, pricing en MVP
 
 ## Startpunt
+
 Je wilt de MVP eerst als consumenten-test lanceren:
 
 **“Lekker makkelijk je dagboek bijhouden.”**
@@ -509,7 +565,9 @@ Nog scherper:
 ## Primaire doelgroep na validatie
 
 ### Solo experts en small creators
+
 Mensen die:
+
 - kennis delen
 - regelmatig ideeën hebben
 - te weinig tijd hebben om alles uit te werken
@@ -518,7 +576,9 @@ Mensen die:
 - niet willen werken met losse AI-tools, notitie-apps en social tools tegelijk
 
 ### Beste eerste subgroep
+
 Ik zou starten met:
+
 - podcasters
 - coaches
 - consultants
@@ -527,6 +587,7 @@ Ik zou starten met:
 - zelfstandige makers met een inhoudelijk kanaal
 
 Waarom deze groep?
+
 - ze produceren al ruwe input
 - ze hebben baat bij structuur
 - ze voelen direct de waarde van hergebruik
@@ -538,11 +599,14 @@ Waarom deze groep?
 # 3. Positionering van de consumenten-MVP
 
 ## Doel van de consumenten-MVP
+
 Niet:
+
 - direct grote omzet maken
 - brede journaling app worden
 
 Wel:
+
 - capture-gedrag testen
 - retention testen
 - dagboek + voice + AI-opschoning testen
@@ -550,7 +614,9 @@ Wel:
 - vrienden / eerste gebruikers laten ervaren wat de kernwaarde is
 
 ## De testhypothese
+
 Als mensen:
+
 - makkelijk gedachten vastleggen
 - die later rustig terugzien
 - AI hen helpt structureren
@@ -565,11 +631,13 @@ Dan is er potentieel voor een Pro-versie die ruwe input omzet in content-output.
 ## MVP consumentenversie: Budio Vandaag
 
 ### Kernbelofte
+
 **Leg je dag snel vast. Budio maakt er overzicht van.**
 
 ### Wat de MVP moet kunnen
 
 ## Must have
+
 1. snelle tekstcapture
 2. snelle audio/voice capture
 3. automatische opschoning van ruwe input
@@ -579,12 +647,14 @@ Dan is er potentieel voor een Pro-versie die ruwe input omzet in content-output.
 7. lage frictie, rustige UX
 
 ## Nice to have
+
 1. eenvoudige tags of thema’s
 2. “gebruik dit als basis voor post/script”
 3. delen van een fragment
 4. eenvoudige export
 
 ## Nog niet in MVP
+
 - volledige social publishing
 - multichannel scheduler
 - geavanceerde analytics
@@ -599,7 +669,9 @@ Dan is er potentieel voor een Pro-versie die ruwe input omzet in content-output.
 De consumenten-MVP moet al één klein bruggetje bevatten naar de latere Budio-richting.
 
 ## Belangrijke brugfunctie
+
 Een gebruiker moet vanuit een dag of entry iets kunnen doen als:
+
 - “maak hier een postvoorstel van”
 - “maak hier een korte caption van”
 - “maak hier een ruwe podcast-note van”
@@ -607,6 +679,7 @@ Een gebruiker moet vanuit een dag of entry iets kunnen doen als:
 
 Niet om direct massaal te posten.
 Wel om te testen:
+
 - voelen mensen daar waarde?
 - klopt de toon?
 - willen mensen hergebruik?
@@ -619,25 +692,32 @@ Dat is de strategische verbindingslaag tussen Vandaag en Pro.
 # 6. Pricing
 
 ## Fase 1 — consumenten-test
+
 Ik zou in het begin kiezen voor:
 
 ### Optie A — gratis test met gesloten groep
+
 Beste voor vrienden / warme testgroep
 
 Voordeel:
+
 - lage drempel
 - veel feedback
 - snel leren
 
 Nadeel:
+
 - minder bewijs van echte betaalbereidheid
 
 ### Optie B — symbolische betaalde beta
+
 Bijvoorbeeld:
+
 - €4 tot €8 per maand
 - of eenmalige early supporter prijs
 
 Voordeel:
+
 - je test meteen of mensen waarde voelen
 - gebruikers nemen het vaak serieuzer
 
@@ -645,18 +725,23 @@ Mijn advies:
 **begin met gratis / invite-only testgroep**, en zet daarna snel een vroege betaalde beta neer.
 
 ## Fase 2 — eerste betaalde consumenten/pro-solo versie
+
 Richtprijs:
+
 - Lite: €9 p/m
 - Plus: €19 p/m
 - Pro beta: €39 p/m
 
 ### Logica
+
 - Lite = dagboek + archief + samenvatting
 - Plus = extra AI-calls + export + formatvoorstellen
 - Pro beta = contenthergebruik, eenvoudige formatsets en workflow-templates
 
 ## Fase 3 — productized Pro
+
 Richtprijs:
+
 - €29 tot €79 p/m voor solo users
 - eventueel hogere tier met usage limits en premium AI-features
 
@@ -669,10 +754,13 @@ Als de tool iemand tijd en mentale frictie bespaart, is hogere pricing verdedigb
 # 7. 12-maanden roadmap
 
 ## Maand 1–2
+
 ### Doel
+
 Consumenten-MVP afronden voor kleine testgroep
 
 ### Focus
+
 - capture super eenvoudig maken
 - tekst + voice stabiel
 - daglaag / samenvatting goed laten werken
@@ -680,6 +768,7 @@ Consumenten-MVP afronden voor kleine testgroep
 - eerste gesloten testers uitnodigen
 
 ### Succescriteria
+
 - gebruikers leggen meerdere entries per week vast
 - gebruikers komen terug
 - gebruikers ervaren rust / overzicht
@@ -687,32 +776,40 @@ Consumenten-MVP afronden voor kleine testgroep
 ---
 
 ## Maand 3–4
+
 ### Doel
+
 Gebruik en herhaalgedrag valideren
 
 ### Focus
+
 - feedback ophalen
 - pijnpunten in flow oplossen
 - archief en teruglezen verbeteren
 - eerste eenvoudige “maak hier iets van”-functie testen
 
 ### Te meten
+
 - activatie
 - aantal entries per week
 - week 2 / week 4 retention
 - hoeveel mensen hergebruik proberen
 
 ### Kritische vraag
+
 Willen mensen alleen bewaren?
 Of willen ze ook echt iets dóén met hun input?
 
 ---
 
 ## Maand 5–6
+
 ### Doel
+
 Brug naar content-use-case valideren
 
 ### Focus
+
 - simpele contentvoorstellen uit dagboek / voice notes
 - postvoorstel
 - korte caption
@@ -720,26 +817,32 @@ Brug naar content-use-case valideren
 - export of kopieerflow
 
 ### Succescriteria
+
 - een deel van de testers gebruikt output echt buiten de app
 - gebruikers zeggen: “dit scheelt mij werk”
 - output voelt persoonlijk genoeg
 
 ### Belangrijk
+
 Als niemand hergebruik interessant vindt, dan blijft Budio vooral een reflectieproduct.
 Als genoeg mensen het wél doen, heb je een geloofwaardige route naar Pro.
 
 ---
 
 ## Maand 7–8
+
 ### Doel
+
 Scherpe Pro-wedge formuleren
 
 ### Op basis van wat je geleerd hebt
+
 Kies je één duidelijke propositie, bijvoorbeeld:
 
 **Voor solo experts die veel losse ideeën hebben en zichtbaar willen zijn, zet Budio ruwe input om in contentvoorstellen en scripts.**
 
 ### Focus
+
 - landingspagina voor Pro-richting
 - 5–15 betalende beta users zoeken
 - handmatig onboarding doen
@@ -748,21 +851,26 @@ Kies je één duidelijke propositie, bijvoorbeeld:
 ---
 
 ## Maand 9–10
+
 ### Doel
+
 Betaalde Pro-beta draaien
 
 ### Focus
+
 - templates per format
 - eenvoudige brand voice / tone instellingen
 - review queue
 - betere export / publish voorbereiding
 
 ### Nog niet doen
+
 - volledige multi-platform automation
 - zware integrations-first strategie
 - teamfeatures
 
 ### Succescriteria
+
 - betalende users blijven actief
 - concrete tijdbesparing wordt gevoeld
 - output wordt echt gebruikt
@@ -770,18 +878,23 @@ Betaalde Pro-beta draaien
 ---
 
 ## Maand 11–12
+
 ### Doel
+
 Beslissing nemen over de hoofdroute
 
 Aan het einde van 12 maanden moet je kiezen:
 
 ## Route A — Vandaag blijft vooral consumentenproduct
+
 Als blijkt dat reflectie, dagboek en persoonlijk archief de echte kern zijn.
 
 ## Route B — Vandaag wordt de instap naar Pro
+
 Als blijkt dat capture + hergebruik + contentoutput sterk genoeg is.
 
 ## Route C — hybride model
+
 - Vandaag = persoonlijke capture
 - Pro = content/workflowlaag erboven
 
@@ -796,6 +909,7 @@ Niet alleen kijken naar downloads of leuke reacties.
 Kijk vooral naar:
 
 ## Consumententest
+
 - aantal actieve gebruikers per week
 - entries per gebruiker per week
 - week 2 retention
@@ -804,12 +918,14 @@ Kijk vooral naar:
 - hoeveel voice vs tekst wordt gebruikt
 
 ## Brug naar Pro
+
 - hoeveel mensen gebruiken “maak hier content van”
 - hoeveel output wordt gekopieerd / geëxporteerd
 - hoeveel output wordt echt geplaatst of gebruikt
 - hoeveel mensen vragen om meer formats of workflows
 
 ## Commerciële validatie
+
 - hoeveel mensen willen betalen
 - waar willen ze voor betalen
 - welk probleem benoemen ze zelf
@@ -831,6 +947,7 @@ Kijk vooral naar:
 # 10. Mijn harde advies
 
 ## Ja, lanceer de MVP eerst als consumenten-test
+
 Dat past in het plan.
 
 Maar alleen als je intern helder houdt:
@@ -838,6 +955,7 @@ Maar alleen als je intern helder houdt:
 **de consumenten-MVP is geen afslag van de strategie, maar een slimme validatiestap in de richting van een capture-first Pro-product.**
 
 Dus:
+
 - begin eenvoudig
 - test met vrienden en warme kring
 - meet echt gedrag
@@ -851,24 +969,31 @@ Dus:
 ## Eén concrete lijn
 
 ### Product
+
 Budio Vandaag
 
 ### Eerste testmarkt
+
 consumenten / vrienden / warme kring
 
 ### Testbelofte
+
 makkelijk je dagboek bijhouden met AI-structuur en overzicht
 
 ### Strategische hypothese
+
 mensen willen ruwe input niet alleen bewaren, maar later ook hergebruiken
 
 ### Doelmarkt na validatie
+
 solo experts, podcasters en knowledge creators
 
 ### Betaalmodel na validatie
+
 freemium of betaalde beta → daarna €9 / €19 / €39 oplopend
 
 ### Beste 12-maandenuitkomst
+
 Budio Vandaag wordt een laagdrempelige capture-ingang, en Budio Pro wordt de laag die ruwe input omzet in content en publiceerbare output.
 
 ---
@@ -884,15 +1009,18 @@ Budio Vandaag wordt een laagdrempelige capture-ingang, en Budio Pro wordt de laa
 # Budio — scherpe podcaster / solo-expert wedge uitgewerkt
 
 ## Doel van dit document
+
 Dit document werkt het plan concreet uit voor de gekozen wedge:
 
 **podcasters + solo experts**
 met:
+
 - founder-led onboarding
 - review-first content-workflows
 - Budio als capture-first product dat begint vóór de klassieke contenttooling
 
 Het doel is niet om “nog een AI social tool” te maken, maar een productflow die logisch voelt voor iemand die:
+
 - veel denkt
 - veel praat
 - veel ruwe input heeft
@@ -904,6 +1032,7 @@ Het doel is niet om “nog een AI social tool” te maken, maar een productflow 
 ## 1. De kernkeuze
 
 De juiste wedge is niet:
+
 - “iedereen die content maakt”
 - brede journaling-consumenten
 - direct teams / enterprise
@@ -914,6 +1043,7 @@ De juiste wedge is:
 **mensen die al waardevolle ruwe input hebben, maar geen strakke workflow hebben om daar snel bruikbare output van te maken.**
 
 Daarom passen deze doelgroepen goed:
+
 - podcasters
 - solo experts
 - coaches
@@ -935,6 +1065,7 @@ De belofte wordt dan:
 Een podcaster verwacht niet alleen transcriptie.
 
 Die verwacht uiteindelijk:
+
 - idee-capture vóór opname
 - structuur voor aflevering of thema
 - transcript of schone samenvatting na opname
@@ -950,6 +1081,7 @@ Die verwacht uiteindelijk:
 Belangrijk:
 de podcaster wil meestal **niet** dat AI alles volledig autonoom post.
 Wat hij of zij wél wil:
+
 - snelheid
 - minder handwerk
 - consistente toon
@@ -958,6 +1090,7 @@ Wat hij of zij wél wil:
 - mens houdt laatste regie
 
 ### Hun echte frustraties
+
 - ideeën kwijt raken
 - losse voice notes zonder systeem
 - na opname te veel handwerk
@@ -974,12 +1107,14 @@ Wat hij of zij wél wil:
 Een solo expert denkt anders dan een podcaster, maar de onderliggende behoefte is bijna hetzelfde.
 
 Voorbeelden:
+
 - een coach loopt na een sessie of wandeling met 6 ideeën
 - een consultant spreekt notities in na klantgesprekken
 - een trainer heeft losse anekdotes, frameworks en observaties
 - een ervaringsdeskundige wil verhalen omzetten naar content zonder zichzelf te verliezen
 
 Die gebruiker verwacht:
+
 - snelle capture
 - context bewaren
 - thought-to-post of thought-to-outline
@@ -991,6 +1126,7 @@ Die gebruiker verwacht:
 - rustige opslag van ruwe input en hergebruik
 
 ### Hun echte frustraties
+
 - ideeën komen op slechte momenten
 - schrijven kost energie
 - losse notities worden nooit content
@@ -1005,12 +1141,15 @@ Bestaande tools beginnen vaak ná de opname of ná het transcript.
 Budio moet eerder beginnen.
 
 ## Traditionele flow
+
 opname -> transcript -> show notes -> clips -> posts
 
 ## Budio-flow
+
 ruwe gedachte / voice note / dagboek / losse context -> structureren -> review -> output -> distributie
 
 Dat betekent:
+
 - Budio moet goed zijn vóór de editor
 - Budio moet niet alleen “repurpose” doen
 - Budio moet vooral **pre-content chaos** reduceren
@@ -1042,6 +1181,7 @@ Dit moet niet voelen als een zwaar instellingenformulier.
 Wel als een slimme setup.
 
 ### Wat je vastlegt
+
 - naam van de show
 - type show (interview / solo / educatief / persoonlijk / nieuws / verhaal)
 - doelgroep
@@ -1064,6 +1204,7 @@ Wel als een slimme setup.
 - voorbeeldcontent die “klinkt als mij”
 
 ### Wat Budio hieruit maakt
+
 - een show profile
 - tone profile
 - output presets
@@ -1071,7 +1212,9 @@ Wel als een slimme setup.
 - review defaults
 
 ### Waarom dit belangrijk is
+
 De gebruiker verwacht niet telkens opnieuw uit te leggen:
+
 - wat de show is
 - voor wie het is
 - hoe de toon moet zijn
@@ -1086,6 +1229,7 @@ Dus:
 Dit is waar Budio echt moet winnen.
 
 Een podcaster heeft vaak:
+
 - losse ideeën
 - hooks
 - mogelijke gespreksonderwerpen
@@ -1094,7 +1238,9 @@ Een podcaster heeft vaak:
 - mini-observaties die later bruikbaar blijken
 
 ### In Budio moet dit zo werken
+
 Op het home-scherm:
+
 - 1 dominante actie: **Leg iets vast**
 - tekst of voice
 - supersnel
@@ -1106,6 +1252,7 @@ Op het home-scherm:
   - of “nog niet indelen”
 
 ### Wat Budio na capture doet
+
 - transcriptie / cleanup
 - kernidee eruit halen
 - eventueel 1–3 labels voorstellen
@@ -1117,7 +1264,9 @@ Op het home-scherm:
   - contentgrondstof
 
 ### Waarom dit sterk is
+
 De gebruiker voelt:
+
 - mijn ruwe gedachten worden niet weggegooid
 - ik hoef nog niet direct te produceren
 - later kan ik dit terugvinden en gebruiken
@@ -1129,7 +1278,9 @@ De gebruiker voelt:
 Wanneer genoeg ruwe input bestaat, moet Budio helpen structureren.
 
 ### Functionaliteit
+
 De gebruiker kiest bijvoorbeeld:
+
 - “maak hiervan een aflevering-outline”
 - “maak hiervan 5 mogelijke onderwerpen”
 - “bundel deze 6 voice notes tot één episode concept”
@@ -1137,8 +1288,10 @@ De gebruiker kiest bijvoorbeeld:
 - “maak een interview prep outline”
 
 ### Outputvorm
+
 Niet één grote lap tekst.
 Wel:
+
 - titelopties
 - kernbelofte van de episode
 - segmenten / hoofdstukken
@@ -1148,9 +1301,11 @@ Wel:
 - snippet kandidaten
 
 ### Productregel
+
 Budio geeft **voorstellen**, geen eindbeslissingen.
 
 Dus:
+
 - kiesbaar
 - combineerbaar
 - herschrijfbaar
@@ -1163,6 +1318,7 @@ Dus:
 Voor podcasters is dit de tweede grote waardezone.
 
 ### Ingest-mogelijkheden
+
 - audio upload
 - video upload
 - RSS episode koppelen
@@ -1170,6 +1326,7 @@ Voor podcasters is dit de tweede grote waardezone.
 - meeting / interview opname import
 
 ### Wat Budio hierna doet
+
 - transcriptie
 - cleanup
 - hoofdstukdetectie
@@ -1184,6 +1341,7 @@ Voor podcasters is dit de tweede grote waardezone.
 - korte socials
 
 ### Cruciaal verschil
+
 Budio moet niet alleen “hier is wat AI-output”.
 Budio moet het structureren als een **review queue**.
 
@@ -1194,7 +1352,9 @@ Budio moet het structureren als een **review queue**.
 Dit is misschien wel het belangrijkste scherm van de hele Pro-richting.
 
 ### Wat de gebruiker hier ziet
+
 Per opname of per contentbatch:
+
 - Show notes
 - Titelopties
 - Hooks
@@ -1216,6 +1376,7 @@ Maar als duidelijke kaarten / output-items met status:
 - gepubliceerd
 
 ### Wat de gebruiker moet kunnen
+
 - snel scannen
 - openen
 - licht bewerken
@@ -1226,8 +1387,10 @@ Maar als duidelijke kaarten / output-items met status:
 - markeren als “dit klinkt wel / niet als mij”
 
 ### Waarom dit essentieel is
+
 Creators willen geen black box.
 Ze willen:
+
 - snelheid
 - overzicht
 - regie
@@ -1245,7 +1408,9 @@ De gebruiker wil niet alleen tekst.
 De gebruiker wil output die al logisch is voor het kanaal.
 
 ### Voorbeelden
+
 #### Voor podcast
+
 - show notes
 - timestamps
 - episode summary
@@ -1254,28 +1419,33 @@ De gebruiker wil output die al logisch is voor het kanaal.
 - outro summary
 
 #### Voor LinkedIn
+
 - thought-leadership post
 - lijstpost
 - verhaalvorm
 - observatie + les
 
 #### Voor nieuwsbrief
+
 - intro alinea
 - onderwerpregel suggesties
 - kerninzichten
 - CTA-idee
 
 #### Voor short-form socials
+
 - hook
 - quote
 - caption
 - korte clipbeschrijving
 
 ### Productregel
+
 Niet klakkeloos crossposten.
 Wel kanaalspecifiek herschrijven.
 
 Dus:
+
 - YouTube ≠ LinkedIn
 - podcast summary ≠ nieuwsbrief intro
 - clip text ≠ caption ≠ title
@@ -1290,6 +1460,7 @@ Sterker nog:
 dat zou te vroeg kunnen zijn.
 
 ### Eerst voldoende
+
 - copy
 - export
 - markdown / text export
@@ -1298,6 +1469,7 @@ dat zou te vroeg kunnen zijn.
 - “klaar voor publicatie”
 
 ### Later
+
 - publish integrations
 - direct doorzetten
 - content calendar
@@ -1316,6 +1488,7 @@ dan
 Een goede podcaster wil dat het systeem over tijd slimmer wordt.
 
 ### Wat Budio moet onthouden
+
 - welke formats vaak gekozen worden
 - welke toon vaak wordt goedgekeurd
 - welke output vaak wordt weggegooid
@@ -1325,14 +1498,17 @@ Een goede podcaster wil dat het systeem over tijd slimmer wordt.
 - welke style-rules de gebruiker impliciet volgt
 
 ### Wat Budio daar functioneel mee doet
+
 - betere default voorstellen
 - betere tone matching
 - sneller juiste outputvorm kiezen
 - minder generieke tekst
 
 ### Niet doen
+
 Niet doen alsof AI “alles weet”.
 Wel:
+
 - zichtbaar leren van goedgekeurde output
 - transparant maken wat voorkeur is geworden
 
@@ -1343,7 +1519,9 @@ Wel:
 De solo-expert flow lijkt erop, maar start vaak minder vanuit afleveringen en meer vanuit gedachten, lessen en klantwerk.
 
 ## Stap 1 — Setup
+
 De gebruiker vult in:
+
 - expertisegebied
 - doelgroep
 - vaste thema’s
@@ -1352,7 +1530,9 @@ De gebruiker vult in:
 - woorden / claims die niet passen
 
 ## Stap 2 — Snelle capture
+
 Bijvoorbeeld:
+
 - na een klantgesprek
 - tijdens een wandeling
 - na een lezing
@@ -1363,7 +1543,9 @@ Bijvoorbeeld:
 De gebruiker spreekt 1–5 minuten in.
 
 ## Stap 3 — Budio structureert
+
 Budio stelt voor:
+
 - kerninzicht
 - 3 posthoeken
 - 1 nieuwsbriefseed
@@ -1371,13 +1553,17 @@ Budio stelt voor:
 - 1 “bewaar voor later”-notitie
 
 ## Stap 4 — Review queue
+
 De expert kiest:
+
 - welke variant voelt het meest als mij
 - wat moet zachter / scherper
 - welke kanalen passen hierbij
 
 ## Stap 5 — Output
+
 Bijvoorbeeld:
+
 - LinkedIn post
 - nieuwsbrief-opener
 - workshop-observatie
@@ -1385,7 +1571,9 @@ Bijvoorbeeld:
 - script voor talking head video
 
 ## Stap 6 — Archief + hergebruik
+
 Alles blijft vindbaar als:
+
 - ruwe note
 - contentseed
 - gepubliceerd idee
@@ -1393,6 +1581,7 @@ Alles blijft vindbaar als:
 - terugkerend thema
 
 ### Het grote voordeel voor deze doelgroep
+
 De expert hoeft niet in “contentmodus” te stappen om content te maken.
 Budio vangt eerst het denken.
 Dat is de kern.
@@ -1404,10 +1593,13 @@ Dat is de kern.
 In de eerste 10–25 Pro-klanten moet je dit niet als volledig self-serve product behandelen.
 
 ## Wel doen
+
 Founder-led onboarding.
 
 ### Waarom
+
 Omdat je nog moet leren:
+
 - waar echte pijn zit
 - welke outputs het meest waardevol zijn
 - welke toneproblemen terugkomen
@@ -1415,7 +1607,9 @@ Omdat je nog moet leren:
 - welk moment in de workflow de meeste waarde levert
 
 ## Aanbevolen onboardingflow
+
 ### Call 1 — intake
+
 - wie ben je
 - wat maak je
 - waar loop je vast
@@ -1424,6 +1618,7 @@ Omdat je nog moet leren:
 - welke output zou direct waarde geven
 
 ### Daarna configureer je samen
+
 - show / brand profile
 - tone profile
 - format pack
@@ -1431,12 +1626,14 @@ Omdat je nog moet leren:
 - kanaalprioriteiten
 
 ### Eerste week
+
 - gebruiker levert 3–5 echte inputs
 - jij helpt de eerste output-run begeleiden
 - je kijkt waar frictie zit
 - je scherpt presets aan
 
 ### Wat dit oplevert
+
 - hogere succesratio
 - betere productlearnings
 - sneller bewijs van waarde
@@ -1450,6 +1647,7 @@ Omdat je nog moet leren:
 Voor deze wedge zijn dit de **minimum verwachtingen**:
 
 ## Must-have
+
 - supersnelle capture
 - transcript / cleanup
 - context bewaren
@@ -1461,6 +1659,7 @@ Voor deze wedge zijn dit de **minimum verwachtingen**:
 - goede mobiele flow
 
 ## Strong should-have
+
 - presets per show / expert
 - format packs
 - quote / hook extraction
@@ -1469,6 +1668,7 @@ Voor deze wedge zijn dit de **minimum verwachtingen**:
 - hergebruik van oudere input
 
 ## Later
+
 - scheduler
 - team approvals
 - analytics
@@ -1481,38 +1681,45 @@ Voor deze wedge zijn dit de **minimum verwachtingen**:
 # 9. Welke schermen Budio hiervoor nodig heeft
 
 ## 1. Home / Capture
+
 - 1 primaire CTA
 - snelle tekst / voice
 - recente items
 - geen dashboard-overload
 
 ## 2. Input detail
+
 - transcript / cleanup
 - labels
 - context
 - link naar serie / show / thema
 
 ## 3. Batch / Project view
+
 - bundel van inputs rond 1 episode / thema / contentbatch
 
 ## 4. Review queue
+
 - outputkaarten per format
 - status per item
 - quick approve / edit / regenerate
 
 ## 5. Output detail
+
 - editor-light
 - kanaalvariant
 - tone controls
 - export / copy
 
 ## 6. Profile / Presets
+
 - show profile
 - tone profile
 - formats
 - defaults
 
 ## 7. Archive / Memory
+
 - ideeën
 - gebruikte output
 - gepubliceerde content seeds
@@ -1526,7 +1733,9 @@ AIQS is niet het gebruikersproduct.
 Maar voor deze wedge is AIQS strategisch onmisbaar.
 
 ## Waarom
+
 Omdat je voor podcasters en solo experts wilt kunnen sturen op:
+
 - outputkwaliteit
 - stembehoud
 - kostprijs per taak
@@ -1537,6 +1746,7 @@ Omdat je voor podcasters en solo experts wilt kunnen sturen op:
 - best werkende formats per task
 
 ## Wat AIQS intern moet ondersteunen
+
 - taskversies voor:
   - cleanup
   - outline
@@ -1561,6 +1771,7 @@ Jij ziet in AIQS of die workflow ook echt economisch en kwalitatief klopt.
 # 11. Wat ik productmatig nu wél en níet zou bouwen
 
 ## Nu wel
+
 1. snelle capture
 2. goede cleanup
 3. project/batch logica
@@ -1573,6 +1784,7 @@ Jij ziet in AIQS of die workflow ook echt economisch en kwalitatief klopt.
 10. AIQS task- en usage-inzicht
 
 ## Nu niet
+
 1. volledige social scheduler
 2. team workspace eerst
 3. enterprise governance als hoofdspoor
@@ -1588,12 +1800,15 @@ Jij ziet in AIQS of die workflow ook echt economisch en kwalitatief klopt.
 Als je dit echt goed wilt verkopen, dan moet de productzin eenvoudig zijn:
 
 ## Voor podcasters
+
 **Van ruwe voice notes en afleveringen naar reviewbare show notes, posts en clips — zonder generieke AI-copy.**
 
 ## Voor solo experts
+
 **Leg je ideeën vast wanneer ze ontstaan. Budio zet ze om in reviewbare content in jouw toon.**
 
 ## Overkoepelend
+
 **Budio begint niet bij de post, maar bij het ruwe denken dat eraan voorafgaat.**
 
 ---
@@ -1618,6 +1833,7 @@ De wedge werkt als je drie dingen goed doet:
 
 Dan wordt Budio geen generieke AI-tool,
 maar een product dat logisch past tussen:
+
 - ruwe gedachten
 - opnames
 - expertise
@@ -1636,6 +1852,7 @@ En dát is precies waar de kans zit.
 Jullie staan nu op een sterke **capture-first basis** met een al serieuze admin AI-governance-laag, maar nog niet op de echte commerciële Pro-machine.
 
 De huidige productwaarheid is bewust smal:
+
 - snelle capture
 - dagboeklaag
 - reflecties
@@ -1657,6 +1874,7 @@ De juiste toekomstlijn is:
 Productmatig staan jullie nog niet op **Budio als content operating system**, maar op een sterke **capture-first dagboekmachine met een opvallend volwassen AI-backoffice**.
 
 De kernlus staat:
+
 - auth
 - tekst/audio capture
 - server-side verwerking
@@ -1681,12 +1899,14 @@ De commerciële brug is nog niet scherp genoeg in het product.
 Dit blijft de rustige capture-ingang.
 
 Doel:
+
 - laagdrempelig gebruik
 - routine opbouwen
 - capture-gedrag valideren
 - laten voelen waarom het product waarde heeft
 
 ### Rol van deze laag
+
 - tekst en audio snel vastleggen
 - daglaag teruglezen
 - week- en maandreflecties
@@ -1695,7 +1915,9 @@ Doel:
 - beperkte AI-hulp
 
 ### Abonnementen in deze laag
+
 #### Free
+
 - basis capture
 - beperkte reflectie
 - max **3 minuten audio per opname**
@@ -1704,6 +1926,7 @@ Doel:
 - geen zware hergebruik-workflows
 
 #### Plus
+
 - uitgebreidere capture
 - meer archiefwaarde
 - langere audio, bijvoorbeeld **5 minuten**
@@ -1712,9 +1935,11 @@ Doel:
 - iets meer AI-transforms
 
 ### Doel van Free
+
 Free moet bruikbaar zijn, maar niet zo ruim dat zware gebruikers gratis blijven.
 
 De functie van Free is:
+
 - product leren kennen
 - routine bouwen
 - waarde bewijzen
@@ -1732,6 +1957,7 @@ Dit is:
 **van ruwe input naar werkbare output**
 
 Voor:
+
 - solo experts
 - podcasters
 - coaches
@@ -1741,6 +1967,7 @@ Voor:
 - knowledge creators
 
 ### Wat deze laag moet kunnen
+
 - postvoorstellen
 - captions
 - LinkedIn-versies
@@ -1752,11 +1979,14 @@ Voor:
 - export / publish-prep
 
 ### Audio-idee
+
 - max **10 minuten audio per opname** als logische Pro-limiet
 
 ### Waarom dit de omzetlaag is
+
 Hier gaat het niet alleen om opslaan of reflecteren.
 Hier gaat het om:
+
 - tijdsbesparing
 - mentale frictie verlagen
 - sneller publiceren
@@ -1764,6 +1994,7 @@ Hier gaat het om:
 - van ruwe capture naar bruikbare output
 
 ### Harde commerciële waarheid
+
 De pure consumenten-journalingversie gaat waarschijnlijk niet efficiënt veel geld opleveren.
 
 De eerste echte geldmachine zit in:
@@ -1774,6 +2005,7 @@ De eerste echte geldmachine zit in:
 # 3. Private / Regulated
 
 Dit is de premium laag voor:
+
 - privacy
 - governance
 - langere werksessies
@@ -1782,6 +2014,7 @@ Dit is de premium laag voor:
 - private modelrouting
 
 ### Voor wie
+
 - business users
 - kleine teams
 - privacygevoelige professionals
@@ -1789,6 +2022,7 @@ Dit is de premium laag voor:
 - later mogelijk regulated use cases
 
 ### Wat deze laag moet kunnen
+
 - lange meeting-opnames
 - transcriptie van sessies
 - volledige review- en audit-trace
@@ -1799,9 +2033,11 @@ Dit is de premium laag voor:
 - later eventueel self-hosted / private deployment
 
 ### Audio-idee
+
 - **60 minuten of langer** per opname / meeting
 
 ### Belangrijke positie
+
 Dit is niet de eerste wedge.
 Maar dit is wel de laag met de hoogste potentiële ARPU zodra privacy en governance echt productwaarde worden.
 
@@ -1818,15 +2054,18 @@ De juiste commerciële vorm is:
 - limieten per plan op functionaliteit én gebruik
 
 ### Belangrijk principe
+
 Naar buiten toe moet je **geen ruwe provider-tokens** verkopen.
 
 Gebruik extern liever:
+
 - credits
 - AI-verbruik
 - maandelijkse bundel
 - extra top-up
 
 Gebruik intern wél:
+
 - input tokens
 - output tokens
 - cached tokens waar relevant
@@ -1835,7 +2074,9 @@ Gebruik intern wél:
 - cost per call
 
 ### Waarom dit slim is
+
 Zo kun je:
+
 - modellen wisselen zonder je pricing kapot te maken
 - planlimieten slim sturen
 - top-ups en auto-recharge logisch aanbieden
@@ -1846,6 +2087,7 @@ Zo kun je:
 ## Voorbeeld abonnementslijn
 
 ## Free
+
 - basis capture
 - daglaag
 - beperkte reflectie
@@ -1855,6 +2097,7 @@ Zo kun je:
 - geen zware export of Pro-workflows
 
 ## Plus
+
 - uitgebreidere capture
 - betere terugblik
 - langere audio, bijvoorbeeld 5 minuten
@@ -1863,6 +2106,7 @@ Zo kun je:
 - iets ruimere AI-verwerking
 
 ## Pro
+
 - 10 minuten audio
 - content transforms
 - review queue
@@ -1872,6 +2116,7 @@ Zo kun je:
 - top-ups en auto-recharge
 
 ## Private / Business
+
 - 60+ minuten meeting capture
 - workspace governance
 - privacy routing
@@ -1888,6 +2133,7 @@ Dit moet je **nu al** vastleggen per AI-call.
 Niet later.
 
 ### Minimale usage truth per call
+
 - user_id
 - workspace_id of account scope
 - task_key
@@ -1911,7 +2157,9 @@ Niet later.
 - target record
 
 ### Waarom dit nu belangrijk is
+
 Omdat je dan later niet hoeft te gokken:
+
 - wat kost een gebruiker echt?
 - welke feature trekt de meeste marge weg?
 - welk plan is te ruim?
@@ -1935,6 +2183,7 @@ Het moet uitgroeien tot:
 - rollout control
 
 ### AIQS moet straks ook kunnen tonen
+
 - usage per task
 - usage per model
 - usage per gebruiker / workspace
@@ -1950,10 +2199,12 @@ Het moet uitgroeien tot:
 - welke taken negatieve marge trekken
 
 ### Belangrijke verschuiving
+
 Niet alleen:
 “welke prompt is beter?”
 
 Maar ook:
+
 - welke taak is winstgevend?
 - waar kan een goedkoper model?
 - waar is local inferentie goed genoeg?
@@ -1967,6 +2218,7 @@ Maar ook:
 De grootste gemiste kans is niet méér AI.
 
 De grootste gemiste kans is:
+
 - geen echte usage truthlaag
 - nog geen scherpe brug van capture naar betaalde output-workflows
 - nog geen duidelijke review queue als productfeature
@@ -1981,6 +2233,7 @@ Dus:
 ## De rol van AIQS in de toekomst
 
 Vandaag is AIQS vooral:
+
 - admin-only
 - task-first
 - contract-first
@@ -1992,6 +2245,7 @@ In de toekomst moet AIQS worden:
 ## De intelligence control plane van Budio
 
 Niet zichtbaar voor de eindgebruiker, maar wel de plek waar je beheert:
+
 - welke AI-taken bestaan
 - welke modellen per taak mogen draaien
 - welke privacy-regels per taak gelden
@@ -2018,12 +2272,15 @@ De juiste lijn voor Budio is:
 - **AIQS** als control plane voor kwaliteit én marge
 
 ### Het echte businessmodel
+
 Niet:
+
 - een brede journaling-app
 - een losse AI-social-tool
 - full autonomous posting
 
 Wel:
+
 - capture-first
 - review-first
 - credits per abonnement
@@ -2034,6 +2291,7 @@ Wel:
 - content-conversie als echte omzetlaag
 
 ### Samenvatting in één zin
+
 **Budio verdient straks niet vooral aan journaling, maar aan het betrouwbaar en privacy-bewust omzetten van ruwe capture naar bruikbare output, met AIQS als machinekamer voor kwaliteit, routing en marge.**
 
 ---
@@ -2043,7 +2301,9 @@ Wel:
 # Budio — future-state analyse, 12-maandenrichting en AIQS-architectuur
 
 ## Doel van dit document
+
 Dit document bundelt:
+
 - waar Budio nu staat ten opzichte van het 12-maandenplan en de richtingsanalyse
 - de toekomstige rol van AI Quality Studio (AIQS)
 - een scherpe future-state architectuur in 3 lagen: consumer, Pro en private/regulated
@@ -2057,6 +2317,7 @@ Dit document bundelt:
 Budio staat nu productmatig op een sterke **capture-first basis**, niet op een uitgewerkte Pro-contentmachine.
 
 De huidige kern is:
+
 - snelle tekst- en audiocapture
 - server-side verwerking
 - daglaag / narratieve dagboeklaag
@@ -2065,6 +2326,7 @@ De huidige kern is:
 - een al opvallend volwassen admin AI-governance-laag via AIQS
 
 Dat betekent:
+
 - **de intake-machine staat er al**
 - **de kwaliteitsmachine staat in opbouw**
 - **de omzetmachine staat nog niet scherp genoeg in het product**
@@ -2074,6 +2336,7 @@ De belangrijkste strategische waarheid:
 **Vandaag is nu nog de validatielaag. Niet de volledige eindmarkt.**
 
 De consumenten-MVP is dus zinvol, maar alleen als die bewust gebruikt wordt om te leren:
+
 - capturen mensen echt vaak genoeg?
 - komt men terug?
 - vertrouwen mensen de AI-structuur?
@@ -2088,6 +2351,7 @@ Als dat laatste waar blijkt, dan ontstaat de echte commerciële route:
 ## 2. De echte strategische positie van Budio
 
 Budio moet niet eindigen als:
+
 - nog een journaling app
 - nog een AI social tool
 - nog een autopost machine
@@ -2098,6 +2362,7 @@ De sterkste positie is:
 **Budio = capture-first intelligence stack**
 
 Voor mensen die ruwe gedachten, audio, dagen, ideeën en expertise willen omzetten in:
+
 - overzicht
 - betekenisvolle terugblik
 - werkbare output
@@ -2105,6 +2370,7 @@ Voor mensen die ruwe gedachten, audio, dagen, ideeën en expertise willen omzett
 - zonder hun eigen stem kwijt te raken
 
 De kernmoat zit waarschijnlijk in 4 dingen:
+
 1. context
 2. geheugen / memory
 3. review en governance
@@ -2117,7 +2383,9 @@ Daarom is AIQS strategisch veel belangrijker dan alleen promptbeheer.
 ## 3. Wat AIQS nu is en wat het moet worden
 
 ## Wat AIQS nu is
+
 AIQS is nu vooral:
+
 - admin-only
 - task-first
 - contract-first
@@ -2129,9 +2397,11 @@ Dat is goed.
 Maar dit is nog vooral de **eerste kwaliteitsschil**.
 
 ## Wat AIQS moet worden
+
 AIQS moet uitgroeien tot de **control plane van Budio intelligence**.
 
 Niet zichtbaar als product voor eindgebruikers, maar intern de plek waar je beheert:
+
 - welke AI-taken bestaan
 - welke outputcontracten gelden
 - welke modellen per taak zijn toegestaan
@@ -2145,6 +2415,7 @@ Niet zichtbaar als product voor eindgebruikers, maar intern de plek waar je behe
 AIQS wordt dan niet alleen prompting-governance, maar:
 
 ### AIQS future capabilities
+
 1. **task registry**
    - cleanup
    - summary
@@ -2202,15 +2473,19 @@ AIQS wordt dan niet alleen prompting-governance, maar:
 # Laag 1 — Consumer
 
 ## Doel
+
 Laagdrempelig, rustig, persoonlijk capture-product.
 
 ## Productnaam
+
 **Budio Vandaag**
 
 ## Belofte
+
 Leg je dag snel vast. Zie hem later rustig terug.
 
 ## Kern
+
 - tekstcapture
 - audiocapture
 - cleanup
@@ -2221,14 +2496,17 @@ Leg je dag snel vast. Zie hem later rustig terug.
 - beperkte hergebruikacties als brugfunctie
 
 ## AI-doel in deze laag
+
 Niet “slim” lijken.
 Wel:
+
 - rustig structureren
 - terugleesbaarheid vergroten
 - lage frictie
 - vertrouwen opbouwen
 
 ## Toekomstige AI-functies in consumer
+
 - maak hier een korte post van
 - maak hier een caption van
 - maak hier een ruwe note van
@@ -2236,13 +2514,16 @@ Wel:
 - optioneel lokale eerste-pass cleanup op supported devices
 
 ## Privacy-principe
+
 - cloud default, privacy-bewust
 - local assist waar mogelijk
 - heldere export/delete controls
 - geen medische of therapeutische positionering
 
 ## Commerciële rol
+
 Consumer is:
+
 - validatielaag
 - instaplaag
 - merkbouwlaag
@@ -2255,12 +2536,15 @@ Niet de sterkste omzetlaag op zichzelf.
 # Laag 2 — Pro
 
 ## Doel
+
 Van ruwe capture naar werkbare, publiceerbare output.
 
 ## Productnaam
+
 **Budio Pro**
 
 ## Primaire doelgroep
+
 - solo experts
 - podcasters
 - coaches
@@ -2270,9 +2554,11 @@ Van ruwe capture naar werkbare, publiceerbare output.
 - knowledge creators
 
 ## Belofte
+
 Denk hardop. Budio maakt er werkbare content van.
 
 ## Kern
+
 - alles uit consumer
 - betere capture-to-content flows
 - format packs
@@ -2284,10 +2570,12 @@ Denk hardop. Budio maakt er werkbare content van.
 - usage inzicht
 
 ## Belangrijkste nieuwe capability
+
 De input is niet alleen archief.
 De input wordt **grondstof voor output**.
 
 Bijvoorbeeld:
+
 - dag -> LinkedIn post
 - voice note -> short-form script
 - losse ideeën -> podcast outline
@@ -2295,19 +2583,23 @@ Bijvoorbeeld:
 - meeting note -> samenvatting + follow-up concept
 
 ## AI-doel in deze laag
+
 - kwaliteit + snelheid
 - stembehoud
 - contextbehoud
 - review before publish
 
 ## Productregel
+
 Niet automatisch alles posten.
 Wel:
+
 - auto-prepare
 - human approve
 - smart publish
 
 ## Commerciële rol
+
 Dit is de eerste echte kern van de omzetmachine.
 
 ---
@@ -2315,14 +2607,17 @@ Dit is de eerste echte kern van de omzetmachine.
 # Laag 3 — Private / Regulated
 
 ## Doel
+
 Budio voor privacygevoelige en professioneel gereguleerde omgevingen.
 
 ## Mogelijke namen
+
 - **Budio Private**
 - **Budio Business**
 - **Budio Sovereign**
 
 ## Doelgroepen
+
 - kleine zorg- of begeleidingspraktijken
 - coaches/therapeuten met hoge privacy-eisen
 - consultancy/bureaus met vertrouwelijke klantinformatie
@@ -2330,9 +2625,11 @@ Budio voor privacygevoelige en professioneel gereguleerde omgevingen.
 - later mogelijk enterprise-achtige teams
 
 ## Belofte
+
 Dezelfde capture- en outputkracht, maar met strengere controle, routing en governance.
 
 ## Kern
+
 - private workspace
 - admin controls
 - data residency / routing policies
@@ -2345,13 +2642,16 @@ Dezelfde capture- en outputkracht, maar met strengere controle, routing en gover
 - strengere export- en retentionregels
 
 ## AI-doel in deze laag
+
 Niet eerst “meer features”, maar:
+
 - meer controle
 - meer privacy
 - meer governance
 - meer deployopties
 
 ## Inference-opties
+
 - EU-cloud only
 - private cloud routing
 - model allowlist per workspace
@@ -2359,6 +2659,7 @@ Niet eerst “meer features”, maar:
 - later optioneel on-prem / self-hosted gateway
 
 ## Commerciële rol
+
 Dit is niet de eerste wedge.
 Maar het is wel de sterkste high-ARPU laag zodra governance, privacy en teamflows echt goed zitten.
 
@@ -2369,6 +2670,7 @@ Maar het is wel de sterkste high-ARPU laag zodra governance, privacy en teamflow
 Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 
 ### A. Experience layer
+
 - app UX
 - capture UX
 - archive UX
@@ -2376,6 +2678,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - export / publish UX
 
 ### B. Intelligence execution layer
+
 - transcription
 - cleanup
 - summaries
@@ -2386,6 +2689,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - model routing
 
 ### C. Governance layer
+
 - AIQS
 - task registry
 - evals
@@ -2396,6 +2700,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - audit
 
 ### D. Usage and billing layer
+
 - plans
 - monthly entitlements
 - credit ledger
@@ -2405,6 +2710,7 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 - quota enforcement
 
 ### E. Privacy and policy layer
+
 - consent / disclosure
 - retention policy
 - residency routing
@@ -2416,16 +2722,19 @@ Onder alle 3 lagen hoort eigenlijk dezelfde basisarchitectuur te liggen:
 ## 6. Verdienmodel — abonnement + usage credits
 
 ## Belangrijk productprincipe
+
 Naar gebruikers toe verkoop je idealiter **credits** of **AI-verbruik**.
 Niet ruwe provider-tokens.
 
 Waarom:
+
 - begrijpelijker
 - stabieler ondanks modelwissels
 - beter voor prijssturing
 - makkelijker te bundelen per plan
 
 Intern registreer je wél:
+
 - input tokens
 - output tokens
 - cached tokens waar relevant
@@ -2435,6 +2744,7 @@ Intern registreer je wél:
 - geschatte kostprijs
 
 Dus:
+
 - **extern = credits**
 - **intern = usage truth**
 
@@ -2445,9 +2755,11 @@ Dus:
 # 1. Free
 
 ## Doel
+
 Instap, validatie, productleren.
 
 ## Inbegrepen
+
 - basis capture
 - tekst
 - korte audio
@@ -2457,6 +2769,7 @@ Instap, validatie, productleren.
 - beperkt aantal AI-acties per maand
 
 ## Grenzen
+
 - audio max **3 minuten** per opname
 - lagere maandelijkse credits
 - tragere of goedkopere modelrouting waar acceptabel
@@ -2464,6 +2777,7 @@ Instap, validatie, productleren.
 - beperkte hergebruikacties
 
 ## Rol
+
 - lage drempel
 - merkintro
 - geen royale bundel
@@ -2474,9 +2788,11 @@ Instap, validatie, productleren.
 # 2. Plus
 
 ## Doel
+
 Betaalde consument die vooral rust, archief en AI-structuur wil.
 
 ## Inbegrepen
+
 - alles uit Free
 - meer maandelijkse credits
 - langere audio
@@ -2485,11 +2801,13 @@ Betaalde consument die vooral rust, archief en AI-structuur wil.
 - iets meer hergebruikmogelijkheden
 
 ## Grenzen
+
 - audio max **5 minuten** per opname
 - geen geavanceerde content-workflows
 - geen uitgebreide review queue
 
 ## Richtprijs
+
 Denk aan: **€9–€14 p/m**
 
 ---
@@ -2497,9 +2815,11 @@ Denk aan: **€9–€14 p/m**
 # 3. Pro
 
 ## Doel
+
 Solo expert / creator die ruwe input omzet naar output.
 
 ## Inbegrepen
+
 - alles uit Plus
 - content transforms
 - kanaalspecifieke outputs
@@ -2510,10 +2830,12 @@ Solo expert / creator die ruwe input omzet naar output.
 - meer credits
 
 ## Grenzen
+
 - audio max **10 minuten** per opname
 - individuele gebruiker / beperkte workspace
 
 ## Richtprijs
+
 Denk aan: **€29–€49 p/m**
 
 Dit is waarschijnlijk de eerste sweet spot.
@@ -2523,9 +2845,11 @@ Dit is waarschijnlijk de eerste sweet spot.
 # 4. Private / Business
 
 ## Doel
+
 Privacy-intensief, teammatig of zwaarder gebruik.
 
 ## Inbegrepen
+
 - alles uit Pro
 - lange meeting captures
 - team/workspace controls
@@ -2536,15 +2860,19 @@ Privacy-intensief, teammatig of zwaarder gebruik.
 - prioriteit / support
 
 ## Grenzen
+
 - per workspace, seat of usage bundle
 - extra governancekosten terecht doorberekenen
 
 ## Opnamegrens
+
 - **60 minuten of langer** per opname / meeting
 - eventueel hoger per plan of add-on
 
 ## Richtprijs
+
 Denk aan:
+
 - **€99–€249 p/m per workspace startpunt**
 - of **€39–€99 p/m per seat**
 - afhankelijk van privacy/gateway/support eisen
@@ -2554,16 +2882,20 @@ Denk aan:
 ## 8. Credits en top-ups
 
 ## Model
+
 Elke betaalde tier krijgt:
+
 - een maandelijkse bundel credits
 - optionele losse top-up packs
 - optionele auto-recharge
 
 ## Slim ontwerp
+
 Niet te royaal bundelen.
 Wel royaal genoeg dat het grootste deel van normale gebruikers niet dagelijks tegen limieten aanloopt.
 
 ## Aanbevolen gedrag
+
 - credits verversen maandelijks
 - beperkt rollover toegestaan, bijvoorbeeld max 25%
 - auto-recharge optioneel
@@ -2571,6 +2903,7 @@ Wel royaal genoeg dat het grootste deel van normale gebruikers niet dagelijks te
 - waarschuwingen bij 50%, 80%, 100%
 
 ## Auto-recharge voorbeeld
+
 - als creditbalans onder drempel X komt
 - koop automatisch pack Y
 - tot maximaal maandlimiet Z
@@ -2578,6 +2911,7 @@ Wel royaal genoeg dat het grootste deel van normale gebruikers niet dagelijks te
 Dit voorkomt frustratie zonder open eindrisico.
 
 ## Add-on types
+
 1. extra AI credits
 2. extra lange audio packs
 3. premium model packs
@@ -2590,18 +2924,21 @@ Dit voorkomt frustratie zonder open eindrisico.
 Niet elke AI-actie hoeft hetzelfde te kosten.
 
 ### Lage kost / hoge frequentie
+
 - cleanup
 - korte samenvatting
 - titelvoorstel
 - caption seed
 
 ### Middel
+
 - dagnarratief
 - reflectie
 - rewrite per kanaal
 - outline
 
 ### Hoog
+
 - lange audio transcriptie
 - meeting synthese
 - multi-output generation
@@ -2609,6 +2946,7 @@ Niet elke AI-actie hoeft hetzelfde te kosten.
 - top-tier modellen
 
 Daarom moet je intern werken met:
+
 - kostclassificatie per taak
 - planpolicy per taak
 - modelrouting per taak
@@ -2620,6 +2958,7 @@ Daarom moet je intern werken met:
 Dit moet je **nu al** doen, niet later.
 
 Per AI-call moet vanaf MVP minimaal worden gelogd:
+
 - `user_id`
 - `workspace_id` of null
 - `task_key`
@@ -2648,6 +2987,7 @@ Per AI-call moet vanaf MVP minimaal worden gelogd:
 - `credits_charged`
 
 Als local inferentie draait en provider-tokens niet bestaan, log dan:
+
 - `local_compute_class`
 - `audio_seconds`
 - `chars_in/chars_out` of andere surrogate usage units
@@ -2662,6 +3002,7 @@ Maak een eigen usage-truthlaag.
 ## 11. Aanbevolen datalaag voor usage en billing
 
 ### Nieuwe kernobjecten
+
 1. `ai_usage_events`
    - 1 record per AI-call of AI-subcall
 
@@ -2684,7 +3025,9 @@ Maak een eigen usage-truthlaag.
    - interne kostprijsformules per model/provider/periode
 
 ### Waarom deze scheiding goed is
+
 Omdat je dan later:
+
 - kosten kunt analyseren
 - prijsmodellen kunt wijzigen
 - credits kunt herrekenen
@@ -2697,6 +3040,7 @@ Omdat je dan later:
 AIQS moet later niet alleen kwaliteit tonen, maar ook:
 
 ### Per task
+
 - aantal calls
 - succesratio
 - gemiddelde latency
@@ -2706,18 +3050,21 @@ AIQS moet later niet alleen kwaliteit tonen, maar ook:
 - cost drift over tijd
 
 ### Per model
+
 - totaal gebruik
 - gemiddelde kost
 - kwaliteit vs kost
 - fallback gebruik
 
 ### Per plan
+
 - gemiddelde cost-to-serve
 - heavy-user patroon
 - meest gebruikte functies
 - risico op negatieve marge
 
 ### Per gebruiker / workspace
+
 - usage trend per maand
 - credits verbruikt
 - credits gekocht
@@ -2725,12 +3072,14 @@ AIQS moet later niet alleen kwaliteit tonen, maar ook:
 - outlier detectie
 
 ### Per AI-task versie
+
 - kwaliteitsscore
 - kostverandering
 - tokenverandering
 - latencyverandering
 
 Dat maakt AIQS uiteindelijk een combinatie van:
+
 - prompt governance
 - quality evals
 - usage intelligence
@@ -2741,6 +3090,7 @@ Dat maakt AIQS uiteindelijk een combinatie van:
 ## 13. Future-state AIQS inzichten die commercieel echt tellen
 
 AIQS moet straks vragen kunnen beantwoorden als:
+
 - welke taak kost het meest?
 - welke taak geeft de meeste waarde?
 - welk model is te duur voor Free of Plus?
@@ -2761,19 +3111,23 @@ Dit is belangrijk:
 Niet elk plan hoeft dezelfde modelkwaliteit te krijgen.
 
 ### Consumer
+
 - cheaper-by-default waar veilig
 - local first-pass waar mogelijk
 - premium only when needed
 
 ### Pro
+
 - hogere kwaliteit als default op contentkritische taken
 - fallback naar goedkopere route op niet-zichtbare tussenstappen
 
 ### Private / Regulated
+
 - routing volgens beleid, niet alleen kost
 - privacy en residency kunnen zwaarder wegen dan marge per call
 
 Dus per taak definieer je:
+
 - primary model
 - fallback model
 - local eligibility
@@ -2786,6 +3140,7 @@ Dus per taak definieer je:
 ## 15. Harde productkeuzes die ik zou maken
 
 ## Ja
+
 - credits extern, tokens intern
 - usage logging vanaf dag 1
 - AIQS uitbreiden met usage- en cost-inzichten
@@ -2795,6 +3150,7 @@ Dus per taak definieer je:
 - private/privacy als premium laag
 
 ## Nee
+
 - raw provider tokens direct als consumentenpricing
 - onbeperkte Free tier
 - full auto posting als kernbelofte
@@ -2807,6 +3163,7 @@ Dus per taak definieer je:
 ## 16. Aanbevolen 12-maandenvolgorde
 
 ### Fase 1 — Nu / MVP hardening
+
 - usage logging per call toevoegen
 - model/config snapshot loggen
 - input/output tokens loggen
@@ -2815,23 +3172,27 @@ Dus per taak definieer je:
 - eerste AIQS usage tab intern bouwen
 
 ### Fase 2 — Consumer launch
+
 - Free + Plus structureren
 - basis credit- en limietmodel
 - opnamegrenzen actief afdwingen
 - zichtbare maar simpele usage indicatie voor gebruiker
 
 ### Fase 3 — Brug naar Pro
+
 - eerste content transform acties
 - review queue light
 - Pro-plan met hogere limieten en betere outputs
 
 ### Fase 4 — Margin control
+
 - top-ups
 - auto-recharge
 - cost-to-serve dashboards in AIQS
 - plan tuning op basis van echte usage
 
 ### Fase 5 — Private / Regulated
+
 - workspace policies
 - EU/private routing
 - langere meeting capture
@@ -2844,11 +3205,13 @@ Dus per taak definieer je:
 De juiste toekomst voor Budio is waarschijnlijk:
 
 ### Frontstage
+
 - **Budio Vandaag** voor consumer capture en reflectie
 - **Budio Pro** voor capture-to-content en output workflows
 - **Budio Private / Business** voor privacy-intensieve en gereguleerde contexten
 
 ### Backstage
+
 - **AIQS als intelligence control plane**
 - **usage + billing truthlaag vanaf MVP**
 - **credits extern, tokens intern**
@@ -2856,6 +3219,7 @@ De juiste toekomst voor Budio is waarschijnlijk:
 
 De grootste strategische winst zit niet in “meer AI”.
 Die zit in:
+
 - betere routing
 - betere governance
 - betere review
@@ -2869,7 +3233,9 @@ Die zit in:
 # Budio — marktresearch, purple cow, groeikansen en omzetpotentie
 
 ## Doel
+
 Dit document zet de eerdere marktreview om in een compacte strategische notitie voor Budio, met:
+
 - oordeel over de 4 gemaakte documenten
 - markt kans
 - purple cow
@@ -2884,6 +3250,7 @@ Dit document zet de eerdere marktreview om in een compacte strategische notitie 
 Ja, dit **kan** de toekomst van Budio zijn.
 
 Maar alleen als Budio **niet** eindigt als:
+
 - nog een journaling app
 - nog een AI social tool
 - nog een autopost machine
@@ -2893,6 +3260,7 @@ De sterkste richting is:
 **voice-first capture -> context -> review -> publiceerbare output**
 
 Voor:
+
 - podcasters
 - solo experts
 - coaches
@@ -2901,6 +3269,7 @@ Voor:
 - knowledge creators
 
 De 4 documenten zijn inhoudelijk behoorlijk consistent:
+
 - consumenten-MVP als validatielaag
 - daarna een Pro-wedge
 - daarna pas private / regulated
@@ -2918,6 +3287,7 @@ de architectuur is scherper beschreven dan de wedge.
 De markt onder deze richting is echt.
 
 Wat de buitenwereld bevestigt:
+
 - creators gebruiken massaal AI
 - mobiel en voice worden belangrijker
 - podcasters en knowledge creators vormen een serieuze markt
@@ -2928,6 +3298,7 @@ De relevante marktkans zit dus niet vooral in “nog een contenttool”, maar in
 **wat gebeurt er vóór de contenttool?**
 
 Dus:
+
 - voordat iemand gaat editen
 - voordat iemand clips maakt
 - voordat iemand captions schrijft
@@ -2940,6 +3311,7 @@ Daar zit de kans voor Budio.
 ## 3. Purple cow
 
 De purple cow van Budio is **niet**:
+
 - AI op zichzelf
 - credits
 - top-ups
@@ -2958,6 +3330,7 @@ Nog scherper:
 **Budio zet pre-content input om in publiceerbare output, mét context, stembehoud en review.**
 
 Dat is anders dan tools die pas beginnen wanneer er al:
+
 - een transcript is
 - een opname is
 - een video is
@@ -2972,6 +3345,7 @@ De echte onderscheidende lijn is dus:
 ## 4. Waarom dit kansrijk is
 
 Deze richting is kansrijk omdat deze doelgroep:
+
 - veel ruwe input heeft
 - weinig tijd heeft
 - wel zichtbaar wil zijn
@@ -2980,6 +3354,7 @@ Deze richting is kansrijk omdat deze doelgroep:
 - sneller betaalt dan brede consumenten
 
 Vooral deze segmenten zijn interessant:
+
 1. podcasters
 2. coaches
 3. consultants
@@ -2999,26 +3374,32 @@ De echte omzetkans zit in:
 ## 5. Groei kansen
 
 ### Kans 1 — Podcasters
+
 Dit is waarschijnlijk de scherpste eerste wedge.
 
 Waarom:
+
 - veel ruwe input
 - veel hergebruik nodig
 - veel kanaalvertalingen nodig
 - hoge waarde van tijdsbesparing
 
 ### Kans 2 — Solo experts
+
 Mensen die veel denken, praten, adviseren en publiceren,
 maar vastlopen tussen idee en output.
 
 ### Kans 3 — Privacy-first differentiatie
+
 Later kan Budio zich onderscheiden met:
+
 - local-first waar mogelijk
 - review-first
 - strakkere privacy
 - private / regulated laag
 
 ### Kans 4 — Business / private workspaces
+
 Niet als eerste wedge,
 wel als latere premium laag met hogere ARPU.
 
@@ -3027,16 +3408,20 @@ wel als latere premium laag met hogere ARPU.
 ## 6. Grootste risico’s
 
 ### 1. Te breed gaan
+
 Consumer + Pro + Business tegelijk verkopen is te veel.
 
 ### 2. Te generiek worden
+
 “AI content tool” is niet scherp genoeg.
 
 ### 3. Te vroeg enterprise denken
+
 Private / regulated is later interessant,
 maar niet de eerste motor.
 
 ### 4. Te weinig commerciële brug
+
 Als Budio alleen goed blijft in capture en reflectie,
 maar de brug naar output niet sterk maakt,
 dan blijft de omzet beperkt.
@@ -3046,6 +3431,7 @@ dan blijft de omzet beperkt.
 ## 7. Voorzichtige maand omzetpotentie
 
 ### Scenario A — vooral consumer journaling
+
 Als Budio vooral een rustige capture- en reflectie-app blijft,
 dan is een voorzichtige inschatting na 12 maanden:
 
@@ -3055,7 +3441,9 @@ Dat is niet nul,
 maar ook geen grote SaaS-machine.
 
 ### Scenario B — hybride lijn met echte Pro-wedge
+
 Als je:
+
 - consumer als instap gebruikt
 - één echte “maak hier iets van”-brug bouwt
 - daarna gericht verkoopt aan podcasters en solo experts
@@ -3065,6 +3453,7 @@ dan is een voorzichtige maar geloofwaardige range:
 **ongeveer €3.000 tot €8.000 MRR**
 
 Voorbeeld:
+
 - 100 Plus-gebruikers × €12 = €1.200
 - 50 Pro-gebruikers × €39 = €1.950
 - 2 Business/private workspaces × €149 = €298
@@ -3085,6 +3474,7 @@ dan is dit tegen maand 12 realistisch:
 **ongeveer €8.000 tot €15.000 MRR**
 
 Voorbeeld:
+
 - 160 Plus × €12 = €1.920
 - 140 Pro × €39 = €5.460
 - 6 Business/private × €149 = €894
@@ -3099,6 +3489,7 @@ Met top-ups of auto-recharge kan dat nog hoger worden.
 ## 9. Wat ik niet geloof in 12 maanden
 
 Ik geloof **niet** in:
+
 - €20k+ MRR uit een brede journaling-app
 - grote businessomzet zonder eerst een Pro-wedge te bewijzen
 - “voor iedereen die content maakt”
@@ -3112,11 +3503,13 @@ Dat is te breed en te optimistisch.
 
 De toekomst van Budio is geloofwaardig als:
 
-### Niet:
+### Niet
+
 - een brede consumer journaling-app
 - nog een AI social tool
 
-### Wel:
+### Wel
+
 - een voice-first capture-to-content product
 - voor podcasters en solo experts
 - met review
@@ -3145,7 +3538,9 @@ In gewone taal:
 de voorspelbare omzet die elke maand terugkomt uit abonnementen.
 
 ### Voorbeeld
+
 Als je hebt:
+
 - 100 klanten op €12 per maand
 - 50 klanten op €39 per maand
 
@@ -3158,16 +3553,20 @@ Totaal:
 **€3.150 MRR**
 
 ### Belangrijk
+
 MRR is meestal:
+
 - **wel** abonnementsgeld
 - **niet automatisch** losse eenmalige omzet
 
 Dus:
+
 - maandabonnementen tellen mee
 - een eenmalige top-up telt meestal niet mee als pure MRR
 - losse implementatie of service-inkomsten tellen meestal ook niet mee
 
 Voor Budio is het slim om onderscheid te maken tussen:
+
 1. **MRR**
    - vaste abonnementen
 2. **usage omzet**
