@@ -45,3 +45,32 @@ Een compacte samenvatting voor de kaart.
   assert.equal(parsed.checklist.length, 2);
   assert.equal(parsed.checklist[1]?.checked, true);
 });
+
+test('parseTaskFile decodes escaped newline and backslashes in quoted summary', () => {
+  const parsed = parseTaskFile({
+    absolutePath: '/workspace/docs/project/25-tasks/open/example-escape.md',
+    relativePath: 'docs/project/25-tasks/open/example-escape.md',
+    content: `---
+id: task-example-escape
+title: Escapetest
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-21
+summary: "regel 1\\nregel 2 met pad C:\\\\temp\\\\file"
+tags: []
+due_date: null
+sort_order: null
+---
+
+# Escapetest
+`,
+    version: {
+      mtimeMs: 1234,
+      hash: 'hash-2',
+    },
+  });
+
+  assert.equal(parsed.summary, 'regel 1\nregel 2 met pad C:\\temp\\file');
+});

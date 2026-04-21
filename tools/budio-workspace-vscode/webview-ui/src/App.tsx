@@ -61,11 +61,14 @@ export function App(): React.JSX.Element {
   const [formState, setFormState] = useState<MetadataFormState | null>(null);
   const [viewport, setViewport] = useState<ViewportKind>(getViewportKind);
   const [detailOpen, setDetailOpen] = useState<boolean>(getViewportKind() === 'desktop');
+  const [detailMenuOpen, setDetailMenuOpen] = useState(false);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [pendingCloseAfterSave, setPendingCloseAfterSave] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
-  const detailMode = viewport === 'desktop' ? 'pinned' : 'toggle';
+  const detailMode = viewport === 'desktop' ? 'split' : 'overlay';
 
   useEffect(() => {
     const handleResize = () => {
@@ -77,15 +80,13 @@ export function App(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (detailMode === 'pinned') {
-      setDetailOpen(true);
-      return;
-    }
-
     if (!selectedTaskId) {
       setDetailOpen(false);
+      setDetailMenuOpen(false);
+      setCloseConfirmOpen(false);
+      setPendingCloseAfterSave(false);
     }
-  }, [detailMode, selectedTaskId]);
+  }, [selectedTaskId]);
 
   useEffect(() => {
     const handler = (event: MessageEvent<HostToWebviewMessage>) => {
@@ -119,18 +120,25 @@ export function App(): React.JSX.Element {
         setSavingTaskId(null);
         setNotice(message.message);
         setError(null);
+        if (pendingCloseAfterSave) {
+          setDetailOpen(false);
+          setCloseConfirmOpen(false);
+          setPendingCloseAfterSave(false);
+        }
         return;
       }
 
       if (message.type === 'saveFailed') {
         setSavingTaskId(null);
         setError(message.message);
+        setPendingCloseAfterSave(false);
         return;
       }
 
       if (message.type === 'conflictDetected') {
         setSavingTaskId(null);
         setError(message.message);
+        setPendingCloseAfterSave(false);
         return;
       }
 
@@ -143,7 +151,7 @@ export function App(): React.JSX.Element {
     vscode.postMessage({ type: 'ready' });
 
     return () => window.removeEventListener('message', handler);
-  }, [selectedTaskId]);
+  }, [pendingCloseAfterSave, selectedTaskId]);
 
   const tags = useMemo(() => {
     const values = new Set<string>();
@@ -205,16 +213,14 @@ export function App(): React.JSX.Element {
 
       if (event.key.toLowerCase() === 'e' && selectedTask) {
         event.preventDefault();
-        if (detailMode === 'toggle') {
-          setDetailOpen(true);
-        }
+        setDetailOpen(true);
         titleRef.current?.focus();
         return;
       }
 
-      if (event.key === 'Escape' && detailMode === 'toggle' && detailOpen) {
+      if (event.key === 'Escape' && detailOpen) {
         event.preventDefault();
-        setDetailOpen(false);
+        requestClosePanel();
         return;
       }
 
@@ -244,8 +250,25 @@ export function App(): React.JSX.Element {
     });
   }, [selectedTask?.id, selectedTask?.version.hash, selectedTask?.version.mtimeMs]);
 
+  useEffect(() => {
+    setDetailMenuOpen(false);
+    setCloseConfirmOpen(false);
+    setPendingCloseAfterSave(false);
+  }, [selectedTask?.id]);
+
+  useEffect(() => {
+    if (!detailMenuOpen) {
+      return;
+    }
+
+    const onGlobalClick = () => setDetailMenuOpen(false);
+    window.addEventListener('click', onGlobalClick);
+    return () => window.removeEventListener('click', onGlobalClick);
+  }, [detailMenuOpen]);
+
   const dragEnabled = !hasActiveFiltering(search, filters) && sort === 'manual';
   const hasActiveFilters = hasActiveFiltering('', filters) || sort !== 'manual';
+  const formDirty = isFormDirty(selectedTask, formState);
 
   if (!snapshot) {
     return <div className="state-shell">Taken laden...</div>;
@@ -398,8 +421,17 @@ export function App(): React.JSX.Element {
 
         <section className="status-strip">
           {!dragEnabled ? <StatusChip>Drag/drop alleen in manual zonder filters</StatusChip> : null}
-          {detailMode === 'toggle' && selectedTask ? (
-            <button className="ghost-button detail-toggle-button" onClick={() => setDetailOpen((current) => !current)}>
+          {selectedTask ? (
+            <button
+              className="ghost-button detail-toggle-button"
+              onClick={() => {
+                if (detailOpen) {
+                  requestClosePanel();
+                } else {
+                  setDetailOpen(true);
+                }
+              }}
+            >
               {detailOpen ? 'Sluit details' : 'Open details'}
             </button>
           ) : null}
@@ -408,7 +440,11 @@ export function App(): React.JSX.Element {
           {error ? <StatusChip danger>{error}</StatusChip> : null}
         </section>
 
-        <div className={`content-shell ${detailMode === 'toggle' ? 'content-shell-toggle' : 'content-shell-pinned'}`}>
+        <div
+          className={`content-shell ${detailMode === 'overlay' ? 'content-shell-toggle' : 'content-shell-pinned'} ${
+            detailOpen ? 'detail-open' : ''
+          }`}
+        >
           <section className="main-pane">
             {activeView === 'board' ? (
               <div className="board-canvas">
@@ -610,27 +646,27 @@ export function App(): React.JSX.Element {
             ) : null}
           </section>
 
-          {detailMode === 'toggle' ? (
+          {detailOpen ? (
             <button
               type="button"
               className={`detail-backdrop ${detailOpen ? 'visible' : ''}`}
               aria-label="Sluit details"
-              onClick={() => setDetailOpen(false)}
+              onClick={requestClosePanel}
             />
           ) : null}
 
-          <aside
-            className={`detail-pane ${detailMode === 'toggle' ? 'detail-pane-toggle' : 'detail-pane-pinned'} ${
-              detailOpen ? 'open' : ''
-            }`}
-          >
+          {detailOpen ? (
+            <aside
+              className={`detail-pane ${detailMode === 'overlay' ? 'detail-pane-toggle' : 'detail-pane-pinned'} ${
+                detailOpen ? 'open' : ''
+              }`}
+            >
             {selectedTask && formState ? (
               <>
                 <div className="detail-header">
                   <div className="detail-copy">
                     <div className="eyebrow">Task detail</div>
                     <h2>{selectedTask.title}</h2>
-                    <p>{selectedTask.relativePath}</p>
                     <div className="detail-meta-chips">
                       <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
                       <span className="task-ref" title={selectedTask.id}>
@@ -641,28 +677,49 @@ export function App(): React.JSX.Element {
                     </div>
                   </div>
                   <div className="detail-actions">
-                    {detailMode === 'toggle' ? (
-                      <button className="ghost-button" onClick={() => setDetailOpen(false)}>
-                        Sluit
-                      </button>
+                    <button
+                      className="ghost-button menu-toggle-button"
+                      aria-label="Meer acties"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDetailMenuOpen((open) => !open);
+                      }}
+                    >
+                      ☰
+                    </button>
+                    {detailMenuOpen ? (
+                      <div className="detail-menu" onClick={(event) => event.stopPropagation()}>
+                        <button
+                          className="ghost-button"
+                          onClick={() => {
+                            vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id });
+                            setDetailMenuOpen(false);
+                          }}
+                        >
+                          Open source file
+                        </button>
+                        <button
+                          className="ghost-button"
+                          onClick={() => {
+                            vscode.postMessage({ type: 'revealInExplorer', taskId: selectedTask.id });
+                            setDetailMenuOpen(false);
+                          }}
+                        >
+                          Reveal
+                        </button>
+                        <button
+                          className="ghost-button"
+                          onClick={() => {
+                            vscode.postMessage({ type: 'copyRelativePath', taskId: selectedTask.id });
+                            setDetailMenuOpen(false);
+                          }}
+                        >
+                          Copy path
+                        </button>
+                      </div>
                     ) : null}
-                    <button
-                      className="ghost-button"
-                      onClick={() => vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id })}
-                    >
-                      Open source file
-                    </button>
-                    <button
-                      className="ghost-button"
-                      onClick={() => vscode.postMessage({ type: 'revealInExplorer', taskId: selectedTask.id })}
-                    >
-                      Reveal
-                    </button>
-                    <button
-                      className="ghost-button"
-                      onClick={() => vscode.postMessage({ type: 'copyRelativePath', taskId: selectedTask.id })}
-                    >
-                      Copy path
+                    <button className="ghost-button detail-close-button" onClick={requestClosePanel}>
+                      Sluiten
                     </button>
                   </div>
                 </div>
@@ -721,7 +778,12 @@ export function App(): React.JSX.Element {
 
                   <div className="detail-section">
                     <strong>Bronbestand</strong>
-                    <span className="detail-path">{selectedTask.relativePath}</span>
+                    <button
+                      className="path-link-button"
+                      onClick={() => vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id })}
+                    >
+                      {selectedTask.relativePath}
+                    </button>
                   </div>
 
                   <div className="detail-section">
@@ -773,14 +835,48 @@ export function App(): React.JSX.Element {
                   <button className="primary-button save-button" onClick={saveMetadata}>
                     Save metadata
                   </button>
+
+                  {closeConfirmOpen ? (
+                    <div className="close-confirm">
+                      <strong>Wijzigingen opslaan?</strong>
+                      <p className="muted-copy">Je hebt onopgeslagen wijzigingen in deze taak.</p>
+                      <div className="close-confirm-actions">
+                        <button
+                          className="primary-button"
+                          onClick={() => {
+                            setPendingCloseAfterSave(true);
+                            saveMetadata();
+                          }}
+                        >
+                          Opslaan
+                        </button>
+                        <button
+                          className="ghost-button"
+                          onClick={() => {
+                            setCloseConfirmOpen(false);
+                            resetFormFromSelectedTask();
+                            setDetailOpen(false);
+                          }}
+                        >
+                          Verwerpen
+                        </button>
+                        <button className="ghost-button" onClick={() => setCloseConfirmOpen(false)}>
+                          Annuleren
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </>
             ) : (
               <div className="empty-detail">
-                {detailMode === 'toggle' ? 'Open een kaart om details te bekijken.' : 'Selecteer een kaart om details te bekijken.'}
+                {detailMode === 'overlay'
+                  ? 'Open een kaart om details te bekijken.'
+                  : 'Selecteer een kaart om details te bekijken.'}
               </div>
             )}
-          </aside>
+            </aside>
+          ) : null}
         </div>
       </main>
     </div>
@@ -855,10 +951,59 @@ export function App(): React.JSX.Element {
 
   function selectTask(taskId: string): void {
     setSelectedTaskId(taskId);
-    if (detailMode === 'toggle') {
-      setDetailOpen(true);
-    }
+    setDetailOpen(true);
+    setCloseConfirmOpen(false);
+    setPendingCloseAfterSave(false);
   }
+
+  function resetFormFromSelectedTask(): void {
+    if (!selectedTask) {
+      return;
+    }
+
+    setFormState({
+      title: selectedTask.title,
+      status: selectedTask.status,
+      priority: selectedTask.priority,
+      summary: selectedTask.summary,
+      tags: selectedTask.tags.join(', '),
+      dueDate: selectedTask.dueDate ?? '',
+    });
+  }
+
+  function requestClosePanel(): void {
+    setDetailMenuOpen(false);
+    if (formDirty) {
+      setCloseConfirmOpen(true);
+      return;
+    }
+    setCloseConfirmOpen(false);
+    setDetailOpen(false);
+  }
+}
+
+function isFormDirty(task: TaskCardViewModel | null, formState: MetadataFormState | null): boolean {
+  if (!task || !formState) {
+    return false;
+  }
+
+  if (formState.title.trim() !== task.title) {
+    return true;
+  }
+  if (formState.status !== task.status) {
+    return true;
+  }
+  if (formState.priority !== task.priority) {
+    return true;
+  }
+  if (formState.summary.trim() !== task.summary) {
+    return true;
+  }
+  if (formState.dueDate !== (task.dueDate ?? '')) {
+    return true;
+  }
+
+  return splitTags(formState.tags).join(',') !== task.tags.join(',');
 }
 
 function IconButton(props: { active: boolean; label: string; onClick: () => void }): React.JSX.Element {

@@ -250,7 +250,7 @@ button {
 .ghost-button,
 .primary-button,
 .mini-button,
-.detail-form input,
+.detail-form input:not([type='checkbox']),
 .detail-form select,
 .detail-form textarea {
   min-height: var(--control-height);
@@ -258,7 +258,7 @@ button {
 }
 
 .topbar-search-row select,
-.detail-form input,
+.detail-form input:not([type='checkbox']),
 .detail-form select,
 .detail-form textarea,
 .topbar-search-row input,
@@ -324,6 +324,10 @@ button {
 
 .content-shell-pinned {
   grid-template-columns: minmax(0, 1fr) minmax(320px, var(--detail-width));
+}
+
+.content-shell-pinned:not(.detail-open) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .content-shell-toggle {
@@ -552,6 +556,15 @@ button {
   display: none;
 }
 
+.detail-backdrop.visible {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: transparent;
+  border: 0;
+}
+
 .detail-pane {
   min-height: 0;
   overflow: auto;
@@ -561,6 +574,7 @@ button {
 .detail-pane-pinned {
   border-left: 1px solid var(--border);
   padding: var(--space-4);
+  z-index: 4;
 }
 
 .detail-pane-toggle {
@@ -621,6 +635,17 @@ button {
   gap: 10px;
 }
 
+.path-link-button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  word-break: break-word;
+}
+
 .detail-path {
   word-break: break-word;
   color: var(--muted-strong);
@@ -640,7 +665,65 @@ button {
 .checklist-row {
   display: flex;
   gap: 10px;
-  align-items: flex-start;
+  align-items: center;
+}
+
+.checklist-row input[type='checkbox'],
+.toggle-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  accent-color: var(--accent);
+}
+
+.menu-toggle-button {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.detail-close-button {
+  margin-left: auto;
+}
+
+.detail-actions {
+  position: relative;
+}
+
+.detail-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-strong);
+  box-shadow: var(--shadow-soft);
+  z-index: 8;
+}
+
+.close-confirm {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.close-confirm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .preview-block pre {
@@ -802,11 +885,7 @@ button {
   }
 
   .detail-backdrop.visible {
-    display: block;
-    position: absolute;
-    inset: 0;
     background: rgba(3, 6, 12, 0.54);
-    z-index: 3;
   }
 }
 

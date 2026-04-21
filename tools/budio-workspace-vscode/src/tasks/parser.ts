@@ -267,11 +267,20 @@ function readTaskPriority(value: FrontmatterValue, relativePath: string): TaskPr
 }
 
 function stripQuotes(input: string): string {
-  if (
-    (input.startsWith('"') && input.endsWith('"')) ||
-    (input.startsWith("'") && input.endsWith("'"))
-  ) {
-    return input.slice(1, -1);
+  if (input.startsWith('"') && input.endsWith('"')) {
+    try {
+      return JSON.parse(input) as string;
+    } catch {
+      return input.slice(1, -1);
+    }
+  }
+
+  if (input.startsWith("'") && input.endsWith("'")) {
+    const singleQuoted = input.slice(1, -1);
+    return singleQuoted
+      .replace(/\\\\/g, '\\')
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t');
   }
 
   return input;
