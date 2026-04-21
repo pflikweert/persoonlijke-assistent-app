@@ -117,6 +117,7 @@ Upload standaard de bestanden uit `docs/upload/`:
 5. `docs/upload/30-budio-build-truth.md`
 6. `docs/upload/40-budio-ui-system-and-design-truth.md`
 7. `docs/upload/50-budio-ai-governance-and-operations.md`
+8. `docs/upload/55-budio-ai-operating-system.md`
 
 Reden:
 
@@ -125,6 +126,7 @@ Reden:
 - ideas/opportunity mapping is expliciet gescheiden van strategy/research
 - het manifest maakt de primaire uploadset controleerbaar
 - use-case subsets staan in `docs/upload/00-budio-upload-manifest.md`
+- `docs/upload/55-budio-ai-operating-system.md` is upload/reference-context en **geen** canonieke bron voor agents in deze repo
 
 Legacy compatibiliteit:
 

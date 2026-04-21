@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
-Source Commit: 8e1ee5c
+Build Timestamp (UTC): 2026-04-21T11:29:50.898Z
+Source Commit: 8659278
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -153,6 +153,7 @@ Upload standaard de bestanden uit `docs/upload/`:
 5. `docs/upload/30-budio-build-truth.md`
 6. `docs/upload/40-budio-ui-system-and-design-truth.md`
 7. `docs/upload/50-budio-ai-governance-and-operations.md`
+8. `docs/upload/55-budio-ai-operating-system.md`
 
 Reden:
 
@@ -161,6 +162,7 @@ Reden:
 - ideas/opportunity mapping is expliciet gescheiden van strategy/research
 - het manifest maakt de primaire uploadset controleerbaar
 - use-case subsets staan in `docs/upload/00-budio-upload-manifest.md`
+- `docs/upload/55-budio-ai-operating-system.md` is upload/reference-context en **geen** canonieke bron voor agents in deze repo
 
 Legacy compatibiliteit:
 
@@ -2414,6 +2416,11 @@ Waarom:
 ## Doel
 
 Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productwaarheid te vervuilen.
+
+## Execution OS (compact)
+
+- Voor harde MVP-scope en uitvoerdiscipline: gebruik `.clinerules/workflows/budio-cline-execution-os.md`.
+- Deze workflow blijft aanvullend en vervangt `AGENTS.md` of `docs/project/**` niet.
 
 ## Rolverdeling
 

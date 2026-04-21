@@ -18,6 +18,7 @@ const outputPaths = {
   uploadBuildTruth: 'docs/upload/30-budio-build-truth.md',
   uploadUiDesignTruth: 'docs/upload/40-budio-ui-system-and-design-truth.md',
   uploadAiGovernanceOps: 'docs/upload/50-budio-ai-governance-and-operations.md',
+  uploadBudioAiOperatingSystem: 'docs/upload/55-budio-ai-operating-system.md',
   generatedProductTruth: 'docs/project/generated/10-budio-product-truth.md',
   generatedStrategyResearch: 'docs/project/generated/20-budio-strategy-and-research.md',
   generatedIdeasOpportunity: 'docs/project/generated/25-budio-ideas-and-opportunity-map.md',
@@ -37,6 +38,9 @@ const outputPaths = {
   uploadStitchDesignContext: 'docs/upload/stitch-design-context.md',
   uploadManifest: 'docs/upload/upload-manifest.md',
 };
+
+const budioAiOperatingSystemSourcePath =
+  'docs/Budio AI Operating System/Budio AI Operating System.md';
 
 const projectCoreSources = [
   { path: 'docs/project/README.md', title: 'Docs-Hiërarchie Samenvatting' },
@@ -178,6 +182,11 @@ const uploadSet = [
     path: outputPaths.uploadAiGovernanceOps,
     type: 'generated primary bundle',
     flow: 'AI governance and operations',
+  },
+  {
+    path: outputPaths.uploadBudioAiOperatingSystem,
+    type: 'upload reference copy',
+    flow: 'External AI operating system context (reference-only)',
   },
   {
     path: outputPaths.uploadChatgptProjectContext,
@@ -1238,6 +1247,9 @@ async function loadBundleInputs() {
   const mvpDesignSpec = await readText('docs/design/mvp-design-spec-1.2.1.md');
   const ethosDesign = await readText('design_refs/1.2.1/ethos_ivory/DESIGN.md');
   const stitchWorkflow = await readText('docs/dev/stitch-workflow.md');
+  const budioAiOperatingSystem = await readText(
+    budioAiOperatingSystemSourcePath,
+  );
   const tokens = await readText('theme/tokens.ts');
   const pageMarkdownRefs = await listDesignMarkdownRefs();
 
@@ -1260,6 +1272,7 @@ async function loadBundleInputs() {
     mvpDesignSpec,
     ethosDesign,
     stitchWorkflow,
+    budioAiOperatingSystem,
     tokenSnapshot: extractTokenSnapshot(tokens),
     pageMarkdownRefs,
   };
@@ -1366,6 +1379,7 @@ function renderOutputs(inputs, metadata) {
     [outputPaths.uploadBuildTruth, primaryBuildTruth],
     [outputPaths.uploadUiDesignTruth, primaryUiDesignTruth],
     [outputPaths.uploadAiGovernanceOps, primaryAiGovernanceOps],
+    [outputPaths.uploadBudioAiOperatingSystem, `${inputs.budioAiOperatingSystem.trim()}\n`],
     [outputPaths.uploadBudioResearch, budioResearch],
     [outputPaths.uploadAiQualityStudio, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/project/ai-quality-studio.md')?.content?.trim() ?? ''}\n`],
     [outputPaths.uploadClineWorkflow, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/dev/cline-workflow.md')?.content?.trim() ?? ''}\n`],
@@ -1389,6 +1403,7 @@ async function assertRequiredSourcesExist(pageMarkdownRefs) {
     'docs/project/25-tasks/README.md',
     'docs/project/25-tasks/_template.md',
     'docs/dev/stitch-workflow.md',
+    budioAiOperatingSystemSourcePath,
     'docs/dev/task-lifecycle-workflow.md',
     ...pageMarkdownRefs,
   ];

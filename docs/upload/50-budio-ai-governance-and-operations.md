@@ -2,8 +2,8 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-20T22:17:33.107Z
-Source Commit: 8e1ee5c
+Build Timestamp (UTC): 2026-04-21T11:29:50.898Z
+Source Commit: 8659278
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -177,6 +177,11 @@ Als output deze grenzen schendt, is dat een **kwaliteitsfout**, ongeacht modelsc
 
 Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productwaarheid te vervuilen.
 
+## Execution OS (compact)
+
+- Voor harde MVP-scope en uitvoerdiscipline: gebruik `.clinerules/workflows/budio-cline-execution-os.md`.
+- Deze workflow blijft aanvullend en vervangt `AGENTS.md` of `docs/project/**` niet.
+
 ## Rolverdeling
 
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
@@ -227,11 +232,7 @@ Regels:
   - canonieke waarheid: `docs/project/**`
   - always-on gedrag: `AGENTS.md`
   - domeinspecifieke herhaalpatronen: `.agents/skills/**`
-  - operationele workflow: `docs/dev/cline-workflow.md` + `docs/dev/memory-bank.md`
-  - taakworkflow: `docs/dev/task-lifecycle-workflow.md`
-  - tijdelijke sessiecontext: `docs/dev/active-context.md`
-  - statuswaarheid: `docs/project/current-status.md`
-  - echte gaps/onz
+  - operationele workflow: `docs/dev/cline-workflow
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 

@@ -4,6 +4,11 @@
 
 Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productwaarheid te vervuilen.
 
+## Execution OS (compact)
+
+- Voor harde MVP-scope en uitvoerdiscipline: gebruik `.clinerules/workflows/budio-cline-execution-os.md`.
+- Deze workflow blijft aanvullend en vervangt `AGENTS.md` of `docs/project/**` niet.
+
 ## Rolverdeling
 
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
