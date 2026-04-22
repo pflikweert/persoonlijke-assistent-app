@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-21T11:29:50.898Z
-Source Commit: 8659278
+Build Timestamp (UTC): 2026-04-22T12:20:58.748Z
+Source Commit: a864397
 
 Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -2451,6 +2451,8 @@ Regels:
 
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
 - Gebruik eerst bestaande shared primitives/patronen; voeg alleen een nieuw shared component toe bij een echt herhaalbaar patroon over meerdere schermen.
+- UI assembly is scaffold-first: check eerst `components/ui/screen-scaffolds.tsx` en daarna pas screen-lokale opbouw.
+- Volg bij UI-keuzes de beslisboom in `docs/dev/ui-assembly-decision-tree.md`.
 - Stop geen screen-specifieke designregels in generieke shared primitives.
 - `design_refs/1.2.1/**` zijn bindend per scherm; `.md` notes tellen mee naast `code.html` en `screen.png`.
 - Verify stylingwerk altijd in light én dark mode tegen relevante design refs voordat het “klaar” is.

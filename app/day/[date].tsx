@@ -40,6 +40,10 @@ import {
   SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
+import {
+  BrandHeaderLockup,
+  HeaderActionGroup,
+} from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   fetchDayJournalByDate,
@@ -557,28 +561,10 @@ export default function DayDetailScreen() {
             <Stack.Screen options={{ headerShown: false }} />
             <ScreenHeader
               leftAction={
-                <ThemedView style={styles.headerTitleStack}>
-                  <ThemedView style={styles.headerTitleLockup}>
-                    <ThemedText type="sectionTitle" style={styles.headerTitlePrimary}>
-                      Budio
-                    </ThemedText>
-                    <ThemedText
-                      type="sectionTitle"
-                      style={[styles.headerTitleSecondary, { color: palette.mutedSoft }]}
-                    >
-                      {dayHeading}
-                    </ThemedText>
-                  </ThemedView>
-                  <ThemedText
-                    type="bodySecondary"
-                    style={[styles.headerSubtitle, { color: palette.muted }]}
-                  >
-                    {readableDate}
-                  </ThemedText>
-                </ThemedView>
+                <BrandHeaderLockup secondary={dayHeading} subtitle={readableDate} />
               }
               rightAction={
-                <ThemedView style={styles.headerActions}>
+                <HeaderActionGroup>
                   <HeaderIconButton
                     accessibilityRole="button"
                     accessibilityLabel="Kies dag"
@@ -597,7 +583,7 @@ export default function DayDetailScreen() {
                   >
                     <MaterialIcons name="menu" size={20} color={palette.primary} />
                   </HeaderIconButton>
-                </ThemedView>
+                </HeaderActionGroup>
               }
               surface="transparent"
             />
@@ -825,33 +811,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.page,
     gap: spacing.section,
     paddingBottom: spacing.xxxl + spacing.xxl + spacing.xxl,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  headerTitleStack: {
-    gap: spacing.xs,
-  },
-  headerTitleLockup: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
-  },
-  headerTitlePrimary: {
-    fontSize: 24,
-    lineHeight: 28,
-    letterSpacing: -0.4,
-  },
-  headerTitleSecondary: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "400",
-    letterSpacing: -0.4,
-  },
-  headerSubtitle: {
-    lineHeight: 22,
   },
   processedRow: {
     flexDirection: "row",

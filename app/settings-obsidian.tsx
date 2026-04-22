@@ -7,17 +7,15 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
     PrimaryButton,
-    ScreenContainer,
     SecondaryButton,
     StateBlock,
     SurfaceSection,
 } from "@/components/ui/screen-primitives";
 import {
-    SettingsPageHero,
     SettingsStateBody,
     SettingsStateIcon,
-    SettingsTopNav,
 } from "@/components/ui/settings-screen-primitives";
+import { SettingsScaffold } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
     classifyUnknownError,
@@ -92,22 +90,13 @@ export default function SettingsObsidianScreen() {
 
   if (!obsidianEnabled) {
     return (
-      <ScreenContainer
-        scrollable
-        backgroundTone="flat"
+      <SettingsScaffold
+        title="Obsidian integratie"
+        subtitle="Deze instelling staat uit."
+        onBack={() => router.replace("/settings")}
+        onMenu={() => setMenuVisible(true)}
         contentContainerStyle={styles.scrollContent}
-        fixedHeader={
-          <SettingsTopNav
-            onBack={() => router.replace("/settings")}
-            onMenu={() => setMenuVisible(true)}
-            title="Instellingen"
-          />
-        }
       >
-        <SettingsPageHero
-          title="Obsidian integratie"
-          subtitle="Deze instelling staat uit."
-        />
 
         <StateBlock
           tone="info"
@@ -125,27 +114,18 @@ export default function SettingsObsidianScreen() {
           currentRouteKey="settings"
           onRequestClose={() => setMenuVisible(false)}
         />
-      </ScreenContainer>
+      </SettingsScaffold>
     );
   }
 
   return (
-    <ScreenContainer
-      scrollable
-      backgroundTone="flat"
+    <SettingsScaffold
+      title="Obsidian integratie"
+      subtitle="Stel standaard vault en notitie in voor Obsidian."
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
-      fixedHeader={
-        <SettingsTopNav
-          onBack={() => router.back()}
-          onMenu={() => setMenuVisible(true)}
-          title="Instellingen"
-        />
-      }
     >
-      <SettingsPageHero
-        title="Obsidian integratie"
-        subtitle="Stel standaard vault en notitie in voor Obsidian."
-      />
 
       <SurfaceSection title="Vault pad">
         <SettingsStateBody>
@@ -242,7 +222,7 @@ export default function SettingsObsidianScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </ScreenContainer>
+    </SettingsScaffold>
   );
 }
 

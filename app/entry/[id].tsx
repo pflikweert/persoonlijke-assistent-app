@@ -35,6 +35,7 @@ import {
   SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
+import { BrandHeaderLockup } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   createEntryAudioSignedUrl,
@@ -532,17 +533,7 @@ export default function EntryCompletionScreen() {
           isProcessing ? null : (
             <ScreenHeader
               leftAction={
-                <ThemedView style={styles.brandLockup}>
-                  <ThemedText type="sectionTitle" style={styles.brandPrimary}>
-                    Budio
-                  </ThemedText>
-                  <ThemedText
-                    type="sectionTitle"
-                    style={[styles.brandSecondary, { color: palette.mutedSoft }]}
-                  >
-                    Moment
-                  </ThemedText>
-                </ThemedView>
+                <BrandHeaderLockup secondary="Moment" />
               }
               rightAction={
                 <HeaderIconButton
@@ -723,22 +714,6 @@ const styles = StyleSheet.create({
   },
   titleBlock: {
     marginBottom: spacing.lg,
-  },
-  brandLockup: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
-  },
-  brandPrimary: {
-    fontSize: 24,
-    lineHeight: 28,
-    letterSpacing: -0.4,
-  },
-  brandSecondary: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "400",
-    letterSpacing: -0.4,
   },
   sectionBlock: {
     gap: spacing.xs,

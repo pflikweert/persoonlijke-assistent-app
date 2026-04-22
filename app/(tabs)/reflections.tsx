@@ -31,6 +31,10 @@ import {
   SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
+import {
+  BrandHeaderLockup,
+  HeaderActionGroup,
+} from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   classifyUnknownError,
@@ -592,20 +596,10 @@ export default function ReflectionsScreen() {
           isProcessing ? null : (
             <ScreenHeader
               leftAction={
-                <ThemedView style={styles.brandLockup}>
-                  <ThemedText type="sectionTitle" style={styles.brandPrimary}>
-                    Budio
-                  </ThemedText>
-                  <ThemedText
-                    type="sectionTitle"
-                    style={[styles.brandSecondary, { color: palette.mutedSoft }]}
-                  >
-                    Terugblik
-                  </ThemedText>
-                </ThemedView>
+                <BrandHeaderLockup secondary="Terugblik" />
               }
               rightAction={
-                <ThemedView style={styles.headerActions}>
+                <HeaderActionGroup>
                   <HeaderIconButton
                     accessibilityRole="button"
                     accessibilityLabel={headerActionLabel}
@@ -628,7 +622,7 @@ export default function ReflectionsScreen() {
                       color={palette.primary}
                     />
                   </HeaderIconButton>
-                </ThemedView>
+                </HeaderActionGroup>
               }
               surface="transparent"
             />
@@ -906,27 +900,6 @@ export default function ReflectionsScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
-  },
-  brandLockup: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
-  },
-  brandPrimary: {
-    fontSize: 24,
-    lineHeight: 28,
-    letterSpacing: -0.4,
-  },
-  brandSecondary: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "400",
-    letterSpacing: -0.4,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
   },
   periodSwitch: {
     marginTop: spacing.sm,

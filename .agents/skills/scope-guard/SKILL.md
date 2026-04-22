@@ -12,6 +12,7 @@ Gebruik bij elke taak met risico op scope-uitloop of over-architectuur.
 3. Kies cheap-first en kleinste werkende wijziging.
 4. Houd input minimaal: doel + scope + files.
 5. Stop uitbreidingen buiten expliciete vraag.
+6. Bij UI-werk: eerst hergebruik/scaffold-check doen via `docs/dev/ui-assembly-decision-tree.md`.
 
 # Niet doen
 - Geen nieuwe productrichting introduceren.

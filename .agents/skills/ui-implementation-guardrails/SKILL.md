@@ -14,14 +14,15 @@ Lees alleen wat nodig is:
 - Relevante `design_refs/1.2.1/**` bij styling- of schermwerk.
 
 # Werkwijze
-1. Check eerst of de regressie uit een shared primitive komt.
-2. Kies clean-first: spacing, typografie, hiërarchie en tonal contrast vóór extra containers.
-3. Houd plain text wrappers transparant; borders, fills en nested surfaces zijn opt-in.
-4. Houd dark mode structureel even licht als de design ref.
-5. Houd topnav navigation-only; titel en ondersteunende copy horen in de hero.
-6. Houd copy compact: liever hero + action + notice dan dubbele uitleg.
-7. Maak background-modi en surfaces mode-aware; dark mode is nooit de impliciete default voor light mode.
-8. Verifieer met relevante design refs en een gerichte dark + light runtime/smoke-check voordat je “klaar” zegt.
+1. Doe eerst een scaffold/shared fit check via `docs/dev/ui-assembly-decision-tree.md`.
+2. Check of de regressie uit een shared primitive komt.
+3. Kies clean-first: spacing, typografie, hiërarchie en tonal contrast vóór extra containers.
+4. Houd plain text wrappers transparant; borders, fills en nested surfaces zijn opt-in.
+5. Houd dark mode structureel even licht als de design ref.
+6. Houd topnav navigation-only; titel en ondersteunende copy horen in de hero.
+7. Houd copy compact: liever hero + action + notice dan dubbele uitleg.
+8. Maak background-modi en surfaces mode-aware; dark mode is nooit de impliciete default voor light mode.
+9. Verifieer met relevante design refs en een gerichte dark + light runtime/smoke-check voordat je “klaar” zegt.
 
 # Niet doen
 - Geen redesign zonder expliciete opdracht.

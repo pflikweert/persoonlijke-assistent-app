@@ -8,16 +8,14 @@ import { ThemedView } from "@/components/themed-view";
 import { ChoiceInputGroup } from "@/components/ui/radio-choice-group";
 import {
   PrimaryButton,
-  ScreenContainer,
   StateBlock,
   SurfaceSection,
 } from "@/components/ui/screen-primitives";
 import {
-  SettingsPageHero,
   SettingsStateBody,
   SettingsStateIcon,
-  SettingsTopNav,
 } from "@/components/ui/settings-screen-primitives";
+import { SettingsScaffold } from "@/components/ui/screen-scaffolds";
 import {
   classifyUnknownError,
   fetchUserAudioPreferences,
@@ -89,22 +87,13 @@ export default function SettingsAudioScreen() {
   const isBusy = loading || saving;
 
   return (
-    <ScreenContainer
-      scrollable
-      backgroundTone="flat"
+    <SettingsScaffold
+      title="Audio-opnames bewaren"
+      subtitle="Beheer opslag van originele audiobestanden."
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
-      fixedHeader={
-        <SettingsTopNav
-          onBack={() => router.back()}
-          onMenu={() => setMenuVisible(true)}
-          title="Instellingen"
-        />
-      }
     >
-      <SettingsPageHero
-        title="Audio-opnames bewaren"
-        subtitle="Beheer opslag van originele audiobestanden."
-      />
 
       <SurfaceSection title="Opslag voorkeur">
         <SettingsStateBody>
@@ -180,7 +169,7 @@ export default function SettingsAudioScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </ScreenContainer>
+    </SettingsScaffold>
   );
 }
 

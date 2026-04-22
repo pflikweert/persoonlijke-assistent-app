@@ -39,6 +39,22 @@ Deze pagina is een **inventory + afsprakenlaag**:
 
 > Let op: wanneer selector UX moet matchen met de reflections slide-up selector, moet deze shell leidend daarop worden geünificeerd.
 
+### `components/feedback/selectable-list-modal.tsx`
+
+- Type: shared selector-list wrapper bovenop `SelectorModalShell`.
+- Rol: standaard loading/error/empty + lijstrijen voor dag/week/maand-achtige selecties.
+- Gebruik:
+  - `components/feedback/day-selector-modal.tsx`
+  - `components/feedback/period-selector-modal.tsx`
+
+### `components/feedback/async-status-sheet.tsx`
+
+- Type: shared async status-sheet (loading/success/error).
+- Rol: voorkomt screen-lokale status-sheet opbouw voor lange async acties.
+- Backdrop: `ModalBackdrop` (`bottom`).
+- Gebruik:
+  - `app/settings.tsx`
+
 ## Componentenoverzicht
 
 ### 1) Dialogs
@@ -66,14 +82,14 @@ Geen actieve centered confirm-dialogs voor bevestigingsflows.
 #### `components/feedback/day-selector-modal.tsx`
 
 - Type: selector modal (dag).
-- Base: `SelectorModalShell`.
+- Base: `SelectableListModal` -> `SelectorModalShell`.
 - Gebruik:
   - `components/feedback/date-range-selector-modal.tsx`
 
 #### `components/feedback/period-selector-modal.tsx`
 
 - Type: selector modal (week/maand generic).
-- Base: `SelectorModalShell`.
+- Base: `SelectableListModal` -> `SelectorModalShell`.
 
 #### `components/feedback/export-period-selector-modal.tsx`
 

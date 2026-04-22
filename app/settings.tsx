@@ -1,19 +1,18 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
+import type { ComponentProps } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
+import { AsyncStatusSheet } from "@/components/feedback/async-status-sheet";
 import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
-import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { ModalBackdrop } from "@/components/ui/modal-backdrop";
-import { ScreenContainer } from "@/components/ui/screen-primitives";
+import { SettingsScaffold } from "@/components/ui/screen-scaffolds";
 import {
-  SettingsPageHero,
-  SettingsTopNav,
-} from "@/components/ui/settings-screen-primitives";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+  SettingsNavRow,
+  SettingsSectionLabel,
+} from "@/components/ui/settings-nav-primitives";
 import {
     classifyUnknownError,
     hasAdminAiQualityStudioAccess,
@@ -21,7 +20,7 @@ import {
     isObsidianSettingsEnabled,
     resetAllUserData,
 } from "@/services";
-import { colorTokens, radius, spacing } from "@/theme";
+import { spacing } from "@/theme";
 
 type SettingsRoute = {
   key:
@@ -33,7 +32,7 @@ type SettingsRoute = {
     | "ai-quality-studio";
   label: string;
   description: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: ComponentProps<typeof MaterialIcons>["name"];
   route:
     | "/settings-export"
     | "/settings-import"
@@ -44,10 +43,9 @@ type SettingsRoute = {
 };
 
 type RowItem = {
-  key: string;
   label: string;
   description: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: ComponentProps<typeof MaterialIcons>["name"];
   destructive?: boolean;
 };
 
@@ -103,77 +101,13 @@ const ADMIN_OBSIDIAN_ROUTE: SettingsRoute = {
 };
 
 const DELETE_ROW: RowItem = {
-  key: "delete-all",
   label: "Verwijder alles",
   description: "Verwijder je momenten, dagen en reflecties.",
   icon: "delete-forever",
   destructive: true,
 };
 
-function SettingsRow({
-  item,
-  onPress,
-}: {
-  item: RowItem;
-  onPress: () => void;
-}) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={item.label}
-      onPress={onPress}
-      style={[
-        styles.menuRow,
-        {
-          backgroundColor: palette.surfaceLow,
-        },
-      ]}
-    >
-      <ThemedView style={styles.menuRowLeft}>
-        <MaterialIcons
-          name={item.icon}
-          size={18}
-          style={styles.menuRowIcon}
-          color={
-            item.destructive ? palette.destructiveSoftText : palette.primary
-          }
-        />
-
-        <ThemedView style={styles.menuTextWrap}>
-          <ThemedText
-            type="defaultSemiBold"
-            style={
-              item.destructive
-                ? { color: palette.destructiveSoftText }
-                : undefined
-            }
-          >
-            {item.label}
-          </ThemedText>
-          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-            {item.description}
-          </ThemedText>
-        </ThemedView>
-      </ThemedView>
-
-      <MaterialIcons
-        name="chevron-right"
-        size={18}
-        style={styles.menuRowChevron}
-        color={
-          item.destructive ? palette.destructiveSoftText : palette.mutedSoft
-        }
-      />
-    </Pressable>
-  );
-}
-
 export default function SettingsScreen() {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
   const obsidianEnabled = isObsidianSettingsEnabled();
   const [menuVisible, setMenuVisible] = useState(false);
   const [, setAdminAccess] = useState<boolean | null>(null);
@@ -226,13 +160,8 @@ export default function SettingsScreen() {
     [obsidianEnabled],
   );
 
-  const deleteSheetVisible = deleteSheetState !== "closed";
-  const canCloseDeleteSheet =
-    deleteSheetState === "success" ||
-    deleteSheetState === "error";
-
   function closeDeleteSheet() {
-    if (!canCloseDeleteSheet) {
+    if (deleteSheetState === "loading") {
       return;
     }
 
@@ -261,32 +190,22 @@ export default function SettingsScreen() {
 
   return (
     <>
-      <ScreenContainer
-        scrollable
-        backgroundTone="flat"
+      <SettingsScaffold
+        title="Instellingen"
+        subtitle="Beheer je archief en gegevens."
+        onBack={() => router.back()}
+        onMenu={() => setMenuVisible(true)}
         contentContainerStyle={styles.scrollContent}
-        fixedHeader={
-          <SettingsTopNav
-            onBack={() => router.back()}
-            onMenu={() => setMenuVisible(true)}
-            title="Instellingen"
-          />
-        }
       >
-        <SettingsPageHero
-          title="Instellingen"
-          subtitle="Beheer je archief en gegevens."
-        />
-
         <ThemedView style={styles.sectionGroup}>
-          <ThemedText type="meta" style={{ color: palette.mutedSoft }}>
-            Archief
-          </ThemedText>
+          <SettingsSectionLabel label="Archief" />
           <ThemedView style={styles.menuList}>
             {ARCHIVE_ROUTES.map((item) => (
-              <SettingsRow
+              <SettingsNavRow
                 key={item.key}
-                item={item}
+                label={item.label}
+                description={item.description}
+                icon={item.icon}
                 onPress={() => router.push(item.route as any)}
               />
             ))}
@@ -294,25 +213,26 @@ export default function SettingsScreen() {
         </ThemedView>
 
         <ThemedView style={styles.sectionGroup}>
-          <ThemedText type="meta" style={{ color: palette.mutedSoft }}>
-            Gegevens verwijderen
-          </ThemedText>
-          <SettingsRow
-            item={DELETE_ROW}
+          <SettingsSectionLabel label="Gegevens verwijderen" />
+          <SettingsNavRow
+            label={DELETE_ROW.label}
+            description={DELETE_ROW.description}
+            icon={DELETE_ROW.icon}
+            destructive
             onPress={() => setDeleteConfirmVisible(true)}
           />
         </ThemedView>
 
         {adminRoutes.length > 0 ? (
           <ThemedView style={styles.sectionGroup}>
-            <ThemedText type="meta" style={{ color: palette.mutedSoft }}>
-              Beheer
-            </ThemedText>
+            <SettingsSectionLabel label="Beheer" />
             <ThemedView style={styles.menuList}>
               {adminRoutes.map((item) => (
-                <SettingsRow
+                <SettingsNavRow
                   key={item.key}
-                  item={item}
+                  label={item.label}
+                  description={item.description}
+                  icon={item.icon}
                   onPress={() => router.push(item.route as any)}
                 />
               ))}
@@ -322,9 +242,7 @@ export default function SettingsScreen() {
 
         {accessError ? (
           <ThemedView style={styles.sectionGroup}>
-            <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-              {accessError}
-            </ThemedText>
+            <SettingsSectionLabel label={accessError} />
           </ThemedView>
         ) : null}
 
@@ -333,161 +251,22 @@ export default function SettingsScreen() {
           currentRouteKey="settings"
           onRequestClose={() => setMenuVisible(false)}
         />
-      </ScreenContainer>
+      </SettingsScaffold>
 
-      <Modal
-        transparent
-        visible={deleteSheetVisible}
-        animationType="fade"
-        onRequestClose={closeDeleteSheet}
-      >
-        <ModalBackdrop
-          layout="bottom"
-          onPressOutside={closeDeleteSheet}
-          outsidePressDisabled={!canCloseDeleteSheet}
-        >
-          <ThemedView
-            lightColor={colorTokens.light.surfaceLowest}
-            darkColor={colorTokens.dark.surface}
-            style={styles.sheetCard}
-          >
-            <ThemedView
-              style={[
-                styles.sheetHandle,
-                { backgroundColor: palette.separator },
-              ]}
-            />
-
-            {deleteSheetState === "loading" ? (
-              <>
-                <ThemedView style={styles.loadingWrap}>
-                  <ActivityIndicator color={palette.primaryStrong} />
-                </ThemedView>
-                <ThemedText type="sectionTitle">Verwijderen</ThemedText>
-                <ThemedText
-                  type="bodySecondary"
-                  style={[styles.stateTextCenter, { color: palette.muted }]}
-                >
-                  Je gegevens worden verwijderd. Dit kan een moment duren.
-                </ThemedText>
-              </>
-            ) : null}
-
-            {deleteSheetState === "success" ? (
-              <>
-                <ThemedView
-                  style={[
-                    styles.statusIconWrap,
-                    { backgroundColor: palette.surfaceLow },
-                  ]}
-                >
-                  <MaterialIcons
-                    name="check-circle-outline"
-                    size={28}
-                    color={palette.primaryStrong}
-                  />
-                </ThemedView>
-                <ThemedText type="sectionTitle">
-                  Alles is verwijderd.
-                </ThemedText>
-                <ThemedText
-                  type="bodySecondary"
-                  style={[styles.stateTextCenter, { color: palette.muted }]}
-                >
-                  Je gegevens zijn verwijderd. Je kunt opnieuw beginnen wanneer
-                  je wilt.
-                </ThemedText>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Klaar"
-                  onPress={closeDeleteSheet}
-                  style={[
-                    styles.sheetPrimaryButton,
-                    { backgroundColor: palette.primaryStrong },
-                  ]}
-                >
-                  <ThemedText
-                    type="ctaLabel"
-                    lightColor={palette.primaryOn}
-                    darkColor={palette.primaryOn}
-                  >
-                    Klaar
-                  </ThemedText>
-                </Pressable>
-              </>
-            ) : null}
-
-            {deleteSheetState === "error" ? (
-              <>
-                <ThemedView
-                  style={[
-                    styles.statusIconWrap,
-                    { backgroundColor: palette.destructiveSoftBackground },
-                  ]}
-                >
-                  <MaterialIcons
-                    name="warning-amber"
-                    size={28}
-                    color={palette.destructiveSoftText}
-                  />
-                </ThemedView>
-                <ThemedText type="sectionTitle">
-                  Verwijderen lukte niet.
-                </ThemedText>
-                <ThemedText
-                  type="bodySecondary"
-                  style={[styles.stateTextCenter, { color: palette.muted }]}
-                >
-                  Er ging iets mis. Probeer het opnieuw.
-                </ThemedText>
-                {deleteErrorDetail ? (
-                  <ThemedText
-                    type="caption"
-                    style={{ color: palette.mutedSoft }}
-                  >
-                    {deleteErrorDetail}
-                  </ThemedText>
-                ) : null}
-
-                <ThemedView style={styles.sheetActions}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Sluiten"
-                    onPress={closeDeleteSheet}
-                    style={styles.sheetSecondaryButton}
-                  >
-                    <ThemedText
-                      type="defaultSemiBold"
-                      style={{ color: palette.mutedSoft }}
-                    >
-                      Sluiten
-                    </ThemedText>
-                  </Pressable>
-
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Probeer opnieuw"
-                    onPress={() => void handleConfirmDeleteAll()}
-                    style={[
-                      styles.sheetPrimaryButton,
-                      { backgroundColor: palette.primaryStrong },
-                    ]}
-                  >
-                    <ThemedText
-                      type="ctaLabel"
-                      lightColor={palette.primaryOn}
-                      darkColor={palette.primaryOn}
-                    >
-                      Probeer opnieuw
-                    </ThemedText>
-                  </Pressable>
-                </ThemedView>
-              </>
-            ) : null}
-          </ThemedView>
-        </ModalBackdrop>
-      </Modal>
+      <AsyncStatusSheet
+        state={deleteSheetState}
+        loadingTitle="Verwijderen"
+        loadingMessage="Je gegevens worden verwijderd. Dit kan een moment duren."
+        successTitle="Alles is verwijderd."
+        successMessage="Je gegevens zijn verwijderd. Je kunt opnieuw beginnen wanneer je wilt."
+        errorTitle="Verwijderen lukte niet."
+        errorMessage="Er ging iets mis. Probeer het opnieuw."
+        errorDetail={deleteErrorDetail}
+        closeLabel="Klaar"
+        retryLabel="Probeer opnieuw"
+        onClose={closeDeleteSheet}
+        onRetry={() => void handleConfirmDeleteAll()}
+      />
 
       <ConfirmSheet
         visible={deleteConfirmVisible}
@@ -524,81 +303,5 @@ const styles = StyleSheet.create({
   },
   menuList: {
     gap: spacing.sm,
-  },
-  menuRow: {
-    borderRadius: radius.lg,
-    minHeight: 62,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
-  menuRowLeft: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.sm,
-    flex: 1,
-  },
-  menuRowIcon: {
-    marginTop: 2,
-  },
-  menuTextWrap: {
-    gap: spacing.xxs,
-    flex: 1,
-  },
-  menuRowChevron: {
-    marginTop: 2,
-  },
-  sheetCard: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: radius.pill,
-    alignSelf: "center",
-    marginBottom: spacing.sm,
-  },
-  sheetActions: {
-    gap: spacing.sm,
-  },
-  sheetSecondaryButton: {
-    minHeight: 46,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.lg,
-  },
-  sheetPrimaryButton: {
-    minHeight: 46,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.lg,
-  },
-  loadingWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-  },
-  statusIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-  },
-  stateTextCenter: {
-    textAlign: "center",
   },
 });

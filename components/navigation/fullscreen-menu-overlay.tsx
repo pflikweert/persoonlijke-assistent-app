@@ -8,6 +8,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { AppBackground } from "@/components/ui/app-background";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
+import { BrandHeaderLockup } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { signOutUser } from "@/services";
 import { colorTokens, radius, spacing, typography } from "@/theme";
@@ -152,22 +153,7 @@ export function FullscreenMenuOverlay({
         <ScreenHeader
           surface="transparent"
           style={styles.menuHeader}
-          leftAction={
-            <ThemedView style={styles.brandLockup}>
-              <ThemedText
-                type="sectionTitle"
-                style={[styles.brandPrimary, { color: palette.text }]}
-              >
-                Budio
-              </ThemedText>
-              <ThemedText
-                type="sectionTitle"
-                style={[styles.brandSecondary, { color: palette.mutedSoft }]}
-              >
-                Vandaag
-              </ThemedText>
-            </ThemedView>
-          }
+          leftAction={<BrandHeaderLockup secondary="Vandaag" />}
           rightAction={
             <HeaderIconButton
               accessibilityRole="button"
@@ -278,22 +264,6 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     paddingHorizontal: spacing.page,
-  },
-  brandLockup: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
-  },
-  brandPrimary: {
-    fontSize: 24,
-    lineHeight: 28,
-    letterSpacing: -0.4,
-  },
-  brandSecondary: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "400",
-    letterSpacing: -0.4,
   },
   listWrap: {
     marginTop: spacing.xxxl,

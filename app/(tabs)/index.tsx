@@ -17,6 +17,10 @@ import {
   ScreenContainer,
   StateBlock,
 } from "@/components/ui/screen-primitives";
+import {
+  BrandHeaderLockup,
+  HeaderActionGroup,
+} from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   fetchLatestReflection,
@@ -123,20 +127,10 @@ export default function TodayScreen() {
       fixedHeader={
         <ScreenHeader
           leftAction={
-            <ThemedView style={styles.brandLockup}>
-              <ThemedText type="sectionTitle" style={styles.brandPrimary}>
-                Budio
-              </ThemedText>
-              <ThemedText
-                type="sectionTitle"
-                style={[styles.brandSecondary, { color: palette.mutedSoft }]}
-              >
-                Vandaag
-              </ThemedText>
-            </ThemedView>
+            <BrandHeaderLockup secondary="Vandaag" />
           }
           rightAction={
-            <ThemedView style={styles.headerActions}>
+            <HeaderActionGroup>
               <HeaderIconButton
                 accessibilityRole="button"
                 accessibilityLabel="Kies dag"
@@ -155,7 +149,7 @@ export default function TodayScreen() {
               >
                 <MaterialIcons name="menu" size={20} color={palette.primary} />
               </HeaderIconButton>
-            </ThemedView>
+            </HeaderActionGroup>
           }
           surface="transparent"
         />
@@ -334,27 +328,6 @@ function isUsableTodaySummary(value: string | null): boolean {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
-  },
-  brandLockup: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
-  },
-  brandPrimary: {
-    fontSize: 24,
-    lineHeight: 28,
-    letterSpacing: -0.4,
-  },
-  brandSecondary: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "400",
-    letterSpacing: -0.4,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
   },
   compactText: {
     lineHeight: typography.roles.bodySecondary.lineHeight + 1,

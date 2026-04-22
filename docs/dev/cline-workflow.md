@@ -4,6 +4,11 @@
 
 Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productwaarheid te vervuilen.
 
+## Execution OS (compact)
+
+- Voor harde MVP-scope en uitvoerdiscipline: gebruik `.clinerules/workflows/budio-cline-execution-os.md`.
+- Deze workflow blijft aanvullend en vervangt `AGENTS.md` of `docs/project/**` niet.
+
 ## Rolverdeling
 
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
@@ -43,6 +48,8 @@ Regels:
 
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
 - Gebruik eerst bestaande shared primitives/patronen; voeg alleen een nieuw shared component toe bij een echt herhaalbaar patroon over meerdere schermen.
+- UI assembly is scaffold-first: check eerst `components/ui/screen-scaffolds.tsx` en daarna pas screen-lokale opbouw.
+- Volg bij UI-keuzes de beslisboom in `docs/dev/ui-assembly-decision-tree.md`.
 - Stop geen screen-specifieke designregels in generieke shared primitives.
 - `design_refs/1.2.1/**` zijn bindend per scherm; `.md` notes tellen mee naast `code.html` en `screen.png`.
 - Verify stylingwerk altijd in light én dark mode tegen relevante design refs voordat het “klaar” is.

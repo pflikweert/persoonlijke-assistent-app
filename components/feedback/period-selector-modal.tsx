@@ -1,12 +1,5 @@
-import { Pressable, StyleSheet } from "react-native";
-
-import { ThemedText } from "@/components/themed-text";
-import { StateBlock } from "@/components/ui/screen-primitives";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import type { SelectablePeriod } from "@/services";
-import { colorTokens, radius, spacing } from "@/theme";
-
-import { SelectorModalShell } from "./selector-modal-shell";
+import { SelectableListModal } from "./selectable-list-modal";
 
 type PeriodSelectorModalProps = {
   visible: boolean;
@@ -33,63 +26,29 @@ export function PeriodSelectorModal({
   onClose,
   onSelect,
 }: PeriodSelectorModalProps) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-
   return (
-    <SelectorModalShell
+    <SelectableListModal
       visible={visible}
       title={title}
       subtitle={subtitle}
+      loading={loading}
+      loadingMessage="Opties laden..."
+      errorMessage={!loading && errorMessage ? "Opties laden lukt nu niet." : null}
+      errorDetail={errorMessage ?? undefined}
+      emptyMessage={emptyMessage}
+      emptyDetail={emptyDetail}
+      items={periods.map((period) => ({
+        key: period.id,
+        title: period.label,
+        subtitle: period.subtitle,
+      }))}
       onClose={onClose}
-      scrollableBody={!loading && !errorMessage && periods.length > 0}
-    >
-      {loading ? (
-        <StateBlock tone="loading" message="Opties laden..." detail="Een moment geduld." />
-      ) : null}
-
-      {!loading && errorMessage ? (
-        <StateBlock
-          tone="error"
-          message="Opties laden lukt nu niet."
-          detail={errorMessage}
-        />
-      ) : null}
-
-      {!loading && !errorMessage && periods.length === 0 ? (
-        <StateBlock tone="empty" message={emptyMessage} detail={emptyDetail} />
-      ) : null}
-
-      {!loading && !errorMessage && periods.length > 0 ? (
-        <>
-          {periods.map((period) => (
-            <Pressable
-              key={period.id}
-              onPress={() => onSelect(period)}
-              style={[
-                styles.row,
-                {
-                  backgroundColor: palette.surfaceLowest,
-                },
-              ]}
-            >
-              <ThemedText type="defaultSemiBold">{period.label}</ThemedText>
-              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                {period.subtitle}
-              </ThemedText>
-            </Pressable>
-          ))}
-        </>
-      ) : null}
-    </SelectorModalShell>
+      onSelect={(itemKey) => {
+        const selected = periods.find((period) => period.id === itemKey);
+        if (selected) {
+          onSelect(selected);
+        }
+      }}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.xxs,
-  },
-});

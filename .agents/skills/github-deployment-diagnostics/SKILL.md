@@ -84,6 +84,8 @@ gh api "repos/<owner>/<repo>/actions/runs/<run_id>"
 
 4. **Uitkomstmelding**
 - Als checks/deploy groen zijn: toon exact dit bericht: **"Te succesvol."**
+- Als checks/deploy warnings bevatten (maar geen failure): vraag eerst expliciet:
+  - **"Hey, wil je dit nu oplossen, of zal ik dit als een taak in de backlog zetten? Of als idee in de backlog?"**
 - Als checks/deploy falen: geef eerst bron-gebaseerde analyse + advies, en voer niets uit zonder expliciet akkoord.
 
 5. **Iteratieregel bij failures**
@@ -95,3 +97,4 @@ gh api "repos/<owner>/<repo>/actions/runs/<run_id>"
 - Geen advies zonder gh/API-bevestiging.
 - Geen platformfout claimen op basis van UI-indruk alleen.
 - Geen security-paniek zonder concrete alert payload.
+- Warnings niet stilzwijgend negeren of direct fixen zonder keuzevraag aan gebruiker.

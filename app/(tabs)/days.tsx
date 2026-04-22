@@ -9,11 +9,10 @@ import {
   type ArchiveGroupedListSection,
 } from "@/components/journal/archive-grouped-list";
 import { ScreenHeader } from "@/components/layout/screen-header";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { DetailScreenHero } from "@/components/ui/detail-screen-primitives";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { ScreenContainer, StateBlock } from "@/components/ui/screen-primitives";
+import { BrandHeaderLockup } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   fetchRecentDayJournals,
@@ -219,17 +218,7 @@ export default function DaysScreen() {
         <ScreenHeader
           surface="transparent"
           leftAction={
-            <ThemedView style={styles.brandLockup}>
-              <ThemedText type="sectionTitle" style={styles.brandPrimary}>
-                Budio
-              </ThemedText>
-              <ThemedText
-                type="sectionTitle"
-                style={[styles.brandSecondary, { color: palette.mutedSoft }]}
-              >
-                Dagen
-              </ThemedText>
-            </ThemedView>
+            <BrandHeaderLockup secondary="Dagen" />
           }
           rightAction={
             <HeaderIconButton
@@ -288,22 +277,6 @@ export default function DaysScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
-  },
-  brandLockup: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: spacing.xs,
-  },
-  brandPrimary: {
-    fontSize: 24,
-    lineHeight: 28,
-    letterSpacing: -0.4,
-  },
-  brandSecondary: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: "400",
-    letterSpacing: -0.4,
   },
   hero: {
     marginBottom: spacing.sm,
