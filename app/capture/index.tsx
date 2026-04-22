@@ -1,7 +1,13 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CaptureIntro, CaptureBackHeader } from "@/components/ui/capture-screen-primitives";
@@ -35,6 +41,8 @@ export default function CaptureStartScreen() {
       : validationCode === "no_speech"
         ? "We hoorden nog geen duidelijke tekst. Neem opnieuw op of kies typen."
         : null;
+  const showAudioSettingsSuggestion =
+    validationCode === "no_speech" && Platform.OS === "web";
 
   function handleClose() {
     if (router.canGoBack()) {
@@ -62,8 +70,21 @@ export default function CaptureStartScreen() {
             <StateBlock
               tone="error"
               message={validationMessage}
-              detail="Kies opnieuw opnemen of typ je moment."
+              detail={
+                showAudioSettingsSuggestion
+                  ? "Kies opnieuw opnemen of typ je moment. Je kunt ook je microfoon en opnamevolume aanpassen in Audio Instellingen."
+                  : "Kies opnieuw opnemen of typ je moment."
+              }
             />
+            {showAudioSettingsSuggestion ? (
+              <View style={styles.validationActions}>
+                <SecondaryButton
+                  label="Open Audio Instellingen"
+                  onPress={() => router.push("../settings-audio")}
+                  className="w-full"
+                />
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -106,6 +127,10 @@ const styles = StyleSheet.create({
   },
   validationBlock: {
     marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  validationActions: {
+    gap: spacing.sm,
   },
   actions: {
     marginTop: spacing.xxxl,

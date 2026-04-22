@@ -61,8 +61,8 @@ const ARCHIVE_ROUTES: SettingsRoute[] = [
   },
   {
     key: "audio",
-    label: "Audio-opnames bewaren",
-    description: "Kies of je originele audio-opnames worden bewaard.",
+    label: "Audio Instellingen",
+    description: "Beheer opnames bewaren en microfoonvoorkeuren.",
     icon: "mic",
     route: "/settings-audio",
   },

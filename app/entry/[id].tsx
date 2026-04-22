@@ -683,7 +683,7 @@ export default function EntryCompletionScreen() {
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Ga naar audio-instellingen"
-                      onPress={() => router.push("/settings-audio")}
+                      onPress={() => router.push("../../settings-audio")}
                       style={styles.inlineEditAction}
                     >
                       <MaterialIcons name="settings" size={14} color={palette.mutedSoft} />

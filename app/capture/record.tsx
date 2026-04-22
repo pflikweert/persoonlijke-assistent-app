@@ -50,6 +50,7 @@ import {
   submitAudioEntry,
   updateCaptureProcessingSession,
 } from "@/services";
+import { ensureWebAudioInputPreferencesApplied } from "@/services/web-audio-input";
 import type {
   DerivedRefreshResult,
   ProcessEntryResult,
@@ -361,6 +362,12 @@ export default function CaptureRecordScreen() {
   const voiceMotionOpacity = isRecording ? 0.76 + liveAudioLevel * 0.24 : 0.45;
   const canTogglePauseResume = isPaused || isRecording;
   const showAudioStorageNotice = saveAudioRecordingsEnabled === false;
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      ensureWebAudioInputPreferencesApplied();
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
