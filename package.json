@@ -8,6 +8,7 @@
     "url": "git@github.com:pflikweert/persoonlijke-assistent-app.git"
   },
   "scripts": {
+    "check:node-version": "node -e \"const major = Number(process.versions.node.split('.')[0]); if (major !== 24) { console.error('❌ Node 24.x vereist voor deze repo. Huidig:', process.version); process.exit(1); } console.log('✅ Node-versie ok:', process.version);\"",
     "dev": "./scripts/dev.sh",
     "dev:stop": "./scripts/dev-stop.sh",
     "supabase:local:start": "npx supabase start",
@@ -35,6 +36,9 @@
     "env:pull:vercel": "npx vercel env pull .env.vercel.local",
     "docs:bundle": "node scripts/docs/build-docs-bundles.mjs",
     "docs:bundle:verify": "node scripts/docs/build-docs-bundles.mjs --check"
+  },
+  "engines": {
+    "node": "24.x"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

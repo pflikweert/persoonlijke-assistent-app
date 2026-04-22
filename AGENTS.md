@@ -55,6 +55,11 @@ Voor AI-gedrag, prompting en evaluatie:
 - Werk cheap-first: kleinste werkende wijziging eerst.
 - Houd taken klein en scherp afgebakend.
 - Gebruik bestaande patronen in de repo vóór nieuwe patronen.
+- Hypothese-first is toegestaan, maar advies pas na bronbevestiging:
+  - formuleer bij onduidelijkheid eerst een expliciete hypothese
+  - verifieer die hypothese daarna via primaire bronnen (code, config, logs, runtime, API/CLI)
+  - geef pas daarna diagnose/advies/uitvoerplan
+  - label onbevestigde punten altijd expliciet als aanname
 
 ## Workflowlaag: ChatGPT Projects + Cline
 
@@ -92,6 +97,7 @@ Voor AI-gedrag, prompting en evaluatie:
 
 - Gebruik `.agents/skills/stitch-redesign-execution/SKILL.md` voor scherm-redesigns op basis van Stitch exports in `design_refs/...`.
 - Gebruik `.agents/skills/ui-implementation-guardrails/SKILL.md` voor UI-implementatie, polish en regressiefixes zonder volledige Stitch-redesignscope.
+- Gebruik `.agents/skills/github-deployment-diagnostics/SKILL.md` voor GitHub deployment/security-issues met verplichte `gh` API-diagnose vóór advies.
 
 ## Codex-regels
 
@@ -103,6 +109,11 @@ Voor AI-gedrag, prompting en evaluatie:
 ## UI-guardrails (NativeWind / component-first)
 
 - Screens in `app/**` zijn assembly-only.
+- UI assembly is scaffold-first: controleer eerst `components/ui/screen-scaffolds.tsx` voor een passend schermskelet.
+- Reuse-first beslisvolgorde is verplicht:
+  - eerst bestaand scaffold/component gebruiken
+  - dan bestaand shared component uitbreiden
+  - pas daarna een nieuw shared component maken als uitbreiding niet schoon past
 - Voeg geen nieuwe grote `StyleSheet.create` patronen toe in `app/**`.
 - Introduceer geen nieuwe visuele patronen in screens.
 - Plaats styling eerst in `components/ui/**` of `components/layout/**`.
@@ -132,6 +143,7 @@ Voor AI-gedrag, prompting en evaluatie:
 - Copy bij een primaire actie blijft compact: liever `hero + action + compacte notice` dan meerdere uitlegblokken of herhaling van dezelfde boodschap.
 - Los visuele regressies bron-first op in shared primitives (`components/ui/**`, `components/layout/**`) als een default de fout veroorzaakt; herhaal dezelfde schermfix niet op meerdere plekken.
 - Shared primitives mogen geen borders, fills, nested surfaces of zware visuele massa als default introduceren zonder expliciete functionele reden of design-ref dekking.
+- Voor overlays/sheets/selectors: gebruik eerst shared primitives in `components/feedback/**` (`destructive-confirm-sheet`, `selector-modal-shell`, `selectable-list-modal`, `async-status-sheet`) vóór screen-lokale modal-opbouw.
 - Keuze-inputs (radio/checkbox met titel+omschrijving of label-only) gebruiken altijd de gedeelde `components/ui/radio-choice-group.tsx` (`ChoiceInputGroup`); maak geen screen-local varianten.
 - Background-modi zijn altijd mode-aware; pas nooit een dark ambient behandeling ongewijzigd toe in light mode.
 - Header, page en footer volgen per mode één coherente themahiërarchie; dark mode is niet de impliciete visuele waarheid voor alle schermen.
