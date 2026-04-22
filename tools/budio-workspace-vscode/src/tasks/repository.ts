@@ -164,6 +164,26 @@ export class TaskRepository {
       path: path.relative(this.workspaceRoot, candidate),
     };
   }
+
+  async deleteTask(taskId: string, expectedVersion: FileVersion): Promise<TaskMutationResult> {
+    const tasks = await this.scan();
+    const task = requireTask(tasks, taskId);
+    assertVersion(task, expectedVersion);
+
+    await fs.unlink(task.sourcePath);
+    await cleanupTaskMapReferences({
+      workspaceRoot: this.workspaceRoot,
+      tasksRootRelative: this.tasksRootRelative,
+      deletedTaskId: task.id,
+      deletedTaskRelativePath: task.relativePath,
+      deletedTaskAbsolutePath: task.sourcePath,
+    });
+
+    return {
+      taskId,
+      path: task.relativePath,
+    };
+  }
 }
 
 function requireTask(tasks: ParsedTaskFile[], taskId: string): ParsedTaskFile {
@@ -238,4 +258,90 @@ function mostCommonPhase(tasks: ParsedTaskFile[]): string | null {
 
   const best = [...counts.entries()].sort((left, right) => right[1] - left[1])[0];
   return best?.[0] ?? null;
+}
+
+async function cleanupTaskMapReferences(input: {
+  workspaceRoot: string;
+  tasksRootRelative: string;
+  deletedTaskId: string;
+  deletedTaskRelativePath: string;
+  deletedTaskAbsolutePath: string;
+}): Promise<void> {
+  const taskMapRoot = path.resolve(input.workspaceRoot, input.tasksRootRelative);
+  const docsProjectRoot = path.resolve(input.workspaceRoot, 'docs/project');
+  const deletedRelativeToDocsProject = toPosix(
+    path.relative(docsProjectRoot, input.deletedTaskAbsolutePath),
+  );
+  const deletedRelativeToTaskMap = toPosix(path.relative(taskMapRoot, input.deletedTaskAbsolutePath));
+  const deletedRelativeToWorkspace = toPosix(input.deletedTaskRelativePath);
+  const deletedBaseName = path.basename(input.deletedTaskAbsolutePath);
+
+  const referenceTokens = new Set<string>([
+    input.deletedTaskId,
+    deletedRelativeToWorkspace,
+    deletedRelativeToDocsProject,
+    deletedRelativeToTaskMap,
+    deletedBaseName,
+  ]);
+
+  const markdownPaths = await collectMarkdownFiles(taskMapRoot);
+  for (const markdownPath of markdownPaths) {
+    if (path.resolve(markdownPath) === path.resolve(input.deletedTaskAbsolutePath)) {
+      continue;
+    }
+
+    const current = await fs.readFile(markdownPath, 'utf8');
+    const next = removeReferenceLines(current, referenceTokens);
+    if (next !== current) {
+      await fs.writeFile(markdownPath, next, 'utf8');
+    }
+  }
+}
+
+function removeReferenceLines(content: string, tokens: Set<string>): string {
+  const lines = content.split('\n');
+  const keptLines: string[] = [];
+
+  for (const line of lines) {
+    const shouldRemove = [...tokens].some((token) => token.length > 0 && line.includes(token));
+    if (!shouldRemove) {
+      keptLines.push(line);
+    }
+  }
+
+  return keptLines.join('\n');
+}
+
+async function collectMarkdownFiles(rootDir: string): Promise<string[]> {
+  if (!(await exists(rootDir))) {
+    return [];
+  }
+
+  const stack = [rootDir];
+  const files: string[] = [];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) {
+      continue;
+    }
+
+    const entries = await fs.readdir(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const nextPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(nextPath);
+        continue;
+      }
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        files.push(nextPath);
+      }
+    }
+  }
+
+  return files;
+}
+
+function toPosix(value: string): string {
+  return value.split(path.sep).join('/');
 }

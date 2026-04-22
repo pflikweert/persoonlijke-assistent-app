@@ -8,6 +8,9 @@ import type {
 
 export type HostToWebviewMessage =
   | { type: 'hydrateBoard'; snapshot: BoardSnapshot; focusTaskId?: string; view?: 'board' | 'list' | 'settings' }
+  | { type: 'refreshStarted' }
+  | { type: 'refreshCompleted' }
+  | { type: 'refreshFailed'; message: string }
   | { type: 'saveStarted'; taskId?: string }
   | { type: 'saveCompleted'; message: string }
   | { type: 'saveFailed'; message: string }
@@ -54,6 +57,11 @@ export type WebviewToHostMessage =
   | {
       type: 'copyRelativePath';
       taskId: string;
+    }
+  | {
+      type: 'deleteTask';
+      taskId: string;
+      expectedVersion: FileVersion;
     }
   | {
       type: 'switchView';

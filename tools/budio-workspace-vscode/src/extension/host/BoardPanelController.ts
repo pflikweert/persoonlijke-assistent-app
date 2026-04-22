@@ -81,7 +81,7 @@ export class BoardPanelController implements vscode.Disposable {
   }
 
   async refresh(): Promise<void> {
-    await this.publishSnapshot();
+    await this.runRefresh();
   }
 
   async createTask(defaultStatus: 'backlog' | 'ready' | 'in_progress' | 'blocked' = 'ready'): Promise<void> {
@@ -116,7 +116,7 @@ export class BoardPanelController implements vscode.Disposable {
     }
 
     if (message.type === 'refreshBoard') {
-      await this.publishSnapshot();
+      await this.runRefresh();
       return;
     }
 
@@ -179,12 +179,30 @@ export class BoardPanelController implements vscode.Disposable {
           sourceIds: message.sourceIds,
         });
       });
+      return;
+    }
+
+    if (message.type === 'deleteTask') {
+      await this.runMutation(
+        message.taskId,
+        async (repository) => {
+          await repository.deleteTask(message.taskId, message.expectedVersion);
+        },
+        {
+          successMessage: 'Taak verwijderd en verwijzingen opgeschoond.',
+          focusTaskId: null,
+        },
+      );
     }
   }
 
   private async runMutation(
     taskId: string,
     action: (repository: TaskRepository) => Promise<void>,
+    options?: {
+      successMessage?: string;
+      focusTaskId?: string | null;
+    },
   ): Promise<void> {
     this.postMessage({ type: 'saveStarted', taskId });
 
@@ -192,8 +210,17 @@ export class BoardPanelController implements vscode.Disposable {
       await this.withRepository(async (repository) => {
         await action(repository);
       });
-      await this.publishSnapshot({ focusTaskId: taskId });
-      this.postMessage({ type: 'saveCompleted', message: 'Wijziging opgeslagen in markdown.' });
+      const focusTaskId =
+        options?.focusTaskId === undefined
+          ? taskId
+          : options.focusTaskId === null
+            ? undefined
+            : options.focusTaskId;
+      await this.publishSnapshot({ focusTaskId });
+      this.postMessage({
+        type: 'saveCompleted',
+        message: options?.successMessage ?? 'Wijziging opgeslagen in markdown.',
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Onbekende fout tijdens opslaan.';
       if (message.includes('gewijzigd op disk')) {
@@ -206,7 +233,21 @@ export class BoardPanelController implements vscode.Disposable {
     }
   }
 
-  private async publishSnapshot(options?: { focusTaskId?: string; view?: PanelView }): Promise<void> {
+  private async runRefresh(): Promise<void> {
+    this.postMessage({ type: 'refreshStarted' });
+    try {
+      await this.publishSnapshot(undefined, true);
+      this.postMessage({ type: 'refreshCompleted' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Kon board niet verversen.';
+      this.postMessage({ type: 'refreshFailed', message });
+    }
+  }
+
+  private async publishSnapshot(
+    options?: { focusTaskId?: string; view?: PanelView },
+    throwOnError = false,
+  ): Promise<void> {
     const workspaceFolder = getPrimaryWorkspaceFolder();
     if (!workspaceFolder || !this.panel) {
       return;
@@ -233,6 +274,9 @@ export class BoardPanelController implements vscode.Disposable {
       const message = error instanceof Error ? error.message : 'Kon board niet laden.';
       void vscode.window.showErrorMessage(message);
       this.postMessage({ type: 'saveFailed', message });
+      if (throwOnError) {
+        throw error;
+      }
     }
   }
 

@@ -46,6 +46,15 @@ const EMPTY_FILTERS: Filters = {
   onlyChecklistOpen: false,
 };
 
+const REFRESH_SUCCESS_MS = 1200;
+const STATUS_TONE_CLASS: Record<TaskStatus, string> = {
+  backlog: 'status-tone-backlog',
+  ready: 'status-tone-ready',
+  in_progress: 'status-tone-in-progress',
+  blocked: 'status-tone-blocked',
+  done: 'status-tone-done',
+};
+
 export function App(): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<BoardSnapshot | null>(null);
   const [activeView, setActiveView] = useState<ViewMode>('board');
@@ -64,9 +73,12 @@ export function App(): React.JSX.Element {
   const [detailMenuOpen, setDetailMenuOpen] = useState(false);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [pendingCloseAfterSave, setPendingCloseAfterSave] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [refreshState, setRefreshState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const searchRef = useRef<HTMLInputElement | null>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
+  const refreshResetTimeoutRef = useRef<number | null>(null);
 
   const detailMode = viewport === 'desktop' ? 'split' : 'overlay';
 
@@ -85,8 +97,18 @@ export function App(): React.JSX.Element {
       setDetailMenuOpen(false);
       setCloseConfirmOpen(false);
       setPendingCloseAfterSave(false);
+      setDeleteConfirmOpen(false);
     }
   }, [selectedTaskId]);
+
+  useEffect(
+    () => () => {
+      if (refreshResetTimeoutRef.current !== null) {
+        window.clearTimeout(refreshResetTimeoutRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const handler = (event: MessageEvent<HostToWebviewMessage>) => {
@@ -97,15 +119,46 @@ export function App(): React.JSX.Element {
         if (message.view) {
           setActiveView(message.view);
         }
-        if (message.focusTaskId) {
-          setSelectedTaskId(message.focusTaskId);
-          if (getViewportKind() !== 'desktop') {
+        const requestedTaskId = message.focusTaskId ?? selectedTaskId;
+        const requestedTaskStillExists = requestedTaskId
+          ? message.snapshot.allCards.some((card) => card.id === requestedTaskId)
+          : false;
+        if (requestedTaskStillExists && requestedTaskId) {
+          setSelectedTaskId(requestedTaskId);
+          if (message.focusTaskId && getViewportKind() !== 'desktop') {
             setDetailOpen(true);
           }
-        } else if (!selectedTaskId && message.snapshot.allCards[0]) {
+        } else if (message.snapshot.allCards[0]) {
           setSelectedTaskId(message.snapshot.allCards[0].id);
+        } else {
+          setSelectedTaskId(null);
+          setDetailOpen(false);
         }
         setError(null);
+        return;
+      }
+
+      if (message.type === 'refreshStarted') {
+        setRefreshState('loading');
+        setError(null);
+        return;
+      }
+
+      if (message.type === 'refreshCompleted') {
+        setRefreshState('success');
+        if (refreshResetTimeoutRef.current !== null) {
+          window.clearTimeout(refreshResetTimeoutRef.current);
+        }
+        refreshResetTimeoutRef.current = window.setTimeout(() => {
+          setRefreshState('idle');
+          refreshResetTimeoutRef.current = null;
+        }, REFRESH_SUCCESS_MS);
+        return;
+      }
+
+      if (message.type === 'refreshFailed') {
+        setRefreshState('error');
+        setError(message.message);
         return;
       }
 
@@ -254,6 +307,7 @@ export function App(): React.JSX.Element {
     setDetailMenuOpen(false);
     setCloseConfirmOpen(false);
     setPendingCloseAfterSave(false);
+    setDeleteConfirmOpen(false);
   }, [selectedTask?.id]);
 
   useEffect(() => {
@@ -280,7 +334,14 @@ export function App(): React.JSX.Element {
         <IconButton active={activeView === 'board'} label="Board" onClick={() => switchView('board')} />
         <IconButton active={activeView === 'list'} label="List" onClick={() => switchView('list')} />
         <IconButton active={activeView === 'settings'} label="Settings" onClick={() => switchView('settings')} />
-        <IconButton active={false} label="Refresh" onClick={() => vscode.postMessage({ type: 'refreshBoard' })} />
+        <button
+          className={`rail-button refresh-button ${refreshState}`}
+          onClick={handleRefresh}
+          title="Refresh"
+          disabled={refreshState === 'loading'}
+        >
+          {refreshState === 'loading' ? 'Refreshing…' : 'Refresh'}
+        </button>
       </aside>
 
       <main className="workspace-shell">
@@ -301,8 +362,16 @@ export function App(): React.JSX.Element {
               <button className={`ghost-button ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((open) => !open)}>
                 Filter {hasActiveFilters ? '•' : ''}
               </button>
-              <button className="ghost-button" onClick={() => vscode.postMessage({ type: 'refreshBoard' })}>
-                Refresh
+              <button
+                className={`ghost-button refresh-button ${refreshState}`}
+                onClick={handleRefresh}
+                disabled={refreshState === 'loading'}
+              >
+                {refreshState === 'loading'
+                  ? 'Verversen...'
+                  : refreshState === 'success'
+                    ? 'Verversd'
+                    : 'Refresh'}
               </button>
             </div>
           </div>
@@ -468,6 +537,7 @@ export function App(): React.JSX.Element {
                     }}
                   >
                     <div className="column-header">
+                      <span className={`status-accent-rail ${statusToneClass(column.key)}`} aria-hidden="true" />
                       <div className="column-heading">
                         <h2>{column.label}</h2>
                         <span>{column.count}</span>
@@ -566,7 +636,6 @@ export function App(): React.JSX.Element {
                         <th>Priority</th>
                         <th>Due</th>
                         <th>Checklist</th>
-                        <th>Pad</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -574,19 +643,19 @@ export function App(): React.JSX.Element {
                         <tr key={card.id} onClick={() => selectTask(card.id)}>
                           <td>
                             <div className="list-title-cell">
+                              <span className={`status-accent-rail ${statusToneClass(card.status)}`} aria-hidden="true" />
                               <strong>{card.title}</strong>
                               <span>{card.excerpt}</span>
                             </div>
                           </td>
-                          <td>{STATUS_LABELS[card.status]}</td>
-                          <td>{card.priority.toUpperCase()}</td>
-                          <td>{card.dueDate ?? '—'}</td>
                           <td>
-                            {card.checklistProgress.total > 0
-                              ? `${card.checklistProgress.completed}/${card.checklistProgress.total}`
-                              : '—'}
+                            <StatusBadge status={card.status} />
                           </td>
-                          <td>{card.relativePath}</td>
+                          <td>
+                            <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
+                          </td>
+                          <td>{card.dueDate ?? '—'}</td>
+                          <td>{checklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -664,64 +733,66 @@ export function App(): React.JSX.Element {
             {selectedTask && formState ? (
               <>
                 <div className="detail-header">
-                  <div className="detail-copy">
-                    <div className="eyebrow">Task detail</div>
-                    <h2>{selectedTask.title}</h2>
-                    <div className="detail-meta-chips">
-                      <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
-                      <span className="task-ref" title={selectedTask.id}>
-                        {formatTaskRef(selectedTask.id)}
-                      </span>
-                      <span className="tag-pill">{STATUS_LABELS[selectedTask.status]}</span>
-                      {selectedTask.dueDate ? <span className={dueClassName(selectedTask.dueDate)}>{selectedTask.dueDate}</span> : null}
-                    </div>
-                  </div>
-                  <div className="detail-actions">
-                    <button
-                      className="ghost-button menu-toggle-button"
-                      aria-label="Meer acties"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setDetailMenuOpen((open) => !open);
-                      }}
-                    >
-                      ☰
-                    </button>
-                    {detailMenuOpen ? (
-                      <div className="detail-menu" onClick={(event) => event.stopPropagation()}>
-                        <button
-                          className="ghost-button"
-                          onClick={() => {
-                            vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id });
-                            setDetailMenuOpen(false);
-                          }}
-                        >
-                          Open source file
-                        </button>
-                        <button
-                          className="ghost-button"
-                          onClick={() => {
-                            vscode.postMessage({ type: 'revealInExplorer', taskId: selectedTask.id });
-                            setDetailMenuOpen(false);
-                          }}
-                        >
-                          Reveal
-                        </button>
-                        <button
-                          className="ghost-button"
-                          onClick={() => {
-                            vscode.postMessage({ type: 'copyRelativePath', taskId: selectedTask.id });
-                            setDetailMenuOpen(false);
-                          }}
-                        >
-                          Copy path
-                        </button>
+                  <div className="detail-header-top">
+                    <div className="detail-title-row">
+                      <button
+                        className="ghost-button menu-toggle-button"
+                        aria-label="Meer acties"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDetailMenuOpen((open) => !open);
+                        }}
+                      >
+                        ☰
+                      </button>
+                      <div className="detail-copy">
+                        <div className="eyebrow">Task detail</div>
+                        <h2>{selectedTask.title}</h2>
+                        <div className="detail-meta-chips">
+                          <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
+                          <span className="task-ref" title={selectedTask.id}>
+                            {formatTaskRef(selectedTask.id)}
+                          </span>
+                          <StatusBadge status={selectedTask.status} />
+                          {selectedTask.dueDate ? <span className={dueClassName(selectedTask.dueDate)}>{selectedTask.dueDate}</span> : null}
+                        </div>
                       </div>
-                    ) : null}
-                    <button className="ghost-button detail-close-button" onClick={requestClosePanel}>
-                      Sluiten
+                    </div>
+                    <button className="icon-button detail-close-icon" aria-label="Sluit details" onClick={requestClosePanel}>
+                      ×
                     </button>
                   </div>
+                  {detailMenuOpen ? (
+                    <div className="detail-menu" onClick={(event) => event.stopPropagation()}>
+                      <button
+                        className="ghost-button"
+                        onClick={() => {
+                          vscode.postMessage({ type: 'openSourceFile', taskId: selectedTask.id });
+                          setDetailMenuOpen(false);
+                        }}
+                      >
+                        Open source file
+                      </button>
+                      <button
+                        className="ghost-button"
+                        onClick={() => {
+                          vscode.postMessage({ type: 'revealInExplorer', taskId: selectedTask.id });
+                          setDetailMenuOpen(false);
+                        }}
+                      >
+                        Reveal
+                      </button>
+                      <button
+                        className="ghost-button"
+                        onClick={() => {
+                          vscode.postMessage({ type: 'copyRelativePath', taskId: selectedTask.id });
+                          setDetailMenuOpen(false);
+                        }}
+                      >
+                        Copy path
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="detail-form">
@@ -819,7 +890,7 @@ export function App(): React.JSX.Element {
                               })
                             }
                           />
-                          <span>{item.text}</span>
+                          <span className="checklist-label">{item.text}</span>
                         </label>
                       ))
                     ) : (
@@ -833,7 +904,7 @@ export function App(): React.JSX.Element {
                   </div>
 
                   <button className="primary-button save-button" onClick={saveMetadata}>
-                    Save metadata
+                    Opslaan
                   </button>
 
                   {closeConfirmOpen ? (
@@ -866,6 +937,39 @@ export function App(): React.JSX.Element {
                       </div>
                     </div>
                   ) : null}
+
+                  <div className="detail-danger-zone">
+                    <button className="ghost-button danger-secondary-button" onClick={() => setDeleteConfirmOpen(true)}>
+                      Verwijderen
+                    </button>
+                    {deleteConfirmOpen ? (
+                      <div className="close-confirm">
+                        <strong>Taak verwijderen?</strong>
+                        <p className="muted-copy">
+                          Dit verwijdert het markdown-bestand en ruimt verwijzingen op binnen de task-map.
+                        </p>
+                        <div className="close-confirm-actions">
+                          <button
+                            className="primary-button danger-primary-button"
+                            onClick={() => {
+                              vscode.postMessage({
+                                type: 'deleteTask',
+                                taskId: selectedTask.id,
+                                expectedVersion: selectedTask.version,
+                              });
+                              setDeleteConfirmOpen(false);
+                              setDetailMenuOpen(false);
+                            }}
+                          >
+                            Verwijderen
+                          </button>
+                          <button className="ghost-button" onClick={() => setDeleteConfirmOpen(false)}>
+                            Annuleren
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </>
             ) : (
@@ -980,6 +1084,14 @@ export function App(): React.JSX.Element {
     setCloseConfirmOpen(false);
     setDetailOpen(false);
   }
+
+  function handleRefresh(): void {
+    if (refreshState === 'loading') {
+      return;
+    }
+    setRefreshState('loading');
+    vscode.postMessage({ type: 'refreshBoard' });
+  }
 }
 
 function isFormDirty(task: TaskCardViewModel | null, formState: MetadataFormState | null): boolean {
@@ -1016,6 +1128,10 @@ function IconButton(props: { active: boolean; label: string; onClick: () => void
 
 function StatusChip(props: { children: React.ReactNode; danger?: boolean }): React.JSX.Element {
   return <span className={props.danger ? 'status-chip status-chip-danger' : 'status-chip'}>{props.children}</span>;
+}
+
+function StatusBadge(props: { status: TaskStatus }): React.JSX.Element {
+  return <span className={`status-badge ${statusToneClass(props.status)}`}>{STATUS_LABELS[props.status]}</span>;
 }
 
 function getViewportKind(): ViewportKind {
@@ -1164,6 +1280,10 @@ function checklistProgressLabel(completed: number, total: number): string {
 
   const percent = Math.round((completed / total) * 100);
   return `${percent}% checklist (${completed}/${total})`;
+}
+
+function statusToneClass(status: TaskStatus): string {
+  return STATUS_TONE_CLASS[status];
 }
 
 function formatTaskRef(taskId: string): string {

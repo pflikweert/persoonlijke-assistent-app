@@ -16,6 +16,11 @@
   --danger: #ff8a8a;
   --warning: #ffc978;
   --success: #8fd7a1;
+  --status-backlog: #9ea8bb;
+  --status-ready: #6ea8ff;
+  --status-in-progress: #63d2ea;
+  --status-blocked: #ffc978;
+  --status-done: #8fd7a1;
   --space-1: clamp(8px, 0.6vw, 10px);
   --space-2: clamp(10px, 0.8vw, 12px);
   --space-3: clamp(14px, 1.1vw, 16px);
@@ -104,6 +109,23 @@ button {
   background: var(--accent-soft);
   border-color: var(--accent-border);
   color: var(--text);
+}
+
+.refresh-button.loading {
+  opacity: 0.85;
+  cursor: progress;
+}
+
+.refresh-button.success {
+  border-color: rgba(143, 215, 161, 0.52);
+  background: rgba(143, 215, 161, 0.2);
+  color: #dff7e6;
+}
+
+.refresh-button.error {
+  border-color: rgba(255, 138, 138, 0.48);
+  background: rgba(255, 138, 138, 0.14);
+  color: #ffdede;
 }
 
 .workspace-shell {
@@ -378,6 +400,15 @@ button {
   border-bottom: 1px solid var(--border);
 }
 
+.status-accent-rail {
+  display: inline-flex;
+  width: 4px;
+  min-width: 4px;
+  align-self: stretch;
+  border-radius: 999px;
+  background: var(--status-backlog);
+}
+
 .column-heading {
   display: flex;
   flex-direction: column;
@@ -483,7 +514,8 @@ button {
 
 .priority-badge,
 .tag-pill,
-.due-badge {
+.due-badge,
+.status-badge {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
@@ -497,6 +529,11 @@ button {
 
 .priority-badge {
   border: 1px solid var(--border);
+}
+
+.status-badge {
+  border: 1px solid transparent;
+  color: var(--muted-strong);
 }
 
 .priority-badge.p1 {
@@ -530,6 +567,56 @@ button {
 
 .due-badge.overdue {
   color: var(--danger);
+}
+
+.status-tone-backlog {
+  color: var(--status-backlog);
+  border-color: color-mix(in srgb, var(--status-backlog) 44%, transparent);
+  background: color-mix(in srgb, var(--status-backlog) 16%, transparent);
+}
+
+.status-tone-ready {
+  color: var(--status-ready);
+  border-color: color-mix(in srgb, var(--status-ready) 44%, transparent);
+  background: color-mix(in srgb, var(--status-ready) 16%, transparent);
+}
+
+.status-tone-in-progress {
+  color: var(--status-in-progress);
+  border-color: color-mix(in srgb, var(--status-in-progress) 44%, transparent);
+  background: color-mix(in srgb, var(--status-in-progress) 16%, transparent);
+}
+
+.status-tone-blocked {
+  color: var(--status-blocked);
+  border-color: color-mix(in srgb, var(--status-blocked) 44%, transparent);
+  background: color-mix(in srgb, var(--status-blocked) 16%, transparent);
+}
+
+.status-tone-done {
+  color: var(--status-done);
+  border-color: color-mix(in srgb, var(--status-done) 44%, transparent);
+  background: color-mix(in srgb, var(--status-done) 16%, transparent);
+}
+
+.status-accent-rail.status-tone-backlog {
+  background: var(--status-backlog);
+}
+
+.status-accent-rail.status-tone-ready {
+  background: var(--status-ready);
+}
+
+.status-accent-rail.status-tone-in-progress {
+  background: var(--status-in-progress);
+}
+
+.status-accent-rail.status-tone-blocked {
+  background: var(--status-blocked);
+}
+
+.status-accent-rail.status-tone-done {
+  background: var(--status-done);
 }
 
 .drop-indicator {
@@ -603,6 +690,25 @@ button {
   gap: var(--space-3);
 }
 
+.detail-header {
+  position: relative;
+}
+
+.detail-header-top {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.detail-title-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+
 .detail-copy {
   display: flex;
   flex-direction: column;
@@ -663,9 +769,10 @@ button {
 }
 
 .checklist-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: start;
 }
 
 .checklist-row input[type='checkbox'],
@@ -674,11 +781,16 @@ button {
   height: 18px;
   min-height: 18px;
   padding: 0;
-  margin: 0;
+  margin: 1px 0 0;
   flex: 0 0 18px;
   border: 1px solid var(--border);
   border-radius: 4px;
   accent-color: var(--accent);
+}
+
+.checklist-label {
+  display: block;
+  line-height: 1.35;
 }
 
 .menu-toggle-button {
@@ -686,19 +798,36 @@ button {
   min-width: 44px;
   padding: 0;
   font-size: 18px;
+  align-self: flex-start;
 }
 
-.detail-close-button {
-  margin-left: auto;
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  color: var(--muted-strong);
 }
 
-.detail-actions {
-  position: relative;
+.icon-button:hover {
+  background: var(--bg-soft-hover);
+}
+
+.detail-close-icon {
+  font-size: 24px;
+  line-height: 1;
+  align-self: flex-start;
 }
 
 .detail-menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: 48px;
   left: 0;
   display: grid;
   gap: 6px;
@@ -774,16 +903,24 @@ button {
 }
 
 .list-title-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 4px;
+  align-items: start;
+}
+
+.list-title-cell .status-accent-rail {
+  grid-row: 1 / span 2;
 }
 
 .list-title-cell strong {
+  grid-column: 2;
   line-height: 1.2;
 }
 
 .list-title-cell span {
+  grid-column: 2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -791,6 +928,26 @@ button {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.detail-danger-zone {
+  display: grid;
+  gap: 10px;
+}
+
+.danger-secondary-button {
+  border-color: rgba(255, 138, 138, 0.4);
+  color: #ffb7b7;
+  background: rgba(255, 138, 138, 0.08);
+}
+
+.danger-secondary-button:hover {
+  background: rgba(255, 138, 138, 0.16);
+}
+
+.danger-primary-button {
+  background: linear-gradient(180deg, #ff8d8d 0%, #eb6767 100%);
+  color: #3a0606;
 }
 
 .settings-card,
@@ -912,7 +1069,7 @@ button {
     width: min(100%, 520px);
   }
 
-  .detail-actions {
+  .detail-header-top {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -955,7 +1112,7 @@ button {
     border-left: 0;
   }
 
-  .detail-actions,
+  .detail-header-top,
   .form-grid {
     grid-template-columns: 1fr;
     flex-direction: column;
