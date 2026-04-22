@@ -18,7 +18,7 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 
 1. `docs/project/README.md`
 2. `AGENTS.md`
-3. taakrelevante canonieke docs in `docs/project/**`
+3. taakrelevante canonieke handmatige docs in `docs/project/**` (excl. `docs/project/generated/**` en `docs/project/archive/**`)
 4. bij niet-triviale uitvoertaken: `docs/project/open-points.md` + relevante taskfile in `docs/project/25-tasks/**`
 5. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
 6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
@@ -28,8 +28,10 @@ Regels:
 - `docs/project/**` = canonieke projectwaarheid.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
+- `docs/project/generated/**` en `docs/design/generated/**` = generated output; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
 - `docs/upload/**` = generated uploadartefacten; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
+- Bij spanning tussen generated docs en canonieke docs zijn canonieke docs leidend.
 - Bij spanning tussen `docs/upload/**` en canonieke docs zijn canonieke docs leidend.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Scope-routing is context-first:

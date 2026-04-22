@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-22T13:12:44.220Z
-Source Commit: 36fe093
+Build Timestamp (UTC): 2026-04-22T13:23:04.358Z
+Source Commit: 86b4c8d
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -93,9 +93,18 @@ Regel:
 
 - handmatige docs zijn de bron
 - generated docs zijn afgeleide output
+- `docs/project/generated/**` en `docs/design/generated/**` zijn geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex
 - `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects
 - `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex
 - bij spanning tussen `docs/upload/**` en canonieke docs zijn canonieke docs leidend
+- bij spanning tussen generated docs en canonieke docs zijn canonieke docs leidend
+
+### 2b) Source-of-truth matrix (hard)
+
+- `docs/project/**` (handmatig, excl. `generated/**` en `archive/**`) = canonieke productwaarheid
+- `docs/dev/**` = operationele workflowafspraken
+- `docs/project/generated/**` + `docs/design/generated/**` = generated, afgeleid, niet leidend
+- `docs/upload/**` = upload-only artefacten voor ChatGPT Projects/handoff, niet leidend
 
 ## 3) Archive-only (niet leidend)
 
@@ -195,7 +204,9 @@ Legacy compatibiliteit:
 - Leidende waarheid voor product/scope/status staat in `docs/project/**`.
 - `AGENTS.md` + `.clinerules` zijn leidend voor werkwijze tijdens uitvoering.
 - Skills gebruik je alleen wanneer een taak duidelijk in een bestaande skillflow valt.
+- Gebruik bij twijfel altijd de source-of-truth matrix in sectie `2b`.
 - `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
+- `docs/project/generated/**` en `docs/design/generated/**` zijn geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - `docs/upload/**` blijft generated uploadartefact, geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - Bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT Projects gebeurt nu nog niet automatisch.
 - Budgetpolicy in ChatGPT Project-context blijft licht; token/cost/runtime-discipline hoort in repo-/runtime-/AI-governance-docs.
@@ -2439,7 +2450,7 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 
 1. `docs/project/README.md`
 2. `AGENTS.md`
-3. taakrelevante canonieke docs in `docs/project/**`
+3. taakrelevante canonieke handmatige docs in `docs/project/**` (excl. `docs/project/generated/**` en `docs/project/archive/**`)
 4. bij niet-triviale uitvoertaken: `docs/project/open-points.md` + relevante taskfile in `docs/project/25-tasks/**`
 5. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
 6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
@@ -2449,8 +2460,10 @@ Regels:
 - `docs/project/**` = canonieke projectwaarheid.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
+- `docs/project/generated/**` en `docs/design/generated/**` = generated output; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
 - `docs/upload/**` = generated uploadartefacten; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
+- Bij spanning tussen generated docs en canonieke docs zijn canonieke docs leidend.
 - Bij spanning tussen `docs/upload/**` en canonieke docs zijn canonieke docs leidend.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Scope-routing is context-first:

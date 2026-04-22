@@ -73,10 +73,13 @@ Voor AI-gedrag, prompting en evaluatie:
   - `docs/project/**` = canonieke projectwaarheid
   - `docs/project/25-tasks/**` = operationele taaklaag voor huidige fase-uitvoering
   - `docs/dev/**` = operationele workflowafspraken
+  - `docs/project/generated/**` + `docs/design/generated/**` = generated output, nooit canonieke bron
   - `docs/upload/**` = generated uploadartefacten, nooit canonieke bron
+- `docs/project/generated/**` en `docs/design/generated/**` zijn geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
 - `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - Bij spanning tussen `docs/upload/**` en canonieke docs zijn canonieke docs leidend.
+- Bij spanning tussen generated docs en canonieke docs zijn canonieke docs leidend.
 - Start-of-session guardrail:
   - lees eerst `docs/project/README.md`
   - check bij non-triviale uitvoering daarna `docs/project/open-points.md` en relevante taskfiles in `docs/project/25-tasks/**`
@@ -177,6 +180,7 @@ Bij wijzigingen aan canonieke docs:
   - `npm run docs:bundle`
 - `npm run docs:bundle:verify`
 - `docs/upload/**` is generated uploadoutput voor de gebruiker; gebruik deze map niet als canonieke agentbron.
+- `docs/project/generated/**` en `docs/design/generated/**` zijn generated output; gebruik deze mappen niet als canonieke agentbron.
 - In ChatGPT Projects: gebruik na de bootstrap alleen de kleinste relevante subset uit het uploadmanifest; upload niet standaard de volledige set.
 - De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT Projects gebeurt nu nog niet automatisch.
 - De primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal.

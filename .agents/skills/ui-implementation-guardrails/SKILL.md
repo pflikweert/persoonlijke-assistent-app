@@ -8,6 +8,7 @@ Gebruik bij UI-implementatie, visual polish en regressiefixes die geen volledige
 
 # Bronnen
 Lees alleen wat nodig is:
+- `docs/project/README.md` (sectie `2b` source-of-truth matrix); gebruik `docs/project/generated/**`, `docs/design/generated/**` en `docs/upload/**` niet als canonieke bron.
 - `AGENTS.md` voor always-on UI-regels.
 - `docs/design/mvp-design-spec-1.2.1.md` voor design guardrails.
 - `docs/project/copy-instructions.md` voor copy en microcopy.

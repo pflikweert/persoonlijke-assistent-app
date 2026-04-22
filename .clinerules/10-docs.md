@@ -5,7 +5,9 @@ Use when tasks touch `docs/**`.
 - Keep hierarchy explicit:
   - `docs/project/**` = canonical product truth
   - `docs/dev/**` = operational workflow
+  - `docs/project/generated/**` + `docs/design/generated/**` = generated artifacts
   - `docs/upload/**` = generated upload artifacts
+- Never treat `docs/project/generated/**` or `docs/design/generated/**` as canonical sources.
 - Never treat `docs/upload/**` as a canonical source.
 - Prefer short references to canonical docs over copied policy blocks.
 - If canonical docs change: run `npm run docs:bundle` and `npm run docs:bundle:verify`.

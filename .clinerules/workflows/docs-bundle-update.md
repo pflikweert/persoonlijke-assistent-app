@@ -13,6 +13,7 @@ Werk docs bij met behoud van waarheidshiërarchie en genereer daarna consistente
 - Eventueel docs bundler-script alleen als strikt nodig.
 
 ## Wat niet geraakt moet worden
+- `docs/project/generated/**` of `docs/design/generated/**` handmatig als bron onderhouden.
 - `docs/upload/**` handmatig als bron onderhouden.
 - Productcode (`app/**`, `components/**`, `services/**`, `supabase/**`) zonder expliciete vraag.
 - Nieuwe waarheidshiërarchie of workflowsprawl.
@@ -27,5 +28,8 @@ Werk docs bij met behoud van waarheidshiërarchie en genereer daarna consistente
 ## Verify
 - Verplicht: `npm run docs:bundle && npm run docs:bundle:verify`.
 - Valideer dat geen generated bestand handmatig als canonieke bron is behandeld.
+- Draai aanvullend:
+  - `rg -n "source-of-truth|canonieke bron|canonical source" AGENTS.md docs/project/README.md docs/dev/cline-workflow.md .clinerules/10-docs.md`
+  - `rg -n "docs/project/generated|docs/design/generated|docs/upload" AGENTS.md docs/project/README.md docs/dev/cline-workflow.md .clinerules/10-docs.md`
 
 Refs: `docs/project/README.md`, `AGENTS.md`, `docs/dev/cline-workflow.md`.

@@ -2,8 +2,8 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-22T13:12:44.220Z
-Source Commit: 36fe093
+Build Timestamp (UTC): 2026-04-22T13:23:04.358Z
+Source Commit: 86b4c8d
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -191,7 +191,7 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 
 1. `docs/project/README.md`
 2. `AGENTS.md`
-3. taakrelevante canonieke docs in `docs/project/**`
+3. taakrelevante canonieke handmatige docs in `docs/project/**` (excl. `docs/project/generated/**` en `docs/project/archive/**`)
 4. bij niet-triviale uitvoertaken: `docs/project/open-points.md` + relevante taskfile in `docs/project/25-tasks/**`
 5. relevante skill(s) in `.agents/skills/**` wanneer de taak daar expliciet onder valt
 6. `docs/dev/active-context.md` alleen wanneer recente sessiecontext of WIP relevant is
@@ -201,8 +201,10 @@ Regels:
 - `docs/project/**` = canonieke projectwaarheid.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
+- `docs/project/generated/**` en `docs/design/generated/**` = generated output; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
 - `docs/upload/**` = generated uploadartefacten; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
+- Bij spanning tussen generated docs en canonieke docs zijn canonieke docs leidend.
 - Bij spanning tussen `docs/upload/**` en canonieke docs zijn canonieke docs leidend.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Scope-routing is context-first:
@@ -223,10 +225,7 @@ Regels:
 
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
 - Gebruik eerst bestaande shared primitives/patronen; voeg alleen een nieuw shared component toe bij een echt herhaalbaar patroon over meerdere schermen.
-- UI assembly is scaffold-first: check eerst `components/ui/screen-scaffolds.tsx` en daarna pas screen-lokale opbouw.
-- Volg bij UI-keuzes de beslisboom in `docs/dev/ui-assembly-decision-tree.md`.
-- Stop geen screen-specifieke designregels in generieke shared primitives.
-- `design_refs/1.2.1/**` zijn bindend per scherm; `.md` notes tel
+- UI assembly is scaffold-firs
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
