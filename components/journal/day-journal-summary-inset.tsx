@@ -1,6 +1,6 @@
 import { StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
+import { MarkdownDisplay } from '@/components/ui/markdown-display';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colorTokens, spacing } from '@/theme';
@@ -25,11 +25,11 @@ export function DayJournalSummaryInset({
       lightColor="transparent"
       darkColor="transparent"
       style={[styles.summaryInset, { borderLeftColor: accentColor }, style]}>
-      <ThemedText
-        type="defaultSemiBold"
-        style={[styles.summaryInsetText, { color: palette.text }, textStyle]}>
-        {text}
-      </ThemedText>
+      <MarkdownDisplay
+        markdown={text}
+        variant="summary"
+        textStyle={[styles.summaryInsetText, { color: palette.text }, textStyle]}
+      />
     </ThemedView>
   );
 }

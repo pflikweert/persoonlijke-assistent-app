@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-04-22T15:04:03.158Z
-Source Commit: b62830e
+Build Timestamp (UTC): 2026-04-22T21:10:06.138Z
+Source Commit: 1a2aa2e
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-22T15:04:03.158Z
-Source Commit: b62830e
+Build Timestamp (UTC): 2026-04-22T21:10:06.138Z
+Source Commit: 1a2aa2e
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -627,7 +627,8 @@ Gecontroleerd op:
 | AIQS prompt-assist preview voor `entry_cleanup` (admin-only) | Editor hardening | **Aanwezig** | server-side action `prompt_assist_preview` + client service/types + draft editor met single-target apply, inline diff en issue-signalen zonder brede chat-UI. |
 | Import verify fixtureconsistentie | Kwaliteitsborging | **Aanwezig** | fixture en scripts uitgelijnd op `scripts/fixtures/chatgpt-markdown/dagboek-voor-gemoedstoestand.md`; lokale verify en parser-test slagen weer. |
 | Lokale auth smoke workflow (magic-link + Mailpit) | Kwaliteitsborging / testbaarheid | **Aanwezig** | local-only auth smoke tooling met verify-link extractie, login-proof en veilige cleanup voor herkenbare smoke users toegevoegd in `scripts/*local-auth*` en `docs/dev/local-auth-smoke-workflow.md`. |
-| Entry detail fotogalerij (max 5) | Moment-detail uitbreiding | **Aanwezig** | secure upload + featured thumbnail onder samenvatting + galerij onderaan + fullscreen swipe/delete aanwezig in `app/entry/[id].tsx` en `components/journal/entry-photo-gallery.tsx`. |
+| Entry detail fotogalerij (max 5) | Moment-detail uitbreiding | **Aanwezig** | secure upload + featured thumbnail onder samenvatting + galerij onderaan + fullscreen swipe/delete/pinch-zoom aanwezig in `app/entry/[id].tsx` en `components/journal/entry-photo-gallery.tsx`. |
+| Dag- en momenttekst tonen markdownstructuur (display-only) | Leesbaarheids-/UX-hardening | **Aanwezig** | gedeelde markdown-rendering voor summary/narrative blokken in `components/ui/markdown-display.tsx`, `components/journal/day-journal-summary-inset.tsx` en `components/journal/editorial-narrative-block.tsx`. |
 | Entry detail audio + foto-layoutpolish | UX/hardening | **Aanwezig** | audio-sectie blijft zichtbaar; featured foto los bovenin bij aanwezige foto's; empty state en thumbnails onderaan in dezelfde fotosectie. |
 | Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
 | Foundation polish: editorial typography + selective ambient backgrounds | Shared design-system hardening | **Aanwezig** | `theme/tokens.ts` bevat nu expliciete typography-roles inclusief display title en gedeelde `ambient/subtle/flat` background tokens; `components/themed-text.tsx`, `components/ui/app-background.tsx`, `components/ui/home-screen-primitives.tsx`, `components/ui/auth-screen-primitives.tsx` en Today (`app/(tabs)/index.tsx`) gebruiken deze foundation. |
@@ -734,7 +735,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 
 | Taak | Status | Prioriteit | Fase | Korte omschrijving |
 | --- | --- | --- | --- | --- |
-| [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Ready | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
+| [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Backlog | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
 | [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |

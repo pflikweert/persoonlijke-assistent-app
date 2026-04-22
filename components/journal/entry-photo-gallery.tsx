@@ -23,6 +23,7 @@ import { ThemedView } from "@/components/themed-view";
 import { DetailSectionHeader } from "@/components/ui/detail-screen-primitives";
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { ModalBackdrop } from "@/components/ui/modal-backdrop";
+import { ZoomablePhotoSlide } from "@/components/ui/zoomable-photo-slide";
 import { PrimaryButton, StateBlock } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -176,12 +177,17 @@ function EntryPhotoViewer({
     280,
     viewportHeight - viewerTopControlsHeight - viewerBottomControlsHeight - spacing.lg * 2
   );
+  const [zoomedPhotoId, setZoomedPhotoId] = useState<string | null>(null);
   const activePhoto = viewerIndex === null ? null : photos[viewerIndex] ?? null;
+  const dragStartIndexRef = useRef(0);
 
   useEffect(() => {
     if (viewerIndex === null) {
+      setZoomedPhotoId(null);
       return;
     }
+    dragStartIndexRef.current = viewerIndex;
+    setZoomedPhotoId(null);
     const handle = setTimeout(() => {
       viewerScrollRef.current?.scrollTo({
         x: viewerIndex * viewerPageWidth,
@@ -191,13 +197,33 @@ function EntryPhotoViewer({
     return () => clearTimeout(handle);
   }, [viewerIndex, viewerPageWidth]);
 
-  function handleViewerScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const offsetX = event.nativeEvent.contentOffset.x;
+  function getNormalizedIndex(offsetX: number) {
     const nextIndex = Math.round(offsetX / viewerPageWidth);
-    const normalized = Math.max(0, Math.min(photos.length - 1, nextIndex));
-    if (normalized !== viewerIndex) {
-      setViewerIndex(normalized);
+    return Math.max(0, Math.min(photos.length - 1, nextIndex));
+  }
+
+  function handleViewerScrollBeginDrag() {
+    dragStartIndexRef.current = viewerIndex ?? 0;
+  }
+
+  function handleViewerScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const rawIndex = getNormalizedIndex(event.nativeEvent.contentOffset.x);
+    const startIndex = dragStartIndexRef.current;
+    const boundedIndex =
+      Math.abs(rawIndex - startIndex) <= 1
+        ? rawIndex
+        : startIndex + Math.sign(rawIndex - startIndex);
+    const nextIndex = Math.max(0, Math.min(photos.length - 1, boundedIndex));
+
+    if (nextIndex !== rawIndex) {
+      viewerScrollRef.current?.scrollTo({
+        x: nextIndex * viewerPageWidth,
+        animated: true,
+      });
     }
+
+    dragStartIndexRef.current = nextIndex;
+    setViewerIndex(nextIndex);
   }
 
   return (
@@ -229,10 +255,13 @@ function EntryPhotoViewer({
               ref={viewerScrollRef}
               horizontal
               pagingEnabled
+              bounces={false}
+              disableIntervalMomentum
+              directionalLockEnabled
+              scrollEnabled={!zoomedPhotoId}
               showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={handleViewerScroll}
-              onScroll={handleViewerScroll}
-              scrollEventThrottle={16}
+              onScrollBeginDrag={handleViewerScrollBeginDrag}
+              onMomentumScrollEnd={handleViewerScrollEnd}
               style={[styles.viewerCarousel, { width: viewerPageWidth }]}
             >
               {photos.map((photo) => {
@@ -241,10 +270,15 @@ function EntryPhotoViewer({
                     key={photo.id}
                     style={[styles.viewerPage, { width: viewerPageWidth, height: viewerFrameHeight }]}
                   >
-                    <Image
+                    <ZoomablePhotoSlide
                       source={photo.displaySource}
-                      contentFit="contain"
-                      style={styles.viewerImage}
+                      frameWidth={viewerPageWidth}
+                      frameHeight={viewerFrameHeight}
+                      imageWidth={photo.displayWidth}
+                      imageHeight={photo.displayHeight}
+                      onZoomStateChange={(zoomed) => {
+                        setZoomedPhotoId(zoomed ? photo.id : null);
+                      }}
                     />
                   </ThemedView>
                 );

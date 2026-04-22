@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, type ViewStyle } from 'react-native';
 
+import { MarkdownDisplay } from '@/components/ui/markdown-display';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -36,9 +37,11 @@ export function EditorialNarrativeBlock({
           {action ?? null}
         </ThemedView>
       ) : null}
-      <ThemedText type="body" style={[styles.text, { color: palette.text }]}>
-        {text}
-      </ThemedText>
+      <MarkdownDisplay
+        markdown={text}
+        variant="narrative"
+        textStyle={[styles.text, { color: palette.text }]}
+      />
     </ThemedView>
   );
 }
@@ -62,4 +65,3 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
 });
-
