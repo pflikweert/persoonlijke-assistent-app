@@ -29,3 +29,6 @@ Lage-frictie plek om nieuwe ideeën direct vast te leggen zonder contextverlies.
 - [2026-04-20] Knowledge Hub + AIQS foundation (PDF/audio/foto), gepromoveerd naar [[30-ai-and-aiqs/60-knowledge-hub-aiqs-foundation]] als epic-candidate (Q3+).
 - [2026-04-20] Inspiratie (Wispr Flow screenshots): user-configureerbare auto-cleanup + schrijfstijlprofielen classificeren onder Budio app + AIQS-compatibele ideas (niet Jarvis by default).
 - [2026-04-21] Capture UX benchmark implementatiekansen (Wispr Flow + NotebookLM), gepromoveerd naar [[10-product/60-capture-ux-benchmark-implementatiekansen-wispr-notebooklm]] als epic-candidate (research-first, na AIQS-live).
+- [2026-04-22] ChatGPT Project uploads slimmer begeleiden/automatiseren zodat handmatige uploadfrictie lager wordt (nu alleen idee, niet uitwerken/bouwen).
+- [2026-04-22] Uploadbundels voor ChatGPT Projects verder slim combineren zodat de primaire aanbevolen handmatige uploadset klein blijft (nu alleen idee, niet uitwerken/bouwen).
+- [2026-04-22] Session/multi-user/OpenAI-contextbeleid voor Budio als later onderzoeksspoor: contextafbakening per gebruiker, session reuse wel/niet, wat wel/niet meegaat naar OpenAI, runtime-context versus canonieke opslag (nu alleen idee, niet uitwerken/bouwen).

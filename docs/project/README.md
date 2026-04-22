@@ -57,7 +57,9 @@ Regel:
 
 - handmatige docs zijn de bron
 - generated docs zijn afgeleide output
-- `docs/upload/**` is alleen bedoeld als kant-en-klare uploadset voor de gebruiker; agents gebruiken deze map niet als canonieke bron
+- `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects
+- `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex
+- bij spanning tussen `docs/upload/**` en canonieke docs zijn canonieke docs leidend
 
 ## 3) Archive-only (niet leidend)
 
@@ -106,32 +108,34 @@ Regel:
 - open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
 - `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
 
-## 4) Standaard upload naar ChatGPT Project / Stitch
+## 4) Uploadpolicy voor ChatGPT Projects (handmatig)
 
-Upload standaard de bestanden uit `docs/upload/`:
+Gebruik altijd eerst:
 
-1. `docs/upload/00-budio-upload-manifest.md`
-2. `docs/upload/10-budio-product-truth.md`
-3. `docs/upload/20-budio-strategy-and-research.md`
-4. `docs/upload/25-budio-ideas-and-opportunity-map.md`
-5. `docs/upload/30-budio-build-truth.md`
-6. `docs/upload/40-budio-ui-system-and-design-truth.md`
-7. `docs/upload/50-budio-ai-governance-and-operations.md`
-8. `docs/upload/55-budio-ai-operating-system.md`
+1. `docs/upload/chatgpt-project-context.md` (verplichte bootstrap/startcontext)
+
+Daarna upload je alleen de kleinste relevante subset uit het uploadmanifest.
+Upload niet standaard de volledige set.
+
+Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal:
+
+1. `docs/upload/chatgpt-project-context.md`
+2. `docs/upload/10-budio-core-product-and-planning.md`
+3. `docs/upload/20-budio-strategy-research-and-ideas.md`
+4. `docs/upload/30-budio-build-ai-governance-and-operations.md`
+5. `docs/upload/40-budio-design-handoff-and-truth.md`
 
 Reden:
 
-- de uploadset is logisch geordend (00/10/20/30/40/50) voor vaste leesvolgorde
-- productwaarheid, strategie/research, build-truth, UI/design en AI-governance zijn expliciet gescheiden
-- ideas/opportunity mapping is expliciet gescheiden van strategy/research
-- het manifest maakt de primaire uploadset controleerbaar
-- use-case subsets staan in `docs/upload/00-budio-upload-manifest.md`
-- `docs/upload/55-budio-ai-operating-system.md` is upload/reference-context en **geen** canonieke bron voor agents in deze repo
+- bootstrap blijft apart en verplicht
+- overige bundels zijn logisch samengevoegd in 4 domeinbundels
+- use-case subsets en volledigheidscheck staan in `docs/upload/00-budio-upload-manifest.md`
+- het uploadmanifest is lokale referentie/completeness-check en geen verplicht onderdeel van de primaire aanbevolen handmatige uploadset
+- volledige set alleen gebruiken voor brede strategie-, audit- of totaalreviews
 
 Legacy compatibiliteit:
 
-- Bestaande legacy uploadfiles (zoals `chatgpt-project-context.md`, `budio-research.md`, `upload-manifest.md`) blijven beschikbaar voor bestaande workflows,
-  maar de 00/10/20/30/40/50-set is de primaire standaard.
+- Bestaande legacy uploadfiles blijven beschikbaar voor bestaande workflows, maar zijn niet de primaire aanbevolen handmatige uploadset.
 
 ## 5) Wat je normaal niet hoeft te uploaden
 
@@ -155,7 +159,11 @@ Legacy compatibiliteit:
 - Leidende waarheid voor product/scope/status staat in `docs/project/**`.
 - `AGENTS.md` + `.clinerules` zijn leidend voor werkwijze tijdens uitvoering.
 - Skills gebruik je alleen wanneer een taak duidelijk in een bestaande skillflow valt.
-- `docs/upload/**` blijft uploadartefact (generated), geen canonieke agentbron.
+- `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
+- `docs/upload/**` blijft generated uploadartefact, geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
+- Bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT Projects gebeurt nu nog niet automatisch.
+- Budgetpolicy in ChatGPT Project-context blijft licht; token/cost/runtime-discipline hoort in repo-/runtime-/AI-governance-docs.
+- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 - Bij wijzigingen aan canonieke docs: altijd bundlen + verify (`npm run docs:bundle` en `npm run docs:bundle:verify`).
 - Sessielearnings horen in:
   - `AGENTS.md` voor always-on repo-regels

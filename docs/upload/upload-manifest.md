@@ -2,22 +2,26 @@
 
 # Upload Manifest
 
-Build Timestamp (UTC): 2026-04-22T12:20:58.748Z
-Source Commit: a864397
+Build Timestamp (UTC): 2026-04-22T13:12:44.220Z
+Source Commit: 36fe093
 
-## Standaard Uploadset
+## Volledige Uploadinventaris
 
 | Bestand | Type | Flow |
 | --- | --- | --- |
-| `docs/upload/00-budio-upload-manifest.md` | generated manifest | Primary upload guidance |
-| `docs/upload/10-budio-product-truth.md` | generated primary bundle | Product/scope/status truth |
-| `docs/upload/20-budio-strategy-and-research.md` | generated primary bundle | Strategy and research |
-| `docs/upload/25-budio-ideas-and-opportunity-map.md` | generated primary bundle | Ideas and opportunity map |
-| `docs/upload/30-budio-build-truth.md` | generated primary bundle | Build/code architecture truth |
-| `docs/upload/40-budio-ui-system-and-design-truth.md` | generated primary bundle | UI system and design truth |
-| `docs/upload/50-budio-ai-governance-and-operations.md` | generated primary bundle | AI governance and operations |
+| `docs/upload/chatgpt-project-context.md` | primary bootstrap bundle | ChatGPT Projects bootstrap/startcontext (upload-only) |
+| `docs/upload/00-budio-upload-manifest.md` | generated manifest | Local reference + completeness check |
+| `docs/upload/10-budio-core-product-and-planning.md` | generated primary domain bundle | Primary recommended uploadset (core product/planning) |
+| `docs/upload/20-budio-strategy-research-and-ideas.md` | generated primary domain bundle | Primary recommended uploadset (strategy/research/ideas) |
+| `docs/upload/30-budio-build-ai-governance-and-operations.md` | generated primary domain bundle | Primary recommended uploadset (build/AI governance/operations) |
+| `docs/upload/40-budio-design-handoff-and-truth.md` | generated primary domain bundle | Primary recommended uploadset (design handoff/truth) |
+| `docs/upload/10-budio-product-truth.md` | generated legacy bundle | Legacy compatibility |
+| `docs/upload/20-budio-strategy-and-research.md` | generated legacy bundle | Legacy compatibility |
+| `docs/upload/25-budio-ideas-and-opportunity-map.md` | generated legacy bundle | Legacy compatibility |
+| `docs/upload/30-budio-build-truth.md` | generated legacy bundle | Legacy compatibility |
+| `docs/upload/40-budio-ui-system-and-design-truth.md` | generated legacy bundle | Legacy compatibility |
+| `docs/upload/50-budio-ai-governance-and-operations.md` | generated legacy bundle | Legacy compatibility |
 | `docs/upload/55-budio-ai-operating-system.md` | upload reference copy | External AI operating system context (reference-only) |
-| `docs/upload/chatgpt-project-context.md` | legacy generated upload copy | Legacy compatibility |
 | `docs/upload/ai-quality-studio.md` | legacy canonical upload copy | Legacy compatibility |
 | `docs/upload/budio-research.md` | legacy generated upload copy | Legacy compatibility |
 | `docs/upload/cline-workflow.md` | workflow upload copy | ChatGPT Project (execution context) |
@@ -28,7 +32,11 @@ Source Commit: a864397
 | `docs/upload/upload-manifest.md` | generated manifest | Upload completeness check |
 
 ## Regels
-- Upload naar ChatGPT Project standaard de contextbestanden uit `docs/upload/**` plus dit manifest indien completeness-check gewenst is.
-- Gebruik `docs/upload/**` niet als canonieke bron voor agents; lees de handmatige bronbestanden en draai de bundle opnieuw.
-- Voor Stitch/design-handoff hoort `docs/upload/stitch-design-context.md` bij de uploadset.
+- Primaire aanbevolen handmatige uploadset staat in `docs/upload/00-budio-upload-manifest.md` en bevat maximaal 5 bestanden totaal.
+- Gebruik in ChatGPT Projects na de bootstrap alleen de kleinste relevante subset; upload niet standaard de volledige set.
+- De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.
+- `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
+- Bij spanning tussen uploadartefacten en canonieke docs zijn canonieke docs leidend.
+- Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance.
+- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 - Draai `npm run docs:bundle` en daarna `npm run docs:bundle:verify` na canonieke docs- of design-handoff wijzigingen.

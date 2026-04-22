@@ -28,7 +28,9 @@ Regels:
 - `docs/project/**` = canonieke projectwaarheid.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
-- `docs/upload/**` = generated uploadartefacten, geen canonieke bron.
+- `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
+- `docs/upload/**` = generated uploadartefacten; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
+- Bij spanning tussen `docs/upload/**` en canonieke docs zijn canonieke docs leidend.
 - Geen "lees alles altijd"-regel; lees alleen taakrelevante bronnen.
 - Scope-routing is context-first:
   - default-context: Budio app + AIQS
@@ -133,6 +135,16 @@ Gebruik Act mode voor:
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Commit alleen na geslaagde verify.
+
+## ChatGPT Projects uploaddiscipline
+
+- Dit is een uploadrichtlijn voor ChatGPT Projects, geen repo-uitvoerregel.
+- Gebruik na de bootstrap alleen de kleinste relevante subset uit `docs/upload/00-budio-upload-manifest.md`.
+- Upload niet standaard de volledige set.
+- Bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.
+- Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal.
+- Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance-docs.
+- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 
 ## VS Code plugin toepassen (verplicht)
 

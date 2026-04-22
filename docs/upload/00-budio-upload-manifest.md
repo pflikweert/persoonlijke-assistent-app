@@ -2,31 +2,38 @@
 
 # Budio Upload Manifest
 
-Build Timestamp (UTC): 2026-04-22T12:20:58.748Z
-Source Commit: a864397
+Build Timestamp (UTC): 2026-04-22T13:12:44.220Z
+Source Commit: 36fe093
 
-## Primaire uploadset (aanbevolen)
+## Primaire aanbevolen handmatige uploadset (maximaal 5 bestanden)
 
 | Bestand | Type | Flow |
 | --- | --- | --- |
-| `docs/upload/00-budio-upload-manifest.md` | generated manifest | Primary upload guidance |
-| `docs/upload/10-budio-product-truth.md` | generated primary bundle | Product/scope/status truth |
-| `docs/upload/20-budio-strategy-and-research.md` | generated primary bundle | Strategy and research |
-| `docs/upload/25-budio-ideas-and-opportunity-map.md` | generated primary bundle | Ideas and opportunity map |
-| `docs/upload/30-budio-build-truth.md` | generated primary bundle | Build/code architecture truth |
-| `docs/upload/40-budio-ui-system-and-design-truth.md` | generated primary bundle | UI system and design truth |
-| `docs/upload/50-budio-ai-governance-and-operations.md` | generated primary bundle | AI governance and operations |
-| `docs/upload/55-budio-ai-operating-system.md` | upload reference copy | External AI operating system context (reference-only) |
+| `docs/upload/chatgpt-project-context.md` | primary bootstrap bundle | ChatGPT Projects bootstrap/startcontext (upload-only) |
+| `docs/upload/10-budio-core-product-and-planning.md` | generated primary domain bundle | Primary recommended uploadset (core product/planning) |
+| `docs/upload/20-budio-strategy-research-and-ideas.md` | generated primary domain bundle | Primary recommended uploadset (strategy/research/ideas) |
+| `docs/upload/30-budio-build-ai-governance-and-operations.md` | generated primary domain bundle | Primary recommended uploadset (build/AI governance/operations) |
+| `docs/upload/40-budio-design-handoff-and-truth.md` | generated primary domain bundle | Primary recommended uploadset (design handoff/truth) |
+
+## Regels
+- `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
+- Gebruik in ChatGPT Projects na de bootstrap alleen de kleinste relevante subset uit dit manifest.
+- Upload niet standaard de volledige set.
+- De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.
+- `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
+- Bij spanning tussen uploadartefacten en canonieke docs zijn canonieke docs leidend.
+- Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance.
+- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 
 ## Use-case matrix (aanbevolen subsets)
 
 | Use-case | Aanbevolen bestanden |
 | --- | --- |
-| Strategie-review | `docs/upload/00-budio-upload-manifest.md`, `docs/upload/10-budio-product-truth.md`, `docs/upload/20-budio-strategy-and-research.md`, `docs/upload/50-budio-ai-governance-and-operations.md` |
-| Planherziening / opportunity review | `docs/upload/00-budio-upload-manifest.md`, `docs/upload/20-budio-strategy-and-research.md`, `docs/upload/25-budio-ideas-and-opportunity-map.md` |
-| Code/build review | `docs/upload/00-budio-upload-manifest.md`, `docs/upload/10-budio-product-truth.md`, `docs/upload/30-budio-build-truth.md` |
-| Design/Stitch handoff | `docs/upload/00-budio-upload-manifest.md`, `docs/upload/40-budio-ui-system-and-design-truth.md`, `docs/upload/mvp-design-spec-1.2.1.md`, `docs/upload/ethos-ivory-design.md`, `docs/upload/stitch-design-context.md` |
-| Volledige primaire context | `docs/upload/00-budio-upload-manifest.md`, `docs/upload/10-budio-product-truth.md`, `docs/upload/20-budio-strategy-and-research.md`, `docs/upload/25-budio-ideas-and-opportunity-map.md`, `docs/upload/30-budio-build-truth.md`, `docs/upload/40-budio-ui-system-and-design-truth.md`, `docs/upload/50-budio-ai-governance-and-operations.md` |
+| Strategie-review | `docs/upload/chatgpt-project-context.md`, `docs/upload/10-budio-core-product-and-planning.md`, `docs/upload/20-budio-strategy-research-and-ideas.md` |
+| Planherziening / opportunity review | `docs/upload/chatgpt-project-context.md`, `docs/upload/20-budio-strategy-research-and-ideas.md` |
+| Code/build review | `docs/upload/chatgpt-project-context.md`, `docs/upload/10-budio-core-product-and-planning.md`, `docs/upload/30-budio-build-ai-governance-and-operations.md` |
+| Design/Stitch handoff | `docs/upload/chatgpt-project-context.md`, `docs/upload/40-budio-design-handoff-and-truth.md` |
+| Volledige primaire context | `docs/upload/chatgpt-project-context.md`, `docs/upload/10-budio-core-product-and-planning.md`, `docs/upload/20-budio-strategy-research-and-ideas.md`, `docs/upload/30-budio-build-ai-governance-and-operations.md`, `docs/upload/40-budio-design-handoff-and-truth.md` |
 
 ## Legacy uploadset
-- Legacy bestanden blijven aanwezig voor compatibiliteit maar zijn niet de primaire set.
+- Legacy bestanden blijven aanwezig voor compatibiliteit maar zijn niet de primaire aanbevolen handmatige uploadset.

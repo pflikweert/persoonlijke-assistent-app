@@ -12,6 +12,10 @@ const outputPaths = {
   canonicalOpenPoints: 'docs/project/open-points.md',
   canonicalTaskHub: 'docs/project/25-tasks/README.md',
   uploadManifestV2: 'docs/upload/00-budio-upload-manifest.md',
+  uploadCoreProductPlanning: 'docs/upload/10-budio-core-product-and-planning.md',
+  uploadStrategyResearchIdeas: 'docs/upload/20-budio-strategy-research-and-ideas.md',
+  uploadBuildAiGovernanceOps: 'docs/upload/30-budio-build-ai-governance-and-operations.md',
+  uploadDesignHandoffTruth: 'docs/upload/40-budio-design-handoff-and-truth.md',
   uploadProductTruth: 'docs/upload/10-budio-product-truth.md',
   uploadStrategyResearch: 'docs/upload/20-budio-strategy-and-research.md',
   uploadIdeasOpportunity: 'docs/upload/25-budio-ideas-and-opportunity-map.md',
@@ -149,49 +153,69 @@ const designSources = [
 
 const uploadSet = [
   {
+    path: outputPaths.uploadChatgptProjectContext,
+    type: 'primary bootstrap bundle',
+    flow: 'ChatGPT Projects bootstrap/startcontext (upload-only)',
+  },
+  {
     path: outputPaths.uploadManifestV2,
     type: 'generated manifest',
-    flow: 'Primary upload guidance',
+    flow: 'Local reference + completeness check',
+  },
+  {
+    path: outputPaths.uploadCoreProductPlanning,
+    type: 'generated primary domain bundle',
+    flow: 'Primary recommended uploadset (core product/planning)',
+  },
+  {
+    path: outputPaths.uploadStrategyResearchIdeas,
+    type: 'generated primary domain bundle',
+    flow: 'Primary recommended uploadset (strategy/research/ideas)',
+  },
+  {
+    path: outputPaths.uploadBuildAiGovernanceOps,
+    type: 'generated primary domain bundle',
+    flow: 'Primary recommended uploadset (build/AI governance/operations)',
+  },
+  {
+    path: outputPaths.uploadDesignHandoffTruth,
+    type: 'generated primary domain bundle',
+    flow: 'Primary recommended uploadset (design handoff/truth)',
   },
   {
     path: outputPaths.uploadProductTruth,
-    type: 'generated primary bundle',
-    flow: 'Product/scope/status truth',
+    type: 'generated legacy bundle',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadStrategyResearch,
-    type: 'generated primary bundle',
-    flow: 'Strategy and research',
+    type: 'generated legacy bundle',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadIdeasOpportunity,
-    type: 'generated primary bundle',
-    flow: 'Ideas and opportunity map',
+    type: 'generated legacy bundle',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadBuildTruth,
-    type: 'generated primary bundle',
-    flow: 'Build/code architecture truth',
+    type: 'generated legacy bundle',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadUiDesignTruth,
-    type: 'generated primary bundle',
-    flow: 'UI system and design truth',
+    type: 'generated legacy bundle',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadAiGovernanceOps,
-    type: 'generated primary bundle',
-    flow: 'AI governance and operations',
+    type: 'generated legacy bundle',
+    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadBudioAiOperatingSystem,
     type: 'upload reference copy',
     flow: 'External AI operating system context (reference-only)',
-  },
-  {
-    path: outputPaths.uploadChatgptProjectContext,
-    type: 'legacy generated upload copy',
-    flow: 'Legacy compatibility',
   },
   {
     path: outputPaths.uploadAiQualityStudio,
@@ -729,11 +753,20 @@ function renderProjectBundle({ buildTimestamp, commitHash, loadedSources, append
       buildTimestamp,
       commitHash,
       purpose:
-        'Doel: compacte uploadcontext voor ChatGPT Project, afgeleid van canonieke projectdocs. Upload via docs/upload samen met de MVP design spec en Stitch design context.',
+        'Doel: uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects, afgeleid van canonieke projectdocs.',
     }),
     '',
     '## Bronbestanden (vaste volgorde)',
     ...sourceList.map((item) => `- ${item}`),
+    '',
+    '## Uploadbeleid (ChatGPT Projects)',
+    '- Dit bestand is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.',
+    '- Dit bestand is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.',
+    '- Gebruik na de bootstrap alleen de kleinste relevante subset uit het uploadmanifest; upload niet standaard de volledige set.',
+    '- `docs/upload/**` blijft generated uploadoutput; bij spanning zijn canonieke docs leidend.',
+    '- De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.',
+    '- Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo- en AI-governance-docs.',
+    '- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.',
   ];
 
   for (const source of loadedSources) {
@@ -965,8 +998,118 @@ function renderAiGovernanceOpsBundle({
   return `${blocks.join('\n').trim()}\n`;
 }
 
+function renderCoreProductPlanningBundle({ buildTimestamp, commitHash, productTruth }) {
+  return `${[
+    renderGeneratedHeader({
+      title: 'Budio Core Product and Planning',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire domeinbundle voor core productwaarheid en actieve planning.',
+    }),
+    '',
+    '## Domein',
+    '- Core product / planning.',
+    '',
+    compactExcerpt(productTruth, 180000),
+  ]
+    .join('\n')
+    .trim()}\n`;
+}
+
+function renderStrategyResearchIdeasBundle({
+  buildTimestamp,
+  commitHash,
+  strategyResearch,
+  ideasOpportunity,
+}) {
+  return `${[
+    renderGeneratedHeader({
+      title: 'Budio Strategy Research and Ideas',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire domeinbundle voor strategy/research/ideas.',
+    }),
+    '',
+    '## Domein',
+    '- Strategy / research / ideas.',
+    '',
+    '## Strategy and Research',
+    compactExcerpt(strategyResearch, 140000),
+    '',
+    '## Ideas and Opportunity Map',
+    compactExcerpt(ideasOpportunity, 140000),
+  ]
+    .join('\n')
+    .trim()}\n`;
+}
+
+function renderBuildAiGovernanceOpsBundle({
+  buildTimestamp,
+  commitHash,
+  buildTruth,
+  aiGovernanceOps,
+}) {
+  return `${[
+    renderGeneratedHeader({
+      title: 'Budio Build AI Governance and Operations',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire domeinbundle voor build-truth, AI-governance en operations.',
+    }),
+    '',
+    '## Domein',
+    '- Build / AI governance / operations.',
+    '',
+    '## Build Truth',
+    compactExcerpt(buildTruth, 140000),
+    '',
+    '## AI Governance and Operations',
+    compactExcerpt(aiGovernanceOps, 140000),
+  ]
+    .join('\n')
+    .trim()}\n`;
+}
+
+function renderDesignHandoffTruthBundle({
+  buildTimestamp,
+  commitHash,
+  uiDesignTruth,
+  stitchDesignContext,
+}) {
+  return `${[
+    renderGeneratedHeader({
+      title: 'Budio Design Handoff and Truth',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: primaire domeinbundle voor design handoff en design truth.',
+    }),
+    '',
+    '## Domein',
+    '- Design handoff / design truth.',
+    '',
+    '## UI System and Design Truth',
+    compactExcerpt(uiDesignTruth, 140000),
+    '',
+    '## Stitch Design Context',
+    compactExcerpt(stitchDesignContext, 140000),
+  ]
+    .join('\n')
+    .trim()}\n`;
+}
+
 function renderPrimaryUploadManifest({ buildTimestamp, commitHash }) {
-  const primaryRows = uploadSet.filter((item) => item.path.startsWith('docs/upload/0') || item.path.startsWith('docs/upload/1') || item.path.startsWith('docs/upload/2') || item.path.startsWith('docs/upload/3') || item.path.startsWith('docs/upload/4') || item.path.startsWith('docs/upload/5'));
+  const primaryRecommended = [
+    outputPaths.uploadChatgptProjectContext,
+    outputPaths.uploadCoreProductPlanning,
+    outputPaths.uploadStrategyResearchIdeas,
+    outputPaths.uploadBuildAiGovernanceOps,
+    outputPaths.uploadDesignHandoffTruth,
+  ];
+  const primaryRows = uploadSet.filter((item) => primaryRecommended.includes(item.path));
 
   return `${[
     '# DO NOT EDIT - GENERATED FILE',
@@ -976,24 +1119,34 @@ function renderPrimaryUploadManifest({ buildTimestamp, commitHash }) {
     `Build Timestamp (UTC): ${buildTimestamp}`,
     `Source Commit: ${commitHash}`,
     '',
-    '## Primaire uploadset (aanbevolen)',
+    '## Primaire aanbevolen handmatige uploadset (maximaal 5 bestanden)',
     '',
     '| Bestand | Type | Flow |',
     '| --- | --- | --- |',
     ...primaryRows.map((item) => `| \`${item.path}\` | ${item.type} | ${item.flow} |`),
     '',
+    '## Regels',
+    '- `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.',
+    '- Gebruik in ChatGPT Projects na de bootstrap alleen de kleinste relevante subset uit dit manifest.',
+    '- Upload niet standaard de volledige set.',
+    '- De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.',
+    '- `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.',
+    '- Bij spanning tussen uploadartefacten en canonieke docs zijn canonieke docs leidend.',
+    '- Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance.',
+    '- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.',
+    '',
     '## Use-case matrix (aanbevolen subsets)',
     '',
     '| Use-case | Aanbevolen bestanden |',
     '| --- | --- |',
-    `| Strategie-review | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadProductTruth}\`, \`${outputPaths.uploadStrategyResearch}\`, \`${outputPaths.uploadAiGovernanceOps}\` |`,
-    `| Planherziening / opportunity review | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadStrategyResearch}\`, \`${outputPaths.uploadIdeasOpportunity}\` |`,
-    `| Code/build review | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadProductTruth}\`, \`${outputPaths.uploadBuildTruth}\` |`,
-    `| Design/Stitch handoff | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadUiDesignTruth}\`, \`${outputPaths.uploadMvpDesignSpec}\`, \`${outputPaths.uploadEthosIvoryDesign}\`, \`${outputPaths.uploadStitchDesignContext}\` |`,
-    `| Volledige primaire context | \`${outputPaths.uploadManifestV2}\`, \`${outputPaths.uploadProductTruth}\`, \`${outputPaths.uploadStrategyResearch}\`, \`${outputPaths.uploadIdeasOpportunity}\`, \`${outputPaths.uploadBuildTruth}\`, \`${outputPaths.uploadUiDesignTruth}\`, \`${outputPaths.uploadAiGovernanceOps}\` |`,
+    `| Strategie-review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadStrategyResearchIdeas}\` |`,
+    `| Planherziening / opportunity review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadStrategyResearchIdeas}\` |`,
+    `| Code/build review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadBuildAiGovernanceOps}\` |`,
+    `| Design/Stitch handoff | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadDesignHandoffTruth}\` |`,
+    `| Volledige primaire context | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadStrategyResearchIdeas}\`, \`${outputPaths.uploadBuildAiGovernanceOps}\`, \`${outputPaths.uploadDesignHandoffTruth}\` |`,
     '',
     '## Legacy uploadset',
-    '- Legacy bestanden blijven aanwezig voor compatibiliteit maar zijn niet de primaire set.',
+    '- Legacy bestanden blijven aanwezig voor compatibiliteit maar zijn niet de primaire aanbevolen handmatige uploadset.',
   ].join('\n')}\n`;
 }
 
@@ -1108,16 +1261,20 @@ function renderUploadManifest({ buildTimestamp, commitHash }) {
     `Build Timestamp (UTC): ${buildTimestamp}`,
     `Source Commit: ${commitHash}`,
     '',
-    '## Standaard Uploadset',
+    '## Volledige Uploadinventaris',
     '',
     '| Bestand | Type | Flow |',
     '| --- | --- | --- |',
     ...uploadSet.map((item) => `| \`${item.path}\` | ${item.type} | ${item.flow} |`),
     '',
     '## Regels',
-    '- Upload naar ChatGPT Project standaard de contextbestanden uit `docs/upload/**` plus dit manifest indien completeness-check gewenst is.',
-    '- Gebruik `docs/upload/**` niet als canonieke bron voor agents; lees de handmatige bronbestanden en draai de bundle opnieuw.',
-    '- Voor Stitch/design-handoff hoort `docs/upload/stitch-design-context.md` bij de uploadset.',
+    '- Primaire aanbevolen handmatige uploadset staat in `docs/upload/00-budio-upload-manifest.md` en bevat maximaal 5 bestanden totaal.',
+    '- Gebruik in ChatGPT Projects na de bootstrap alleen de kleinste relevante subset; upload niet standaard de volledige set.',
+    '- De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.',
+    '- `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.',
+    '- Bij spanning tussen uploadartefacten en canonieke docs zijn canonieke docs leidend.',
+    '- Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance.',
+    '- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.',
     '- Draai `npm run docs:bundle` en daarna `npm run docs:bundle:verify` na canonieke docs- of design-handoff wijzigingen.',
   ]
     .join('\n')
@@ -1357,6 +1514,25 @@ function renderOutputs(inputs, metadata) {
       inputs.loadedProjectSources.find((item) => item.path === 'docs/dev/cline-workflow.md')?.content ?? '',
     stitchWorkflow: inputs.stitchWorkflow,
   });
+  const primaryCoreProductPlanning = renderCoreProductPlanningBundle({
+    ...metadata,
+    productTruth: primaryProductTruth,
+  });
+  const primaryStrategyResearchIdeas = renderStrategyResearchIdeasBundle({
+    ...metadata,
+    strategyResearch: primaryStrategyResearch,
+    ideasOpportunity: primaryIdeasOpportunity,
+  });
+  const primaryBuildAiGovernanceOps = renderBuildAiGovernanceOpsBundle({
+    ...metadata,
+    buildTruth: primaryBuildTruth,
+    aiGovernanceOps: primaryAiGovernanceOps,
+  });
+  const primaryDesignHandoffTruth = renderDesignHandoffTruthBundle({
+    ...metadata,
+    uiDesignTruth: primaryUiDesignTruth,
+    stitchDesignContext,
+  });
   const primaryManifest = renderPrimaryUploadManifest(metadata);
 
   return new Map([
@@ -1373,6 +1549,10 @@ function renderOutputs(inputs, metadata) {
     [outputPaths.stitchDesignContext, stitchDesignContext],
     [outputPaths.uploadChatgptProjectContext, chatgptProjectContext],
     [outputPaths.uploadManifestV2, primaryManifest],
+    [outputPaths.uploadCoreProductPlanning, primaryCoreProductPlanning],
+    [outputPaths.uploadStrategyResearchIdeas, primaryStrategyResearchIdeas],
+    [outputPaths.uploadBuildAiGovernanceOps, primaryBuildAiGovernanceOps],
+    [outputPaths.uploadDesignHandoffTruth, primaryDesignHandoffTruth],
     [outputPaths.uploadProductTruth, primaryProductTruth],
     [outputPaths.uploadStrategyResearch, primaryStrategyResearch],
     [outputPaths.uploadIdeasOpportunity, primaryIdeasOpportunity],
