@@ -13,6 +13,7 @@ Navigatie voor operationele workflowdocs en tijdelijke context.
 - [[memory-bank|Memory bank]]
 - [[active-context|Active context]]
 - [[idea-lifecycle-workflow|Idea lifecycle workflow]]
+- [[local-auth-smoke-workflow|Local auth smoke workflow]]
 
 ## Historische en lokale notities
 

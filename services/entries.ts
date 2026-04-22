@@ -13,6 +13,7 @@ export interface ProcessEntryResult {
   flow: 'process-entry';
   requestId: string;
   flowId: string;
+  processingOutcome?: 'success' | 'recovered';
   rawEntryId: string;
   normalizedEntryId: string;
   journalDate: string;
@@ -234,6 +235,57 @@ export async function resumeCaptureEntryProcessing(input: {
       timezoneOffsetMinutes: input.timezoneOffsetMinutes,
       deferDerived: input.deferDerived ?? true,
       clientProcessingId,
+    },
+  });
+
+  if (error) {
+    await parseFunctionInvokeError(error);
+  }
+
+  if (!data) {
+    throw new Error('Lege response van process-entry.');
+  }
+
+  if (data.status !== 'ok' || data.flow !== 'process-entry' || !data.requestId) {
+    throw new Error('Ongeldige response van process-entry.');
+  }
+
+  return data;
+}
+
+export async function recoverCaptureEntryByRawEntryId(input: {
+  rawEntryId: string;
+  sourceType: 'text' | 'audio';
+  capturedAt?: string;
+  journalDate?: string;
+  timezoneOffsetMinutes?: number;
+  deferDerived?: boolean;
+}): Promise<ProcessEntryResult> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const rawEntryId = input.rawEntryId.trim();
+  if (!rawEntryId) {
+    throw new Error('Herstelreferentie voor moment ontbreekt.');
+  }
+
+  const flowId = createClientFlowId(input.sourceType === 'audio' ? 'capture-audio' : 'capture-text');
+  await ensureAuthenticatedUserSession({ flowId, source: 'process-entry' });
+
+  const { data, error } = await supabase.functions.invoke<ProcessEntryResult>('process-entry', {
+    headers: {
+      'x-flow-id': flowId,
+    },
+    body: {
+      rawEntryId,
+      sourceType: input.sourceType,
+      capturedAt: input.capturedAt,
+      journalDate: input.journalDate,
+      timezoneOffsetMinutes: input.timezoneOffsetMinutes,
+      deferDerived: input.deferDerived ?? true,
     },
   });
 

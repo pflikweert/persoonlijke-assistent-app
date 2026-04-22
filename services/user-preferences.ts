@@ -45,7 +45,7 @@ export async function fetchUserAudioPreferences(): Promise<UserAudioPreferences>
       .upsert(
         {
           user_id: userId,
-          save_audio_recordings: false,
+          save_audio_recordings: true,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" },

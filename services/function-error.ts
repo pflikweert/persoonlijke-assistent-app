@@ -25,6 +25,7 @@ export interface FunctionErrorPayload {
   code: FunctionErrorCode;
   message: string;
   retryable: boolean;
+  details?: Record<string, unknown>;
 }
 
 export class FunctionFlowError extends Error {
@@ -49,6 +50,7 @@ export function createClientFlowId(
     | 'admin-ai-quality'
     | 'export-archive'
     | 'user-preferences'
+    | 'entry-photo'
 ): string {
   const random = Math.random().toString(36).slice(2, 10);
   return `${prefix}-${Date.now()}-${random}`;
@@ -78,13 +80,19 @@ export function classifyUnknownError(error: unknown): {
   retryable: boolean;
   requestId: string | null;
   code: string | null;
+  nonRecoverable: boolean;
 } {
   if (error instanceof FunctionFlowError) {
+    const nonRecoverable =
+      error.payload.details?.nonRecoverable === true ||
+      error.payload.details?.recoveryState === 'non_recoverable';
+
     return {
       message: error.payload.message,
-      retryable: error.payload.retryable,
+      retryable: nonRecoverable ? false : error.payload.retryable,
       requestId: error.payload.requestId,
       code: error.payload.code,
+      nonRecoverable,
     };
   }
 
@@ -94,6 +102,7 @@ export function classifyUnknownError(error: unknown): {
       retryable: true,
       requestId: null,
       code: null,
+      nonRecoverable: false,
     };
   }
 
@@ -102,5 +111,6 @@ export function classifyUnknownError(error: unknown): {
     retryable: true,
     requestId: null,
     code: null,
+    nonRecoverable: false,
   };
 }

@@ -2,23 +2,127 @@
 set -eu
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
-FIXTURE_FILE="$ROOT_DIR/docs/dev/Dagboek voor gemoedstoestand.md"
+FIXTURE_FILE="$ROOT_DIR/scripts/fixtures/chatgpt-markdown/dagboek-voor-gemoedstoestand.md"
 PARSER_FILE="$ROOT_DIR/services/import/chatgpt-markdown-parser.ts"
 
-if [ -f "$ROOT_DIR/.env.local" ]; then
-  set -a
-  . "$ROOT_DIR/.env.local"
-  set +a
-fi
+ENV_FILE="$ROOT_DIR/.env.local"
 
-TARGET="${EXPO_PUBLIC_SUPABASE_TARGET:-local}"
+read_env_file_value() {
+  file="$1"
+  key="$2"
+
+  awk -v key="$key" '
+    /^[[:space:]]*#/ { next }
+    {
+      line=$0
+      sub(/\r$/, "", line)
+
+      prefixed="^[[:space:]]*export[[:space:]]+" key "="
+      plain="^[[:space:]]*" key "="
+
+      if (line ~ prefixed) {
+        sub(prefixed, "", line)
+        print line
+        exit
+      }
+
+      if (line ~ plain) {
+        sub(plain, "", line)
+        print line
+        exit
+      }
+    }
+  ' "$file"
+}
+
+normalize_env_value() {
+  value="$1"
+  case "$value" in
+    \"*\")
+      value="${value#\"}"
+      value="${value%\"}"
+      ;;
+    \''*\')
+      value="${value#\'}"
+      value="${value%\'}"
+      ;;
+  esac
+  printf '%s' "$value"
+}
+
+resolve_env_value() {
+  current_value="$1"
+  key="$2"
+
+  if [ -n "$current_value" ]; then
+    printf '%s' "$current_value"
+    return
+  fi
+
+  if [ ! -f "$ENV_FILE" ]; then
+    printf ''
+    return
+  fi
+
+  raw_value="$(read_env_file_value "$ENV_FILE" "$key")"
+  normalize_env_value "$raw_value"
+}
+
+SUPABASE_STATUS_ENV_CACHE=""
+
+read_supabase_status_env() {
+  if [ -n "$SUPABASE_STATUS_ENV_CACHE" ]; then
+    printf '%s' "$SUPABASE_STATUS_ENV_CACHE"
+    return
+  fi
+
+  if ! command -v npx >/dev/null 2>&1; then
+    printf ''
+    return
+  fi
+
+  SUPABASE_STATUS_ENV_CACHE="$(npx supabase status -o env 2>/dev/null || true)"
+  printf '%s' "$SUPABASE_STATUS_ENV_CACHE"
+}
+
+resolve_supabase_status_value() {
+  key="$1"
+  status_env="$(read_supabase_status_env)"
+
+  if [ -z "$status_env" ]; then
+    printf ''
+    return
+  fi
+
+  printf '%s\n' "$status_env" | awk -F '=' -v key="$key" '
+    $1 == key {
+      value = $2
+      sub(/^"/, "", value)
+      sub(/"$/, "", value)
+      print value
+      exit
+    }
+  '
+}
+
+TARGET="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_TARGET:-}" "EXPO_PUBLIC_SUPABASE_TARGET")"
+TARGET="${TARGET:-local}"
 
 if [ "$TARGET" = "local" ]; then
-  API_URL="${EXPO_PUBLIC_SUPABASE_LOCAL_URL:-http://127.0.0.1:54321}"
-  API_KEY="${EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY:-}"
+  API_URL="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_LOCAL_URL:-}" "EXPO_PUBLIC_SUPABASE_LOCAL_URL")"
+  API_URL="${API_URL:-http://127.0.0.1:54321}"
+  API_KEY="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY:-}" "EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY")"
+
+  if [ -z "$API_KEY" ]; then
+    API_KEY="$(resolve_supabase_status_value "PUBLISHABLE_KEY")"
+  fi
+
+  if [ -z "$API_URL" ]; then
+    API_URL="$(resolve_supabase_status_value "API_URL")"
+  fi
 else
-  API_URL="${EXPO_PUBLIC_SUPABASE_CLOUD_URL:-}"
-  API_KEY="${EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY:-}"
+  API_URL="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_CLOUD_URL:-}" "EXPO_PUBLIC_SUPABASE_CLOUD_URL")"
+  API_KEY="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY:-}" "EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY")"
 fi
 
 if [ -z "$API_URL" ] || [ -z "$API_KEY" ]; then

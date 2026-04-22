@@ -4,7 +4,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const fixturePath = path.join(rootDir, 'docs/dev/Dagboek voor gemoedstoestand.md');
+const fixturePath = path.join(rootDir, 'scripts/fixtures/chatgpt-markdown/dagboek-voor-gemoedstoestand.md');
 const parserPath = pathToFileURL(path.join(rootDir, 'services/import/chatgpt-markdown-parser.ts')).href;
 const { parseChatGptMarkdownFile } = await import(parserPath);
 

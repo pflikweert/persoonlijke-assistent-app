@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-22T13:23:04.358Z
-Source Commit: 86b4c8d
+Build Timestamp (UTC): 2026-04-22T15:04:03.158Z
+Source Commit: b62830e
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -612,7 +612,10 @@ Gecontroleerd op:
 | AI Quality Studio contract-first editor (`entry_cleanup`) | Hardening AI governance | **Aanwezig** | editor split met alleen taakinstructie als bewerklaag; input/system/response/model + baseline metadata read-only zichtbaar. |
 | AIQS admin detail topnav + sticky action footer (shared) | UX/hardening admin | **Aanwezig** | gedeelde admin topnav en 3-action sticky footer primitives toegepast op task/draft/test detailschermen. |
 | AIQS prompt-assist preview voor `entry_cleanup` (admin-only) | Editor hardening | **Aanwezig** | server-side action `prompt_assist_preview` + client service/types + draft editor met single-target apply, inline diff en issue-signalen zonder brede chat-UI. |
-| Import verify fixtureconsistentie | Kwaliteitsborging | **Niet aangetroffen / onzeker** | import-tests verwijzen naar ontbrekende fixture `docs/dev/Dagboek voor gemoedstoestand.md`. |
+| Import verify fixtureconsistentie | Kwaliteitsborging | **Aanwezig** | fixture en scripts uitgelijnd op `scripts/fixtures/chatgpt-markdown/dagboek-voor-gemoedstoestand.md`; lokale verify en parser-test slagen weer. |
+| Lokale auth smoke workflow (magic-link + Mailpit) | Kwaliteitsborging / testbaarheid | **Aanwezig** | local-only auth smoke tooling met verify-link extractie, login-proof en veilige cleanup voor herkenbare smoke users toegevoegd in `scripts/*local-auth*` en `docs/dev/local-auth-smoke-workflow.md`. |
+| Entry detail fotogalerij (max 5) | Moment-detail uitbreiding | **Aanwezig** | secure upload + featured thumbnail onder samenvatting + galerij onderaan + fullscreen swipe/delete aanwezig in `app/entry/[id].tsx` en `components/journal/entry-photo-gallery.tsx`. |
+| Entry detail audio + foto-layoutpolish | UX/hardening | **Aanwezig** | audio-sectie blijft zichtbaar; featured foto los bovenin bij aanwezige foto's; empty state en thumbnails onderaan in dezelfde fotosectie. |
 | Design 1.2.1 volledige doorvoer | Gepland designspoor | **Aanwezig** | designrefs zijn structureel doorvertaald in shared primitives en kernflows; shell/theming/copy-guardrails zijn expliciet geborgd in canonieke docs en runtime-checklist. |
 | Foundation polish: editorial typography + selective ambient backgrounds | Shared design-system hardening | **Aanwezig** | `theme/tokens.ts` bevat nu expliciete typography-roles inclusief display title en gedeelde `ambient/subtle/flat` background tokens; `components/themed-text.tsx`, `components/ui/app-background.tsx`, `components/ui/home-screen-primitives.tsx`, `components/ui/auth-screen-primitives.tsx` en Today (`app/(tabs)/index.tsx`) gebruiken deze foundation. |
 | Branded productlaag “Budio Vandaag” in shell/auth/menu | Niet als losse MVP-feature benoemd in vroege projectdocs | **Aanwezig** | branded login/header/menu/splash doorgevoerd in `app/sign-in.tsx`, `components/ui/auth-screen-primitives.tsx`, `components/navigation/fullscreen-menu-overlay.tsx`, `app/(tabs)/index.tsx`, `app.json`. |

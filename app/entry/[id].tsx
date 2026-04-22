@@ -16,6 +16,10 @@ import { TextEditorModal } from "@/components/feedback/text-editor-modal";
 import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary-inset";
 import { EditorialNarrativeBlock } from "@/components/journal/editorial-narrative-block";
 import { EntryAudioPlayer } from "@/components/journal/entry-audio-player";
+import {
+  EntryPhotoFeaturedPreview,
+  EntryPhotoGallery,
+} from "@/components/journal/entry-photo-gallery";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { BottomTabBarStandalone } from "@/components/navigation/BottomTabBar";
 import { ThemedText } from "@/components/themed-text";
@@ -213,6 +217,7 @@ export default function EntryCompletionScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [photoRefreshTick, setPhotoRefreshTick] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [entry, setEntry] =
     useState<Awaited<ReturnType<typeof fetchNormalizedEntryById>>>(null);
@@ -221,6 +226,10 @@ export default function EntryCompletionScreen() {
   const [editBody, setEditBody] = useState("");
   const [audioPlaybackUrl, setAudioPlaybackUrl] = useState<string | null>(null);
   const [audioDownloadUrl, setAudioDownloadUrl] = useState<string | null>(null);
+  const [audioUrlStatus, setAudioUrlStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [audioUrlError, setAudioUrlError] = useState<string | null>(null);
+  const [audioReloadTick, setAudioReloadTick] = useState(0);
+  const [audioRetrying, setAudioRetrying] = useState(false);
 
   const loadEntry = useCallback(async () => {
     if (!entryId) {
@@ -267,8 +276,13 @@ export default function EntryCompletionScreen() {
       if (!path) {
         setAudioPlaybackUrl(null);
         setAudioDownloadUrl(null);
+        setAudioUrlStatus("idle");
+        setAudioUrlError(null);
         return;
       }
+
+      setAudioUrlStatus("loading");
+      setAudioUrlError(null);
 
       try {
         const extensionFromMime =
@@ -279,22 +293,34 @@ export default function EntryCompletionScreen() {
           capturedAtIso: entry?.captured_at ?? new Date().toISOString(),
           extension: extensionFromMime,
         });
-        const playback = await createEntryAudioSignedUrl({
-          storagePath: path,
-        });
-        const download = await createEntryAudioSignedUrl({
-          storagePath: path,
-          downloadFileName,
-        });
+
+        const playback = await createEntryAudioSignedUrl({ storagePath: path });
+        let download: string | null = null;
+        try {
+          download = await createEntryAudioSignedUrl({
+            storagePath: path,
+            downloadFileName,
+          });
+        } catch {
+          download = null;
+        }
 
         if (!cancelled) {
           setAudioPlaybackUrl(playback);
           setAudioDownloadUrl(download);
+          setAudioUrlStatus("ready");
+          setAudioUrlError(null);
         }
-      } catch {
+      } catch (nextError) {
         if (!cancelled) {
           setAudioPlaybackUrl(null);
           setAudioDownloadUrl(null);
+          setAudioUrlStatus("error");
+          setAudioUrlError(
+            nextError instanceof Error
+              ? nextError.message
+              : "Opname kon niet worden geladen."
+          );
         }
       }
     };
@@ -310,6 +336,8 @@ export default function EntryCompletionScreen() {
     entry?.audio_mime_type,
     entry?.captured_at,
     entry?.title,
+    entry?.source_type,
+    audioReloadTick,
   ]);
 
   useFocusEffect(
@@ -372,6 +400,35 @@ export default function EntryCompletionScreen() {
     const hasShortSummary = !showAssistantCopy || summaryShortText.length <= 90;
     return hasShortBody && hasShortSummary;
   }, [cleanedBodyLineCount, showAssistantCopy, summaryShortText]);
+  const audioPathMissing =
+    entry?.source_type === "audio" && !(entry?.audio_storage_path?.trim());
+
+  const handlePhotosChanged = useCallback(() => {
+    setPhotoRefreshTick((current) => current + 1);
+  }, []);
+
+  const handleRetryAudio = useCallback(async () => {
+    if (audioRetrying) {
+      return;
+    }
+
+    setAudioRetrying(true);
+    setAudioUrlStatus("loading");
+    setAudioUrlError(null);
+    try {
+      await loadEntry();
+      setAudioReloadTick((current) => current + 1);
+    } catch (nextError) {
+      setAudioUrlStatus("error");
+      setAudioUrlError(
+        nextError instanceof Error
+          ? nextError.message
+          : "Opname kon niet opnieuw worden geladen.",
+      );
+    } finally {
+      setAudioRetrying(false);
+    }
+  }, [audioRetrying, loadEntry]);
 
   function goToDayDetail(options?: { includeEntryFocus?: boolean }) {
     if (!dayDate) {
@@ -587,17 +644,74 @@ export default function EntryCompletionScreen() {
               </ThemedView>
             ) : null}
 
-            {entry.source_type === "audio" && audioPlaybackUrl ? (
+            <ThemedView style={styles.summarySectionBlock}>
+              <EntryPhotoFeaturedPreview
+                rawEntryId={entry.raw_entry_id}
+                refreshToken={photoRefreshTick}
+                onPhotosChanged={handlePhotosChanged}
+              />
+            </ThemedView>
+
+            {entry.source_type === "audio" && !audioPathMissing ? (
               <ThemedView style={[styles.sectionBlock, styles.primarySectionSpacing]}>
                 <DetailSectionHeader
                   icon="mic"
                   title="Opname"
                 />
-                <EntryAudioPlayer
-                  sourceUrl={audioPlaybackUrl}
-                  durationMs={entry.audio_duration_ms}
-                  onRequestDownload={handleDownloadAudio}
-                />
+                {audioPlaybackUrl ? (
+                  <EntryAudioPlayer
+                    sourceUrl={audioPlaybackUrl}
+                    durationMs={entry.audio_duration_ms}
+                    onRequestDownload={audioDownloadUrl ? handleDownloadAudio : undefined}
+                  />
+                ) : audioUrlStatus === "loading" ? (
+                  <StateBlock
+                    tone="loading"
+                    message="Opname laden..."
+                    detail="We halen je audio op."
+                  />
+                ) : (
+                  <StateBlock
+                    tone="error"
+                    message="Opname is nu niet beschikbaar"
+                    detail={audioUrlError ?? "Probeer opnieuw."}
+                  />
+                )}
+
+                {!audioPlaybackUrl && audioUrlStatus === "error" ? (
+                  audioPathMissing ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Ga naar audio-instellingen"
+                      onPress={() => router.push("/settings-audio")}
+                      style={styles.inlineEditAction}
+                    >
+                      <MaterialIcons name="settings" size={14} color={palette.mutedSoft} />
+                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                        Audio-instellingen
+                      </ThemedText>
+                    </Pressable>
+                  ) : (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Opname opnieuw laden"
+                      accessibilityState={{ disabled: audioRetrying }}
+                      disabled={audioRetrying}
+                      onPress={() => {
+                        void handleRetryAudio();
+                      }}
+                      style={[
+                        styles.inlineEditAction,
+                        audioRetrying ? { opacity: 0.6 } : null,
+                      ]}
+                    >
+                      <MaterialIcons name="refresh" size={14} color={palette.mutedSoft} />
+                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                        {audioRetrying ? "Opname opnieuw laden..." : "Opnieuw laden"}
+                      </ThemedText>
+                    </Pressable>
+                  )
+                ) : null}
               </ThemedView>
             ) : null}
 
@@ -644,6 +758,14 @@ export default function EntryCompletionScreen() {
                   </ThemedText>
                 </ThemedView>
               ) : null}
+            </ThemedView>
+
+            <ThemedView style={styles.summarySectionBlock}>
+              <EntryPhotoGallery
+                rawEntryId={entry.raw_entry_id}
+                refreshToken={photoRefreshTick}
+                onPhotosChanged={handlePhotosChanged}
+              />
             </ThemedView>
 
             <DetailActionStack

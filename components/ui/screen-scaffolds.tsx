@@ -1,3 +1,4 @@
+import { Stack } from "expo-router";
 import type { ReactNode } from "react";
 import { StyleSheet, type ViewStyle } from "react-native";
 
@@ -164,15 +165,18 @@ export function SettingsScaffold({
   backgroundTone = "flat",
 }: SettingsScaffoldProps) {
   return (
-    <ScreenContainer
-      scrollable
-      backgroundTone={backgroundTone}
-      contentContainerStyle={[styles.settingsContent, contentContainerStyle]}
-      fixedHeader={<SettingsTopNav onBack={onBack} onMenu={onMenu} title="Instellingen" />}
-    >
-      <SettingsPageHero title={title} subtitle={subtitle} />
-      {children}
-    </ScreenContainer>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScreenContainer
+        scrollable
+        backgroundTone={backgroundTone}
+        contentContainerStyle={[styles.settingsContent, contentContainerStyle]}
+        fixedHeader={<SettingsTopNav onBack={onBack} onMenu={onMenu} title="Instellingen" />}
+      >
+        <SettingsPageHero title={title} subtitle={subtitle} />
+        {children}
+      </ScreenContainer>
+    </>
   );
 }
 

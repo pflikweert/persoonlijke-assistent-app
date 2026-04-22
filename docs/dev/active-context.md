@@ -1,6 +1,6 @@
 # Active context (niet-canoniek)
 
-Laatst bijgewerkt op: 2026-04-13
+Laatst bijgewerkt op: 2026-04-22
 
 ## Doel
 
@@ -16,14 +16,17 @@ Lichte sessiecontext tussen Cline-sessies, zodat non-triviale taken sneller en c
 
 ## Laatste onderhoud
 
-- Memory-bank review uitgevoerd; opschoningsregels aangescherpt in `docs/dev/memory-bank.md`.
-- Deze file opgeschoond naar baseline om stale sessiecontext te voorkomen.
+- UX-fix capture/detail audioflow afgerond: geen misleidende foutmelding meer wanneer audio-opslag uit staat.
+- Capture-opnamescherm toont nu een subtiele notice wanneer `save_audio_recordings` uit staat.
+- Detailweergave toont audio-sectie alleen wanneer `audio_storage_path` aanwezig is.
 
 ## Actuele valkuilen / sessielearnings
 
 - Geen tweede waarheidshiërarchie bouwen naast `docs/project/**`.
 - Geen “lees alles altijd”; alleen taakrelevante bronnen lezen via docs-router.
 - Status alleen verhogen met hard, bewijsbaar repo-signaal (niet op basis van deze contextfile).
+- Bij audio-capture UX: onderscheid expliciet tussen *technische fout* en *functioneel gevolg van user preference*.
+- Als een preference bewust gedrag uitschakelt (zoals audio-opslag), toon dan geen error/retry-state voor ontbrekende output.
 
 ## Relevante verwijzingen
 

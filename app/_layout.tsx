@@ -223,12 +223,24 @@ a:focus-visible,
       <View style={[styles.rootShell, styles.webBackdrop]}>
         <View style={[styles.rootShell, styles.webAppShell]}>
           <AppBackground tone="flat" />
-          <Stack>
+          <Stack
+            // Use in-app headers consistently and avoid accidental native double top-nav
+            // on newly added routes (e.g. settings detail screens).
+            screenOptions={{ headerShown: false }}
+          >
             <Stack.Screen name="sign-in" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="capture" options={{ headerShown: false }} />
             <Stack.Screen name="entry/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="settings-audio"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="settings-obsidian"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen
               name="settings-export"
               options={{ headerShown: false }}
@@ -267,7 +279,7 @@ a:focus-visible,
             />
             <Stack.Screen
               name="modal"
-              options={{ presentation: "modal", title: "Modal" }}
+              options={{ presentation: "modal", title: "Modal", headerShown: true }}
             />
           </Stack>
         </View>

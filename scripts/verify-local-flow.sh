@@ -80,6 +80,43 @@ resolve_env_value() {
   normalize_env_value "$raw_value"
 }
 
+SUPABASE_STATUS_ENV_CACHE=""
+
+read_supabase_status_env() {
+  if [ -n "$SUPABASE_STATUS_ENV_CACHE" ]; then
+    printf '%s' "$SUPABASE_STATUS_ENV_CACHE"
+    return
+  fi
+
+  if ! command -v npx >/dev/null 2>&1; then
+    printf ''
+    return
+  fi
+
+  SUPABASE_STATUS_ENV_CACHE="$(npx supabase status -o env 2>/dev/null || true)"
+  printf '%s' "$SUPABASE_STATUS_ENV_CACHE"
+}
+
+resolve_supabase_status_value() {
+  key="$1"
+  status_env="$(read_supabase_status_env)"
+
+  if [ -z "$status_env" ]; then
+    printf ''
+    return
+  fi
+
+  printf '%s\n' "$status_env" | awk -F '=' -v key="$key" '
+    $1 == key {
+      value = $2
+      sub(/^"/, "", value)
+      sub(/"$/, "", value)
+      print value
+      exit
+    }
+  '
+}
+
 require_cmd curl
 require_cmd jq
 require_cmd mktemp
@@ -97,6 +134,14 @@ if [ "$TARGET" = "local" ]; then
   API_URL="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_LOCAL_URL:-}" "EXPO_PUBLIC_SUPABASE_LOCAL_URL")"
   API_URL="${API_URL:-http://127.0.0.1:54321}"
   API_KEY="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY:-}" "EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY")"
+
+  if [ -z "$API_KEY" ]; then
+    API_KEY="$(resolve_supabase_status_value "PUBLISHABLE_KEY")"
+  fi
+
+  if [ -z "$API_URL" ]; then
+    API_URL="$(resolve_supabase_status_value "API_URL")"
+  fi
 else
   API_URL="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_CLOUD_URL:-}" "EXPO_PUBLIC_SUPABASE_CLOUD_URL")"
   API_KEY="$(resolve_env_value "${EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY:-}" "EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY")"

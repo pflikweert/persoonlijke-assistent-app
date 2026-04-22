@@ -41,6 +41,7 @@ import {
   clearCaptureProcessingSession,
   createCaptureProcessingSession,
   createClientProcessingId,
+  fetchUserAudioPreferences,
   loadCaptureProcessingSession,
   logCaptureProcessing,
   refreshDerivedAfterCaptureInBackground,
@@ -269,6 +270,9 @@ export default function CaptureRecordScreen() {
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [draftDurationMillis, setDraftDurationMillis] = useState(0);
   const [draftHasSpeech, setDraftHasSpeech] = useState(false);
+  const [saveAudioRecordingsEnabled, setSaveAudioRecordingsEnabled] = useState<
+    boolean | null
+  >(null);
 
   const hasStartedRef = useRef(false);
   const startAttemptIdRef = useRef(0);
@@ -356,6 +360,30 @@ export default function CaptureRecordScreen() {
   const voiceMotionScale = 1 + liveAudioLevel * 0.07;
   const voiceMotionOpacity = isRecording ? 0.76 + liveAudioLevel * 0.24 : 0.45;
   const canTogglePauseResume = isPaused || isRecording;
+  const showAudioStorageNotice = saveAudioRecordingsEnabled === false;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const prefs = await fetchUserAudioPreferences();
+        if (!cancelled) {
+          setSaveAudioRecordingsEnabled(prefs.save_audio_recordings);
+        }
+      } catch {
+        if (!cancelled) {
+          setSaveAudioRecordingsEnabled(null);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const goBackToStart = useCallback(() => {
     if (router.canGoBack()) {
@@ -718,10 +746,19 @@ export default function CaptureRecordScreen() {
         });
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
+        const failureReason = parsed.code ?? parsed.message;
         setRecoveryStatus(null);
         setProcessingVariant(null);
+        updateCaptureProcessingSession({
+          phase: "failed",
+          failureReason: parsed.nonRecoverable
+            ? `non_recoverable:${failureReason}`
+            : failureReason,
+        });
         setError({
-          message: parsed.message,
+          message: parsed.nonRecoverable
+            ? "Deze opname kan niet automatisch worden hersteld. Neem opnieuw op."
+            : parsed.message,
           retryable: parsed.retryable,
           requestId: parsed.requestId,
         });
@@ -803,10 +840,14 @@ export default function CaptureRecordScreen() {
         const parsed = classifyUnknownError(nextError);
         updateCaptureProcessingSession({
           phase: "failed",
-          failureReason: parsed.code ?? parsed.message,
+          failureReason: parsed.nonRecoverable
+            ? `non_recoverable:${parsed.code ?? parsed.message}`
+            : parsed.code ?? parsed.message,
         });
         setError({
-          message: parsed.message,
+          message: parsed.nonRecoverable
+            ? "Deze opname kan niet automatisch worden hersteld. Neem opnieuw op."
+            : parsed.message,
           retryable: parsed.retryable,
           requestId: parsed.requestId,
         });
@@ -1506,6 +1547,17 @@ export default function CaptureRecordScreen() {
         </View>
 
         <View style={styles.controlsStack}>
+          {showAudioStorageNotice ? (
+            <ThemedText
+              type="caption"
+              lightColor={palette.mutedSoft}
+              darkColor={palette.mutedSoft}
+              style={styles.storageNotice}
+            >
+              Audio wordt niet bewaard. Alleen de uitgeschreven opname slaan we op.
+            </ThemedText>
+          ) : null}
+
           <PrimaryButton
             label={isPermissionHelpVisible ? "Microfoon opnieuw proberen" : "Opname afronden"}
             icon={isPermissionHelpVisible ? undefined : "stop"}
@@ -1707,6 +1759,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     alignItems: "center",
     gap: spacing.md,
+  },
+  storageNotice: {
+    textAlign: "center",
+    maxWidth: 320,
+    marginBottom: spacing.xs,
   },
   cancelAction: {
     minHeight: 36,

@@ -581,6 +581,65 @@ export type Database = {
           },
         ]
       }
+      entry_photos: {
+        Row: {
+          created_at: string
+          display_height: number
+          display_size_bytes: number
+          display_storage_path: string
+          display_width: number
+          id: string
+          mime_type: string
+          raw_entry_id: string
+          sort_order: number
+          thumb_height: number
+          thumb_size_bytes: number
+          thumb_storage_path: string
+          thumb_width: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_height: number
+          display_size_bytes: number
+          display_storage_path: string
+          display_width: number
+          id?: string
+          mime_type?: string
+          raw_entry_id: string
+          sort_order: number
+          thumb_height: number
+          thumb_size_bytes: number
+          thumb_storage_path: string
+          thumb_width: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_height?: number
+          display_size_bytes?: number
+          display_storage_path?: string
+          display_width?: number
+          id?: string
+          mime_type?: string
+          raw_entry_id?: string
+          sort_order?: number
+          thumb_height?: number
+          thumb_size_bytes?: number
+          thumb_storage_path?: string
+          thumb_width?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entry_photos_raw_entry_id_fkey"
+            columns: ["raw_entry_id"]
+            isOneToOne: false
+            referencedRelation: "entries_raw"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entries_raw: {
         Row: {
           audio_duration_ms: number | null

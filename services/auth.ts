@@ -63,8 +63,9 @@ export async function ensureAuthenticatedUserSession(args: {
     | 'admin-regeneration-job'
     | 'admin-ai-quality-studio'
     | 'export-archive'
-    | 'user-preferences';
-}): Promise<{ userId: string }> {
+    | 'user-preferences'
+    | 'entry-photos';
+}): Promise<{ userId: string; accessToken: string }> {
   const supabase = getSupabaseBrowserClient();
 
   if (!supabase) {
@@ -103,7 +104,7 @@ export async function ensureAuthenticatedUserSession(args: {
     throw new Error('Je sessie is ongeldig of verlopen. Log opnieuw in.');
   }
 
-  return { userId: data.user.id };
+  return { userId: data.user.id, accessToken };
 }
 
 export function onAuthStateChange(callback: (session: Session | null) => void) {

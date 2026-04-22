@@ -33,6 +33,12 @@ export {
     updateNormalizedEntryById
 } from "./day-journals";
 export {
+    deleteEntryPhotoById,
+    fetchEntryPhotosByRawEntryId,
+    uploadEntryPhotoForEntry,
+    type EntryPhotoAsset
+} from "./entry-photos";
+export {
     getSessionSelectedDayDate,
     setSessionSelectedDayDate
 } from "./day-selection-session";

@@ -227,9 +227,18 @@ export default function CaptureTypeScreen() {
         });
       } catch (nextError) {
         const parsed = classifyUnknownError(nextError);
+        const failureReason = parsed.code ?? parsed.message;
         setRecoveryStatus(null);
+        updateCaptureProcessingSession({
+          phase: "failed",
+          failureReason: parsed.nonRecoverable
+            ? `non_recoverable:${failureReason}`
+            : failureReason,
+        });
         setError({
-          message: parsed.message,
+          message: parsed.nonRecoverable
+            ? "Dit moment kan niet automatisch worden hersteld. Leg het opnieuw vast."
+            : parsed.message,
           retryable: parsed.retryable,
           requestId: parsed.requestId,
         });
@@ -365,10 +374,14 @@ export default function CaptureTypeScreen() {
       const parsed = classifyUnknownError(nextError);
       updateCaptureProcessingSession({
         phase: "failed",
-        failureReason: parsed.code ?? parsed.message,
+        failureReason: parsed.nonRecoverable
+          ? `non_recoverable:${parsed.code ?? parsed.message}`
+          : parsed.code ?? parsed.message,
       });
       setError({
-        message: parsed.message,
+        message: parsed.nonRecoverable
+          ? "Dit moment kan niet automatisch worden hersteld. Leg het opnieuw vast."
+          : parsed.message,
         retryable: parsed.retryable,
         requestId: parsed.requestId,
       });

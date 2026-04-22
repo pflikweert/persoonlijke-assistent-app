@@ -23,6 +23,7 @@ type ProcessEntryRequest = {
   rawText?: unknown;
   audioBase64?: unknown;
   audioMimeType?: unknown;
+  rawEntryId?: unknown;
   sourceType?: unknown;
   capturedAt?: unknown;
   journalDate?: unknown;
@@ -36,6 +37,7 @@ type ProcessEntryResponse = {
   flow: "process-entry";
   requestId: string;
   flowId: string;
+  processingOutcome: "success" | "recovered";
   rawEntryId: string;
   normalizedEntryId: string;
   journalDate: string;
@@ -87,6 +89,8 @@ const FLOW = "process-entry" as const;
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
 const AUDIO_STORAGE_BUCKET = "entry-audio";
 const CLIENT_PROCESSING_ID_PATTERN = /^[A-Za-z0-9_-]{12,160}$/;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NO_SPEECH_TRANSCRIPT = "Geen spraak herkend in audio-opname.";
 const LOW_CONTENT_TITLE = "Audio-opname zonder spraak";
@@ -195,6 +199,17 @@ function parseClientProcessingId(value: unknown): string | null {
   }
   if (!CLIENT_PROCESSING_ID_PATTERN.test(parsed)) {
     throw new Error("Invalid clientProcessingId.");
+  }
+  return parsed;
+}
+
+function parseRawEntryId(value: unknown): string | null {
+  const parsed = parseString(value);
+  if (!parsed) {
+    return null;
+  }
+  if (!UUID_PATTERN.test(parsed)) {
+    throw new Error("Invalid rawEntryId.");
   }
   return parsed;
 }
@@ -604,11 +619,12 @@ function parseSourceInput(body: ProcessEntryRequest): {
   const audioMimeType = parseString(body.audioMimeType);
   const sourceType = parseString(body.sourceType);
   const hasClientProcessingId = Boolean(parseString(body.clientProcessingId));
+  const hasRawEntryId = Boolean(parseString(body.rawEntryId));
 
   const hasText = Boolean(rawText);
   const hasAudio = Boolean(audioBase64);
 
-  if (!hasText && !hasAudio && hasClientProcessingId) {
+  if (!hasText && !hasAudio && (hasClientProcessingId || hasRawEntryId)) {
     if (sourceType === "text" || sourceType === "audio") {
       return {
         value: {
@@ -732,7 +748,21 @@ async function shouldSaveAudioRecordings(args: {
     return false;
   }
 
-  return data?.save_audio_recordings === true;
+  if (!data) {
+    logFlow("info", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: "validated",
+      event: "user_preferences_missing_default_enabled",
+      details: {
+        saveAudioRecordings: true,
+      },
+    });
+    return true;
+  }
+
+  return data.save_audio_recordings === true;
 }
 
 async function uploadEntryAudio(args: {
@@ -897,6 +927,47 @@ async function transcribeAudio(args: {
   }
 }
 
+async function transcribeAudioWithSingleRetry(args: {
+  apiKey: string;
+  model: string;
+  requestId: string;
+  flowId: string;
+  audioBytes: Uint8Array;
+  audioMimeType: string;
+}): Promise<string | null> {
+  const firstAttempt = await transcribeAudio(args);
+  if (firstAttempt !== null) {
+    return firstAttempt;
+  }
+
+  logFlow("warn", {
+    flow: FLOW,
+    requestId: args.requestId,
+    flowId: args.flowId,
+    step: "transcribed",
+    event: "openai_transcription_retry_attempted",
+    details: {
+      retryAttempt: 1,
+    },
+  });
+
+  const secondAttempt = await transcribeAudio(args);
+  if (secondAttempt !== null) {
+    logFlow("info", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: "transcribed",
+      event: "openai_transcription_retry_succeeded",
+      details: {
+        retryAttempt: 1,
+      },
+    });
+  }
+
+  return secondAttempt;
+}
+
 async function callOpenAiJson(args: {
   apiKey: string;
   model: string;
@@ -1035,6 +1106,53 @@ async function callOpenAiJson(args: {
   }
 }
 
+async function callOpenAiJsonWithSingleRetry(args: {
+  apiKey: string;
+  model: string;
+  requestId: string;
+  flowId: string;
+  step: string;
+  operation: string;
+  promptVersion: string;
+  systemPrompt: string;
+  userPrompt: string;
+  debugStore?: { store: boolean; metadata?: Record<string, string> };
+}): Promise<OpenAiJson | null> {
+  const firstAttempt = await callOpenAiJson(args);
+  if (firstAttempt !== null) {
+    return firstAttempt;
+  }
+
+  logFlow("warn", {
+    flow: FLOW,
+    requestId: args.requestId,
+    flowId: args.flowId,
+    step: args.step,
+    event: "openai_call_retry_attempted",
+    details: {
+      operation: args.operation,
+      retryAttempt: 1,
+    },
+  });
+
+  const secondAttempt = await callOpenAiJson(args);
+  if (secondAttempt !== null) {
+    logFlow("info", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: args.step,
+      event: "openai_call_retry_succeeded",
+      details: {
+        operation: args.operation,
+        retryAttempt: 1,
+      },
+    });
+  }
+
+  return secondAttempt;
+}
+
 async function normalizeEntry(args: {
   apiKey: string;
   model: string;
@@ -1055,7 +1173,7 @@ async function normalizeEntry(args: {
   const normalizationPrompt = buildEntryNormalizationPromptSpec({
     rawText: args.rawText,
   });
-  const aiResult = await callOpenAiJson({
+  const aiResult = await callOpenAiJsonWithSingleRetry({
     apiKey: args.apiKey,
     model: args.model,
     requestId: args.requestId,
@@ -1171,7 +1289,7 @@ async function normalizeEntry(args: {
       rawText: args.rawText,
       currentBody: body,
     });
-    const repairedAiResult = await callOpenAiJson({
+    const repairedAiResult = await callOpenAiJsonWithSingleRetry({
       apiKey: args.apiKey,
       model: args.model,
       requestId: args.requestId,
@@ -1300,7 +1418,7 @@ async function composeDayJournal(args: {
     entries: contentEntries,
   });
 
-  const aiResult = await callOpenAiJson({
+  const aiResult = await callOpenAiJsonWithSingleRetry({
     apiKey: args.apiKey,
     model: args.model,
     requestId: args.requestId,
@@ -1380,7 +1498,7 @@ async function composeDayJournal(args: {
       },
     });
 
-    const repairedAiResult = await callOpenAiJson({
+    const repairedAiResult = await callOpenAiJsonWithSingleRetry({
       apiKey: args.apiKey,
       model: args.model,
       requestId: args.requestId,
@@ -1537,6 +1655,9 @@ Deno.serve(async (request: Request) => {
   let step = "received";
   let rawEntryId: string | null = null;
   let clientProcessingId: string | null = null;
+  let requestedRawEntryId: string | null = null;
+  let usedRecoveryPath = false;
+  let createdRawEntryThisRequest = false;
 
   try {
     logFlow("info", {
@@ -1703,6 +1824,7 @@ Deno.serve(async (request: Request) => {
       requestJournalDate = parseJournalDateInput(body.journalDate);
       timezoneOffsetMinutes = parseTimezoneOffsetMinutes(body.timezoneOffsetMinutes);
       clientProcessingId = parseClientProcessingId(body.clientProcessingId);
+      requestedRawEntryId = parseRawEntryId(body.rawEntryId);
     } catch (error) {
       return errorResponse({
         request,
@@ -1735,6 +1857,7 @@ Deno.serve(async (request: Request) => {
           : "capturedAt_utc_day",
         timezoneOffsetMinutes,
         hasClientProcessingId: Boolean(clientProcessingId),
+        hasRawEntryId: Boolean(requestedRawEntryId),
         sourceType: parsedSource.value.sourceType,
       },
     });
@@ -1751,6 +1874,19 @@ Deno.serve(async (request: Request) => {
       requestId,
       flowId,
     });
+
+    if (parsedSource.value.sourceType === "audio" && !saveAudioRecordings) {
+      logFlow("info", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "audio_recording_not_saved_by_preference",
+        details: {
+          reason: "user_preference_save_audio_recordings_false",
+        },
+      });
+    }
 
     if (clientProcessingId) {
       const { data: existingRawEntry, error: existingRawError } = await supabase
@@ -1838,6 +1974,7 @@ Deno.serve(async (request: Request) => {
             flow: FLOW,
             requestId,
             flowId,
+            processingOutcome: "recovered",
             rawEntryId: existingRawEntry.id,
             normalizedEntryId: existingNormalizedEntry.id,
             journalDate: existingJournalDate,
@@ -1907,7 +2044,129 @@ Deno.serve(async (request: Request) => {
             clientProcessingId,
           },
         });
+        usedRecoveryPath = true;
       }
+    }
+
+    if (!rawEntry && requestedRawEntryId) {
+      const { data: existingRawEntry, error: existingRawError } = await supabase
+        .from("entries_raw")
+        .select("id, source_type, raw_text, transcript_text, journal_date, captured_at")
+        .eq("user_id", authData.user.id)
+        .eq("id", requestedRawEntryId)
+        .maybeSingle();
+
+      if (existingRawError) {
+        logFlow("error", {
+          flow: FLOW,
+          requestId,
+          flowId,
+          step,
+          event: "recovery_check_failed",
+          details: {
+            error: String(existingRawError.message ?? existingRawError),
+            rawEntryId: requestedRawEntryId,
+          },
+        });
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: "DB_READ_FAILED",
+          message: "Failed to check existing capture",
+          details: {
+            rawEntryId: requestedRawEntryId,
+          },
+        });
+      }
+
+      if (!existingRawEntry) {
+        return errorResponse({
+          request,
+          httpStatus: 409,
+          requestId,
+          flowId,
+          step,
+          code: "INPUT_INVALID",
+          message: "Capture could not be found for recovery.",
+          details: {
+            rawEntryId: requestedRawEntryId,
+            recoveryState: "non_recoverable",
+            nonRecoverable: true,
+            reason: "raw_entry_not_found",
+          },
+        });
+      }
+
+      if (existingRawEntry.source_type !== parsedSource.value.sourceType) {
+        return errorResponse({
+          request,
+          httpStatus: 409,
+          requestId,
+          flowId,
+          step,
+          code: "INPUT_INVALID",
+          message: "rawEntryId belongs to another capture type.",
+          details: {
+            rawEntryId: requestedRawEntryId,
+          },
+        });
+      }
+
+      rawEntry = { id: existingRawEntry.id };
+      rawEntryId = existingRawEntry.id;
+      journalDate = existingRawEntry.journal_date ?? journalDate;
+      sourceTextForNormalization =
+        existingRawEntry.source_type === "audio"
+          ? parseString(existingRawEntry.transcript_text) ?? ""
+          : parseString(existingRawEntry.raw_text) ?? "";
+
+      if (!sourceTextForNormalization) {
+        logFlow("warn", {
+          flow: FLOW,
+          requestId,
+          flowId,
+          step,
+          event: "recovery_resume_blocked",
+          details: {
+            rawEntryId,
+            sourceType: existingRawEntry.source_type,
+            requestedRawEntryId,
+          },
+        });
+        return errorResponse({
+          request,
+          httpStatus: 409,
+          requestId,
+          flowId,
+          step,
+          code: "INPUT_INVALID",
+          message: "Capture could not be resumed safely.",
+          details: {
+            rawEntryId,
+            recoveryState: "non_recoverable",
+            nonRecoverable: true,
+            reason: "source_text_missing",
+          },
+        });
+      }
+
+      logFlow("info", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "recovery_resume",
+        details: {
+          rawEntryId,
+          journalDate,
+          sourceType: existingRawEntry.source_type,
+          requestedRawEntryId,
+        },
+      });
+      usedRecoveryPath = true;
     }
 
     if (rawEntry) {
@@ -1921,6 +2180,11 @@ Deno.serve(async (request: Request) => {
         step,
         code: "INPUT_INVALID",
         message: "Capture could not be found for recovery.",
+        details: {
+          recoveryState: "non_recoverable",
+          nonRecoverable: true,
+          reason: "recovery_reference_not_found",
+        },
       });
     } else if (parsedSource.value.sourceType === "text") {
       sourceTextForNormalization = parsedSource.value.rawText;
@@ -1967,7 +2231,7 @@ Deno.serve(async (request: Request) => {
         },
       });
 
-      const transcript = await transcribeAudio({
+      const transcript = await transcribeAudioWithSingleRetry({
         apiKey: runtimeEnv.openAiApiKey,
         model: runtimeEnv.openAiTranscriptionModel,
         requestId,
@@ -2053,6 +2317,7 @@ Deno.serve(async (request: Request) => {
 
       rawEntry = insertedRawEntry;
       rawEntryId = insertedRawEntry.id;
+      createdRawEntryThisRequest = true;
       logFlow("info", {
         flow: FLOW,
         requestId,
@@ -2100,7 +2365,7 @@ Deno.serve(async (request: Request) => {
           .eq("user_id", authData.user.id);
 
         if (audioMetaError) {
-          logFlow("warn", {
+          logFlow("error", {
             flow: FLOW,
             requestId,
             flowId,
@@ -2111,9 +2376,53 @@ Deno.serve(async (request: Request) => {
               error: String(audioMetaError.message ?? audioMetaError),
             },
           });
+
+          try {
+            await supabase.storage
+              .from(AUDIO_STORAGE_BUCKET)
+              .remove([uploaded.path]);
+          } catch {
+            // best effort cleanup
+          }
+
+          if (createdRawEntryThisRequest) {
+            const { error: rollbackRawError } = await supabase
+              .from("entries_raw")
+              .delete()
+              .eq("id", persistedRawEntry.id)
+              .eq("user_id", authData.user.id);
+
+            if (rollbackRawError) {
+              logFlow("error", {
+                flow: FLOW,
+                requestId,
+                flowId,
+                step,
+                event: "audio_capture_rollback_failed",
+                details: {
+                  rawEntryId: persistedRawEntry.id,
+                  error: String(rollbackRawError.message ?? rollbackRawError),
+                },
+              });
+            }
+          }
+
+          return errorResponse({
+            request,
+            httpStatus: 500,
+            requestId,
+            flowId,
+            step,
+            code: "DB_WRITE_FAILED",
+            message: "Failed to persist audio recording metadata",
+            details: {
+              rawEntryId: persistedRawEntry.id,
+              reason: "audio_metadata_update_failed",
+            },
+          });
         }
       } catch (error) {
-        logFlow("warn", {
+        logFlow("error", {
           flow: FLOW,
           requestId,
           flowId,
@@ -2122,6 +2431,42 @@ Deno.serve(async (request: Request) => {
           details: {
             rawEntryId: persistedRawEntry.id,
             error: error instanceof Error ? error.message : String(error),
+          },
+        });
+
+        if (createdRawEntryThisRequest) {
+          const { error: rollbackRawError } = await supabase
+            .from("entries_raw")
+            .delete()
+            .eq("id", persistedRawEntry.id)
+            .eq("user_id", authData.user.id);
+
+          if (rollbackRawError) {
+            logFlow("error", {
+              flow: FLOW,
+              requestId,
+              flowId,
+              step,
+              event: "audio_capture_rollback_failed",
+              details: {
+                rawEntryId: persistedRawEntry.id,
+                error: String(rollbackRawError.message ?? rollbackRawError),
+              },
+            });
+          }
+        }
+
+        return errorResponse({
+          request,
+          httpStatus: 502,
+          requestId,
+          flowId,
+          step,
+          code: "UPSTREAM_UNAVAILABLE",
+          message: "Failed to persist audio recording",
+          details: {
+            rawEntryId: persistedRawEntry.id,
+            reason: "audio_upload_failed",
           },
         });
       }
@@ -2180,12 +2525,113 @@ Deno.serve(async (request: Request) => {
       });
     }
 
+    const { data: persistedRawRow, error: persistedRawRowError } = await supabase
+      .from("entries_raw")
+      .select("source_type, raw_text, transcript_text, audio_storage_path, audio_mime_type, audio_size_bytes")
+      .eq("id", persistedRawEntry.id)
+      .eq("user_id", authData.user.id)
+      .single();
+
+    if (persistedRawRowError || !persistedRawRow) {
+      logFlow("error", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "integrity_check_failed",
+        details: {
+          rawEntryId: persistedRawEntry.id,
+          reason: "entries_raw_read_failed",
+          error: persistedRawRowError
+            ? String(persistedRawRowError.message ?? persistedRawRowError)
+            : "missing row",
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: "DB_READ_FAILED",
+        message: "Failed to verify capture integrity",
+        details: {
+          rawEntryId: persistedRawEntry.id,
+          reason: "entries_raw_read_failed",
+        },
+      });
+    }
+
+    const integrityIssues: string[] = [];
+    if (!parseString(normalized.title)) {
+      integrityIssues.push("normalized_title_missing");
+    }
+    if (!parseString(normalized.body)) {
+      integrityIssues.push("normalized_body_missing");
+    }
+    if (!parseString(normalized.summaryShort)) {
+      integrityIssues.push("normalized_summary_missing");
+    }
+    if (persistedRawRow.source_type === "text" && !parseString(persistedRawRow.raw_text)) {
+      integrityIssues.push("raw_text_missing");
+    }
+    if (
+      persistedRawRow.source_type === "audio" &&
+      !parseString(persistedRawRow.transcript_text)
+    ) {
+      integrityIssues.push("transcript_text_missing");
+    }
+    if (persistedRawRow.source_type === "audio" && saveAudioRecordings) {
+      if (!parseString(persistedRawRow.audio_storage_path)) {
+        integrityIssues.push("audio_storage_path_missing");
+      }
+      if (!parseString(persistedRawRow.audio_mime_type)) {
+        integrityIssues.push("audio_mime_type_missing");
+      }
+      if (
+        typeof persistedRawRow.audio_size_bytes !== "number" ||
+        !Number.isFinite(persistedRawRow.audio_size_bytes) ||
+        persistedRawRow.audio_size_bytes <= 0
+      ) {
+        integrityIssues.push("audio_size_invalid");
+      }
+    }
+
+    if (integrityIssues.length > 0) {
+      logFlow("error", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "integrity_check_failed",
+        details: {
+          rawEntryId: persistedRawEntry.id,
+          issues: integrityIssues,
+          saveAudioRecordings,
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: "DB_WRITE_FAILED",
+        message: "Capture integrity check failed",
+        details: {
+          rawEntryId: persistedRawEntry.id,
+          issues: integrityIssues,
+        },
+      });
+    }
+
     if (deferDerived) {
       const response: ProcessEntryResponse = {
         status: "ok",
         flow: FLOW,
         requestId,
         flowId,
+        processingOutcome: usedRecoveryPath ? "recovered" : "success",
         rawEntryId: persistedRawEntry.id,
         normalizedEntryId: normalizedEntry.id,
         journalDate,
@@ -2420,6 +2866,7 @@ Deno.serve(async (request: Request) => {
       flow: FLOW,
       requestId,
       flowId,
+      processingOutcome: usedRecoveryPath ? "recovered" : "success",
       rawEntryId: persistedRawEntry.id,
       normalizedEntryId: normalizedEntry.id,
       journalDate,

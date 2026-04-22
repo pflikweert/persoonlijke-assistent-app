@@ -159,11 +159,26 @@ MAILPIT_URL="$(resolve_env_value "${MAILPIT_URL:-}" "MAILPIT_URL" "INBUCKET_URL"
 MAILPIT_URL="${MAILPIT_URL:-http://127.0.0.1:54324}"
 EMAIL_REDIRECT_TO="${VERIFY_LOCAL_AUTH_EMAIL_REDIRECT_TO:-http://localhost:8081}"
 
+resolve_smoke_email() {
+  profile="${SMOKE_TEST_EMAIL_PROFILE:-default}"
+  case "$profile" in
+    clean)
+      printf '%s' "smoke.clean.local@example.com"
+      ;;
+    new)
+      printf '%s' "smoke.new.$(date +%s)@example.com"
+      ;;
+    *)
+      printf '%s' "smoke.default.local@example.com"
+      ;;
+  esac
+}
+
 if [ -z "$API_KEY" ]; then
   fail "missing local publishable key (check .env.local or 'supabase status -o env')"
 fi
 
-EMAIL="verify.magic-link.$(date +%s)@example.com"
+EMAIL="${SMOKE_TEST_EMAIL:-$(resolve_smoke_email)}"
 
 log "Start magic-link smoke check api_url=$API_URL mailpit_url=$MAILPIT_URL email=$EMAIL"
 
