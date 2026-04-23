@@ -55,6 +55,14 @@ Voor AI-gedrag, prompting en evaluatie:
 - Werk cheap-first: kleinste werkende wijziging eerst.
 - Houd taken klein en scherp afgebakend.
 - Gebruik bestaande patronen in de repo vóór nieuwe patronen.
+- Simpeler maken of iets weghalen is een volwaardige oplossing: kijk bij code en UI eerst naar minder copy, minder surface, minder state en minder custom interactielagen voordat je complexiteit toevoegt.
+- Tijdelijk complexer onderzoeken mag om het probleem te begrijpen, maar schaal daarna actief terug naar de simpelste werkende oplossing.
+- Bij complexe wijzigingen vraag je eerst: kan dit testbaar als pure helper, of hoort stateful interactielogica in een kleine hook?
+- Laat geen nieuwe grote componentfiles ontstaan zonder bewuste reden; extractie moet altijd testbaarheid, leesbaarheid, hergebruik of minder risico opleveren.
+- Refactor bestaande code alleen binnen de aangeraakte flow; grotere opruimingen krijgen een eigen task.
+- Nieuwe complexe helperlogica krijgt unit-tests; simpele render/glue-code hoeft niet standaard getest te worden.
+- Bij interactieve UI is `lint`/`typecheck` niet genoeg als de wijziging gedrag raakt: draai een relevante smoke-test of leg expliciet vast waarom dat nog niet kan.
+- 80% coverage is de KPI; nieuwe complexe helpermodules mikken direct op minimaal 80% coverage, zonder legacy code in één keer als gate te blokkeren.
 - Hypothese-first is toegestaan, maar advies pas na bronbevestiging:
   - formuleer bij onduidelijkheid eerst een expliciete hypothese
   - verifieer die hypothese daarna via primaire bronnen (code, config, logs, runtime, API/CLI)
@@ -108,6 +116,8 @@ Voor AI-gedrag, prompting en evaluatie:
     - `Status: <huidige status>`
   - werk tijdens uitvoering checklist + `updated_at` bij op echte voortgang
   - elk inhoudelijk plan noemt expliciet de concrete taskfile-path
+  - elk inhoudelijk Plan Mode-plan bevat een korte `Taskflow summary`: welke taskfile gebruikt of gemaakt wordt, welke statuswijziging verwacht wordt, en wanneer extra werk een eigen task krijgt
+  - verbeteringen die direct voortkomen uit testen van dezelfde flow blijven in dezelfde task; nieuw niet-relevant werk krijgt een eigen task
   - updates en eindresultaat bevatten altijd:
     - `Task: <taaktitel>`
     - `Task file: <pad naar task md>`
@@ -135,6 +145,8 @@ Voor AI-gedrag, prompting en evaluatie:
 - Gebruik `.agents/skills/stitch-redesign-execution/SKILL.md` voor scherm-redesigns op basis van Stitch exports in `design_refs/...`.
 - Gebruik `.agents/skills/ui-implementation-guardrails/SKILL.md` voor UI-implementatie, polish en regressiefixes zonder volledige Stitch-redesignscope.
 - Gebruik `.agents/skills/github-deployment-diagnostics/SKILL.md` voor GitHub deployment/security-issues met verplichte `gh` API-diagnose vóór advies.
+- Gebruik `.agents/skills/programming-architecture-guardrails/SKILL.md` voor complexe componenten, bugfixes in grote files, nieuwe interactielogica, services/dataflows of helper-extractie.
+- Gebruik `docs/dev/qa-test-strategy.md` als QA-basis voor unit-, smoke- en full-E2E bewijs bij complexe of interactieve wijzigingen.
 
 ## Codex-regels
 
@@ -142,6 +154,15 @@ Voor AI-gedrag, prompting en evaluatie:
 - Herhaal geen projectcontext uit docs.
 - Werk met 1 taak per prompt.
 - Gebruik plan mode alleen bij bugs, multi-file wijzigingen of migraties.
+
+## Repo-local Codex MCP defaults (local AI development)
+
+- Gebruik in deze repo standaard de lokale MCP-config: `.codex/config.toml`.
+- Default target voor Supabase is altijd `supabase_local`.
+- `supabase_remote_ro` gebruik je alleen voor expliciete productiegerichte read-only checks (diagnose/metadata/logcontext) die lokaal niet kunnen.
+- Gebruik `supabase_remote_ro` niet voor normale ontwikkeliteraties, writes of bulk inspecties die lokaal ook kunnen.
+- Als een agent `supabase_remote_ro` tijdelijk activeert, zet die daarna direct terug naar `supabase_local`.
+- Gebruik voor target-switching altijd de helper: `node scripts/codex-mcp-target.mjs <local|remote-ro ...>`; geen handmatige TOML-edits tenzij expliciet nodig.
 
 ## UI-guardrails (NativeWind / component-first)
 

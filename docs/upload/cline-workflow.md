@@ -176,6 +176,36 @@ Gebruik Act mode voor:
 - Gebruik geen `CI=1` prefix voor lokale dev-server commando’s.
 - Als live server nodig is: geef alleen het handmatige commando aan de gebruiker.
 
+## Repo-local Codex MCP (local AI development)
+
+Gebruik voor deze repo standaard de lokale MCP-config in `.codex/config.toml`.
+
+Default (veilig):
+
+- `supabase_local` actief
+- `supabase_remote_ro` uit
+
+Switchflow:
+
+- local activeren: `node scripts/codex-mcp-target.mjs local`
+- remote/prod read-only activeren: `node scripts/codex-mcp-target.mjs remote-ro --project-ref <project_ref>`
+
+Gebruik `supabase_remote_ro` alleen wanneer nodig voor:
+
+- productiegerichte read-only diagnose
+- metadata/log/context-checks die lokaal niet beschikbaar zijn
+
+Gebruik `supabase_remote_ro` niet voor:
+
+- schema- of datawrites
+- reguliere lokale ontwikkeliteraties
+- bulk inspecties als local/dev voldoende is
+
+Agent-default:
+
+- bij twijfel altijd `supabase_local`
+- na remote-ro checks altijd terugzetten naar local
+
 ## Lessen uit sessies (stabiel, herbruikbaar)
 
 - Bevestig bij onderbroken sessies altijd eerst de actuele file state (small read/diff) vóór nieuwe patches.
