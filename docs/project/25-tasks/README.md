@@ -48,7 +48,9 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 
 ### Ready
 
-_Geen taken._
+| Taak | Prioriteit | Fase | Korte omschrijving |
+| --- | --- | --- | --- |
+| [Entry photo gallery volledige end-user E2E flows](open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
 
 ### In Progress
 
@@ -69,11 +71,16 @@ _Geen taken._
 | [Actieve maandplanning herijkt naar transitiemaand](done/actieve-maandplanning-herijkt-naar-transitiemaand.md) | p1 | transitiemaand-consumer-beta | Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een smalle brugpilot expliciet prioriteit krijgen. |
 | [Always-on taskflow enforcement (agent-onafhankelijk)](done/always-on-taskflow-enforcement-agent-onafhankelijk.md) | p1 | transitiemaand-consumer-beta | Elke inhoudelijke agentsessie (plan/research/bug/implementatie) loopt automatisch via een taskfile in `docs/project/25-tasks/**`, inclusi... |
 | [Audio-instellingen testadvies stabiliseren en mic-selectie polish](done/audio-instellingen-testadvies-stabiliseren-en-mic-selectie-polish.md) | p1 | transitiemaand-consumer-beta | Op het scherm Audio Instellingen is het advies tijdens testen rustiger en gebaseerd op langere sampleperiodes. Het eerste advies komt pas... |
+| [Entry photo gallery QA-basis: unit, smoke en end-user tests](done/entry-photo-gallery-qa-basis-unit-smoke-e2e.md) | p1 | transitiemaand-consumer-beta | Er is een eerste QA-basis voor de entry photo gallery: snelle unit-tests voor complexe sorteerlogica, scripts voor gallery smoke/full tes... |
+| [GitHub deployment Node/NPM-versie diagnose](done/github-deployment-node-npm-versie-diagnose.md) | p1 | transitiemaand-consumer-beta | Er ligt een korte diagnose met: - actuele repo Node/NPM-config - actuele GitHub Actions deployment-config - relevante recente GitHub run/... |
 | [Lokale auth smoke workflow hardenen (magic-link + Mailpit)](done/local-auth-smoke-hardening-workflow.md) | p1 | transitiemaand-consumer-beta | Een vaste local-only auth smoke workflow waarmee een agent of developer veilig kan inloggen en daarna end-to-end UI smoke tests kan doen... |
 | [Moment detail foto's toevoegen met beveiligde galerij (max 5)](done/moment-entry-fotos-galerij-beveiligde-upload.md) | p1 | transitiemaand-consumer-beta | Een compacte fotoflow op moment detail met maximaal 5 foto's per moment. Als er nog geen foto's zijn toont de UI een rustige empty state... |
 | [Moment fotoviewer swipe/zoom verbeteren en markdownstructuur tonen](done/moment-fotoviewer-swipe-zoom-en-markdown-weergave.md) | p1 | transitiemaand-consumer-beta | De fotoviewer voelt op mobiel beheerst en direct aan: per swipe land je op de bedoelde vorige of volgende foto, en ingezoomde foto's kun... |
 | [Plugin drag-drop sortering in board en list herstellen](done/plugin-drag-drop-sortering-board-en-list-herstel.md) | p1 | transitiemaand-consumer-beta | Taken moeten weer met de muis versleept kunnen worden in board én list view, inclusief statusverplaatsing en herordening. |
+| [Thumbnail reorder productiebug in moment detail](done/thumbnail-reorder-productiebug-moment-detail.md) | p1 | transitiemaand-consumer-beta | De galerij-reorder werkt in productie vloeiend en betrouwbaar: tijdens slepen beweegt de actieve thumbnail correct mee en blijft niet vas... |
 | [Plugin task classification filters en manual prio actions](done/plugin-task-classification-filters-en-manual-prio-actions.md) | p2 | transitiemaand-consumer-beta | Taskfiles krijgen een expliciete classificatie in template en instructies. De plugin toont deze classificatie zichtbaar in cards en list... |
 | [Plugin task overview line en detail hero sticky fix](done/plugin-task-overview-line-en-detail-hero-sticky-fix.md) | p2 | transitiemaand-consumer-beta | De list-rij toont de accentlijn stabiel links naast titel + description (niet erboven). In task detail blijft de header/hero zichtbaar ti... |
+| [Programmeer-architectuur guardrails, helper-extractie en refactorbeleid](done/programmeer-architectuur-guardrails-helper-extractie-en-refactorbeleid.md) | p2 | transitiemaand-consumer-beta | Er is een compacte programmeer-architectuur skill die agents helpt om bij complexe code vaker goede helperfiles/hooks te maken, zonder sc... |
+| [Repo-local Codex MCP setup met veilige Supabase target-switchflow](done/repo-local-codex-mcp-setup-met-veilige-supabase-target-switchflow.md) | p2 | transitiemaand-consumer-beta | De repo bevat één begrijpelijke `.codex/config.toml` met vaste MCP-servers voor context7, playwright en stitch, plus een Supabase-opzet w... |
 | [Workstream backfill voor bestaande taskfiles](done/workstream-backfill-bestaande-taskfiles.md) | p2 | transitiemaand-consumer-beta | Alle bestaande taskfiles onder `docs/project/25-tasks/**` hebben een passende `workstream`-waarde (`idea`, `plugin`, `app` of `aiqs`). |
 <!-- TASK_INDEX:END -->

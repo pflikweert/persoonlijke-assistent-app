@@ -1,7 +1,7 @@
 ---
 id: task-repo-local-codex-mcp-setup-switchflow
 title: Repo-local Codex MCP setup met veilige Supabase target-switchflow
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
