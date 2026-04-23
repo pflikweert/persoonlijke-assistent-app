@@ -14,6 +14,9 @@
     "webview-ui/src/**/*.ts",
     "webview-ui/src/**/*.tsx",
     "src/tasks/constants.ts",
+    "src/tasks/dnd-policy.ts",
+    "src/tasks/list-sort-controls.ts",
+    "src/tasks/sort-policy.ts",
     "src/tasks/types.ts",
     "src/webview-bridge/messages.ts"
   ]

@@ -8,6 +8,7 @@ source: chat
 updated_at: 2026-04-23
 summary: "Stabiliseer testadvies in audio-instellingen, laat advies staan na stop, voorkom layout-jitter met vaste advieshoogte en verbeter slider/microfoonselectie UX tijdens actieve test."
 tags: [audio, settings, ux, web]
+workstream: app
 due_date: null
 sort_order: null
 ---

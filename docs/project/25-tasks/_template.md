@@ -8,9 +8,12 @@ source: docs/project/open-points.md
 updated_at: 2026-04-19
 summary: ""
 tags: []
+workstream: app
 due_date: null
 sort_order: null
 ---
+
+<!-- Gebruik voor workstream één van: idea | plugin | app | aiqs -->
 
 ## Probleem / context
 

@@ -38,7 +38,9 @@
     "docs:lint:fix": "npx markdownlint-cli2 --fix \"docs/**/*.md\"",
     "env:pull:vercel": "npx vercel env pull .env.vercel.local",
     "docs:bundle": "node scripts/docs/build-docs-bundles.mjs",
-    "docs:bundle:verify": "node scripts/docs/build-docs-bundles.mjs --check"
+    "docs:bundle:verify": "node scripts/docs/build-docs-bundles.mjs --check",
+    "taskflow:verify": "node scripts/docs/verify-taskflow-enforcement.mjs",
+    "taskflow:test": "node --test scripts/docs/verify-taskflow-enforcement.test.mjs"
   },
   "engines": {
     "node": "24.x"

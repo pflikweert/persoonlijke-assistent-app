@@ -74,3 +74,33 @@ sort_order: null
 
   assert.equal(parsed.summary, 'regel 1\nregel 2 met pad C:\\temp\\file');
 });
+
+test('parseTaskFile normalizes repeated escaped newlines and keeps paragraph breaks compact', () => {
+  const parsed = parseTaskFile({
+    absolutePath: '/workspace/docs/project/25-tasks/open/example-newlines.md',
+    relativePath: 'docs/project/25-tasks/open/example-newlines.md',
+    content: `---
+id: task-example-newlines
+title: Newline test
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-21
+summary: "eerste regel\\\\n\\\\n\\\\n tweede regel"
+tags: []
+due_date: null
+sort_order: null
+---
+
+# Newline test
+`,
+    version: {
+      mtimeMs: 1234,
+      hash: 'hash-3',
+    },
+  });
+
+  assert.equal(parsed.summary, 'eerste regel\n\n tweede regel');
+  assert.equal(parsed.excerpt, 'eerste regel tweede regel');
+});

@@ -8,9 +8,13 @@ source: docs/project/open-points.md
 updated_at: 2026-04-21
 summary: "Werk een besluitbaar plan uit om strategische docs naar een aparte private repo te verplaatsen (optie 2), met behoud van historie, workflow en AIQS-governance."
 tags: [docs, governance, security, repo-structuur, planning]
+workstream: idea
 due_date: null
-sort_order: null
+sort_order: 6
 ---
+
+
+
 
 ## Probleem / context
 

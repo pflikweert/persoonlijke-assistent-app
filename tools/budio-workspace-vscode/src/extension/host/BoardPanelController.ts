@@ -14,8 +14,11 @@ import { getPrimaryWorkspaceFolder, readWorkspaceSettings } from './config';
 type PanelView = 'board' | 'list' | 'settings';
 
 export class BoardPanelController implements vscode.Disposable {
+  private static readonly BACKGROUND_REFRESH_MS = 30000;
+
   private panel: vscode.WebviewPanel | null = null;
   private watcher: vscode.Disposable | null = null;
+  private backgroundRefreshTimer: NodeJS.Timeout | null = null;
   private readonly disposables: vscode.Disposable[] = [];
   private lastTasks = new Map<string, ParsedTaskFile>();
 
@@ -34,6 +37,7 @@ export class BoardPanelController implements vscode.Disposable {
   }
 
   dispose(): void {
+    this.stopBackgroundRefresh();
     this.panel?.dispose();
     this.watcher?.dispose();
     vscode.Disposable.from(...this.disposables).dispose();
@@ -64,6 +68,7 @@ export class BoardPanelController implements vscode.Disposable {
       this.panel.webview.html = getBoardWebviewHtml(this.panel.webview, this.extensionUri);
       this.panel.onDidDispose(() => {
         this.panel = null;
+        this.stopBackgroundRefresh();
       }, null, this.disposables);
 
       this.panel.webview.onDidReceiveMessage(
@@ -76,6 +81,8 @@ export class BoardPanelController implements vscode.Disposable {
     } else {
       this.panel.reveal(vscode.ViewColumn.One);
     }
+
+    this.startBackgroundRefresh();
 
     await this.publishSnapshot({ view });
   }
@@ -190,6 +197,20 @@ export class BoardPanelController implements vscode.Disposable {
         },
         {
           successMessage: 'Taak verwijderd en verwijzingen opgeschoond.',
+          focusTaskId: null,
+        },
+      );
+      return;
+    }
+
+    if (message.type === 'archiveTask') {
+      await this.runMutation(
+        message.taskId,
+        async (repository) => {
+          await repository.archiveTask(message.taskId, message.expectedVersion);
+        },
+        {
+          successMessage: 'Taak gearchiveerd.',
           focusTaskId: null,
         },
       );
@@ -342,5 +363,26 @@ export class BoardPanelController implements vscode.Disposable {
     this.watcher = createTaskWatcher(workspaceFolder, settings.tasksRoot, () => {
       void this.publishSnapshot();
     });
+  }
+
+  private startBackgroundRefresh(): void {
+    if (this.backgroundRefreshTimer || !this.panel) {
+      return;
+    }
+
+    this.backgroundRefreshTimer = setInterval(() => {
+      if (!this.panel) {
+        return;
+      }
+      void this.publishSnapshot();
+    }, BoardPanelController.BACKGROUND_REFRESH_MS);
+  }
+
+  private stopBackgroundRefresh(): void {
+    if (!this.backgroundRefreshTimer) {
+      return;
+    }
+    clearInterval(this.backgroundRefreshTimer);
+    this.backgroundRefreshTimer = null;
   }
 }

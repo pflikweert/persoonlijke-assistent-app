@@ -8,9 +8,12 @@ source: user-request
 updated_at: 2026-04-22
 summary: "Lokale magic-link loginflow reproduceerbaar gemaakt met smoke-user profielen, verify-link extractie, login-proof script en veilige local-only cleanup voor smoke users."
 tags: [auth, smoke-test, local, mailpit]
+workstream: app
 due_date: null
 sort_order: 3
 ---
+
+# Lokale auth smoke workflow hardenen (magic-link + Mailpit)
 
 ## Probleem / context
 

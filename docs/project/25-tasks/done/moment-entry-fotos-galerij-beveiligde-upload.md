@@ -8,6 +8,7 @@ source: user-request
 updated_at: 2026-04-22
 summary: "Op de moment detailpagina een rustige fotoflow toevoegen: camera/upload, veilige opslag per user, featured thumbnail onder samenvatting (alleen bij foto), galerij onderaan, fullscreen swipe en verwijderen met bevestiging."
 tags: [moment-detail, photos, security, ui]
+workstream: app
 due_date: null
 sort_order: 2
 ---

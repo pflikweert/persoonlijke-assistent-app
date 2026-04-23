@@ -8,16 +8,10 @@ source: docs/project/open-points.md
 updated_at: 2026-04-20
 summary: "Implementeer PWA-installatieprompt voor webgebruikers om de app als desktop-app te installeren, met modal, cookie-onthouding en instellingenoptie."
 tags: [pwa, webapp, installatie, modal, cookie]
+workstream: app
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
-
-
-
-
-
-
-
 
 ## Probleem / context
 
@@ -35,10 +29,10 @@ Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie 
 
 ## In scope
 
-- Bijwerken van web app manifest (manifest.json) met juiste iconen, naam en instellingen.
+- Bijwerken of aanmaken van web app manifest (manifest.json) met juiste iconen, naam en instellingen.
 - Implementeren van PWA-installatie logica in de app (detectie van 'beforeinstallprompt' event).
 - Creëren van een installatiemodal component met duidelijke call-to-action.
-- Toevoegen van cookie-logica om gebruikerskeuze te onthouden (niet tonen als geweigerd).
+- Toevoegen van local storage om gebruikerskeuze te onthouden (niet tonen als geweigerd), wel altijd via menu -> instellingen alsnog weer activeren.
 - Integreren van een toggle in instellingen scherm om installatieprompt te heractiveren.
 - Testen op verschillende browsers (Chrome, Firefox, Safari) voor compatibiliteit.
 

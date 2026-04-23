@@ -8,9 +8,13 @@ source: docs/project/open-points.md
 updated_at: 2026-04-20
 summary: "Geef AIQS admin een helderder en strakker eigen thema, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools, met goede bruikbaarheid op telefoon en desktop."
 tags: [aiqs, admin-ui, thema, design]
+workstream: aiqs
 due_date: null
-sort_order: 1
+sort_order: 3
 ---
+
+
+
 
 
 

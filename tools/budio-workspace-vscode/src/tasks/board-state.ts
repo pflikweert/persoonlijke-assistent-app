@@ -1,4 +1,5 @@
 import { PRIORITY_LABELS, STATUS_LABELS } from './constants';
+import { sortTaskCards } from './sort-policy';
 import type {
   BoardColumn,
   BoardSnapshot,
@@ -20,7 +21,9 @@ export function buildBoardSnapshot(input: {
     ? input.settings.columns
     : input.settings.columns.filter((status) => status !== 'done');
 
-  const allCards = input.tasks.map(toTaskCardViewModel);
+  const allCards = input.tasks
+    .filter((task) => task.bucket !== 'archived')
+    .map(toTaskCardViewModel);
   const columns = visibleStatuses.map((status) =>
     buildColumn(status, allCards.filter((card) => card.status === status), input.settings.defaultSort),
   );
@@ -49,6 +52,7 @@ export function toTaskCardViewModel(task: ParsedTaskFile): TaskCardViewModel {
     phase: task.phase,
     priority: task.priority,
     tags: task.tags,
+    workstream: task.workstream,
     dueDate: task.dueDate,
     checklistProgress: {
       completed,
@@ -82,61 +86,7 @@ function buildColumn(status: TaskStatus, cards: TaskCardViewModel[], sort: TaskS
 }
 
 export function sortCards(cards: TaskCardViewModel[], sort: TaskSort): TaskCardViewModel[] {
-  return [...cards].sort((left, right) => compareCards(left, right, sort));
-}
-
-function compareCards(left: TaskCardViewModel, right: TaskCardViewModel, sort: TaskSort): number {
-  if (sort === 'due_date') {
-    return compareDueDate(left.dueDate, right.dueDate) || comparePriority(left.priority, right.priority);
-  }
-
-  if (sort === 'priority') {
-    return comparePriority(left.priority, right.priority) || compareDueDate(left.dueDate, right.dueDate);
-  }
-
-  if (sort === 'updated_at') {
-    return right.updatedAt.localeCompare(left.updatedAt);
-  }
-
-  if (sort === 'alphabetical') {
-    return left.title.localeCompare(right.title);
-  }
-
-  return compareManual(left, right);
-}
-
-function compareManual(left: TaskCardViewModel, right: TaskCardViewModel): number {
-  const leftOrder = left.sortOrder ?? Number.MAX_SAFE_INTEGER;
-  const rightOrder = right.sortOrder ?? Number.MAX_SAFE_INTEGER;
-  if (leftOrder !== rightOrder) {
-    return leftOrder - rightOrder;
-  }
-
-  return right.updatedAt.localeCompare(left.updatedAt);
-}
-
-function comparePriority(left: TaskPriority, right: TaskPriority): number {
-  return priorityValue(left) - priorityValue(right);
-}
-
-function compareDueDate(left: string | null, right: string | null): number {
-  if (left && right) {
-    return left.localeCompare(right);
-  }
-
-  if (left) {
-    return -1;
-  }
-
-  if (right) {
-    return 1;
-  }
-
-  return 0;
-}
-
-function priorityValue(priority: TaskPriority): number {
-  return priority === 'p1' ? 1 : priority === 'p2' ? 2 : 3;
+  return sortTaskCards(cards, sort);
 }
 
 export function describePriority(priority: TaskPriority): string {

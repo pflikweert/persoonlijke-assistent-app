@@ -8,6 +8,7 @@ source: user-request
 updated_at: 2026-04-22
 summary: "De fullscreen momentfoto-viewer op mobiel slimmer laten snappen per swipe, pinch-to-zoom op de foto zelf ondersteunen, en gedeelde dag-/momenttekstblokken markdownstructuur display-only laten weergeven."
 tags: [moment-detail, photos, markdown, ui, mobile]
+workstream: app
 due_date: null
 sort_order: 3
 ---

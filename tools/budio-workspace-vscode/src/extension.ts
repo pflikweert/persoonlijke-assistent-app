@@ -4,7 +4,7 @@ import { LauncherViewProvider } from './extension/host/LauncherViewProvider';
 
 export function activate(context: vscode.ExtensionContext): void {
   const controller = new BoardPanelController(context.extensionUri);
-  const launcher = new LauncherViewProvider(context.extensionUri);
+  const launcher = new LauncherViewProvider(context.extensionUri, () => controller.open('board'));
 
   context.subscriptions.push(
     controller,

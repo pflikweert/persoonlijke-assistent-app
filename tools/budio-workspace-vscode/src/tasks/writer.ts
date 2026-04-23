@@ -36,6 +36,9 @@ export function applyTaskFieldPatch(task: ParsedTaskFile, patch: TaskFieldPatch)
   if (patch.tags !== undefined) {
     nextFrontmatter.tags = patch.tags;
   }
+  if (patch.workstream !== undefined) {
+    nextFrontmatter.workstream = patch.workstream;
+  }
   if (patch.dueDate !== undefined) {
     nextFrontmatter.due_date = patch.dueDate;
   }
@@ -51,7 +54,8 @@ export function applyTaskFieldPatch(task: ParsedTaskFile, patch: TaskFieldPatch)
     if (task.firstHeadingLineIndex !== null) {
       nextBodyLines[task.firstHeadingLineIndex] = `# ${patch.title.trim()}`;
     } else {
-      nextBodyLines.unshift(`# ${patch.title.trim()}`, '');
+      const withoutLeadingBlanks = stripLeadingBlankLines(nextBodyLines);
+      nextBodyLines.splice(0, nextBodyLines.length, `# ${patch.title.trim()}`, '', ...withoutLeadingBlanks);
     }
   }
 
@@ -94,6 +98,7 @@ export function buildNewTaskContent(input: CreateTaskInput & { id: string; updat
     updated_at: input.updatedAt,
     summary: input.summary?.trim() ?? '',
     tags: input.tags ?? [],
+    workstream: input.workstream ?? 'app',
     due_date: input.dueDate ?? null,
     sort_order: null,
   };
@@ -101,31 +106,40 @@ export function buildNewTaskContent(input: CreateTaskInput & { id: string; updat
   return `${serializeFrontmatter(frontmatter, frontmatterOrder)}# ${input.title.trim()}
 
 ## Probleem / context
+
 Beschrijf kort welk concreet gat, risico of uitvoeringsprobleem deze taak oplost.
 
 ## Gewenste uitkomst
+
 Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 
 ## Waarom nu
+
 - Waarom deze taak nu relevant is voor de actieve fase.
 
 ## In scope
+
 - Concreet werk dat binnen deze taak valt.
 
 ## Buiten scope
+
 - Werk dat bewust niet in deze taak zit.
 
 ## ${CONCRETE_CHECKLIST_HEADING}
+
 - [ ] Eerste concrete stap
 - [ ] Tweede concrete stap
 
 ## Blockers / afhankelijkheden
+
 - Geen of nog te bepalen.
 
 ## Verify / bewijs
+
 - Noem hier de relevante verify-, runtime- of doc-bewijzen.
 
 ## Relevante links
+
 - \`docs/project/open-points.md\`
 `;
 }
@@ -203,4 +217,12 @@ function quoteIfNeeded(input: string): string {
   }
 
   return input;
+}
+
+function stripLeadingBlankLines(lines: string[]): string[] {
+  const next = [...lines];
+  while (next.length > 0 && next[0].trim() === '') {
+    next.shift();
+  }
+  return next;
 }

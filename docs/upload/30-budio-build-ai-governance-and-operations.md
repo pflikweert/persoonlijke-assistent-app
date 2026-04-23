@@ -2,8 +2,8 @@
 
 # Budio Build AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-22T21:10:06.138Z
-Source Commit: 1a2aa2e
+Build Timestamp (UTC): 2026-04-23T01:08:01.843Z
+Source Commit: 1a351a5
 
 Doel: primaire domeinbundle voor build-truth, AI-governance en operations.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -16,8 +16,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Build Truth
 
-Build Timestamp (UTC): 2026-04-22T21:10:06.138Z
-Source Commit: 1a2aa2e
+Build Timestamp (UTC): 2026-04-23T01:08:01.843Z
+Source Commit: 1a351a5
 
 Doel: primaire buildbundle met routes, componentarchitectuur, services, runtime functions en contracts.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -90,8 +90,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-22T21:10:06.138Z
-Source Commit: 1a2aa2e
+Build Timestamp (UTC): 2026-04-23T01:08:01.843Z
+Source Commit: 1a351a5
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

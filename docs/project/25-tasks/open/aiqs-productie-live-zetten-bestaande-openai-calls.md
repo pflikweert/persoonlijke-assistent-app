@@ -1,16 +1,24 @@
 ---
 id: task-aiqs-productie-live-zetten-bestaande-openai-calls
 title: AIQS productie live zetten voor bestaande OpenAI-calls
-status: ready
+status: backlog
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-04-20
+updated_at: 2026-04-22
 summary: "Zet de huidige AIQS-variant snel en gecontroleerd live in productie voor alleen de bestaande OpenAI-calls, zonder nieuwe reviewflow of extra calls toe te voegen."
 tags: [aiqs, productie, openai, consumer-beta]
+workstream: aiqs
 due_date: null
 sort_order: 1
 ---
+
+
+
+
+
+
+
 
 
 

@@ -1,9 +1,13 @@
 export const TASK_STATUSES = ['backlog', 'ready', 'in_progress', 'blocked', 'done'] as const;
 export const TASK_PRIORITIES = ['p1', 'p2', 'p3'] as const;
+export const TASK_WORKSTREAMS = ['idea', 'plugin', 'app', 'aiqs'] as const;
 export const TASK_SORTS = [
   'manual',
+  'lane_order',
+  'status',
   'due_date',
   'priority',
+  'progress',
   'updated_at',
   'alphabetical',
 ] as const;
@@ -18,7 +22,7 @@ export const TASK_REQUIRED_FIELDS = [
   'updated_at',
 ] as const;
 
-export const TASK_OPTIONAL_FIELDS = ['summary', 'tags', 'due_date', 'sort_order'] as const;
+export const TASK_OPTIONAL_FIELDS = ['summary', 'tags', 'workstream', 'due_date', 'sort_order'] as const;
 
 export const PLUGIN_OWNED_FRONTMATTER_FIELDS = [
   'title',
@@ -26,6 +30,7 @@ export const PLUGIN_OWNED_FRONTMATTER_FIELDS = [
   'priority',
   'summary',
   'tags',
+  'workstream',
   'due_date',
   'sort_order',
   'updated_at',
@@ -45,6 +50,13 @@ export const PRIORITY_LABELS: Record<(typeof TASK_PRIORITIES)[number], string> =
   p1: 'P1',
   p2: 'P2',
   p3: 'P3',
+};
+
+export const WORKSTREAM_LABELS: Record<(typeof TASK_WORKSTREAMS)[number], string> = {
+  idea: 'Idee',
+  plugin: 'Plugin',
+  app: 'Budio App',
+  aiqs: 'AIQS',
 };
 
 export const CONCRETE_CHECKLIST_HEADING = 'Concrete checklist';

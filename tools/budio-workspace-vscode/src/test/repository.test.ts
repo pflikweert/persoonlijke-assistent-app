@@ -102,3 +102,162 @@ updated_at: 2026-04-20
   assert.equal(references.includes('task-example'), false);
   assert.equal(references.includes('25-tasks/open/example.md'), false);
 });
+
+test('repository moveTask rewrites sort_order for in-lane reordering', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(openRoot, { recursive: true });
+
+  await fs.writeFile(
+    path.join(openRoot, 'a.md'),
+    `---
+id: task-a
+title: A
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# A
+`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(openRoot, 'b.md'),
+    `---
+id: task-b
+title: B
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 2
+---
+
+# B
+`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(openRoot, 'c.md'),
+    `---
+id: task-c
+title: C
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 3
+---
+
+# C
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const tasks = await repository.scan();
+  const taskB = tasks.find((task) => task.id === 'task-b');
+  assert.ok(taskB);
+
+  await repository.moveTask({
+    taskId: taskB.id,
+    expectedVersion: taskB.version,
+    targetStatus: 'ready',
+    destinationIds: ['task-a', 'task-c', 'task-b'],
+    sourceIds: [],
+  });
+
+  const contentA = await fs.readFile(path.join(openRoot, 'a.md'), 'utf8');
+  const contentB = await fs.readFile(path.join(openRoot, 'b.md'), 'utf8');
+  const contentC = await fs.readFile(path.join(openRoot, 'c.md'), 'utf8');
+
+  assert.match(contentA, /sort_order: 1/);
+  assert.match(contentC, /sort_order: 2/);
+  assert.match(contentB, /sort_order: 3/);
+});
+
+test('repository moveTask updates both lanes and markdown status on cross-lane move', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(openRoot, { recursive: true });
+
+  await fs.writeFile(
+    path.join(openRoot, 'ready-a.md'),
+    `---
+id: task-ready-a
+title: Ready A
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# Ready A
+`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(openRoot, 'ready-b.md'),
+    `---
+id: task-ready-b
+title: Ready B
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 2
+---
+
+# Ready B
+`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(openRoot, 'blocked-x.md'),
+    `---
+id: task-blocked-x
+title: Blocked X
+status: blocked
+phase: transitiemaand-consumer-beta
+priority: p1
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# Blocked X
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const tasks = await repository.scan();
+  const moving = tasks.find((task) => task.id === 'task-ready-b');
+  assert.ok(moving);
+
+  await repository.moveTask({
+    taskId: moving.id,
+    expectedVersion: moving.version,
+    targetStatus: 'blocked',
+    destinationIds: ['task-ready-b', 'task-blocked-x'],
+    sourceIds: ['task-ready-a'],
+  });
+
+  const readyA = await fs.readFile(path.join(openRoot, 'ready-a.md'), 'utf8');
+  const readyB = await fs.readFile(path.join(openRoot, 'ready-b.md'), 'utf8');
+  const blockedX = await fs.readFile(path.join(openRoot, 'blocked-x.md'), 'utf8');
+
+  assert.match(readyA, /sort_order: 1/);
+  assert.match(readyB, /status: blocked/);
+  assert.match(readyB, /sort_order: 1/);
+  assert.match(blockedX, /sort_order: 2/);
+});

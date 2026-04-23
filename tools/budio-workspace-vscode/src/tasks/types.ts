@@ -3,12 +3,14 @@ import type {
   TASK_PRIORITIES,
   TASK_SORTS,
   TASK_STATUSES,
+  TASK_WORKSTREAMS,
 } from './constants';
 
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 export type TaskSort = (typeof TASK_SORTS)[number];
-export type TaskBucket = 'open' | 'done';
+export type TaskWorkstream = (typeof TASK_WORKSTREAMS)[number];
+export type TaskBucket = 'open' | 'done' | 'archived';
 export type FrontmatterValue = string | number | boolean | string[] | null;
 
 export interface FileVersion {
@@ -40,6 +42,7 @@ export interface ParsedTaskFile {
   updatedAt: string;
   summary: string;
   tags: string[];
+  workstream: TaskWorkstream | null;
   dueDate: string | null;
   sortOrder: number | null;
   checklist: ChecklistItem[];
@@ -68,6 +71,7 @@ export interface TaskCardViewModel {
   phase: string;
   priority: TaskPriority;
   tags: string[];
+  workstream: TaskWorkstream | null;
   dueDate: string | null;
   checklistProgress: {
     completed: number;
@@ -124,6 +128,7 @@ export interface TaskFieldPatch {
   priority?: TaskPriority;
   summary?: string;
   tags?: string[];
+  workstream?: TaskWorkstream | null;
   dueDate?: string | null;
   sortOrder?: number | null;
   updatedAt?: string;
@@ -145,6 +150,7 @@ export interface CreateTaskInput {
   source?: string;
   summary?: string;
   tags?: string[];
+  workstream?: TaskWorkstream;
   dueDate?: string | null;
 }
 

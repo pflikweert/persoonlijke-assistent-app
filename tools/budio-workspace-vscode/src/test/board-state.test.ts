@@ -4,6 +4,7 @@ import { buildBoardSnapshot } from '../tasks/board-state';
 import type { ParsedTaskFile } from '../tasks/types';
 
 function buildTask(overrides: Partial<ParsedTaskFile>): ParsedTaskFile {
+  const { workstream = null, ...restOverrides } = overrides;
   return {
     id: 'task',
     title: 'Task',
@@ -14,6 +15,7 @@ function buildTask(overrides: Partial<ParsedTaskFile>): ParsedTaskFile {
     updatedAt: '2026-04-20',
     summary: 'Summary',
     tags: [],
+    workstream,
     dueDate: null,
     sortOrder: null,
     checklist: [],
@@ -33,7 +35,7 @@ function buildTask(overrides: Partial<ParsedTaskFile>): ParsedTaskFile {
     sections: new Map(),
     firstHeadingLineIndex: 0,
     checklistLineIndexes: [],
-    ...overrides,
+    ...restOverrides,
   };
 }
 

@@ -184,6 +184,31 @@ export class TaskRepository {
       path: task.relativePath,
     };
   }
+
+  async archiveTask(taskId: string, expectedVersion: FileVersion): Promise<TaskMutationResult> {
+    const tasks = await this.scan();
+    const task = requireTask(tasks, taskId);
+    assertVersion(task, expectedVersion);
+
+    const archivePath = await resolveUniqueTargetPath(
+      path.resolve(
+        this.workspaceRoot,
+        this.tasksRootRelative,
+        'archive',
+        path.basename(task.sourcePath),
+      ),
+      task.sourcePath,
+    );
+    const nextContent = applyTaskFieldPatch(task, {
+      updatedAt: new Date().toISOString().slice(0, 10),
+    });
+
+    await writeTaskFile(task.sourcePath, archivePath, nextContent);
+    return {
+      taskId,
+      path: path.relative(this.workspaceRoot, archivePath),
+    };
+  }
 }
 
 function requireTask(tasks: ParsedTaskFile[], taskId: string): ParsedTaskFile {

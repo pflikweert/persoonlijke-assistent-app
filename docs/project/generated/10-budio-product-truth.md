@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-22T21:10:06.138Z
-Source Commit: 1a2aa2e
+Build Timestamp (UTC): 2026-04-23T01:08:01.843Z
+Source Commit: 1a351a5
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -722,10 +722,11 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 
 | Taak | Status | Prioriteit | Fase | Korte omschrijving |
 | --- | --- | --- | --- | --- |
+| [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Backlog | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
 | [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Backlog | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
-| [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
+| [Moment detail foto reorder + thumbnail-logica en audio test auto-stop](25-tasks/open/moment-detail-foto-reorder-en-audio-test-auto-stop.md) | In Progress | p1 | transitiemaand-consumer-beta | Op het moment-detailscherm kan de gebruiker een foto lang indrukken en intuïtief naar een andere positie slepen. Tijdens het slepen is du... |
 | [AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)](25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md) | Backlog | p2 | transitiemaand-consumer-beta | AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.... |
 | [Budio webapp compatible maken](25-tasks/open/budio-webapp-compatible-maken.md) | Backlog | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 | [Docs scheiden naar private repo (strategie + migratieplan)](25-tasks/open/docs-private-repo-scheiding-en-migratieplan.md) | Backlog | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
@@ -2545,6 +2546,12 @@ Gebruik Plan mode bij:
 - migraties
 - taken met duidelijke scope-/architectuurrisico’s
 
+Plan mode heft de taskfile-verplichting niet op:
+
+- begin bij inhoudelijke repo-taken altijd met een bestaande of nieuw aangemaakte taskfile
+- een inhoudelijk plan zonder concrete taskfile geldt als onvolledig
+- noem in elk plan expliciet `Task`, `Task file` en `Status`
+
 ## Wanneer Act mode
 
 Gebruik Act mode voor:
@@ -2564,6 +2571,7 @@ Gebruik Act mode voor:
 ### Multi-file werk
 
 - Begin met expliciete todo/checklist.
+- Maak of vind vóór het plan eerst de taskfile.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
 
@@ -2572,6 +2580,7 @@ Gebruik Act mode voor:
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
 
 ## ChatGPT Projects uploaddiscipline
@@ -2600,6 +2609,7 @@ Gebruik Act mode voor:
 ## Dev-server policy
 
 - Start geen langlopende dev servers tenzij expliciet gevraagd.
+- Gebruik voor deze repo `http://localhost:8081` als standaard lokale web dev/smoke-test target wanneer geen andere lokale webtarget is opgegeven.
 - Gebruik geen `CI=1` prefix voor lokale dev-server commando’s.
 - Als live server nodig is: geef alleen het handmatige commando aan de gebruiker.
 

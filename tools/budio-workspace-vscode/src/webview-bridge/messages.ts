@@ -64,6 +64,11 @@ export type WebviewToHostMessage =
       expectedVersion: FileVersion;
     }
   | {
+      type: 'archiveTask';
+      taskId: string;
+      expectedVersion: FileVersion;
+    }
+  | {
       type: 'switchView';
       view: 'board' | 'list' | 'settings';
     }

@@ -17,6 +17,7 @@
     "Other"
   ],
   "activationEvents": [
+    "onCommand:budioWorkspace.openBoard",
     "onCommand:budioWorkspace.openListView",
     "onCommand:budioWorkspace.openSettings",
     "onView:budioWorkspace.launcher"
@@ -84,8 +85,11 @@
           "default": "manual",
           "enum": [
             "manual",
+            "lane_order",
+            "status",
             "due_date",
             "priority",
+            "progress",
             "updated_at",
             "alphabetical"
           ],
@@ -107,7 +111,7 @@
         {
           "type": "webview",
           "id": "budioWorkspace.launcher",
-          "name": "Launcher"
+          "name": "Workspace"
         }
       ]
     }

@@ -1,12 +1,30 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { STATUS_LABELS } from '../../src/tasks/constants';
+import { STATUS_LABELS, WORKSTREAM_LABELS } from '../../src/tasks/constants';
 import type {
   BoardSnapshot,
   TaskCardViewModel,
   TaskPriority,
   TaskSort,
   TaskStatus,
+  TaskWorkstream,
 } from '../../src/tasks/types';
+import {
+  buildMovePlan,
+  computeInsertIndex,
+  getDropPlacementFromPointer,
+  type DropPlacement,
+} from '../../src/tasks/dnd-policy';
+import {
+  applySortDirection,
+  describeSortState,
+  directionArrow,
+  isColumnActive,
+  mapColumnToSort,
+  nextSortStateFromHeader,
+  type ListSortColumn,
+  type SortDirection,
+} from '../../src/tasks/list-sort-controls';
+import { isWorkOrderSort, sortTaskCards } from '../../src/tasks/sort-policy';
 import type { HostToWebviewMessage } from '../../src/webview-bridge/messages';
 import { vscode } from './vscode';
 
@@ -18,6 +36,7 @@ interface Filters {
   status: 'all' | TaskStatus;
   priority: 'all' | TaskPriority;
   tag: 'all' | string;
+  workstream: 'all' | TaskWorkstream;
   due: DueFilter;
   onlyOpen: boolean;
   onlyChecklistOpen: boolean;
@@ -26,6 +45,18 @@ interface Filters {
 interface DragState {
   taskId: string;
   sourceStatus: TaskStatus;
+}
+
+interface DropIndicatorState {
+  status: TaskStatus;
+  index: number;
+  cardId: string | null;
+  placement: 'before' | 'after' | 'between';
+}
+
+interface ListDropIndicatorState {
+  targetTaskId: string;
+  placement: 'before' | 'after';
 }
 
 interface MetadataFormState {
@@ -41,19 +72,13 @@ const EMPTY_FILTERS: Filters = {
   status: 'all',
   priority: 'all',
   tag: 'all',
+  workstream: 'all',
   due: 'all',
   onlyOpen: false,
   onlyChecklistOpen: false,
 };
 
 const REFRESH_SUCCESS_MS = 1200;
-const STATUS_TONE_CLASS: Record<TaskStatus, string> = {
-  backlog: 'status-tone-backlog',
-  ready: 'status-tone-ready',
-  in_progress: 'status-tone-in-progress',
-  blocked: 'status-tone-blocked',
-  done: 'status-tone-done',
-};
 
 export function App(): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<BoardSnapshot | null>(null);
@@ -62,23 +87,30 @@ export function App(): React.JSX.Element {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [sort, setSort] = useState<TaskSort>('manual');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savingTaskId, setSavingTaskId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
-  const [dropIndicator, setDropIndicator] = useState<{ status: TaskStatus; index: number } | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<DropIndicatorState | null>(null);
+  const [listDropIndicator, setListDropIndicator] = useState<ListDropIndicatorState | null>(null);
   const [formState, setFormState] = useState<MetadataFormState | null>(null);
+  const [formTaskId, setFormTaskId] = useState<string | null>(null);
+  const [pendingDiskChanges, setPendingDiskChanges] = useState(false);
   const [viewport, setViewport] = useState<ViewportKind>(getViewportKind);
   const [detailOpen, setDetailOpen] = useState<boolean>(getViewportKind() === 'desktop');
   const [detailMenuOpen, setDetailMenuOpen] = useState(false);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [pendingCloseAfterSave, setPendingCloseAfterSave] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [refreshState, setRefreshState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const searchRef = useRef<HTMLInputElement | null>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
   const refreshResetTimeoutRef = useRef<number | null>(null);
+  const hasHydratedSortRef = useRef(false);
+  const moveDispatchLockRef = useRef(false);
 
   const detailMode = viewport === 'desktop' ? 'split' : 'overlay';
 
@@ -98,6 +130,7 @@ export function App(): React.JSX.Element {
       setCloseConfirmOpen(false);
       setPendingCloseAfterSave(false);
       setDeleteConfirmOpen(false);
+      setArchiveConfirmOpen(false);
     }
   }, [selectedTaskId]);
 
@@ -115,7 +148,10 @@ export function App(): React.JSX.Element {
       const message = event.data;
       if (message.type === 'hydrateBoard') {
         setSnapshot(message.snapshot);
-        setSort((current) => current ?? message.snapshot.sort);
+        if (!hasHydratedSortRef.current) {
+          setSort(message.snapshot.sort);
+          hasHydratedSortRef.current = true;
+        }
         if (message.view) {
           setActiveView(message.view);
         }
@@ -214,16 +250,30 @@ export function App(): React.JSX.Element {
     return [...values].sort((left, right) => left.localeCompare(right));
   }, [snapshot]);
 
+  const workstreams = useMemo(() => {
+    const values = new Set<TaskWorkstream>();
+    snapshot?.allCards.forEach((card) => {
+      if (card.workstream) {
+        values.add(card.workstream);
+      }
+    });
+    return [...values].sort((left, right) => left.localeCompare(right));
+  }, [snapshot]);
+
   const filteredCards = useMemo(() => {
     if (!snapshot) {
       return [];
     }
 
-    return sortCards(
+    return sortTaskCards(
       snapshot.allCards.filter((card) => matchesFilters(card, search, filters)),
       sort,
     );
   }, [filters, search, snapshot, sort]);
+  const listCards = useMemo(
+    () => applySortDirection(filteredCards, sortDirection),
+    [filteredCards, sortDirection],
+  );
 
   const visibleColumns = useMemo(() => {
     if (!snapshot) {
@@ -290,24 +340,35 @@ export function App(): React.JSX.Element {
   useEffect(() => {
     if (!selectedTask) {
       setFormState(null);
+      setFormTaskId(null);
+      setPendingDiskChanges(false);
       return;
     }
 
-    setFormState({
-      title: selectedTask.title,
-      status: selectedTask.status,
-      priority: selectedTask.priority,
-      summary: selectedTask.summary,
-      tags: selectedTask.tags.join(', '),
-      dueDate: selectedTask.dueDate ?? '',
-    });
-  }, [selectedTask?.id, selectedTask?.version.hash, selectedTask?.version.mtimeMs]);
+    const incomingFormState = toMetadataFormState(selectedTask);
+    const hasUnsavedChanges = isFormDirty(selectedTask, formState);
+    if (formTaskId !== selectedTask.id) {
+      setFormState(incomingFormState);
+      setFormTaskId(selectedTask.id);
+      setPendingDiskChanges(false);
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      setPendingDiskChanges(true);
+      return;
+    }
+
+    setFormState(incomingFormState);
+    setPendingDiskChanges(false);
+  }, [selectedTask?.id, selectedTask?.version.hash, selectedTask?.version.mtimeMs, formState, formTaskId]);
 
   useEffect(() => {
     setDetailMenuOpen(false);
     setCloseConfirmOpen(false);
     setPendingCloseAfterSave(false);
     setDeleteConfirmOpen(false);
+    setArchiveConfirmOpen(false);
   }, [selectedTask?.id]);
 
   useEffect(() => {
@@ -320,8 +381,10 @@ export function App(): React.JSX.Element {
     return () => window.removeEventListener('click', onGlobalClick);
   }, [detailMenuOpen]);
 
-  const dragEnabled = !hasActiveFiltering(search, filters) && sort === 'manual';
-  const hasActiveFilters = hasActiveFiltering('', filters) || sort !== 'manual';
+  const dragBlockedByFiltering = hasActiveFiltering(search, filters);
+  const dragEnabled = !dragBlockedByFiltering;
+  const listDragEnabled = activeView === 'list' && !dragBlockedByFiltering;
+  const hasActiveFilters = hasActiveFiltering('', filters) || !isWorkOrderSort(sort);
   const formDirty = isFormDirty(selectedTask, formState);
 
   if (!snapshot) {
@@ -360,7 +423,7 @@ export function App(): React.JSX.Element {
                 Nieuwe taak
               </button>
               <button className={`ghost-button ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((open) => !open)}>
-                Filter {hasActiveFilters ? '•' : ''}
+                Filter
               </button>
               <button
                 className={`ghost-button refresh-button ${refreshState}`}
@@ -432,23 +495,40 @@ export function App(): React.JSX.Element {
                   </select>
                 </label>
                 <label>
-                  <span>Datum</span>
+                  <span>Domein</span>
                   <select
-                    value={filters.due}
-                    onChange={(event) => updateFilters({ due: event.target.value as DueFilter })}
+                    value={filters.workstream}
+                    onChange={(event) => updateFilters({ workstream: event.target.value as Filters['workstream'] })}
                   >
+                    <option value="all">Alle domeinen</option>
+                    {workstreams.map((workstream) => (
+                      <option key={workstream} value={workstream}>
+                        {WORKSTREAM_LABELS[workstream]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Datum</span>
+	                  <select
+	                    value={filters.due}
+	                    onChange={(event) => updateFilters({ due: event.target.value as DueFilter })}
+	                  >
                     <option value="all">Alle data</option>
                     <option value="today">Vandaag</option>
                     <option value="overdue">Over tijd</option>
                     <option value="no_date">Geen datum</option>
                   </select>
                 </label>
-                <label>
-                  <span>Sortering</span>
-                  <select value={sort} onChange={(event) => setSort(event.target.value as TaskSort)}>
-                    <option value="manual">Manual</option>
+	                <label>
+	                  <span>Sortering</span>
+	                  <select value={sort} onChange={(event) => applySortChange(event.target.value as TaskSort)}>
+	                    <option value="manual">Manual</option>
+	                    <option value="lane_order">Lane-volgorde</option>
+	                    <option value="status">Status</option>
                     <option value="due_date">Due date</option>
                     <option value="priority">Priority</option>
+                    <option value="progress">Percentage</option>
                     <option value="updated_at">Recent gewijzigd</option>
                     <option value="alphabetical">Alfabetisch</option>
                   </select>
@@ -473,11 +553,11 @@ export function App(): React.JSX.Element {
               <div className="filter-panel-actions">
                 <button
                   className="ghost-button"
-                  onClick={() => {
-                    setFilters(EMPTY_FILTERS);
-                    setSort('manual');
-                  }}
-                >
+	                  onClick={() => {
+	                    setFilters(EMPTY_FILTERS);
+	                    applySortChange('manual');
+	                  }}
+	                >
                   Reset filters
                 </button>
                 <button className="ghost-button" onClick={() => setFiltersOpen(false)}>
@@ -489,22 +569,14 @@ export function App(): React.JSX.Element {
         </header>
 
         <section className="status-strip">
-          {!dragEnabled ? <StatusChip>Drag/drop alleen in manual zonder filters</StatusChip> : null}
-          {selectedTask ? (
-            <button
-              className="ghost-button detail-toggle-button"
-              onClick={() => {
-                if (detailOpen) {
-                  requestClosePanel();
-                } else {
-                  setDetailOpen(true);
-                }
-              }}
-            >
-              {detailOpen ? 'Sluit details' : 'Open details'}
-            </button>
+          {activeView === 'board' && !dragEnabled ? (
+            <StatusChip>Board drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
+          ) : null}
+          {activeView === 'list' && !listDragEnabled ? (
+            <StatusChip>List drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
           ) : null}
           {savingTaskId ? <StatusChip>Opslaan...</StatusChip> : null}
+          {pendingDiskChanges ? <StatusChip>Nieuwe disk-wijzigingen beschikbaar (je edits blijven behouden)</StatusChip> : null}
           {notice ? <StatusChip>{notice}</StatusChip> : null}
           {error ? <StatusChip danger>{error}</StatusChip> : null}
         </section>
@@ -517,27 +589,18 @@ export function App(): React.JSX.Element {
           <section className="main-pane">
             {activeView === 'board' ? (
               <div className="board-canvas">
-                {visibleColumns.map((column) => (
+                {visibleColumns.map((column) => {
+                  const destinationLength =
+                    dragState
+                      ? column.cards.filter((card) => card.id !== dragState.taskId).length
+                      : column.cards.length;
+                  return (
                   <section
                     className="board-column"
                     key={column.key}
-                    onDragOver={(event) => {
-                      if (!dragEnabled || !dragState) {
-                        return;
-                      }
-                      event.preventDefault();
-                      setDropIndicator({ status: column.key, index: column.cards.length });
-                    }}
-                    onDrop={(event) => {
-                      if (!dragEnabled || !dragState) {
-                        return;
-                      }
-                      event.preventDefault();
-                      commitMove(column.key, column.cards.length);
-                    }}
                   >
                     <div className="column-header">
-                      <span className={`status-accent-rail ${statusToneClass(column.key)}`} aria-hidden="true" />
+                      <span className={`status-accent-rail ${statusRailClass(column.key)}`} aria-hidden="true" />
                       <div className="column-heading">
                         <h2>{column.label}</h2>
                         <span>{column.count}</span>
@@ -545,16 +608,22 @@ export function App(): React.JSX.Element {
                     </div>
 
                     <div className="column-cards">
-                      {column.cards.map((card, index) => {
+                      {column.cards.map((card) => {
                         const visibleTags = card.tags.slice(0, 2);
                         const hiddenTagCount = Math.max(card.tags.length - visibleTags.length, 0);
                         const hasMeta = Boolean(card.dueDate) || card.checklistProgress.total > 0;
+                        const isDropBefore =
+                          dropIndicator?.status === column.key &&
+                          dropIndicator.cardId === card.id &&
+                          dropIndicator.placement === 'before';
+                        const isDropAfter =
+                          dropIndicator?.status === column.key &&
+                          dropIndicator.cardId === card.id &&
+                          dropIndicator.placement === 'after';
 
                         return (
-                          <div key={card.id}>
-                            {dropIndicator?.status === column.key && dropIndicator.index === index ? (
-                              <div className="drop-indicator" />
-                            ) : null}
+                          <div key={card.id} className="task-card-shell">
+                            {isDropBefore ? <div className="drop-indicator drop-indicator-before" /> : null}
                             <article
                               className={`task-card ${selectedTask?.id === card.id ? 'selected' : ''}`}
                               draggable={dragEnabled}
@@ -568,14 +637,39 @@ export function App(): React.JSX.Element {
                                   return;
                                 }
                                 event.preventDefault();
-                                setDropIndicator({ status: column.key, index });
+                                event.stopPropagation();
+                                const nextIndicator = buildDropIndicatorForCard({
+                                  event,
+                                  dragState,
+                                  status: column.key,
+                                  cards: column.cards,
+                                  cardId: card.id,
+                                });
+                                if (nextIndicator) {
+                                  setDropIndicator(nextIndicator);
+                                }
                               }}
                               onDrop={(event) => {
                                 if (!dragEnabled || !dragState) {
                                   return;
                                 }
                                 event.preventDefault();
-                                commitMove(column.key, index);
+                                event.stopPropagation();
+                                const nextIndicator = buildDropIndicatorForCard({
+                                  event,
+                                  dragState,
+                                  status: column.key,
+                                  cards: column.cards,
+                                  cardId: card.id,
+                                });
+                                if (!nextIndicator) {
+                                  return;
+                                }
+                                commitMove({
+                                  targetStatus: column.key,
+                                  anchorTaskId: nextIndicator.cardId,
+                                  placement: nextIndicator.placement === 'before' ? 'before' : 'after',
+                                });
                               }}
                               onClick={() => selectTask(card.id)}
                               onDoubleClick={() => vscode.postMessage({ type: 'openSourceFile', taskId: card.id })}
@@ -588,6 +682,9 @@ export function App(): React.JSX.Element {
                               </div>
 
                               <h3>{card.title}</h3>
+                              <div className="meta-row card-workstream-row">
+                                <WorkstreamBadge workstream={card.workstream} />
+                              </div>
                               <p className="card-summary">{card.excerpt}</p>
 
                               {(visibleTags.length > 0 || hiddenTagCount > 0) && (
@@ -610,52 +707,183 @@ export function App(): React.JSX.Element {
                                 </div>
                               ) : null}
                             </article>
+                            {isDropAfter ? <div className="drop-indicator drop-indicator-after" /> : null}
                           </div>
                         );
                       })}
 
-                      {dropIndicator?.status === column.key && dropIndicator.index === column.cards.length ? (
-                        <div className="drop-indicator" />
+                      {dropIndicator?.status === column.key &&
+                      dropIndicator.cardId === null &&
+                      dropIndicator.index === destinationLength ? (
+                        <div className="drop-indicator drop-indicator-end" />
                       ) : null}
+
+                      <div
+                        className="column-drop-end-target"
+                        onDragOver={(event) => {
+                          if (!dragEnabled || !dragState) {
+                            return;
+                          }
+                          event.preventDefault();
+                          setDropIndicator({
+                            status: column.key,
+                            index: destinationLength,
+                            cardId: null,
+                            placement: 'between',
+                          });
+                        }}
+                        onDrop={(event) => {
+                          if (!dragEnabled || !dragState) {
+                            return;
+                          }
+                          event.preventDefault();
+                          event.stopPropagation();
+                          commitMove({
+                            targetStatus: column.key,
+                            anchorTaskId: null,
+                            placement: 'end',
+                          });
+                        }}
+                      />
 
                       {column.cards.length === 0 ? <div className="empty-state">Geen kaarten in deze kolom.</div> : null}
                     </div>
                   </section>
-                ))}
+                )})}
               </div>
             ) : null}
 
-            {activeView === 'list' ? (
-              <div className="list-shell">
-                <div className="list-table-shell">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Titel</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Due</th>
-                        <th>Checklist</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredCards.map((card) => (
-                        <tr key={card.id} onClick={() => selectTask(card.id)}>
+	            {activeView === 'list' ? (
+	              <div className="list-shell">
+	                <div className="list-controls">
+	                  <label>
+	                    <span>Sortering</span>
+	                    <select value={sort} onChange={(event) => applySortChange(event.target.value as TaskSort)}>
+	                      <option value="manual">Manual</option>
+	                      <option value="lane_order">Lane-volgorde</option>
+	                      <option value="status">Status</option>
+                      <option value="due_date">Due date</option>
+                      <option value="priority">Priority</option>
+                      <option value="progress">Percentage</option>
+                      <option value="updated_at">Recent gewijzigd</option>
+	                      <option value="alphabetical">Alfabetisch</option>
+	                    </select>
+	                  </label>
+                    <div className="list-sort-readout">Actieve sort: {describeSortState({ sort, direction: sortDirection })}</div>
+	                </div>
+	                <div className="status-strip">
+	                  <StatusChip>Sleep taken in de lijst om werkvolgorde en status te wijzigen</StatusChip>
+	                </div>
+	                <div className="list-table-shell">
+	                  <table>
+	                    <thead>
+	                      <tr>
+	                        <th>{renderSortHeader('title', 'Titel')}</th>
+	                        <th>Domein</th>
+	                        <th>{renderSortHeader('status', 'Status')}</th>
+	                        <th>{renderSortHeader('priority', 'Priority')}</th>
+	                        <th>{renderSortHeader('due', 'Due')}</th>
+	                        <th>{renderSortHeader('checklist', 'Checklist')}</th>
+	                        <th>Volgorde</th>
+	                      </tr>
+	                    </thead>
+	                    <tbody>
+	                      {listCards.map((card) => (
+                        <tr
+                          key={card.id}
+                          className={
+                            listDropIndicator?.targetTaskId === card.id
+                              ? `list-row-drop-target ${
+                                  listDropIndicator.placement === 'before'
+                                    ? 'list-row-drop-target-before'
+                                    : 'list-row-drop-target-after'
+                                }`
+                              : ''
+                          }
+                          draggable={listDragEnabled}
+                          onDragStart={() => setDragState({ taskId: card.id, sourceStatus: card.status })}
+                          onDragEnd={() => {
+                            setDragState(null);
+                            setListDropIndicator(null);
+                          }}
+                          onDragOver={(event) => {
+                            if (!listDragEnabled || !dragState || dragState.taskId === card.id) {
+                              return;
+                            }
+                            event.preventDefault();
+                            const placement = getDropPlacementForEvent(event);
+                            setListDropIndicator({
+                              targetTaskId: card.id,
+                              placement,
+                            });
+                          }}
+                          onDrop={(event) => {
+                            if (!listDragEnabled || !dragState || dragState.taskId === card.id) {
+                              return;
+                            }
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const placement = getDropPlacementForEvent(event);
+                            commitMove({
+                              targetStatus: card.status,
+                              anchorTaskId: card.id,
+                              placement,
+                            });
+                          }}
+                          onClick={() => selectTask(card.id)}
+                        >
                           <td>
                             <div className="list-title-cell">
-                              <span className={`status-accent-rail ${statusToneClass(card.status)}`} aria-hidden="true" />
-                              <strong>{card.title}</strong>
-                              <span>{card.excerpt}</span>
+                              <span className={`status-accent-rail ${statusRailClass(card.status)}`} aria-hidden="true" />
+                              <div className="list-title-copy">
+                                <strong>{card.title}</strong>
+                                <span>{card.excerpt}</span>
+                              </div>
                             </div>
                           </td>
                           <td>
-                            <StatusBadge status={card.status} />
+                            <WorkstreamBadge workstream={card.workstream} />
+                          </td>
+                          <td>
+                            <span className={`list-status-text ${statusTextClass(card.status)}`}>
+                              {STATUS_LABELS[card.status]}
+                            </span>
                           </td>
                           <td>
                             <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
                           </td>
                           <td>{card.dueDate ?? '—'}</td>
                           <td>{checklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}</td>
+                          <td>
+                            <div className="list-order-actions">
+                              <button
+                                type="button"
+                                className="mini-icon-button"
+                                title="Zet bovenaan in handmatige volgorde"
+                                aria-label="Zet bovenaan in handmatige volgorde"
+                                disabled={!listDragEnabled}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  moveTaskToListEdge(card.id, 'start');
+                                }}
+                              >
+                                ⤒
+                              </button>
+                              <button
+                                type="button"
+                                className="mini-icon-button"
+                                title="Zet onderaan in handmatige volgorde"
+                                aria-label="Zet onderaan in handmatige volgorde"
+                                disabled={!listDragEnabled}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  moveTaskToListEdge(card.id, 'end');
+                                }}
+                              >
+                                ⤓
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -696,8 +924,11 @@ export function App(): React.JSX.Element {
                       }
                     >
                       <option value="manual">Manual</option>
+                      <option value="lane_order">Lane-volgorde</option>
+                      <option value="status">Status</option>
                       <option value="due_date">Due date</option>
                       <option value="priority">Priority</option>
+                      <option value="progress">Percentage</option>
                       <option value="updated_at">Recent gewijzigd</option>
                       <option value="alphabetical">Alfabetisch</option>
                     </select>
@@ -733,34 +964,32 @@ export function App(): React.JSX.Element {
             {selectedTask && formState ? (
               <>
                 <div className="detail-header">
-                  <div className="detail-header-top">
-                    <div className="detail-title-row">
-                      <button
-                        className="ghost-button menu-toggle-button"
-                        aria-label="Meer acties"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setDetailMenuOpen((open) => !open);
-                        }}
-                      >
-                        ☰
-                      </button>
-                      <div className="detail-copy">
-                        <div className="eyebrow">Task detail</div>
-                        <h2>{selectedTask.title}</h2>
-                        <div className="detail-meta-chips">
-                          <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
-                          <span className="task-ref" title={selectedTask.id}>
-                            {formatTaskRef(selectedTask.id)}
-                          </span>
-                          <StatusBadge status={selectedTask.status} />
-                          {selectedTask.dueDate ? <span className={dueClassName(selectedTask.dueDate)}>{selectedTask.dueDate}</span> : null}
-                        </div>
-                      </div>
-                    </div>
+                  <div className="detail-header-topbar">
+                    <button
+                      className="icon-button menu-toggle-button"
+                      aria-label="Meer acties"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDetailMenuOpen((open) => !open);
+                      }}
+                    >
+                      ☰
+                    </button>
+                    <div className="detail-header-label">Task detail</div>
                     <button className="icon-button detail-close-icon" aria-label="Sluit details" onClick={requestClosePanel}>
                       ×
                     </button>
+                  </div>
+                  <div className="detail-hero">
+                    <h2>{selectedTask.title}</h2>
+                    <div className="detail-meta-chips">
+                      <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
+                      <span className="task-ref" title={selectedTask.id}>
+                        {formatTaskRef(selectedTask.id)}
+                      </span>
+                      <StatusBadge status={selectedTask.status} />
+                      {selectedTask.dueDate ? <span className={dueClassName(selectedTask.dueDate)}>{selectedTask.dueDate}</span> : null}
+                    </div>
                   </div>
                   {detailMenuOpen ? (
                     <div className="detail-menu" onClick={(event) => event.stopPropagation()}>
@@ -791,12 +1020,21 @@ export function App(): React.JSX.Element {
                       >
                         Copy path
                       </button>
+                      <button
+                        className="ghost-button"
+                        onClick={() => {
+                          setArchiveConfirmOpen(true);
+                          setDetailMenuOpen(false);
+                        }}
+                      >
+                        Archiveer taak
+                      </button>
                     </div>
                   ) : null}
                 </div>
 
                 <div className="detail-form">
-                  <label>
+                  <label className="detail-title-field">
                     <span>Titel</span>
                     <input ref={titleRef} value={formState.title} onChange={(event) => patchForm({ title: event.target.value })} />
                   </label>
@@ -939,6 +1177,37 @@ export function App(): React.JSX.Element {
                   ) : null}
 
                   <div className="detail-danger-zone">
+                    <button className="ghost-button" onClick={() => setArchiveConfirmOpen(true)}>
+                      Archiveer
+                    </button>
+                    {archiveConfirmOpen ? (
+                      <div className="close-confirm">
+                        <strong>Taak archiveren?</strong>
+                        <p className="muted-copy">
+                          Deze taak wordt verplaatst naar archive en verdwijnt uit board en list.
+                        </p>
+                        <div className="close-confirm-actions">
+                          <button
+                            className="primary-button"
+                            onClick={() => {
+                              vscode.postMessage({
+                                type: 'archiveTask',
+                                taskId: selectedTask.id,
+                                expectedVersion: selectedTask.version,
+                              });
+                              setArchiveConfirmOpen(false);
+                              setDetailMenuOpen(false);
+                            }}
+                          >
+                            Archiveer
+                          </button>
+                          <button className="ghost-button" onClick={() => setArchiveConfirmOpen(false)}>
+                            Annuleren
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+
                     <button className="ghost-button danger-secondary-button" onClick={() => setDeleteConfirmOpen(true)}>
                       Verwijderen
                     </button>
@@ -998,6 +1267,31 @@ export function App(): React.JSX.Element {
     }));
   }
 
+  function applySortChange(nextSort: TaskSort, nextDirection: SortDirection = 'asc'): void {
+    setSort(nextSort);
+    setSortDirection(nextDirection);
+  }
+
+  function handleHeaderSort(column: ListSortColumn): void {
+    const next = nextSortStateFromHeader({ sort, direction: sortDirection }, column);
+    applySortChange(next.sort, next.direction);
+  }
+
+  function renderSortHeader(column: ListSortColumn, label: string): React.JSX.Element {
+    const active = isColumnActive(sort, column);
+    return (
+      <button
+        type="button"
+        className={`list-sort-header ${active ? 'active' : ''}`}
+        onClick={() => handleHeaderSort(column)}
+        title={`Sorteer op ${label.toLowerCase()}`}
+      >
+        <span>{label}</span>
+        {active ? <span className="list-sort-arrow">{directionArrow(sortDirection)}</span> : null}
+      </button>
+    );
+  }
+
   function patchForm(patch: Partial<MetadataFormState>): void {
     setFormState((current) => (current ? { ...current, ...patch } : current));
   }
@@ -1022,35 +1316,51 @@ export function App(): React.JSX.Element {
     });
   }
 
-  function commitMove(targetStatus: TaskStatus, targetIndex: number): void {
+  function commitMove(input: {
+    targetStatus: TaskStatus;
+    anchorTaskId: string | null;
+    placement: DropPlacement;
+  }): void {
+    if (moveDispatchLockRef.current) {
+      return;
+    }
     if (!dragState || !snapshot) {
       return;
     }
 
-    const sourceColumn = snapshot.columns.find((column) => column.key === dragState.sourceStatus);
-    const targetColumn = snapshot.columns.find((column) => column.key === targetStatus);
+    const sourceIdsInManualOrder = cardsForStatus(snapshot, dragState.sourceStatus).map((card) => card.id);
+    const targetIdsInManualOrder = cardsForStatus(snapshot, input.targetStatus).map((card) => card.id);
     const task = snapshot.allCards.find((card) => card.id === dragState.taskId);
-    if (!sourceColumn || !targetColumn || !task) {
+    if (!task) {
       return;
     }
 
-    const withoutSource = sourceColumn.cards.filter((card) => card.id !== dragState.taskId).map((card) => card.id);
-    const destinationWithoutTask = targetColumn.cards
-      .filter((card) => card.id !== dragState.taskId)
-      .map((card) => card.id);
-    const destinationIds = [...destinationWithoutTask];
-    destinationIds.splice(targetIndex, 0, dragState.taskId);
+    const movePlan = buildMovePlan({
+      dragTaskId: dragState.taskId,
+      sourceStatus: dragState.sourceStatus,
+      targetStatus: input.targetStatus,
+      sourceIdsInManualOrder,
+      targetIdsInManualOrder,
+      anchorTaskId: input.anchorTaskId,
+      placement: input.placement,
+    });
+
+    moveDispatchLockRef.current = true;
+    window.setTimeout(() => {
+      moveDispatchLockRef.current = false;
+    }, 0);
 
     vscode.postMessage({
       type: 'moveTask',
       taskId: dragState.taskId,
       expectedVersion: task.version,
-      targetStatus,
-      destinationIds,
-      sourceIds: dragState.sourceStatus === targetStatus ? [] : withoutSource,
+      targetStatus: input.targetStatus,
+      destinationIds: movePlan.destinationIds,
+      sourceIds: movePlan.sourceIds,
     });
     setDragState(null);
     setDropIndicator(null);
+    setListDropIndicator(null);
   }
 
   function selectTask(taskId: string): void {
@@ -1065,14 +1375,9 @@ export function App(): React.JSX.Element {
       return;
     }
 
-    setFormState({
-      title: selectedTask.title,
-      status: selectedTask.status,
-      priority: selectedTask.priority,
-      summary: selectedTask.summary,
-      tags: selectedTask.tags.join(', '),
-      dueDate: selectedTask.dueDate ?? '',
-    });
+    setFormState(toMetadataFormState(selectedTask));
+    setFormTaskId(selectedTask.id);
+    setPendingDiskChanges(false);
   }
 
   function requestClosePanel(): void {
@@ -1091,6 +1396,33 @@ export function App(): React.JSX.Element {
     }
     setRefreshState('loading');
     vscode.postMessage({ type: 'refreshBoard' });
+  }
+
+  function moveTaskToListEdge(taskId: string, edge: 'start' | 'end'): void {
+    if (!snapshot || !listDragEnabled) {
+      return;
+    }
+
+    const task = snapshot.allCards.find((entry) => entry.id === taskId);
+    if (!task) {
+      return;
+    }
+
+    const orderedInStatus = cardsForStatus(snapshot, task.status).map((entry) => entry.id);
+    const withoutTask = orderedInStatus.filter((id) => id !== taskId);
+    const destinationIds = edge === 'start' ? [taskId, ...withoutTask] : [...withoutTask, taskId];
+
+    vscode.postMessage({
+      type: 'moveTask',
+      taskId,
+      expectedVersion: task.version,
+      targetStatus: task.status,
+      destinationIds,
+      sourceIds: withoutTask,
+    });
+    setListDropIndicator(null);
+    setDropIndicator(null);
+    setDragState(null);
   }
 }
 
@@ -1131,7 +1463,18 @@ function StatusChip(props: { children: React.ReactNode; danger?: boolean }): Rea
 }
 
 function StatusBadge(props: { status: TaskStatus }): React.JSX.Element {
-  return <span className={`status-badge ${statusToneClass(props.status)}`}>{STATUS_LABELS[props.status]}</span>;
+  return <span className={`status-badge ${statusBadgeClass(props.status)}`}>{STATUS_LABELS[props.status]}</span>;
+}
+
+function WorkstreamBadge(props: { workstream: TaskWorkstream | null }): React.JSX.Element {
+  if (!props.workstream) {
+    return <span className="workstream-badge workstream-unknown">Overig</span>;
+  }
+  return (
+    <span className={`workstream-badge workstream-${props.workstream}`}>
+      {WORKSTREAM_LABELS[props.workstream]}
+    </span>
+  );
 }
 
 function getViewportKind(): ViewportKind {
@@ -1174,6 +1517,9 @@ function matchesFilters(card: TaskCardViewModel, search: string, filters: Filter
   if (filters.tag !== 'all' && !card.tags.includes(filters.tag)) {
     return false;
   }
+  if (filters.workstream !== 'all' && card.workstream !== filters.workstream) {
+    return false;
+  }
   if (filters.onlyOpen && card.status === 'done') {
     return false;
   }
@@ -1208,40 +1554,41 @@ function matchesDueFilter(dueDate: string | null, filter: DueFilter): boolean {
   return dueDate < today;
 }
 
-function sortCards(cards: TaskCardViewModel[], sort: TaskSort): TaskCardViewModel[] {
-  return [...cards].sort((left, right) => {
-    if (sort === 'due_date') {
-      return compareDue(left.dueDate, right.dueDate) || comparePriority(left.priority, right.priority);
-    }
-    if (sort === 'priority') {
-      return comparePriority(left.priority, right.priority) || compareDue(left.dueDate, right.dueDate);
-    }
-    if (sort === 'updated_at') {
-      return right.updatedAt.localeCompare(left.updatedAt);
-    }
-    if (sort === 'alphabetical') {
-      return left.title.localeCompare(right.title);
-    }
-    return (left.sortOrder ?? Number.MAX_SAFE_INTEGER) - (right.sortOrder ?? Number.MAX_SAFE_INTEGER);
+function cardsForStatus(snapshot: BoardSnapshot, status: TaskStatus): TaskCardViewModel[] {
+  return sortTaskCards(
+    snapshot.allCards.filter((card) => card.status === status),
+    'manual',
+  );
+}
+
+function buildDropIndicatorForCard(input: {
+  event: React.DragEvent<HTMLElement>;
+  dragState: DragState;
+  status: TaskStatus;
+  cards: TaskCardViewModel[];
+  cardId: string;
+}): DropIndicatorState | null {
+  const destinationWithoutTask = input.cards
+    .filter((card) => card.id !== input.dragState.taskId)
+    .map((card) => card.id);
+  if (!destinationWithoutTask.includes(input.cardId)) {
+    return null;
+  }
+
+  const rect = input.event.currentTarget.getBoundingClientRect();
+  const placement = getDropPlacementFromPointer(input.event.clientY - rect.top, rect.height);
+  const index = computeInsertIndex({
+    destinationIdsWithoutDragged: destinationWithoutTask,
+    anchorTaskId: input.cardId,
+    placement,
   });
-}
 
-function comparePriority(left: TaskPriority, right: TaskPriority): number {
-  const weight = (priority: TaskPriority) => (priority === 'p1' ? 1 : priority === 'p2' ? 2 : 3);
-  return weight(left) - weight(right);
-}
-
-function compareDue(left: string | null, right: string | null): number {
-  if (left && right) {
-    return left.localeCompare(right);
-  }
-  if (left) {
-    return -1;
-  }
-  if (right) {
-    return 1;
-  }
-  return 0;
+  return {
+    status: input.status,
+    index,
+    cardId: input.cardId,
+    placement,
+  };
 }
 
 function splitTags(input: string): string[] {
@@ -1282,8 +1629,45 @@ function checklistProgressLabel(completed: number, total: number): string {
   return `${percent}% checklist (${completed}/${total})`;
 }
 
-function statusToneClass(status: TaskStatus): string {
-  return STATUS_TONE_CLASS[status];
+function getDropPlacementForEvent(event: React.DragEvent<HTMLElement>): 'before' | 'after' {
+  const rect = event.currentTarget.getBoundingClientRect();
+  return getDropPlacementFromPointer(event.clientY - rect.top, rect.height);
+}
+
+const STATUS_TEXT_CLASS: Record<TaskStatus, string> = {
+  backlog: 'status-text-backlog',
+  ready: 'status-text-ready',
+  in_progress: 'status-text-in-progress',
+  blocked: 'status-text-blocked',
+  done: 'status-text-done',
+};
+
+const STATUS_BADGE_CLASS: Record<TaskStatus, string> = {
+  backlog: 'status-badge-tone-backlog',
+  ready: 'status-badge-tone-ready',
+  in_progress: 'status-badge-tone-in-progress',
+  blocked: 'status-badge-tone-blocked',
+  done: 'status-badge-tone-done',
+};
+
+const STATUS_RAIL_CLASS: Record<TaskStatus, string> = {
+  backlog: 'status-rail-backlog',
+  ready: 'status-rail-ready',
+  in_progress: 'status-rail-in-progress',
+  blocked: 'status-rail-blocked',
+  done: 'status-rail-done',
+};
+
+function statusTextClass(status: TaskStatus): string {
+  return STATUS_TEXT_CLASS[status];
+}
+
+function statusBadgeClass(status: TaskStatus): string {
+  return STATUS_BADGE_CLASS[status];
+}
+
+function statusRailClass(status: TaskStatus): string {
+  return STATUS_RAIL_CLASS[status];
 }
 
 function formatTaskRef(taskId: string): string {
@@ -1297,4 +1681,15 @@ function formatTaskRef(taskId: string): string {
   }
 
   return `${base.slice(0, 16).toUpperCase()}…`;
+}
+
+function toMetadataFormState(task: TaskCardViewModel): MetadataFormState {
+  return {
+    title: task.title,
+    status: task.status,
+    priority: task.priority,
+    summary: task.summary,
+    tags: task.tags.join(', '),
+    dueDate: task.dueDate ?? '',
+  };
 }

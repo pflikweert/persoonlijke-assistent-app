@@ -8,6 +8,7 @@ source: docs/project/20-planning/40-deviations-and-decisions.md
 updated_at: 2026-04-19
 summary: "Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een smalle brugpilot expliciet prioriteit krijgen."
 tags: [planning, transitiemaand]
+workstream: idea
 due_date: null
 sort_order: 1
 ---

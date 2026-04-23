@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { CONCRETE_CHECKLIST_HEADING, TASK_PRIORITIES, TASK_STATUSES } from './constants';
+import { CONCRETE_CHECKLIST_HEADING, TASK_PRIORITIES, TASK_STATUSES, TASK_WORKSTREAMS } from './constants';
 import type {
   ChecklistItem,
   FileVersion,
@@ -9,6 +9,7 @@ import type {
   TaskPriority,
   TaskSectionRange,
   TaskStatus,
+  TaskWorkstream,
 } from './types';
 
 const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---\n?/;
@@ -45,8 +46,9 @@ export function parseTaskFile(input: {
   const phase = readRequiredString(frontmatterValues.phase, 'phase', input.relativePath);
   const source = readRequiredString(frontmatterValues.source, 'source', input.relativePath);
   const updatedAt = readRequiredString(frontmatterValues.updated_at, 'updated_at', input.relativePath);
-  const summary = readOptionalString(frontmatterValues.summary) ?? deriveSummary(sections);
+  const summary = normalizeSummaryText(readOptionalString(frontmatterValues.summary) ?? deriveSummary(sections));
   const tags = readStringArray(frontmatterValues.tags);
+  const workstream = readTaskWorkstream(frontmatterValues.workstream);
   const dueDate = readOptionalString(frontmatterValues.due_date);
   const sortOrder = readOptionalNumber(frontmatterValues.sort_order);
   const excerpt = buildExcerpt(summary);
@@ -62,6 +64,7 @@ export function parseTaskFile(input: {
     updatedAt,
     summary,
     tags,
+    workstream,
     dueDate,
     sortOrder,
     checklist,
@@ -266,6 +269,16 @@ function readTaskPriority(value: FrontmatterValue, relativePath: string): TaskPr
   return value as TaskPriority;
 }
 
+function readTaskWorkstream(value: FrontmatterValue | undefined): TaskWorkstream | null {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  return TASK_WORKSTREAMS.includes(value as TaskWorkstream) ? (value as TaskWorkstream) : null;
+}
+
 function stripQuotes(input: string): string {
   if (input.startsWith('"') && input.endsWith('"')) {
     try {
@@ -287,6 +300,14 @@ function stripQuotes(input: string): string {
 }
 
 function inferBucket(relativePath: string): TaskBucket {
+  if (
+    relativePath.includes(`${path.sep}archive${path.sep}`) ||
+    relativePath.startsWith(`archive${path.sep}`) ||
+    relativePath.includes('/archive/')
+  ) {
+    return 'archived';
+  }
+
   return relativePath.includes(`${path.sep}done${path.sep}`) || relativePath.startsWith(`done${path.sep}`)
     ? 'done'
     : relativePath.includes('/done/')
@@ -298,7 +319,7 @@ function deriveSummary(sections: Map<string, TaskSectionRange>): string {
   const desired = extractFirstParagraph(
     sections.get('gewenste uitkomst')?.lines ?? sections.get('probleem / context')?.lines ?? [],
   );
-  return desired || 'Nog geen korte samenvatting.';
+  return normalizeSummaryText(desired || 'Nog geen korte samenvatting.');
 }
 
 function extractFirstParagraph(lines: string[]): string {
@@ -319,9 +340,26 @@ function extractFirstParagraph(lines: string[]): string {
 }
 
 function buildExcerpt(summary: string): string {
-  if (summary.length <= 180) {
-    return summary;
+  const compact = summary.replace(/\s+/g, ' ').trim();
+  if (compact.length <= 180) {
+    return compact;
   }
 
-  return `${summary.slice(0, 177).trimEnd()}...`;
+  return `${compact.slice(0, 177).trimEnd()}...`;
+}
+
+function normalizeSummaryText(input: string): string {
+  const withDecodedEscapes = input
+    .replace(/\r\n?/g, '\n')
+    .replace(/\\{2,}n/g, '\n')
+    .replace(/\\n/g, '\n');
+
+  const normalizedLines = withDecodedEscapes
+    .split('\n')
+    .map((line) => line.replace(/\s+$/g, ''))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return normalizedLines || 'Nog geen korte samenvatting.';
 }
