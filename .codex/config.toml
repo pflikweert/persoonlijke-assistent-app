@@ -1,0 +1,29 @@
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+
+[projects."/Users/pieterflikweert/development/persoonlijke-assistent-app"]
+trust_level = "trusted"
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp"]
+
+[mcp_servers.stitch]
+command = "npx"
+args = ["-y", "@_davideast/stitch-mcp", "proxy"]
+enabled = true
+env_vars = [
+  "STITCH_API_KEY",
+]
+
+[mcp_servers.supabase_local]
+url = "http://127.0.0.1:54321/mcp"
+enabled = true
+
+[mcp_servers.supabase_remote_ro]
+url = "https://mcp.supabase.com/mcp?project_ref=__SET_SUPABASE_PROJECT_REF__&read_only=true"
+enabled = false
