@@ -10,7 +10,7 @@ summary: "Long-press reorder voor momentfoto's met duidelijke thumbnail-indicati
 tags: [moment-detail, photos, audio-settings, taskflow]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context
