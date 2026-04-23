@@ -13,6 +13,7 @@ due_date: null
 sort_order: 2
 ---
 
+
 ## Probleem / context
 
 De moment detail-flow mist nog foto-reordering in de onderste galerij, terwijl de eerste positie functioneel de featured thumbnail bovenin bepaalt.

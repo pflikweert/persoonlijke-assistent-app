@@ -10,7 +10,7 @@ summary: "Werk een besluitbaar plan uit om strategische docs naar een aparte pri
 tags: [docs, governance, security, repo-structuur, planning]
 workstream: idea
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
 
 

@@ -22,6 +22,12 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:unit:coverage": "vitest run --coverage",
+    "test:e2e:gallery:seed": "node scripts/seed-local-entry-photo-gallery-smoke.mjs",
+    "test:e2e:gallery:cleanup": "node scripts/seed-local-entry-photo-gallery-smoke.mjs --cleanup",
+    "test:e2e:gallery:smoke": "playwright test tests/e2e/gallery-smoke.spec.mjs",
+    "test:e2e:gallery:full": "playwright test tests/e2e/gallery-full.spec.mjs",
     "test:chatgpt-markdown-import": "node scripts/test-chatgpt-markdown-import.mjs",
     "test:reflection-helpers": "node scripts/test-reflection-helpers.mjs",
     "verify:local-auth-mail": "sh ./scripts/verify-local-auth-mail.sh",
@@ -89,11 +95,14 @@
     "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/react": "~19.1.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "supabase": "^2.84.5",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.5"
   },
   "private": true
 }

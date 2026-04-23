@@ -5,8 +5,8 @@ import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
+  type GestureResponderEvent,
   Modal,
-  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -36,6 +36,11 @@ import {
   type EntryPhotoAsset,
   uploadEntryPhotoForEntry,
 } from "@/services";
+import {
+  getGalleryDragLeft,
+  getGalleryDragTargetIndex,
+  reorderGalleryItems,
+} from "@/src/lib/entry-photo-gallery/sorting";
 import { colorTokens, radius, spacing } from "@/theme";
 
 type PreparedImageAsset = {
@@ -62,32 +67,8 @@ const THUMB_SIZE = 84;
 const THUMB_GAP = spacing.sm;
 const THUMB_SLOT_WIDTH = THUMB_SIZE + THUMB_GAP;
 const DRAG_PLACEHOLDER_SCALE = 0.94;
-const LONG_PRESS_DELAY_MS = 220;
-
-function clampIndex(index: number, length: number): number {
-  if (length <= 0) {
-    return 0;
-  }
-  return Math.max(0, Math.min(length - 1, index));
-}
-
-function reorderPhotos(
-  photos: EntryPhotoAsset[],
-  fromIndex: number,
-  toIndex: number
-): EntryPhotoAsset[] {
-  if (fromIndex === toIndex) {
-    return photos;
-  }
-
-  const next = photos.slice();
-  const [moved] = next.splice(fromIndex, 1);
-  if (!moved) {
-    return photos;
-  }
-  next.splice(toIndex, 0, moved);
-  return next;
-}
+const SORT_HOLD_MS = 120;
+const TAP_MOVE_TOLERANCE = 8;
 
 function getLongEdgeResize(width: number, height: number, maxLongEdge: number) {
   if (width <= 0 || height <= 0) {
@@ -404,12 +385,6 @@ export function EntryPhotoFeaturedPreview({
         style={[styles.featuredWrap, { backgroundColor: palette.surfaceLow }]}
       >
         <Image source={effectivePhotos[0]?.thumbSource} contentFit="cover" style={styles.featuredImage} />
-        <View style={[styles.thumbnailBadge, { backgroundColor: palette.primaryStrong }]}>
-          <MaterialIcons name="image" size={12} color={palette.primaryOn} />
-          <ThemedText type="caption" style={[styles.thumbnailBadgeText, { color: palette.primaryOn }]}>
-            Thumbnail
-          </ThemedText>
-        </View>
       </Pressable>
 
       <EntryPhotoViewer
@@ -472,8 +447,15 @@ export function EntryPhotoGallery({
   const [dragTargetIndex, setDragTargetIndex] = useState<number | null>(null);
   const dragX = useRef(new Animated.Value(0)).current;
   const dragStartLeftRef = useRef(0);
+  const dragPointerStartPageXRef = useRef(0);
   const dragSnapshotRef = useRef<EntryPhotoAsset[] | null>(null);
-  const suppressPressUntilRef = useRef(0);
+  const dragHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragOriginIndexRef = useRef<number | null>(null);
+  const dragTargetIndexRef = useRef<number | null>(null);
+  const draggingPhotoIdRef = useRef<string | null>(null);
+  const pendingDragIndexRef = useRef<number | null>(null);
+  const pendingDragStartPageXRef = useRef(0);
+  const pendingDragStartedAtRef = useRef(0);
 
   const hasPhotos = photos.length > 0;
   const remainingSlots = Math.max(0, MAX_PHOTOS - photos.length);
@@ -484,15 +466,30 @@ export function EntryPhotoGallery({
     onPhotosSnapshotChange?.(photos);
   }, [onPhotosSnapshotChange, photos]);
 
+  const clearDragHoldTimer = useCallback(() => {
+    if (dragHoldTimerRef.current) {
+      clearTimeout(dragHoldTimerRef.current);
+      dragHoldTimerRef.current = null;
+    }
+  }, []);
+
   const resetDragState = useCallback(() => {
+    clearDragHoldTimer();
+    draggingPhotoIdRef.current = null;
+    dragOriginIndexRef.current = null;
+    dragTargetIndexRef.current = null;
+    pendingDragIndexRef.current = null;
     setDraggingPhotoId(null);
     setDragOriginIndex(null);
     setDragTargetIndex(null);
     dragSnapshotRef.current = null;
     dragStartLeftRef.current = 0;
+    dragPointerStartPageXRef.current = 0;
     dragX.stopAnimation();
     dragX.setValue(0);
-  }, [dragX]);
+  }, [clearDragHoldTimer, dragX]);
+
+  useEffect(() => clearDragHoldTimer, [clearDragHoldTimer]);
 
   const persistReorder = useCallback(
     async (previousPhotos: EntryPhotoAsset[], nextPhotos: EntryPhotoAsset[]) => {
@@ -514,10 +511,8 @@ export function EntryPhotoGallery({
   const finishDrag = useCallback(
     (cancelled = false) => {
       const previousPhotos = dragSnapshotRef.current ?? photos;
-      const fromIndex = dragOriginIndex;
-      const toIndex = dragTargetIndex;
-
-      resetDragState();
+      const fromIndex = dragOriginIndexRef.current;
+      const toIndex = dragTargetIndexRef.current;
 
       if (
         cancelled ||
@@ -526,48 +521,17 @@ export function EntryPhotoGallery({
         fromIndex === toIndex ||
         !previousPhotos[fromIndex]
       ) {
+        resetDragState();
         return;
       }
 
-      const nextPhotos = reorderPhotos(previousPhotos, fromIndex, toIndex);
+      const nextPhotos = reorderGalleryItems(previousPhotos, fromIndex, toIndex);
       setPhotos(nextPhotos);
       onPhotosSnapshotChange?.(nextPhotos);
+      resetDragState();
       void persistReorder(previousPhotos, nextPhotos);
     },
-    [
-      dragOriginIndex,
-      dragTargetIndex,
-      onPhotosSnapshotChange,
-      persistReorder,
-      photos,
-      resetDragState,
-      setPhotos,
-    ]
-  );
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: () => draggingPhotoId !== null,
-        onMoveShouldSetPanResponderCapture: () => draggingPhotoId !== null,
-        onPanResponderMove: (_, gestureState) => {
-          if (draggingPhotoId === null) {
-            return;
-          }
-
-          const maxLeft = Math.max(0, (photos.length - 1) * THUMB_SLOT_WIDTH);
-          const nextLeft = Math.max(
-            0,
-            Math.min(maxLeft, dragStartLeftRef.current + gestureState.dx)
-          );
-          dragX.setValue(nextLeft);
-          setDragTargetIndex(clampIndex(Math.round(nextLeft / THUMB_SLOT_WIDTH), photos.length));
-        },
-        onPanResponderRelease: () => finishDrag(false),
-        onPanResponderTerminate: () => finishDrag(true),
-        onPanResponderTerminationRequest: () => false,
-      }),
-    [dragX, draggingPhotoId, finishDrag, photos.length]
+    [onPhotosSnapshotChange, persistReorder, photos, resetDragState, setPhotos]
   );
 
   const startDrag = useCallback(
@@ -581,15 +545,112 @@ export function EntryPhotoGallery({
         return;
       }
 
-      suppressPressUntilRef.current = Date.now() + 400;
+      clearDragHoldTimer();
       dragSnapshotRef.current = photos.slice();
       dragStartLeftRef.current = index * THUMB_SLOT_WIDTH;
+      dragPointerStartPageXRef.current = pendingDragStartPageXRef.current;
+      dragOriginIndexRef.current = index;
+      dragTargetIndexRef.current = index;
+      draggingPhotoIdRef.current = photo.id;
       dragX.setValue(dragStartLeftRef.current);
       setDragOriginIndex(index);
       setDragTargetIndex(index);
       setDraggingPhotoId(photo.id);
     },
-    [dragX, photos]
+    [clearDragHoldTimer, dragX, photos]
+  );
+
+  const updateDragPosition = useCallback(
+    (pageX: number) => {
+      if (draggingPhotoIdRef.current === null) {
+        return;
+      }
+
+      const nextLeft = getGalleryDragLeft({
+        originLeft: dragStartLeftRef.current,
+        pointerStartPageX: dragPointerStartPageXRef.current,
+        pointerPageX: pageX,
+        itemCount: photos.length,
+        slotWidth: THUMB_SLOT_WIDTH,
+      });
+      const nextTargetIndex = getGalleryDragTargetIndex({
+        dragLeft: nextLeft,
+        itemCount: photos.length,
+        slotWidth: THUMB_SLOT_WIDTH,
+      });
+
+      dragX.setValue(nextLeft);
+      if (dragTargetIndexRef.current !== nextTargetIndex) {
+        dragTargetIndexRef.current = nextTargetIndex;
+        setDragTargetIndex(nextTargetIndex);
+      }
+    },
+    [dragX, photos.length]
+  );
+
+  const handleThumbResponderGrant = useCallback(
+    (index: number, event: GestureResponderEvent) => {
+      clearDragHoldTimer();
+      pendingDragIndexRef.current = index;
+      pendingDragStartPageXRef.current = event.nativeEvent.pageX;
+      pendingDragStartedAtRef.current = Date.now();
+      dragHoldTimerRef.current = setTimeout(() => startDrag(index), SORT_HOLD_MS);
+    },
+    [clearDragHoldTimer, startDrag]
+  );
+
+  const handleThumbResponderMove = useCallback(
+    (index: number, event: GestureResponderEvent) => {
+      const pageX = event.nativeEvent.pageX;
+
+      if (
+        draggingPhotoIdRef.current === null &&
+        pendingDragIndexRef.current === index &&
+        Date.now() - pendingDragStartedAtRef.current >= SORT_HOLD_MS
+      ) {
+        startDrag(index);
+      }
+
+      updateDragPosition(pageX);
+    },
+    [startDrag, updateDragPosition]
+  );
+
+  const handleThumbResponderRelease = useCallback(
+    (index: number, event: GestureResponderEvent) => {
+      const wasDragging = draggingPhotoIdRef.current !== null;
+      const movedDistance = Math.abs(
+        event.nativeEvent.pageX - pendingDragStartPageXRef.current
+      );
+
+      clearDragHoldTimer();
+
+      if (wasDragging) {
+        updateDragPosition(event.nativeEvent.pageX);
+        finishDrag(false);
+        return;
+      }
+
+      resetDragState();
+      if (movedDistance <= TAP_MOVE_TOLERANCE) {
+        setViewerIndex(index);
+      }
+    },
+    [clearDragHoldTimer, finishDrag, resetDragState, updateDragPosition]
+  );
+
+  const handleThumbResponderTerminate = useCallback(() => {
+    clearDragHoldTimer();
+    if (draggingPhotoIdRef.current !== null) {
+      finishDrag(true);
+      return;
+    }
+    resetDragState();
+  }, [clearDragHoldTimer, finishDrag, resetDragState]);
+
+  const shouldBlockResponderTermination = useCallback(
+    () => draggingPhotoIdRef.current === null,
+    []
   );
 
   const runUpload = useCallback(
@@ -790,19 +851,21 @@ export function EntryPhotoGallery({
                         />
                       ) : null}
 
-                      <Pressable
+                      <View
+                        accessible
                         accessibilityRole="imagebutton"
                         accessibilityLabel={
                           isFirst ? `Open thumbnail foto ${index + 1}` : `Open foto ${index + 1}`
                         }
-                        delayLongPress={LONG_PRESS_DELAY_MS}
-                        onLongPress={() => startDrag(index)}
-                        onPress={() => {
-                          if (Date.now() < suppressPressUntilRef.current || draggingPhotoId !== null) {
-                            return;
-                          }
-                          setViewerIndex(index);
-                        }}
+                        accessibilityHint="Houd kort vast en sleep om de volgorde te wijzigen."
+                        testID={`entry-photo-thumb-${photo.id}`}
+                        onStartShouldSetResponder={() => true}
+                        onMoveShouldSetResponder={() => true}
+                        onResponderGrant={(event) => handleThumbResponderGrant(index, event)}
+                        onResponderMove={(event) => handleThumbResponderMove(index, event)}
+                        onResponderRelease={(event) => handleThumbResponderRelease(index, event)}
+                        onResponderTerminate={handleThumbResponderTerminate}
+                        onResponderTerminationRequest={shouldBlockResponderTermination}
                         style={[
                           styles.thumbWrap,
                           {
@@ -816,16 +879,10 @@ export function EntryPhotoGallery({
                         <Image source={photo.thumbSource} contentFit="cover" style={styles.thumbImage} />
                         {isFirst ? (
                           <View style={[styles.thumbBadge, { backgroundColor: palette.primaryStrong }]}>
-                            <MaterialIcons name="image" size={10} color={palette.primaryOn} />
-                            <ThemedText
-                              type="caption"
-                              style={[styles.thumbBadgeText, { color: palette.primaryOn }]}
-                            >
-                              Thumbnail
-                            </ThemedText>
+                            <MaterialIcons name="image" size={8} color={palette.primaryOn} />
                           </View>
                         ) : null}
-                      </Pressable>
+                      </View>
                     </View>
                   );
                 })}
@@ -833,9 +890,8 @@ export function EntryPhotoGallery({
 
               {draggingPhoto && dragOriginIndex !== null ? (
                 <View
-                  pointerEvents="box-none"
+                  pointerEvents="none"
                   style={styles.dragOverlay}
-                  {...panResponder.panHandlers}
                 >
                   <Animated.View
                     style={[
@@ -848,13 +904,7 @@ export function EntryPhotoGallery({
                   >
                     <Image source={draggingPhoto.thumbSource} contentFit="cover" style={styles.thumbImage} />
                     <View style={[styles.thumbBadge, { backgroundColor: palette.primaryStrong }]}>
-                      <MaterialIcons name="drag-indicator" size={10} color={palette.primaryOn} />
-                      <ThemedText
-                        type="caption"
-                        style={[styles.thumbBadgeText, { color: palette.primaryOn }]}
-                      >
-                        {dragTargetIndex === 0 ? "Thumbnail" : "Verplaatsen"}
-                      </ThemedText>
+                      <MaterialIcons name="drag-indicator" size={8} color={palette.primaryOn} />
                     </View>
                   </Animated.View>
                 </View>
@@ -936,21 +986,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     height: 164,
   },
-  thumbnailBadge: {
-    position: "absolute",
-    top: spacing.sm,
-    left: spacing.sm,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  thumbnailBadgeText: {
-    fontSize: 11,
-    lineHeight: 14,
-  },
   featuredImage: {
     width: "100%",
     height: "100%",
@@ -1014,18 +1049,13 @@ const styles = StyleSheet.create({
   },
   thumbBadge: {
     position: "absolute",
-    left: 6,
-    bottom: 6,
+    left: 4,
+    bottom: 4,
+    width: 22,
+    height: 22,
     borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-  },
-  thumbBadgeText: {
-    fontSize: 10,
-    lineHeight: 12,
+    justifyContent: "center",
   },
   galleryMetaRow: {
     flexDirection: "row",

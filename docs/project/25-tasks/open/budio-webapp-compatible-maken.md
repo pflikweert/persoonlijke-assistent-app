@@ -10,7 +10,7 @@ summary: "Implementeer PWA-installatieprompt voor webgebruikers om de app als de
 tags: [pwa, webapp, installatie, modal, cookie]
 workstream: app
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
 
 ## Probleem / context

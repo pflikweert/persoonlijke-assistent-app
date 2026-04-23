@@ -42,6 +42,12 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 14. Elk inhoudelijk plan noemt expliciet de concrete taskfile-path.
 15. Een automatisch aangemaakte taak komt altijd bovenaan de doel-lane met `sort_order: 1`; herschrijf de overige open taakfiles in die lane doorlopend zodat de sortering opgeslagen blijft.
 16. Wanneer een open taak naar `in_progress` gaat, komt die altijd bovenaan de `in_progress` lane; herschrijf `sort_order` in bron- en doellane doorlopend zodat lane-sortering leidend en persistent blijft.
+17. Elk Plan Mode-plan bevat een korte **Taskflow summary** met:
+    - welke bestaande taskfile wordt gebruikt, of welke nieuwe taskfile nodig is
+    - welke statuswijziging verwacht wordt
+    - wanneer extra werk binnen dezelfde task blijft
+    - wanneer extra werk een eigen task krijgt
+18. Verbeteringen uit testen van dezelfde flow blijven in dezelfde task; nieuw werk dat niet direct relevant is voor die flow krijgt een eigen task.
 
 ## Standaardflow
 
@@ -56,6 +62,8 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
    - Zet status direct op `in_progress` wanneer uitvoering start (tenzij al correct).
    - Verplaats de actieve taak direct naar de top van de `in_progress` lane en herschrijf de lane-volgorde expliciet.
    - Werk checklist, blockers en verify-sectie bij.
+   - Leg testbevindingen en directe verbeteringen binnen dezelfde flow vast in dezelfde task.
+   - Maak alleen een nieuwe task wanneer het extra werk inhoudelijk losstaat van de actieve flow.
 4. **Done**
    - Zet status op `done`.
    - Verplaats het bestand naar `docs/project/25-tasks/done/`.

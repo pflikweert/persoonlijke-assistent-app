@@ -10,7 +10,7 @@ summary: "Zet de huidige AIQS-variant snel en gecontroleerd live in productie vo
 tags: [aiqs, productie, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 

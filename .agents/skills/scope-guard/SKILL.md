@@ -14,8 +14,11 @@ Gebruik bij elke taak met risico op scope-uitloop of over-architectuur.
 5. Houd input minimaal: doel + scope + files.
 6. Stop uitbreidingen buiten expliciete vraag.
 7. Bij UI-werk: eerst hergebruik/scaffold-check doen via `docs/dev/ui-assembly-decision-tree.md`.
+8. Refactor alleen binnen de aangeraakte flow en alleen wanneer dit testbaarheid, leesbaarheid of risicoreductie helpt.
+9. Grotere opruimingen, repo-brede cleanup of refactors buiten de actieve flow krijgen een eigen task.
 
 # Niet doen
 - Geen nieuwe productrichting introduceren.
 - Geen ongevraagde infra of architectuurlagen toevoegen.
+- Geen big-bang refactor onder de vlag van een kleine taak.
 - Geen herhaling van projectcontext in output.

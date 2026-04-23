@@ -25,6 +25,9 @@ Lees alleen wat nodig is:
 8. Maak background-modi en surfaces mode-aware; dark mode is nooit de impliciete default voor light mode.
 9. Verifieer met relevante design refs en een gerichte dark + light runtime/smoke-check voordat je “klaar” zegt.
 10. Voor deze repo is `http://localhost:8081` de standaard lokale web smoke-test target wanneer een bestaande lokale web devserver draait en geen andere target is opgegeven.
+11. Bij interactieve UI met complexe state: houd de zichtbare component vooral rendering + wiring; zet branchy berekeningen in helpers en lifecycle-heavy eventlogica in een kleine hook waar dat begrip of testbaarheid verbetert.
+12. Technische complexiteit mag niet lekken naar extra UI-copy, surfaces of controls; versimpel de zichtbare UI waar mogelijk.
+13. Bij gedrag/interactie: draai relevante unit-tests voor helperlogica en een smoke-test voor de kerninteractie, of leg expliciet vast waarom smoke nog niet mogelijk is.
 
 # Niet doen
 - Geen redesign zonder expliciete opdracht.
@@ -32,3 +35,5 @@ Lees alleen wat nodig is:
 - Geen zware auth-cards, image backgrounds, borders of fills als shortcut.
 - Geen dark-only gradients, surfaces of scrims in shared primitives.
 - Geen productstatus ophogen zonder hard bewijs.
+- Geen grote component-local interactielaag laten groeien wanneer een helper/hook de flow duidelijker en testbaarder maakt.
+- Geen interactieve UI-fix als "bewezen" markeren op basis van alleen lint/typecheck.

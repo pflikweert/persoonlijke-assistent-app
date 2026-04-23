@@ -22,10 +22,13 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
      - `Task file: ...`
      - `Status: ...`
    - Noem in elk inhoudelijk plan expliciet het concrete taskfile-pad.
+   - Voeg in Plan Mode-plannen altijd een korte `Taskflow summary` toe: bestaande/nieuwe taskfile, verwachte statuswijziging, en wanneer extra werk een eigen task krijgt.
 
 2. **Tijdens uitvoering**
    - Houd `updated_at` actueel bij betekenisvolle voortgang.
    - Werk checklist-items alleen bij op echte milestone-completion.
+   - Testbevindingen en verbeteringen binnen dezelfde flow blijven in dezelfde task.
+   - Nieuw niet-relevant werk krijgt een eigen task.
 
 3. **Bij blokkade**
    - Zet status op `blocked` met korte blocker in taskfile.

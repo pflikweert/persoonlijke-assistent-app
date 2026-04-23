@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-04-23T01:08:01.843Z
-Source Commit: 1a351a5
+Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
+Source Commit: c69cc17
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-23T01:08:01.843Z
-Source Commit: 1a351a5
+Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
+Source Commit: c69cc17
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -737,6 +737,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | --- | --- | --- | --- | --- |
 | [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Backlog | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
 | [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Backlog | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
+| [Entry photo gallery volledige end-user E2E flows](25-tasks/open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | Ready | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
 | [Moment detail foto reorder + thumbnail-logica en audio test auto-stop](25-tasks/open/moment-detail-foto-reorder-en-audio-test-auto-stop.md) | In Progress | p1 | transitiemaand-consumer-beta | Op het moment-detailscherm kan de gebruiker een foto lang indrukken en intuïtief naar een andere positie slepen. Tijdens het slepen is du... |
@@ -744,6 +745,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [Budio webapp compatible maken](25-tasks/open/budio-webapp-compatible-maken.md) | Backlog | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 | [Docs scheiden naar private repo (strategie + migratieplan)](25-tasks/open/docs-private-repo-scheiding-en-migratieplan.md) | Backlog | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
 | [niet vergeten](25-tasks/open/niet-vergeten.md) | Backlog | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
+| [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
@@ -2625,6 +2627,36 @@ Gebruik Act mode voor:
 - Gebruik voor deze repo `http://localhost:8081` als standaard lokale web dev/smoke-test target wanneer geen andere lokale webtarget is opgegeven.
 - Gebruik geen `CI=1` prefix voor lokale dev-server commando’s.
 - Als live server nodig is: geef alleen het handmatige commando aan de gebruiker.
+
+## Repo-local Codex MCP (local AI development)
+
+Gebruik voor deze repo standaard de lokale MCP-config in `.codex/config.toml`.
+
+Default (veilig):
+
+- `supabase_local` actief
+- `supabase_remote_ro` uit
+
+Switchflow:
+
+- local activeren: `node scripts/codex-mcp-target.mjs local`
+- remote/prod read-only activeren: `node scripts/codex-mcp-target.mjs remote-ro --project-ref <project_ref>`
+
+Gebruik `supabase_remote_ro` alleen wanneer nodig voor:
+
+- productiegerichte read-only diagnose
+- metadata/log/context-checks die lokaal niet beschikbaar zijn
+
+Gebruik `supabase_remote_ro` niet voor:
+
+- schema- of datawrites
+- reguliere lokale ontwikkeliteraties
+- bulk inspecties als local/dev voldoende is
+
+Agent-default:
+
+- bij twijfel altijd `supabase_local`
+- na remote-ro checks altijd terugzetten naar local
 
 ## Lessen uit sessies (stabiel, herbruikbaar)
 
