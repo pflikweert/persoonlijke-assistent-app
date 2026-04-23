@@ -243,6 +243,48 @@ export async function uploadEntryPhotoForEntry(input: {
   }
 }
 
+export async function reorderEntryPhotosForEntry(input: {
+  rawEntryId: string;
+  orderedPhotoIds: string[];
+}): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
+  }
+
+  const rawEntryId = input.rawEntryId.trim();
+  if (!rawEntryId) {
+    throw new Error("Moment-id ontbreekt.");
+  }
+
+  const orderedPhotoIds = input.orderedPhotoIds
+    .map((photoId) => photoId.trim())
+    .filter(Boolean);
+
+  if (orderedPhotoIds.length < 1 || orderedPhotoIds.length > MAX_ENTRY_PHOTOS) {
+    throw new Error("De fotovolgorde is ongeldig.");
+  }
+
+  if (new Set(orderedPhotoIds).size !== orderedPhotoIds.length) {
+    throw new Error("De fotovolgorde bevat dubbelen.");
+  }
+
+  const flowId = createClientFlowId("entry-photo");
+  await ensureAuthenticatedUserSession({
+    flowId,
+    source: "entry-photos",
+  });
+
+  const { error } = await (supabase as any).rpc("reorder_entry_photos", {
+    input_raw_entry_id: rawEntryId,
+    input_photo_ids: orderedPhotoIds,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function deleteEntryPhotoById(photoId: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {

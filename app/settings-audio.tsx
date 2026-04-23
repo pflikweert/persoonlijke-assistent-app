@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Platform,
@@ -45,6 +45,7 @@ const TEST_ADVICE_REFRESH_MS = 2200;
 const TEST_INITIAL_ADVICE_DELAY_MS = 5500;
 const TEST_MIN_SPEECH_DURATION_MS = 2400;
 const TEST_SPEECH_GATE = 0.12;
+const TEST_SILENCE_STOP_MS = 10000;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -103,6 +104,7 @@ export default function SettingsAudioScreen() {
   const testSamplesRef = useRef<{ at: number; level: number }[]>([]);
   const testLastAdviceRefreshRef = useRef(0);
   const testStartedAtRef = useRef(0);
+  const testLastAudibleAtRef = useRef(0);
 
   function gainDescriptor(value: number): "Zachter" | "Standaard" | "Versterken" {
     if (value < 1) {
@@ -114,7 +116,7 @@ export default function SettingsAudioScreen() {
     return "Standaard";
   }
 
-  function stopMicrophoneTest() {
+  function stopMicrophoneTest(options?: { nextAdviceMessage?: string }) {
     if (testRafRef.current !== null) {
       cancelAnimationFrame(testRafRef.current);
       testRafRef.current = null;
@@ -131,9 +133,13 @@ export default function SettingsAudioScreen() {
     }
     testGainNodeRef.current = null;
     testAnalyserRef.current = null;
+    testLastAudibleAtRef.current = 0;
 
     setIsTestingMic(false);
     setTestLevel(0);
+    if (typeof options?.nextAdviceMessage === "string") {
+      setTestAdviceMessage(options.nextAdviceMessage);
+    }
   }
 
   function analyseRecentWindow(now: number) {
@@ -281,6 +287,7 @@ export default function SettingsAudioScreen() {
       testSamplesRef.current = [];
       testLastAdviceRefreshRef.current = 0;
       testStartedAtRef.current = Date.now();
+      testLastAudibleAtRef.current = testStartedAtRef.current;
 
       const data = new Uint8Array(analyser.fftSize);
       const tick = () => {
@@ -296,7 +303,17 @@ export default function SettingsAudioScreen() {
         setTestLevel(normalized);
 
         const now = Date.now();
+        if (normalized >= TEST_SPEECH_GATE) {
+          testLastAudibleAtRef.current = now;
+        }
         testSamplesRef.current.push({ at: now, level: normalized });
+
+        if (now - testLastAudibleAtRef.current >= TEST_SILENCE_STOP_MS) {
+          stopMicrophoneTest({
+            nextAdviceMessage: "We hoorden 10 seconden niets meer. De test is automatisch gestopt.",
+          });
+          return;
+        }
 
         if (now - testLastAdviceRefreshRef.current >= TEST_ADVICE_REFRESH_MS) {
           testLastAdviceRefreshRef.current = now;
@@ -359,6 +376,14 @@ export default function SettingsAudioScreen() {
       stopMicrophoneTest();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        stopMicrophoneTest();
+      };
+    }, [])
+  );
 
   async function persistPreference(nextValue: boolean) {
     setSaving(true);

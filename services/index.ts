@@ -35,6 +35,7 @@ export {
 export {
     deleteEntryPhotoById,
     fetchEntryPhotosByRawEntryId,
+    reorderEntryPhotosForEntry,
     uploadEntryPhotoForEntry,
     type EntryPhotoAsset
 } from "./entry-photos";
@@ -104,4 +105,3 @@ export {
     type UserAudioPreferences,
     type UserObsidianPreferences
 } from "./user-preferences";
-

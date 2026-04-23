@@ -44,6 +44,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   createEntryAudioSignedUrl,
   deleteNormalizedEntryById,
+  type EntryPhotoAsset,
   fetchNormalizedEntryById,
   generateReflection,
   hasReflectionForAnchorDate,
@@ -218,6 +219,7 @@ export default function EntryCompletionScreen() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [photoRefreshTick, setPhotoRefreshTick] = useState(0);
+  const [photoSnapshot, setPhotoSnapshot] = useState<EntryPhotoAsset[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [entry, setEntry] =
     useState<Awaited<ReturnType<typeof fetchNormalizedEntryById>>>(null);
@@ -406,6 +408,10 @@ export default function EntryCompletionScreen() {
   const handlePhotosChanged = useCallback(() => {
     setPhotoRefreshTick((current) => current + 1);
   }, []);
+
+  useEffect(() => {
+    setPhotoSnapshot(null);
+  }, [entry?.raw_entry_id]);
 
   const handleRetryAudio = useCallback(async () => {
     if (audioRetrying) {
@@ -649,6 +655,8 @@ export default function EntryCompletionScreen() {
                 rawEntryId={entry.raw_entry_id}
                 refreshToken={photoRefreshTick}
                 onPhotosChanged={handlePhotosChanged}
+                onPhotosSnapshotChange={setPhotoSnapshot}
+                photosOverride={photoSnapshot}
               />
             </ThemedView>
 
@@ -765,6 +773,7 @@ export default function EntryCompletionScreen() {
                 rawEntryId={entry.raw_entry_id}
                 refreshToken={photoRefreshTick}
                 onPhotosChanged={handlePhotosChanged}
+                onPhotosSnapshotChange={setPhotoSnapshot}
               />
             </ThemedView>
 

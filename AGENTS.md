@@ -93,6 +93,33 @@ Voor AI-gedrag, prompting en evaluatie:
 - Is een learning taak-/domeinspecifiek en herhaalbaar, leg die vast in een bestaande skill (niet in AGENTS).
 - Voor "nieuwe taak": maak eerst een taskfile aan vanuit `docs/project/25-tasks/_template.md`.
 - Voor verwijzing op taaktitel: open eerst de overeenkomstige taskfile; gebruik `id` als fallback bij ambiguiteit.
+- Always-on taskflow (verplicht voor alle inhoudelijke agenttaken):
+  - geldt voor plan/research/bug/implementatie binnen repo-context
+  - uitzondering: pure chat of simpele read-only vraag zonder uitvoertaak
+  - preflight: vind bestaande taskfile of maak nieuwe taskfile uit `docs/project/25-tasks/_template.md`
+  - geen inhoudelijk plan, research-antwoord of implementatiestart zonder bestaande of nieuw aangemaakte taskfile
+  - als taskfile ontbreekt: maak die eerst aan en ga pas daarna verder met plan/research/uitvoering
+  - wanneer een taak automatisch wordt aangemaakt: plaats die direct bovenaan de doel-lane door `sort_order` van die lane te herschrijven en de nieuwe taak op positie `1` te zetten
+  - wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: plaats die direct bovenaan de `in_progress` lane door `sort_order` van bron- en doellane opnieuw doorlopend op te slaan
+  - zet status direct op `in_progress` zodra uitvoering start
+  - eerste inhoudelijke update bevat altijd:
+    - `Task: <taaktitel>`
+    - `Task file: <pad naar task md>`
+    - `Status: <huidige status>`
+  - werk tijdens uitvoering checklist + `updated_at` bij op echte voortgang
+  - elk inhoudelijk plan noemt expliciet de concrete taskfile-path
+  - updates en eindresultaat bevatten altijd:
+    - `Task: <taaktitel>`
+    - `Task file: <pad naar task md>`
+    - `Status: <huidige status>`
+  - afronding vereist:
+    - status `done`
+    - verplaatsing naar `docs/project/25-tasks/done/`
+    - `npm run docs:bundle`
+    - `npm run docs:bundle:verify`
+  - hard guardrail:
+    - draai `npm run taskflow:verify` bij relevante repo-uitvoering
+    - bij falen eerst taskflow herstellen, daarna pas afronden
 - Scope-routing is context-first:
   - default-context is Budio app + AIQS
   - bepaal scope op intentie/formulering (doel, doelgroep, omgeving, planningimpact), niet alleen op letterlijke keywords
@@ -188,6 +215,7 @@ Bij wijzigingen aan canonieke docs:
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 - Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
 - Bij taskstatuswijzigingen of taakverplaatsing naar `done/`: werk taskfile + relevante planning/open-points context bij en draai daarna ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Voor inhoudelijke agentuitvoering in repo-context: draai ook `npm run taskflow:verify`.
 
 Bij wijzigingen in admin-regeneratie:
 
@@ -264,6 +292,7 @@ Voer na relevante wijzigingen uit:
 
 - Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask.
 - Assume the local dev server is already running.
+- Voor deze repo is `http://localhost:8081` de standaard lokale web dev/smoke-test target wanneer geen andere lokale webtarget is opgegeven.
 - Never prefix local dev-server commands with `CI=1`.
 - For validation, use one-shot commands only, such as:
   - `npm run lint`

@@ -24,6 +24,7 @@ Lees alleen wat nodig is:
 7. Houd copy compact: liever hero + action + notice dan dubbele uitleg.
 8. Maak background-modi en surfaces mode-aware; dark mode is nooit de impliciete default voor light mode.
 9. Verifieer met relevante design refs en een gerichte dark + light runtime/smoke-check voordat je “klaar” zegt.
+10. Voor deze repo is `http://localhost:8081` de standaard lokale web smoke-test target wanneer een bestaande lokale web devserver draait en geen andere target is opgegeven.
 
 # Niet doen
 - Geen redesign zonder expliciete opdracht.

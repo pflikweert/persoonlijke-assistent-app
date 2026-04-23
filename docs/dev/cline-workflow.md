@@ -109,6 +109,12 @@ Gebruik Plan mode bij:
 - migraties
 - taken met duidelijke scope-/architectuurrisico’s
 
+Plan mode heft de taskfile-verplichting niet op:
+
+- begin bij inhoudelijke repo-taken altijd met een bestaande of nieuw aangemaakte taskfile
+- een inhoudelijk plan zonder concrete taskfile geldt als onvolledig
+- noem in elk plan expliciet `Task`, `Task file` en `Status`
+
 ## Wanneer Act mode
 
 Gebruik Act mode voor:
@@ -128,6 +134,7 @@ Gebruik Act mode voor:
 ### Multi-file werk
 
 - Begin met expliciete todo/checklist.
+- Maak of vind vóór het plan eerst de taskfile.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
 
@@ -136,6 +143,7 @@ Gebruik Act mode voor:
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
 
 ## ChatGPT Projects uploaddiscipline
@@ -164,6 +172,7 @@ Gebruik Act mode voor:
 ## Dev-server policy
 
 - Start geen langlopende dev servers tenzij expliciet gevraagd.
+- Gebruik voor deze repo `http://localhost:8081` als standaard lokale web dev/smoke-test target wanneer geen andere lokale webtarget is opgegeven.
 - Gebruik geen `CI=1` prefix voor lokale dev-server commando’s.
 - Als live server nodig is: geef alleen het handmatige commando aan de gebruiker.
 

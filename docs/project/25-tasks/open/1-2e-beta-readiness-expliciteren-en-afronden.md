@@ -5,12 +5,22 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-04-19
+updated_at: 2026-04-22
 summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft."
 tags: [consumer-beta, beta-readiness]
+workstream: app
 due_date: null
-sort_order: 1
+sort_order: 3
 ---
+
+
+
+
+
+
+
+
+
 
 
 

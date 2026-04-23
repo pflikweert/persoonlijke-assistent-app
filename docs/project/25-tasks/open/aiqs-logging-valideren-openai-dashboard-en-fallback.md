@@ -5,12 +5,22 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-04-20
+updated_at: 2026-04-22
 summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenkomt in het OpenAI API-dashboard, met werkende fallback-logging en een duidelijke 4-uurs logging-toggle in de admin UI."
 tags: [aiqs, logging, openai, consumer-beta]
+workstream: aiqs
 due_date: null
-sort_order: 3
+sort_order: 2
 ---
+
+
+
+
+
+
+
+
+
 
 
 

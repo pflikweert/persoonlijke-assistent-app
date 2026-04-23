@@ -31,20 +31,36 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 6. Idee vs taak: als flow nog niet bestaat, plugin-ondersteuning ontbreekt, of de scope nog epic-niveau is -> eerst `40-ideas/**` (epic-candidate), pas daarna taakpromotie.
 7. Scope-routing is context-first: default-context is Budio app + AIQS; Jarvis/plugin alleen als intentie daar logisch op wijst.
 8. Bij classificatietwijfel: hoge-impact eerst afstemmen, lage-impact als expliciete aanname vastleggen.
+9. Always-on taskflow is verplicht voor alle inhoudelijke agenttaken (plan/research/bug/implementatie) binnen repo-context.
+10. Uitzondering op regel 9: pure chat of simpele read-only vraag zonder uitvoertaak.
+11. Elke tussentijdse update en elk eindresultaat vermeldt expliciet:
+    - `Task: ...`
+    - `Task file: ...`
+    - `Status: ...`
+12. Een inhoudelijk plan zonder bestaande of nieuw aangemaakte taskfile is onvolledig.
+13. Maak bij ontbrekende taskfile eerst de taskfile aan en ga pas daarna verder met plan/research/implementatie.
+14. Elk inhoudelijk plan noemt expliciet de concrete taskfile-path.
+15. Een automatisch aangemaakte taak komt altijd bovenaan de doel-lane met `sort_order: 1`; herschrijf de overige open taakfiles in die lane doorlopend zodat de sortering opgeslagen blijft.
+16. Wanneer een open taak naar `in_progress` gaat, komt die altijd bovenaan de `in_progress` lane; herschrijf `sort_order` in bron- en doellane doorlopend zodat lane-sortering leidend en persistent blijft.
 
 ## Standaardflow
 
 1. **Create**
    - Maak nieuwe taken vanuit `docs/project/25-tasks/_template.md`.
+   - Voor plan/research geldt dezelfde regel: eerst taskfile, daarna inhoudelijke output.
+   - Zet de nieuwe taak direct bovenaan de doel-lane en sla de nieuwe lane-volgorde expliciet op via `sort_order`.
 2. **Triage**
    - Kies status, prioriteit en fase.
    - Link terug naar bron in planning of `open-points.md`.
 3. **Uitvoering**
+   - Zet status direct op `in_progress` wanneer uitvoering start (tenzij al correct).
+   - Verplaats de actieve taak direct naar de top van de `in_progress` lane en herschrijf de lane-volgorde expliciet.
    - Werk checklist, blockers en verify-sectie bij.
 4. **Done**
    - Zet status op `done`.
    - Verplaats het bestand naar `docs/project/25-tasks/done/`.
 5. **Bundle / verify**
+   - Draai `npm run taskflow:verify`.
    - Draai `npm run docs:bundle`.
    - Draai `npm run docs:bundle:verify`.
 
@@ -60,3 +76,4 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 - Geen `done`-status in `open/`.
 - Geen open status in `done/`.
 - Gebruik de taaklaag niet als vervanging van `current-status.md`.
+- Geen afronding zonder expliciete `Task`/`Task file`/`Status` in updates en eindresultaat.
