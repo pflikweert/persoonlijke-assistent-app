@@ -2,8 +2,8 @@
 
 # Upload Manifest
 
-Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
-Source Commit: c69cc17
+Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
+Source Commit: 4ed38bf
 
 ## Volledige Uploadinventaris
 
@@ -30,6 +30,8 @@ Source Commit: c69cc17
 | `docs/upload/ethos-ivory-design.md` | canonical upload copy | Stitch/design handoff foundations |
 | `docs/upload/stitch-design-context.md` | generated upload copy | Stitch/design handoff |
 | `docs/upload/upload-manifest.md` | generated manifest | Upload completeness check |
+| `docs/upload/60-budio-tasks-full.md` | generated task bundle | Optional upload for full task context (open + done) |
+| `docs/upload/61-budio-tasks-archive-full.md` | generated task archive bundle | Optional upload for full archive context (done only) |
 
 ## Regels
 - Primaire aanbevolen handmatige uploadset staat in `docs/upload/00-budio-upload-manifest.md` en bevat maximaal 5 bestanden totaal.

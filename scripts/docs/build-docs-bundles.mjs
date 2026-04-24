@@ -3,10 +3,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { withDocsBundleLock } from './doc-bundle-lock.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../..');
+const gitDir = execSync('git rev-parse --git-dir', { cwd: repoRoot, encoding: 'utf8' }).trim();
+const docsBundleLockPath = path.resolve(repoRoot, gitDir, 'docs-bundle.lock');
 
 const outputPaths = {
   canonicalOpenPoints: 'docs/project/open-points.md',
@@ -41,6 +44,8 @@ const outputPaths = {
   uploadEthosIvoryDesign: 'docs/upload/ethos-ivory-design.md',
   uploadStitchDesignContext: 'docs/upload/stitch-design-context.md',
   uploadManifest: 'docs/upload/upload-manifest.md',
+  uploadTasksFull: 'docs/upload/60-budio-tasks-full.md',
+  uploadTasksArchiveFull: 'docs/upload/61-budio-tasks-archive-full.md',
 };
 
 const budioAiOperatingSystemSourcePath =
@@ -256,6 +261,16 @@ const uploadSet = [
     path: outputPaths.uploadManifest,
     type: 'generated manifest',
     flow: 'Upload completeness check',
+  },
+  {
+    path: outputPaths.uploadTasksFull,
+    type: 'generated task bundle',
+    flow: 'Optional upload for full task context (open + done)',
+  },
+  {
+    path: outputPaths.uploadTasksArchiveFull,
+    type: 'generated task archive bundle',
+    flow: 'Optional upload for full archive context (done only)',
   },
 ];
 
@@ -1361,6 +1376,57 @@ function renderTaskHub(taskHubSource, tasks) {
   return replaceMarkedSection(taskHubSource, taskIndexMarkers, renderTaskIndex(tasks));
 }
 
+function renderTasksUploadBundle({ buildTimestamp, commitHash, loadedTaskSources, archiveOnly = false }) {
+  const normalized = [...loadedTaskSources]
+    .filter((item) => (archiveOnly ? item.bucket === 'done' : true))
+    .sort((a, b) => a.path.localeCompare(b.path));
+
+  const title = archiveOnly ? 'Budio Tasks Archive Full' : 'Budio Tasks Full';
+  const purpose = archiveOnly
+    ? 'Doel: volledige uploadbundle met alle gearchiveerde tasks uit `docs/project/25-tasks/done/**`.'
+    : 'Doel: volledige uploadbundle met alle tasks uit `docs/project/25-tasks/open/**` en `docs/project/25-tasks/done/**`.';
+
+  const sourceList = archiveOnly
+    ? ['docs/project/25-tasks/done/**']
+    : ['docs/project/25-tasks/open/**', 'docs/project/25-tasks/done/**'];
+
+  const blocks = [
+    renderGeneratedHeader({ title, buildTimestamp, commitHash, purpose }),
+    '',
+    '## Brondirectories',
+    ...sourceList.map((item) => `- ${item}`),
+    '',
+    `## Telling`,
+    `- Totaal tasks opgenomen: ${normalized.length}`,
+    '',
+    '## Leesregel',
+    '- Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.',
+    '- Canonieke taskfiles blijven de bron in `docs/project/25-tasks/**`.',
+  ];
+
+  for (const item of normalized) {
+    blocks.push(
+      '',
+      '---',
+      '',
+      `## ${item.task.metadata.title ?? path.basename(item.path)}`,
+      '',
+      `- Path: \`${item.path}\``,
+      `- Bucket: ${item.bucket}`,
+      `- Status: ${item.task.metadata.status ?? 'unknown'}`,
+      `- Priority: ${item.task.metadata.priority ?? 'unknown'}`,
+      `- Phase: ${item.task.metadata.phase ?? 'unknown'}`,
+      `- Updated_at: ${item.task.metadata.updated_at ?? 'unknown'}`,
+      '',
+      '```md',
+      normalizeLf(item.content).trim(),
+      '```',
+    );
+  }
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
 async function loadBundleInputs() {
   const loadedProjectSources = [];
   for (const source of projectSources) {
@@ -1462,6 +1528,15 @@ function renderOutputs(inputs, metadata) {
     inputs.taskHubSource,
     taskEntries,
   );
+  const uploadTasksFull = renderTasksUploadBundle({
+    ...metadata,
+    loadedTaskSources: inputs.loadedTaskSources,
+  });
+  const uploadTasksArchiveFull = renderTasksUploadBundle({
+    ...metadata,
+    loadedTaskSources: inputs.loadedTaskSources,
+    archiveOnly: true,
+  });
   const loadedProjectSources = inputs.loadedProjectSources.map((source) =>
     source.path === 'docs/project/open-points.md'
       ? { ...source, content: canonicalOpenPoints.trim() }
@@ -1568,6 +1643,8 @@ function renderOutputs(inputs, metadata) {
     [outputPaths.uploadEthosIvoryDesign, `${inputs.ethosDesign.trim()}\n`],
     [outputPaths.uploadStitchDesignContext, stitchDesignContext],
     [outputPaths.uploadManifest, uploadManifest],
+    [outputPaths.uploadTasksFull, uploadTasksFull],
+    [outputPaths.uploadTasksArchiveFull, uploadTasksArchiveFull],
   ]);
 }
 
@@ -1659,26 +1736,30 @@ async function verifyOutputs(outputs) {
 
 async function main() {
   const isCheckMode = process.argv.includes('--check');
-  const discovered = await discoverProjectLayerSources();
-  taskSources = await discoverTaskSources();
-  strategySources = discovered.strategy;
-  planningSources = discovered.planning;
-  researchSources = discovered.research;
-  ideaSources = discovered.ideas;
-  projectSources = [...projectCoreSources];
-  assertDiscoveredSources();
-  const metadata = await resolveBuildMetadata(isCheckMode);
-  const inputs = await loadBundleInputs();
-  await assertRequiredSourcesExist(inputs.pageMarkdownRefs);
-  const outputs = renderOutputs(inputs, metadata);
+  const mode = isCheckMode ? 'verify' : 'bundle';
 
-  if (isCheckMode) {
-    await verifyOutputs(outputs);
-    return;
-  }
+  await withDocsBundleLock(docsBundleLockPath, mode, async () => {
+    const discovered = await discoverProjectLayerSources();
+    taskSources = await discoverTaskSources();
+    strategySources = discovered.strategy;
+    planningSources = discovered.planning;
+    researchSources = discovered.research;
+    ideaSources = discovered.ideas;
+    projectSources = [...projectCoreSources];
+    assertDiscoveredSources();
+    const metadata = await resolveBuildMetadata(isCheckMode);
+    const inputs = await loadBundleInputs();
+    await assertRequiredSourcesExist(inputs.pageMarkdownRefs);
+    const outputs = renderOutputs(inputs, metadata);
 
-  await cleanUploadDirectory(outputs);
-  await writeOutputs(outputs);
+    if (isCheckMode) {
+      await verifyOutputs(outputs);
+      return;
+    }
+
+    await cleanUploadDirectory(outputs);
+    await writeOutputs(outputs);
+  });
 }
 
 main().catch((error) => {
