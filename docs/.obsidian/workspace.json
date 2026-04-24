@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "project/25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md",
+                "file": "project/20-planning/30-now-next-later.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "1-2e-beta-readiness-expliciteren-en-afronden"
+              "title": "30-now-next-later"
             }
           }
         ]
@@ -186,12 +186,16 @@
   },
   "active": "9132288e05cd2f6d",
   "lastOpenFiles": [
+    "project/20-planning/20-active-phase.md",
+    "project/20-planning/10-roadmap-phases.md",
+    "project/10-strategy/20-12-month-plan.md",
+    "project/10-strategy/10-long-term-strategy.md",
+    "project/25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md",
     "project/25-tasks/open/budio-webapp-compatible-maken.md",
     "project/25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md",
     "project/25-tasks/README.md",
     "upload/00-budio-upload-manifest.md",
     "dev/task-lifecycle-workflow.md",
-    "project/25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md",
     "project/25-tasks/done/actieve-maandplanning-herijkt-naar-transitiemaand.md",
     "project/25-tasks/open",
     "project/25-tasks/done",

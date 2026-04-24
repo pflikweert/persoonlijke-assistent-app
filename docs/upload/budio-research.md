@@ -2,8 +2,8 @@
 
 # Budio Research
 
-Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
-Source Commit: c69cc17
+Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
+Source Commit: 4ed38bf
 
 Doel: geordende researchbundle als strategische input voor planherijking, zonder canonieke MVP-docs te overschrijven.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

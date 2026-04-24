@@ -25,5 +25,5 @@ url = "http://127.0.0.1:54321/mcp"
 enabled = true
 
 [mcp_servers.supabase_remote_ro]
-url = "https://mcp.supabase.com/mcp?project_ref=__SET_SUPABASE_PROJECT_REF__&read_only=true"
+url = "https://mcp.supabase.com/mcp?project_ref=xmrndabfqfvkhdhcjqit&read_only=true"
 enabled = false

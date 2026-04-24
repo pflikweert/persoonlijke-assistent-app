@@ -20,7 +20,7 @@
     "onCommand:budioWorkspace.openBoard",
     "onCommand:budioWorkspace.openListView",
     "onCommand:budioWorkspace.openSettings",
-    "onView:budioWorkspace.launcher"
+    "onView:budioWorkspace.activityEntry"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -110,8 +110,8 @@
       "budioWorkspace": [
         {
           "type": "webview",
-          "id": "budioWorkspace.launcher",
-          "name": "Workspace"
+          "id": "budioWorkspace.activityEntry",
+          "name": " "
         }
       ]
     }

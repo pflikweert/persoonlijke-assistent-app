@@ -2,8 +2,8 @@
 
 # Budio Strategy Research and Ideas
 
-Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
-Source Commit: c69cc17
+Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
+Source Commit: 4ed38bf
 
 Doel: primaire domeinbundle voor strategy/research/ideas.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -16,8 +16,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Strategy and Research
 
-Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
-Source Commit: c69cc17
+Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
+Source Commit: 4ed38bf
 
 Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3697,8 +3697,8 @@ Na AIQS-live een timeboxed benchmark sprint starten (research-only), en per patr
 
 # Budio Ideas and Opportunity Map
 
-Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
-Source Commit: c69cc17
+Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
+Source Commit: 4ed38bf
 
 Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3722,6 +3722,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/40-ideas/40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export.md
 - docs/project/40-ideas/40-platform-and-architecture/70-budio-workspace-plugin-decision-board.md
 - docs/project/40-ideas/40-platform-and-architecture/80-jarvis-internal-research-lane.md
+- docs/project/40-ideas/40-platform-and-architecture/90-resend-local-dev-en-lifecycle-automations.md
 
 ## Leesregel
 - Ideas zijn voorstelruimte en niet automatisch actieve planning of canonieke productwaarheid.
@@ -3861,6 +3862,7 @@ Lage-frictie plek om nieuwe ideeën direct vast te leggen zonder contextverlies.
 - [2026-04-22] ChatGPT Project uploads slimmer begeleiden/automatiseren zodat handmatige uploadfrictie lager wordt (nu alleen idee, niet uitwerken/bouwen).
 - [2026-04-22] Uploadbundels voor ChatGPT Projects verder slim combineren zodat de primaire aanbevolen handmatige uploadset klein blijft (nu alleen idee, niet uitwerken/bouwen).
 - [2026-04-22] Session/multi-user/OpenAI-contextbeleid voor Budio als later onderzoeksspoor: contextafbakening per gebruiker, session reuse wel/niet, wat wel/niet meegaat naar OpenAI, runtime-context versus canonieke opslag (nu alleen idee, niet uitwerken/bouwen).
+- [2026-04-24] Resend local dev/testflow + lifecycle automations/triggers (o.a. welkom na eerste aanmelding), gepromoveerd naar 40-platform-and-architecture/90-resend-local-dev-en-lifecycle-automations.
 
 ---
 
@@ -4718,6 +4720,35 @@ Sneller van idee naar implementatie, minder context-switching, hogere consistent
 - Welke functies moeten lokaal-only blijven?
 - Welke functies moeten via API/MCP praten met runtime-context?
 
+## Nieuwe input (apr 2026): OpenAI Codex Automations
+
+Bron: `https://openai.com/academy/codex-automations/` (23 apr 2026).
+
+Relevante learnings:
+
+1. **Automations werken het best voor terugkerende, reviewbare taken**
+   - Voorbeelden uit de bron: wekelijkse review, ochtendbriefing, changelog-samenvatting, inconsistentie-checks.
+   - Dit past direct bij plugin-werk rond task-overzichten, docs-status en periodieke hygiene-checks.
+
+2. **Thread-continuatie is waardevol voor lopende context**
+   - De bron benadrukt dat sommige automations terugkeren naar dezelfde conversatie i.p.v. telkens opnieuw beginnen.
+   - Voor Budio-plugin betekent dit: een automation lane moet context-stabiel blijven (zelfde task/flow), met heldere audittrail.
+
+3. **Specifiek + herhaalbaar + makkelijk te reviewen is de kernkwaliteit**
+   - Deze quality bar sluit aan op onze taskflow- en bewijsregels.
+   - Plugin-automations moeten daarom standaard output geven in vaste templates (wat gecontroleerd is, welke bronnen, welke onzekerheden).
+
+### Vertaling naar Budio-scope (cheap-first)
+
+- **Nu (idea):** plugin positioneren als "automation launcher" voor repo-routines (taskflow-verify reminder, docs status digest, weekreview).
+- **Next:** 1-2 beperkte automation templates ontwerpen met human-in-the-loop review als harde stap vóór write-acties.
+- **Later:** pas na bewijs uitbreiden naar semi-autonome multi-step automations in de plugin-UX.
+
+### Bewuste afbakening
+
+- Geen impliciete overstap naar full-autonomous repo mutaties.
+- Geen bypass van bestaande guardrails (`taskflow`, docs verify, source-first).
+
 ## Volgende stap
 
 Scope opdelen in MVP-plugin (read/assist) vs latere automation (write/execute).
@@ -4768,6 +4799,39 @@ Flow-specifieke kwaliteit, betere governance en duidelijkere productpositionerin
 
 - Welke flow-families krijgen als eerste prioriteit?
 - Hoe scheid je shared platformlaag vs flow-specifieke laag technisch?
+
+## Nieuwe input (apr 2026): Identifying and scaling AI use cases
+
+Bron: `https://openai.com/business/guides-and-resources/identifying-and-scaling-ai-use-cases/`.
+
+Relevante learnings:
+
+1. **Start met laag-effort/high-impact i.p.v. indrukwekkende complexiteit**
+   - De gids benadrukt dat complexe use-cases vaak vertragen; snelle waarde komt uit herhaalbare teamproblemen.
+   - Dit past bij onze cheap-first route: eerst kleine flow-modules met meetbare impact.
+
+2. **Gebruik vaste use-case primitives om ontdekking te versnellen**
+   - De bron groepeert use-cases in terugkerende primitieve typen (zoals content, research, coding, data-analyse, ideation/strategy, automations).
+   - Voor Budio ondersteunt dit een modulair model per flow-familie met een kleine contractset per primitive i.p.v. één generieke AI-laag.
+
+3. **Prioriteren met Impact/Effort als terugkerend ritme**
+   - De gids adviseert expliciete quadrant-prioritering en periodieke herijking.
+   - Dit sluit aan op onze planning-/taskflowlaag: modules pas opschalen zodra bewijs op impact en uitvoerbaarheid er is.
+
+4. **Cross-functioneel bouwen en itereren versnelt schaalbaarheid**
+   - Voorbeeldstructuur in de bron: business owner + domeinexpert + technische lead, met feedbackloops na launch.
+   - Voor Budio vertaalt dit naar compacte triads voor nieuwe flow-modules (product/context, domeinkwaliteit, implementatie/agentflow).
+
+### Vertaling naar Budio-scope (cheap-first)
+
+- **Nu (idea):** flow-families expliciet mappen op primitives, met per family een minimale outputcontractset.
+- **Next:** 1 pilot-flow kiezen met Impact/Effort-score en een korte evaluateloop (kwaliteit, doorlooptijd, herhaalbaarheid).
+- **Later:** alleen bewezen modules promoveren naar bredere workspace-architectuur.
+
+### Bewuste afbakening
+
+- Geen nieuwe roadmapbeslissing zonder aparte planningstap.
+- Geen grote platformherbouw op basis van 1 gids; eerst kleine evidence-gedreven pilots.
 
 ## Volgende stap
 
@@ -4991,6 +5055,44 @@ Kernpunten om later in web en in-app te communiceren:
 - Wanneer introduceren we `security.txt` en responsible disclosure pad?
 - Welke onderdelen landen in `docs/project/**` (canoniek) vs `docs/dev/**` (runbook/tooling)?
 
+## Nieuwe input (apr 2026): OpenAI Privacy Filter
+
+Bron: `https://openai.com/index/introducing-openai-privacy-filter/` (22 apr 2026).
+
+Relevante learnings voor dit idee:
+
+1. **PII-filtering als aparte infrastructuurlaag werkt in de praktijk**
+   - OpenAI positioneert privacy-filtering expliciet als eigen pipeline-component vóór training, indexing, logging en review.
+   - Dit sluit direct aan op ons idee om privacy-by-design niet alleen policy-matig maar ook technisch afdwingbaar te maken.
+
+2. **Kleine, lokale modellen kunnen privacy-risico in de keten verlagen**
+   - Privacy Filter is ontworpen voor high-throughput en lokaal gebruik, zodat ruwe tekst niet eerst naar een externe de-identification service hoeft.
+   - Voor Budio betekent dit een kans op een later "local-first redactiepad" voor gevoelige tekstfragmenten, zonder direct een volledige E2EE-architectuur te eisen.
+
+3. **Context-aware redactie is belangrijker dan regex-only detectie**
+   - De release benadrukt dat patroonregels (email/phone regex) onvoldoende zijn voor subtiele PII in ongestructureerde tekst.
+   - Dit bevestigt dat onze toekomstige privacylaag context-aware detectie moet ondersteunen, met expliciete trade-offs tussen recall en precision per workflow.
+
+4. **Taxonomie + operating points moeten expliciet policy-koppelbaar zijn**
+   - OpenAI werkt met vaste labelcategorieën en instelbare operating points.
+   - Voor Budio past dit bij AIQS/policy-routing: per flow definiëren wat verplicht gemaskeerd wordt (bijv. secrets altijd) versus optioneel (bijv. private dates in persoonlijke journalingcontext).
+
+5. **Belangrijke guardrail: geen compliance-claim op model alleen**
+   - OpenAI benoemt expliciet dat dit geen volledige anonymization/compliance-vervanger is.
+   - Dit ondersteunt onze bestaande lijn: modelmatige redactie is één laag naast runbooks, human review in high-stakes contexten en heldere trust-communicatie.
+
+### Vertaling naar Budio-scope (cheap-first)
+
+- **Nu (idea-niveau, geen productbouw):** security-idee expliciet aanvullen met een "PII redaction gateway" als optionele privacylaag vóór logging/training-achtige interne paden.
+- **Next (kleine spike):** beperkte benchmark op eigen voorbeelddata (NL/EN journaling + exports) om te meten waar context-aware redactie meerwaarde heeft t.o.v. regex baseline.
+- **Later:** pas na bewijs beslissen over productie-inzet, fine-tuning, en of dit in consumer of alleen private/business lane landt.
+
+### Bewuste afbakening
+
+- Dit update **alleen** de ideevorming en roadmap-input.
+- Geen nieuwe claim dat Budio nu al volledige anonymization of compliance-dekking biedt.
+- Geen directe runtime-integratie zonder aparte task en bewijsgedreven evaluatie.
+
 ## Volgende stap
 
 - Security charter opstellen als product-facing doc (via separate idea doc).
@@ -5207,3 +5309,113 @@ Jarvis is strategisch belangrijk, maar de benodigde flow- en pluginfundering bes
 ## Volgende stap
 
 Werk een promotie-gate uit (entry criteria) voor dit epic-candidate idee in planning/workflow, zonder runtime- of productscope te activeren.
+
+---
+
+## Resend Local Dev En Lifecycle Automations
+
+# Resend local dev en lifecycle automations
+
+## Status
+
+idea
+
+## Type
+
+platform-architecture
+
+## Horizon
+
+next
+
+## Korte samenvatting
+
+Leg een expliciet idee-spoor vast voor production email via Resend, met twee doelen:
+
+1. een betrouwbare lokale development/testflow voor Resend binnen de huidige local development stack
+2. een later uit te werken lifecycle/automation-spoor voor eventgedreven emails, zoals een eerste welkomstmail na aanmelding
+
+Dit idee is nu nog geen bouwtaak en nog geen actieve planning. Het is bedoeld als denk- en uitwerkbasis voor verdere verkenning met ChatGPT.
+
+## Probleem
+
+- Resend wordt gebruikt voor production email, maar er is nog geen duidelijke lokale dev/testaanpak in de repo-workflow.
+- Daardoor ontbreekt een veilige en goedkope manier om emailflows lokaal te ontwikkelen, bekijken en valideren zonder meteen op productiegedrag of handmatige workarounds te leunen.
+- Er is ook nog geen uitgewerkt plan voor lifecycle emails en eventgedreven triggers, terwijl zulke flows waarschijnlijk relevant worden zodra onboarding en gebruikerscommunicatie volwassener worden.
+- Zonder expliciet idee-spoor blijft emailinfrastructuur versnipperd tussen auth-mail, productmail en mogelijke marketing/lifecycle-berichten.
+
+## Waarom interessant
+
+- Lokale email-dev/testing verlaagt frictie en risico bij elke flow die production emails raakt.
+- Een duidelijke Resend-strategie voorkomt dat onboarding- of lifecyclemails ad hoc worden toegevoegd zonder goede triggerlogica, copy en testaanpak.
+- Het sluit aan op een logische groeilaag voor Budio: eerste ervaring na signup, re-engagement, statusmails en later mogelijk AIQS/admin-signalen.
+- Door dit eerst als idee vast te leggen kan het later in ChatGPT verder worden uitgedacht zonder nu al product- of architectuurwaarheid te promoten.
+
+## Richting van dit idee
+
+### 1. Resend in local development
+
+Mogelijke verkenningsrichting:
+
+- definieer een expliciete local-only emailmodus voor development
+- kies een testpad dat veilig is en geen echte gebruikers mailt
+- maak zichtbaar waar uitgaande mails landen tijdens lokaal testen
+- leg vast hoe developers emailtemplates en payloads lokaal kunnen controleren
+- bepaal of lokale flows via Resend zelf, een mock/test transport of een hybride previewpad lopen
+
+Belangrijke gedachte:
+
+- lokale email-dev moet cheap-first zijn
+- productiekeys en echte ontvangers mogen nooit per ongeluk in lokaal testen terechtkomen
+- de dev-flow moet passen binnen bestaande repo- en env-guardrails
+
+### 2. Lifecycle automations en triggers
+
+Mogelijke verkenningsrichting:
+
+- eerste mail na eerste succesvolle aanmelding
+- onboarding-/welkomstserie met kleine, rustige productintroductie
+- eventgedreven mails op betekenisvolle productmomenten
+- expliciete triggerkaart: welk event, welke doelgroep, welke copy, welke cooldown, welke stopvoorwaarden
+- onderscheid tussen transactionele mail, lifecycle mail en latere marketingmail
+
+Voorbeelden om later te verkennen:
+
+- welkom na eerste signup
+- nudge wanneer account wel bestaat maar eerste kernactie uitblijft
+- bevestiging of follow-up na belangrijke account- of importactie
+- founder/admin-only signalen voor interne operationele flows
+
+## Relatie met huidige docs
+
+- Past binnen `40-platform-and-architecture/` omdat het zowel local dev stack als production email-infra en triggerarchitectuur raakt.
+- Moet nu nog niet doorstromen naar canonieke productdocs of actieve planning.
+- Kan later raakvlakken krijgen met auth, onboarding, growth en admin-operations, maar die beslissingen horen pas na verdere uitwerking thuis in planning of tasks.
+
+## Mogelijke impact
+
+- services
+- supabase
+- docs
+- platform
+- internal-tooling
+- growth
+
+## Open vragen
+
+- Wat is de veiligste en goedkoopste lokale teststrategie voor Resend in deze repo?
+- Willen we lokaal een echte Resend testflow, een mock inbox, of beide?
+- Welke events zijn in fase 1 logisch genoeg voor lifecycle email, en welke zijn duidelijk nog te vroeg?
+- Wat is het onderscheid tussen productkritische transactional mail en latere engagement/lifecycle mail?
+- Waar hoort triggerlogica uiteindelijk thuis: app/backend events, database triggers, cron/automationlaag, of Resend-native automation?
+- Welke copy/tone-of-voice guardrails gelden voor onboarding- en lifecyclemails binnen Budio?
+- Hoe voorkomen we dat email-automation scope creep wordt terwijl de huidige productfase nog compact moet blijven?
+
+## Volgende stap
+
+- Gebruik dit idee als input voor verdere verkenning in ChatGPT Projects.
+- Werk daarna pas, indien zinvol, een compacte optieset uit voor:
+  - local dev/test aanpak
+  - eerste lifecycle-events
+  - architectuurkeuze voor triggers/automations
+- Promoveer pas daarna eventueel naar planning of één of meer concrete tasks.

@@ -10,7 +10,7 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
 
 

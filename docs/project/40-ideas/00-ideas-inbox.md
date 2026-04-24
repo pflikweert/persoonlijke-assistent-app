@@ -32,3 +32,4 @@ Lage-frictie plek om nieuwe ideeën direct vast te leggen zonder contextverlies.
 - [2026-04-22] ChatGPT Project uploads slimmer begeleiden/automatiseren zodat handmatige uploadfrictie lager wordt (nu alleen idee, niet uitwerken/bouwen).
 - [2026-04-22] Uploadbundels voor ChatGPT Projects verder slim combineren zodat de primaire aanbevolen handmatige uploadset klein blijft (nu alleen idee, niet uitwerken/bouwen).
 - [2026-04-22] Session/multi-user/OpenAI-contextbeleid voor Budio als later onderzoeksspoor: contextafbakening per gebruiker, session reuse wel/niet, wat wel/niet meegaat naar OpenAI, runtime-context versus canonieke opslag (nu alleen idee, niet uitwerken/bouwen).
+- [2026-04-24] Resend local dev/testflow + lifecycle automations/triggers (o.a. welkom na eerste aanmelding), gepromoveerd naar [[40-platform-and-architecture/90-resend-local-dev-en-lifecycle-automations]].

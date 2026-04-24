@@ -161,6 +161,44 @@ Kernpunten om later in web en in-app te communiceren:
 - Wanneer introduceren we `security.txt` en responsible disclosure pad?
 - Welke onderdelen landen in `docs/project/**` (canoniek) vs `docs/dev/**` (runbook/tooling)?
 
+## Nieuwe input (apr 2026): OpenAI Privacy Filter
+
+Bron: `https://openai.com/index/introducing-openai-privacy-filter/` (22 apr 2026).
+
+Relevante learnings voor dit idee:
+
+1. **PII-filtering als aparte infrastructuurlaag werkt in de praktijk**
+   - OpenAI positioneert privacy-filtering expliciet als eigen pipeline-component vóór training, indexing, logging en review.
+   - Dit sluit direct aan op ons idee om privacy-by-design niet alleen policy-matig maar ook technisch afdwingbaar te maken.
+
+2. **Kleine, lokale modellen kunnen privacy-risico in de keten verlagen**
+   - Privacy Filter is ontworpen voor high-throughput en lokaal gebruik, zodat ruwe tekst niet eerst naar een externe de-identification service hoeft.
+   - Voor Budio betekent dit een kans op een later "local-first redactiepad" voor gevoelige tekstfragmenten, zonder direct een volledige E2EE-architectuur te eisen.
+
+3. **Context-aware redactie is belangrijker dan regex-only detectie**
+   - De release benadrukt dat patroonregels (email/phone regex) onvoldoende zijn voor subtiele PII in ongestructureerde tekst.
+   - Dit bevestigt dat onze toekomstige privacylaag context-aware detectie moet ondersteunen, met expliciete trade-offs tussen recall en precision per workflow.
+
+4. **Taxonomie + operating points moeten expliciet policy-koppelbaar zijn**
+   - OpenAI werkt met vaste labelcategorieën en instelbare operating points.
+   - Voor Budio past dit bij AIQS/policy-routing: per flow definiëren wat verplicht gemaskeerd wordt (bijv. secrets altijd) versus optioneel (bijv. private dates in persoonlijke journalingcontext).
+
+5. **Belangrijke guardrail: geen compliance-claim op model alleen**
+   - OpenAI benoemt expliciet dat dit geen volledige anonymization/compliance-vervanger is.
+   - Dit ondersteunt onze bestaande lijn: modelmatige redactie is één laag naast runbooks, human review in high-stakes contexten en heldere trust-communicatie.
+
+### Vertaling naar Budio-scope (cheap-first)
+
+- **Nu (idea-niveau, geen productbouw):** security-idee expliciet aanvullen met een "PII redaction gateway" als optionele privacylaag vóór logging/training-achtige interne paden.
+- **Next (kleine spike):** beperkte benchmark op eigen voorbeelddata (NL/EN journaling + exports) om te meten waar context-aware redactie meerwaarde heeft t.o.v. regex baseline.
+- **Later:** pas na bewijs beslissen over productie-inzet, fine-tuning, en of dit in consumer of alleen private/business lane landt.
+
+### Bewuste afbakening
+
+- Dit update **alleen** de ideevorming en roadmap-input.
+- Geen nieuwe claim dat Budio nu al volledige anonymization of compliance-dekking biedt.
+- Geen directe runtime-integratie zonder aparte task en bewijsgedreven evaluatie.
+
 ## Volgende stap
 
 - Security charter opstellen als product-facing doc (via separate idea doc).

@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-23T15:06:10.225Z
-Source Commit: c69cc17
+Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
+Source Commit: 4ed38bf
 
 Doel: uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects, afgeleid van canonieke projectdocs.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -726,12 +726,14 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [Entry photo gallery volledige end-user E2E flows](25-tasks/open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | Ready | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
-| [Moment detail foto reorder + thumbnail-logica en audio test auto-stop](25-tasks/open/moment-detail-foto-reorder-en-audio-test-auto-stop.md) | In Progress | p1 | transitiemaand-consumer-beta | Op het moment-detailscherm kan de gebruiker een foto lang indrukken en intuïtief naar een andere positie slepen. Tijdens het slepen is du... |
+| [Moment detail foto reorder + thumbnail-logica en audio test auto-stop](25-tasks/open/moment-detail-foto-reorder-en-audio-test-auto-stop.md) | In Progress | p1 | transitiemaand-consumer-beta | Op het moment-detailscherm kan de gebruiker foto's betrouwbaar uploaden en herordenen. Tijdens het slepen schuift de galerij live mee naa... |
 | [AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)](25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md) | Backlog | p2 | transitiemaand-consumer-beta | AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.... |
 | [Budio webapp compatible maken](25-tasks/open/budio-webapp-compatible-maken.md) | Backlog | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 | [Docs scheiden naar private repo (strategie + migratieplan)](25-tasks/open/docs-private-repo-scheiding-en-migratieplan.md) | Backlog | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
 | [niet vergeten](25-tasks/open/niet-vergeten.md) | Backlog | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
 | [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
+| [Budio Workspace activity-bar opent list view zonder workspace-menu](25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | In Progress | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
+| [Upload bundles uitbreiden met volledige tasks en apart full archive](25-tasks/open/upload-bundles-volledige-tasks-en-archive.md) | In Progress | p2 | transitiemaand-consumer-beta | `docs/upload/**` bevat twee nieuwe generated bestanden: - één volledige tasks bundle met zowel `open/` als `done/` taskfiles - één aparte... |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
@@ -2553,6 +2555,13 @@ Plan mode heft de taskfile-verplichting niet op:
 - een inhoudelijk plan zonder concrete taskfile geldt als onvolledig
 - noem in elk plan expliciet `Task`, `Task file` en `Status`
 
+Extra repo-regel voor Plan Mode:
+
+- gebruik in Plan Mode altijd eerst een **bestaande** taskfile
+- maak in Plan Mode nooit automatisch een nieuwe task aan
+- bestaat er geen passende bestaande task, blokkeer inhoudelijk en meld dat expliciet
+- een nieuwe task mag pas buiten Plan Mode worden aangemaakt
+
 ## Wanneer Act mode
 
 Gebruik Act mode voor:
@@ -2580,6 +2589,7 @@ Gebruik Act mode voor:
 
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Draai `npm run docs:bundle` en `npm run docs:bundle:verify` altijd sequentieel, nooit parallel.
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
@@ -2644,6 +2654,12 @@ Agent-default:
 - bij twijfel altijd `supabase_local`
 - na remote-ro checks altijd terugzetten naar local
 
+Voor productiebug-onderzoek:
+
+- volg `docs/dev/production-bug-investigation-workflow.md`
+- gebruik remote/prod alleen read-only voor logs, metadata en diagnosecontext
+- leg timestamp, route en deployment/logbron vast zodra je productiebevindingen claimt
+
 ## Lessen uit sessies (stabiel, herbruikbaar)
 
 - Bevestig bij onderbroken sessies altijd eerst de actuele file state (small read/diff) vóór nieuwe patches.
@@ -2703,6 +2719,7 @@ Agent-default:
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 - Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
 - Bij taskstatuswijzigingen of taakverplaatsing naar `done/`: werk taskfile + relevante planning/open-points context bij en draai daarna ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Draai `npm run docs:bundle` en `npm run docs:bundle:verify` altijd sequentieel, nooit parallel.
 - Voor inhoudelijke agentuitvoering in repo-context: draai ook `npm run taskflow:verify`.
 - documenteer altijd zichtbaarheidsregel (admin-only) en allowlist-mechanisme
 - documenteer relevante env-vars (`ADMIN_REGEN_ALLOWLIST_USER_IDS`, `ADMIN_REGEN_INTERNAL_TOKEN`)

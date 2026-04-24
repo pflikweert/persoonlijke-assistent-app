@@ -1,14 +1,24 @@
 import * as vscode from 'vscode';
 import { BoardPanelController } from './extension/host/BoardPanelController';
-import { LauncherViewProvider } from './extension/host/LauncherViewProvider';
 
 export function activate(context: vscode.ExtensionContext): void {
   const controller = new BoardPanelController(context.extensionUri);
-  const launcher = new LauncherViewProvider(context.extensionUri, () => controller.open('board'));
 
   context.subscriptions.push(
     controller,
-    vscode.window.registerWebviewViewProvider('budioWorkspace.launcher', launcher),
+    vscode.window.registerWebviewViewProvider('budioWorkspace.activityEntry', {
+      resolveWebviewView(webviewView) {
+        void controller.open('list');
+        webviewView.webview.options = {
+          enableCommandUris: true,
+          localResourceRoots: [context.extensionUri],
+        };
+        webviewView.webview.html = `<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0; padding:0; background: transparent;"></body>
+</html>`;
+      },
+    }),
     vscode.commands.registerCommand('budioWorkspace.openBoard', () => controller.open('board')),
     vscode.commands.registerCommand('budioWorkspace.openListView', () => controller.open('list')),
     vscode.commands.registerCommand('budioWorkspace.openSettings', () => controller.open('settings')),

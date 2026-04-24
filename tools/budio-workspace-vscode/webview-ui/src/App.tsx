@@ -79,6 +79,11 @@ const EMPTY_FILTERS: Filters = {
 };
 
 const REFRESH_SUCCESS_MS = 1200;
+const VIEW_TITLES: Record<ViewMode, string> = {
+  board: 'Board',
+  list: 'List',
+  settings: 'Settings',
+};
 
 export function App(): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<BoardSnapshot | null>(null);
@@ -411,7 +416,7 @@ export function App(): React.JSX.Element {
         <header className="topbar">
           <div className="topbar-main">
             <div className="topbar-title-wrap">
-              <div className="topbar-title">Board</div>
+              <div className="topbar-title">{VIEW_TITLES[activeView]}</div>
               <div className="eyebrow">Budio Workspace</div>
             </div>
 
