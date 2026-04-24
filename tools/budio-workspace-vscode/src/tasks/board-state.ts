@@ -73,6 +73,12 @@ export function toTaskCardViewModel(task: ParsedTaskFile): TaskCardViewModel {
     bodyPreview: task.body.trim().slice(0, 600),
     source: task.source,
     version: task.version,
+    activeAgent: task.activeAgent,
+    activeAgentModel: task.activeAgentModel,
+    activeAgentRuntime: task.activeAgentRuntime,
+    activeAgentSince: task.activeAgentSince,
+    activeAgentStatus: task.activeAgentStatus,
+    activeAgentSettings: task.activeAgentSettings,
   };
 }
 

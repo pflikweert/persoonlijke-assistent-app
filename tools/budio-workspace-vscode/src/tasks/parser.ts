@@ -51,6 +51,12 @@ export function parseTaskFile(input: {
   const workstream = readTaskWorkstream(frontmatterValues.workstream);
   const dueDate = readOptionalString(frontmatterValues.due_date);
   const sortOrder = readOptionalNumber(frontmatterValues.sort_order);
+  const activeAgent = readOptionalString(frontmatterValues.active_agent);
+  const activeAgentModel = readOptionalString(frontmatterValues.active_agent_model);
+  const activeAgentRuntime = readOptionalString(frontmatterValues.active_agent_runtime);
+  const activeAgentSince = readOptionalString(frontmatterValues.active_agent_since);
+  const activeAgentStatus = readOptionalString(frontmatterValues.active_agent_status);
+  const activeAgentSettings = readOptionalString(frontmatterValues.active_agent_settings);
   const excerpt = buildExcerpt(summary);
   const hasBody = body.trim().length > 0;
 
@@ -67,6 +73,12 @@ export function parseTaskFile(input: {
     workstream,
     dueDate,
     sortOrder,
+    activeAgent,
+    activeAgentModel,
+    activeAgentRuntime,
+    activeAgentSince,
+    activeAgentStatus,
+    activeAgentSettings,
     checklist,
     bucket,
     sourcePath: input.absolutePath,

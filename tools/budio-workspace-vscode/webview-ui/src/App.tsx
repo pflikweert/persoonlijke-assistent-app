@@ -16,21 +16,30 @@ import {
 } from '../../src/tasks/dnd-policy';
 import {
   applySortDirection,
-  describeSortState,
   directionArrow,
   isColumnActive,
-  mapColumnToSort,
   nextSortStateFromHeader,
   type ListSortColumn,
   type SortDirection,
 } from '../../src/tasks/list-sort-controls';
-import { isWorkOrderSort, sortTaskCards } from '../../src/tasks/sort-policy';
+import { sortTaskCards } from '../../src/tasks/sort-policy';
+import {
+  activeAgentLabel,
+  checklistProgressTone,
+  compactChecklistProgressLabel,
+  formatLastChangeDate,
+} from '../../src/tasks/task-ux';
 import type { HostToWebviewMessage } from '../../src/webview-bridge/messages';
 import { vscode } from './vscode';
 
 type ViewMode = 'board' | 'list' | 'settings';
 type DueFilter = 'all' | 'today' | 'overdue' | 'no_date';
 type ViewportKind = 'desktop' | 'tablet' | 'small';
+
+const DETAIL_PANE_MIN_WIDTH = 320;
+const DETAIL_PANE_MAX_WIDTH = 720;
+const DETAIL_PANE_DEFAULT_WIDTH = 420;
+const CLICK_DRAG_SUPPRESSION_MS = 180;
 
 interface Filters {
   status: 'all' | TaskStatus;
@@ -74,7 +83,7 @@ const EMPTY_FILTERS: Filters = {
   tag: 'all',
   workstream: 'all',
   due: 'all',
-  onlyOpen: false,
+  onlyOpen: true,
   onlyChecklistOpen: false,
 };
 
@@ -111,13 +120,19 @@ export function App(): React.JSX.Element {
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [refreshState, setRefreshState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [detailPaneWidth, setDetailPaneWidth] = useState<number>(DETAIL_PANE_DEFAULT_WIDTH);
+  const [detailFullscreen, setDetailFullscreen] = useState(false);
+  const [isResizingDetailPane, setIsResizingDetailPane] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
   const refreshResetTimeoutRef = useRef<number | null>(null);
   const hasHydratedSortRef = useRef(false);
   const moveDispatchLockRef = useRef(false);
+  const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
+  const suppressSelectionUntilRef = useRef(0);
 
   const detailMode = viewport === 'desktop' ? 'split' : 'overlay';
+  const isFullscreenDetail = viewport !== 'desktop' || detailFullscreen;
 
   useEffect(() => {
     const handleResize = () => {
@@ -138,6 +153,35 @@ export function App(): React.JSX.Element {
       setArchiveConfirmOpen(false);
     }
   }, [selectedTaskId]);
+
+  useEffect(() => {
+    if (!isResizingDetailPane) {
+      return;
+    }
+
+    const onPointerMove = (event: PointerEvent) => {
+      const start = resizeStartRef.current;
+      if (!start) {
+        return;
+      }
+
+      const nextWidth = clampDetailPaneWidth(start.width - (event.clientX - start.x));
+      setDetailPaneWidth(nextWidth);
+    };
+
+    const stopResize = () => {
+      resizeStartRef.current = null;
+      setIsResizingDetailPane(false);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', stopResize);
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', stopResize);
+    };
+  }, [isResizingDetailPane]);
 
   useEffect(
     () => () => {
@@ -389,7 +433,6 @@ export function App(): React.JSX.Element {
   const dragBlockedByFiltering = hasActiveFiltering(search, filters);
   const dragEnabled = !dragBlockedByFiltering;
   const listDragEnabled = activeView === 'list' && !dragBlockedByFiltering;
-  const hasActiveFilters = hasActiveFiltering('', filters) || !isWorkOrderSort(sort);
   const formDirty = isFormDirty(selectedTask, formState);
 
   if (!snapshot) {
@@ -397,18 +440,19 @@ export function App(): React.JSX.Element {
   }
 
   return (
-    <div className={`app-shell viewport-${viewport} detail-${detailMode}`}>
+    <div className={`app-shell viewport-${viewport} detail-${detailMode} ${isFullscreenDetail ? 'detail-fullscreen' : ''}`}>
       <aside className="icon-rail">
-        <IconButton active={activeView === 'board'} label="Board" onClick={() => switchView('board')} />
-        <IconButton active={activeView === 'list'} label="List" onClick={() => switchView('list')} />
-        <IconButton active={activeView === 'settings'} label="Settings" onClick={() => switchView('settings')} />
+        <IconButton active={activeView === 'board'} icon="▥" label="Board" onClick={() => switchView('board')} />
+        <IconButton active={activeView === 'list'} icon="☰" label="List" onClick={() => switchView('list')} />
+        <IconButton active={activeView === 'settings'} icon="⚙" label="Settings" onClick={() => switchView('settings')} />
         <button
-          className={`rail-button refresh-button ${refreshState}`}
+          className={`rail-button rail-icon-button refresh-button icon-only ${refreshState}`}
           onClick={handleRefresh}
-          title="Refresh"
+          title={refreshButtonTitle(refreshState)}
+          aria-label={refreshButtonTitle(refreshState)}
           disabled={refreshState === 'loading'}
         >
-          {refreshState === 'loading' ? 'Refreshing…' : 'Refresh'}
+          <span aria-hidden="true">↻</span>
         </button>
       </aside>
 
@@ -420,6 +464,19 @@ export function App(): React.JSX.Element {
               <div className="eyebrow">Budio Workspace</div>
             </div>
 
+            <div className="topbar-status-center">
+              {activeView === 'board' && !dragEnabled ? (
+                <StatusChip>Board drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
+              ) : null}
+              {activeView === 'list' && !listDragEnabled ? (
+                <StatusChip>List drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
+              ) : null}
+              {savingTaskId ? <StatusChip>Opslaan...</StatusChip> : null}
+              {pendingDiskChanges ? <StatusChip>Nieuwe disk-wijzigingen beschikbaar (je edits blijven behouden)</StatusChip> : null}
+              {notice ? <StatusChip>{notice}</StatusChip> : null}
+              {error ? <StatusChip danger>{error}</StatusChip> : null}
+            </div>
+
             <div className="topbar-main-actions">
               <button
                 className="primary-button"
@@ -427,19 +484,37 @@ export function App(): React.JSX.Element {
               >
                 Nieuwe taak
               </button>
-              <button className={`ghost-button ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((open) => !open)}>
-                Filter
-              </button>
+              <div className="topbar-filter-sort">
+                <button className={`ghost-button ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((open) => !open)}>
+                  Filter
+                </button>
+                {activeView === 'list' ? (
+                  <select
+                    aria-label="Sortering"
+                    value={sort}
+                    onChange={(event) => applySortChange(event.target.value as TaskSort)}
+                    className="topbar-sort-select"
+                    title="Sortering"
+                  >
+                    <option value="manual">Manual</option>
+                    <option value="lane_order">Lane-volgorde</option>
+                    <option value="status">Status</option>
+                    <option value="due_date">Due date</option>
+                    <option value="priority">Priority</option>
+                    <option value="progress">Percentage</option>
+                    <option value="updated_at">Recent gewijzigd</option>
+                    <option value="alphabetical">Alfabetisch</option>
+                  </select>
+                ) : null}
+              </div>
               <button
-                className={`ghost-button refresh-button ${refreshState}`}
+                className={`ghost-button refresh-button icon-only ${refreshState}`}
                 onClick={handleRefresh}
+                title={refreshButtonTitle(refreshState)}
+                aria-label={refreshButtonTitle(refreshState)}
                 disabled={refreshState === 'loading'}
               >
-                {refreshState === 'loading'
-                  ? 'Verversen...'
-                  : refreshState === 'success'
-                    ? 'Verversd'
-                    : 'Refresh'}
+                <span aria-hidden="true">↻</span>
               </button>
             </div>
           </div>
@@ -453,9 +528,18 @@ export function App(): React.JSX.Element {
               onChange={(event) => setSearch(event.target.value)}
             />
             <div className="header-stats">
-              <StatusChip>{snapshot.totalTasks} taken</StatusChip>
-              <StatusChip>{snapshot.openTaskCount} open</StatusChip>
-              <StatusChip>{snapshot.doneTaskCount} done</StatusChip>
+              <span className="header-stat header-stat-total">
+                <span className="header-stat-dot" aria-hidden="true" />
+                {snapshot.totalTasks} taken
+              </span>
+              <span className="header-stat header-stat-open">
+                <span className="header-stat-dot" aria-hidden="true" />
+                {snapshot.openTaskCount} open
+              </span>
+              <span className="header-stat header-stat-done">
+                <span className="header-stat-dot" aria-hidden="true" />
+                {snapshot.doneTaskCount} done
+              </span>
             </div>
           </div>
 
@@ -525,19 +609,6 @@ export function App(): React.JSX.Element {
                     <option value="no_date">Geen datum</option>
                   </select>
                 </label>
-	                <label>
-	                  <span>Sortering</span>
-	                  <select value={sort} onChange={(event) => applySortChange(event.target.value as TaskSort)}>
-	                    <option value="manual">Manual</option>
-	                    <option value="lane_order">Lane-volgorde</option>
-	                    <option value="status">Status</option>
-                    <option value="due_date">Due date</option>
-                    <option value="priority">Priority</option>
-                    <option value="progress">Percentage</option>
-                    <option value="updated_at">Recent gewijzigd</option>
-                    <option value="alphabetical">Alfabetisch</option>
-                  </select>
-                </label>
               </div>
 
               <div className="filter-toggles">
@@ -573,25 +644,13 @@ export function App(): React.JSX.Element {
           ) : null}
         </header>
 
-        <section className="status-strip">
-          {activeView === 'board' && !dragEnabled ? (
-            <StatusChip>Board drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
-          ) : null}
-          {activeView === 'list' && !listDragEnabled ? (
-            <StatusChip>List drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
-          ) : null}
-          {savingTaskId ? <StatusChip>Opslaan...</StatusChip> : null}
-          {pendingDiskChanges ? <StatusChip>Nieuwe disk-wijzigingen beschikbaar (je edits blijven behouden)</StatusChip> : null}
-          {notice ? <StatusChip>{notice}</StatusChip> : null}
-          {error ? <StatusChip danger>{error}</StatusChip> : null}
-        </section>
-
         <div
           className={`content-shell ${detailMode === 'overlay' ? 'content-shell-toggle' : 'content-shell-pinned'} ${
             detailOpen ? 'detail-open' : ''
           }`}
+          style={detailMode === 'split' && detailOpen && !isFullscreenDetail ? { gridTemplateColumns: `minmax(0, 1fr) minmax(${DETAIL_PANE_MIN_WIDTH}px, ${detailPaneWidth}px)` } : undefined}
         >
-          <section className="main-pane">
+          <section className={`main-pane ${activeView === 'list' ? 'main-pane-list' : ''}`}>
             {activeView === 'board' ? (
               <div className="board-canvas">
                 {visibleColumns.map((column) => {
@@ -608,12 +667,14 @@ export function App(): React.JSX.Element {
                       <span className={`status-accent-rail ${statusRailClass(column.key)}`} aria-hidden="true" />
                       <div className="column-heading">
                         <h2>{column.label}</h2>
-                        <span>{column.count}</span>
+                        <span className="column-count-chip">{column.count}</span>
                       </div>
                     </div>
 
                     <div className="column-cards">
                       {column.cards.map((card) => {
+                        const isSelected = selectedTask?.id === card.id;
+                        const agentLabel = activeAgentLabel(card);
                         const visibleTags = card.tags.slice(0, 2);
                         const hiddenTagCount = Math.max(card.tags.length - visibleTags.length, 0);
                         const hasMeta = Boolean(card.dueDate) || card.checklistProgress.total > 0;
@@ -630,9 +691,9 @@ export function App(): React.JSX.Element {
                           <div key={card.id} className="task-card-shell">
                             {isDropBefore ? <div className="drop-indicator drop-indicator-before" /> : null}
                             <article
-                              className={`task-card ${selectedTask?.id === card.id ? 'selected' : ''}`}
+                              className={`task-card ${isSelected ? 'selected' : ''}`}
                               draggable={dragEnabled}
-                              onDragStart={() => setDragState({ taskId: card.id, sourceStatus: card.status })}
+                              onDragStart={() => handleTaskDragStart(card.id, card.status)}
                               onDragEnd={() => {
                                 setDragState(null);
                                 setDropIndicator(null);
@@ -676,14 +737,18 @@ export function App(): React.JSX.Element {
                                   placement: nextIndicator.placement === 'before' ? 'before' : 'after',
                                 });
                               }}
-                              onClick={() => selectTask(card.id)}
+                              onClick={() => handleTaskSurfaceClick(card.id)}
                               onDoubleClick={() => vscode.postMessage({ type: 'openSourceFile', taskId: card.id })}
                             >
                               <div className="card-header">
                                 <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
-                                <span className="task-ref" title={card.id}>
-                                  {formatTaskRef(card.id)}
-                                </span>
+                                <div className="card-header-badges">
+                                  {isSelected ? <span className="active-task-chip">Actief</span> : null}
+                                  {agentLabel ? <span className="agent-task-chip">{agentLabel}</span> : null}
+                                  <span className="task-ref" title={card.id}>
+                                    {formatTaskRef(card.id)}
+                                  </span>
+                                </div>
                               </div>
 
                               <h3>{card.title}</h3>
@@ -706,9 +771,11 @@ export function App(): React.JSX.Element {
                               {hasMeta ? (
                                 <div className="meta-row compact card-meta">
                                   {card.checklistProgress.total > 0 ? (
-                                    <span>{checklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}</span>
+                                    <span className={`progress-pill ${checklistProgressTone(card.checklistProgress.completed, card.checklistProgress.total)}`}>
+                                      {compactChecklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}
+                                    </span>
                                   ) : null}
-                                  {card.dueDate ? <span>{dueLabel(card.dueDate)}</span> : null}
+                                  <span>{formatLastChangeDate(card.updatedAt)}</span>
                                 </div>
                               ) : null}
                             </article>
@@ -758,27 +825,8 @@ export function App(): React.JSX.Element {
               </div>
             ) : null}
 
-	            {activeView === 'list' ? (
-	              <div className="list-shell">
-	                <div className="list-controls">
-	                  <label>
-	                    <span>Sortering</span>
-	                    <select value={sort} onChange={(event) => applySortChange(event.target.value as TaskSort)}>
-	                      <option value="manual">Manual</option>
-	                      <option value="lane_order">Lane-volgorde</option>
-	                      <option value="status">Status</option>
-                      <option value="due_date">Due date</option>
-                      <option value="priority">Priority</option>
-                      <option value="progress">Percentage</option>
-                      <option value="updated_at">Recent gewijzigd</option>
-	                      <option value="alphabetical">Alfabetisch</option>
-	                    </select>
-	                  </label>
-                    <div className="list-sort-readout">Actieve sort: {describeSortState({ sort, direction: sortDirection })}</div>
-	                </div>
-	                <div className="status-strip">
-	                  <StatusChip>Sleep taken in de lijst om werkvolgorde en status te wijzigen</StatusChip>
-	                </div>
+            {activeView === 'list' ? (
+              <div className="list-shell">
 	                <div className="list-table-shell">
 	                  <table>
 	                    <thead>
@@ -787,26 +835,32 @@ export function App(): React.JSX.Element {
 	                        <th>Domein</th>
 	                        <th>{renderSortHeader('status', 'Status')}</th>
 	                        <th>{renderSortHeader('priority', 'Priority')}</th>
-	                        <th>{renderSortHeader('due', 'Due')}</th>
+	                        <th>{renderSortHeader('due', 'Last change')}</th>
 	                        <th>{renderSortHeader('checklist', 'Checklist')}</th>
 	                        <th>Volgorde</th>
 	                      </tr>
 	                    </thead>
 	                    <tbody>
-	                      {listCards.map((card) => (
+	                      {listCards.map((card) => {
+	                        const isSelected = selectedTask?.id === card.id;
+	                        const agentLabel = activeAgentLabel(card);
+	                        return (
                         <tr
                           key={card.id}
                           className={
-                            listDropIndicator?.targetTaskId === card.id
-                              ? `list-row-drop-target ${
-                                  listDropIndicator.placement === 'before'
-                                    ? 'list-row-drop-target-before'
-                                    : 'list-row-drop-target-after'
-                                }`
-                              : ''
+                            `${isSelected ? 'list-row-selected' : ''} ${
+                              listDropIndicator?.targetTaskId === card.id
+                                ? `list-row-drop-target ${
+                                    listDropIndicator.placement === 'before'
+                                      ? 'list-row-drop-target-before'
+                                      : 'list-row-drop-target-after'
+                                  }`
+                                : ''
+                            }`.trim()
                           }
+                          aria-selected={isSelected}
                           draggable={listDragEnabled}
-                          onDragStart={() => setDragState({ taskId: card.id, sourceStatus: card.status })}
+                          onDragStart={() => handleTaskDragStart(card.id, card.status)}
                           onDragEnd={() => {
                             setDragState(null);
                             setListDropIndicator(null);
@@ -835,13 +889,16 @@ export function App(): React.JSX.Element {
                               placement,
                             });
                           }}
-                          onClick={() => selectTask(card.id)}
+                          onClick={() => handleTaskSurfaceClick(card.id)}
                         >
                           <td>
                             <div className="list-title-cell">
                               <span className={`status-accent-rail ${statusRailClass(card.status)}`} aria-hidden="true" />
                               <div className="list-title-copy">
-                                <strong>{card.title}</strong>
+                                <strong>
+                                  {card.title}
+                                  {agentLabel ? <span className="inline-agent-chip">{agentLabel}</span> : null}
+                                </strong>
                                 <span>{card.excerpt}</span>
                               </div>
                             </div>
@@ -857,8 +914,16 @@ export function App(): React.JSX.Element {
                           <td>
                             <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
                           </td>
-                          <td>{card.dueDate ?? '—'}</td>
-                          <td>{checklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}</td>
+                          <td>{formatLastChangeDate(card.updatedAt)}</td>
+                          <td>
+                            {card.checklistProgress.total > 0 ? (
+                              <span className={`progress-pill ${checklistProgressTone(card.checklistProgress.completed, card.checklistProgress.total)}`}>
+                                {compactChecklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}
+                              </span>
+                            ) : (
+                              'Geen checklist'
+                            )}
+                          </td>
                           <td>
                             <div className="list-order-actions">
                               <button
@@ -890,7 +955,8 @@ export function App(): React.JSX.Element {
                             </div>
                           </td>
                         </tr>
-                      ))}
+	                        );
+	                      })}
                     </tbody>
                   </table>
                 </div>
@@ -951,7 +1017,19 @@ export function App(): React.JSX.Element {
             ) : null}
           </section>
 
-          {detailOpen ? (
+          {detailOpen && detailMode === 'split' && !isFullscreenDetail ? (
+            <button
+              type="button"
+              className={`detail-resize-handle ${isResizingDetailPane ? 'active' : ''}`}
+              aria-label="Resize detail pane"
+              onPointerDown={(event) => {
+                resizeStartRef.current = { x: event.clientX, width: detailPaneWidth };
+                setIsResizingDetailPane(true);
+              }}
+            />
+          ) : null}
+
+          {detailOpen && detailMode === 'overlay' && !isFullscreenDetail ? (
             <button
               type="button"
               className={`detail-backdrop ${detailOpen ? 'visible' : ''}`}
@@ -980,6 +1058,17 @@ export function App(): React.JSX.Element {
                     >
                       ☰
                     </button>
+                    <button
+                      className="icon-button menu-toggle-button"
+                      aria-label={detailFullscreen ? 'Verlaat fullscreen detail' : 'Open fullscreen detail'}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDetailFullscreen((value) => !value);
+                      }}
+                    >
+                      {detailFullscreen ? '⤢' : '⤢'}
+                    </button>
+                    
                     <div className="detail-header-label">Task detail</div>
                     <button className="icon-button detail-close-icon" aria-label="Sluit details" onClick={requestClosePanel}>
                       ×
@@ -1112,6 +1201,24 @@ export function App(): React.JSX.Element {
                       ) : (
                         <span className="muted-copy">Geen tags.</span>
                       )}
+                    </div>
+                  </div>
+
+                  <div className="detail-section">
+                    <strong>Agent metadata</strong>
+                    <div className="detail-meta-grid">
+                      <span className="muted-copy">Agent</span>
+                      <span>{selectedTask.activeAgent ?? '—'}</span>
+                      <span className="muted-copy">Model</span>
+                      <span>{selectedTask.activeAgentModel ?? '—'}</span>
+                      <span className="muted-copy">Runtime</span>
+                      <span>{selectedTask.activeAgentRuntime ?? '—'}</span>
+                      <span className="muted-copy">Sinds</span>
+                      <span>{selectedTask.activeAgentSince ?? '—'}</span>
+                      <span className="muted-copy">Status</span>
+                      <span>{selectedTask.activeAgentStatus ?? '—'}</span>
+                      <span className="muted-copy">Settings</span>
+                      <span>{selectedTask.activeAgentSettings ?? '—'}</span>
                     </div>
                   </div>
 
@@ -1287,12 +1394,12 @@ export function App(): React.JSX.Element {
     return (
       <button
         type="button"
-        className={`list-sort-header ${active ? 'active' : ''}`}
+        className={`list-sort-header ${active ? `active active-${sortDirection}` : ''}`}
         onClick={() => handleHeaderSort(column)}
         title={`Sorteer op ${label.toLowerCase()}`}
       >
         <span>{label}</span>
-        {active ? <span className="list-sort-arrow">{directionArrow(sortDirection)}</span> : null}
+        {active ? <span className="list-sort-direction-icon">{directionArrow(sortDirection)}</span> : null}
       </button>
     );
   }
@@ -1368,6 +1475,19 @@ export function App(): React.JSX.Element {
     setListDropIndicator(null);
   }
 
+  function handleTaskDragStart(taskId: string, sourceStatus: TaskStatus): void {
+    suppressSelectionUntilRef.current = Date.now() + CLICK_DRAG_SUPPRESSION_MS;
+    setDragState({ taskId, sourceStatus });
+  }
+
+  function handleTaskSurfaceClick(taskId: string): void {
+    if (Date.now() < suppressSelectionUntilRef.current) {
+      return;
+    }
+
+    selectTask(taskId);
+  }
+
   function selectTask(taskId: string): void {
     setSelectedTaskId(taskId);
     setDetailOpen(true);
@@ -1431,6 +1551,19 @@ export function App(): React.JSX.Element {
   }
 }
 
+function refreshButtonTitle(state: 'idle' | 'loading' | 'success' | 'error'): string {
+  if (state === 'loading') {
+    return 'Verversen...';
+  }
+  if (state === 'success') {
+    return 'Verversd';
+  }
+  if (state === 'error') {
+    return 'Verversen mislukt';
+  }
+  return 'Refresh';
+}
+
 function isFormDirty(task: TaskCardViewModel | null, formState: MetadataFormState | null): boolean {
   if (!task || !formState) {
     return false;
@@ -1455,10 +1588,10 @@ function isFormDirty(task: TaskCardViewModel | null, formState: MetadataFormStat
   return splitTags(formState.tags).join(',') !== task.tags.join(',');
 }
 
-function IconButton(props: { active: boolean; label: string; onClick: () => void }): React.JSX.Element {
+function IconButton(props: { active: boolean; label: string; icon: string; onClick: () => void }): React.JSX.Element {
   return (
-    <button className={`rail-button ${props.active ? 'active' : ''}`} onClick={props.onClick} title={props.label}>
-      {props.label}
+    <button className={`rail-button rail-icon-button ${props.active ? 'active' : ''}`} onClick={props.onClick} title={props.label} aria-label={props.label}>
+      <span className="rail-button-icon" aria-hidden="true">{props.icon}</span>
     </button>
   );
 }
@@ -1625,15 +1758,6 @@ function dueLabel(dueDate: string): string {
   return dueDate;
 }
 
-function checklistProgressLabel(completed: number, total: number): string {
-  if (total <= 0) {
-    return 'Geen checklist';
-  }
-
-  const percent = Math.round((completed / total) * 100);
-  return `${percent}% checklist (${completed}/${total})`;
-}
-
 function getDropPlacementForEvent(event: React.DragEvent<HTMLElement>): 'before' | 'after' {
   const rect = event.currentTarget.getBoundingClientRect();
   return getDropPlacementFromPointer(event.clientY - rect.top, rect.height);
@@ -1643,6 +1767,7 @@ const STATUS_TEXT_CLASS: Record<TaskStatus, string> = {
   backlog: 'status-text-backlog',
   ready: 'status-text-ready',
   in_progress: 'status-text-in-progress',
+  review: 'status-text-review',
   blocked: 'status-text-blocked',
   done: 'status-text-done',
 };
@@ -1651,6 +1776,7 @@ const STATUS_BADGE_CLASS: Record<TaskStatus, string> = {
   backlog: 'status-badge-tone-backlog',
   ready: 'status-badge-tone-ready',
   in_progress: 'status-badge-tone-in-progress',
+  review: 'status-badge-tone-review',
   blocked: 'status-badge-tone-blocked',
   done: 'status-badge-tone-done',
 };
@@ -1659,6 +1785,7 @@ const STATUS_RAIL_CLASS: Record<TaskStatus, string> = {
   backlog: 'status-rail-backlog',
   ready: 'status-rail-ready',
   in_progress: 'status-rail-in-progress',
+  review: 'status-rail-review',
   blocked: 'status-rail-blocked',
   done: 'status-rail-done',
 };
@@ -1697,4 +1824,8 @@ function toMetadataFormState(task: TaskCardViewModel): MetadataFormState {
     tags: task.tags.join(', '),
     dueDate: task.dueDate ?? '',
   };
+}
+
+function clampDetailPaneWidth(value: number): number {
+  return Math.max(DETAIL_PANE_MIN_WIDTH, Math.min(DETAIL_PANE_MAX_WIDTH, value));
 }

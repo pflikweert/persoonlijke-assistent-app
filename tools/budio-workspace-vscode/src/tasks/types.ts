@@ -62,6 +62,12 @@ export interface ParsedTaskFile {
   sections: Map<string, TaskSectionRange>;
   firstHeadingLineIndex: number | null;
   checklistLineIndexes: number[];
+  activeAgent: string | null;
+  activeAgentModel: string | null;
+  activeAgentRuntime: string | null;
+  activeAgentSince: string | null;
+  activeAgentStatus: string | null;
+  activeAgentSettings: string | null;
 }
 
 export interface TaskCardViewModel {
@@ -92,6 +98,12 @@ export interface TaskCardViewModel {
   bodyPreview: string;
   source: string;
   version: FileVersion;
+  activeAgent: string | null;
+  activeAgentModel: string | null;
+  activeAgentRuntime: string | null;
+  activeAgentSince: string | null;
+  activeAgentStatus: string | null;
+  activeAgentSettings: string | null;
 }
 
 export interface BoardColumn {
@@ -132,6 +144,12 @@ export interface TaskFieldPatch {
   dueDate?: string | null;
   sortOrder?: number | null;
   updatedAt?: string;
+  activeAgent?: string | null;
+  activeAgentModel?: string | null;
+  activeAgentRuntime?: string | null;
+  activeAgentSince?: string | null;
+  activeAgentStatus?: string | null;
+  activeAgentSettings?: string | null;
 }
 
 export interface MoveTaskInput {
@@ -152,6 +170,7 @@ export interface CreateTaskInput {
   tags?: string[];
   workstream?: TaskWorkstream;
   dueDate?: string | null;
+  sortOrder?: number | null;
 }
 
 export interface TaskMutationResult {

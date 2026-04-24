@@ -15,12 +15,15 @@ type PanelView = 'board' | 'list' | 'settings';
 
 export class BoardPanelController implements vscode.Disposable {
   private static readonly BACKGROUND_REFRESH_MS = 30000;
+  private static readonly WATCHER_REFRESH_DEBOUNCE_MS = 350;
 
   private panel: vscode.WebviewPanel | null = null;
   private watcher: vscode.Disposable | null = null;
   private backgroundRefreshTimer: NodeJS.Timeout | null = null;
+  private watcherRefreshTimer: NodeJS.Timeout | null = null;
   private readonly disposables: vscode.Disposable[] = [];
   private lastTasks = new Map<string, ParsedTaskFile>();
+  private lastFocusedTaskId: string | null = null;
 
   constructor(private readonly extensionUri: vscode.Uri) {
     this.resetWatcher();
@@ -38,6 +41,7 @@ export class BoardPanelController implements vscode.Disposable {
 
   dispose(): void {
     this.stopBackgroundRefresh();
+    this.stopWatcherRefresh();
     this.panel?.dispose();
     this.watcher?.dispose();
     vscode.Disposable.from(...this.disposables).dispose();
@@ -91,7 +95,7 @@ export class BoardPanelController implements vscode.Disposable {
     await this.runRefresh();
   }
 
-  async createTask(defaultStatus: 'backlog' | 'ready' | 'in_progress' | 'blocked' = 'ready'): Promise<void> {
+  async createTask(defaultStatus: 'backlog' | 'ready' | 'in_progress' | 'review' | 'blocked' = 'ready'): Promise<void> {
     const title = await vscode.window.showInputBox({
       title: 'Nieuwe taak',
       prompt: 'Titel voor de nieuwe taak',
@@ -237,6 +241,7 @@ export class BoardPanelController implements vscode.Disposable {
           : options.focusTaskId === null
             ? undefined
             : options.focusTaskId;
+      this.lastFocusedTaskId = focusTaskId ?? null;
       await this.publishSnapshot({ focusTaskId });
       this.postMessage({
         type: 'saveCompleted',
@@ -279,6 +284,8 @@ export class BoardPanelController implements vscode.Disposable {
       const repository = new TaskRepository(workspaceFolder.uri.fsPath, settings.tasksRoot);
       const tasks = await repository.scan();
       this.lastTasks = new Map(tasks.map((task) => [task.id, task]));
+      const resolvedFocusTaskId = options?.focusTaskId ?? this.resolveFocusedTaskId(tasks);
+      this.lastFocusedTaskId = resolvedFocusTaskId ?? null;
       const snapshot = buildBoardSnapshot({
         tasks,
         settings,
@@ -288,7 +295,7 @@ export class BoardPanelController implements vscode.Disposable {
       this.postMessage({
         type: 'hydrateBoard',
         snapshot,
-        focusTaskId: options?.focusTaskId,
+        focusTaskId: resolvedFocusTaskId,
         view: options?.view,
       });
     } catch (error) {
@@ -353,6 +360,7 @@ export class BoardPanelController implements vscode.Disposable {
 
   private resetWatcher(): void {
     this.watcher?.dispose();
+    this.stopWatcherRefresh();
     const workspaceFolder = getPrimaryWorkspaceFolder();
     if (!workspaceFolder) {
       this.watcher = null;
@@ -361,8 +369,39 @@ export class BoardPanelController implements vscode.Disposable {
 
     const settings = readWorkspaceSettings(workspaceFolder);
     this.watcher = createTaskWatcher(workspaceFolder, settings.tasksRoot, () => {
-      void this.publishSnapshot();
+      this.scheduleWatcherRefresh();
     });
+  }
+
+  private scheduleWatcherRefresh(): void {
+    if (!this.panel) {
+      return;
+    }
+
+    this.stopWatcherRefresh();
+    this.watcherRefreshTimer = setTimeout(() => {
+      this.watcherRefreshTimer = null;
+      void this.publishSnapshot();
+    }, BoardPanelController.WATCHER_REFRESH_DEBOUNCE_MS);
+  }
+
+  private stopWatcherRefresh(): void {
+    if (!this.watcherRefreshTimer) {
+      return;
+    }
+
+    clearTimeout(this.watcherRefreshTimer);
+    this.watcherRefreshTimer = null;
+  }
+
+  private resolveFocusedTaskId(tasks: ParsedTaskFile[]): string | undefined {
+    if (!this.lastFocusedTaskId) {
+      return undefined;
+    }
+
+    return tasks.some((task) => task.id === this.lastFocusedTaskId)
+      ? this.lastFocusedTaskId
+      : undefined;
   }
 
   private startBackgroundRefresh(): void {

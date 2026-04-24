@@ -12,7 +12,7 @@ const COLUMN_TO_SORT: Record<ListSortColumn, TaskSort> = {
   title: 'alphabetical',
   status: 'status',
   priority: 'priority',
-  due: 'due_date',
+  due: 'updated_at',
   checklist: 'progress',
 };
 

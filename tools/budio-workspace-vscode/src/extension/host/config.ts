@@ -9,9 +9,10 @@ export function getPrimaryWorkspaceFolder(): vscode.WorkspaceFolder | null {
 export function readWorkspaceSettings(workspaceFolder: vscode.WorkspaceFolder): WorkspaceSettings {
   const configuration = vscode.workspace.getConfiguration('budioWorkspace', workspaceFolder.uri);
   const rawColumns = configuration.get<string[]>('columns', [...DEFAULT_COLUMNS]);
-  const columns = rawColumns.filter((status): status is TaskStatus =>
+  const configuredColumns = rawColumns.filter((status): status is TaskStatus =>
     TASK_STATUSES.includes(status as TaskStatus),
   );
+  const columns = ensureRequiredColumns(configuredColumns);
   const rawSort = configuration.get<string>('defaultSort', 'manual');
   const defaultSort = TASK_SORTS.includes(rawSort as TaskSort) ? (rawSort as TaskSort) : 'manual';
 
@@ -21,6 +22,20 @@ export function readWorkspaceSettings(workspaceFolder: vscode.WorkspaceFolder): 
     showDoneColumn: configuration.get<boolean>('showDoneColumn', true),
     defaultSort,
   };
+}
+
+function ensureRequiredColumns(columns: TaskStatus[]): TaskStatus[] {
+  const laneOrder: TaskStatus[] = ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'];
+  const existing = new Set(columns);
+
+  for (const lane of laneOrder) {
+    if (!existing.has(lane)) {
+      columns.push(lane);
+      existing.add(lane);
+    }
+  }
+
+  return laneOrder.filter((lane) => existing.has(lane));
 }
 
 function sanitizeRelativePath(input: string): string {

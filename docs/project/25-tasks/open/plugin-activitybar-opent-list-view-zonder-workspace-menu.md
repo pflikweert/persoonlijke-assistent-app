@@ -5,12 +5,12 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
-updated_at: 2026-04-23
-summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, terwijl de oude Workspace-launcher en overbodige tussenlaag worden opgeruimd."
+updated_at: 2026-04-25
+summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, met veel list/board polish doorgevoerd; fullscreen-detail en enkele laatste layout-issues zijn nog open en blijven binnen deze in-progress task."
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 # Budio Workspace activity-bar opent list view zonder workspace-menu
@@ -52,7 +52,28 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 - [x] Activity-bar open-flow aangepast naar `list`.
 - [x] Oude launcher-code en manifestverwijzingen opgeschoond.
 - [x] README bijgewerkt naar het nieuwe open-gedrag.
+- [x] List-view header/filters/sort/refresh UI aangescherpt (icon-only refresh, sort-select in topbar, actieve sort-header, statuschips gecentreerd, gekleurde batchchips).
+- [x] List-view kolomheaders sticky gemaakt zodat ze onder de topnav zichtbaar blijven tijdens scroll.
+- [x] Actieve taak-indicator visueel versterkt in board cards en list rows.
+- [x] Automatische refresh/selectie-behoud aangescherpt voor repo- en agentgedreven markdownwijzigingen.
+- [x] `Due` vervangen door `Last change` in de list view (datum-only, sorteert op wijzigingsdatum).
+- [x] Checklist progress compacter en visueel consistenter gemaakt met gedeelde kleurbanden.
+- [x] Plugin opent standaard met `Alleen open` actief.
+- [x] Linker rail omgezet naar icon-first navigatie.
+- [x] Detail pane uitbreidbaar gemaakt met resize handle en fullscreen toggle.
+- [x] Agent activity zichtbaar gemaakt in list/board task-overzichten via gedeeld helperpatroon.
+- [x] Rail refresh-knop gelijkgetrokken met de andere icon-buttons.
+- [x] `Last change` compact gemaakt (`Apr 25`) zodat de datum niet over twee regels breekt.
+- [x] Drag-vs-click structureel gescheiden zodat slepen niet meer meteen task detail opent.
+- [ ] Detailweergave volledig stabiel maken: klein scherm fullscreen, desktop side-pane met expliciete fullscreen-optie, zonder lege rechterkolom of overlap over list/board.
+- [ ] Laatste rail-sizing check bevestigen zodat refresh exact dezelfde maat houdt als de andere rail-icon buttons.
 - [ ] Handmatige smoke-check in de normale VS Code workspace bevestigd.
+
+## Bekende resterende punten uit deze sessie
+
+- Fullscreen detail is nog niet volledig correct: in de huidige WIP kan de oude rechter-placeholder zichtbaar blijven terwijl detail over de list/board heen valt.
+- De refresh-knop in de linker rail is codematig verder gelijkgetrokken, maar moet nog visueel bevestigd worden als exact dezelfde maat als de andere rail-icon buttons.
+- De taak blijft bewust `in_progress` totdat deze laatste plugin-layout regressies én de handmatige smoke-check zijn afgerond.
 
 ## Blockers / afhankelijkheden
 

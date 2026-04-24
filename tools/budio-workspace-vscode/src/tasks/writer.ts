@@ -48,6 +48,24 @@ export function applyTaskFieldPatch(task: ParsedTaskFile, patch: TaskFieldPatch)
   if (patch.updatedAt !== undefined) {
     nextFrontmatter.updated_at = patch.updatedAt;
   }
+  if (patch.activeAgent !== undefined) {
+    nextFrontmatter.active_agent = patch.activeAgent;
+  }
+  if (patch.activeAgentModel !== undefined) {
+    nextFrontmatter.active_agent_model = patch.activeAgentModel;
+  }
+  if (patch.activeAgentRuntime !== undefined) {
+    nextFrontmatter.active_agent_runtime = patch.activeAgentRuntime;
+  }
+  if (patch.activeAgentSince !== undefined) {
+    nextFrontmatter.active_agent_since = patch.activeAgentSince;
+  }
+  if (patch.activeAgentStatus !== undefined) {
+    nextFrontmatter.active_agent_status = patch.activeAgentStatus;
+  }
+  if (patch.activeAgentSettings !== undefined) {
+    nextFrontmatter.active_agent_settings = patch.activeAgentSettings;
+  }
 
   const nextBodyLines = [...task.bodyLines];
   if (patch.title !== undefined) {
@@ -100,7 +118,13 @@ export function buildNewTaskContent(input: CreateTaskInput & { id: string; updat
     tags: input.tags ?? [],
     workstream: input.workstream ?? 'app',
     due_date: input.dueDate ?? null,
-    sort_order: null,
+    sort_order: input.sortOrder ?? null,
+    active_agent: null,
+    active_agent_model: null,
+    active_agent_runtime: null,
+    active_agent_since: null,
+    active_agent_status: null,
+    active_agent_settings: null,
   };
 
   return `${serializeFrontmatter(frontmatter, frontmatterOrder)}# ${input.title.trim()}
@@ -141,6 +165,14 @@ Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 ## Relevante links
 
 - \`docs/project/open-points.md\`
+
+## Agent activity
+
+- Geen actieve agent.
+
+## Commits
+
+- Nog geen commit-registraties.
 `;
 }
 

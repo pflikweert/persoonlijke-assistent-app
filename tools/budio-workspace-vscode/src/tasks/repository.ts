@@ -30,6 +30,68 @@ export class TaskRepository {
     const task = requireTask(tasks, taskId);
     assertVersion(task, expectedVersion);
 
+    const statusChanged = patch.status !== undefined && patch.status !== task.status;
+    if (statusChanged && patch.status) {
+      const taskMap = new Map(tasks.map((entry) => [entry.id, entry]));
+      const writes = new Map<string, { sourcePath: string; targetPath: string; content: string }>();
+
+      const sourceLaneIds = tasks
+        .filter((entry) => entry.status === task.status && entry.id !== task.id)
+        .sort((left, right) => (left.sortOrder ?? Number.MAX_SAFE_INTEGER) - (right.sortOrder ?? Number.MAX_SAFE_INTEGER))
+        .map((entry) => entry.id);
+
+      const targetLaneIds = tasks
+        .filter((entry) => entry.status === patch.status && entry.id !== task.id)
+        .sort((left, right) => (left.sortOrder ?? Number.MAX_SAFE_INTEGER) - (right.sortOrder ?? Number.MAX_SAFE_INTEGER))
+        .map((entry) => entry.id);
+
+      sourceLaneIds.forEach((id, index) => {
+        const sourceTask = taskMap.get(id);
+        if (!sourceTask) {
+          return;
+        }
+
+        writes.set(id, {
+          sourcePath: sourceTask.sourcePath,
+          targetPath: sourceTask.sourcePath,
+          content: applyTaskFieldPatch(sourceTask, { sortOrder: index + 1 }),
+        });
+      });
+
+      const targetPath = await resolveUniqueTargetPath(
+        buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, patch.status),
+        task.sourcePath,
+      );
+
+      writes.set(task.id, {
+        sourcePath: task.sourcePath,
+        targetPath,
+        content: applyTaskFieldPatch(task, {
+          ...patch,
+          sortOrder: 1,
+        }),
+      });
+
+      targetLaneIds.forEach((id, index) => {
+        const targetTask = taskMap.get(id);
+        if (!targetTask) {
+          return;
+        }
+
+        writes.set(id, {
+          sourcePath: targetTask.sourcePath,
+          targetPath: targetTask.sourcePath,
+          content: applyTaskFieldPatch(targetTask, { sortOrder: index + 2 }),
+        });
+      });
+
+      for (const write of writes.values()) {
+        await writeTaskFile(write.sourcePath, write.targetPath, write.content);
+      }
+
+      return { taskId, path: path.relative(this.workspaceRoot, targetPath) };
+    }
+
     const nextPath = patch.status
       ? await resolveUniqueTargetPath(
           buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, patch.status),
@@ -152,11 +214,24 @@ export class TaskRepository {
 
     const phase = input.phase ?? mostCommonPhase(tasks) ?? 'transitiemaand-consumer-beta';
     const id = `task-${path.basename(candidate, '.md')}`;
+
+    const laneTasks = tasks
+      .filter((task) => task.status === input.status)
+      .sort((left, right) => (left.sortOrder ?? Number.MAX_SAFE_INTEGER) - (right.sortOrder ?? Number.MAX_SAFE_INTEGER));
+
+    for (const [index, laneTask] of laneTasks.entries()) {
+      const content = applyTaskFieldPatch(laneTask, {
+        sortOrder: index + 2,
+      });
+      await writeTaskFile(laneTask.sourcePath, laneTask.sourcePath, content);
+    }
+
     const content = buildNewTaskContent({
       ...input,
       id,
       phase,
       updatedAt: now,
+      sortOrder: 1,
     });
     await fs.writeFile(candidate, content, 'utf8');
     return {

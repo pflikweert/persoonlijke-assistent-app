@@ -35,6 +35,12 @@ function card(id: string): TaskCardViewModel {
     bodyPreview: 'Preview',
     source: 'docs/project/open-points.md',
     version: { mtimeMs: 1, hash: id },
+    activeAgent: null,
+    activeAgentModel: null,
+    activeAgentRuntime: null,
+    activeAgentSince: null,
+    activeAgentStatus: null,
+    activeAgentSettings: null,
   };
 }
 
@@ -42,7 +48,7 @@ test('mapColumnToSort maps list headers to TaskSort values', () => {
   assert.equal(mapColumnToSort('title'), 'alphabetical');
   assert.equal(mapColumnToSort('status'), 'status');
   assert.equal(mapColumnToSort('priority'), 'priority');
-  assert.equal(mapColumnToSort('due'), 'due_date');
+  assert.equal(mapColumnToSort('due'), 'updated_at');
   assert.equal(mapColumnToSort('checklist'), 'progress');
 });
 
@@ -54,7 +60,7 @@ test('nextSortStateFromHeader toggles direction on same column and resets on new
   assert.deepEqual(toggled, { sort: 'alphabetical', direction: 'desc' });
 
   const switched = nextSortStateFromHeader(toggled, 'due');
-  assert.deepEqual(switched, { sort: 'due_date', direction: 'asc' });
+  assert.deepEqual(switched, { sort: 'updated_at', direction: 'asc' });
 });
 
 test('applySortDirection keeps asc order and reverses for desc', () => {

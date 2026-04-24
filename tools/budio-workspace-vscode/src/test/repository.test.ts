@@ -261,3 +261,136 @@ sort_order: 1
   assert.match(readyB, /sort_order: 1/);
   assert.match(blockedX, /sort_order: 2/);
 });
+
+test('repository createTask inserts new task at top of selected status lane', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(openRoot, { recursive: true });
+
+  await fs.writeFile(
+    path.join(openRoot, 'ready-a.md'),
+    `---
+id: task-ready-a
+title: Ready A
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# Ready A
+`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(openRoot, 'ready-b.md'),
+    `---
+id: task-ready-b
+title: Ready B
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 2
+---
+
+# Ready B
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const result = await repository.createTask({
+    title: 'Nieuwe ready taak',
+    status: 'ready',
+  });
+
+  const created = await fs.readFile(path.resolve(workspaceRoot, result.path), 'utf8');
+  const readyA = await fs.readFile(path.join(openRoot, 'ready-a.md'), 'utf8');
+  const readyB = await fs.readFile(path.join(openRoot, 'ready-b.md'), 'utf8');
+
+  assert.match(created, /status: ready/);
+  assert.match(created, /sort_order: 1/);
+  assert.match(readyA, /sort_order: 2/);
+  assert.match(readyB, /sort_order: 3/);
+});
+
+test('repository updateTaskFields places moved task on top of destination lane', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(openRoot, { recursive: true });
+
+  await fs.writeFile(
+    path.join(openRoot, 'in-progress-a.md'),
+    `---
+id: task-in-progress-a
+title: In Progress A
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# In Progress A
+`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(openRoot, 'review-a.md'),
+    `---
+id: task-review-a
+title: Review A
+status: review
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# Review A
+`,
+    'utf8',
+  );
+  await fs.writeFile(
+    path.join(openRoot, 'review-b.md'),
+    `---
+id: task-review-b
+title: Review B
+status: review
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 2
+---
+
+# Review B
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const tasks = await repository.scan();
+  const moving = tasks.find((task) => task.id === 'task-in-progress-a');
+  assert.ok(moving);
+
+  await repository.updateTaskFields(moving.id, moving.version, {
+    status: 'review',
+    updatedAt: '2026-04-24',
+  });
+
+  const moved = await fs.readFile(path.join(openRoot, 'in-progress-a.md'), 'utf8');
+  const reviewA = await fs.readFile(path.join(openRoot, 'review-a.md'), 'utf8');
+  const reviewB = await fs.readFile(path.join(openRoot, 'review-b.md'), 'utf8');
+
+  assert.match(moved, /status: review/);
+  assert.match(moved, /sort_order: 1/);
+  assert.match(reviewA, /sort_order: 2/);
+  assert.match(reviewB, /sort_order: 3/);
+});

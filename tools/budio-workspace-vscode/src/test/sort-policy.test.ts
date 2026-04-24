@@ -33,6 +33,12 @@ function card(overrides: Partial<TaskCardViewModel>): TaskCardViewModel {
     bodyPreview: 'Preview',
     source: 'docs/project/open-points.md',
     version: { mtimeMs: 1, hash: 'hash' },
+    activeAgent: null,
+    activeAgentModel: null,
+    activeAgentRuntime: null,
+    activeAgentSince: null,
+    activeAgentStatus: null,
+    activeAgentSettings: null,
     ...restOverrides,
   };
 }
@@ -40,6 +46,7 @@ function card(overrides: Partial<TaskCardViewModel>): TaskCardViewModel {
 test('sortTaskCards applies lane/status ordering before manual ordering', () => {
   const cards = [
     card({ id: 'done-1', status: 'done', sortOrder: 1 }),
+    card({ id: 'review-1', status: 'review', sortOrder: 1 }),
     card({ id: 'ready-2', status: 'ready', sortOrder: 2 }),
     card({ id: 'ready-1', status: 'ready', sortOrder: 1 }),
     card({ id: 'backlog-1', status: 'backlog', sortOrder: 1 }),
@@ -48,7 +55,7 @@ test('sortTaskCards applies lane/status ordering before manual ordering', () => 
   const laneSorted = sortTaskCards(cards, 'lane_order').map((item) => item.id);
   const statusSorted = sortTaskCards(cards, 'status').map((item) => item.id);
 
-  assert.deepEqual(laneSorted, ['backlog-1', 'ready-1', 'ready-2', 'done-1']);
+  assert.deepEqual(laneSorted, ['backlog-1', 'ready-1', 'ready-2', 'review-1', 'done-1']);
   assert.deepEqual(statusSorted, laneSorted);
 });
 

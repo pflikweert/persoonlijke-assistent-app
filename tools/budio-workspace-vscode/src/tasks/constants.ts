@@ -1,4 +1,4 @@
-export const TASK_STATUSES = ['backlog', 'ready', 'in_progress', 'blocked', 'done'] as const;
+export const TASK_STATUSES = ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'] as const;
 export const TASK_PRIORITIES = ['p1', 'p2', 'p3'] as const;
 export const TASK_WORKSTREAMS = ['idea', 'plugin', 'app', 'aiqs'] as const;
 export const TASK_SORTS = [
@@ -22,7 +22,19 @@ export const TASK_REQUIRED_FIELDS = [
   'updated_at',
 ] as const;
 
-export const TASK_OPTIONAL_FIELDS = ['summary', 'tags', 'workstream', 'due_date', 'sort_order'] as const;
+export const TASK_OPTIONAL_FIELDS = [
+  'summary',
+  'tags',
+  'workstream',
+  'due_date',
+  'sort_order',
+  'active_agent',
+  'active_agent_model',
+  'active_agent_runtime',
+  'active_agent_since',
+  'active_agent_status',
+  'active_agent_settings',
+] as const;
 
 export const PLUGIN_OWNED_FRONTMATTER_FIELDS = [
   'title',
@@ -34,6 +46,12 @@ export const PLUGIN_OWNED_FRONTMATTER_FIELDS = [
   'due_date',
   'sort_order',
   'updated_at',
+  'active_agent',
+  'active_agent_model',
+  'active_agent_runtime',
+  'active_agent_since',
+  'active_agent_status',
+  'active_agent_settings',
 ] as const;
 
 export const DEFAULT_COLUMNS = [...TASK_STATUSES];
@@ -42,6 +60,7 @@ export const STATUS_LABELS: Record<(typeof TASK_STATUSES)[number], string> = {
   backlog: 'Backlog',
   ready: 'Ready',
   in_progress: 'In Progress',
+  review: 'Review',
   blocked: 'Blocked',
   done: 'Done',
 };

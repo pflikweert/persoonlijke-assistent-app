@@ -101,7 +101,9 @@ function statusRank(status: TaskStatus): number {
       ? 2
       : status === 'in_progress'
         ? 3
-        : status === 'blocked'
+        : status === 'review'
           ? 4
-          : 5;
+          : status === 'blocked'
+            ? 5
+            : 6;
 }

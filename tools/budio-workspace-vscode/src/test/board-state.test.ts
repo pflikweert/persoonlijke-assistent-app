@@ -35,6 +35,12 @@ function buildTask(overrides: Partial<ParsedTaskFile>): ParsedTaskFile {
     sections: new Map(),
     firstHeadingLineIndex: 0,
     checklistLineIndexes: [],
+    activeAgent: null,
+    activeAgentModel: null,
+    activeAgentRuntime: null,
+    activeAgentSince: null,
+    activeAgentStatus: null,
+    activeAgentSettings: null,
     ...restOverrides,
   };
 }
@@ -48,7 +54,7 @@ test('buildBoardSnapshot groups by column and respects manual ordering', () => {
     ],
     settings: {
       tasksRoot: 'docs/project/25-tasks',
-      columns: ['backlog', 'ready', 'in_progress', 'blocked', 'done'],
+      columns: ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'],
       showDoneColumn: true,
       defaultSort: 'manual',
     },

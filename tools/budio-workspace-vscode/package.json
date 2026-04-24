@@ -60,6 +60,7 @@
             "backlog",
             "ready",
             "in_progress",
+            "review",
             "blocked",
             "done"
           ],
@@ -69,6 +70,7 @@
               "backlog",
               "ready",
               "in_progress",
+              "review",
               "blocked",
               "done"
             ]
