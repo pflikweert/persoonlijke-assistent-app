@@ -2,7 +2,7 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 
-const VALID_STATUSES = new Set(['backlog', 'ready', 'in_progress', 'blocked', 'done']);
+const VALID_STATUSES = new Set(['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done']);
 const TASKFILE_PREFIX = 'docs/project/25-tasks/';
 const OPEN_PREFIX = 'docs/project/25-tasks/open/';
 const DONE_PREFIX = 'docs/project/25-tasks/done/';
@@ -109,7 +109,7 @@ export function evaluateTaskflow(input) {
 
     if (!VALID_STATUSES.has(status)) {
       issues.push(
-        `Taskfile heeft ongeldige status (${String(status)}): ${taskfilePath}. Gebruik: backlog|ready|in_progress|blocked|done.`,
+        `Taskfile heeft ongeldige status (${String(status)}): ${taskfilePath}. Gebruik: backlog|ready|in_progress|review|blocked|done.`,
       );
     }
 
