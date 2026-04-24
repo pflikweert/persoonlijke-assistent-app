@@ -32,68 +32,21 @@ async function loginWithLocalMagicLink(page) {
   await page.waitForLoadState("networkidle");
 }
 
-async function dragWithTouch(page, fromBox, toBox) {
-  await page.evaluate(
-    async ({ fromBox, toBox }) => {
-      const start = {
-        x: fromBox.x + fromBox.width / 2,
-        y: fromBox.y + fromBox.height / 2,
-      };
-      const end = {
-        x: toBox.x + toBox.width / 2,
-        y: toBox.y + toBox.height / 2,
-      };
-      const target = document.elementFromPoint(start.x, start.y);
-      if (!target) {
-        throw new Error("Could not find drag source element.");
-      }
+async function dragWithMouse(page, fromBox, toBox) {
+  const start = {
+    x: fromBox.x + fromBox.width / 2,
+    y: fromBox.y + fromBox.height / 2,
+  };
+  const end = {
+    x: toBox.x + toBox.width / 2,
+    y: toBox.y + toBox.height / 2,
+  };
 
-      const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
-      const createTouch = (point) =>
-        new Touch({
-          identifier: 1,
-          target,
-          clientX: point.x,
-          clientY: point.y,
-          pageX: point.x + window.scrollX,
-          pageY: point.y + window.scrollY,
-          screenX: point.x,
-          screenY: point.y,
-          radiusX: 1,
-          radiusY: 1,
-          force: 1,
-        });
-      const fire = (type, point, active) => {
-        const touch = createTouch(point);
-        target.dispatchEvent(
-          new TouchEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            touches: active ? [touch] : [],
-            targetTouches: active ? [touch] : [],
-            changedTouches: [touch],
-          })
-        );
-      };
-
-      fire("touchstart", start, true);
-      await wait(160);
-      for (let step = 1; step <= 8; step += 1) {
-        const progress = step / 8;
-        fire(
-          "touchmove",
-          {
-            x: start.x + (end.x - start.x) * progress,
-            y: start.y + (end.y - start.y) * progress,
-          },
-          true
-        );
-        await wait(16);
-      }
-      fire("touchend", end, false);
-    },
-    { fromBox, toBox }
-  );
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.waitForTimeout(160);
+  await page.mouse.move(end.x, end.y, { steps: 8 });
+  await page.mouse.up();
 }
 
 test.describe("entry photo gallery smoke", () => {
@@ -101,8 +54,11 @@ test.describe("entry photo gallery smoke", () => {
   test.skip(orderedPhotoIds.length < 3, "Set GALLERY_E2E_PHOTO_IDS to at least 3 ordered photo ids.");
 
   test("reorders a thumbnail to the left without visible copy badges", async ({ page }) => {
+    test.setTimeout(60000);
+
     await loginWithLocalMagicLink(page);
     await page.goto(entryUrl ?? "/");
+    await expect(page.getByText("Foto's laden...")).toHaveCount(0, { timeout: 15000 });
 
     const first = page.getByTestId(`entry-photo-thumb-${orderedPhotoIds[0]}`);
     const second = page.getByTestId(`entry-photo-thumb-${orderedPhotoIds[1]}`);
@@ -119,7 +75,7 @@ test.describe("entry photo gallery smoke", () => {
     expect(firstBox).not.toBeNull();
     expect(secondBox).not.toBeNull();
 
-    await dragWithTouch(page, secondBox, firstBox);
+    await dragWithMouse(page, secondBox, firstBox);
 
     await expect(second).toBeVisible();
     const movedBox = await second.boundingBox();

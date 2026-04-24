@@ -104,9 +104,12 @@ Voor AI-gedrag, prompting en evaluatie:
 - Always-on taskflow (verplicht voor alle inhoudelijke agenttaken):
   - geldt voor plan/research/bug/implementatie binnen repo-context
   - uitzondering: pure chat of simpele read-only vraag zonder uitvoertaak
-  - preflight: vind bestaande taskfile of maak nieuwe taskfile uit `docs/project/25-tasks/_template.md`
-  - geen inhoudelijk plan, research-antwoord of implementatiestart zonder bestaande of nieuw aangemaakte taskfile
-  - als taskfile ontbreekt: maak die eerst aan en ga pas daarna verder met plan/research/uitvoering
+  - preflight: vind eerst een bestaande taskfile; maak alleen buiten Plan Mode een nieuwe taskfile uit `docs/project/25-tasks/_template.md`
+  - geen inhoudelijk plan, research-antwoord of implementatiestart zonder taskfile
+  - in Plan Mode: gebruik altijd eerst een bestaande taskfile
+  - in Plan Mode: maak nooit automatisch een nieuwe taskfile aan
+  - als in Plan Mode geen passende bestaande taskfile bestaat: blokkeer inhoudelijk, meld dit expliciet, en maak pas buiten Plan Mode een nieuwe task
+  - buiten Plan Mode: als taskfile ontbreekt, maak die eerst aan en ga pas daarna verder met plan/research/uitvoering
   - wanneer een taak automatisch wordt aangemaakt: plaats die direct bovenaan de doel-lane door `sort_order` van die lane te herschrijven en de nieuwe taak op positie `1` te zetten
   - wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: plaats die direct bovenaan de `in_progress` lane door `sort_order` van bron- en doellane opnieuw doorlopend op te slaan
   - zet status direct op `in_progress` zodra uitvoering start
@@ -116,7 +119,7 @@ Voor AI-gedrag, prompting en evaluatie:
     - `Status: <huidige status>`
   - werk tijdens uitvoering checklist + `updated_at` bij op echte voortgang
   - elk inhoudelijk plan noemt expliciet de concrete taskfile-path
-  - elk inhoudelijk Plan Mode-plan bevat een korte `Taskflow summary`: welke taskfile gebruikt of gemaakt wordt, welke statuswijziging verwacht wordt, en wanneer extra werk een eigen task krijgt
+  - elk inhoudelijk Plan Mode-plan bevat een korte `Taskflow summary`: welke bestaande taskfile gebruikt wordt, welke statuswijziging verwacht wordt, en wanneer extra werk een eigen task krijgt
   - verbeteringen die direct voortkomen uit testen van dezelfde flow blijven in dezelfde task; nieuw niet-relevant werk krijgt een eigen task
   - updates en eindresultaat bevatten altijd:
     - `Task: <taaktitel>`
@@ -163,6 +166,8 @@ Voor AI-gedrag, prompting en evaluatie:
 - Gebruik `supabase_remote_ro` niet voor normale ontwikkeliteraties, writes of bulk inspecties die lokaal ook kunnen.
 - Als een agent `supabase_remote_ro` tijdelijk activeert, zet die daarna direct terug naar `supabase_local`.
 - Gebruik voor target-switching altijd de helper: `node scripts/codex-mcp-target.mjs <local|remote-ro ...>`; geen handmatige TOML-edits tenzij expliciet nodig.
+- Gebruik bij productiebug-onderzoek de runbook-volgorde in `docs/dev/production-bug-investigation-workflow.md`.
+- Leg productieclaims alleen vast met bronspoor: timestamp, route, deployment/logbron en bevestigde status (`bevestigd`, `onbevestigd`, `blocked`).
 
 ## UI-guardrails (NativeWind / component-first)
 
@@ -236,6 +241,7 @@ Bij wijzigingen aan canonieke docs:
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 - Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
 - Bij taskstatuswijzigingen of taakverplaatsing naar `done/`: werk taskfile + relevante planning/open-points context bij en draai daarna ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Draai `npm run docs:bundle` en `npm run docs:bundle:verify` altijd sequentieel, nooit parallel.
 - Voor inhoudelijke agentuitvoering in repo-context: draai ook `npm run taskflow:verify`.
 
 Bij wijzigingen in admin-regeneratie:

@@ -5,76 +5,106 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-23
-summary: "Long-press reorder voor momentfoto's met duidelijke thumbnail-indicatie en stille background-save, plus veilige auto-stop voor de microfoontest bij stilte en schermverlaten."
-tags: [moment-detail, photos, audio-settings, taskflow]
+updated_at: 2026-04-24
+summary: "Hardening van moment-detail foto-upload en reorder in productie, inclusief live drag-preview, foutclassificatie, retry/refetch-gedrag, productie diagnoseflow en repo-brede Plan Mode taskflow-guardrails."
+tags: [moment-detail, photos, production, diagnostics, taskflow]
 workstream: app
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 
 ## Probleem / context
 
-De moment detail-flow mist nog foto-reordering in de onderste galerij, terwijl de eerste positie functioneel de featured thumbnail bovenin bepaalt.
-Daarnaast is de microfoontest in audio-instellingen nu te kwetsbaar: hij stopt niet automatisch bij langere stilte en moet altijd stoppen zodra de gebruiker het scherm verlaat.
+De moment detail-flow toont in productie twee reele regressies:
+
+- foto-upload werkt soms wel en soms niet, zonder duidelijke foutfasering of diagnosepad
+- reorder geeft in productie foutmeldingen en de placeholder schuift tijdens slepen niet live mee naar de nieuwe doelpositie
+
+Daarnaast moet de repo-brede taskflow worden aangescherpt:
+
+- Plan Mode mag in deze repo niet langer automatisch nieuwe taskfiles aanmaken
+- productieonderzoek moet via een vaste read-only diagnoseflow en vaste agent-testaccount reproduceerbaar worden
 
 ## Gewenste uitkomst
 
-Op het moment-detailscherm kan de gebruiker een foto lang indrukken en intuïtief naar een andere positie slepen. Tijdens het slepen is duidelijk zichtbaar waar de foto terechtkomt, en de volgorde wordt stil op de achtergrond opgeslagen zonder extra save-flow. De eerste positie blijft altijd de thumbnailbron en is als zodanig herkenbaar in de UI.
+Op het moment-detailscherm kan de gebruiker foto's betrouwbaar uploaden en herordenen. Tijdens het slepen schuift de galerij live mee naar de beoogde nieuwe positie, en persist gebeurt pas na loslaten. Bij mismatch- of persistfouten volgt exact een autoritatieve refetch + retry; daarna blijft een geclassificeerde fout zichtbaar.
 
-In audio-instellingen stopt de microfoontest automatisch na 10 seconden zonder hoorbaar signaal, en ook direct wanneer het scherm focus verliest of op welke manier dan ook wordt verlaten.
+Daarnaast is er een compacte repo-brede workflow voor productiebug-onderzoek: altijd gekoppeld aan een bestaande task, met vaste Vercel/Supabase diagnosevolgorde, tijdelijke productie read-only context, een dedicated agent-testaccount zonder adminrechten en expliciete learnings terug naar taskfile + runbook.
 
 ## Waarom nu
 
-- Deze UX-gap blokkeert een logische kernflow in moment detail: bepalen welke foto het moment vertegenwoordigt.
-- De audiotest moet veiliger en robuuster worden voordat deze als afgeronde microfooninstelling kan gelden.
-- Deze taak is ook de concrete drager voor het plan en de implementatie; hij moet daarom vanaf start expliciet in de tasklaag bestaan.
+- De productiebug schaadt vertrouwen in een kernflow: foto's toevoegen en een thumbnail kiezen voor een moment.
+- De huidige reorder-UI laat niet betrouwbaar zien waar de foto zal landen.
+- Toekomstig productieonderzoek kost te veel tijd zonder vaste testaccount, logvolgorde en taskflow-regel.
 
 ## In scope
 
-- Long-press drag reorder in de onderste momentfotogalerij.
-- Duidelijke placeholder / doelpositie tijdens slepen.
-- Eerste positie bepaalt featured thumbnail bovenin.
-- Zichtbare thumbnail-indicatie op featured foto en positie 1 in de galerij.
-- Volgorde stil opslaan op de achtergrond.
-- Microfoontest stopt na 10 seconden stilte.
-- Microfoontest stopt altijd bij scherm verlaten of focusverlies.
-- Structurele taskflow-hardening zodat inhoudelijke planvorming nooit meer zonder taskfile gebeurt.
+- Hardening van uploadfases: pick, prepare, display upload, thumb upload, DB insert, post-upload refresh.
+- Autoritatieve refetch na succesvolle upload voordat reorder weer actief wordt.
+- Reorder-preview die live mee schuift met de doelpositie.
+- Persist na loslaten, met precies een refetch + retry bij bekende reorder-mismatch.
+- Geclassificeerde foutmelding voor upload/reorder i.p.v. alleen generieke fouttekst.
+- Productie diagnose runbook in `docs/dev/**`.
+- Repo-brede Plan Mode-regel: bestaande task verplicht, nieuwe task alleen buiten Plan Mode.
+- Dedicated productie agent-testaccount als gedocumenteerd ops secret contract.
 
 ## Buiten scope
 
 - Nieuwe foto-editing features zoals captions, albums of bulkbeheer.
-- Nieuwe globale productflows buiten dit scherm en audio-instellingen.
+- Nieuwe auth-backdoors of productie adminroutes voor agents.
 - Nieuwe statuswaarden of aparte plan-only taakstructuur.
+- Grote herbouw van andere moment detail-subflows buiten gallery/diagnose/taskflow.
 
 ## Concrete checklist
 
-- [x] Taskfile aangemaakt en status direct op `in_progress` gezet.
-- [x] Always-on taskflow aangescherpt in `AGENTS.md`.
-- [x] Taskflow-skill uitgebreid naar plan/research-preflight.
-- [x] Workflowdocs aangescherpt zodat plan zonder taskfile als onvolledig geldt.
-- [x] Verify gedraaid (`npm run taskflow:verify`, relevante docs bundle checks).
-- [x] Feature-implementatie voor foto reorder + audio test auto-stop uitgevoerd.
-- [x] Code verify gedraaid (`npm run lint`, `npm run typecheck`).
+- [x] Bestaande task expliciet als enige hoofdtaak voor deze flow bevestigd.
+- [x] Taskflow-regels bijgewerkt: Plan Mode gebruikt alleen bestaande taskfiles; geen auto-create.
+- [x] Productie diagnose runbook toegevoegd met Vercel/Supabase read-only volgorde.
+- [x] Ops secret contract voor dedicated productie agent-testaccount gedocumenteerd.
+- [x] Gallery upload flow geclassificeerd per foutfase en autoritatieve refetch toegevoegd.
+- [x] Gallery reorder flow toont live preview / meeschuivende doelpositie.
+- [x] Reorder retry na refetch voor bekende mismatch-fouten toegevoegd.
+- [x] Unit-tests uitgebreid voor preview-ordering, foutclassificatie en retry-pad.
+- [x] Gallery smoke/full E2E bijgewerkt voor upload/reorder regressies.
+- [x] Verify gedraaid (`taskflow`, `lint`, `typecheck`, relevante tests, docs bundle checks).
 
 ## Blockers / afhankelijkheden
 
-- Bestaande WIP in workflowbestanden was aanwezig; gebruiker heeft expliciet akkoord gegeven om bovenop die wijzigingen door te werken.
-- Gerichte runtime-check in light/dark mode is nog niet hard bewezen in deze sessie; lokaal was alleen Metro op `:8081` zichtbaar en geen bruikbare app/web target voor een schermsmoke.
+- Productie diagnose vereist bestaande read-only toegangspaden en beschikbare Vercel-capability of CLI/API-route.
+- Gerichte runtime-check in light/dark mode blijft afhankelijk van bruikbare lokale web/app target.
+- Dedicated productie testaccount is aangemaakt; stabiele metadata staat lokaal in de gitignored env-config onder `PROD_AGENT_TEST_*`.
 
 ## Verify / bewijs
 
-- `npm run taskflow:verify`
-- `npm run docs:bundle`
-- `npm run docs:bundle:verify`
-- `npm run lint`
-- `npm run typecheck`
-- Gerichte runtime-checks in light en dark mode voor moment detail en audio-instellingen
+- ✅ `npm run taskflow:verify` (geslaagd op 2026-04-24)
+- ✅ `npm run docs:bundle` (geslaagd op 2026-04-24)
+- ✅ `npm run docs:bundle:verify` (geslaagd op 2026-04-24)
+- ✅ `npm run test:unit` (13 tests geslaagd op 2026-04-24)
+- ✅ `npm run test:e2e:gallery:smoke` (geslaagd op 2026-04-24; desktop-web reorder bevestigt linkse verplaatsing na hold-and-drag)
+- ✅ `GALLERY_E2E_FULL=1 npm run test:e2e:gallery:full` (1 test geslaagd, 2 bewust geskipt/fixme op 2026-04-24)
+- ✅ `npm run lint` (geslaagd op 2026-04-24)
+- ✅ `npm run typecheck` (geslaagd op 2026-04-24)
+- ✅ Vercel productiecontext bevestigd op 2026-04-24:
+  - deployment `dpl_VNVWEcwvCfcrFu7FcRWAY522Akp6`
+  - alias `https://assistent.budio.nl`
+  - created `2026-04-23 17:07:48 CEST`
+- ⚠️ Vercel runtime-logcheck over laatste 24 uur op production/main gaf geen relevante logs terug voor `error`, `upload`, `reorder`, `storage` of `supabase`
+- ✅ Supabase cloud project bevestigd via CLI op 2026-04-24:
+  - project ref `xmrndabfqfvkhdhcjqit`
+  - region `Central EU (Frankfurt)`
+- ✅ Supabase cloud logquery via Management API op 2026-04-24:
+  - `auth_logs`, `storage_logs`, `postgres_logs` en `edge_logs` voor de laatste 24 uur expliciet uitgevraagd
+  - geen relevante logregels terug voor gallery/upload/reorder in het onderzochte venster
+- ✅ Gerichte runtime-checks in light en dark mode voor moment detail gallery (lokale webtarget, screenshots vastgelegd op 2026-04-24)
+- Productie repro-check met baseline-entry + sessie-entry via dedicated agent-testaccount
 
 ## Relevante links
 
 - `docs/project/open-points.md`
 - `app/entry/[id].tsx`
 - `components/journal/entry-photo-gallery.tsx`
-- `app/settings-audio.tsx`
+- `services/entry-photos.ts`
+- `src/lib/entry-photo-gallery/flow.ts`
+- `src/lib/entry-photo-gallery/sorting.ts`
+- `docs/dev/production-bug-investigation-workflow.md`

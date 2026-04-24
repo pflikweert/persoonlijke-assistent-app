@@ -115,6 +115,13 @@ Plan mode heft de taskfile-verplichting niet op:
 - een inhoudelijk plan zonder concrete taskfile geldt als onvolledig
 - noem in elk plan expliciet `Task`, `Task file` en `Status`
 
+Extra repo-regel voor Plan Mode:
+
+- gebruik in Plan Mode altijd eerst een **bestaande** taskfile
+- maak in Plan Mode nooit automatisch een nieuwe task aan
+- bestaat er geen passende bestaande task, blokkeer inhoudelijk en meld dat expliciet
+- een nieuwe task mag pas buiten Plan Mode worden aangemaakt
+
 ## Wanneer Act mode
 
 Gebruik Act mode voor:
@@ -142,6 +149,7 @@ Gebruik Act mode voor:
 
 - Voor relevante codewijzigingen: `npm run lint` en `npm run typecheck`.
 - Voor canonieke docs-wijzigingen: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
+- Draai `npm run docs:bundle` en `npm run docs:bundle:verify` altijd sequentieel, nooit parallel.
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
@@ -205,6 +213,12 @@ Agent-default:
 
 - bij twijfel altijd `supabase_local`
 - na remote-ro checks altijd terugzetten naar local
+
+Voor productiebug-onderzoek:
+
+- volg `docs/dev/production-bug-investigation-workflow.md`
+- gebruik remote/prod alleen read-only voor logs, metadata en diagnosecontext
+- leg timestamp, route en deployment/logbron vast zodra je productiebevindingen claimt
 
 ## Lessen uit sessies (stabiel, herbruikbaar)
 

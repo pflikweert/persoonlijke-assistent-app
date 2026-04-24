@@ -37,23 +37,26 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
     - `Task: ...`
     - `Task file: ...`
     - `Status: ...`
-12. Een inhoudelijk plan zonder bestaande of nieuw aangemaakte taskfile is onvolledig.
-13. Maak bij ontbrekende taskfile eerst de taskfile aan en ga pas daarna verder met plan/research/implementatie.
-14. Elk inhoudelijk plan noemt expliciet de concrete taskfile-path.
-15. Een automatisch aangemaakte taak komt altijd bovenaan de doel-lane met `sort_order: 1`; herschrijf de overige open taakfiles in die lane doorlopend zodat de sortering opgeslagen blijft.
-16. Wanneer een open taak naar `in_progress` gaat, komt die altijd bovenaan de `in_progress` lane; herschrijf `sort_order` in bron- en doellane doorlopend zodat lane-sortering leidend en persistent blijft.
+12. Een inhoudelijk plan zonder taskfile is onvolledig.
+13. In Plan Mode gebruik je altijd eerst een bestaande taskfile; maak daar nooit automatisch een nieuwe task aan.
+14. Als er in Plan Mode geen passende bestaande taskfile is, blokkeer inhoudelijk en meld expliciet dat een nieuwe task pas buiten Plan Mode mag worden aangemaakt.
+15. Buiten Plan Mode: maak bij ontbrekende taskfile eerst de taskfile aan en ga pas daarna verder met plan/research/implementatie.
+16. Elk inhoudelijk plan noemt expliciet de concrete taskfile-path.
 17. Elk Plan Mode-plan bevat een korte **Taskflow summary** met:
-    - welke bestaande taskfile wordt gebruikt, of welke nieuwe taskfile nodig is
+    - welke bestaande taskfile wordt gebruikt
     - welke statuswijziging verwacht wordt
     - wanneer extra werk binnen dezelfde task blijft
     - wanneer extra werk een eigen task krijgt
 18. Verbeteringen uit testen van dezelfde flow blijven in dezelfde task; nieuw werk dat niet direct relevant is voor die flow krijgt een eigen task.
+19. Een automatisch aangemaakte taak komt altijd bovenaan de doel-lane met `sort_order: 1`; herschrijf de overige open taakfiles in die lane doorlopend zodat de sortering opgeslagen blijft.
+20. Wanneer een open taak naar `in_progress` gaat, komt die altijd bovenaan de `in_progress` lane; herschrijf `sort_order` in bron- en doellane doorlopend zodat lane-sortering leidend en persistent blijft.
 
 ## Standaardflow
 
 1. **Create**
    - Maak nieuwe taken vanuit `docs/project/25-tasks/_template.md`.
-   - Voor plan/research geldt dezelfde regel: eerst taskfile, daarna inhoudelijke output.
+   - Buiten Plan Mode geldt voor plan/research dezelfde regel: eerst taskfile, daarna inhoudelijke output.
+   - In Plan Mode: alleen bestaande tasks gebruiken; nieuwe taken pas later buiten Plan Mode aanmaken.
    - Zet de nieuwe taak direct bovenaan de doel-lane en sla de nieuwe lane-volgorde expliciet op via `sort_order`.
 2. **Triage**
    - Kies status, prioriteit en fase.
@@ -71,6 +74,7 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
    - Draai `npm run taskflow:verify`.
    - Draai `npm run docs:bundle`.
    - Draai `npm run docs:bundle:verify`.
+   - Draai `docs:bundle` en `docs:bundle:verify` altijd sequentieel, nooit parallel.
 
 ## Agentgebruik
 

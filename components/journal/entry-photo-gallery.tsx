@@ -7,6 +7,7 @@ import {
   Animated,
   type GestureResponderEvent,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -36,6 +37,11 @@ import {
   type EntryPhotoAsset,
   uploadEntryPhotoForEntry,
 } from "@/services";
+import {
+  buildEntryPhotoPreviewSlots,
+  createEntryPhotoPhaseError,
+  describeEntryPhotoError,
+} from "@/src/lib/entry-photo-gallery/flow";
 import {
   getGalleryDragLeft,
   getGalleryDragTargetIndex,
@@ -85,6 +91,25 @@ function getLongEdgeResize(width: number, height: number, maxLongEdge: number) {
     width: Math.max(1, Math.round(width * ratio)),
     height: Math.max(1, Math.round(height * ratio)),
   };
+}
+
+function getPointerPageX(event: GestureResponderEvent | any): number {
+  const directPageX = event?.nativeEvent?.pageX;
+  if (typeof directPageX === "number") {
+    return directPageX;
+  }
+
+  const changedTouchPageX = event?.nativeEvent?.changedTouches?.[0]?.pageX;
+  if (typeof changedTouchPageX === "number") {
+    return changedTouchPageX;
+  }
+
+  const touchPageX = event?.nativeEvent?.touches?.[0]?.pageX;
+  if (typeof touchPageX === "number") {
+    return touchPageX;
+  }
+
+  return 0;
 }
 
 async function buildPreparedImageAsset(
@@ -434,10 +459,11 @@ export function EntryPhotoGallery({
     loading,
     error,
     setError,
-    loadPhotos,
   } = useEntryPhotos(rawEntryId, refreshToken);
 
   const [uploading, setUploading] = useState(false);
+  const [refreshingPhotos, setRefreshingPhotos] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EntryPhotoAsset | null>(null);
@@ -453,18 +479,54 @@ export function EntryPhotoGallery({
   const dragOriginIndexRef = useRef<number | null>(null);
   const dragTargetIndexRef = useRef<number | null>(null);
   const draggingPhotoIdRef = useRef<string | null>(null);
+  const suppressNextPressRef = useRef(false);
   const pendingDragIndexRef = useRef<number | null>(null);
   const pendingDragStartPageXRef = useRef(0);
   const pendingDragStartedAtRef = useRef(0);
 
   const hasPhotos = photos.length > 0;
   const remainingSlots = Math.max(0, MAX_PHOTOS - photos.length);
+  const galleryBusy = uploading || refreshingPhotos || reordering || deleting;
   const draggingPhoto =
     draggingPhotoId === null ? null : photos.find((photo) => photo.id === draggingPhotoId) ?? null;
+  const previewSlots = useMemo(
+    () => buildEntryPhotoPreviewSlots(photos, draggingPhotoId, dragTargetIndex),
+    [dragTargetIndex, draggingPhotoId, photos]
+  );
 
   useEffect(() => {
     onPhotosSnapshotChange?.(photos);
   }, [onPhotosSnapshotChange, photos]);
+
+  const applyConfirmedPhotos = useCallback(
+    (nextPhotos: EntryPhotoAsset[]) => {
+      setPhotos(nextPhotos);
+      onPhotosSnapshotChange?.(nextPhotos);
+    },
+    [onPhotosSnapshotChange, setPhotos]
+  );
+
+  const refreshConfirmedPhotos = useCallback(
+    async (
+      phase:
+        | "upload_post_refresh"
+        | "delete_post_refresh"
+        | "reorder_retry_refetch"
+        | "reorder_post_refresh"
+    ) => {
+      setRefreshingPhotos(true);
+      try {
+        const nextPhotos = await fetchEntryPhotosByRawEntryId(rawEntryId);
+        applyConfirmedPhotos(nextPhotos);
+        return nextPhotos;
+      } catch (nextError) {
+        throw createEntryPhotoPhaseError(phase, nextError, "Foto's vernieuwen mislukte.");
+      } finally {
+        setRefreshingPhotos(false);
+      }
+    },
+    [applyConfirmedPhotos, rawEntryId]
+  );
 
   const clearDragHoldTimer = useCallback(() => {
     if (dragHoldTimerRef.current) {
@@ -493,19 +555,44 @@ export function EntryPhotoGallery({
 
   const persistReorder = useCallback(
     async (previousPhotos: EntryPhotoAsset[], nextPhotos: EntryPhotoAsset[]) => {
+      setReordering(true);
       try {
         await reorderEntryPhotosForEntry({
           rawEntryId,
           orderedPhotoIds: nextPhotos.map((photo) => photo.id),
         });
+        await refreshConfirmedPhotos("reorder_post_refresh");
         onPhotosChanged?.();
       } catch (nextError) {
-        setPhotos(previousPhotos);
-        onPhotosSnapshotChange?.(previousPhotos);
-        setError(nextError instanceof Error ? nextError.message : "Volgorde opslaan mislukte.");
+        const classified = describeEntryPhotoError(nextError, "Nieuwe volgorde opslaan mislukte.");
+
+        if (classified.retryableReorderMismatch) {
+          try {
+            await refreshConfirmedPhotos("reorder_retry_refetch");
+            await reorderEntryPhotosForEntry({
+              rawEntryId,
+              orderedPhotoIds: nextPhotos.map((photo) => photo.id),
+            });
+            await refreshConfirmedPhotos("reorder_post_refresh");
+            onPhotosChanged?.();
+            return;
+          } catch (retryError) {
+            const retryDetail = describeEntryPhotoError(
+              retryError,
+              "Volgorde opnieuw opslaan na herstel mislukte."
+            );
+            setError(retryDetail.detail);
+            return;
+          }
+        }
+
+        applyConfirmedPhotos(previousPhotos);
+        setError(classified.detail);
+      } finally {
+        setReordering(false);
       }
     },
-    [onPhotosChanged, onPhotosSnapshotChange, rawEntryId, setError, setPhotos]
+    [applyConfirmedPhotos, onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
   );
 
   const finishDrag = useCallback(
@@ -526,17 +613,19 @@ export function EntryPhotoGallery({
       }
 
       const nextPhotos = reorderGalleryItems(previousPhotos, fromIndex, toIndex);
-      setPhotos(nextPhotos);
-      onPhotosSnapshotChange?.(nextPhotos);
+      applyConfirmedPhotos(nextPhotos);
       resetDragState();
       void persistReorder(previousPhotos, nextPhotos);
     },
-    [onPhotosSnapshotChange, persistReorder, photos, resetDragState, setPhotos]
+    [applyConfirmedPhotos, persistReorder, photos, resetDragState]
   );
 
   const startDrag = useCallback(
     (index: number) => {
       if (photos.length < 2) {
+        return;
+      }
+      if (galleryBusy) {
         return;
       }
 
@@ -557,7 +646,7 @@ export function EntryPhotoGallery({
       setDragTargetIndex(index);
       setDraggingPhotoId(photo.id);
     },
-    [clearDragHoldTimer, dragX, photos]
+    [clearDragHoldTimer, dragX, galleryBusy, photos]
   );
 
   const updateDragPosition = useCallback(
@@ -592,8 +681,9 @@ export function EntryPhotoGallery({
     (index: number, event: GestureResponderEvent) => {
       clearDragHoldTimer();
       pendingDragIndexRef.current = index;
-      pendingDragStartPageXRef.current = event.nativeEvent.pageX;
+      pendingDragStartPageXRef.current = getPointerPageX(event);
       pendingDragStartedAtRef.current = Date.now();
+      suppressNextPressRef.current = false;
       dragHoldTimerRef.current = setTimeout(() => startDrag(index), SORT_HOLD_MS);
     },
     [clearDragHoldTimer, startDrag]
@@ -601,7 +691,7 @@ export function EntryPhotoGallery({
 
   const handleThumbResponderMove = useCallback(
     (index: number, event: GestureResponderEvent) => {
-      const pageX = event.nativeEvent.pageX;
+      const pageX = getPointerPageX(event);
 
       if (
         draggingPhotoIdRef.current === null &&
@@ -620,20 +710,21 @@ export function EntryPhotoGallery({
     (index: number, event: GestureResponderEvent) => {
       const wasDragging = draggingPhotoIdRef.current !== null;
       const movedDistance = Math.abs(
-        event.nativeEvent.pageX - pendingDragStartPageXRef.current
+        getPointerPageX(event) - pendingDragStartPageXRef.current
       );
 
       clearDragHoldTimer();
 
       if (wasDragging) {
-        updateDragPosition(event.nativeEvent.pageX);
+        suppressNextPressRef.current = true;
+        updateDragPosition(getPointerPageX(event));
         finishDrag(false);
         return;
       }
 
       resetDragState();
-      if (movedDistance <= TAP_MOVE_TOLERANCE) {
-        setViewerIndex(index);
+      if (movedDistance > TAP_MOVE_TOLERANCE) {
+        suppressNextPressRef.current = true;
       }
     },
     [clearDragHoldTimer, finishDrag, resetDragState, updateDragPosition]
@@ -641,12 +732,25 @@ export function EntryPhotoGallery({
 
   const handleThumbResponderTerminate = useCallback(() => {
     clearDragHoldTimer();
+    suppressNextPressRef.current = true;
     if (draggingPhotoIdRef.current !== null) {
       finishDrag(true);
       return;
     }
     resetDragState();
   }, [clearDragHoldTimer, finishDrag, resetDragState]);
+
+  const handleThumbPress = useCallback(
+    (index: number) => {
+      if (suppressNextPressRef.current || galleryBusy) {
+        suppressNextPressRef.current = false;
+        return;
+      }
+
+      setViewerIndex(index);
+    },
+    [galleryBusy]
+  );
 
   const shouldBlockResponderTermination = useCallback(
     () => draggingPhotoIdRef.current === null,
@@ -663,22 +767,33 @@ export function EntryPhotoGallery({
       setError(null);
       try {
         for (const asset of assets) {
-          const prepared = await buildPreparedImageAsset(asset.uri, asset.width, asset.height);
+          let prepared: PreparedImageAsset;
+          try {
+            prepared = await buildPreparedImageAsset(asset.uri, asset.width, asset.height);
+          } catch (nextError) {
+            throw createEntryPhotoPhaseError(
+              "upload_prepare",
+              nextError,
+              "Foto voorbereiden mislukte."
+            );
+          }
+
           await uploadEntryPhotoForEntry({
             rawEntryId,
             ...prepared,
             mimeType: "image/jpeg",
           });
         }
-        await loadPhotos();
+        await refreshConfirmedPhotos("upload_post_refresh");
         onPhotosChanged?.();
       } catch (nextError) {
-        setError(nextError instanceof Error ? nextError.message : "Foto uploaden mislukte.");
+        const classified = describeEntryPhotoError(nextError, "Foto uploaden mislukte.");
+        setError(classified.detail);
       } finally {
         setUploading(false);
       }
     },
-    [loadPhotos, onPhotosChanged, rawEntryId, setError]
+    [onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
   );
 
   const pickFromLibrary = useCallback(async () => {
@@ -745,29 +860,32 @@ export function EntryPhotoGallery({
   }, [remainingSlots, runUpload, setError]);
 
   const requestDeleteFromViewer = useCallback((photo: EntryPhotoAsset) => {
+    if (galleryBusy) {
+      return;
+    }
     setViewerIndex(null);
     setTimeout(() => setDeleteTarget(photo), 120);
-  }, []);
+  }, [galleryBusy]);
 
   const handleDeletePhoto = useCallback(async () => {
     const target = deleteTarget;
-    if (!target) {
+    if (!target || galleryBusy) {
       return;
     }
 
     setDeleting(true);
     try {
       await deleteEntryPhotoById(target.id);
-      onPhotosSnapshotChange?.(photos.filter((photo) => photo.id !== target.id));
       setDeleteTarget(null);
-      await loadPhotos();
+      await refreshConfirmedPhotos("delete_post_refresh");
       onPhotosChanged?.();
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Foto verwijderen mislukte.");
+      const classified = describeEntryPhotoError(nextError, "Foto verwijderen mislukte.");
+      setError(classified.detail);
     } finally {
       setDeleting(false);
     }
-  }, [deleteTarget, loadPhotos, onPhotosChanged, onPhotosSnapshotChange, photos, setError]);
+  }, [deleteTarget, galleryBusy, onPhotosChanged, refreshConfirmedPhotos, setError]);
 
   const pickerActions = useMemo<ConfirmSheetAction[]>(
     () => [
@@ -804,6 +922,9 @@ export function EntryPhotoGallery({
         <DetailSectionHeader icon="photo-library" title="Foto's bij dit moment" />
 
         {loading ? <StateBlock tone="loading" message="Foto's laden..." detail="Even geduld." /> : null}
+        {refreshingPhotos && !loading ? (
+          <StateBlock tone="loading" message="Foto's vernieuwen..." detail="Even geduld." />
+        ) : null}
 
         {error ? <StateBlock tone="error" message="Foto's zijn nu niet beschikbaar" detail={error} /> : null}
 
@@ -816,8 +937,12 @@ export function EntryPhotoGallery({
             <PrimaryButton
               label={uploading ? "Foto verwerken..." : "Foto toevoegen"}
               icon="add-a-photo"
-              disabled={uploading || remainingSlots <= 0}
-              onPress={() => setPickerVisible(true)}
+              disabled={galleryBusy || remainingSlots <= 0}
+              onPress={() => {
+                if (!galleryBusy) {
+                  setPickerVisible(true);
+                }
+              }}
             />
           </ThemedView>
         ) : null}
@@ -827,20 +952,25 @@ export function EntryPhotoGallery({
             <ThemedView style={styles.galleryStack}>
               <ScrollView
                 horizontal
-                scrollEnabled={draggingPhotoId === null}
+                scrollEnabled={draggingPhotoId === null && !galleryBusy}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.galleryRow}
               >
-                {photos.map((photo, index) => {
+                {previewSlots.map((slot, index) => {
+                  const photo = slot.item;
+                  const originalIndex = photos.findIndex((item) => item.id === photo.id);
                   const isFirst = index === 0;
                   const isDragging = photo.id === draggingPhotoId;
-                  const showPlaceholder = dragTargetIndex === index && draggingPhotoId !== null;
 
                   return (
-                    <View key={photo.id} style={styles.thumbSlot}>
-                      {showPlaceholder ? (
+                    <View
+                      key={slot.isPlaceholder ? `${photo.id}-placeholder` : photo.id}
+                      style={styles.thumbSlot}
+                    >
+                      {slot.isPlaceholder ? (
                         <View
                           pointerEvents="none"
+                          testID="entry-photo-drag-placeholder"
                           style={[
                             styles.dragPlaceholder,
                             {
@@ -851,38 +981,61 @@ export function EntryPhotoGallery({
                         />
                       ) : null}
 
-                      <View
-                        accessible
-                        accessibilityRole="imagebutton"
-                        accessibilityLabel={
-                          isFirst ? `Open thumbnail foto ${index + 1}` : `Open foto ${index + 1}`
-                        }
-                        accessibilityHint="Houd kort vast en sleep om de volgorde te wijzigen."
-                        testID={`entry-photo-thumb-${photo.id}`}
-                        onStartShouldSetResponder={() => true}
-                        onMoveShouldSetResponder={() => true}
-                        onResponderGrant={(event) => handleThumbResponderGrant(index, event)}
-                        onResponderMove={(event) => handleThumbResponderMove(index, event)}
-                        onResponderRelease={(event) => handleThumbResponderRelease(index, event)}
-                        onResponderTerminate={handleThumbResponderTerminate}
-                        onResponderTerminationRequest={shouldBlockResponderTermination}
-                        style={[
-                          styles.thumbWrap,
-                          {
-                            backgroundColor: palette.surfaceLow,
-                            opacity: isDragging ? 0.08 : 1,
-                            borderWidth: isFirst ? 2 : 0,
-                            borderColor: isFirst ? palette.primary : "transparent",
-                          },
-                        ]}
-                      >
-                        <Image source={photo.thumbSource} contentFit="cover" style={styles.thumbImage} />
-                        {isFirst ? (
-                          <View style={[styles.thumbBadge, { backgroundColor: palette.primaryStrong }]}>
-                            <MaterialIcons name="image" size={8} color={palette.primaryOn} />
-                          </View>
-                        ) : null}
-                      </View>
+                      {!slot.isPlaceholder ? (
+                        <Pressable
+                          accessible
+                          accessibilityRole="imagebutton"
+                          accessibilityLabel={
+                            isFirst ? `Open thumbnail foto ${index + 1}` : `Open foto ${index + 1}`
+                          }
+                          accessibilityHint="Houd kort vast en sleep om de volgorde te wijzigen."
+                          testID={`entry-photo-thumb-${photo.id}`}
+                          delayLongPress={SORT_HOLD_MS}
+                          onPress={() => handleThumbPress(originalIndex)}
+                          onPressIn={(event) => handleThumbResponderGrant(originalIndex, event as any)}
+                          onLongPress={() => startDrag(originalIndex)}
+                          onPressOut={(event) => handleThumbResponderRelease(originalIndex, event as any)}
+                          onStartShouldSetResponder={() => !galleryBusy}
+                          onMoveShouldSetResponder={() => !galleryBusy}
+                          onResponderGrant={(event) => handleThumbResponderGrant(originalIndex, event)}
+                          onResponderMove={(event) => handleThumbResponderMove(originalIndex, event)}
+                          onResponderRelease={(event) => handleThumbResponderRelease(originalIndex, event)}
+                          onResponderTerminate={handleThumbResponderTerminate}
+                          onResponderTerminationRequest={shouldBlockResponderTermination}
+                          onTouchStart={(event) => handleThumbResponderGrant(originalIndex, event as any)}
+                          onTouchMove={(event) => handleThumbResponderMove(originalIndex, event as any)}
+                          onTouchEnd={(event) => handleThumbResponderRelease(originalIndex, event as any)}
+                          onTouchCancel={handleThumbResponderTerminate}
+                          disabled={galleryBusy}
+                          {...(Platform.OS === "web"
+                            ? ({
+                                onMouseDown: (event: any) =>
+                                  handleThumbResponderGrant(originalIndex, event),
+                                onMouseMove: (event: any) =>
+                                  handleThumbResponderMove(originalIndex, event),
+                                onMouseUp: (event: any) =>
+                                  handleThumbResponderRelease(originalIndex, event),
+                                onMouseLeave: handleThumbResponderTerminate,
+                              } as any)
+                            : null)}
+                          style={[
+                            styles.thumbWrap,
+                            {
+                              backgroundColor: palette.surfaceLow,
+                              opacity: isDragging ? 0.08 : 1,
+                              borderWidth: isFirst ? 2 : 0,
+                              borderColor: isFirst ? palette.primary : "transparent",
+                            },
+                          ]}
+                        >
+                          <Image source={photo.thumbSource} contentFit="cover" style={styles.thumbImage} />
+                          {isFirst ? (
+                            <View style={[styles.thumbBadge, { backgroundColor: palette.primaryStrong }]}>
+                              <MaterialIcons name="image" size={8} color={palette.primaryOn} />
+                            </View>
+                          ) : null}
+                        </Pressable>
+                      ) : null}
                     </View>
                   );
                 })}
@@ -924,8 +1077,12 @@ export function EntryPhotoGallery({
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Foto toevoegen"
-                disabled={uploading || remainingSlots <= 0}
-                onPress={() => setPickerVisible(true)}
+                disabled={galleryBusy || remainingSlots <= 0}
+                onPress={() => {
+                  if (!galleryBusy) {
+                    setPickerVisible(true);
+                  }
+                }}
                 style={styles.addInlineButton}
               >
                 <MaterialIcons name="add-a-photo" size={16} color={palette.primary} />

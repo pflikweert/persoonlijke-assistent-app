@@ -1,5 +1,6 @@
 import { ensureAuthenticatedUserSession } from "@/services/auth";
 import { createClientFlowId } from "@/services/function-error";
+import { createEntryPhotoPhaseError } from "@/src/lib/entry-photo-gallery/flow";
 import { getSupabaseBrowserClient, getSupabasePublicEnv } from "@/src/lib/supabase";
 import type { Tables } from "@/src/lib/supabase/database.types";
 
@@ -205,7 +206,11 @@ export async function uploadEntryPhotoForEntry(input: {
     });
 
   if (uploadDisplay.error) {
-    throw uploadDisplay.error;
+    throw createEntryPhotoPhaseError(
+      "upload_display",
+      uploadDisplay.error,
+      "Displayversie uploaden mislukte."
+    );
   }
 
   const uploadThumb = await supabase.storage
@@ -217,7 +222,11 @@ export async function uploadEntryPhotoForEntry(input: {
 
   if (uploadThumb.error) {
     await supabase.storage.from(ENTRY_PHOTOS_BUCKET).remove([displayStoragePath]);
-    throw uploadThumb.error;
+    throw createEntryPhotoPhaseError(
+      "upload_thumb",
+      uploadThumb.error,
+      "Thumbnail uploaden mislukte."
+    );
   }
 
   const { error: insertError } = await supabase.from("entry_photos").insert({
@@ -239,7 +248,11 @@ export async function uploadEntryPhotoForEntry(input: {
     await supabase.storage
       .from(ENTRY_PHOTOS_BUCKET)
       .remove([displayStoragePath, thumbStoragePath]);
-    throw insertError;
+    throw createEntryPhotoPhaseError(
+      "upload_insert",
+      insertError,
+      "Foto opslaan in database mislukte."
+    );
   }
 }
 
@@ -281,7 +294,11 @@ export async function reorderEntryPhotosForEntry(input: {
   });
 
   if (error) {
-    throw error;
+    throw createEntryPhotoPhaseError(
+      "reorder_persist",
+      error,
+      "Nieuwe volgorde opslaan mislukte."
+    );
   }
 }
 

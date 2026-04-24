@@ -14,6 +14,9 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 1. **Start uitvoering**
    - Zorg dat de actieve taak bestaat in `docs/project/25-tasks/open/` (of maak deze eerst vanuit `_template.md`).
    - Plan/research/implementatie zonder taskfile is onvolledig; maak de taskfile eerst aan vóór verdere inhoudelijke output.
+   - In **Plan Mode** geldt een strengere repo-regel: gebruik altijd eerst een **bestaande** taskfile.
+   - Bestaat er in Plan Mode geen passende bestaande taskfile, stop dan inhoudelijk en meld expliciet dat de gebruiker eerst buiten Plan Mode een task moet kiezen of laten aanmaken.
+   - Maak in Plan Mode nooit automatisch een nieuwe taskfile aan.
    - Wanneer je automatisch een nieuwe taak aanmaakt: zet die direct bovenaan de doel-lane met `sort_order: 1` en herschrijf de overige taakfiles in die lane doorlopend.
    - Wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: zet die direct bovenaan de `in_progress` lane en herschrijf `sort_order` voor bron- en doellane zodat de sortering opgeslagen blijft.
    - Zet status op `in_progress` zodra inhoudelijke uitvoering start (tenzij al correct).
@@ -22,7 +25,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
      - `Task file: ...`
      - `Status: ...`
    - Noem in elk inhoudelijk plan expliciet het concrete taskfile-pad.
-   - Voeg in Plan Mode-plannen altijd een korte `Taskflow summary` toe: bestaande/nieuwe taskfile, verwachte statuswijziging, en wanneer extra werk een eigen task krijgt.
+   - Voeg in Plan Mode-plannen altijd een korte `Taskflow summary` toe: gebruikte bestaande taskfile, verwachte statuswijziging, en wanneer extra werk een eigen task krijgt.
 
 2. **Tijdens uitvoering**
    - Houd `updated_at` actueel bij betekenisvolle voortgang.
@@ -50,5 +53,6 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 
 # Niet doen
 - Geen inhoudelijk plan opleveren zonder concrete taskfile.
+- Geen nieuwe task automatisch aanmaken in Plan Mode.
 - Geen nieuwe statuswaarden buiten: `backlog`, `ready`, `in_progress`, `blocked`, `done`.
 - Geen taak automatisch op `done` zetten zonder verify-resultaat en afrondingscontext.
