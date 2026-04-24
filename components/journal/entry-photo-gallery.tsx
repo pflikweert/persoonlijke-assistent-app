@@ -41,6 +41,7 @@ import {
   buildEntryPhotoPreviewSlots,
   createEntryPhotoPhaseError,
   describeEntryPhotoError,
+  getEntryPhotoErrorDiagnostics,
 } from "@/src/lib/entry-photo-gallery/flow";
 import {
   getGalleryDragLeft,
@@ -48,6 +49,7 @@ import {
   reorderGalleryItems,
 } from "@/src/lib/entry-photo-gallery/sorting";
 import { colorTokens, radius, spacing } from "@/theme";
+import { createClientFlowId } from "@/services/function-error";
 
 type PreparedImageAsset = {
   displayBytes: ArrayBuffer;
@@ -75,6 +77,7 @@ const THUMB_SLOT_WIDTH = THUMB_SIZE + THUMB_GAP;
 const DRAG_PLACEHOLDER_SCALE = 0.94;
 const SORT_HOLD_MS = 120;
 const TAP_MOVE_TOLERANCE = 8;
+const REORDER_LOG_PREFIX = "[entry-photo:reorder]";
 
 function getLongEdgeResize(width: number, height: number, maxLongEdge: number) {
   if (width <= 0 || height <= 0) {
@@ -494,6 +497,19 @@ export function EntryPhotoGallery({
     [dragTargetIndex, draggingPhotoId, photos]
   );
 
+  const logReorder = useCallback(
+    (
+      level: "info" | "warn" | "error",
+      event: string,
+      details: Record<string, unknown>
+    ) => {
+      const logger =
+        level === "error" ? console.error : level === "warn" ? console.warn : console.info;
+      logger(REORDER_LOG_PREFIX, event, details);
+    },
+    []
+  );
+
   useEffect(() => {
     onPhotosSnapshotChange?.(photos);
   }, [onPhotosSnapshotChange, photos]);
@@ -554,26 +570,99 @@ export function EntryPhotoGallery({
   useEffect(() => clearDragHoldTimer, [clearDragHoldTimer]);
 
   const persistReorder = useCallback(
-    async (previousPhotos: EntryPhotoAsset[], nextPhotos: EntryPhotoAsset[]) => {
+    async (
+      previousPhotos: EntryPhotoAsset[],
+      nextPhotos: EntryPhotoAsset[],
+      dragMeta: { originIndex: number; targetIndex: number }
+    ) => {
+      const flowId = createClientFlowId("entry-photo");
+      const previousOrder = previousPhotos.map((photo) => photo.id);
+      const nextOrder = nextPhotos.map((photo) => photo.id);
+
+      logReorder("info", "start", {
+        flowId,
+        rawEntryId,
+        originIndex: dragMeta.originIndex,
+        targetIndex: dragMeta.targetIndex,
+        previousOrder,
+        nextOrder,
+      });
+
       setReordering(true);
       try {
         await reorderEntryPhotosForEntry({
           rawEntryId,
-          orderedPhotoIds: nextPhotos.map((photo) => photo.id),
+          orderedPhotoIds: nextOrder,
+          flowId,
+          diagnostics: {
+            flowId,
+            rawEntryId,
+            originIndex: dragMeta.originIndex,
+            targetIndex: dragMeta.targetIndex,
+            previousOrder,
+            nextOrder,
+          },
         });
         await refreshConfirmedPhotos("reorder_post_refresh");
+        logReorder("info", "success", {
+          flowId,
+          rawEntryId,
+          originIndex: dragMeta.originIndex,
+          targetIndex: dragMeta.targetIndex,
+          nextOrder,
+        });
         onPhotosChanged?.();
       } catch (nextError) {
         const classified = describeEntryPhotoError(nextError, "Nieuwe volgorde opslaan mislukte.");
+        const diagnostics = getEntryPhotoErrorDiagnostics(nextError);
+
+        logReorder("error", "persist_failed", {
+          flowId,
+          rawEntryId,
+          originIndex: dragMeta.originIndex,
+          targetIndex: dragMeta.targetIndex,
+          previousOrder,
+          nextOrder,
+          phase: classified.phase,
+          detail: classified.detail,
+          ...diagnostics,
+        });
 
         if (classified.retryableReorderMismatch) {
           try {
+            logReorder("warn", "retry_after_refetch", {
+              flowId,
+              rawEntryId,
+              originIndex: dragMeta.originIndex,
+              targetIndex: dragMeta.targetIndex,
+              previousOrder,
+              nextOrder,
+              phase: classified.phase,
+              detail: classified.detail,
+              ...diagnostics,
+            });
             await refreshConfirmedPhotos("reorder_retry_refetch");
             await reorderEntryPhotosForEntry({
               rawEntryId,
-              orderedPhotoIds: nextPhotos.map((photo) => photo.id),
+              orderedPhotoIds: nextOrder,
+              flowId,
+              diagnostics: {
+                flowId,
+                rawEntryId,
+                originIndex: dragMeta.originIndex,
+                targetIndex: dragMeta.targetIndex,
+                previousOrder,
+                nextOrder,
+              },
             });
             await refreshConfirmedPhotos("reorder_post_refresh");
+            logReorder("info", "retry_success", {
+              flowId,
+              rawEntryId,
+              originIndex: dragMeta.originIndex,
+              targetIndex: dragMeta.targetIndex,
+              nextOrder,
+            });
             onPhotosChanged?.();
             return;
           } catch (retryError) {
@@ -581,6 +670,17 @@ export function EntryPhotoGallery({
               retryError,
               "Volgorde opnieuw opslaan na herstel mislukte."
             );
+            logReorder("error", "retry_failed", {
+              flowId,
+              rawEntryId,
+              originIndex: dragMeta.originIndex,
+              targetIndex: dragMeta.targetIndex,
+              previousOrder,
+              nextOrder,
+              phase: retryDetail.phase,
+              detail: retryDetail.detail,
+              ...getEntryPhotoErrorDiagnostics(retryError),
+            });
             setError(retryDetail.detail);
             return;
           }
@@ -592,7 +692,7 @@ export function EntryPhotoGallery({
         setReordering(false);
       }
     },
-    [applyConfirmedPhotos, onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
+    [applyConfirmedPhotos, logReorder, onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
   );
 
   const finishDrag = useCallback(
@@ -615,7 +715,10 @@ export function EntryPhotoGallery({
       const nextPhotos = reorderGalleryItems(previousPhotos, fromIndex, toIndex);
       applyConfirmedPhotos(nextPhotos);
       resetDragState();
-      void persistReorder(previousPhotos, nextPhotos);
+      void persistReorder(previousPhotos, nextPhotos, {
+        originIndex: fromIndex,
+        targetIndex: toIndex,
+      });
     },
     [applyConfirmedPhotos, persistReorder, photos, resetDragState]
   );

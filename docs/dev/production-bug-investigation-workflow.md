@@ -31,6 +31,7 @@ Een compacte, herhaalbare workflow voor productiebug-onderzoek zonder improvisat
    - `bevestigd`
    - `onbevestigd`
    - `blocked`
+8. Als serverlogs leeg blijven maar browser-network een duidelijke foutresponse toont, behandel die network-response als primaire bron en leg status/code/body expliciet vast.
 
 ## Vercel-regel
 
@@ -77,3 +78,4 @@ Een compacte, herhaalbare workflow voor productiebug-onderzoek zonder improvisat
   - de actieve taskfile
   - dit runbook als het een stabiele herhaalregel is
 - Zet geen onbevestigde aannames weg als structurele learning.
+- Voor gallery/reorder bugs is browser-network capture verplicht naast console capture; een `409` of `400` response uit `reorder_entry_photos` kan de root cause direct bevestigen, ook als Vercel en Supabase logs weinig opleveren.

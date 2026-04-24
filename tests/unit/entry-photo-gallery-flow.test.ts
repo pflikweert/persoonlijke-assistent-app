@@ -4,6 +4,7 @@ import {
   buildEntryPhotoPreviewSlots,
   createEntryPhotoPhaseError,
   describeEntryPhotoError,
+  getEntryPhotoErrorDiagnostics,
 } from "@/src/lib/entry-photo-gallery/flow";
 
 describe("entry photo gallery flow helpers", () => {
@@ -33,10 +34,12 @@ describe("entry photo gallery flow helpers", () => {
     const error = createEntryPhotoPhaseError(
       "upload_prepare",
       new Error("canvas decode failed"),
-      "Foto voorbereiden mislukte."
+      "Foto voorbereiden mislukte.",
+      { flowId: "entry-photo-test-flow" }
     );
 
     expect(error.message).toBe("[entry-photo:upload_prepare] canvas decode failed");
+    expect(getEntryPhotoErrorDiagnostics(error).flowId).toBe("entry-photo-test-flow");
   });
 
   it("classifies retryable reorder mismatch errors", () => {
@@ -57,5 +60,30 @@ describe("entry photo gallery flow helpers", () => {
 
     expect(detail.retryableReorderMismatch).toBe(false);
     expect(detail.detail).toBe("Displayversie uploaden mislukte. storage timeout");
+  });
+
+  it("preserves diagnostic metadata for reorder errors", () => {
+    const error = createEntryPhotoPhaseError(
+      "reorder_persist",
+      {
+        code: "23505",
+        message: "duplicate key value violates unique constraint",
+        details: "Key (raw_entry_id, sort_order) already exists.",
+        hint: null,
+      },
+      "Nieuwe volgorde opslaan mislukte.",
+      {
+        flowId: "entry-photo-123",
+        rawEntryId: "raw-1",
+        orderedPhotoIds: ["b", "a", "c"],
+      }
+    );
+
+    const diagnostics = getEntryPhotoErrorDiagnostics(error);
+    expect(diagnostics.flowId).toBe("entry-photo-123");
+    expect(diagnostics.rawEntryId).toBe("raw-1");
+    expect(diagnostics.orderedPhotoIds).toEqual(["b", "a", "c"]);
+    expect(diagnostics.supabaseCode).toBe("23505");
+    expect(diagnostics.supabaseDetails).toContain("sort_order");
   });
 });

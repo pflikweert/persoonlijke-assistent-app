@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
-Source Commit: 4ed38bf
+Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
+Source Commit: c32c098
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-24T12:13:03.374Z
-Source Commit: 4ed38bf
+Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
+Source Commit: c32c098
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -747,7 +747,6 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [niet vergeten](25-tasks/open/niet-vergeten.md) | Backlog | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
 | [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | In Progress | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
-| [Upload bundles uitbreiden met volledige tasks en apart full archive](25-tasks/open/upload-bundles-volledige-tasks-en-archive.md) | In Progress | p2 | transitiemaand-consumer-beta | `docs/upload/**` bevat twee nieuwe generated bestanden: - één volledige tasks bundle met zowel `open/` als `done/` taskfiles - één aparte... |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.

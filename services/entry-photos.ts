@@ -1,6 +1,9 @@
 import { ensureAuthenticatedUserSession } from "@/services/auth";
 import { createClientFlowId } from "@/services/function-error";
-import { createEntryPhotoPhaseError } from "@/src/lib/entry-photo-gallery/flow";
+import {
+  createEntryPhotoPhaseError,
+  type EntryPhotoErrorDiagnostics,
+} from "@/src/lib/entry-photo-gallery/flow";
 import { getSupabaseBrowserClient, getSupabasePublicEnv } from "@/src/lib/supabase";
 import type { Tables } from "@/src/lib/supabase/database.types";
 
@@ -259,7 +262,9 @@ export async function uploadEntryPhotoForEntry(input: {
 export async function reorderEntryPhotosForEntry(input: {
   rawEntryId: string;
   orderedPhotoIds: string[];
-}): Promise<void> {
+  flowId?: string;
+  diagnostics?: EntryPhotoErrorDiagnostics;
+}): Promise<{ flowId: string }> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
     throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
@@ -282,7 +287,7 @@ export async function reorderEntryPhotosForEntry(input: {
     throw new Error("De fotovolgorde bevat dubbelen.");
   }
 
-  const flowId = createClientFlowId("entry-photo");
+  const flowId = input.flowId?.trim() || createClientFlowId("entry-photo");
   await ensureAuthenticatedUserSession({
     flowId,
     source: "entry-photos",
@@ -297,9 +302,17 @@ export async function reorderEntryPhotosForEntry(input: {
     throw createEntryPhotoPhaseError(
       "reorder_persist",
       error,
-      "Nieuwe volgorde opslaan mislukte."
+      "Nieuwe volgorde opslaan mislukte.",
+      {
+        flowId,
+        rawEntryId,
+        orderedPhotoIds,
+        ...input.diagnostics,
+      }
     );
   }
+
+  return { flowId };
 }
 
 export async function deleteEntryPhotoById(photoId: string): Promise<void> {

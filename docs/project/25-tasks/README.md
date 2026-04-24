@@ -61,7 +61,6 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
 | [Moment detail foto reorder + thumbnail-logica en audio test auto-stop](open/moment-detail-foto-reorder-en-audio-test-auto-stop.md) | p1 | transitiemaand-consumer-beta | Op het moment-detailscherm kan de gebruiker foto's betrouwbaar uploaden en herordenen. Tijdens het slepen schuift de galerij live mee naa... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
-| [Upload bundles uitbreiden met volledige tasks en apart full archive](open/upload-bundles-volledige-tasks-en-archive.md) | p2 | transitiemaand-consumer-beta | `docs/upload/**` bevat twee nieuwe generated bestanden: - één volledige tasks bundle met zowel `open/` als `done/` taskfiles - één aparte... |
 
 ### Blocked
 
@@ -90,5 +89,6 @@ _Geen taken._
 | [Programmeer-architectuur guardrails, helper-extractie en refactorbeleid](done/programmeer-architectuur-guardrails-helper-extractie-en-refactorbeleid.md) | p2 | transitiemaand-consumer-beta | Er is een compacte programmeer-architectuur skill die agents helpt om bij complexe code vaker goede helperfiles/hooks te maken, zonder sc... |
 | [Repo-local Codex MCP documentatie en agent-defaults voor local AI development](done/repo-local-codex-mcp-documentatie-en-agent-defaults.md) | p2 | transitiemaand-consumer-beta | Docs en AGENTS beschrijven compact en eenduidig: - default gebruik van `supabase_local` - wanneer `supabase_remote_ro` wel gebruikt mag w... |
 | [Repo-local Codex MCP setup met veilige Supabase target-switchflow](done/repo-local-codex-mcp-setup-met-veilige-supabase-target-switchflow.md) | p2 | transitiemaand-consumer-beta | De repo bevat één begrijpelijke `.codex/config.toml` met vaste MCP-servers voor context7, playwright en stitch, plus een Supabase-opzet w... |
+| [Upload bundles uitbreiden met volledige tasks en apart full archive](done/upload-bundles-volledige-tasks-en-archive.md) | p2 | transitiemaand-consumer-beta | `docs/upload/**` bevat twee nieuwe generated bestanden: - één volledige tasks bundle met zowel `open/` als `done/` taskfiles - één aparte... |
 | [Workstream backfill voor bestaande taskfiles](done/workstream-backfill-bestaande-taskfiles.md) | p2 | transitiemaand-consumer-beta | Alle bestaande taskfiles onder `docs/project/25-tasks/**` hebben een passende `workstream`-waarde (`idea`, `plugin`, `app` of `aiqs`). |
 <!-- TASK_INDEX:END -->

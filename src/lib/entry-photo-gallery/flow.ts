@@ -17,6 +17,36 @@ export type EntryPhotoPreviewSlot<T> = {
   isPlaceholder: boolean;
 };
 
+export type EntryPhotoErrorDiagnostics = {
+  flowId?: string;
+  rawEntryId?: string;
+  orderedPhotoIds?: string[];
+  previousOrder?: string[];
+  nextOrder?: string[];
+  originIndex?: number | null;
+  targetIndex?: number | null;
+  supabaseCode?: string | null;
+  supabaseMessage?: string | null;
+  supabaseDetails?: string | null;
+  supabaseHint?: string | null;
+};
+
+export class EntryPhotoDiagnosticError extends Error {
+  readonly phase: EntryPhotoPhase;
+  readonly diagnostics: EntryPhotoErrorDiagnostics;
+
+  constructor(
+    phase: EntryPhotoPhase,
+    message: string,
+    diagnostics: EntryPhotoErrorDiagnostics = {}
+  ) {
+    super(message);
+    this.name = "EntryPhotoDiagnosticError";
+    this.phase = phase;
+    this.diagnostics = diagnostics;
+  }
+}
+
 const PHASE_PREFIX = /^\[entry-photo:([a-z_]+)\]\s*/i;
 
 const PHASE_LABELS: Record<EntryPhotoPhase, string> = {
@@ -47,13 +77,46 @@ function errorMessage(error: unknown): string {
   return "";
 }
 
+function extractSupabaseDiagnostics(error: unknown): EntryPhotoErrorDiagnostics {
+  if (!error || typeof error !== "object") {
+    return {};
+  }
+
+  const candidate = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  return {
+    supabaseCode: typeof candidate.code === "string" ? candidate.code : null,
+    supabaseMessage: typeof candidate.message === "string" ? candidate.message : null,
+    supabaseDetails: typeof candidate.details === "string" ? candidate.details : null,
+    supabaseHint: typeof candidate.hint === "string" ? candidate.hint : null,
+  };
+}
+
+export function getEntryPhotoErrorDiagnostics(error: unknown): EntryPhotoErrorDiagnostics {
+  if (error instanceof EntryPhotoDiagnosticError) {
+    return error.diagnostics;
+  }
+
+  return extractSupabaseDiagnostics(error);
+}
+
 export function createEntryPhotoPhaseError(
   phase: EntryPhotoPhase,
   error: unknown,
-  fallbackDetail: string
+  fallbackDetail: string,
+  diagnostics: EntryPhotoErrorDiagnostics = {}
 ): Error {
   const detail = errorMessage(error) || fallbackDetail;
-  return new Error(`[entry-photo:${phase}] ${detail}`);
+  return new EntryPhotoDiagnosticError(phase, `[entry-photo:${phase}] ${detail}`, {
+    ...extractSupabaseDiagnostics(error),
+    ...getEntryPhotoErrorDiagnostics(error),
+    ...diagnostics,
+  });
 }
 
 export function describeEntryPhotoError(
@@ -63,6 +126,7 @@ export function describeEntryPhotoError(
   phase: EntryPhotoPhase | null;
   detail: string;
   retryableReorderMismatch: boolean;
+  diagnostics: EntryPhotoErrorDiagnostics;
 } {
   const rawMessage = errorMessage(error);
   const match = rawMessage.match(PHASE_PREFIX);
@@ -79,6 +143,7 @@ export function describeEntryPhotoError(
       RETRYABLE_REORDER_PATTERNS.some((pattern) =>
         stripped.toLowerCase().includes(pattern)
       ),
+    diagnostics: getEntryPhotoErrorDiagnostics(error),
   };
 }
 

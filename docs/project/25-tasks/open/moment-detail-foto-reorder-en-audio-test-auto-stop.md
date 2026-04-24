@@ -6,7 +6,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-04-24
-summary: "Hardening van moment-detail foto-upload en reorder in productie, inclusief live drag-preview, foutclassificatie, retry/refetch-gedrag, productie diagnoseflow en repo-brede Plan Mode taskflow-guardrails."
+summary: "Hardening van moment-detail foto-upload en reorder in productie, inclusief live drag-preview, foutclassificatie, retry/refetch-gedrag, bevestigde reorder-root-cause in productie en repo-brede diagnoseflow/taskflow-guardrails."
 tags: [moment-detail, photos, production, diagnostics, taskflow]
 workstream: app
 due_date: null
@@ -25,6 +25,13 @@ Daarnaast moet de repo-brede taskflow worden aangescherpt:
 
 - Plan Mode mag in deze repo niet langer automatisch nieuwe taskfiles aanmaken
 - productieonderzoek moet via een vaste read-only diagnoseflow en vaste agent-testaccount reproduceerbaar worden
+
+Bevestigde reorder-root-cause op 2026-04-24:
+
+- de productie-reorderfout zat in `public.reorder_entry_photos`
+- een swap van `sort_order` veroorzaakte eerst een `23505` unique-conflict op `(raw_entry_id, sort_order)`
+- een eerste tijdelijke offset-fix botste daarna op de check `sort_order between 0 and 4`
+- de duurzame oplossing is: unieke constraint `deferrable` maken en de reorder-update binnen een deferred constraint uitvoeren
 
 ## Gewenste uitkomst
 
@@ -74,6 +81,7 @@ Daarnaast is er een compacte repo-brede workflow voor productiebug-onderzoek: al
 - Productie diagnose vereist bestaande read-only toegangspaden en beschikbare Vercel-capability of CLI/API-route.
 - Gerichte runtime-check in light/dark mode blijft afhankelijk van bruikbare lokale web/app target.
 - Dedicated productie testaccount is aangemaakt; stabiele metadata staat lokaal in de gitignored env-config onder `PROD_AGENT_TEST_*`.
+- Upload-flakiness in productie is nog niet separaat bronvast bevestigd; reorder is nu wel hard onderzocht en hersteld.
 
 ## Verify / bewijs
 
@@ -96,6 +104,21 @@ Daarnaast is er een compacte repo-brede workflow voor productiebug-onderzoek: al
 - ✅ Supabase cloud logquery via Management API op 2026-04-24:
   - `auth_logs`, `storage_logs`, `postgres_logs` en `edge_logs` voor de laatste 24 uur expliciet uitgevraagd
   - geen relevante logregels terug voor gallery/upload/reorder in het onderzochte venster
+- ✅ Productie-repro reorder op 2026-04-24 rond `18:29Z` bevestigd:
+  - fixture-entry: `/entry/f806e61f-1148-49d1-9694-78ecdda41301`
+  - mobiele/touch repro stuurde `POST /rest/v1/rpc/reorder_entry_photos`
+  - response: `409`
+  - body bevatte `code: 23505` en `duplicate key value violates unique constraint "entry_photos_raw_entry_id_sort_order_key"`
+- ✅ Tussenstap gevalideerd op 2026-04-24 rond `20:28Z`:
+  - tijdelijke offset-aanpak faalde met `400`
+  - body bevatte `code: 23514` en check-constraint `entry_photos_sort_order_check`
+- ✅ Definitieve productie-fix toegepast op 2026-04-24 rond `20:38Z`:
+  - `entry_photos_raw_entry_id_sort_order_key` is `deferrable`
+  - `reorder_entry_photos` gebruikt deferred constraint tijdens reorder-update
+- ✅ Productie-herverify reorder op 2026-04-24 rond `20:39Z`:
+  - dezelfde touch-repro op dezelfde fixture-entry geeft `204` op `reorder_entry_photos`
+  - geen zichtbare gallery-foutmelding
+  - volgorde veranderde van `[f2d14118..., 61941a4b..., ca2c5fbd...]` naar `[61941a4b..., f2d14118..., ca2c5fbd...]`
 - ✅ Gerichte runtime-checks in light en dark mode voor moment detail gallery (lokale webtarget, screenshots vastgelegd op 2026-04-24)
 - Productie repro-check met baseline-entry + sessie-entry via dedicated agent-testaccount
 
