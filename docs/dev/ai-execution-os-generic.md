@@ -1,3 +1,12 @@
+---
+title: AI execution OS generic
+audience: agent
+doc_type: workflow
+source_role: operational
+visual_profile: plain
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
 # AI Execution OS (generiek)
 
 ## Doel
@@ -48,8 +57,17 @@ Altijd:
 4. Breid eerst bestaand shared component uit als dat schoon past.
 5. Maak alleen een nieuw shared component als uitbreiding niet passend is.
 6. Maak de minimale wijziging.
-7. Vermijd nieuwe dependencies.
-8. Vermijd nieuwe architectuur.
+7. Kies zelf compacte uitvoerblokken op basis van taaktype, huidig agent/model, risico, dirty worktree en verificatiekosten.
+8. Vraag de gebruiker niet om fasering tenzij er een echte product-, planning- of architectuurtradeoff is.
+9. Vermijd nieuwe dependencies.
+10. Vermijd nieuwe architectuur.
+
+Standaardblok:
+
+- preflight/context/taskflow
+- kleinste bronwijziging
+- gerichte verify
+- docs/taskstatus afronden
 
 ## 3. Wijzigingsregels
 
@@ -72,6 +90,7 @@ Bij elke taak:
 
 - noem welke files geraakt worden
 - raak geen andere files aan
+- noem bij niet-triviaal werk ook de gekozen uitvoerblokken
 
 ## 5. Verify (verplicht)
 

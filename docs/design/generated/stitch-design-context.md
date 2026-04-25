@@ -2,8 +2,8 @@
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
-Source Commit: c32c098
+Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
+Source Commit: 53f227f
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

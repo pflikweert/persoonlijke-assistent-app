@@ -20,6 +20,7 @@ Na `npm install` onder Node 24 rapporteert npm nog steeds `14 vulnerabilities (1
 ## Gewenste uitkomst
 
 Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen:
+
 - direct runtime-risico
 - dev-only/tooling-risico
 - fixes die veilig zijn

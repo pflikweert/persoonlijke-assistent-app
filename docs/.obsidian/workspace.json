@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "4d9620c6e091afa1",
+        "id": "7ac67378b7417fd0",
         "type": "tabs",
         "children": [
           {
-            "id": "9132288e05cd2f6d",
+            "id": "0f9a984fbff02a26",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "project/20-planning/30-now-next-later.md",
+                "file": "project/master-project.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "30-now-next-later"
+              "title": "master-project"
             }
           }
         ]
@@ -181,29 +181,42 @@
       "templates:Sjabloon invoegen": false,
       "command-palette:Open opdrachtenpaneel": false,
       "bases:Nieuwe basis maken": false,
-      "3d-graph:3D Graph": false
+      "3d-graph:3D Graph": false,
+      "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "9132288e05cd2f6d",
+  "active": "0f9a984fbff02a26",
   "lastOpenFiles": [
+    "project/product-vision-mvp.md",
+    "project/40-ideas/30-ai-and-aiqs/60-knowledge-hub-aiqs-foundation.md",
+    "project/40-ideas/30-ai-and-aiqs/50-source-aware-routing-and-evaluation.md",
+    "project/40-ideas/30-ai-and-aiqs/40-aiqs-modular-flow-control-plane.md",
+    "project/40-ideas/10-product/60-capture-ux-benchmark-implementatiekansen-wispr-notebooklm.md",
+    "project/40-ideas/10-product/50-structured-export-and-obsidian-archive.md",
+    "project/40-ideas/10-product/40-trust-and-security-charter.md",
+    "project/40-ideas/10-product/30-conversation-aware-ingest-and-interpretation.md",
+    "project/40-ideas/10-product/20-budio-brainstorm-workspace-for-builders.md",
+    "project/10-strategy/30-research-map.md",
+    "project/10-strategy/README.md",
     "project/20-planning/20-active-phase.md",
-    "project/20-planning/10-roadmap-phases.md",
-    "project/10-strategy/20-12-month-plan.md",
-    "project/10-strategy/10-long-term-strategy.md",
-    "project/25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md",
-    "project/25-tasks/open/budio-webapp-compatible-maken.md",
-    "project/25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md",
-    "project/25-tasks/README.md",
-    "upload/00-budio-upload-manifest.md",
-    "dev/task-lifecycle-workflow.md",
-    "project/25-tasks/done/actieve-maandplanning-herijkt-naar-transitiemaand.md",
+    "project/20-planning/README.md",
+    "README.md",
+    "setup/step-0-readiness.md",
+    "setup/developer-docs-environment.md",
+    "project/20-planning/30-now-next-later.md",
+    "project/25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md",
+    "upload/80-budio-agent-workflow-and-docs-tooling.md",
+    "upload/70-budio-tasks-archive.md",
+    "upload/60-budio-tasks-current.md",
+    "upload/50-budio-roadmap-planning-pack.md",
+    "upload/40-budio-design-handoff-and-truth.md",
+    "upload/30-budio-build-ai-governance-and-operations.md",
+    "upload/20-budio-strategy-research-and-ideas.md",
+    "upload/10-budio-core-product-and-planning.md",
+    "project/00-docs-governance",
+    "project/20-planning/_templates",
     "project/25-tasks/open",
     "project/25-tasks/done",
-    "project/25-tasks/_template.md",
-    "project/25-tasks",
-    "README.md",
-    "project/40-ideas/10-product/50-structured-export-and-obsidian-archive.md",
-    "design/generated/stitch-design-context.md",
-    "project/README.md"
+    "project/25-tasks"
   ]
 }

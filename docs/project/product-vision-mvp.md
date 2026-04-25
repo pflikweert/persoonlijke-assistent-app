@@ -1,3 +1,12 @@
+---
+title: Productvisie MVP
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # Persoonlijke Assistent App — Productvisie Aanscherping (MVP)
 
 ## Doel

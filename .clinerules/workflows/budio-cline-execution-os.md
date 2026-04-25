@@ -42,8 +42,16 @@ Altijd:
 4. Breid bestaand shared component uit als dat schoon kan.
 5. Maak alleen nieuw shared component als uitbreiding niet passend is.
 6. Maak de minimale wijziging.
-7. Vermijd nieuwe dependencies.
-8. Vermijd nieuwe architectuur.
+7. Kies zelf compacte uitvoerblokken op basis van taaktype, huidig agent/model, risico, dirty worktree en verificatiekosten.
+8. Vraag de gebruiker niet om fasering tenzij er een echte product-, planning- of architectuurtradeoff is.
+9. Vermijd nieuwe dependencies.
+10. Vermijd nieuwe architectuur.
+
+Standaardblok:
+- preflight/context/taskflow
+- kleinste bronwijziging
+- gerichte verify
+- docs/taskstatus afronden
 
 ## 3. Wijzigingsregels
 
@@ -63,6 +71,7 @@ Cline mag niet:
 Bij elke taak:
 - noem welke files geraakt worden
 - raak geen andere files aan
+- noem bij niet-triviaal werk ook de gekozen uitvoerblokken
 
 ## 5. Verify (verplicht)
 

@@ -42,6 +42,7 @@
     "verify:local-output-quality": "./scripts/verify-local-output-quality.sh",
     "docs:lint": "npx markdownlint-cli2 \"docs/**/*.md\"",
     "docs:lint:fix": "npx markdownlint-cli2 --fix \"docs/**/*.md\"",
+    "docs:audience:verify": "node scripts/docs/verify-doc-audience-metadata.mjs",
     "env:pull:vercel": "npx vercel env pull .env.vercel.local",
     "docs:bundle": "node scripts/docs/build-docs-bundles.mjs",
     "docs:bundle:verify": "node scripts/docs/build-docs-bundles.mjs --check",

@@ -22,6 +22,7 @@ We moeten bron-first bepalen of er nu nog een echt deployment-risico is, en of l
 ## Gewenste uitkomst
 
 Er ligt een korte diagnose met:
+
 - actuele repo Node/NPM-config
 - actuele GitHub Actions deployment-config
 - relevante recente GitHub run/check bewijzen
@@ -30,6 +31,7 @@ Er ligt een korte diagnose met:
 ## Diagnose
 
 Bevestigd op 2026-04-23:
+
 - Repo vraagt Node 24 via `.nvmrc` (`24`) en `package.json` engines (`24.x`).
 - Lokale shell draaide tijdens installatie op Node `v25.8.0` met npm `11.11.0`.
 - `npm run check:node-version` faalt lokaal terecht zolang Node 25 actief is.

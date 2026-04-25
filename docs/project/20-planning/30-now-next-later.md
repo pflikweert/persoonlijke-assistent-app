@@ -1,8 +1,35 @@
+---
+title: Now Next Later
+audience: human
+doc_type: planning
+source_role: operational
+visual_profile: budio-terminal
+upload_bundle: 10-budio-core-product-and-planning.md
+---
+
 # Now / Next / Later
 
 ## Doel
 
 Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadministratie.
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ BUDIO PLANNING RADAR                                         │
+├───────────────┬──────────────────────────────────────────────┤
+│ NOW           │ bewijs, basis, AIQS, lopende fase            │
+│ NEXT          │ builder/podcast wedge + Knowledge Hub prep   │
+│ LATER         │ Jarvis public, Pro, billing, scheduler       │
+└───────────────┴──────────────────────────────────────────────┘
+```
+
+```mermaid
+flowchart LR
+  Now[Now: basis bewijzen] --> Next[Next: wedge verdiepen]
+  Next --> Later[Later: opschalen na bewijs]
+  Parking[Parking lot] --> Now
+  Parking -. alleen na besluit .-> Next
+```
 
 ## Obsidian links
 

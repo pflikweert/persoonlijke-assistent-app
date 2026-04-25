@@ -1,3 +1,12 @@
+---
+title: Ideas workspace
+audience: human
+doc_type: hub
+source_role: reference
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Ideas workspace (gestructureerde ideecapture)
 
 ## Doel

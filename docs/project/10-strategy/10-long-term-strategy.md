@@ -1,8 +1,28 @@
+---
+title: Lange termijn strategie
+audience: human
+doc_type: strategy
+source_role: canonical
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Lange termijn strategie (Horizon)
 
 ## Doel
 
 Deze strategie beschrijft de duurzame richting van Budio over meerdere fases heen.
+
+```text
+╔════════════════════════════════════════════════════════════╗
+║ BUDIO STRATEGY TERMINAL                                  ║
+╠════════════════════════════════════════════════════════════╣
+║ NORTH STAR   capture-first thinking tool                 ║
+║ PUBLIC WEDGE builders / podcasters / solo experts        ║
+║ CONTROL      AIQS as governance layer                    ║
+║ FUTURE       Jarvis later, not as public promise now     ║
+╚════════════════════════════════════════════════════════════╝
+```
 
 ## Richting
 
@@ -14,6 +34,16 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 4. Publieke productontwikkeling prioriteert podcast- en builder-use-cases.
 5. AIQS ontwikkelt door als governance/control plane, niet als eindgebruikerschat.
 6. Jarvis is geen actieve publieke productbelofte in de komende jaren zonder expliciet nieuw besluit.
+
+```mermaid
+flowchart LR
+  A[Capture-first core] --> B[Consumer beta proof]
+  B --> C[Builder/podcast wedge]
+  C --> D[Knowledge Hub + AIQS]
+  D --> E[Workspace structure]
+  E --> F[Jarvis-ready context]
+  F -. not public now .-> G[Future Jarvis track]
+```
 
 ## Obsidian links
 

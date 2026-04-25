@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
-Source Commit: c32c098
+Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
+Source Commit: 53f227f
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,14 +15,15 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
-Source Commit: c32c098
+Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
+Source Commit: 53f227f
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
 - docs/project/README.md
+- docs/project/00-docs-governance/README.md
 - docs/project/master-project.md
 - docs/project/product-vision-mvp.md
 - docs/project/current-status.md
@@ -38,6 +39,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/20-planning/40-deviations-and-decisions.md
 - docs/project/20-planning/50-budio-workspace-plugin-focus.md
 - docs/project/20-planning/60-april-2026-ideeen-prioritering-en-learning-loop.md
+- docs/project/20-planning/70-post-basis-6-month-roadmap.md
 
 ## Leesregel
 - Dit is de primaire bron voor scope, status en uitvoering binnen de huidige fase.
@@ -46,6 +48,15 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 ---
 
 ## Docs-Hiërarchie Samenvatting
+
+---
+title: Projectdocs waarheidshierarchie en operating system
+audience: both
+doc_type: hub
+source_role: canonical
+visual_profile: budio-terminal
+upload_bundle: chatgpt-project-context.md
+---
 
 # Projectdocs — Waarheidshiërarchie en Operating System
 
@@ -58,6 +69,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
+- `docs/project/00-docs-governance/**` = audience, metadata en docs-visual-language afspraken
 
 Regel:
 
@@ -72,6 +84,7 @@ Regel:
 - Tasks hub
 - Research hub
 - Ideas workspace
+- Docs governance
 - Current status
 - Open points
 
@@ -166,7 +179,25 @@ Regel:
 - open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
 - `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
 
-## 4) Uploadpolicy voor ChatGPT Projects (handmatig)
+## 4) Docs audience en visual language
+
+Gebruik frontmatter om per document vast te leggen voor wie het bedoeld is.
+De afspraken staan in `docs/project/00-docs-governance/README.md`.
+
+```text
+┌───────────────────────┬──────────────────────────────┐
+│ audience              │ gebruik                       │
+├───────────────────────┼──────────────────────────────┤
+│ human                 │ strategie, planning, research │
+│ agent                 │ workflow, skills, instructies │
+│ both                  │ hubs, status, shared truth    │
+└───────────────────────┴──────────────────────────────┘
+```
+
+Human-facing docs mogen een duidelijke Budio Terminal-smaaklaag krijgen.
+Agent-only docs blijven sober en operationeel.
+
+## 5) Uploadpolicy voor ChatGPT Projects (handmatig)
 
 Gebruik altijd eerst:
 
@@ -175,27 +206,21 @@ Gebruik altijd eerst:
 Daarna upload je alleen de kleinste relevante subset uit het uploadmanifest.
 Upload niet standaard de volledige set.
 
-Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal:
+`docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal.
+
+De primaire aanbevolen subset blijft klein:
 
 1. `docs/upload/chatgpt-project-context.md`
-2. `docs/upload/10-budio-core-product-and-planning.md`
-3. `docs/upload/20-budio-strategy-research-and-ideas.md`
-4. `docs/upload/30-budio-build-ai-governance-and-operations.md`
-5. `docs/upload/40-budio-design-handoff-and-truth.md`
+2. kies daarna alleen de relevante domeinbundle uit het manifest
 
 Reden:
 
 - bootstrap blijft apart en verplicht
-- overige bundels zijn logisch samengevoegd in 4 domeinbundels
+- domeinbundels zijn logisch samengevoegd en use-case gestuurd
 - use-case subsets en volledigheidscheck staan in `docs/upload/00-budio-upload-manifest.md`
-- het uploadmanifest is lokale referentie/completeness-check en geen verplicht onderdeel van de primaire aanbevolen handmatige uploadset
-- volledige set alleen gebruiken voor brede strategie-, audit- of totaalreviews
+- volledige set alleen gebruiken voor brede strategie-, audit-, roadmap- of totaalreviews
 
-Legacy compatibiliteit:
-
-- Bestaande legacy uploadfiles blijven beschikbaar voor bestaande workflows, maar zijn niet de primaire aanbevolen handmatige uploadset.
-
-## 5) Wat je normaal niet hoeft te uploaden
+## 6) Wat je normaal niet hoeft te uploaden
 
 - `docs/project/archive/**`
 - `docs/design/archive/**`
@@ -203,14 +228,14 @@ Legacy compatibiliteit:
 - `docs/project/25-tasks/**`
 - setup/run-notities zonder canonieke productwaarheid
 
-## 6) Onderhoudsflow
+## 7) Onderhoudsflow
 
 1. Werk eerst de handmatige canonieke docs bij.
 2. Draai `npm run docs:bundle`.
 3. Controleer met `npm run docs:bundle:verify`.
 4. Commit canonieke docs + generated output samen.
 
-## 7) Werken met ChatGPT Projects + Cline
+## 8) Werken met ChatGPT Projects + Cline
 
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
 - **Cline in VS Code**: repo-analyse, plan, wijzigingen, verify en commit.
@@ -231,7 +256,7 @@ Legacy compatibiliteit:
   - `docs/project/current-status.md` alleen voor bewijsbare statusrealiteit
   - niet in productdocs als toolingsruis
 
-## 8) Repo-eigen Memory Bank (workflow, geen extra waarheid)
+## 9) Repo-eigen Memory Bank (workflow, geen extra waarheid)
 
 Deze repo gebruikt een lichte memory-bank workflow als uitvoerhulp, zonder tweede waarheidshiërarchie.
 
@@ -258,7 +283,119 @@ Regels:
 
 ---
 
+## Docs Governance
+
+---
+title: Docs governance, audience en visual language
+audience: both
+doc_type: governance
+source_role: canonical
+visual_profile: budio-terminal
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
+# Docs governance, audience en visual language
+
+## Doel
+
+Deze laag maakt expliciet voor wie een document bedoeld is, hoe het gelezen
+moet worden en wanneer visuele verrijking waarde toevoegt.
+
+```text
+╔══════════════════════════════════════════════════════════════════╗
+║ BUDIO DOCS TERMINAL                                             ║
+╠══════════════════════════════════════════════════════════════════╣
+║ MODE        docs-governance                                     ║
+║ RULE        serious first, nerdy enough                         ║
+║ RENDER      plain Markdown baseline, richer in Obsidian/VS Code ║
+║ BOUNDARY    no IP-copy, no gimmick overload                     ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+## Metadata-contract
+
+Nieuwe of actieve handmatige docs krijgen frontmatter wanneer ze onderdeel zijn
+van projectwaarheid, planning, research, ideas, setup of workflow.
+
+Vaste velden:
+
+| Veld | Waarden | Betekenis |
+| --- | --- | --- |
+| `title` | vrije titel | Menselijke titel voor vault, bundler en uploadcontext. |
+| `audience` | `human`, `agent`, `both` | Primaire lezer: gebruiker/founder, agent/AI, of allebei. |
+| `doc_type` | vrije korte categorie | Bijvoorbeeld `hub`, `strategy`, `planning`, `research`, `workflow`, `setup`. |
+| `source_role` | `canonical`, `operational`, `reference`, `generated`, `archive` | Waarheidsrol van het document. |
+| `visual_profile` | `plain`, `budio-terminal`, `diagram-first` | Hoe rijk de Markdown visueel mag zijn. |
+| `upload_bundle` | uploadbestandsnaam of `none` | In welke generated uploadcontext het document terecht hoort. |
+
+## Audience-regels
+
+- `human`: uitleg, strategie, planning, roadmap, ideeën en besliscontext voor mensen.
+- `agent`: uitvoeringsregels, skills, checklists en technische workflow voor agents.
+- `both`: docs die mensen en agents allebei nodig hebben als gedeelde waarheid.
+
+Regel: als een document vooral een agent moet sturen, voeg geen extra sfeerlaag
+toe. Als een document een mens moet meenemen in strategie of planning, mag het
+wel visueel meer karakter krijgen.
+
+## Budio Terminal visual profile
+
+De Budio Terminal-stijl is een interne docs-smaaklaag, geen productdesignsystem.
+Hij is geinspireerd door retro terminals en mission-control interfaces, maar
+kopieert geen bestaande serie, game of IP.
+
+Gebruik:
+
+- terminalpanelen met `text` codeblocks voor status, sequencing en prioriteit
+- Mermaid-diagrammen voor flow, dependencies en roadmapstructuur
+- compacte radar/mission-control blokken voor menselijke oriëntatie
+- normale Markdown als basis, zodat lezen zonder plugin altijd werkt
+
+Niet gebruiken:
+
+- animatie als harde afhankelijkheid
+- HTML/CSS die in ChatGPT, GitHub of Obsidian slecht degradeert
+- gimmicks die de inhoud overheersen
+- productcopy richting app-eindgebruikers
+
+## Portable rendering
+
+```mermaid
+flowchart LR
+  A[Plain Markdown] --> B[VS Code preview]
+  A --> C[Obsidian vault]
+  B --> D[Mermaid preview as plus]
+  C --> E[Native Mermaid rendering]
+  A --> F[ChatGPT upload]
+```
+
+Baseline:
+
+- elk document blijft leesbaar als ruwe Markdown
+- Mermaid is handig voor preview, maar de omliggende tekst moet de boodschap ook dragen
+- uploadbundels blijven `.md`-bestanden zonder assets of runtime-afhankelijkheden
+
+## Folderstructuur-regel
+
+We doen nu geen brede foldermigratie. Metadata en bundling lossen de verwarring
+goedkoper en veiliger op.
+
+Een mogelijke folderherziening krijgt pas vervolg na bewijs uit deze fase.
+Daarvoor bestaat de blocked task:
+`docs/project/25-tasks/open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md`.
+
+---
+
 ## Hoofd Projectdocument
+
+---
+title: Persoonlijke Assistent App Master Project
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Persoonlijke Assistent App — Master Project (Canoniek)
 
@@ -430,6 +567,15 @@ In de huidige fase blijft leidend:
 
 ## Productvisie Aanscherping
 
+---
+title: Productvisie MVP
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # Persoonlijke Assistent App — Productvisie Aanscherping (MVP)
 
 ## Doel
@@ -557,6 +703,15 @@ Zolang deze lagen niet productmatig bewezen en expliciet in scope zijn, blijven 
 ---
 
 ## Actuele Gebouwde Status
+
+---
+title: Current Status
+audience: both
+doc_type: status
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Current Status — Codegevalideerd
 
@@ -727,6 +882,15 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 
 ## Open Punten / Resterend Werk
 
+---
+title: Open Points
+audience: both
+doc_type: status
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # Open Points — Resterend Werk
 
 ## Doel
@@ -738,15 +902,19 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Backlog | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
 | [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Backlog | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
 | [Entry photo gallery volledige end-user E2E flows](25-tasks/open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | Ready | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
+| [Moment detail foto-upload productieflakiness onderzoeken](25-tasks/open/moment-detail-foto-upload-productieflakiness-onderzoek.md) | Ready | p1 | transitiemaand-consumer-beta | Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een upload met de vaste agent-testaccount werkt betrouwbaar... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
-| [Moment detail foto reorder + thumbnail-logica en audio test auto-stop](25-tasks/open/moment-detail-foto-reorder-en-audio-test-auto-stop.md) | In Progress | p1 | transitiemaand-consumer-beta | Op het moment-detailscherm kan de gebruiker foto's betrouwbaar uploaden en herordenen. Tijdens het slepen schuift de galerij live mee naa... |
+| [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | In Progress | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
+| [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
+| [Moments-overzicht primaire foto thumbnail en viewer](25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | Review | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
 | [AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)](25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md) | Backlog | p2 | transitiemaand-consumer-beta | AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.... |
 | [Budio webapp compatible maken](25-tasks/open/budio-webapp-compatible-maken.md) | Backlog | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 | [Docs scheiden naar private repo (strategie + migratieplan)](25-tasks/open/docs-private-repo-scheiding-en-migratieplan.md) | Backlog | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
 | [niet vergeten](25-tasks/open/niet-vergeten.md) | Backlog | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
 | [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | In Progress | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
+| [Docs folderstructuur en visual language herbeoordelen na metadatafase](25-tasks/open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md) | Blocked | p3 | transitiemaand-consumer-beta | Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling: - Is metadata + bundling... |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
@@ -871,6 +1039,15 @@ Dit raakt architectuur, job-afhandeling en betrouwbaarheid van achtergrondverwer
 ---
 
 ## Content / Narrative Processing Regels
+
+---
+title: Content and narrative processing rules
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Content & Narrative Processing Rules (Canoniek)
 
@@ -1057,6 +1234,15 @@ Primair geraakt door:
 ---
 
 ## Copy Instructions
+
+---
+title: Copy instructions
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Persoonlijke Assistent App — Copy Instructions
 
@@ -1381,6 +1567,15 @@ Hij helpt je rustig je dag vast te leggen.
 ---
 
 ## AI Quality Studio Governance
+
+---
+title: AI Quality Studio
+audience: both
+doc_type: ai-governance
+source_role: canonical
+visual_profile: plain
+upload_bundle: 30-budio-build-ai-governance-and-operations.md
+---
 
 # AI Quality Studio (Canoniek)
 
@@ -2451,6 +2646,15 @@ Waarom:
 
 ## Cline Workflow Afspraken
 
+---
+title: Cline workflow
+audience: agent
+doc_type: workflow
+source_role: operational
+visual_profile: plain
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
 # Cline workflow (operationeel)
 
 ## Doel
@@ -2570,10 +2774,10 @@ Plan mode heft de taskfile-verplichting niet op:
 
 Extra repo-regel voor Plan Mode:
 
-- gebruik in Plan Mode altijd eerst een **bestaande** taskfile
-- maak in Plan Mode nooit automatisch een nieuwe task aan
-- bestaat er geen passende bestaande task, blokkeer inhoudelijk en meld dat expliciet
-- een nieuwe task mag pas buiten Plan Mode worden aangemaakt
+- gebruik in Plan Mode eerst een **bestaande** taskfile wanneer daar een duidelijke match voor is
+- maak in Plan Mode bij duidelijke nieuwe scope automatisch een nieuwe task aan vanuit `_template.md`
+- vraag alleen bij echte twijfel: meerdere plausibele tasks, onduidelijke scope-routing of onduidelijk task-vs-idea
+- `Taskflow summary` mag dus ook een nieuw aangemaakte task noemen
 
 ## Wanneer Act mode
 
@@ -2584,6 +2788,13 @@ Gebruik Act mode voor:
 - verify en afronding
 
 ## Promptpatronen
+
+### Uitvoerblokken
+
+- Cline/Codex bepaalt bij elke inhoudelijke taak zelf de efficiëntste blokken op basis van huidige agent/model, taaktype, risico, dirty worktree, verificatiekosten en afhankelijkheden.
+- Vraag de gebruiker niet om fasering tenzij er een echte product-, planning- of architectuurtradeoff is.
+- Default: preflight/context/taskflow -> kleinste bronwijziging -> gerichte verify -> docs/taskstatus/bundel afronden.
+- Voor grotere docs/roadmaptaken: research -> template/workflow -> primair artefact -> bundel -> verify.
 
 ### Kleine fixes
 
@@ -2597,6 +2808,13 @@ Gebruik Act mode voor:
 - Maak of vind vóór het plan eerst de taskfile.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
+- Behandel het laatst besproken subprobleem nooit automatisch als de nieuwe hoofdscope.
+- Leg bij niet-triviale taken het **oorspronkelijke plan / afgesproken scope** expliciet vast in de taskfile en houd die sectie stabiel tijdens uitvoering.
+- Leg expliciete user-details met latere uitvoer- of reviewwaarde vast onder een aparte requirement-sectie in de taskfile; alleen een samenvatting is niet genoeg.
+- Maak onderscheid tussen review-uitkomst en requirement-uitkomst: de taskfile moet niet alleen de conclusie bevatten, maar ook de concrete requirement-details waarop die conclusie rust.
+- Als de gebruiker een bestaand uitgebreid plan of detailblok expliciet in de taskfile wil terugzien, moet dat bronblok als eigen sectie behouden blijven; een statusreview of samenvatting mag dat niet vervangen.
+- Leg latere regressies, polish of user-correcties vast als **toegevoegde verbeteringen tijdens uitvoering**, tenzij de gebruiker expliciet de hoofdscope wijzigt.
+- Rond een taak pas af na een expliciete **plan reconciliation**: oorspronkelijk plan, later toegevoegd werk en resterende open punten moeten allemaal zichtbaar zijn.
 
 ## Verify-regel
 
@@ -2613,7 +2831,9 @@ Gebruik Act mode voor:
 - Gebruik na de bootstrap alleen de kleinste relevante subset uit `docs/upload/00-budio-upload-manifest.md`.
 - Upload niet standaard de volledige set.
 - Bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.
-- Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal.
+- `docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal; upload per ChatGPT Project-context alleen de kleinste relevante subset uit het manifest.
+- Audience-metadata en Budio Terminal-regels staan in `docs/project/00-docs-governance/README.md`.
+- Developer docs-tooling en Obsidian vault setup staan in `docs/setup/developer-docs-environment.md`.
 - Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance-docs.
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 
@@ -2692,6 +2912,15 @@ Voor productiebug-onderzoek:
 
 ## README
 
+---
+title: Planning hub
+audience: human
+doc_type: hub
+source_role: operational
+visual_profile: budio-terminal
+upload_bundle: 10-budio-core-product-and-planning.md
+---
+
 # Planning hub
 
 ## Doel
@@ -2705,6 +2934,7 @@ Navigatiehub voor actieve uitvoeringsfocus, roadmap en afwijkingsbesluiten.
 - Now / Next / Later
 - Budio Workspace plugin focus
 - April 2026 ideeënprioritering en learning loop
+- Post-basis 6-maandenroadmap
 - Deviations and decisions
 
 ## Verbonden lagen
@@ -2822,11 +3052,38 @@ Knowledge Hub blijft een high-prio richting, maar staat gepland voor na dit kwar
 
 ## Now Next Later
 
+---
+title: Now Next Later
+audience: human
+doc_type: planning
+source_role: operational
+visual_profile: budio-terminal
+upload_bundle: 10-budio-core-product-and-planning.md
+---
+
 # Now / Next / Later
 
 ## Doel
 
 Lean focusbord voor kanban-achtige planning zonder overgedetailleerde sprintadministratie.
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ BUDIO PLANNING RADAR                                         │
+├───────────────┬──────────────────────────────────────────────┤
+│ NOW           │ bewijs, basis, AIQS, lopende fase            │
+│ NEXT          │ builder/podcast wedge + Knowledge Hub prep   │
+│ LATER         │ Jarvis public, Pro, billing, scheduler       │
+└───────────────┴──────────────────────────────────────────────┘
+```
+
+```mermaid
+flowchart LR
+  Now[Now: basis bewijzen] --> Next[Next: wedge verdiepen]
+  Next --> Later[Later: opschalen na bewijs]
+  Parking[Parking lot] --> Now
+  Parking -. alleen na besluit .-> Next
+```
 
 ## Obsidian links
 
@@ -3194,3 +3451,421 @@ Per gebruiker/segment:
 - Budio Workspace plugin focus
 - Open points
 - Ideas workspace
+
+---
+
+## Post Basis 6 Month Roadmap
+
+---
+title: Post-basis 6-maandenroadmap
+audience: human
+doc_type: roadmap
+source_role: operational
+visual_profile: budio-terminal
+upload_bundle: 50-budio-roadmap-planning-pack.md
+---
+
+# Post-basis 6-maandenroadmap - concept
+
+## Status en leesregel
+
+Dit is een concept-roadmap voor de periode nadat de basis klaar is.
+Het is richtinggevend voor sequencing en productplanning, niet automatisch een set actieve taken.
+
+```text
+╔════════════════════════════════════════════════════════════════════╗
+║ BUDIO ROADMAP CONSOLE                                            ║
+╠════════════════════════════════════════════════════════════════════╣
+║ MODE       post-basis concept                                    ║
+║ UNIT       maandblokken op epicniveau                            ║
+║ GOAL       buildbare volgorde voor testbare gebruikerswaarde     ║
+║ FILTER     must-have eerst, nice-to-have alleen als ruimte helpt ║
+╚════════════════════════════════════════════════════════════════════╝
+```
+
+Basis klaar betekent minimaal:
+
+- 1.2B outputkwaliteit is expliciet genoeg voor beta-gebruik
+- 1.2E private-beta readiness heeft voldoende runtimebewijs
+- kernlus capture -> dagboeklaag -> reflecties blijft stabiel
+- AIQS-basis en bestaande hardeningtaken blokkeren de volgende productlaag niet meer
+
+## Strategische keuze
+
+Na de basis bouwen we niet breder, maar scherper:
+
+- eerst een builder/podcast wedge bewijzen
+- daarna pas kennislaag, formats, workflow en Jarvis-ready structuur verdiepen
+- geen publieke Jarvis-launch als shortcut
+
+## Onderbouwing
+
+Deze roadmap gebruikt een lichte combinatie van bewezen roadmapprincipes:
+
+- doelen per maand in plaats van losse featurelijsten, geinspireerd door de GO Product Roadmap van Roman Pichler
+- thema-roadmaps in plaats van sprintdetail, zoals ProductPlan beschrijft
+- doel/uitkomst/werk-terug redeneren uit Atlassian roadmap guidance
+- RICE-denken van Intercom als sanity-check op impact, confidence en effort
+- Opportunity Solution Tree-denken van Product Talk om kans, probleem en oplossing gescheiden te houden
+
+Bronnen:
+
+- [Roman Pichler - GO Product Roadmap](https://www.romanpichler.com/tools/the-go-product-roadmap/)
+- [Atlassian - Create a project roadmap](https://www.atlassian.com/agile/project-management/create-project-roadmap)
+- [ProductPlan - Organize your roadmap by themes](https://www.productplan.com/learn/organize-your-roadmap-by-themes)
+- [Intercom - RICE prioritization](https://www.intercom.com/blog/rice-simple-prioritization-for-product-managers/)
+- [Product Talk - Opportunity Solution Trees](https://www.producttalk.org/opportunity-solution-trees/)
+
+## Niet bouwen in deze roadmap
+
+- Geen publieke Jarvis-launch.
+- Geen brede Pro/Business/Private uitbreiding.
+- Geen billing/credits/usage-economie.
+- Geen zware sprint/cycle-machine als hoofdlaag.
+- Geen brede scheduler/autopost-flow voordat de builder/podcast wedge bewezen is.
+
+## Hoofdlijn
+
+```text
+┌────────────┐
+│ Basis klaar│
+└─────┬──────┘
+      ▼
+┌────────────────────────────────────────┐
+│ M1 Capture naar eerste contentbrug     │
+├────────────────────────────────────────┤
+│ M2 Output review queue en export       │
+├────────────────────────────────────────┤
+│ M3 Knowledge Hub V1                    │
+├────────────────────────────────────────┤
+│ M4 Builder/podcast profile + packs     │
+├────────────────────────────────────────┤
+│ M5 Podcast/solo expert workflow beta   │
+├────────────────────────────────────────┤
+│ M6 Workspace + Jarvis-ready structuur  │
+└────────────────────────────────────────┘
+```
+
+```mermaid
+flowchart TD
+  Basis[Basis klaar] --> M1[M1 Capture -> contentbrug]
+  M1 --> M2[M2 Review queue -> export]
+  M2 --> M3[M3 Knowledge Hub V1]
+  M3 --> M4[M4 Profile + format packs]
+  M4 --> M5[M5 Expert workflow beta]
+  M5 --> M6[M6 Workspace context layer]
+  M6 -. future only .-> Jarvis[Jarvis skills / agents]
+```
+
+## Dependency flow
+
+```text
+Stabiele basis
+  -> contentbrug
+  -> review/export bewijs
+  -> broncontext
+  -> format/podcast herhaalbaarheid
+  -> beta workflow
+  -> workspace + Jarvis-ready contextlaag
+```
+
+## Must-have versus nice-to-have
+
+```text
++---------+--------------------------------------+--------------------------------------+
+| Maand   | Must-have                            | Nice-to-have                         |
++---------+--------------------------------------+--------------------------------------+
+| M1      | entry -> output intent -> draft      | meerdere kanalen tegelijk            |
+| M2      | review queue + export                | publishing/scheduler                 |
+| M3      | source hub + citations               | brede document intelligence          |
+| M4      | profile + format packs               | marketplace van formats              |
+| M5      | podcast beta workflow                | autopost clips                       |
+| M6      | workspace views + contextlaag        | publieke Jarvis                      |
++---------+--------------------------------------+--------------------------------------+
+```
+
+## Maand 1 - Capture Naar Eerste Contentbrug
+
+### Doel
+
+Maak van bestaande dagboek- en momentinput een eerste bewuste brug naar content-output voor builders/podcasters.
+De gebruiker moet niet opnieuw vanaf een lege prompt beginnen.
+
+### Waarom deze maand
+
+De basis heeft al capture, daglaag en reflecties.
+De grootste strategische gap is dat die context nog niet leidt tot een concrete builder-output.
+Deze maand bewijst of Budio van persoonlijke context naar bruikbare publicatievoorbereiding kan bewegen.
+
+### Eindgebruikerswaarde
+
+De gebruiker kan een moment, dag of reflectie aanwijzen en daar een eerste contentrichting uit halen, zoals een post-idee, talking point of episode-angle.
+Het voelt als hergebruik van eigen context, niet als generieke AI-output.
+
+### Budio-ROI
+
+Dit levert het eerste bewijs voor de publieke wedge: Budio helpt makers sneller van eigen input naar concrete contentvoorbereiding.
+Het verhoogt strategische differentiatie zonder meteen scheduler, billing of teamfeatures te bouwen.
+
+### Must-have epics
+
+| Epic | Wat moet het kunnen | Waarom belangrijk | Afhankelijkheid |
+| --- | --- | --- | --- |
+| Output intent kiezen | Een gebruiker kiest vanuit een moment/dag het doel: post, talking point, podcast angle of outline. | Maakt output expliciet zonder open chat te introduceren. | Stabiele entry/day detail flow. |
+| Eerste draft op basis van eigen context | Het systeem maakt een korte concept-output met bronverwijzing naar de gekozen input. | Bewijst de contentbrug en houdt output source-grounded. | AIQS/outputkwaliteit basis. |
+| Review-first resultaat | Output landt als concept met duidelijke reviewstatus, niet als automatisch gepubliceerde content. | Voorkomt premature autopost en houdt vertrouwen hoog. | Bestaande edit/review patronen. |
+
+### Nice-to-have epics
+
+| Epic | Wat voegt het toe | Waarom niet must-have |
+| --- | --- | --- |
+| Meerdere kanaalvarianten | Een concept kan tegelijk als LinkedIn, newsletter of podcast-hook worden herschreven. | Eerst moet één sterke outputbrug bewezen worden. |
+| Tone quick-picks | Snelle toonkeuze zoals helder, persoonlijk of scherp. | Kan wachten tot we echte reviewfeedback zien. |
+
+### Rollout en testlogica
+
+Start met founder/testers die al eigen capture-data hebben.
+Goed genoeg wanneer testers zonder arrow-prompt of leeg scherm een bruikbare eerste output kunnen maken en snappen waar die op gebaseerd is.
+
+### Niet bouwen in deze maand
+
+Geen scheduler, geen autopost, geen brede contentkalender en geen publieke Jarvis-interface.
+
+## Maand 2 - Output Review Queue En Export
+
+### Doel
+
+Maak gegenereerde concepten beheersbaar: bewaren, vergelijken, verbeteren, afkeuren en exporteren.
+
+### Waarom deze maand
+
+Maand 1 bewijst creatie.
+Maand 2 bewijst workflow: gebruikers moeten niet losse outputs verliezen of direct moeten publiceren.
+
+### Eindgebruikerswaarde
+
+De gebruiker heeft één plek om concepten terug te vinden, te reviewen en klaar te maken voor publicatie buiten Budio.
+Export is belangrijker dan publiceren binnen Budio.
+
+### Budio-ROI
+
+Reviewdata laat zien welke outputs waardevol zijn en waar kwaliteit tekortschiet.
+Dit voedt AIQS, formatkeuzes en latere productbeslissingen.
+
+### Must-have epics
+
+| Epic | Wat moet het kunnen | Waarom belangrijk | Afhankelijkheid |
+| --- | --- | --- | --- |
+| Output review queue | Concepten krijgen status zoals nieuw, in review, goedgekeurd of afgewezen. | Maakt outputproductie beheersbaar zonder sprintmachine. | Maand 1 concept-output. |
+| Source peek | Vanuit een concept kan de gebruiker snel de gebruikte entry/dag/reflectie zien. | Houdt vertrouwen en context vast. | Bronkoppeling uit M1. |
+| Markdown/copy export | Goedgekeurde output kan schoon worden gekopieerd of als Markdown worden geëxporteerd. | Geeft direct nut zonder publishing-infra. | Review queue. |
+
+### Nice-to-have epics
+
+| Epic | Wat voegt het toe | Waarom niet must-have |
+| --- | --- | --- |
+| Simpele batch export | Meerdere goedgekeurde concepten in één export. | Eerst individuele review/export bewijzen. |
+| Feedbacklabels | Gebruiker labelt waarom output goed of slecht is. | Waardevol, maar kan na basisreview volgen. |
+
+### Rollout en testlogica
+
+Test met 5-10 echte outputconcepten per gebruiker.
+Goed genoeg wanneer de gebruiker concepten terugvindt, begrijpt, verbetert en buiten Budio kan gebruiken zonder extra uitleg.
+
+### Niet bouwen in deze maand
+
+Geen automatische publicatie, geen contentkalender als hoofdlaag en geen zware cycle/sprint-statussen.
+
+## Maand 3 - Knowledge Hub V1
+
+### Doel
+
+Voeg een compacte bronlaag toe zodat output niet alleen op dagboekcontext leunt, maar ook op expliciete kennisbronnen.
+
+### Waarom deze maand
+
+Na review/export weten we welke outputtypes waarde hebben.
+Daarna pas is het logisch om bronnen toe te voegen, omdat we weten waarvoor die bronnen nodig zijn.
+
+### Eindgebruikerswaarde
+
+De gebruiker kan belangrijke bronnen toevoegen of aanwijzen en ziet dat outputs beter onderbouwd zijn met context en citations.
+
+### Budio-ROI
+
+Dit vergroot differentiatie: Budio wordt geen generieke generator, maar een brongetrouwe contextmachine voor makers.
+Het bouwt voort op AIQS in plaats van een losse knowledge-base te worden.
+
+### Must-have epics
+
+| Epic | Wat moet het kunnen | Waarom belangrijk | Afhankelijkheid |
+| --- | --- | --- | --- |
+| Source library V1 | Gebruiker kan beperkte bronnen toevoegen of registreren voor builder/podcast-output. | Legt fundament voor kennisgestuurde output. | Review/export flow uit M2. |
+| Citation-aware output | Concepten tonen compacte bronverwijzingen of contextsignalen. | Vertrouwen en herleidbaarheid. | AIQS/grounding checks. |
+| Source peek | Bronnen zijn snel previewbaar zonder context-switch. | Past bij rustige, preview-first UX. | Source library. |
+
+### Nice-to-have epics
+
+| Epic | Wat voegt het toe | Waarom niet must-have |
+| --- | --- | --- |
+| Brede documenttypen | PDF, audio, foto en webbronnen allemaal tegelijk. | Te breed voor V1; eerst klein bronbewijs. |
+| Semantische zoekervaring | Vrij zoeken door alle bronnen. | Waardevol later, maar outputflow is belangrijker. |
+
+### Rollout en testlogica
+
+Begin met enkele bronsoorten en echte builder/podcast-bronnen.
+Goed genoeg wanneer bronnen zichtbaar betere en beter herleidbare outputs opleveren.
+
+### Niet bouwen in deze maand
+
+Geen brede document intelligence-suite en geen publieke second-brain positionering.
+
+## Maand 4 - Builder/Podcast Profile En Format Packs
+
+### Doel
+
+Maak herhaalbare output mogelijk via profielen, formats en stijlkeuzes.
+De gebruiker moet minder vaak dezelfde context uitleggen.
+
+### Waarom deze maand
+
+Na M1-M3 weten we welke outputs werken en welke bronnen nuttig zijn.
+Dan pas kunnen vaste formats en profielen waardevol worden in plaats van premature configuratie.
+
+### Eindgebruikerswaarde
+
+De gebruiker legt eenmalig positionering, doelgroep, toon en favoriete outputformats vast.
+Nieuwe outputs sluiten daarna beter aan zonder telkens opnieuw promptwerk.
+
+### Budio-ROI
+
+Profielen en format packs verhogen herhaalgebruik en maken de builder/podcast wedge verkoopbaarder.
+Ze vormen ook een later fundament voor pricing, maar zonder nu billing te bouwen.
+
+### Must-have epics
+
+| Epic | Wat moet het kunnen | Waarom belangrijk | Afhankelijkheid |
+| --- | --- | --- | --- |
+| Builder/podcast profile | Vaste context voor doelgroep, propositie, toon en expertisegebied. | Vermindert herhaling en verbetert outputconsistentie. | Reviewfeedback uit M2-M3. |
+| Format packs V1 | Enkele vaste formats zoals solo episode outline, LinkedIn post, newsletter intro en talking points. | Maakt waarde concreet en testbaar. | Profiel en output queue. |
+| Format preview | Gebruiker ziet vooraf wat een format oplevert en waarvoor het bedoeld is. | Voorkomt dashboard- of prompt-chaos. | Format packs. |
+
+### Nice-to-have epics
+
+| Epic | Wat voegt het toe | Waarom niet must-have |
+| --- | --- | --- |
+| Custom format builder | Gebruiker maakt eigen formats. | Eerst moeten standaardformats bewezen zijn. |
+| Team/klantprofielen | Meerdere profielen voor verschillende merken of klanten. | Past later bij Pro/Business, niet nu. |
+
+### Rollout en testlogica
+
+Test met 2-3 archetypes: solo expert, podcastmaker en builder/founder.
+Goed genoeg wanneer profiel + format minder correctierondes oplevert dan losse output.
+
+### Niet bouwen in deze maand
+
+Geen marketplace, geen teamspaces en geen brede Business-laag.
+
+## Maand 5 - Podcast/Solo Expert Workflow Beta
+
+### Doel
+
+Bundel capture, bronnen, formats en review tot één end-to-end workflow voor podcastmakers en solo experts.
+
+### Waarom deze maand
+
+Pas nu zijn de noodzakelijke bouwstenen aanwezig: outputbrug, review/export, broncontext en formats.
+Deze maand bewijst of de wedge echt als productflow werkt.
+
+### Eindgebruikerswaarde
+
+De gebruiker kan van idee en bronnen naar een aflevering-outline, talking points, show notes en publicatievoorbereiding.
+Het blijft review-first en source-grounded.
+
+### Budio-ROI
+
+Dit is het scherpste validatiemoment voor retentie en commerciële waarde.
+Als deze workflow niet aanslaat, is brede opschaling te vroeg.
+
+### Must-have epics
+
+| Epic | Wat moet het kunnen | Waarom belangrijk | Afhankelijkheid |
+| --- | --- | --- | --- |
+| Episode/project workspace | Eén lichte werkruimte voor een aflevering of solo expert asset. | Verbindt losse outputs tot een echte workflow. | M1-M4 capabilities. |
+| Outline + talking points | Genereert outline en talking points uit eigen context en bronnen. | Kernwaarde voor podcast/builder wedge. | Source hub + format packs. |
+| Show notes/export pack | Maakt een exporteerbaar pakket met show notes, summary en post-ideeën. | Direct bruikbaar buiten Budio. | Review queue/export. |
+
+### Nice-to-have epics
+
+| Epic | Wat voegt het toe | Waarom niet must-have |
+| --- | --- | --- |
+| Clip-ideeën | Ideeën voor short clips of quotes. | Nuttig, maar pas na outline/show notes. |
+| Gastvoorbereiding | Specifieke guest prep flow. | Later uitbreiden als solo expert flow bewijs heeft. |
+
+### Rollout en testlogica
+
+Beta met kleine groep makers die echt een aflevering of expertstuk voorbereiden.
+Goed genoeg wanneer de workflow tijd bespaart, betere structuur oplevert en buiten Budio gebruikt wordt.
+
+### Niet bouwen in deze maand
+
+Geen autopost, geen full scheduler en geen brede customer-support suite.
+
+## Maand 6 - Workspace En Jarvis-Ready Structuur
+
+### Doel
+
+Breng structuur aan rond intake, views, beslissingen en uitvoering zodat Budio later Jarvis-compatible wordt zonder Jarvis nu publiek te maken.
+
+### Waarom deze maand
+
+Na de wedge-beta weten we welke werkobjecten bestaan: bronnen, outputs, episodes, reviews, beslissingen en vervolgacties.
+Pas dan is workspace-structuur waardevol en geen abstract intern systeem.
+
+### Eindgebruikerswaarde
+
+De gebruiker krijgt overzicht: wat is nieuw, wat wacht op review, wat is klaar voor export, en welke bron of beslissing hoort erbij.
+
+### Budio-ROI
+
+Dit verbetert interne snelheid en legt de contextlaag voor toekomstige Jarvis-skills/agents.
+Het voorkomt dat Jarvis bovenop rommelige data en losse workflows wordt gebouwd.
+
+### Must-have epics
+
+| Epic | Wat moet het kunnen | Waarom belangrijk | Afhankelijkheid |
+| --- | --- | --- | --- |
+| Workspace views | Saved views voor inbox, review, sources, outputs en episode/project work. | Maakt werk vindbaar en bestuurbaar. | M1-M5 objecten. |
+| Decision view | Belangrijke keuzes rond formats, bronnen en outputrichting zijn zichtbaar en herleidbaar. | Helpt planning en productontwikkeling. | Review/source metadata. |
+| Jarvis-ready context layer | Objecten krijgen genoeg context en status om later door Jarvis/agents gebruikt te worden. | Bouwt toekomstfundament zonder publieke Jarvis-belofte. | Workspace views. |
+
+### Nice-to-have epics
+
+| Epic | Wat voegt het toe | Waarom niet must-have |
+| --- | --- | --- |
+| Slack/GitHub event ingest | Interne workflow-events automatisch binnenhalen. | Eerst workspace-objectmodel stabiel maken. |
+| Agent quick actions | Jarvis-achtige assistive acties op objects. | Pas na stabiele structuurlaag. |
+
+### Rollout en testlogica
+
+Eerst intern/founder-only en met beta-outputdata.
+Goed genoeg wanneer de workspace minder contextverlies geeft en vervolgwerk sneller te prioriteren is.
+
+### Niet bouwen in deze maand
+
+Geen publieke Jarvis, geen brede automationlaag en geen enterprise workspace.
+
+## Volgordecontrole
+
+```text
+Kan M2 zonder M1? Nee, review queue heeft concept-output nodig.
+Kan M3 voor M2? Liever niet, bronnen hebben pas waarde als output/review scherp is.
+Kan M4 voor M3? Beperkt, maar formats worden sterker met bron- en reviewbewijs.
+Kan M5 voor M4? Nee, beta workflow heeft formats/profiel nodig.
+Kan M6 eerder? Alleen intern, maar productmatig is structuur pas logisch na echte wedge-objecten.
+```
+
+## Vervolg
+
+De basis-roadmap wordt apart uitgewerkt met dezelfde templates.
+Deze post-basis roadmap blijft de conceptlijn voor wat er na de basis gebouwd wordt.

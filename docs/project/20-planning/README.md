@@ -1,3 +1,12 @@
+---
+title: Planning hub
+audience: human
+doc_type: hub
+source_role: operational
+visual_profile: budio-terminal
+upload_bundle: 10-budio-core-product-and-planning.md
+---
+
 # Planning hub
 
 ## Doel
@@ -11,6 +20,7 @@ Navigatiehub voor actieve uitvoeringsfocus, roadmap en afwijkingsbesluiten.
 - [[30-now-next-later|Now / Next / Later]]
 - [[50-budio-workspace-plugin-focus|Budio Workspace plugin focus]]
 - [[60-april-2026-ideeen-prioritering-en-learning-loop|April 2026 ideeënprioritering en learning loop]]
+- [[70-post-basis-6-month-roadmap|Post-basis 6-maandenroadmap]]
 - [[40-deviations-and-decisions|Deviations and decisions]]
 
 ## Verbonden lagen

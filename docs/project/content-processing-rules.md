@@ -1,3 +1,12 @@
+---
+title: Content and narrative processing rules
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # Content & Narrative Processing Rules (Canoniek)
 
 > Relatie met AI governance:

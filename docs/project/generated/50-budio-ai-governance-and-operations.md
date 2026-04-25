@@ -2,13 +2,22 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
-Source Commit: c32c098
+Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
+Source Commit: 53f227f
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## AI Quality Studio Governance (excerpt)
+---
+title: AI Quality Studio
+audience: both
+doc_type: ai-governance
+source_role: canonical
+visual_profile: plain
+upload_bundle: 30-budio-build-ai-governance-and-operations.md
+---
+
 # AI Quality Studio (Canoniek)
 
 ## Canonieke status
@@ -160,17 +169,20 @@ Kernscheiding:
 - entry-normalization loopt als één compound flow (`entry_cleanup`) voor `title`, `body`, `summary_short`
 - `day_narrative` ≠ `day_summary`
 - reflectiepunten ≠ advieslaag
-- reflecties ≠ therapeutische interpretatie
-
-Als output deze grenzen schendt, is dat een **kwaliteitsfout**, ongeacht modelscore of “mooier” taalgebruik.
-
----
-
-## 6. Huidige code-realiteit (status april
+- reflecties ≠ therape
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 
 ## Cline Workflow (excerpt)
+---
+title: Cline workflow
+audience: agent
+doc_type: workflow
+source_role: operational
+visual_profile: plain
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
 # Cline workflow (operationeel)
 
 ## Doel
@@ -224,8 +236,7 @@ Regels:
 ## Design-implementatie guardrails (operationeel)
 
 - `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
-- Gebruik eerst bestaande shared primitives/patronen; voeg alleen een nieuw shared component toe bij een echt herhaalbaar patroon over meerdere schermen.
-- UI assembly is scaffold-firs
+- Gebruik ee
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 

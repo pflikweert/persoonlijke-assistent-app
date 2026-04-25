@@ -1,3 +1,12 @@
+---
+title: Budio podcaster solo-expert wedge plan
+audience: human
+doc_type: research
+source_role: reference
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Budio — scherpe podcaster / solo-expert wedge uitgewerkt
 
 ## Doel van dit document
@@ -18,6 +27,26 @@ Het doel is niet om “nog een AI social tool” te maken, maar een productflow 
 - veel ruwe input heeft
 - zichtbaar wil zijn
 - en vastloopt tussen idee en publiceerbare output
+
+```text
+╭──────────────────────────────────────────────────────────────╮
+│ WEDGE SCAN                                                   │
+├──────────────────────────────────────────────────────────────┤
+│ TARGET     podcasters, solo experts, coaches, consultants    │
+│ PAIN       veel ruwe input, weinig herhaalbare outputflow    │
+│ PROMISE    denk hardop -> publiceerbare concepten            │
+│ LIMIT      review-first, geen brede autopost-machine         │
+╰──────────────────────────────────────────────────────────────╯
+```
+
+```mermaid
+flowchart LR
+  Raw[Ruwe input] --> Capture[Capture]
+  Capture --> Shape[Structuur + formats]
+  Shape --> Review[Review queue]
+  Review --> Export[Export / publish-ready copy]
+  Review -. menselijke controle .-> Improve[Format learning]
+```
 
 ---
 

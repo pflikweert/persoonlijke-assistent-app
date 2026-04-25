@@ -1,3 +1,12 @@
+---
+title: Current Status
+audience: both
+doc_type: status
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # Current Status — Codegevalideerd
 
 ## Doel

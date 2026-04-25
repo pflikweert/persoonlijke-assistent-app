@@ -19,13 +19,10 @@ const outputPaths = {
   uploadStrategyResearchIdeas: 'docs/upload/20-budio-strategy-research-and-ideas.md',
   uploadBuildAiGovernanceOps: 'docs/upload/30-budio-build-ai-governance-and-operations.md',
   uploadDesignHandoffTruth: 'docs/upload/40-budio-design-handoff-and-truth.md',
-  uploadProductTruth: 'docs/upload/10-budio-product-truth.md',
-  uploadStrategyResearch: 'docs/upload/20-budio-strategy-and-research.md',
-  uploadIdeasOpportunity: 'docs/upload/25-budio-ideas-and-opportunity-map.md',
-  uploadBuildTruth: 'docs/upload/30-budio-build-truth.md',
-  uploadUiDesignTruth: 'docs/upload/40-budio-ui-system-and-design-truth.md',
-  uploadAiGovernanceOps: 'docs/upload/50-budio-ai-governance-and-operations.md',
-  uploadBudioAiOperatingSystem: 'docs/upload/55-budio-ai-operating-system.md',
+  uploadRoadmapPlanningPack: 'docs/upload/50-budio-roadmap-planning-pack.md',
+  uploadTasksCurrent: 'docs/upload/60-budio-tasks-current.md',
+  uploadTasksArchive: 'docs/upload/70-budio-tasks-archive.md',
+  uploadAgentWorkflowDocsTooling: 'docs/upload/80-budio-agent-workflow-and-docs-tooling.md',
   generatedProductTruth: 'docs/project/generated/10-budio-product-truth.md',
   generatedStrategyResearch: 'docs/project/generated/20-budio-strategy-and-research.md',
   generatedIdeasOpportunity: 'docs/project/generated/25-budio-ideas-and-opportunity-map.md',
@@ -36,23 +33,56 @@ const outputPaths = {
   budioResearch: 'docs/project/generated/budio-research.md',
   stitchDesignContext: 'docs/design/generated/stitch-design-context.md',
   uploadChatgptProjectContext: 'docs/upload/chatgpt-project-context.md',
-  uploadBudioResearch: 'docs/upload/budio-research.md',
-  uploadAiQualityStudio: 'docs/upload/ai-quality-studio.md',
-  uploadClineWorkflow: 'docs/upload/cline-workflow.md',
-  uploadStitchWorkflow: 'docs/upload/stitch-workflow.md',
-  uploadMvpDesignSpec: 'docs/upload/mvp-design-spec-1.2.1.md',
-  uploadEthosIvoryDesign: 'docs/upload/ethos-ivory-design.md',
-  uploadStitchDesignContext: 'docs/upload/stitch-design-context.md',
-  uploadManifest: 'docs/upload/upload-manifest.md',
-  uploadTasksFull: 'docs/upload/60-budio-tasks-full.md',
-  uploadTasksArchiveFull: 'docs/upload/61-budio-tasks-archive-full.md',
 };
 
 const budioAiOperatingSystemSourcePath =
   'docs/Budio AI Operating System/Budio AI Operating System.md';
 
+const roadmapPlanningPackSources = [
+  {
+    path: 'docs/project/20-planning/70-post-basis-6-month-roadmap.md',
+    title: 'Post-Basis 6-Maandenroadmap',
+  },
+  {
+    path: 'docs/dev/roadmap-planning-workflow.md',
+    title: 'Roadmap Planning Workflow',
+  },
+  {
+    path: 'docs/project/20-planning/_templates/month-block-roadmap-template.md',
+    title: 'Maandblok Roadmap Template',
+  },
+  {
+    path: 'docs/project/20-planning/_templates/epic-roadmap-item-template.md',
+    title: 'Epic Roadmap Item Template',
+  },
+  {
+    path: 'docs/project/20-planning/10-roadmap-phases.md',
+    title: 'Roadmap Fases',
+  },
+  {
+    path: 'docs/project/20-planning/30-now-next-later.md',
+    title: 'Now Next Later',
+  },
+];
+
+const agentWorkflowDocsToolingSources = [
+  { path: 'docs/README.md', title: 'Docs Hub' },
+  { path: 'docs/project/00-docs-governance/README.md', title: 'Docs Governance' },
+  { path: 'docs/setup/developer-docs-environment.md', title: 'Developer Docs Environment' },
+  { path: 'docs/setup/step-0-readiness.md', title: 'Step 0 Readiness' },
+  { path: 'docs/dev/README.md', title: 'Dev Docs Hub' },
+  { path: 'docs/dev/cline-workflow.md', title: 'Cline Workflow' },
+  { path: 'docs/dev/ai-execution-os-generic.md', title: 'AI Execution OS Generic' },
+  { path: 'docs/dev/task-lifecycle-workflow.md', title: 'Task Lifecycle Workflow' },
+  { path: 'docs/dev/roadmap-planning-workflow.md', title: 'Roadmap Planning Workflow' },
+  { path: 'AGENTS.md', title: 'AGENTS Rules' },
+  { path: '.agents/skills/task-status-sync-workflow/SKILL.md', title: 'Task Status Sync Skill' },
+  { path: '.agents/skills/scope-guard/SKILL.md', title: 'Scope Guard Skill' },
+];
+
 const projectCoreSources = [
   { path: 'docs/project/README.md', title: 'Docs-Hiërarchie Samenvatting' },
+  { path: 'docs/project/00-docs-governance/README.md', title: 'Docs Governance' },
   { path: 'docs/project/master-project.md', title: 'Hoofd Projectdocument' },
   { path: 'docs/project/product-vision-mvp.md', title: 'Productvisie Aanscherping' },
   { path: 'docs/project/current-status.md', title: 'Actuele Gebouwde Status' },
@@ -70,7 +100,7 @@ let planningSources = [];
 let ideaSources = [];
 let taskSources = [];
 
-const taskStatusOrder = ['backlog', 'ready', 'in_progress', 'blocked', 'done'];
+const taskStatusOrder = ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'];
 const taskPriorityOrder = ['p1', 'p2', 'p3'];
 const taskRequiredFields = ['id', 'title', 'status', 'phase', 'priority', 'source', 'updated_at'];
 const taskOverviewMarkers = {
@@ -158,119 +188,54 @@ const designSources = [
 
 const uploadSet = [
   {
+    path: outputPaths.uploadManifestV2,
+    type: 'generated manifest',
+    flow: 'Local reference, use-case routing and completeness check',
+  },
+  {
     path: outputPaths.uploadChatgptProjectContext,
     type: 'primary bootstrap bundle',
     flow: 'ChatGPT Projects bootstrap/startcontext (upload-only)',
   },
   {
-    path: outputPaths.uploadManifestV2,
-    type: 'generated manifest',
-    flow: 'Local reference + completeness check',
-  },
-  {
     path: outputPaths.uploadCoreProductPlanning,
-    type: 'generated primary domain bundle',
-    flow: 'Primary recommended uploadset (core product/planning)',
+    type: 'generated domain bundle',
+    flow: 'Core product truth and active planning',
   },
   {
     path: outputPaths.uploadStrategyResearchIdeas,
-    type: 'generated primary domain bundle',
-    flow: 'Primary recommended uploadset (strategy/research/ideas)',
+    type: 'generated domain bundle',
+    flow: 'Strategy, research and idea context',
   },
   {
     path: outputPaths.uploadBuildAiGovernanceOps,
-    type: 'generated primary domain bundle',
-    flow: 'Primary recommended uploadset (build/AI governance/operations)',
+    type: 'generated domain bundle',
+    flow: 'Build truth, AI governance and operations',
   },
   {
     path: outputPaths.uploadDesignHandoffTruth,
-    type: 'generated primary domain bundle',
-    flow: 'Primary recommended uploadset (design handoff/truth)',
+    type: 'generated domain bundle',
+    flow: 'Design handoff and design truth',
   },
   {
-    path: outputPaths.uploadProductTruth,
-    type: 'generated legacy bundle',
-    flow: 'Legacy compatibility',
+    path: outputPaths.uploadRoadmapPlanningPack,
+    type: 'generated roadmap planning bundle',
+    flow: 'Roadmap, month-block planning and review templates',
   },
   {
-    path: outputPaths.uploadStrategyResearch,
-    type: 'generated legacy bundle',
-    flow: 'Legacy compatibility',
+    path: outputPaths.uploadTasksCurrent,
+    type: 'generated current task bundle',
+    flow: 'Current open task context',
   },
   {
-    path: outputPaths.uploadIdeasOpportunity,
-    type: 'generated legacy bundle',
-    flow: 'Legacy compatibility',
-  },
-  {
-    path: outputPaths.uploadBuildTruth,
-    type: 'generated legacy bundle',
-    flow: 'Legacy compatibility',
-  },
-  {
-    path: outputPaths.uploadUiDesignTruth,
-    type: 'generated legacy bundle',
-    flow: 'Legacy compatibility',
-  },
-  {
-    path: outputPaths.uploadAiGovernanceOps,
-    type: 'generated legacy bundle',
-    flow: 'Legacy compatibility',
-  },
-  {
-    path: outputPaths.uploadBudioAiOperatingSystem,
-    type: 'upload reference copy',
-    flow: 'External AI operating system context (reference-only)',
-  },
-  {
-    path: outputPaths.uploadAiQualityStudio,
-    type: 'legacy canonical upload copy',
-    flow: 'Legacy compatibility',
-  },
-  {
-    path: outputPaths.uploadBudioResearch,
-    type: 'legacy generated upload copy',
-    flow: 'Legacy compatibility',
-  },
-  {
-    path: outputPaths.uploadClineWorkflow,
-    type: 'workflow upload copy',
-    flow: 'ChatGPT Project (execution context)',
-  },
-  {
-    path: outputPaths.uploadStitchWorkflow,
-    type: 'workflow upload copy',
-    flow: 'ChatGPT Project + Stitch handoff (workflow context)',
-  },
-  {
-    path: outputPaths.uploadMvpDesignSpec,
-    type: 'canonical upload copy',
-    flow: 'ChatGPT Project + Stitch/design handoff',
-  },
-  {
-    path: outputPaths.uploadEthosIvoryDesign,
-    type: 'canonical upload copy',
-    flow: 'Stitch/design handoff foundations',
-  },
-  {
-    path: outputPaths.uploadStitchDesignContext,
-    type: 'generated upload copy',
-    flow: 'Stitch/design handoff',
-  },
-  {
-    path: outputPaths.uploadManifest,
-    type: 'generated manifest',
-    flow: 'Upload completeness check',
-  },
-  {
-    path: outputPaths.uploadTasksFull,
-    type: 'generated task bundle',
-    flow: 'Optional upload for full task context (open + done)',
-  },
-  {
-    path: outputPaths.uploadTasksArchiveFull,
+    path: outputPaths.uploadTasksArchive,
     type: 'generated task archive bundle',
-    flow: 'Optional upload for full archive context (done only)',
+    flow: 'Done task archive context',
+  },
+  {
+    path: outputPaths.uploadAgentWorkflowDocsTooling,
+    type: 'generated workflow and tooling bundle',
+    flow: 'Agent workflow, docs tooling and developer environment',
   },
 ];
 
@@ -529,6 +494,7 @@ function statusLabel(status) {
     backlog: 'Backlog',
     ready: 'Ready',
     in_progress: 'In Progress',
+    review: 'Review',
     blocked: 'Blocked',
     done: 'Done',
   };
@@ -1117,15 +1083,6 @@ function renderDesignHandoffTruthBundle({
 }
 
 function renderPrimaryUploadManifest({ buildTimestamp, commitHash }) {
-  const primaryRecommended = [
-    outputPaths.uploadChatgptProjectContext,
-    outputPaths.uploadCoreProductPlanning,
-    outputPaths.uploadStrategyResearchIdeas,
-    outputPaths.uploadBuildAiGovernanceOps,
-    outputPaths.uploadDesignHandoffTruth,
-  ];
-  const primaryRows = uploadSet.filter((item) => primaryRecommended.includes(item.path));
-
   return `${[
     '# DO NOT EDIT - GENERATED FILE',
     '',
@@ -1134,16 +1091,17 @@ function renderPrimaryUploadManifest({ buildTimestamp, commitHash }) {
     `Build Timestamp (UTC): ${buildTimestamp}`,
     `Source Commit: ${commitHash}`,
     '',
-    '## Primaire aanbevolen handmatige uploadset (maximaal 5 bestanden)',
+    '## Beheerde uploadset (maximaal 10 bestanden)',
     '',
     '| Bestand | Type | Flow |',
     '| --- | --- | --- |',
-    ...primaryRows.map((item) => `| \`${item.path}\` | ${item.type} | ${item.flow} |`),
+    ...uploadSet.map((item) => `| \`${item.path}\` | ${item.type} | ${item.flow} |`),
     '',
     '## Regels',
     '- `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.',
     '- Gebruik in ChatGPT Projects na de bootstrap alleen de kleinste relevante subset uit dit manifest.',
     '- Upload niet standaard de volledige set.',
+    '- Beheer handmatig nooit meer dan deze 10 uploadbestanden; oude legacy-output wordt bij bundlen opgeschoond.',
     '- De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.',
     '- `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.',
     '- Bij spanning tussen uploadartefacten en canonieke docs zijn canonieke docs leidend.',
@@ -1156,12 +1114,17 @@ function renderPrimaryUploadManifest({ buildTimestamp, commitHash }) {
     '| --- | --- |',
     `| Strategie-review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadStrategyResearchIdeas}\` |`,
     `| Planherziening / opportunity review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadStrategyResearchIdeas}\` |`,
+    `| Roadmapplanning / maandblokken | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadRoadmapPlanningPack}\` |`,
+    `| Current task review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadTasksCurrent}\` |`,
+    `| Task archive review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadTasksArchive}\` |`,
+    `| Agent/docs workflow review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadAgentWorkflowDocsTooling}\` |`,
     `| Code/build review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadBuildAiGovernanceOps}\` |`,
     `| Design/Stitch handoff | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadDesignHandoffTruth}\` |`,
-    `| Volledige primaire context | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadStrategyResearchIdeas}\`, \`${outputPaths.uploadBuildAiGovernanceOps}\`, \`${outputPaths.uploadDesignHandoffTruth}\` |`,
+    `| Volledige beheerde context | ${uploadSet.map((item) => `\`${item.path}\``).join(', ')} |`,
     '',
-    '## Legacy uploadset',
-    '- Legacy bestanden blijven aanwezig voor compatibiliteit maar zijn niet de primaire aanbevolen handmatige uploadset.',
+    '## Leesregel',
+    '- Het manifest is lokale uploadrouting, geen extra canonieke bron.',
+    '- Complete uploads zijn alleen nodig voor brede audit, strategieherziening of overdracht.',
   ].join('\n')}\n`;
 }
 
@@ -1267,35 +1230,6 @@ function renderDesignContext({
     .trim()}\n`;
 }
 
-function renderUploadManifest({ buildTimestamp, commitHash }) {
-  return `${[
-    '# DO NOT EDIT - GENERATED FILE',
-    '',
-    '# Upload Manifest',
-    '',
-    `Build Timestamp (UTC): ${buildTimestamp}`,
-    `Source Commit: ${commitHash}`,
-    '',
-    '## Volledige Uploadinventaris',
-    '',
-    '| Bestand | Type | Flow |',
-    '| --- | --- | --- |',
-    ...uploadSet.map((item) => `| \`${item.path}\` | ${item.type} | ${item.flow} |`),
-    '',
-    '## Regels',
-    '- Primaire aanbevolen handmatige uploadset staat in `docs/upload/00-budio-upload-manifest.md` en bevat maximaal 5 bestanden totaal.',
-    '- Gebruik in ChatGPT Projects na de bootstrap alleen de kleinste relevante subset; upload niet standaard de volledige set.',
-    '- De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.',
-    '- `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.',
-    '- Bij spanning tussen uploadartefacten en canonieke docs zijn canonieke docs leidend.',
-    '- Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance.',
-    '- Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.',
-    '- Draai `npm run docs:bundle` en daarna `npm run docs:bundle:verify` na canonieke docs- of design-handoff wijzigingen.',
-  ]
-    .join('\n')
-    .trim()}\n`;
-}
-
 function sortTasks(tasks) {
   return [...tasks].sort((a, b) => {
     const priorityDiff = priorityRank(a.metadata.priority) - priorityRank(b.metadata.priority);
@@ -1376,19 +1310,25 @@ function renderTaskHub(taskHubSource, tasks) {
   return replaceMarkedSection(taskHubSource, taskIndexMarkers, renderTaskIndex(tasks));
 }
 
-function renderTasksUploadBundle({ buildTimestamp, commitHash, loadedTaskSources, archiveOnly = false }) {
+function renderTasksUploadBundle({ buildTimestamp, commitHash, loadedTaskSources, mode }) {
   const normalized = [...loadedTaskSources]
-    .filter((item) => (archiveOnly ? item.bucket === 'done' : true))
+    .filter((item) => {
+      if (mode === 'archive') {
+        return item.bucket === 'done';
+      }
+      return item.task.metadata.status !== 'done';
+    })
     .sort((a, b) => a.path.localeCompare(b.path));
 
-  const title = archiveOnly ? 'Budio Tasks Archive Full' : 'Budio Tasks Full';
-  const purpose = archiveOnly
-    ? 'Doel: volledige uploadbundle met alle gearchiveerde tasks uit `docs/project/25-tasks/done/**`.'
-    : 'Doel: volledige uploadbundle met alle tasks uit `docs/project/25-tasks/open/**` en `docs/project/25-tasks/done/**`.';
+  const archiveMode = mode === 'archive';
+  const title = archiveMode ? 'Budio Tasks Archive' : 'Budio Current Tasks';
+  const purpose = archiveMode
+    ? 'Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.'
+    : 'Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.';
 
-  const sourceList = archiveOnly
+  const sourceList = archiveMode
     ? ['docs/project/25-tasks/done/**']
-    : ['docs/project/25-tasks/open/**', 'docs/project/25-tasks/done/**'];
+    : ['docs/project/25-tasks/open/**'];
 
   const blocks = [
     renderGeneratedHeader({ title, buildTimestamp, commitHash, purpose }),
@@ -1423,6 +1363,83 @@ function renderTasksUploadBundle({ buildTimestamp, commitHash, loadedTaskSources
       '```',
     );
   }
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderRoadmapPlanningPack({ buildTimestamp, commitHash, loadedRoadmapPlanningPackSources }) {
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio Roadmap Planning Pack',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: uploadklare roadmapbundle voor maandblokken, epicniveau planning en post-basis roadmap review.',
+    }),
+    '',
+    '## Bronbestanden',
+    ...roadmapPlanningPackSources.map((item) => `- ${item.path}`),
+    '',
+    '## Leesregel',
+    '- Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.',
+    '- Canonieke roadmap- en workflowbronnen blijven de handmatige files in `docs/project/20-planning/**` en `docs/dev/**`.',
+    '- Gebruik dit pack wanneer iemand zonder projectcontext de roadmap, maandvolgorde, ROI en templates snel moet begrijpen.',
+    '',
+    '## Gebruik',
+    '- Voor post-basis roadmapreview: upload dit bestand samen met `docs/upload/chatgpt-project-context.md`.',
+    '- Voor nieuwe of herziene maandroadmaps: gebruik de templates uit dit pack en werk de canonieke bronfiles bij.',
+  ];
+
+  for (const source of loadedRoadmapPlanningPackSources) {
+    blocks.push('', '---', '', `## ${source.title}`, '', stripObsidianLinks(source.content));
+  }
+
+  return `${blocks.join('\n').trim()}\n`;
+}
+
+function renderAgentWorkflowDocsToolingPack({
+  buildTimestamp,
+  commitHash,
+  loadedAgentWorkflowDocsToolingSources,
+  budioAiOperatingSystem,
+}) {
+  const blocks = [
+    renderGeneratedHeader({
+      title: 'Budio Agent Workflow and Docs Tooling',
+      buildTimestamp,
+      commitHash,
+      purpose:
+        'Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.',
+    }),
+    '',
+    '## Bronbestanden',
+    ...agentWorkflowDocsToolingSources.map((item) => `- ${item.path}`),
+    `- ${budioAiOperatingSystemSourcePath} (excerpt)`,
+    '',
+    '## Leesregel',
+    '- Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.',
+    '- Gebruik canonieke handmatige docs, `AGENTS.md`, `.agents/skills/**` en `docs/dev/**` als bron.',
+    '- Gebruik deze bundel alleen voor externe review of ChatGPT Project-context rond agent/docs-workflow.',
+    '',
+    '## Upload- en docs-policy kern',
+    '- `docs/upload/**` is generated, upload-only en nooit leidend.',
+    '- Human-facing docs mogen Budio Terminal-visueel zijn zolang plain Markdown blijft werken.',
+    '- Agent-only docs blijven sober en operationeel.',
+    '- De Obsidian vault is `docs/`; de vault-config staat in `docs/.obsidian/`.',
+  ];
+
+  for (const source of loadedAgentWorkflowDocsToolingSources) {
+    blocks.push('', '---', '', `## ${source.title}`, '', stripObsidianLinks(source.content));
+  }
+
+  blocks.push(
+    '',
+    '---',
+    '',
+    '## Budio AI Operating System (excerpt)',
+    '',
+    compactExcerpt(budioAiOperatingSystem, 12000),
+  );
 
   return `${blocks.join('\n').trim()}\n`;
 }
@@ -1464,6 +1481,16 @@ async function loadBundleInputs() {
   }
   validateTasks(loadedTaskSources.map((item) => item.task));
 
+  const loadedRoadmapPlanningPackSources = [];
+  for (const source of roadmapPlanningPackSources) {
+    loadedRoadmapPlanningPackSources.push({ ...source, content: await readText(source.path) });
+  }
+
+  const loadedAgentWorkflowDocsToolingSources = [];
+  for (const source of agentWorkflowDocsToolingSources) {
+    loadedAgentWorkflowDocsToolingSources.push({ ...source, content: await readText(source.path) });
+  }
+
   const agents = await readText('AGENTS.md');
   const openPointsSource = await readText('docs/project/open-points.md');
   const taskHubSource = await readText('docs/project/25-tasks/README.md');
@@ -1483,6 +1510,8 @@ async function loadBundleInputs() {
     loadedPlanningSources,
     loadedIdeaSources,
     loadedTaskSources,
+    loadedRoadmapPlanningPackSources,
+    loadedAgentWorkflowDocsToolingSources,
     openPointsSource,
     taskHubSource,
     appendixSummary: extractAgentsSummary(agents, [
@@ -1528,14 +1557,24 @@ function renderOutputs(inputs, metadata) {
     inputs.taskHubSource,
     taskEntries,
   );
-  const uploadTasksFull = renderTasksUploadBundle({
+  const uploadTasksCurrent = renderTasksUploadBundle({
     ...metadata,
     loadedTaskSources: inputs.loadedTaskSources,
+    mode: 'current',
   });
-  const uploadTasksArchiveFull = renderTasksUploadBundle({
+  const uploadTasksArchive = renderTasksUploadBundle({
     ...metadata,
     loadedTaskSources: inputs.loadedTaskSources,
-    archiveOnly: true,
+    mode: 'archive',
+  });
+  const uploadRoadmapPlanningPack = renderRoadmapPlanningPack({
+    ...metadata,
+    loadedRoadmapPlanningPackSources: inputs.loadedRoadmapPlanningPackSources,
+  });
+  const uploadAgentWorkflowDocsTooling = renderAgentWorkflowDocsToolingPack({
+    ...metadata,
+    loadedAgentWorkflowDocsToolingSources: inputs.loadedAgentWorkflowDocsToolingSources,
+    budioAiOperatingSystem: inputs.budioAiOperatingSystem,
   });
   const loadedProjectSources = inputs.loadedProjectSources.map((source) =>
     source.path === 'docs/project/open-points.md'
@@ -1558,7 +1597,6 @@ function renderOutputs(inputs, metadata) {
     tokenSnapshot: inputs.tokenSnapshot,
     pageMarkdownRefs: inputs.pageMarkdownRefs,
   });
-  const uploadManifest = renderUploadManifest(metadata);
   const primaryProductTruth = renderProductTruthBundle({
     ...metadata,
     loadedProjectSources,
@@ -1628,23 +1666,10 @@ function renderOutputs(inputs, metadata) {
     [outputPaths.uploadStrategyResearchIdeas, primaryStrategyResearchIdeas],
     [outputPaths.uploadBuildAiGovernanceOps, primaryBuildAiGovernanceOps],
     [outputPaths.uploadDesignHandoffTruth, primaryDesignHandoffTruth],
-    [outputPaths.uploadProductTruth, primaryProductTruth],
-    [outputPaths.uploadStrategyResearch, primaryStrategyResearch],
-    [outputPaths.uploadIdeasOpportunity, primaryIdeasOpportunity],
-    [outputPaths.uploadBuildTruth, primaryBuildTruth],
-    [outputPaths.uploadUiDesignTruth, primaryUiDesignTruth],
-    [outputPaths.uploadAiGovernanceOps, primaryAiGovernanceOps],
-    [outputPaths.uploadBudioAiOperatingSystem, `${inputs.budioAiOperatingSystem.trim()}\n`],
-    [outputPaths.uploadBudioResearch, budioResearch],
-    [outputPaths.uploadAiQualityStudio, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/project/ai-quality-studio.md')?.content?.trim() ?? ''}\n`],
-    [outputPaths.uploadClineWorkflow, `${inputs.loadedProjectSources.find((item) => item.path === 'docs/dev/cline-workflow.md')?.content?.trim() ?? ''}\n`],
-    [outputPaths.uploadStitchWorkflow, `${inputs.stitchWorkflow.trim()}\n`],
-    [outputPaths.uploadMvpDesignSpec, `${inputs.mvpDesignSpec.trim()}\n`],
-    [outputPaths.uploadEthosIvoryDesign, `${inputs.ethosDesign.trim()}\n`],
-    [outputPaths.uploadStitchDesignContext, stitchDesignContext],
-    [outputPaths.uploadManifest, uploadManifest],
-    [outputPaths.uploadTasksFull, uploadTasksFull],
-    [outputPaths.uploadTasksArchiveFull, uploadTasksArchiveFull],
+    [outputPaths.uploadRoadmapPlanningPack, uploadRoadmapPlanningPack],
+    [outputPaths.uploadTasksCurrent, uploadTasksCurrent],
+    [outputPaths.uploadTasksArchive, uploadTasksArchive],
+    [outputPaths.uploadAgentWorkflowDocsTooling, uploadAgentWorkflowDocsTooling],
   ]);
 }
 
@@ -1656,6 +1681,8 @@ async function assertRequiredSourcesExist(pageMarkdownRefs) {
     ...planningSources.map((item) => item.path),
     ...ideaSources.map((item) => item.path),
     ...taskSources.map((item) => item.path),
+    ...roadmapPlanningPackSources.map((item) => item.path),
+    ...agentWorkflowDocsToolingSources.map((item) => item.path),
     ...designSources,
     'docs/project/25-tasks/README.md',
     'docs/project/25-tasks/_template.md',

@@ -1,3 +1,12 @@
+---
+title: Projectdocs waarheidshierarchie en operating system
+audience: both
+doc_type: hub
+source_role: canonical
+visual_profile: budio-terminal
+upload_bundle: chatgpt-project-context.md
+---
+
 # Projectdocs — Waarheidshiërarchie en Operating System
 
 Deze map bevat de actieve projectwaarheid voor scope, richting en status,
@@ -9,6 +18,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
+- `docs/project/00-docs-governance/**` = audience, metadata en docs-visual-language afspraken
 
 Regel:
 
@@ -23,6 +33,7 @@ Regel:
 - [[25-tasks/README|Tasks hub]]
 - [[30-research/README|Research hub]]
 - [[40-ideas/README|Ideas workspace]]
+- [[00-docs-governance/README|Docs governance]]
 - [[current-status|Current status]]
 - [[open-points|Open points]]
 
@@ -117,7 +128,25 @@ Regel:
 - open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
 - `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
 
-## 4) Uploadpolicy voor ChatGPT Projects (handmatig)
+## 4) Docs audience en visual language
+
+Gebruik frontmatter om per document vast te leggen voor wie het bedoeld is.
+De afspraken staan in `docs/project/00-docs-governance/README.md`.
+
+```text
+┌───────────────────────┬──────────────────────────────┐
+│ audience              │ gebruik                       │
+├───────────────────────┼──────────────────────────────┤
+│ human                 │ strategie, planning, research │
+│ agent                 │ workflow, skills, instructies │
+│ both                  │ hubs, status, shared truth    │
+└───────────────────────┴──────────────────────────────┘
+```
+
+Human-facing docs mogen een duidelijke Budio Terminal-smaaklaag krijgen.
+Agent-only docs blijven sober en operationeel.
+
+## 5) Uploadpolicy voor ChatGPT Projects (handmatig)
 
 Gebruik altijd eerst:
 
@@ -126,27 +155,21 @@ Gebruik altijd eerst:
 Daarna upload je alleen de kleinste relevante subset uit het uploadmanifest.
 Upload niet standaard de volledige set.
 
-Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal:
+`docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal.
+
+De primaire aanbevolen subset blijft klein:
 
 1. `docs/upload/chatgpt-project-context.md`
-2. `docs/upload/10-budio-core-product-and-planning.md`
-3. `docs/upload/20-budio-strategy-research-and-ideas.md`
-4. `docs/upload/30-budio-build-ai-governance-and-operations.md`
-5. `docs/upload/40-budio-design-handoff-and-truth.md`
+2. kies daarna alleen de relevante domeinbundle uit het manifest
 
 Reden:
 
 - bootstrap blijft apart en verplicht
-- overige bundels zijn logisch samengevoegd in 4 domeinbundels
+- domeinbundels zijn logisch samengevoegd en use-case gestuurd
 - use-case subsets en volledigheidscheck staan in `docs/upload/00-budio-upload-manifest.md`
-- het uploadmanifest is lokale referentie/completeness-check en geen verplicht onderdeel van de primaire aanbevolen handmatige uploadset
-- volledige set alleen gebruiken voor brede strategie-, audit- of totaalreviews
+- volledige set alleen gebruiken voor brede strategie-, audit-, roadmap- of totaalreviews
 
-Legacy compatibiliteit:
-
-- Bestaande legacy uploadfiles blijven beschikbaar voor bestaande workflows, maar zijn niet de primaire aanbevolen handmatige uploadset.
-
-## 5) Wat je normaal niet hoeft te uploaden
+## 6) Wat je normaal niet hoeft te uploaden
 
 - `docs/project/archive/**`
 - `docs/design/archive/**`
@@ -154,14 +177,14 @@ Legacy compatibiliteit:
 - `docs/project/25-tasks/**`
 - setup/run-notities zonder canonieke productwaarheid
 
-## 6) Onderhoudsflow
+## 7) Onderhoudsflow
 
 1. Werk eerst de handmatige canonieke docs bij.
 2. Draai `npm run docs:bundle`.
 3. Controleer met `npm run docs:bundle:verify`.
 4. Commit canonieke docs + generated output samen.
 
-## 7) Werken met ChatGPT Projects + Cline
+## 8) Werken met ChatGPT Projects + Cline
 
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
 - **Cline in VS Code**: repo-analyse, plan, wijzigingen, verify en commit.
@@ -182,7 +205,7 @@ Legacy compatibiliteit:
   - `docs/project/current-status.md` alleen voor bewijsbare statusrealiteit
   - niet in productdocs als toolingsruis
 
-## 8) Repo-eigen Memory Bank (workflow, geen extra waarheid)
+## 9) Repo-eigen Memory Bank (workflow, geen extra waarheid)
 
 Deze repo gebruikt een lichte memory-bank workflow als uitvoerhulp, zonder tweede waarheidshiërarchie.
 

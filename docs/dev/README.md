@@ -1,3 +1,12 @@
+---
+title: Dev docs hub
+audience: agent
+doc_type: hub
+source_role: operational
+visual_profile: plain
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
 # Dev docs hub
 
 ## Doel
@@ -14,6 +23,7 @@ Navigatie voor operationele workflowdocs en tijdelijke context.
 - [[active-context|Active context]]
 - [[idea-lifecycle-workflow|Idea lifecycle workflow]]
 - [[local-auth-smoke-workflow|Local auth smoke workflow]]
+- [[../setup/developer-docs-environment|Developer docs environment]]
 
 ## Historische en lokale notities
 

@@ -1,3 +1,12 @@
+---
+title: Step 0 readiness check
+audience: human
+doc_type: setup
+source_role: operational
+visual_profile: plain
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
 Status: Setup referentie
 Zie: docs/project/current-status.md
 

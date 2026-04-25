@@ -1,3 +1,12 @@
+---
+title: AI Quality Studio
+audience: both
+doc_type: ai-governance
+source_role: canonical
+visual_profile: plain
+upload_bundle: 30-budio-build-ai-governance-and-operations.md
+---
+
 # AI Quality Studio (Canoniek)
 
 ## Canonieke status

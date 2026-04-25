@@ -2,8 +2,8 @@
 
 # Budio Research
 
-Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
-Source Commit: c32c098
+Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
+Source Commit: 53f227f
 
 Doel: geordende researchbundle als strategische input voor planherijking, zonder canonieke MVP-docs te overschrijven.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -25,6 +25,15 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 ---
 
 ## README
+
+---
+title: Research hub
+audience: human
+doc_type: hub
+source_role: reference
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
 
 # Research hub
 
@@ -850,6 +859,15 @@ Budio Vandaag wordt een laagdrempelige capture-ingang, en Budio Pro wordt de laa
 
 ## Budio Podcaster Solo Expert Wedge Plan
 
+---
+title: Budio podcaster solo-expert wedge plan
+audience: human
+doc_type: research
+source_role: reference
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Budio — scherpe podcaster / solo-expert wedge uitgewerkt
 
 ## Doel van dit document
@@ -870,6 +888,26 @@ Het doel is niet om “nog een AI social tool” te maken, maar een productflow 
 - veel ruwe input heeft
 - zichtbaar wil zijn
 - en vastloopt tussen idee en publiceerbare output
+
+```text
+╭──────────────────────────────────────────────────────────────╮
+│ WEDGE SCAN                                                   │
+├──────────────────────────────────────────────────────────────┤
+│ TARGET     podcasters, solo experts, coaches, consultants    │
+│ PAIN       veel ruwe input, weinig herhaalbare outputflow    │
+│ PROMISE    denk hardop -> publiceerbare concepten            │
+│ LIMIT      review-first, geen brede autopost-machine         │
+╰──────────────────────────────────────────────────────────────╯
+```
+
+```mermaid
+flowchart LR
+  Raw[Ruwe input] --> Capture[Capture]
+  Capture --> Shape[Structuur + formats]
+  Shape --> Review[Review queue]
+  Review --> Export[Export / publish-ready copy]
+  Review -. menselijke controle .-> Improve[Format learning]
+```
 
 ---
 

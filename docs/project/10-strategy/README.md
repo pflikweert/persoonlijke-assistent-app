@@ -1,3 +1,12 @@
+---
+title: Strategy hub
+audience: human
+doc_type: hub
+source_role: operational
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Strategy hub
 
 ## Doel

@@ -10,7 +10,7 @@ summary: "Breid de nieuwe gallery-smoke basis uit naar een volledige end-user E2
 tags: [qa, tests, gallery, photos, e2e]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context
@@ -18,6 +18,7 @@ sort_order: 1
 De eerste gallery QA-basis bewijst de kerninteractie voor thumbnail-reorder en legt unit/smoke-infra neer. De volledige end-user dekking voor alle gallery-flows bestaat nog niet.
 
 Voor toekomstige gallery-wijzigingen willen we kunnen kiezen tussen:
+
 - een snelle smoke-test die bewijst dat de belangrijkste interactie niet kapot is
 - een volledige end-user test die alle vastgelegde use cases en unhappy paths doorloopt
 

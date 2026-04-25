@@ -18,6 +18,7 @@ sort_order: 3
 De nieuwe thumbnail reorder-flow werkt niet goed in productie. Bij het slepen van een thumbnail in de galerij blijft de foto hangen op zijn oude positie, waardoor de volgorde voor de gebruiker niet betrouwbaar of intuïtief aanvoelt.
 
 Daarnaast is de copy/presentatie van de thumbnail-indicatie nu te zwaar:
+
 - de `Thumbnail`-tag op de grote foto onder de samenvatting is daar niet nodig
 - tekstlabels in de galerij voegen onrust toe; een kleine icon-only indicatie past beter
 

@@ -1,3 +1,12 @@
+---
+title: UI modals
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # UI modals, sheets en overlays
 
 Doel van deze pagina: één verwijspagina voor alle huidige modal-/sheet-/overlaypatronen in de app.

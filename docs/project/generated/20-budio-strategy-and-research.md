@@ -2,8 +2,8 @@
 
 # Budio Strategy and Research
 
-Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
-Source Commit: c32c098
+Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
+Source Commit: 53f227f
 
 Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -30,6 +30,15 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 ## README
 
+---
+title: Strategy hub
+audience: human
+doc_type: hub
+source_role: operational
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Strategy hub
 
 ## Doel
@@ -52,11 +61,31 @@ Navigatiehub voor strategische richting en horizonkeuzes.
 
 ## Long Term Strategy
 
+---
+title: Lange termijn strategie
+audience: human
+doc_type: strategy
+source_role: canonical
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Lange termijn strategie (Horizon)
 
 ## Doel
 
 Deze strategie beschrijft de duurzame richting van Budio over meerdere fases heen.
+
+```text
+╔════════════════════════════════════════════════════════════╗
+║ BUDIO STRATEGY TERMINAL                                  ║
+╠════════════════════════════════════════════════════════════╣
+║ NORTH STAR   capture-first thinking tool                 ║
+║ PUBLIC WEDGE builders / podcasters / solo experts        ║
+║ CONTROL      AIQS as governance layer                    ║
+║ FUTURE       Jarvis later, not as public promise now     ║
+╚════════════════════════════════════════════════════════════╝
+```
 
 ## Richting
 
@@ -68,6 +97,16 @@ Deze strategie beschrijft de duurzame richting van Budio over meerdere fases hee
 4. Publieke productontwikkeling prioriteert podcast- en builder-use-cases.
 5. AIQS ontwikkelt door als governance/control plane, niet als eindgebruikerschat.
 6. Jarvis is geen actieve publieke productbelofte in de komende jaren zonder expliciet nieuw besluit.
+
+```mermaid
+flowchart LR
+  A[Capture-first core] --> B[Consumer beta proof]
+  B --> C[Builder/podcast wedge]
+  C --> D[Knowledge Hub + AIQS]
+  D --> E[Workspace structure]
+  E --> F[Jarvis-ready context]
+  F -. not public now .-> G[Future Jarvis track]
+```
 
 ## Obsidian links
 
@@ -188,6 +227,15 @@ Korte index die uitlegt hoe de researchset gelezen en gebruikt wordt.
 ---
 
 ## README
+
+---
+title: Research hub
+audience: human
+doc_type: hub
+source_role: reference
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
 
 # Research hub
 
@@ -1013,6 +1061,15 @@ Budio Vandaag wordt een laagdrempelige capture-ingang, en Budio Pro wordt de laa
 
 ## Budio Podcaster Solo Expert Wedge Plan
 
+---
+title: Budio podcaster solo-expert wedge plan
+audience: human
+doc_type: research
+source_role: reference
+visual_profile: budio-terminal
+upload_bundle: 20-budio-strategy-research-and-ideas.md
+---
+
 # Budio — scherpe podcaster / solo-expert wedge uitgewerkt
 
 ## Doel van dit document
@@ -1033,6 +1090,26 @@ Het doel is niet om “nog een AI social tool” te maken, maar een productflow 
 - veel ruwe input heeft
 - zichtbaar wil zijn
 - en vastloopt tussen idee en publiceerbare output
+
+```text
+╭──────────────────────────────────────────────────────────────╮
+│ WEDGE SCAN                                                   │
+├──────────────────────────────────────────────────────────────┤
+│ TARGET     podcasters, solo experts, coaches, consultants    │
+│ PAIN       veel ruwe input, weinig herhaalbare outputflow    │
+│ PROMISE    denk hardop -> publiceerbare concepten            │
+│ LIMIT      review-first, geen brede autopost-machine         │
+╰──────────────────────────────────────────────────────────────╯
+```
+
+```mermaid
+flowchart LR
+  Raw[Ruwe input] --> Capture[Capture]
+  Capture --> Shape[Structuur + formats]
+  Shape --> Review[Review queue]
+  Review --> Export[Export / publish-ready copy]
+  Review -. menselijke controle .-> Improve[Format learning]
+```
 
 ---
 

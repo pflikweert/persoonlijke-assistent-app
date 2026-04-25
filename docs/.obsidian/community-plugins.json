@@ -1,5 +1,7 @@
 [
   "obsidian-meta-bind-plugin",
   "pretty-properties",
-  "3d-graph"
+  "3d-graph",
+  "mermaid-tools",
+  "mermaid-icons"
 ]
