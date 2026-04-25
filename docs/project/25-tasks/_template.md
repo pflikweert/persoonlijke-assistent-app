@@ -35,6 +35,29 @@ Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 
 - Werk dat bewust niet in deze taak zit.
 
+## Oorspronkelijk plan / afgesproken scope
+
+- Leg hier bij niet-triviale taken het oorspronkelijke goedgekeurde plan of de afgesproken hoofdscope vast.
+
+## Expliciete user requirements / detailbehoud
+
+- Leg hier concrete user-details vast die later nog relevant zijn voor bouwen, review of acceptatie en niet mogen verdwijnen in alleen een samenvatting.
+
+## Status per requirement
+
+- [ ] Requirement A — status: gebouwd / gedeeltelijk / niet gebouwd / user-review nodig
+- [ ] Requirement B — status: gebouwd / gedeeltelijk / niet gebouwd / user-review nodig
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Leg hier aanvullingen, regressiefixes of polish vast die tijdens uitvoering bijkomen zonder het oorspronkelijke plan te vervangen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [ ] Blok 2: kleinste bronwijziging of primair artefact uitvoeren.
+- [ ] Blok 3: gerichte verify en task/docs afronden.
+
 ## Concrete checklist
 
 - [ ] Eerste concrete stap
@@ -47,6 +70,13 @@ Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 ## Verify / bewijs
 
 - Noem hier de relevante verify-, runtime- of doc-bewijzen.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: wat was de afgesproken hoofdscope?
+- Toegevoegde verbeteringen: wat kwam er later bij?
+- Afgerond: wat is klaar?
+- Open / blocked: wat staat nog open of is bewust doorgeschoven?
 
 ## Relevante links
 

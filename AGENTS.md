@@ -54,6 +54,9 @@ Voor AI-gedrag, prompting en evaluatie:
 - Geen feature creep buiten de vastgelegde scope.
 - Werk cheap-first: kleinste werkende wijziging eerst.
 - Houd taken klein en scherp afgebakend.
+- Bepaal bij elke inhoudelijke repo-taak zelf de efficiëntste uitvoerblokken/fases op basis van huidige agent/model, taaktype, risico, dirty worktree, verificatiekosten en afhankelijkheden.
+- Vraag de gebruiker niet om fasering tenzij er een echte product-, planning- of architectuurtradeoff is; kies anders zelf de kleinste veilige blokken en leg die vast in taskfile, plan of eerste inhoudelijke update.
+- Standaardblok voor niet-triviaal werk: preflight/context/taskflow -> kleinste bronwijziging -> gerichte verify -> docs/taskstatus/bundel afronden. Voor grotere docs/roadmaptaken: research -> template/workflow -> primair artefact -> bundel -> verify.
 - Gebruik bestaande patronen in de repo vóór nieuwe patronen.
 - Simpeler maken of iets weghalen is een volwaardige oplossing: kijk bij code en UI eerst naar minder copy, minder surface, minder state en minder custom interactielagen voordat je complexiteit toevoegt.
 - Tijdelijk complexer onderzoeken mag om het probleem te begrijpen, maar schaal daarna actief terug naar de simpelste werkende oplossing.
@@ -83,6 +86,8 @@ Voor AI-gedrag, prompting en evaluatie:
   - `docs/dev/**` = operationele workflowafspraken
   - `docs/project/generated/**` + `docs/design/generated/**` = generated output, nooit canonieke bron
   - `docs/upload/**` = generated uploadartefacten, nooit canonieke bron
+- Audience en docs-visual-language staan in `docs/project/00-docs-governance/README.md`.
+- `docs/` is ook de lokale Obsidian vault; developer tooling staat in `docs/setup/developer-docs-environment.md`.
 - `docs/project/generated/**` en `docs/design/generated/**` zijn geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
 - `docs/upload/chatgpt-project-context.md` is uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects.
 - `docs/upload/**` is geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
@@ -104,27 +109,51 @@ Voor AI-gedrag, prompting en evaluatie:
 - Always-on taskflow (verplicht voor alle inhoudelijke agenttaken):
   - geldt voor plan/research/bug/implementatie binnen repo-context
   - uitzondering: pure chat of simpele read-only vraag zonder uitvoertaak
-  - preflight: vind eerst een bestaande taskfile; maak alleen buiten Plan Mode een nieuwe taskfile uit `docs/project/25-tasks/_template.md`
+  - preflight: zoek eerst naar een passende bestaande taskfile; maak bij duidelijke nieuwe scope anders direct een nieuwe taskfile uit `docs/project/25-tasks/_template.md`
   - geen inhoudelijk plan, research-antwoord of implementatiestart zonder taskfile
-  - in Plan Mode: gebruik altijd eerst een bestaande taskfile
-  - in Plan Mode: maak nooit automatisch een nieuwe taskfile aan
-  - als in Plan Mode geen passende bestaande taskfile bestaat: blokkeer inhoudelijk, meld dit expliciet, en maak pas buiten Plan Mode een nieuwe task
+  - in Plan Mode: gebruik eerst een passende bestaande taskfile wanneer die er duidelijk is
+  - in Plan Mode: maak bij duidelijke nieuwe scope automatisch een nieuwe taskfile aan
+  - vraag alleen nog bij echte twijfel: meerdere plausibele bestaande tasks, onduidelijke scope-routing, of onduidelijk task-vs-idea/epic
   - buiten Plan Mode: als taskfile ontbreekt, maak die eerst aan en ga pas daarna verder met plan/research/uitvoering
   - wanneer een taak automatisch wordt aangemaakt: plaats die direct bovenaan de doel-lane door `sort_order` van die lane te herschrijven en de nieuwe taak op positie `1` te zetten
   - wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: plaats die direct bovenaan de `in_progress` lane door `sort_order` van bron- en doellane opnieuw doorlopend op te slaan
   - zet status direct op `in_progress` zodra uitvoering start
+  - kies en benoem bij inhoudelijke uitvoering de compacte uitvoerblokken/fases; leg die bij voorkeur vast in de taskfile-sectie `Uitvoerblokken / fasering`
   - eerste inhoudelijke update bevat altijd:
     - `Task: <taaktitel>`
     - `Task file: <pad naar task md>`
     - `Status: <huidige status>`
   - werk tijdens uitvoering checklist + `updated_at` bij op echte voortgang
   - elk inhoudelijk plan noemt expliciet de concrete taskfile-path
-  - elk inhoudelijk Plan Mode-plan bevat een korte `Taskflow summary`: welke bestaande taskfile gebruikt wordt, welke statuswijziging verwacht wordt, en wanneer extra werk een eigen task krijgt
+  - elk inhoudelijk Plan Mode-plan bevat een korte `Taskflow summary`: welke taskfile gebruikt of aangemaakt wordt, welke statuswijziging verwacht wordt, en wanneer extra werk een eigen task krijgt
   - verbeteringen die direct voortkomen uit testen van dezelfde flow blijven in dezelfde task; nieuw niet-relevant werk krijgt een eigen task
   - updates en eindresultaat bevatten altijd:
     - `Task: <taaktitel>`
     - `Task file: <pad naar task md>`
     - `Status: <huidige status>`
+- planintegriteit is verplicht:
+  - een goedgekeurd oorspronkelijk plan of expliciet afgestemde hoofdscope blijft tijdens uitvoering het vaste referentiepunt
+  - vervang of verklein het oorspronkelijke plan nooit stilzwijgend tijdens bouwen, testen of polish-rondes
+  - nieuwe feedback, regressies of verbeteringen tijdens uitvoering gelden standaard als **aanvulling op het bestaande plan**, niet als vervanging ervan, tenzij de gebruiker expliciet de hoofdscope wijzigt
+  - leg het oorspronkelijke plan bij niet-triviale taken expliciet vast in de taskfile onder `## Oorspronkelijk plan / afgesproken scope`
+  - leg extra werk dat tijdens uitvoering ontstaat expliciet vast onder `## Toegevoegde verbeteringen tijdens uitvoering`
+  - voer vóór afronding altijd een expliciete **plan reconciliation** uit in de taskfile:
+    - wat was het oorspronkelijke plan?
+    - wat is daarvan afgerond?
+    - wat is later toegevoegd?
+    - wat blijft nog open of blocked?
+  - markeer een taak nooit impliciet als klaar alleen omdat het laatste subprobleem is opgelost; afronding mag pas wanneer oorspronkelijke planpunten én later toegevoegde verbeteringen expliciet zijn gereconcilieerd
+  - alleen de gebruiker mag de oorspronkelijke hoofdscope inhoudelijk herdefiniëren of verkleinen
+  - expliciete user-details of requirement-punten met latere uitvoer-, bouw- of reviewwaarde mogen niet verdwijnen in alleen een samenvatting
+  - leg zulke details bij niet-triviale taken expliciet vast in de taskfile onder `## Expliciete user requirements / detailbehoud`
+  - leg per requirement vast of die:
+    - gebouwd is
+    - gedeeltelijk gebouwd is
+    - nog niet gebouwd is
+    - in code aanwezig is maar nog user-review nodig heeft
+  - wanneer een gebruiker vraagt om een bestaande task te verrijken met gemiste detailrequirements, moet de taskfile die details expliciet opnemen en niet alleen de conclusie van een review
+  - wanneer een gebruiker een bestaand uitgebreid plan of genummerde requirements expliciet laat opnemen in een taskfile, moet die bronstructuur letterlijk of nagenoeg letterlijk bewaard blijven onder een aparte bron-/detailsectie
+  - een afgeleide review, samenvatting of statusmatrix mag de bronstructuur nooit vervangen; bronplan, detailrequirements en reviewconclusie zijn aparte lagen
   - afronding vereist:
     - status `done`
     - verplaatsing naar `docs/project/25-tasks/done/`
@@ -236,7 +265,8 @@ Bij wijzigingen aan canonieke docs:
 - `docs/project/generated/**` en `docs/design/generated/**` zijn generated output; gebruik deze mappen niet als canonieke agentbron.
 - In ChatGPT Projects: gebruik na de bootstrap alleen de kleinste relevante subset uit het uploadmanifest; upload niet standaard de volledige set.
 - De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT Projects gebeurt nu nog niet automatisch.
-- De primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal.
+- `docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal; upload per ChatGPT Project-context alleen de kleinste relevante subset uit het manifest.
+- Human-facing docs mogen een Budio Terminal-smaaklaag gebruiken zolang plain Markdown leesbaar blijft; agent-only docs blijven sober.
 - Budgetpolicy in ChatGPT Project-context blijft licht; token/cost/runtime-discipline hoort in repo-/runtime-/AI-governance-docs.
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 - Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.

@@ -1,3 +1,12 @@
+---
+title: Cline workflow
+audience: agent
+doc_type: workflow
+source_role: operational
+visual_profile: plain
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
 # Cline workflow (operationeel)
 
 ## Doel
@@ -117,10 +126,10 @@ Plan mode heft de taskfile-verplichting niet op:
 
 Extra repo-regel voor Plan Mode:
 
-- gebruik in Plan Mode altijd eerst een **bestaande** taskfile
-- maak in Plan Mode nooit automatisch een nieuwe task aan
-- bestaat er geen passende bestaande task, blokkeer inhoudelijk en meld dat expliciet
-- een nieuwe task mag pas buiten Plan Mode worden aangemaakt
+- gebruik in Plan Mode eerst een **bestaande** taskfile wanneer daar een duidelijke match voor is
+- maak in Plan Mode bij duidelijke nieuwe scope automatisch een nieuwe task aan vanuit `_template.md`
+- vraag alleen bij echte twijfel: meerdere plausibele tasks, onduidelijke scope-routing of onduidelijk task-vs-idea
+- `Taskflow summary` mag dus ook een nieuw aangemaakte task noemen
 
 ## Wanneer Act mode
 
@@ -131,6 +140,13 @@ Gebruik Act mode voor:
 - verify en afronding
 
 ## Promptpatronen
+
+### Uitvoerblokken
+
+- Cline/Codex bepaalt bij elke inhoudelijke taak zelf de efficiëntste blokken op basis van huidige agent/model, taaktype, risico, dirty worktree, verificatiekosten en afhankelijkheden.
+- Vraag de gebruiker niet om fasering tenzij er een echte product-, planning- of architectuurtradeoff is.
+- Default: preflight/context/taskflow -> kleinste bronwijziging -> gerichte verify -> docs/taskstatus/bundel afronden.
+- Voor grotere docs/roadmaptaken: research -> template/workflow -> primair artefact -> bundel -> verify.
 
 ### Kleine fixes
 
@@ -144,6 +160,13 @@ Gebruik Act mode voor:
 - Maak of vind vóór het plan eerst de taskfile.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
+- Behandel het laatst besproken subprobleem nooit automatisch als de nieuwe hoofdscope.
+- Leg bij niet-triviale taken het **oorspronkelijke plan / afgesproken scope** expliciet vast in de taskfile en houd die sectie stabiel tijdens uitvoering.
+- Leg expliciete user-details met latere uitvoer- of reviewwaarde vast onder een aparte requirement-sectie in de taskfile; alleen een samenvatting is niet genoeg.
+- Maak onderscheid tussen review-uitkomst en requirement-uitkomst: de taskfile moet niet alleen de conclusie bevatten, maar ook de concrete requirement-details waarop die conclusie rust.
+- Als de gebruiker een bestaand uitgebreid plan of detailblok expliciet in de taskfile wil terugzien, moet dat bronblok als eigen sectie behouden blijven; een statusreview of samenvatting mag dat niet vervangen.
+- Leg latere regressies, polish of user-correcties vast als **toegevoegde verbeteringen tijdens uitvoering**, tenzij de gebruiker expliciet de hoofdscope wijzigt.
+- Rond een taak pas af na een expliciete **plan reconciliation**: oorspronkelijk plan, later toegevoegd werk en resterende open punten moeten allemaal zichtbaar zijn.
 
 ## Verify-regel
 
@@ -160,7 +183,9 @@ Gebruik Act mode voor:
 - Gebruik na de bootstrap alleen de kleinste relevante subset uit `docs/upload/00-budio-upload-manifest.md`.
 - Upload niet standaard de volledige set.
 - Bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.
-- Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal.
+- `docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal; upload per ChatGPT Project-context alleen de kleinste relevante subset uit het manifest.
+- Audience-metadata en Budio Terminal-regels staan in `docs/project/00-docs-governance/README.md`.
+- Developer docs-tooling en Obsidian vault setup staan in `docs/setup/developer-docs-environment.md`.
 - Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance-docs.
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 

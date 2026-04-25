@@ -2,14 +2,15 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-24T18:42:06.530Z
-Source Commit: c32c098
+Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
+Source Commit: 53f227f
 
 Doel: uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects, afgeleid van canonieke projectdocs.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
 
 ## Bronbestanden (vaste volgorde)
 - docs/project/README.md
+- docs/project/00-docs-governance/README.md
 - docs/project/master-project.md
 - docs/project/product-vision-mvp.md
 - docs/project/current-status.md
@@ -33,6 +34,15 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 ## Docs-Hiërarchie Samenvatting
 
+---
+title: Projectdocs waarheidshierarchie en operating system
+audience: both
+doc_type: hub
+source_role: canonical
+visual_profile: budio-terminal
+upload_bundle: chatgpt-project-context.md
+---
+
 # Projectdocs — Waarheidshiërarchie en Operating System
 
 Deze map bevat de actieve projectwaarheid voor scope, richting en status,
@@ -44,6 +54,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
+- `docs/project/00-docs-governance/**` = audience, metadata en docs-visual-language afspraken
 
 Regel:
 
@@ -58,6 +69,7 @@ Regel:
 - Tasks hub
 - Research hub
 - Ideas workspace
+- Docs governance
 - Current status
 - Open points
 
@@ -152,7 +164,25 @@ Regel:
 - open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
 - `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
 
-## 4) Uploadpolicy voor ChatGPT Projects (handmatig)
+## 4) Docs audience en visual language
+
+Gebruik frontmatter om per document vast te leggen voor wie het bedoeld is.
+De afspraken staan in `docs/project/00-docs-governance/README.md`.
+
+```text
+┌───────────────────────┬──────────────────────────────┐
+│ audience              │ gebruik                       │
+├───────────────────────┼──────────────────────────────┤
+│ human                 │ strategie, planning, research │
+│ agent                 │ workflow, skills, instructies │
+│ both                  │ hubs, status, shared truth    │
+└───────────────────────┴──────────────────────────────┘
+```
+
+Human-facing docs mogen een duidelijke Budio Terminal-smaaklaag krijgen.
+Agent-only docs blijven sober en operationeel.
+
+## 5) Uploadpolicy voor ChatGPT Projects (handmatig)
 
 Gebruik altijd eerst:
 
@@ -161,27 +191,21 @@ Gebruik altijd eerst:
 Daarna upload je alleen de kleinste relevante subset uit het uploadmanifest.
 Upload niet standaard de volledige set.
 
-Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal:
+`docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal.
+
+De primaire aanbevolen subset blijft klein:
 
 1. `docs/upload/chatgpt-project-context.md`
-2. `docs/upload/10-budio-core-product-and-planning.md`
-3. `docs/upload/20-budio-strategy-research-and-ideas.md`
-4. `docs/upload/30-budio-build-ai-governance-and-operations.md`
-5. `docs/upload/40-budio-design-handoff-and-truth.md`
+2. kies daarna alleen de relevante domeinbundle uit het manifest
 
 Reden:
 
 - bootstrap blijft apart en verplicht
-- overige bundels zijn logisch samengevoegd in 4 domeinbundels
+- domeinbundels zijn logisch samengevoegd en use-case gestuurd
 - use-case subsets en volledigheidscheck staan in `docs/upload/00-budio-upload-manifest.md`
-- het uploadmanifest is lokale referentie/completeness-check en geen verplicht onderdeel van de primaire aanbevolen handmatige uploadset
-- volledige set alleen gebruiken voor brede strategie-, audit- of totaalreviews
+- volledige set alleen gebruiken voor brede strategie-, audit-, roadmap- of totaalreviews
 
-Legacy compatibiliteit:
-
-- Bestaande legacy uploadfiles blijven beschikbaar voor bestaande workflows, maar zijn niet de primaire aanbevolen handmatige uploadset.
-
-## 5) Wat je normaal niet hoeft te uploaden
+## 6) Wat je normaal niet hoeft te uploaden
 
 - `docs/project/archive/**`
 - `docs/design/archive/**`
@@ -189,14 +213,14 @@ Legacy compatibiliteit:
 - `docs/project/25-tasks/**`
 - setup/run-notities zonder canonieke productwaarheid
 
-## 6) Onderhoudsflow
+## 7) Onderhoudsflow
 
 1. Werk eerst de handmatige canonieke docs bij.
 2. Draai `npm run docs:bundle`.
 3. Controleer met `npm run docs:bundle:verify`.
 4. Commit canonieke docs + generated output samen.
 
-## 7) Werken met ChatGPT Projects + Cline
+## 8) Werken met ChatGPT Projects + Cline
 
 - **ChatGPT Projects**: strategie, review en promptontwerp buiten repo-uitvoering.
 - **Cline in VS Code**: repo-analyse, plan, wijzigingen, verify en commit.
@@ -217,7 +241,7 @@ Legacy compatibiliteit:
   - `docs/project/current-status.md` alleen voor bewijsbare statusrealiteit
   - niet in productdocs als toolingsruis
 
-## 8) Repo-eigen Memory Bank (workflow, geen extra waarheid)
+## 9) Repo-eigen Memory Bank (workflow, geen extra waarheid)
 
 Deze repo gebruikt een lichte memory-bank workflow als uitvoerhulp, zonder tweede waarheidshiërarchie.
 
@@ -244,7 +268,119 @@ Regels:
 
 ---
 
+## Docs Governance
+
+---
+title: Docs governance, audience en visual language
+audience: both
+doc_type: governance
+source_role: canonical
+visual_profile: budio-terminal
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
+# Docs governance, audience en visual language
+
+## Doel
+
+Deze laag maakt expliciet voor wie een document bedoeld is, hoe het gelezen
+moet worden en wanneer visuele verrijking waarde toevoegt.
+
+```text
+╔══════════════════════════════════════════════════════════════════╗
+║ BUDIO DOCS TERMINAL                                             ║
+╠══════════════════════════════════════════════════════════════════╣
+║ MODE        docs-governance                                     ║
+║ RULE        serious first, nerdy enough                         ║
+║ RENDER      plain Markdown baseline, richer in Obsidian/VS Code ║
+║ BOUNDARY    no IP-copy, no gimmick overload                     ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+## Metadata-contract
+
+Nieuwe of actieve handmatige docs krijgen frontmatter wanneer ze onderdeel zijn
+van projectwaarheid, planning, research, ideas, setup of workflow.
+
+Vaste velden:
+
+| Veld | Waarden | Betekenis |
+| --- | --- | --- |
+| `title` | vrije titel | Menselijke titel voor vault, bundler en uploadcontext. |
+| `audience` | `human`, `agent`, `both` | Primaire lezer: gebruiker/founder, agent/AI, of allebei. |
+| `doc_type` | vrije korte categorie | Bijvoorbeeld `hub`, `strategy`, `planning`, `research`, `workflow`, `setup`. |
+| `source_role` | `canonical`, `operational`, `reference`, `generated`, `archive` | Waarheidsrol van het document. |
+| `visual_profile` | `plain`, `budio-terminal`, `diagram-first` | Hoe rijk de Markdown visueel mag zijn. |
+| `upload_bundle` | uploadbestandsnaam of `none` | In welke generated uploadcontext het document terecht hoort. |
+
+## Audience-regels
+
+- `human`: uitleg, strategie, planning, roadmap, ideeën en besliscontext voor mensen.
+- `agent`: uitvoeringsregels, skills, checklists en technische workflow voor agents.
+- `both`: docs die mensen en agents allebei nodig hebben als gedeelde waarheid.
+
+Regel: als een document vooral een agent moet sturen, voeg geen extra sfeerlaag
+toe. Als een document een mens moet meenemen in strategie of planning, mag het
+wel visueel meer karakter krijgen.
+
+## Budio Terminal visual profile
+
+De Budio Terminal-stijl is een interne docs-smaaklaag, geen productdesignsystem.
+Hij is geinspireerd door retro terminals en mission-control interfaces, maar
+kopieert geen bestaande serie, game of IP.
+
+Gebruik:
+
+- terminalpanelen met `text` codeblocks voor status, sequencing en prioriteit
+- Mermaid-diagrammen voor flow, dependencies en roadmapstructuur
+- compacte radar/mission-control blokken voor menselijke oriëntatie
+- normale Markdown als basis, zodat lezen zonder plugin altijd werkt
+
+Niet gebruiken:
+
+- animatie als harde afhankelijkheid
+- HTML/CSS die in ChatGPT, GitHub of Obsidian slecht degradeert
+- gimmicks die de inhoud overheersen
+- productcopy richting app-eindgebruikers
+
+## Portable rendering
+
+```mermaid
+flowchart LR
+  A[Plain Markdown] --> B[VS Code preview]
+  A --> C[Obsidian vault]
+  B --> D[Mermaid preview as plus]
+  C --> E[Native Mermaid rendering]
+  A --> F[ChatGPT upload]
+```
+
+Baseline:
+
+- elk document blijft leesbaar als ruwe Markdown
+- Mermaid is handig voor preview, maar de omliggende tekst moet de boodschap ook dragen
+- uploadbundels blijven `.md`-bestanden zonder assets of runtime-afhankelijkheden
+
+## Folderstructuur-regel
+
+We doen nu geen brede foldermigratie. Metadata en bundling lossen de verwarring
+goedkoper en veiliger op.
+
+Een mogelijke folderherziening krijgt pas vervolg na bewijs uit deze fase.
+Daarvoor bestaat de blocked task:
+`docs/project/25-tasks/open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md`.
+
+---
+
 ## Hoofd Projectdocument
+
+---
+title: Persoonlijke Assistent App Master Project
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Persoonlijke Assistent App — Master Project (Canoniek)
 
@@ -416,6 +552,15 @@ In de huidige fase blijft leidend:
 
 ## Productvisie Aanscherping
 
+---
+title: Productvisie MVP
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # Persoonlijke Assistent App — Productvisie Aanscherping (MVP)
 
 ## Doel
@@ -543,6 +688,15 @@ Zolang deze lagen niet productmatig bewezen en expliciet in scope zijn, blijven 
 ---
 
 ## Actuele Gebouwde Status
+
+---
+title: Current Status
+audience: both
+doc_type: status
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Current Status — Codegevalideerd
 
@@ -713,6 +867,15 @@ De release-1 kernlus is aantoonbaar gebouwd. Daarnaast is een admin-only setting
 
 ## Open Punten / Resterend Werk
 
+---
+title: Open Points
+audience: both
+doc_type: status
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
+
 # Open Points — Resterend Werk
 
 ## Doel
@@ -724,15 +887,19 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Backlog | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
 | [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Backlog | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
 | [Entry photo gallery volledige end-user E2E flows](25-tasks/open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | Ready | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
+| [Moment detail foto-upload productieflakiness onderzoeken](25-tasks/open/moment-detail-foto-upload-productieflakiness-onderzoek.md) | Ready | p1 | transitiemaand-consumer-beta | Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een upload met de vaste agent-testaccount werkt betrouwbaar... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
-| [Moment detail foto reorder + thumbnail-logica en audio test auto-stop](25-tasks/open/moment-detail-foto-reorder-en-audio-test-auto-stop.md) | In Progress | p1 | transitiemaand-consumer-beta | Op het moment-detailscherm kan de gebruiker foto's betrouwbaar uploaden en herordenen. Tijdens het slepen schuift de galerij live mee naa... |
+| [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | In Progress | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
+| [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
+| [Moments-overzicht primaire foto thumbnail en viewer](25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | Review | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
 | [AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)](25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md) | Backlog | p2 | transitiemaand-consumer-beta | AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.... |
 | [Budio webapp compatible maken](25-tasks/open/budio-webapp-compatible-maken.md) | Backlog | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 | [Docs scheiden naar private repo (strategie + migratieplan)](25-tasks/open/docs-private-repo-scheiding-en-migratieplan.md) | Backlog | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
 | [niet vergeten](25-tasks/open/niet-vergeten.md) | Backlog | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
 | [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | In Progress | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
+| [Docs folderstructuur en visual language herbeoordelen na metadatafase](25-tasks/open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md) | Blocked | p3 | transitiemaand-consumer-beta | Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling: - Is metadata + bundling... |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
@@ -857,6 +1024,15 @@ Dit raakt architectuur, job-afhandeling en betrouwbaarheid van achtergrondverwer
 ---
 
 ## Content / Narrative Processing Regels
+
+---
+title: Content and narrative processing rules
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Content & Narrative Processing Rules (Canoniek)
 
@@ -1043,6 +1219,15 @@ Primair geraakt door:
 ---
 
 ## Copy Instructions
+
+---
+title: Copy instructions
+audience: both
+doc_type: product-canonical
+source_role: canonical
+visual_profile: plain
+upload_bundle: chatgpt-project-context.md
+---
 
 # Persoonlijke Assistent App — Copy Instructions
 
@@ -1367,6 +1552,15 @@ Hij helpt je rustig je dag vast te leggen.
 ---
 
 ## AI Quality Studio Governance
+
+---
+title: AI Quality Studio
+audience: both
+doc_type: ai-governance
+source_role: canonical
+visual_profile: plain
+upload_bundle: 30-budio-build-ai-governance-and-operations.md
+---
 
 # AI Quality Studio (Canoniek)
 
@@ -2437,6 +2631,15 @@ Waarom:
 
 ## Cline Workflow Afspraken
 
+---
+title: Cline workflow
+audience: agent
+doc_type: workflow
+source_role: operational
+visual_profile: plain
+upload_bundle: 80-budio-agent-workflow-and-docs-tooling.md
+---
+
 # Cline workflow (operationeel)
 
 ## Doel
@@ -2556,10 +2759,10 @@ Plan mode heft de taskfile-verplichting niet op:
 
 Extra repo-regel voor Plan Mode:
 
-- gebruik in Plan Mode altijd eerst een **bestaande** taskfile
-- maak in Plan Mode nooit automatisch een nieuwe task aan
-- bestaat er geen passende bestaande task, blokkeer inhoudelijk en meld dat expliciet
-- een nieuwe task mag pas buiten Plan Mode worden aangemaakt
+- gebruik in Plan Mode eerst een **bestaande** taskfile wanneer daar een duidelijke match voor is
+- maak in Plan Mode bij duidelijke nieuwe scope automatisch een nieuwe task aan vanuit `_template.md`
+- vraag alleen bij echte twijfel: meerdere plausibele tasks, onduidelijke scope-routing of onduidelijk task-vs-idea
+- `Taskflow summary` mag dus ook een nieuw aangemaakte task noemen
 
 ## Wanneer Act mode
 
@@ -2570,6 +2773,13 @@ Gebruik Act mode voor:
 - verify en afronding
 
 ## Promptpatronen
+
+### Uitvoerblokken
+
+- Cline/Codex bepaalt bij elke inhoudelijke taak zelf de efficiëntste blokken op basis van huidige agent/model, taaktype, risico, dirty worktree, verificatiekosten en afhankelijkheden.
+- Vraag de gebruiker niet om fasering tenzij er een echte product-, planning- of architectuurtradeoff is.
+- Default: preflight/context/taskflow -> kleinste bronwijziging -> gerichte verify -> docs/taskstatus/bundel afronden.
+- Voor grotere docs/roadmaptaken: research -> template/workflow -> primair artefact -> bundel -> verify.
 
 ### Kleine fixes
 
@@ -2583,6 +2793,13 @@ Gebruik Act mode voor:
 - Maak of vind vóór het plan eerst de taskfile.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
+- Behandel het laatst besproken subprobleem nooit automatisch als de nieuwe hoofdscope.
+- Leg bij niet-triviale taken het **oorspronkelijke plan / afgesproken scope** expliciet vast in de taskfile en houd die sectie stabiel tijdens uitvoering.
+- Leg expliciete user-details met latere uitvoer- of reviewwaarde vast onder een aparte requirement-sectie in de taskfile; alleen een samenvatting is niet genoeg.
+- Maak onderscheid tussen review-uitkomst en requirement-uitkomst: de taskfile moet niet alleen de conclusie bevatten, maar ook de concrete requirement-details waarop die conclusie rust.
+- Als de gebruiker een bestaand uitgebreid plan of detailblok expliciet in de taskfile wil terugzien, moet dat bronblok als eigen sectie behouden blijven; een statusreview of samenvatting mag dat niet vervangen.
+- Leg latere regressies, polish of user-correcties vast als **toegevoegde verbeteringen tijdens uitvoering**, tenzij de gebruiker expliciet de hoofdscope wijzigt.
+- Rond een taak pas af na een expliciete **plan reconciliation**: oorspronkelijk plan, later toegevoegd werk en resterende open punten moeten allemaal zichtbaar zijn.
 
 ## Verify-regel
 
@@ -2599,7 +2816,9 @@ Gebruik Act mode voor:
 - Gebruik na de bootstrap alleen de kleinste relevante subset uit `docs/upload/00-budio-upload-manifest.md`.
 - Upload niet standaard de volledige set.
 - Bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT gebeurt nu nog niet automatisch.
-- Primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal.
+- `docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal; upload per ChatGPT Project-context alleen de kleinste relevante subset uit het manifest.
+- Audience-metadata en Budio Terminal-regels staan in `docs/project/00-docs-governance/README.md`.
+- Developer docs-tooling en Obsidian vault setup staan in `docs/setup/developer-docs-environment.md`.
 - Budgetpolicy in ChatGPT Projects blijft licht; token/cost/runtime-discipline hoort in repo en AI-governance-docs.
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 
@@ -2713,7 +2932,8 @@ Voor productiebug-onderzoek:
 - `docs/project/generated/**` en `docs/design/generated/**` zijn generated output; gebruik deze mappen niet als canonieke agentbron.
 - In ChatGPT Projects: gebruik na de bootstrap alleen de kleinste relevante subset uit het uploadmanifest; upload niet standaard de volledige set.
 - De bundelscript zet uploadbestanden klaar voor handmatige upload; upload naar ChatGPT Projects gebeurt nu nog niet automatisch.
-- De primaire aanbevolen handmatige uploadset is teruggebracht naar maximaal 5 bestanden totaal.
+- `docs/upload/**` wordt beheerd als maximaal 10 uploadbestanden totaal; upload per ChatGPT Project-context alleen de kleinste relevante subset uit het manifest.
+- Human-facing docs mogen een Budio Terminal-smaaklaag gebruiken zolang plain Markdown leesbaar blijft; agent-only docs blijven sober.
 - Budgetpolicy in ChatGPT Project-context blijft licht; token/cost/runtime-discipline hoort in repo-/runtime-/AI-governance-docs.
 - Session/multi-user/OpenAI-contextbeleid is nu alleen als later idee vastgelegd.
 - Zet geen toolinguitleg of sessieruis in productdocs; workflowafspraken horen in `docs/dev/**` en waar nodig in dit bestand.
