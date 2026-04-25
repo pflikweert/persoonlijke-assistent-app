@@ -34,10 +34,12 @@ export {
 } from "./day-journals";
 export {
     deleteEntryPhotoById,
+    fetchEntryPhotosByRawEntryIds,
     fetchEntryPhotosByRawEntryId,
     reorderEntryPhotosForEntry,
     uploadEntryPhotoForEntry,
-    type EntryPhotoAsset
+    type EntryPhotoAsset,
+    type EntryPhotoAssetGroup
 } from "./entry-photos";
 export {
     getSessionSelectedDayDate,

@@ -49,6 +49,8 @@ export type EntryPhotoAsset = {
   createdAt: string;
 };
 
+export type EntryPhotoAssetGroup = Record<string, EntryPhotoAsset[]>;
+
 function createPhotoId(): string {
   if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
@@ -147,6 +149,69 @@ export async function fetchEntryPhotosByRawEntryId(rawEntryId: string): Promise<
   })) satisfies EntryPhotoAsset[];
 
   return mapped;
+}
+
+export async function fetchEntryPhotosByRawEntryIds(rawEntryIds: string[]): Promise<EntryPhotoAssetGroup> {
+  const normalizedRawEntryIds = [...new Set(rawEntryIds.map((value) => value.trim()).filter(Boolean))];
+  if (normalizedRawEntryIds.length === 0) {
+    return {};
+  }
+
+  const flowId = createClientFlowId("entry-photo");
+  const { accessToken } = await ensureAuthenticatedUserSession({
+    flowId,
+    source: "entry-photos",
+  });
+
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error("Supabase client niet beschikbaar. Controleer je env variabelen.");
+  }
+
+  const { data, error } = await supabase
+    .from("entry_photos")
+    .select(
+      "id, raw_entry_id, sort_order, display_storage_path, thumb_storage_path, display_width, display_height, thumb_width, thumb_height, display_size_bytes, thumb_size_bytes, mime_type, created_at"
+    )
+    .in("raw_entry_id", normalizedRawEntryIds)
+    .order("raw_entry_id", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  const rows = (data ?? []) as EntryPhotoRow[];
+  const groups: EntryPhotoAssetGroup = {};
+
+  for (const row of rows) {
+    const photo: EntryPhotoAsset = {
+      id: row.id,
+      rawEntryId: row.raw_entry_id,
+      sortOrder: row.sort_order,
+      displayPath: row.display_storage_path,
+      thumbPath: row.thumb_storage_path,
+      displaySource: createAuthenticatedEntryPhotoSource({
+        storagePath: row.display_storage_path,
+        accessToken,
+      }),
+      thumbSource: createAuthenticatedEntryPhotoSource({
+        storagePath: row.thumb_storage_path,
+        accessToken,
+      }),
+      displayWidth: row.display_width,
+      displayHeight: row.display_height,
+      thumbWidth: row.thumb_width,
+      thumbHeight: row.thumb_height,
+      mimeType: row.mime_type,
+      createdAt: row.created_at,
+    };
+
+    groups[row.raw_entry_id] = [...(groups[row.raw_entry_id] ?? []), photo];
+  }
+
+  return groups;
 }
 
 export async function uploadEntryPhotoForEntry(input: {

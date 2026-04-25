@@ -6,28 +6,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   type GestureResponderEvent,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  useWindowDimensions,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   ConfirmSheet,
   type ConfirmSheetAction,
 } from "@/components/feedback/destructive-confirm-sheet";
+import { MomentPhotoViewerModal } from "@/components/journal/moment-photo-viewer-modal";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { DetailSectionHeader } from "@/components/ui/detail-screen-primitives";
-import { HeaderIconButton } from "@/components/ui/header-icon-button";
-import { ModalBackdrop } from "@/components/ui/modal-backdrop";
-import { ZoomablePhotoSlide } from "@/components/ui/zoomable-photo-slide";
 import { PrimaryButton, StateBlock } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -196,166 +189,6 @@ function useEntryPhotos(rawEntryId: string, refreshToken: number) {
   };
 }
 
-function EntryPhotoViewer({
-  photos,
-  viewerIndex,
-  setViewerIndex,
-  onRequestDelete,
-}: {
-  photos: EntryPhotoAsset[];
-  viewerIndex: number | null;
-  setViewerIndex: (value: number | null) => void;
-  onRequestDelete: (photo: EntryPhotoAsset) => void;
-}) {
-  const scheme = useColorScheme() ?? "light";
-  const palette = colorTokens[scheme];
-  const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const viewerScrollRef = useRef<ScrollView | null>(null);
-
-  const viewerPageWidth = Math.max(1, viewportWidth);
-  const viewerTopPadding = insets.top + spacing.sm;
-  const viewerBottomPadding = Math.max(insets.bottom, spacing.md);
-  const viewerTopControlsHeight = viewerTopPadding + 44;
-  const viewerBottomControlsHeight = viewerBottomPadding + 28;
-  const viewerFrameHeight = Math.max(
-    280,
-    viewportHeight - viewerTopControlsHeight - viewerBottomControlsHeight - spacing.lg * 2
-  );
-  const [zoomedPhotoId, setZoomedPhotoId] = useState<string | null>(null);
-  const activePhoto = viewerIndex === null ? null : photos[viewerIndex] ?? null;
-  const dragStartIndexRef = useRef(0);
-
-  useEffect(() => {
-    if (viewerIndex === null) {
-      setZoomedPhotoId(null);
-      return;
-    }
-    dragStartIndexRef.current = viewerIndex;
-    setZoomedPhotoId(null);
-    const handle = setTimeout(() => {
-      viewerScrollRef.current?.scrollTo({
-        x: viewerIndex * viewerPageWidth,
-        animated: false,
-      });
-    }, 0);
-    return () => clearTimeout(handle);
-  }, [viewerIndex, viewerPageWidth]);
-
-  function getNormalizedIndex(offsetX: number) {
-    const nextIndex = Math.round(offsetX / viewerPageWidth);
-    return Math.max(0, Math.min(photos.length - 1, nextIndex));
-  }
-
-  function handleViewerScrollBeginDrag() {
-    dragStartIndexRef.current = viewerIndex ?? 0;
-  }
-
-  function handleViewerScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const rawIndex = getNormalizedIndex(event.nativeEvent.contentOffset.x);
-    const startIndex = dragStartIndexRef.current;
-    const boundedIndex =
-      Math.abs(rawIndex - startIndex) <= 1
-        ? rawIndex
-        : startIndex + Math.sign(rawIndex - startIndex);
-    const nextIndex = Math.max(0, Math.min(photos.length - 1, boundedIndex));
-
-    if (nextIndex !== rawIndex) {
-      viewerScrollRef.current?.scrollTo({
-        x: nextIndex * viewerPageWidth,
-        animated: true,
-      });
-    }
-
-    dragStartIndexRef.current = nextIndex;
-    setViewerIndex(nextIndex);
-  }
-
-  return (
-    <Modal
-      transparent
-      visible={viewerIndex !== null && Boolean(activePhoto)}
-      animationType="fade"
-      onRequestClose={() => setViewerIndex(null)}
-    >
-      <ModalBackdrop
-        layout="bottom"
-        onPressOutside={() => setViewerIndex(null)}
-        contentStyle={styles.viewerBackdropContent}
-      >
-        <ThemedView style={styles.viewerShell}>
-          <ThemedView style={[styles.viewerTopBar, { paddingTop: viewerTopPadding }]}>
-            <HeaderIconButton
-              accessibilityRole="button"
-              accessibilityLabel="Foto sluiten"
-              onPress={() => setViewerIndex(null)}
-              style={styles.viewerCloseButton}
-            >
-              <MaterialIcons name="close" size={18} color={palette.primary} />
-            </HeaderIconButton>
-          </ThemedView>
-
-          <ThemedView style={[styles.viewerMediaFrame, { height: viewerFrameHeight }]}>
-            <ScrollView
-              ref={viewerScrollRef}
-              horizontal
-              pagingEnabled
-              bounces={false}
-              disableIntervalMomentum
-              directionalLockEnabled
-              scrollEnabled={!zoomedPhotoId}
-              showsHorizontalScrollIndicator={false}
-              onScrollBeginDrag={handleViewerScrollBeginDrag}
-              onMomentumScrollEnd={handleViewerScrollEnd}
-              style={[styles.viewerCarousel, { width: viewerPageWidth }]}
-            >
-              {photos.map((photo) => {
-                return (
-                  <ThemedView
-                    key={photo.id}
-                    style={[styles.viewerPage, { width: viewerPageWidth, height: viewerFrameHeight }]}
-                  >
-                    <ZoomablePhotoSlide
-                      source={photo.displaySource}
-                      frameWidth={viewerPageWidth}
-                      frameHeight={viewerFrameHeight}
-                      imageWidth={photo.displayWidth}
-                      imageHeight={photo.displayHeight}
-                      onZoomStateChange={(zoomed) => {
-                        setZoomedPhotoId(zoomed ? photo.id : null);
-                      }}
-                    />
-                  </ThemedView>
-                );
-              })}
-            </ScrollView>
-          </ThemedView>
-
-          <ThemedView style={[styles.viewerBottomBar, { paddingBottom: viewerBottomPadding }]}>
-            <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-              {(viewerIndex ?? 0) + 1} / {photos.length}
-            </ThemedText>
-
-            {activePhoto ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Foto verwijderen"
-                onPress={() => onRequestDelete(activePhoto)}
-                style={styles.viewerDeleteAction}
-              >
-                <MaterialIcons name="delete" size={18} color={palette.destructiveSoftText} />
-                <ThemedText type="caption" style={{ color: palette.destructiveSoftText }}>
-                  Verwijderen
-                </ThemedText>
-              </Pressable>
-            ) : null}
-          </ThemedView>
-        </ThemedView>
-      </ModalBackdrop>
-    </Modal>
-  );
-}
-
 export function EntryPhotoFeaturedPreview({
   rawEntryId,
   refreshToken = 0,
@@ -415,7 +248,7 @@ export function EntryPhotoFeaturedPreview({
         <Image source={effectivePhotos[0]?.thumbSource} contentFit="cover" style={styles.featuredImage} />
       </Pressable>
 
-      <EntryPhotoViewer
+      <MomentPhotoViewerModal
         photos={effectivePhotos}
         viewerIndex={viewerIndex}
         setViewerIndex={setViewerIndex}
@@ -1207,7 +1040,7 @@ export function EntryPhotoGallery({
         onConfirm={() => setPickerVisible(false)}
       />
 
-      <EntryPhotoViewer
+      <MomentPhotoViewerModal
         photos={photos}
         viewerIndex={viewerIndex}
         setViewerIndex={setViewerIndex}
@@ -1323,52 +1156,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   addInlineButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-  },
-  viewerBackdropContent: {
-    flex: 1,
-    width: "100%",
-  },
-  viewerShell: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "space-between",
-  },
-  viewerTopBar: {
-    width: "100%",
-    paddingHorizontal: spacing.sm,
-    alignItems: "flex-end",
-  },
-  viewerMediaFrame: {
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  viewerCarousel: {
-    width: "100%",
-  },
-  viewerPage: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  viewerImage: {
-    width: "100%",
-    height: "100%",
-  },
-  viewerCloseButton: {
-    marginRight: 0,
-  },
-  viewerBottomBar: {
-    width: "100%",
-    paddingHorizontal: spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  viewerDeleteAction: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,

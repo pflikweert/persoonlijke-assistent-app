@@ -24,6 +24,7 @@ De gebruiker wil een kleine, vaste thumbnail onder de tijdindicator zonder dat d
 In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom. Die thumb heeft een vaste maat en verandert de linkerkolombreedte niet.
 
 Bij tikken/klikken opent een read-only fotoviewer met:
+
 - de momenttitel bovenin naast de sluitknop
 - swipe door alle foto's van dat moment
 - een duidelijke visuele links/rechts indicatie wanneer swipen mogelijk is
