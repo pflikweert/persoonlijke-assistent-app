@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
-Source Commit: 53f227f
+Build Timestamp (UTC): 2026-04-25T22:02:50.683Z
+Source Commit: f044130
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 25
+- Totaal tasks opgenomen: 28
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -256,6 +256,84 @@ De advieszone heeft een vaste hoogte zodat onderliggende UI niet verspringt. Sli
 - `app/settings-audio.tsx`
 - `services/web-audio-input.ts`
 - `docs/project/25-tasks/README.md`
+```
+
+---
+
+## Dev-browser configureerbaar voor local web
+
+- Path: `docs/project/25-tasks/done/dev-browser-configureerbaar-voor-local-web.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-25
+
+```md
+---
+id: dev-browser-configureerbaar-voor-local-web
+title: Dev-browser configureerbaar voor local web
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: gebruiker
+updated_at: 2026-04-25
+summary: "Local web development kan optioneel een specifieke browser openen via `.env.local`, met behoud van het bestaande standaardbrowsergedrag als de env ontbreekt."
+tags: [local-dev, tooling, expo]
+workstream: app
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+Op de nieuwe Mac opent Expo web nu via de standaardbrowser. De gebruiker wil ChatGPT Atlas kunnen gebruiken voor lokale webontwikkeling, maar zonder dit hard te coderen voor alle machines.
+
+## Gewenste uitkomst
+
+`npm run dev` blijft standaard hetzelfde werken wanneer er geen browser-env is gezet. Als `BUDIO_DEV_BROWSER` lokaal is gezet, gebruikt de dev-flow die browser voor Expo web-open acties.
+
+## Waarom nu
+
+- De lokale MacBook setup is net afgerond.
+- Browserkeuze is machine-specifieke dev tooling en hoort configureerbaar te zijn zonder productruntime te raken.
+
+## In scope
+
+- `scripts/dev.sh` uitbreiden met optionele local browser-config.
+- `.env.local` op deze machine aanvullen met ChatGPT Atlas als browser.
+- Verify zonder langlopende devserver.
+
+## Buiten scope
+
+- Productruntime-config of `EXPO_PUBLIC_*` toevoegen voor browserkeuze.
+- Langlopende devserver starten.
+- Browserkeuze afdwingen op andere machines.
+
+## Concrete checklist
+
+- [x] Browser-env veilig laden uit `.env.local`.
+- [x] Expo web-open laten terugvallen op standaardgedrag als env ontbreekt.
+- [x] Verify draaien.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- ✅ `sh -n scripts/dev.sh`
+- ✅ `.env.local` parser-check voor `BUDIO_DEV_BROWSER`
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `npm run taskflow:verify`
+- ✅ `npm run docs:bundle`
+- ✅ `npm run docs:bundle:verify`
+
+## Relevante links
+
+- `scripts/dev.sh`
+- `.env.local`
 ```
 
 ---
@@ -911,6 +989,98 @@ Een vaste local-only auth smoke workflow waarmee een agent of developer veilig k
 - `scripts/verify-local-auth-login.mjs`
 - `scripts/cleanup-local-smoke-users.mjs`
 - `docs/dev/local-auth-smoke-workflow.md`
+```
+
+---
+
+## Lokale developmentomgeving nieuwe MacBook opzetten
+
+- Path: `docs/project/25-tasks/done/lokale-developmentomgeving-nieuwe-macbook-opzetten.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-25
+
+```md
+---
+id: lokale-developmentomgeving-nieuwe-macbook-opzetten
+title: Lokale developmentomgeving nieuwe MacBook opzetten
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: gebruiker
+updated_at: 2026-04-25
+summary: "De nieuwe MacBook heeft een werkende lokale Budio developmentomgeving met dependencies, lokale services, env-config en basisverificatie."
+tags: [local-dev, onboarding, setup]
+workstream: app
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De nieuwe MacBook is nog niet ingericht voor lokale Budio development. Docker Desktop en Codex in VS Code zijn aanwezig, maar Node/npm, repo-dependencies, Supabase local, env-vars, lokale MCP/Codex-config en smoke/verify-stappen moeten nog gecontroleerd en werkend gemaakt worden.
+
+## Gewenste uitkomst
+
+De lokale omgeving kan betrouwbaar worden gebruikt voor Budio app-ontwikkeling zonder productie-secrets in clientcode of remote mutaties. De gebruiker weet welke env-vars vanaf de oude laptop moeten worden overgezet en welke lokale verificatiecommando's succesvol zijn.
+
+## Waarom nu
+
+- Nieuwe machine moet klaar zijn voor de transitiemaand-werkzaamheden.
+- Lokale setup voorkomt frictie bij app-, AIQS- en verify-taken.
+- De repo heeft expliciete local-first MCP- en Supabase-afspraken die op de nieuwe laptop juist moeten staan.
+
+## In scope
+
+- Lokale toolchain en repo-dependencies controleren en installeren waar nodig.
+- Lokale env-bestanden en benodigde variabelen inventariseren zonder secrets te loggen.
+- Supabase local en Docker-afhankelijkheden controleren.
+- Codex/VS Code local workflow en standaard smoke-target bevestigen.
+- Basisverify draaien met een passende set one-shot commando's.
+
+## Buiten scope
+
+- Productie-deploys of remote Supabase-writes.
+- Nieuwe productfeatures of UI-redesigns.
+- Secrets in docs, commits of chat opnemen.
+- Langlopende devservers starten zonder expliciete opdracht.
+
+## Concrete checklist
+
+- [x] Toolchain en repo-setup inventariseren.
+- [x] Dependencies en lokale services werkend krijgen.
+- [x] Env-var overdracht veilig begeleiden.
+- [x] Basisverify en smoke-pad vastleggen.
+- [x] `npm run dev` startflow op macOS herstellen en opnieuw verifiëren.
+- [x] Local development onboarding documenteren, committen en pushen.
+
+## Blockers / afhankelijkheden
+
+- Geen open blockers binnen deze setup-task.
+
+## Verify / bewijs
+
+- ✅ `npm run check:node-version`
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `npm run verify:local-auth-mail`
+- ✅ `gh auth status`
+- ✅ `npx supabase --version` (`2.90.0`)
+- ✅ `npx supabase status -o env`
+- ✅ `npm run dev` smoke: startflow loopt door zonder `awk`-fout; Supabase local env, functions runtime en Expo starten
+- ✅ `npm run taskflow:verify`
+- ✅ `npm run docs:lint`
+- ✅ `npm run docs:bundle`
+- ✅ `npm run docs:bundle:verify`
+- ✅ Local development onboarding vastgelegd in `docs/dev/local-development-environment.md`
+
+## Relevante links
+
+- `docs/project/README.md`
+- `docs/dev/active-context.md`
+- `.codex/config.toml`
 ```
 
 ---
@@ -2108,6 +2278,97 @@ Beide bundels zijn directory-gebaseerd, worden automatisch via `docs:bundle` geg
 
 - `scripts/docs/build-docs-bundles.mjs`
 - `docs/upload/00-budio-upload-manifest.md`
+```
+
+---
+
+## VS Code MCP local workspace setup
+
+- Path: `docs/project/25-tasks/done/vscode-mcp-local-workspace-setup.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-25
+
+```md
+---
+id: vscode-mcp-local-workspace-setup
+title: VS Code MCP local workspace setup
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: gebruiker
+updated_at: 2026-04-25
+summary: "VS Code heeft minimale Budio editor-support, Markdown/taskfile support, de lokale Budio Workspace plugin en repo-local MCP/CLI randvoorwaarden."
+tags: [local-dev, vscode, mcp, tooling]
+workstream: plugin
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De nieuwe MacBook heeft de basis lokale developmentomgeving, maar VS Code mist nog minimale projectextensions, de lokale Budio Workspace plugin is nog niet opnieuw toegepast, en MCP/CLI-randvoorwaarden moeten worden bevestigd.
+
+## Gewenste uitkomst
+
+VS Code is ingericht voor Expo, Markdown/taskfiles, NativeWind, Playwright en Budio Workspace. De repo blijft local-first werken met `npx`/repo-local tooling voor MCP en CLI's, zonder onnodige globale installaties.
+
+## Waarom nu
+
+- Editor- en pluginsetup hoort direct bij de nieuwe MacBook onboarding.
+- De Budio Workspace plugin is de dagelijkse taaklaag voor `docs/project/25-tasks/**`.
+- MCP/CLI-checks voorkomen later verwarring tussen globale tooling en repo-local scripts.
+
+## In scope
+
+- Minimale VS Code extensions installeren.
+- Budio Workspace VS Code plugin builden, packagen, installeren en workspace refreshen.
+- Repo-aanbevolen VS Code extensions aanvullen.
+- MCP- en CLI-randvoorwaarden inventariseren en bevestigen.
+- Verify draaien zonder langlopende devserver.
+
+## Buiten scope
+
+- Globale Vercel/Supabase/Expo/EAS installaties zonder dagelijkse noodzaak.
+- Productruntime-wijzigingen.
+- Remote Supabase target activeren.
+- Nieuwe appfeatures of UI-wijzigingen.
+
+## Concrete checklist
+
+- [x] VS Code extensions installeren en aanbevelingen aanvullen.
+- [x] Budio Workspace plugin toepassen op de normale workspace.
+- [x] MCP/CLI-randvoorwaarden bevestigen.
+- [x] Verify draaien.
+
+## Blockers / afhankelijkheden
+
+- Geen harde blocker.
+- `STITCH_API_KEY` ontbreekt nog lokaal; Stitch MCP is geconfigureerd maar vereist die key wanneer Stitch actief gebruikt wordt.
+- VS Code refresh via AppleScript werd door macOS-keystroke-permissies geblokkeerd; de plugininstallatie is wel geslaagd en de workspace is via `code --reuse-window` geopend.
+
+## Verify / bewijs
+
+- ✅ `code --list-extensions --show-versions`
+- ✅ `cd tools/budio-workspace-vscode && npm run typecheck`
+- ✅ `cd tools/budio-workspace-vscode && npm run test`
+- ✅ `cd tools/budio-workspace-vscode && npm run apply:workspace`
+- ✅ `npx supabase status -o env`
+- ✅ `npx vercel --version`
+- ✅ `npx markdownlint-cli2 --version`
+- ✅ `npm run taskflow:verify`
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `npm run docs:bundle`
+- ✅ `npm run docs:bundle:verify`
+
+## Relevante links
+
+- `.vscode/extensions.json`
+- `.codex/config.toml`
+- `tools/budio-workspace-vscode/README.md`
 ```
 
 ---

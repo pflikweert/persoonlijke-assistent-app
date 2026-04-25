@@ -4,6 +4,9 @@ model_reasoning_effort = "medium"
 [projects."/Users/pieterflikweert/development/persoonlijke-assistent-app"]
 trust_level = "trusted"
 
+[projects."/Users/pieterflikweert/Development/budio/persoonlijke-assistent-app"]
+trust_level = "trusted"
+
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]

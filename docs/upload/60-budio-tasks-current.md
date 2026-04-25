@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
-Source Commit: 53f227f
+Build Timestamp (UTC): 2026-04-25T22:02:50.683Z
+Source Commit: f044130
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 16
+- Totaal tasks opgenomen: 17
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -42,7 +42,7 @@ summary: Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt w
 tags: [consumer-beta, outputkwaliteit]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
 
 
@@ -226,7 +226,7 @@ summary: "Geef AIQS admin een helderder en strakker eigen thema, geïnspireerd d
 tags: [aiqs, admin-ui, thema, design]
 workstream: aiqs
 due_date: null
-sort_order: 4
+sort_order: 6
 ---
 
 
@@ -321,7 +321,7 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 4
+sort_order: 7
 ---
 
 
@@ -425,7 +425,7 @@ summary: "Zet de huidige AIQS-variant snel en gecontroleerd live in productie vo
 tags: [aiqs, productie, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 
@@ -524,7 +524,7 @@ summary: "Implementeer PWA-installatieprompt voor webgebruikers om de app als de
 tags: [pwa, webapp, installatie, modal, cookie]
 workstream: app
 due_date: null
-sort_order: 5
+sort_order: 9
 ---
 
 ## Probleem / context
@@ -702,7 +702,7 @@ summary: "Werk een besluitbaar plan uit om strategische docs naar een aparte pri
 tags: [docs, governance, security, repo-structuur, planning]
 workstream: idea
 due_date: null
-sort_order: 7
+sort_order: 11
 ---
 
 
@@ -959,7 +959,7 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 
 - Path: `docs/project/25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md`
 - Bucket: open
-- Status: review
+- Status: blocked
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
 - Updated_at: 2026-04-25
@@ -968,7 +968,7 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 ---
 id: task-moments-overzicht-primaire-foto-thumbnail-en-viewer
 title: Moments-overzicht primaire foto thumbnail en viewer
-status: review
+status: blocked
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
@@ -1043,7 +1043,7 @@ De viewerbasis is gedeeld met de bestaande moment-detail galerij, zodat swipeged
 ## Review-notitie
 
 - Lokale desktop-Chrome swipe met de muis in de fullscreen foto-popup werkt nog niet betrouwbaar; navigatie via de pijliconen werkt wel.
-- Deze task staat daarom bewust in `review` voor latere productiecheck i.p.v. als opgelost/done.
+- Deze task staat daarom bewust op `blocked` voor latere productiecheck i.p.v. als opgelost/done.
 - Gewenste vervolgrichting na review:
   - slimmer zoomen
   - foto kunnen slepen/pannen wanneer ingezoomd
@@ -1090,7 +1090,7 @@ summary: "screenshots van Flow verwerken tot ideeen. todo, ideeen etc taggen in 
 tags: []
 workstream: idea
 due_date: null
-sort_order: 6
+sort_order: 10
 ---
 
 
@@ -1159,7 +1159,7 @@ summary: "Beoordeel de huidige npm audit meldingen na de testinfra-uitbreiding, 
 tags: [npm, audit, dependencies, security]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context
@@ -1553,32 +1553,36 @@ Onderstaande planstructuur is expliciet bewaard omdat deze later nog uitvoerwaar
    - zodra klaar: geen animatie en geen actieve chip meer
 
 10. **Agent metadata opslaan in task-md**
-   Ik stel voor een vaste metadata- en sectiestructuur toe te voegen, bijvoorbeeld:
-   - frontmatter velden voor actuele agentstatus
-   - sectie voor historiek / referentie, zoals:
-     - `## Agent activity`
-     - `## Commits`
-   
-   Daarin kunnen we per nieuwe activiteit vastleggen:
-   - agentnaam
-   - model
-   - relevante agent-instellingen / context
-   - start/stop-status waar zinvol
+Ik stel voor een vaste metadata- en sectiestructuur toe te voegen, bijvoorbeeld:
+
+- frontmatter velden voor actuele agentstatus
+- sectie voor historiek / referentie, zoals:
+  - `## Agent activity`
+  - `## Commits`
+
+Daarin kunnen we per nieuwe activiteit vastleggen:
+
+- agentnaam
+- model
+- relevante agent-instellingen / context
+- start/stop-status waar zinvol
 
 ### D. Automatische commit logging voor nieuwe commits
 
 11. **`## Commits` voorbereiden én automatisch vullen**
-   - repo-managed hook/script, geen losse lokale sample-hooks
-   - alleen **nieuwe commits**, geen historische backfill
-   - nieuwe commits worden toegevoegd aan relevante taskfile(s)
-   - commit hash + subject loggen in `## Commits`
+
+- repo-managed hook/script, geen losse lokale sample-hooks
+- alleen **nieuwe commits**, geen historische backfill
+- nieuwe commits worden toegevoegd aan relevante taskfile(s)
+- commit hash + subject loggen in `## Commits`
 
 ### E. Multi-agent robuustheid
 
 12. **Concurrency-aanpak**
-   - task updates blijven file-version/checks respecteren
-   - agent-activiteit en sort-order updates moeten conflict-arm worden geschreven
-   - bij race/conflict: refresh/herhydrate pad behouden, geen stille overschrijvingen
+
+- task updates blijven file-version/checks respecteren
+- agent-activiteit en sort-order updates moeten conflict-arm worden geschreven
+- bij race/conflict: refresh/herhydrate pad behouden, geen stille overschrijvingen
 
 ## Verwachte implementatiestructuur uit het oorspronkelijke plan
 
@@ -1713,4 +1717,80 @@ Onderstaande planstructuur is expliciet bewaard omdat deze later nog uitvoerwaar
 - `tools/budio-workspace-vscode/package.json`
 - `tools/budio-workspace-vscode/src/extension.ts`
 - `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
+```
+
+---
+
+## STITCH_API_KEY voor MCP activeren
+
+- Path: `docs/project/25-tasks/open/stitch-api-key-voor-mcp-activeren.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-25
+
+```md
+---
+id: stitch-api-key-voor-mcp-activeren
+title: STITCH_API_KEY voor MCP activeren
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: gebruiker
+updated_at: 2026-04-25
+summary: "De lokale `.env.local` krijgt de ontbrekende `STITCH_API_KEY`, zodat de Stitch MCP-config echt bruikbaar is wanneer Stitch nodig is."
+tags: [mcp, stitch, local-dev, env]
+workstream: plugin
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De repo heeft al een geconfigureerde Stitch MCP-server in `.codex/config.toml`, maar `STITCH_API_KEY` ontbreekt nog lokaal in `.env.local`. Daardoor blijft Stitch beschikbaar als setup, maar niet volledig bruikbaar.
+
+## Gewenste uitkomst
+
+De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch MCP later zonder extra handelingen gebruikt kan worden. De sleutel blijft buiten de repo en wordt niet in docs of output gelekt.
+
+## Waarom nu
+
+- Stitch is al onderdeel van de repo-local MCP-config.
+- De nieuwe MacBook setup is bijna compleet; dit is één van de laatste ontbrekende local-dev variabelen.
+- De key staat nog op de oude laptop en moet bewust overgezet worden.
+
+## In scope
+
+- `STITCH_API_KEY` veilig overnemen naar `.env.local`.
+- Controleren dat de key niet in git of docs terechtkomt.
+- Verifiëren dat de lokale env-parser en tooling de key zien.
+
+## Buiten scope
+
+- Andere MCP-servers toevoegen.
+- Stitch workflow-inhoud wijzigen.
+- Globale CLI-installaties.
+
+## Concrete checklist
+
+- [ ] `STITCH_API_KEY` veilig toevoegen aan `.env.local`.
+- [ ] Bevestigen dat de key alleen lokaal aanwezig is.
+- [ ] Relevante verify draaien.
+
+## Blockers / afhankelijkheden
+
+- De sleutel staat nog op de oude laptop en moet door de gebruiker worden overgenomen.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+- Lokale env-check op aanwezigheid van `STITCH_API_KEY`
+
+## Relevante links
+
+- `.codex/config.toml`
+- `docs/dev/stitch-workflow.md`
 ```

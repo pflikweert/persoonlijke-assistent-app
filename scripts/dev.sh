@@ -7,6 +7,31 @@ STOP_SCRIPT="$ROOT_DIR/scripts/dev-stop.sh"
 EXPO_PORT="${EXPO_PORT:-8081}"
 STATUS_ENV_FILE="$(mktemp)"
 
+read_dotenv_value() {
+  ENV_KEY="$1"
+  ENV_FILE="$ROOT_DIR/.env.local"
+
+  if [ ! -f "$ENV_FILE" ]; then
+    return 0
+  fi
+
+  awk -v key="$ENV_KEY" '
+    $0 ~ "^[[:space:]]*#" { next }
+    $0 ~ "^[[:space:]]*$" { next }
+    index($0, key "=") == 1 {
+      value = substr($0, length(key) + 2)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      first = substr(value, 1, 1)
+      last = substr(value, length(value), 1)
+      if ((first == "\"" || first == "'\''") && last == first) {
+        value = substr(value, 2, length(value) - 2)
+      }
+      print value
+      exit
+    }
+  ' "$ENV_FILE"
+}
+
 cleanup() {
   rm -f "$STATUS_ENV_FILE"
   "$STOP_SCRIPT"
@@ -70,6 +95,12 @@ export EXPO_PUBLIC_SUPABASE_LOCAL_PUBLISHABLE_KEY="$LOCAL_PUBLISHABLE_KEY"
 echo "Using local Supabase auth env for Expo:"
 echo "  EXPO_PUBLIC_SUPABASE_TARGET=$EXPO_PUBLIC_SUPABASE_TARGET"
 echo "  EXPO_PUBLIC_SUPABASE_LOCAL_URL=$EXPO_PUBLIC_SUPABASE_LOCAL_URL"
+
+BUDIO_DEV_BROWSER="${BUDIO_DEV_BROWSER:-$(read_dotenv_value BUDIO_DEV_BROWSER)}"
+if [ -n "$BUDIO_DEV_BROWSER" ]; then
+  export BROWSER="$BUDIO_DEV_BROWSER"
+  echo "Using configured dev browser for Expo web: $BUDIO_DEV_BROWSER"
+fi
 
 "$START_SCRIPT"
 

@@ -2,8 +2,8 @@
 
 # Budio Agent Workflow and Docs Tooling
 
-Build Timestamp (UTC): 2026-04-25T07:49:23.622Z
-Source Commit: 53f227f
+Build Timestamp (UTC): 2026-04-25T22:02:50.683Z
+Source Commit: f044130
 
 Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -404,6 +404,7 @@ Navigatie voor operationele workflowdocs en tijdelijke context.
 ## Actieve workflowbestanden
 
 - Cline workflow
+- Local development environment
 - AI execution OS (generiek)
 - UI assembly decision tree
 - Stitch workflow

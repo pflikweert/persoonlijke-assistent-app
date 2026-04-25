@@ -47,6 +47,7 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [Docs scheiden naar private repo (strategie + migratieplan)](open/docs-private-repo-scheiding-en-migratieplan.md) | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
 | [niet vergeten](open/niet-vergeten.md) | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
 | [npm audit kwetsbaarheden beoordelen en saneren](open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
+| [STITCH_API_KEY voor MCP activeren](open/stitch-api-key-voor-mcp-activeren.md) | p2 | transitiemaand-consumer-beta | De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch MCP later zonder extra handelingen gebruikt kan worden.... |
 
 ### Ready
 
@@ -67,14 +68,13 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 
 ### Review
 
-| Taak | Prioriteit | Fase | Korte omschrijving |
-| --- | --- | --- | --- |
-| [Moments-overzicht primaire foto thumbnail en viewer](open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
+_Geen taken._
 
 ### Blocked
 
 | Taak | Prioriteit | Fase | Korte omschrijving |
 | --- | --- | --- | --- |
+| [Moments-overzicht primaire foto thumbnail en viewer](open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
 | [Docs folderstructuur en visual language herbeoordelen na metadatafase](open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md) | p3 | transitiemaand-consumer-beta | Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling: - Is metadata + bundling... |
 
 ### Done
@@ -93,9 +93,11 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [Moment fotoviewer swipe/zoom verbeteren en markdownstructuur tonen](done/moment-fotoviewer-swipe-zoom-en-markdown-weergave.md) | p1 | transitiemaand-consumer-beta | De fotoviewer voelt op mobiel beheerst en direct aan: per swipe land je op de bedoelde vorige of volgende foto, en ingezoomde foto's kun... |
 | [Plugin drag-drop sortering in board en list herstellen](done/plugin-drag-drop-sortering-board-en-list-herstel.md) | p1 | transitiemaand-consumer-beta | Taken moeten weer met de muis versleept kunnen worden in board én list view, inclusief statusverplaatsing en herordening. |
 | [Thumbnail reorder productiebug in moment detail](done/thumbnail-reorder-productiebug-moment-detail.md) | p1 | transitiemaand-consumer-beta | De galerij-reorder werkt in productie vloeiend en betrouwbaar: tijdens slepen beweegt de actieve thumbnail correct mee en blijft niet vas... |
+| [Dev-browser configureerbaar voor local web](done/dev-browser-configureerbaar-voor-local-web.md) | p2 | transitiemaand-consumer-beta | `npm run dev` blijft standaard hetzelfde werken wanneer er geen browser-env is gezet. Als `BUDIO_DEV_BROWSER` lokaal is gezet, gebruikt d... |
 | [Docs UX, audience-metadata en uploadbundels opschonen](done/docs-ux-audience-taxonomie-en-uploadbundels.md) | p2 | transitiemaand-consumer-beta | De docs krijgen een kleine metadata- en visuele laag die duidelijk maakt voor wie een document bedoeld is en hoe het gebruikt moet worden... |
 | [docs:bundle en docs:bundle:verify race condition structureel voorkomen](done/docs-bundle-en-verify-race-condition-voorkomen.md) | p2 | transitiemaand-consumer-beta | Parallelle bundelruns worden hard geblokkeerd met een duidelijke foutmelding. Daardoor kan `docs:bundle:verify` niet meer vals falen door... |
 | [Linear-geinspireerde Budio Workspace structuurlaag als idee uitwerken](done/linear-budio-workspace-structuurlaag-idee-uitwerken.md) | p2 | transitiemaand-consumer-beta | Er staat een nieuw standalone idea-file in `docs/project/40-ideas/40-platform-and-architecture/` dat Linear niet bewondert om de hype, ma... |
+| [Lokale developmentomgeving nieuwe MacBook opzetten](done/lokale-developmentomgeving-nieuwe-macbook-opzetten.md) | p2 | transitiemaand-consumer-beta | De lokale omgeving kan betrouwbaar worden gebruikt voor Budio app-ontwikkeling zonder productie-secrets in clientcode of remote mutaties.... |
 | [OpenAI Codex Automations en AI use-case scaling vertalen naar ideeën](done/openai-codex-automations-en-ai-use-case-scaling-vertalen-naar-ideeen.md) | p2 | transitiemaand-consumer-beta | Minstens één bestaand idee in `docs/project/40-ideas/**` is bijgewerkt (of een nieuw idee is toegevoegd) met concrete, afgebakende learni... |
 | [OpenAI Privacy Filter-idee vertalen naar Budio privacyplan](done/openai-privacy-filter-idee-vertalen-naar-budio-privacyplan.md) | p2 | transitiemaand-consumer-beta | Een bestaand privacy/security-idee in `docs/project/40-ideas/**` is bijgewerkt met de belangrijkste lessen uit de OpenAI Privacy Filter r... |
 | [Plugin task classification filters en manual prio actions](done/plugin-task-classification-filters-en-manual-prio-actions.md) | p2 | transitiemaand-consumer-beta | Taskfiles krijgen een expliciete classificatie in template en instructies. De plugin toont deze classificatie zichtbaar in cards en list... |
@@ -105,5 +107,6 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [Repo-local Codex MCP setup met veilige Supabase target-switchflow](done/repo-local-codex-mcp-setup-met-veilige-supabase-target-switchflow.md) | p2 | transitiemaand-consumer-beta | De repo bevat één begrijpelijke `.codex/config.toml` met vaste MCP-servers voor context7, playwright en stitch, plus een Supabase-opzet w... |
 | [Roadmap OS en post-basis 6-maandenroadmap](done/roadmap-os-en-post-basis-6-maandenroadmap.md) | p2 | transitiemaand-consumer-beta | Er staat een kleine Roadmap OS-laag voor maandblokken op epicniveau. Iemand die het project niet kent, moet kunnen begrijpen waarom een m... |
 | [Upload bundles uitbreiden met volledige tasks en apart full archive](done/upload-bundles-volledige-tasks-en-archive.md) | p2 | transitiemaand-consumer-beta | `docs/upload/**` bevat twee nieuwe generated bestanden: - één volledige tasks bundle met zowel `open/` als `done/` taskfiles - één aparte... |
+| [VS Code MCP local workspace setup](done/vscode-mcp-local-workspace-setup.md) | p2 | transitiemaand-consumer-beta | VS Code is ingericht voor Expo, Markdown/taskfiles, NativeWind, Playwright en Budio Workspace. De repo blijft local-first werken met `npx... |
 | [Workstream backfill voor bestaande taskfiles](done/workstream-backfill-bestaande-taskfiles.md) | p2 | transitiemaand-consumer-beta | Alle bestaande taskfiles onder `docs/project/25-tasks/**` hebben een passende `workstream`-waarde (`idea`, `plugin`, `app` of `aiqs`). |
 <!-- TASK_INDEX:END -->

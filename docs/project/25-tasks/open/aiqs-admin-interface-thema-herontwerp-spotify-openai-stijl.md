@@ -10,7 +10,7 @@ summary: "Geef AIQS admin een helderder en strakker eigen thema, geïnspireerd d
 tags: [aiqs, admin-ui, thema, design]
 workstream: aiqs
 due_date: null
-sort_order: 4
+sort_order: 6
 ---
 
 

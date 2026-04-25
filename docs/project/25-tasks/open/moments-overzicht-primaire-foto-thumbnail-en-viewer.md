@@ -1,7 +1,7 @@
 ---
 id: task-moments-overzicht-primaire-foto-thumbnail-en-viewer
 title: Moments-overzicht primaire foto thumbnail en viewer
-status: review
+status: blocked
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
@@ -76,7 +76,7 @@ De viewerbasis is gedeeld met de bestaande moment-detail galerij, zodat swipeged
 ## Review-notitie
 
 - Lokale desktop-Chrome swipe met de muis in de fullscreen foto-popup werkt nog niet betrouwbaar; navigatie via de pijliconen werkt wel.
-- Deze task staat daarom bewust in `review` voor latere productiecheck i.p.v. als opgelost/done.
+- Deze task staat daarom bewust op `blocked` voor latere productiecheck i.p.v. als opgelost/done.
 - Gewenste vervolgrichting na review:
   - slimmer zoomen
   - foto kunnen slepen/pannen wanneer ingezoomd

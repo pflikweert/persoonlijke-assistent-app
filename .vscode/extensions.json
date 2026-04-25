@@ -1,7 +1,13 @@
 {
   "recommendations": [
     "expo.vscode-expo-tools",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-playwright.playwright",
     "davidanson.vscode-markdownlint",
+    "yzhang.markdown-all-in-one",
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
     "willasm.obsidian-md-vsc",
     "bierner.markdown-mermaid",
     "jonathan-yeung.mark-sharp"

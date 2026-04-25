@@ -130,32 +130,36 @@ Onderstaande planstructuur is expliciet bewaard omdat deze later nog uitvoerwaar
    - zodra klaar: geen animatie en geen actieve chip meer
 
 10. **Agent metadata opslaan in task-md**
-   Ik stel voor een vaste metadata- en sectiestructuur toe te voegen, bijvoorbeeld:
-   - frontmatter velden voor actuele agentstatus
-   - sectie voor historiek / referentie, zoals:
-     - `## Agent activity`
-     - `## Commits`
-   
-   Daarin kunnen we per nieuwe activiteit vastleggen:
-   - agentnaam
-   - model
-   - relevante agent-instellingen / context
-   - start/stop-status waar zinvol
+Ik stel voor een vaste metadata- en sectiestructuur toe te voegen, bijvoorbeeld:
+
+- frontmatter velden voor actuele agentstatus
+- sectie voor historiek / referentie, zoals:
+  - `## Agent activity`
+  - `## Commits`
+
+Daarin kunnen we per nieuwe activiteit vastleggen:
+
+- agentnaam
+- model
+- relevante agent-instellingen / context
+- start/stop-status waar zinvol
 
 ### D. Automatische commit logging voor nieuwe commits
 
 11. **`## Commits` voorbereiden én automatisch vullen**
-   - repo-managed hook/script, geen losse lokale sample-hooks
-   - alleen **nieuwe commits**, geen historische backfill
-   - nieuwe commits worden toegevoegd aan relevante taskfile(s)
-   - commit hash + subject loggen in `## Commits`
+
+- repo-managed hook/script, geen losse lokale sample-hooks
+- alleen **nieuwe commits**, geen historische backfill
+- nieuwe commits worden toegevoegd aan relevante taskfile(s)
+- commit hash + subject loggen in `## Commits`
 
 ### E. Multi-agent robuustheid
 
 12. **Concurrency-aanpak**
-   - task updates blijven file-version/checks respecteren
-   - agent-activiteit en sort-order updates moeten conflict-arm worden geschreven
-   - bij race/conflict: refresh/herhydrate pad behouden, geen stille overschrijvingen
+
+- task updates blijven file-version/checks respecteren
+- agent-activiteit en sort-order updates moeten conflict-arm worden geschreven
+- bij race/conflict: refresh/herhydrate pad behouden, geen stille overschrijvingen
 
 ## Verwachte implementatiestructuur uit het oorspronkelijke plan
 

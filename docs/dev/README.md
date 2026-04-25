@@ -16,6 +16,7 @@ Navigatie voor operationele workflowdocs en tijdelijke context.
 ## Actieve workflowbestanden
 
 - [[cline-workflow|Cline workflow]]
+- [[local-development-environment|Local development environment]]
 - [[ai-execution-os-generic|AI execution OS (generiek)]]
 - [[ui-assembly-decision-tree|UI assembly decision tree]]
 - [[stitch-workflow|Stitch workflow]]

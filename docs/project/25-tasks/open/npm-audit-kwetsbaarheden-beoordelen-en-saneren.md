@@ -10,7 +10,7 @@ summary: "Beoordeel de huidige npm audit meldingen na de testinfra-uitbreiding, 
 tags: [npm, audit, dependencies, security]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context

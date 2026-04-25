@@ -14,6 +14,7 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 ## Documentatie
 - Cline-instructies: `.clinerules`
 - Leidende projectdocs: `docs/project/README.md`
+- Lokale development setup: `docs/dev/local-development-environment.md`
 - Generated uploadset voor ChatGPT Project en Stitch: `docs/upload/**`
 - Generated ChatGPT Project context: `docs/project/generated/chatgpt-project-context.md`
 - Generated Stitch design context: `docs/design/generated/stitch-design-context.md`
@@ -29,6 +30,7 @@ Deze repository bevat een React Native / Expo app met Supabase backend voor:
 
 ## Contributor workflow (kort)
 - Check eerst `docs/project/README.md` en daarna `AGENTS.md` voor scope, waarheid en werkwijze.
+- Richt een nieuwe machine in via `docs/dev/local-development-environment.md`.
 - Gebruik **ChatGPT Projects** voor strategie/review/promptontwerp; gebruik **Cline in VS Code** voor repo-uitvoering.
 - Gebruik `docs/project/**` als canonieke bron; gebruik `docs/upload/**` niet als bron voor beslissingen.
 - Repo gebruikt canonieke docs + `AGENTS.md` + skills + lichte memory-bank/active-context workflow in `docs/dev/**`.
@@ -100,6 +102,9 @@ Los opruimen van de functions runtime kan met `npm run dev:stop`. Function logs 
 
 ## Stap-0 checklist
 - [ ] Node `24` actief (via `.nvmrc`)
+- [ ] Docker Desktop actief
+- [ ] GitHub CLI ingelogd met `gh auth login`
+- [ ] VS Code recommendations geinstalleerd
 - [ ] `npm install` uitgevoerd
 - [ ] `.env.local` gevuld op basis van `.env.example`
 - [ ] `npm run lint` is groen

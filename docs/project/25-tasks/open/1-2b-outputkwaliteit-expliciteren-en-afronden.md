@@ -10,7 +10,7 @@ summary: Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt w
 tags: [consumer-beta, outputkwaliteit]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
 
 
