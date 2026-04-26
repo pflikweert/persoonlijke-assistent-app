@@ -5,13 +5,16 @@ status: ready
 phase: transitiemaand-consumer-beta
 priority: p1
 source: split-from-task-moment-detail-foto-reorder-productiebug-herstel
-updated_at: 2026-04-24
+updated_at: 2026-04-26
 summary: "Onderzoek en herstel de resterende productieflakiness in moment detail foto-upload, met bronvaste repro, fasegerichte foutanalyse en bevestigde oorzaak in browser/Supabase-spoor."
 tags: [moment-detail, photos, production, upload, diagnostics]
 workstream: app
 due_date: null
 sort_order: 1
 ---
+
+
+
 
 ## Probleem / context
 

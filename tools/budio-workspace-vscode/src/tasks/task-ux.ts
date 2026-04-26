@@ -64,3 +64,17 @@ export function activeAgentLabel(task: Pick<TaskCardViewModel, 'activeAgent' | '
 
   return task.activeAgent;
 }
+
+export function compareActiveAgentsFirst(
+  left: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus'>,
+  right: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus'>,
+): number {
+  const leftActive = isTaskAgentActive(left);
+  const rightActive = isTaskAgentActive(right);
+
+  if (leftActive === rightActive) {
+    return 0;
+  }
+
+  return leftActive ? -1 : 1;
+}

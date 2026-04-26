@@ -10,7 +10,7 @@ summary: "De lokale `.env.local` krijgt de ontbrekende `STITCH_API_KEY`, zodat d
 tags: [mcp, stitch, local-dev, env]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context

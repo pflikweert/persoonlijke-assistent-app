@@ -48,6 +48,8 @@
     "env:pull:vercel": "npx vercel env pull .env.vercel.local",
     "docs:bundle": "node scripts/docs/build-docs-bundles.mjs",
     "docs:bundle:verify": "node scripts/docs/build-docs-bundles.mjs --check",
+    "task-commit-log": "node --import tsx scripts/task-commit-log.mjs",
+    "githooks:install": "git config core.hooksPath .githooks && chmod +x .githooks/post-commit",
     "taskflow:verify": "node scripts/docs/verify-taskflow-enforcement.mjs",
     "taskflow:test": "node --test scripts/docs/verify-taskflow-enforcement.test.mjs"
   },

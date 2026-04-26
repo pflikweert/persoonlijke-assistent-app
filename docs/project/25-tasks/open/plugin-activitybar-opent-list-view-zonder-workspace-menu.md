@@ -14,6 +14,7 @@ sort_order: 6
 ---
 
 
+
 # Budio Workspace activity-bar opent list view zonder workspace-menu
 
 ## Probleem / context
@@ -353,3 +354,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 ## Commits
 
 - dbe712d — docs(task): update plugin task status with unresolved bugs and 3-phase plan
+
+- a9e2961 — docs(task): add selection bug to plugin task status

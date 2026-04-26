@@ -1,3 +1,4 @@
+import { compareActiveAgentsFirst } from './task-ux';
 import type { TaskCardViewModel, TaskPriority, TaskSort, TaskStatus } from './types';
 
 export const WORK_ORDER_SORTS = ['manual', 'lane_order'] as const;
@@ -11,8 +12,10 @@ export function sortTaskCards(cards: readonly TaskCardViewModel[], sort: TaskSor
 }
 
 function compareCards(left: TaskCardViewModel, right: TaskCardViewModel, sort: TaskSort): number {
+  const activeAgentComparison = compareActiveAgentsFirst(left, right);
+
   if (sort === 'lane_order' || sort === 'status') {
-    return compareStatus(left.status, right.status) || compareManual(left, right);
+    return activeAgentComparison || compareStatus(left.status, right.status) || compareManual(left, right);
   }
 
   if (sort === 'due_date') {
@@ -35,7 +38,7 @@ function compareCards(left: TaskCardViewModel, right: TaskCardViewModel, sort: T
     return left.title.localeCompare(right.title);
   }
 
-  return compareManual(left, right);
+  return activeAgentComparison || compareManual(left, right);
 }
 
 function compareManual(left: TaskCardViewModel, right: TaskCardViewModel): number {

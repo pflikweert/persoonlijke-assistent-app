@@ -630,6 +630,11 @@ button {
   font-weight: 700;
 }
 
+.agent-task-chip-pulsing,
+.inline-agent-chip {
+  animation: agentPulse 1.8s ease-in-out infinite;
+}
+
 .inline-agent-chip {
   margin-left: 8px;
   vertical-align: middle;
@@ -963,6 +968,14 @@ button {
   z-index: 4;
 }
 
+.detail-pane-fullscreen {
+  position: absolute;
+  inset: 0;
+  padding: var(--space-4);
+  border-left: 0;
+  z-index: 9;
+}
+
 .detail-pane-toggle {
   position: absolute;
   top: 0;
@@ -986,16 +999,16 @@ button {
   grid-template-columns: minmax(0, 1fr) !important;
 }
 
-.detail-fullscreen .main-pane {
+.detail-fullscreen .detail-resize-handle,
+.detail-fullscreen .detail-backdrop {
   display: none;
 }
 
-.detail-fullscreen .detail-pane {
-  position: relative;
-  width: 100%;
-  max-width: none;
-  border-left: 0;
-  transform: none;
+.detail-fullscreen-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: rgba(13, 16, 22, 0.98);
 }
 
 .detail-fullscreen-shell {
@@ -1138,6 +1151,19 @@ button {
   gap: 6px 10px;
   font-size: 12px;
   color: var(--muted-strong);
+}
+
+@keyframes agentPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(152, 215, 255, 0.18);
+    transform: translateY(0);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(152, 215, 255, 0.06);
+    transform: translateY(-1px);
+  }
 }
 
 .checklist-block h3,

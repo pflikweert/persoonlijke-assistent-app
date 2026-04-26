@@ -16,6 +16,11 @@ import type {
 const H1_PATTERN = /^# /;
 const CHECKLIST_PATTERN = /^- \[( |x|X)\] /;
 
+const SECTION_PLACEHOLDER_BY_HEADING: Record<string, string> = {
+  'Agent activity': '- Geen actieve agent.',
+  Commits: '- Nog geen commit-registraties.',
+};
+
 export function applyTaskFieldPatch(task: ParsedTaskFile, patch: TaskFieldPatch): string {
   const nextFrontmatter = {
     ...task.frontmatterValues,
@@ -186,6 +191,38 @@ export function buildTargetPathForStatus(
   const fileName = path.basename(currentPath);
   const targetFolder = targetStatus === 'done' ? 'done' : 'open';
   return path.resolve(workspaceRoot, tasksRootRelative, targetFolder, fileName);
+}
+
+export function appendSectionListEntry(task: ParsedTaskFile, heading: string, entry: string): string {
+  const nextBodyLines = [...task.bodyLines];
+  const normalizedHeading = heading.toLowerCase();
+  const section = task.sections.get(normalizedHeading);
+  const placeholder = SECTION_PLACEHOLDER_BY_HEADING[heading];
+
+  if (section) {
+    const insertIndex = section.endLineExclusive;
+    const sectionLines = section.lines;
+    const hasPlaceholder = placeholder ? sectionLines.some((line) => line.trim() === placeholder) : false;
+
+    if (hasPlaceholder) {
+      const placeholderLineIndex = nextBodyLines.findIndex(
+        (line, index) => index >= section.contentStartLine && index < section.endLineExclusive && line.trim() === placeholder,
+      );
+      if (placeholderLineIndex >= 0) {
+        nextBodyLines.splice(placeholderLineIndex, 1, entry);
+      }
+    } else {
+      const needsLeadingBlank = insertIndex > 0 && nextBodyLines[insertIndex - 1]?.trim() !== '';
+      const linesToInsert = needsLeadingBlank ? ['', entry] : [entry];
+      nextBodyLines.splice(insertIndex, 0, ...linesToInsert);
+    }
+
+    return `${serializeFrontmatter(task.frontmatterValues, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
+  }
+
+  const suffix = nextBodyLines.length > 0 && nextBodyLines[nextBodyLines.length - 1]?.trim() !== '' ? ['', ''] : [''];
+  nextBodyLines.push(...suffix, `## ${heading}`, '', entry);
+  return `${serializeFrontmatter(task.frontmatterValues, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
 }
 
 function serializeFrontmatter(

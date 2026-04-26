@@ -5,13 +5,16 @@ status: ready
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-23
+updated_at: 2026-04-26
 summary: "Breid de nieuwe gallery-smoke basis uit naar een volledige end-user E2E-suite voor toevoegen, verwijderen, max-limiet, viewer, reorder en unhappy/error flows."
 tags: [qa, tests, gallery, photos, e2e]
 workstream: app
 due_date: null
 sort_order: 2
 ---
+
+
+
 
 ## Probleem / context
 

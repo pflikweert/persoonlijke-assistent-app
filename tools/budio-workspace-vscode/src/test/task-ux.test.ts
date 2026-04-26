@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   activeAgentLabel,
   checklistProgressTone,
+  compareActiveAgentsFirst,
   compactChecklistProgressLabel,
   isTaskAgentActive,
 } from '../tasks/task-ux';
@@ -25,4 +26,10 @@ test('agent activity helpers only mark active-like statuses as active labels', (
   assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'done' }), false);
   assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'running' }), 'Cline');
   assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'done' }), null);
+});
+
+test('active agent comparison sorts active tasks before inactive tasks', () => {
+  assert.equal(compareActiveAgentsFirst({ activeAgent: 'Cline', activeAgentStatus: 'running' }, { activeAgent: null, activeAgentStatus: null }), -1);
+  assert.equal(compareActiveAgentsFirst({ activeAgent: null, activeAgentStatus: null }, { activeAgent: 'Cline', activeAgentStatus: 'running' }), 1);
+  assert.equal(compareActiveAgentsFirst({ activeAgent: 'Cline', activeAgentStatus: 'running' }, { activeAgent: 'Codex', activeAgentStatus: 'active' }), 0);
 });

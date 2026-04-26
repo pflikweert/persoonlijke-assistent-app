@@ -72,3 +72,14 @@ test('sortTaskCards supports due, priority, progress, updated and alphabetical m
   assert.deepEqual(sortTaskCards(cards, 'updated_at').map((item) => item.id), ['c', 'a', 'b']);
   assert.deepEqual(sortTaskCards(cards, 'alphabetical').map((item) => item.id), ['b', 'c', 'a']);
 });
+
+test('sortTaskCards promotes active-agent tasks to the top while preserving other sort behavior', () => {
+  const cards = [
+    card({ id: 'inactive-1', title: 'A', status: 'ready', sortOrder: 1 }),
+    card({ id: 'active-1', title: 'Z', status: 'ready', sortOrder: 3, activeAgent: 'Cline', activeAgentStatus: 'running' }),
+    card({ id: 'inactive-2', title: 'B', status: 'backlog', sortOrder: 1 }),
+  ];
+
+  assert.deepEqual(sortTaskCards(cards, 'manual').map((item) => item.id), ['active-1', 'inactive-1', 'inactive-2']);
+  assert.deepEqual(sortTaskCards(cards, 'lane_order').map((item) => item.id), ['active-1', 'inactive-2', 'inactive-1']);
+});

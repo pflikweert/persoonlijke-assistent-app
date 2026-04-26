@@ -30,15 +30,16 @@ import {
   formatLastChangeDate,
 } from '../../src/tasks/task-ux';
 import type { HostToWebviewMessage } from '../../src/webview-bridge/messages';
+import {
+  DETAIL_PANE_MIN_WIDTH,
+  getViewportKind,
+  type DetailRenderMode,
+  useTaskDetailLayout,
+} from './use-task-detail-layout';
 import { vscode } from './vscode';
 
 type ViewMode = 'board' | 'list' | 'settings';
 type DueFilter = 'all' | 'today' | 'overdue' | 'no_date';
-type ViewportKind = 'desktop' | 'tablet' | 'small';
-
-const DETAIL_PANE_MIN_WIDTH = 320;
-const DETAIL_PANE_MAX_WIDTH = 720;
-const DETAIL_PANE_DEFAULT_WIDTH = 420;
 const CLICK_DRAG_SUPPRESSION_MS = 180;
 
 interface Filters {
@@ -111,41 +112,42 @@ export function App(): React.JSX.Element {
   const [formState, setFormState] = useState<MetadataFormState | null>(null);
   const [formTaskId, setFormTaskId] = useState<string | null>(null);
   const [pendingDiskChanges, setPendingDiskChanges] = useState(false);
-  const [viewport, setViewport] = useState<ViewportKind>(getViewportKind);
-  const [detailOpen, setDetailOpen] = useState<boolean>(getViewportKind() === 'desktop');
   const [detailMenuOpen, setDetailMenuOpen] = useState(false);
   const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [pendingCloseAfterSave, setPendingCloseAfterSave] = useState(false);
+  const [pendingSelectedTaskId, setPendingSelectedTaskId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [refreshState, setRefreshState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [detailPaneWidth, setDetailPaneWidth] = useState<number>(DETAIL_PANE_DEFAULT_WIDTH);
-  const [detailFullscreen, setDetailFullscreen] = useState(false);
-  const [isResizingDetailPane, setIsResizingDetailPane] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const titleRef = useRef<HTMLInputElement | null>(null);
   const refreshResetTimeoutRef = useRef<number | null>(null);
   const hasHydratedSortRef = useRef(false);
   const moveDispatchLockRef = useRef(false);
-  const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
   const suppressSelectionUntilRef = useRef(0);
+  const {
+    viewport,
+    detailOpen,
+    setDetailOpen,
+    detailFullscreen,
+    setDetailFullscreen,
+    detailPaneWidth,
+    renderMode,
+    isResizingDetailPane,
+    startResize,
+    closeDetail,
+  } = useTaskDetailLayout(selectedTaskId);
 
-  const detailMode = viewport === 'desktop' ? 'split' : 'overlay';
-  const isFullscreenDetail = viewport !== 'desktop' || detailFullscreen;
-
-  useEffect(() => {
-    const handleResize = () => {
-      setViewport(getViewportKind());
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const detailMode = renderMode === 'split' ? 'split' : 'overlay';
+  const isFullscreenDetail = renderMode === 'fullscreen';
+  const effectiveFilters = useMemo(
+    () => getEffectiveFilters(filters, activeView),
+    [activeView, filters],
+  );
 
   useEffect(() => {
     if (!selectedTaskId) {
-      setDetailOpen(false);
       setDetailMenuOpen(false);
       setCloseConfirmOpen(false);
       setPendingCloseAfterSave(false);
@@ -153,35 +155,6 @@ export function App(): React.JSX.Element {
       setArchiveConfirmOpen(false);
     }
   }, [selectedTaskId]);
-
-  useEffect(() => {
-    if (!isResizingDetailPane) {
-      return;
-    }
-
-    const onPointerMove = (event: PointerEvent) => {
-      const start = resizeStartRef.current;
-      if (!start) {
-        return;
-      }
-
-      const nextWidth = clampDetailPaneWidth(start.width - (event.clientX - start.x));
-      setDetailPaneWidth(nextWidth);
-    };
-
-    const stopResize = () => {
-      resizeStartRef.current = null;
-      setIsResizingDetailPane(false);
-    };
-
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', stopResize);
-
-    return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', stopResize);
-    };
-  }, [isResizingDetailPane]);
 
   useEffect(
     () => () => {
@@ -210,7 +183,7 @@ export function App(): React.JSX.Element {
           : false;
         if (requestedTaskStillExists && requestedTaskId) {
           setSelectedTaskId(requestedTaskId);
-          if (message.focusTaskId && getViewportKind() !== 'desktop') {
+          if (message.focusTaskId && viewport !== 'desktop') {
             setDetailOpen(true);
           }
         } else if (message.snapshot.allCards[0]) {
@@ -263,6 +236,11 @@ export function App(): React.JSX.Element {
           setCloseConfirmOpen(false);
           setPendingCloseAfterSave(false);
         }
+        if (pendingSelectedTaskId) {
+          setSelectedTaskId(pendingSelectedTaskId);
+          setPendingSelectedTaskId(null);
+          setDetailOpen(true);
+        }
         return;
       }
 
@@ -289,7 +267,7 @@ export function App(): React.JSX.Element {
     vscode.postMessage({ type: 'ready' });
 
     return () => window.removeEventListener('message', handler);
-  }, [pendingCloseAfterSave, selectedTaskId]);
+  }, [pendingCloseAfterSave, pendingSelectedTaskId, selectedTaskId]);
 
   const tags = useMemo(() => {
     const values = new Set<string>();
@@ -315,10 +293,10 @@ export function App(): React.JSX.Element {
     }
 
     return sortTaskCards(
-      snapshot.allCards.filter((card) => matchesFilters(card, search, filters)),
+      snapshot.allCards.filter((card) => matchesFilters(card, search, effectiveFilters)),
       sort,
     );
-  }, [filters, search, snapshot, sort]);
+  }, [effectiveFilters, search, snapshot, sort]);
   const listCards = useMemo(
     () => applySortDirection(filteredCards, sortDirection),
     [filteredCards, sortDirection],
@@ -430,7 +408,7 @@ export function App(): React.JSX.Element {
     return () => window.removeEventListener('click', onGlobalClick);
   }, [detailMenuOpen]);
 
-  const dragBlockedByFiltering = hasActiveFiltering(search, filters);
+  const dragBlockedByFiltering = hasActiveFiltering(search, effectiveFilters, activeView);
   const dragEnabled = !dragBlockedByFiltering;
   const listDragEnabled = activeView === 'list' && !dragBlockedByFiltering;
   const formDirty = isFormDirty(selectedTask, formState);
@@ -452,7 +430,7 @@ export function App(): React.JSX.Element {
           aria-label={refreshButtonTitle(refreshState)}
           disabled={refreshState === 'loading'}
         >
-          <span aria-hidden="true">↻</span>
+          <span className="rail-button-icon" aria-hidden="true">↻</span>
         </button>
       </aside>
 
@@ -612,12 +590,14 @@ export function App(): React.JSX.Element {
               </div>
 
               <div className="filter-toggles">
-                <button
-                  className={`ghost-button ${filters.onlyOpen ? 'active' : ''}`}
-                  onClick={() => updateFilters({ onlyOpen: !filters.onlyOpen })}
-                >
-                  Alleen open
-                </button>
+                {activeView === 'list' ? (
+                  <button
+                    className={`ghost-button ${filters.onlyOpen ? 'active' : ''}`}
+                    onClick={() => updateFilters({ onlyOpen: !filters.onlyOpen })}
+                  >
+                    Alleen open
+                  </button>
+                ) : null}
                 <button
                   className={`ghost-button ${filters.onlyChecklistOpen ? 'active' : ''}`}
                   onClick={() => updateFilters({ onlyChecklistOpen: !filters.onlyChecklistOpen })}
@@ -1022,10 +1002,7 @@ export function App(): React.JSX.Element {
               type="button"
               className={`detail-resize-handle ${isResizingDetailPane ? 'active' : ''}`}
               aria-label="Resize detail pane"
-              onPointerDown={(event) => {
-                resizeStartRef.current = { x: event.clientX, width: detailPaneWidth };
-                setIsResizingDetailPane(true);
-              }}
+              onPointerDown={startResize}
             />
           ) : null}
 
@@ -1038,15 +1015,26 @@ export function App(): React.JSX.Element {
             />
           ) : null}
 
-          {detailOpen ? (
-            <aside
-              className={`detail-pane ${detailMode === 'overlay' ? 'detail-pane-toggle' : 'detail-pane-pinned'} ${
-                detailOpen ? 'open' : ''
-              }`}
-            >
-            {selectedTask && formState ? (
-              <>
-                <div className="detail-header">
+          {renderMode === 'split' ? renderDetailPane('split') : null}
+        </div>
+
+        {renderMode === 'fullscreen' ? (
+          <div className="detail-fullscreen-layer">
+            {renderDetailPane('fullscreen')}
+          </div>
+        ) : null}
+      </main>
+    </div>
+  );
+
+  function renderDetailPane(mode: Extract<DetailRenderMode, 'split' | 'fullscreen'>): React.JSX.Element {
+    const detailSnapshot = snapshot;
+    const detailAgentLabel = selectedTask ? activeAgentLabel(selectedTask) : null;
+    return (
+      <aside className={`detail-pane ${mode === 'fullscreen' ? 'detail-pane-fullscreen' : 'detail-pane-pinned'} open`}>
+        {selectedTask && formState && detailSnapshot ? (
+          <>
+            <div className="detail-header">
                   <div className="detail-header-topbar">
                     <button
                       className="icon-button menu-toggle-button"
@@ -1077,6 +1065,8 @@ export function App(): React.JSX.Element {
                   <div className="detail-hero">
                     <h2>{selectedTask.title}</h2>
                     <div className="detail-meta-chips">
+                      <span className="active-task-chip">Actief</span>
+                      {detailAgentLabel ? <span className="agent-task-chip agent-task-chip-pulsing">{detailAgentLabel}</span> : null}
                       <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
                       <span className="task-ref" title={selectedTask.id}>
                         {formatTaskRef(selectedTask.id)}
@@ -1127,7 +1117,7 @@ export function App(): React.JSX.Element {
                   ) : null}
                 </div>
 
-                <div className="detail-form">
+            <div className="detail-form">
                   <label className="detail-title-field">
                     <span>Titel</span>
                     <input ref={titleRef} value={formState.title} onChange={(event) => patchForm({ title: event.target.value })} />
@@ -1140,7 +1130,7 @@ export function App(): React.JSX.Element {
                         value={formState.status}
                         onChange={(event) => patchForm({ status: event.target.value as TaskStatus })}
                       >
-                        {snapshot.settings.columns.map((status) => (
+                        {detailSnapshot.settings.columns.map((status) => (
                           <option key={status} value={status}>
                             {STATUS_LABELS[status]}
                           </option>
@@ -1276,7 +1266,13 @@ export function App(): React.JSX.Element {
                           onClick={() => {
                             setCloseConfirmOpen(false);
                             resetFormFromSelectedTask();
-                            setDetailOpen(false);
+                            if (pendingSelectedTaskId) {
+                              setSelectedTaskId(pendingSelectedTaskId);
+                              setPendingSelectedTaskId(null);
+                              setDetailOpen(true);
+                            } else {
+                              closeDetail();
+                            }
                           }}
                         >
                           Verwerpen
@@ -1351,21 +1347,16 @@ export function App(): React.JSX.Element {
                       </div>
                     ) : null}
                   </div>
-                </div>
-              </>
-            ) : (
-              <div className="empty-detail">
-                {detailMode === 'overlay'
-                  ? 'Open een kaart om details te bekijken.'
-                  : 'Selecteer een kaart om details te bekijken.'}
-              </div>
-            )}
-            </aside>
-          ) : null}
-        </div>
-      </main>
-    </div>
-  );
+            </div>
+          </>
+        ) : (
+          <div className="empty-detail">
+            {mode === 'fullscreen' ? 'Open een kaart om details te bekijken.' : 'Selecteer een kaart om details te bekijken.'}
+          </div>
+        )}
+      </aside>
+    );
+  }
 
   function switchView(view: ViewMode): void {
     setActiveView(view);
@@ -1489,10 +1480,21 @@ export function App(): React.JSX.Element {
   }
 
   function selectTask(taskId: string): void {
+    if (selectedTaskId === taskId) {
+      return;
+    }
+
+    if (formDirty) {
+      setPendingSelectedTaskId(taskId);
+      setCloseConfirmOpen(true);
+      return;
+    }
+
     setSelectedTaskId(taskId);
     setDetailOpen(true);
     setCloseConfirmOpen(false);
     setPendingCloseAfterSave(false);
+    setPendingSelectedTaskId(null);
   }
 
   function resetFormFromSelectedTask(): void {
@@ -1508,11 +1510,12 @@ export function App(): React.JSX.Element {
   function requestClosePanel(): void {
     setDetailMenuOpen(false);
     if (formDirty) {
+      setPendingSelectedTaskId(null);
       setCloseConfirmOpen(true);
       return;
     }
     setCloseConfirmOpen(false);
-    setDetailOpen(false);
+    closeDetail();
   }
 
   function handleRefresh(): void {
@@ -1615,24 +1618,27 @@ function WorkstreamBadge(props: { workstream: TaskWorkstream | null }): React.JS
   );
 }
 
-function getViewportKind(): ViewportKind {
-  const width = window.innerWidth;
-  if (width < 768) {
-    return 'small';
-  }
-  if (width < 1180) {
-    return 'tablet';
-  }
-  return 'desktop';
-}
-
-function hasActiveFiltering(search: string, filters: Filters): boolean {
+function hasActiveFiltering(search: string, filters: Filters, activeView: ViewMode): boolean {
   return Boolean(search.trim()) || Object.entries(filters).some(([key, value]) => {
-    if (key === 'onlyOpen' || key === 'onlyChecklistOpen') {
+    if (key === 'onlyOpen') {
+      return activeView === 'list' ? Boolean(value) : false;
+    }
+    if (key === 'onlyChecklistOpen') {
       return Boolean(value);
     }
     return value !== 'all';
   });
+}
+
+function getEffectiveFilters(filters: Filters, activeView: ViewMode): Filters {
+  if (activeView === 'list') {
+    return filters;
+  }
+
+  return {
+    ...filters,
+    onlyOpen: false,
+  };
 }
 
 function matchesFilters(card: TaskCardViewModel, search: string, filters: Filters): boolean {
@@ -1826,6 +1832,3 @@ function toMetadataFormState(task: TaskCardViewModel): MetadataFormState {
   };
 }
 
-function clampDetailPaneWidth(value: number): number {
-  return Math.max(DETAIL_PANE_MIN_WIDTH, Math.min(DETAIL_PANE_MAX_WIDTH, value));
-}
