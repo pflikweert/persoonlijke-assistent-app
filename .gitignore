@@ -34,6 +34,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.har
+*.har.zip
+download-log.jsonl
 
 # macOS
 .DS_Store
@@ -53,6 +56,18 @@ pnpm-debug.log*
 *.key
 *.mobileprovision
 *.pem
+
+# Local-only sensitive research data
+.local-data/**
+local-data/**
+browser-profile/**
+playwright-profile/**
+medical-exports/**
+medical-downloads/**
+*.dcm
+*.dicom
+*.nii
+*.nii.gz
 
 # Misc
 *.orig

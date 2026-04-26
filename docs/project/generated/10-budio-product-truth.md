@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-25T22:02:50.683Z
-Source Commit: f044130
+Build Timestamp (UTC): 2026-04-26T19:57:29.572Z
+Source Commit: 09d9374
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

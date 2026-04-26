@@ -30,6 +30,8 @@
     "test:e2e:gallery:full": "playwright test tests/e2e/gallery-full.spec.mjs",
     "test:chatgpt-markdown-import": "node scripts/test-chatgpt-markdown-import.mjs",
     "test:reflection-helpers": "node scripts/test-reflection-helpers.mjs",
+    "hme-me:prepare": "tsx modules/hme-me-research/scripts/prepare-local-data-root.ts",
+    "hme-me:inspect-radboud": "tsx modules/hme-me-research/scripts/inspect-radboud-viewer.ts",
     "verify:local-auth-mail": "sh ./scripts/verify-local-auth-mail.sh",
     "verify:local-auth-login": "node scripts/verify-local-auth-login.mjs",
     "verify:local-auth-magic-link": "node scripts/get-local-magic-link.mjs",
@@ -102,6 +104,7 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "supabase": "2.90.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.2",
     "vitest": "^4.1.5"
   },
