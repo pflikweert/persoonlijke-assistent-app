@@ -6,12 +6,13 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-04-27
-summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Laatste sessiestatus: fullscreen toggle werkt, maar task-openen/tonen en drag/sort in board + list zijn nog niet opgelost en moeten structureel herbouwd worden in maximaal 3 fases."
+summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Laatste sessiestatus: fullscreen toggle werkt, maar task-openen/tonen en drag/sort in board + list zijn nog niet opgelost; daarnaast opent klikken op willekeurige tasks nu onterecht steeds dezelfde (actieve) kaart. Dit moet structureel herbouwd worden in maximaal 3 fases."
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
 sort_order: 6
 ---
+
 
 # Budio Workspace activity-bar opent list view zonder workspace-menu
 
@@ -66,6 +67,7 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 - [x] `Last change` compact gemaakt (`Apr 25`) zodat de datum niet over twee regels breekt.
 - [x] Drag-vs-click structureel gescheiden zodat slepen niet meer meteen task detail opent.
 - [ ] Task-openen en tonen structureel herzien: openen altijd in het taakvlak boven board/lane of list (niet in een lege placeholder rechts naast board/list).
+- [ ] Selectiebug herstellen: klikken op willekeurige task in board/list opent nu steeds dezelfde actieve kaart i.p.v. de aangeklikte task.
 - [ ] Task-openen weer klikbaar en betrouwbaar maken in board + list na de structurele herbouw.
 - [ ] Drag & drop voor lane/sortering in board + list volledig herstellen en valideren (nu niet klik/sleepbaar in runtime).
 - [ ] Detailweergave volledig stabiel maken: klein scherm fullscreen, desktop side-pane met expliciete fullscreen-optie, zonder lege rechterkolom of overlap over list/board.
@@ -78,6 +80,7 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 ### Fase 1 — Task-openen/tonen en interactief fundament structureel herbouwen
 
 - task-openen/tonen volledig herzien: detail opent in het taakvlak boven lane/board of list, nooit in een losse rechter-placeholder
+- selectie-state fixen zodat klik altijd de correcte aangeklikte task opent (niet de eerder actieve kaart)
 - klik op tasks in board + list weer betrouwbaar maken
 - drag-vs-click regressies herstellen zonder board/list drag-drop te breken
 - board + list drag/drop voor lane + sortering robuust herstellen
@@ -290,6 +293,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 
 - Fullscreen toggle werkt nu wel, maar de rest van de interactiestack is nog niet opgelost.
 - Task-openen moet structureel opnieuw worden ontworpen: openen over lane/board/list-context, niet in de rechter placeholder naast board/list.
+- Nieuwe regressie bevestigd: klikken op verschillende tasks opent nu telkens dezelfde actieve kaart (bijv. `Entry photo gallery volledige end-user E2E flows`) in plaats van de geselecteerde task.
 - Task-openen en drag/drop in board + list hebben op dit moment regressies (taken niet goed aanklikbaar en niet sleepbaar voor lane/sortering).
 - Actieve agent-visualisatie is nog niet volledig volgens plan: animatie en consistente visual state in board/list/detail ontbreken nog.
 - Agent metadata bestaat nu vooral als frontmatter-model; de geplande activity-/commit-secties in task-md zijn nog niet uitgewerkt.
@@ -344,3 +348,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - **In deze ronde aantoonbaar afgerond:** list-only `onlyOpen`, start van detail-layout herbouw via aparte hook, plugin typecheck/test/docs-verify in de vorige ronde.
 - **Later toegevoegd of opnieuw geopend:** fullscreen/detail claims teruggezet naar in uitvoering omdat runtime nog fout was; board/list click+drag regressies horen expliciet in fase 1 thuis.
 - **Open / blocked:** taak blijft `in_progress` totdat fase 1 runtime-stabiel is en daarna fase 2/3 inclusief handmatige smoke-check bevestigd zijn.
+
+
+## Commits
+
+- dbe712d — docs(task): update plugin task status with unresolved bugs and 3-phase plan

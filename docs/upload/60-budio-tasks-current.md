@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-26T19:57:29.572Z
-Source Commit: 09d9374
+Build Timestamp (UTC): 2026-04-26T22:50:09.861Z
+Source Commit: dbe712d
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 17
+- Totaal tasks opgenomen: 18
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -589,6 +589,132 @@ Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie 
 
 ---
 
+## Budio Workspace Command Room research en startpunt vastleggen
+
+- Path: `docs/project/25-tasks/open/budio-workspace-command-room-research-en-startpunt-vastleggen.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-26
+
+```md
+---
+id: task-budio-workspace-command-room-research-startpunt
+title: Budio Workspace Command Room research en startpunt vastleggen
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-26
+summary: "Research- en startpunt vastleggen voor een lokale Budio Workspace Command Room die leert van Linear en Cline Kanban en later Codex-ready kan worden."
+tags: [idea, research, plugin, workspace, linear, cline, codex]
+workstream: plugin
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+Er bestaat al een Linear-geïnspireerd Workspace-idee voor structuur, intake en views, maar nog geen expliciet research-startpunt voor een bredere local-first Command Room-richting die ook Cline Kanban en Codex als referenties meeneemt.
+
+Zonder deze vastlegging blijft dit spoor te makkelijk hangen als losse chatcontext in plaats van als traceerbaar idee binnen de bestaande Budio Workspace- en pluginlaag.
+
+## Gewenste uitkomst
+
+Er staat één nieuw idea/research-document in `docs/project/40-ideas/40-platform-and-architecture/` dat de richting vastlegt voor een Linear-inspired, Codex-ready, local-first Budio Workspace Command Room.
+
+Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en expliciet koppelt aan het bestaande Linear-geïnspireerde Workspace-idee, zonder dat dit al actieve planning, pluginbouw of scopeverbreding wordt.
+
+## Waarom nu
+
+- Dit borgt een waardevol researchspoor zonder het voortijdig te promoveren naar actieve bouwscope.
+- Het sluit logisch aan op het bestaande Linear Workspace-idee en de plugin-focus in de huidige fase.
+- Het voorkomt dat Browser Shell-, Codex-runner- of Jarvis-discussies te vroeg door elkaar gaan lopen.
+
+## In scope
+
+- Idea-doc toevoegen op de gevraagde locatie.
+- Taskfile toevoegen in `docs/project/25-tasks/open/`.
+- Koppeling vastleggen naar `100-linear-geinspireerde-budio-workspace-structuurlaag.md`.
+- Taskflow-, docs-bundle- en docs-bundle-verify uitvoeren.
+
+## Buiten scope
+
+- Codewijzigingen.
+- Pluginbouw of wijzigingen in `tools/budio-workspace-vscode/**`.
+- Browser shell bouwen.
+- Codex runner bouwen.
+- Worktrees uitwerken.
+- Jarvis-scope verbreden.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Voeg precies één nieuw idea/research-document toe op basis van het aangeleverde Markdown-document.
+- Maak precies één taskfile aan om dit startpunt traceerbaar te maken.
+- Bewaar dit als proposal/idea en niet als actieve planning of implementatie.
+
+## Expliciete user requirements / detailbehoud
+
+- Gebruik `docs/project/README.md`, `docs/project/20-planning/50-budio-workspace-plugin-focus.md`, `docs/project/40-ideas/40-platform-and-architecture/100-linear-geinspireerde-budio-workspace-structuurlaag.md`, `docs/dev/cline-workflow.md`, `AGENTS.md` en `.agents/skills/task-status-sync-workflow/SKILL.md` als verplichte leesvolgorde.
+- Taskfile moet `status: backlog`, `phase: transitiemaand-consumer-beta`, `priority: p2`, `workstream: plugin`, tags `[idea, research, plugin, workspace, linear, cline, codex]` en de opgegeven samenvatting krijgen.
+- Niet raken: `tools/budio-workspace-vscode/**`, `app/**`, `components/**`, `services/**`, `supabase/**`, en `package.json` tenzij een bestaand verify-script aantoonbaar ontbreekt.
+- `docs/upload/**` niet handmatig wijzigen; alleen via `npm run docs:bundle`.
+- Verify sequentieel uitvoeren: `npm run taskflow:verify`, `npm run docs:bundle`, `npm run docs:bundle:verify`.
+- Alleen als lint/typecheck standaard verplicht blijkt voor docs-only taken in deze repo: ook `npm run lint` en `npm run typecheck`.
+- Commit alleen als verify slaagt.
+
+## Status per requirement
+
+- [ ] Nieuw idea/research-document aangemaakt — status: niet gebouwd
+- [ ] Nieuwe backlog-task aangemaakt — status: niet gebouwd
+- [ ] Koppeling aan bestaand Linear Workspace-idee vastgelegd — status: niet gebouwd
+- [ ] Verify sequentieel uitgevoerd en gerapporteerd — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [ ] Blok 2: primair docs-artefact en taskfile toevoegen.
+- [ ] Blok 3: gerichte verify en docs/taskstatus afronden.
+
+## Concrete checklist
+
+- [ ] Idea-doc toevoegen met aangeleverde inhoud.
+- [ ] Taskfile toevoegen met juiste frontmatter en scopeafbakening.
+- [ ] Backlog-sortering actualiseren zodat deze task bovenaan staat.
+- [ ] Verify uitvoeren en output vastleggen.
+
+## Blockers / afhankelijkheden
+
+- Geen functionele blockers; alleen docs- en taskflow-discipline.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+- Indien repo-regels of tooling dat voor docs-only expliciet vereisen: `npm run lint` en `npm run typecheck`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: één idea-doc en één taskfile toevoegen voor dit research-startpunt.
+- Toegevoegde verbeteringen: geen.
+- Afgerond: nog bij te werken tijdens uitvoering.
+- Open / blocked: nog bij te werken tijdens uitvoering.
+
+## Relevante links
+
+- `docs/project/20-planning/50-budio-workspace-plugin-focus.md`
+- `docs/project/40-ideas/40-platform-and-architecture/100-linear-geinspireerde-budio-workspace-structuurlaag.md`
+- `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+```
+
+---
+
 ## Docs folderstructuur en visual language herbeoordelen na metadatafase
 
 - Path: `docs/project/25-tasks/open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md`
@@ -775,7 +901,7 @@ Het resultaat van deze taak is een besluit- en uitvoeringskader; geen directe te
 - Status: ready
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-23
+- Updated_at: 2026-04-26
 
 ```md
 ---
@@ -785,13 +911,16 @@ status: ready
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-23
+updated_at: 2026-04-26
 summary: "Breid de nieuwe gallery-smoke basis uit naar een volledige end-user E2E-suite voor toevoegen, verwijderen, max-limiet, viewer, reorder en unhappy/error flows."
 tags: [qa, tests, gallery, photos, e2e]
 workstream: app
 due_date: null
 sort_order: 2
 ---
+
+
+
 
 ## Probleem / context
 
@@ -871,7 +1000,7 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 - Status: ready
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-24
+- Updated_at: 2026-04-26
 
 ```md
 ---
@@ -881,13 +1010,16 @@ status: ready
 phase: transitiemaand-consumer-beta
 priority: p1
 source: split-from-task-moment-detail-foto-reorder-productiebug-herstel
-updated_at: 2026-04-24
+updated_at: 2026-04-26
 summary: "Onderzoek en herstel de resterende productieflakiness in moment detail foto-upload, met bronvaste repro, fasegerichte foutanalyse en bevestigde oorzaak in browser/Supabase-spoor."
 tags: [moment-detail, photos, production, upload, diagnostics]
 workstream: app
 due_date: null
 sort_order: 1
 ---
+
+
+
 
 ## Probleem / context
 
@@ -1418,7 +1550,7 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - Status: in_progress
 - Priority: p2
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-25
+- Updated_at: 2026-04-27
 
 ```md
 ---
@@ -1428,13 +1560,14 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
-updated_at: 2026-04-25
-summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view. Veel list/board polish uit deze sessie zit in code, maar fullscreen-detail rendering is nog niet structureel af en houdt deze task terecht op in_progress."
+updated_at: 2026-04-27
+summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Laatste sessiestatus: fullscreen toggle werkt, maar task-openen/tonen en drag/sort in board + list zijn nog niet opgelost; daarnaast opent klikken op willekeurige tasks nu onterecht steeds dezelfde (actieve) kaart. Dit moet structureel herbouwd worden in maximaal 3 fases."
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
 sort_order: 6
 ---
+
 
 # Budio Workspace activity-bar opent list view zonder workspace-menu
 
@@ -1459,7 +1592,7 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 ## In scope
 
 - Activity-bar open-route laten landen in `list` view.
-- Oude launcher/tussenlaag opruimen of minimaliseren tot alleen technisch noodzakelijke VS Code plumbing.
+- Oude launcher/tussenlaag opruimen of minimaliseren tot alleen technisch noodzakelijke VS Code plumbing. Geen zijbalk openen/tonen die toch leeg is.
 - Verouderde launcher-referenties uit extension-code en README verwijderen.
 - Zorgen dat de webview-titel correct meebeweegt met de actieve view.
 
@@ -1483,15 +1616,46 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 - [x] Checklist progress compacter en visueel consistenter gemaakt met gedeelde kleurbanden.
 - [x] Plugin opent standaard met `Alleen open` actief.
 - [x] Linker rail omgezet naar icon-first navigatie.
-- [x] Detail pane uitbreidbaar gemaakt met resize handle en fullscreen toggle.
+- [x] Detail pane uitbreidbaar gemaakt met resize handle en fullscreen toggle (basis aanwezig).
 - [x] Agent activity zichtbaar gemaakt in list/board task-overzichten via gedeeld helperpatroon.
 - [x] Rail refresh-knop gelijkgetrokken met de andere icon-buttons.
 - [x] `Last change` compact gemaakt (`Apr 25`) zodat de datum niet over twee regels breekt.
 - [x] Drag-vs-click structureel gescheiden zodat slepen niet meer meteen task detail opent.
+- [ ] Task-openen en tonen structureel herzien: openen altijd in het taakvlak boven board/lane of list (niet in een lege placeholder rechts naast board/list).
+- [ ] Selectiebug herstellen: klikken op willekeurige task in board/list opent nu steeds dezelfde actieve kaart i.p.v. de aangeklikte task.
+- [ ] Task-openen weer klikbaar en betrouwbaar maken in board + list na de structurele herbouw.
+- [ ] Drag & drop voor lane/sortering in board + list volledig herstellen en valideren (nu niet klik/sleepbaar in runtime).
 - [ ] Detailweergave volledig stabiel maken: klein scherm fullscreen, desktop side-pane met expliciete fullscreen-optie, zonder lege rechterkolom of overlap over list/board.
 - [ ] Fullscreen-renderpath structureel los trekken van de side-pane render zodat fullscreen niet meer meedraait op de oude split-layout.
 - [ ] Laatste rail-sizing check bevestigen zodat refresh exact dezelfde maat houdt als de andere rail-icon buttons.
 - [ ] Handmatige smoke-check in de normale VS Code workspace bevestigd.
+
+## Uitvoerblokken / fasering
+
+### Fase 1 — Task-openen/tonen en interactief fundament structureel herbouwen
+
+- task-openen/tonen volledig herzien: detail opent in het taakvlak boven lane/board of list, nooit in een losse rechter-placeholder
+- selectie-state fixen zodat klik altijd de correcte aangeklikte task opent (niet de eerder actieve kaart)
+- klik op tasks in board + list weer betrouwbaar maken
+- drag-vs-click regressies herstellen zonder board/list drag-drop te breken
+- board + list drag/drop voor lane + sortering robuust herstellen
+- fullscreen detail als aparte render-layer buiten split-grid houden, samen met resize-state via kleine hook
+
+### Fase 2 — Ordering + agent-activiteit end-to-end zichtbaar en robuust maken
+
+- actieve taken automatisch bovenaan binnen hun statuskolom houden
+- actieve taken in list lane-onafhankelijk bovenaan tonen
+- bestaande `sort_order` per lane/status robuust herschrijven zonder cross-lane chaos (multi-agent veilig)
+- agentstatus volledig zichtbaar maken in board, list én detail (incl. actieve state)
+- sort/order helpers klein en testbaar houden
+
+### Fase 3 — Commit logging + multi-agent hardening afronden
+
+- `## Commits` automatisch vullen voor nieuwe commits (repo-script/hook pad)
+- `## Agent activity` structureel maken in taskfile-output
+- conflict-arm schrijven/hydrateren voor gelijktijdige agents bevestigen
+- gerichte E2E/smoke-check uitvoeren in VS Code op openen, drag/drop, fullscreen en ordering
+- verify-flow afronden
 
 ## Status tegen uitgebreid plan uit deze sessie
 
@@ -1506,9 +1670,9 @@ Onderstaande planstructuur is expliciet bewaard omdat deze later nog uitvoerwaar
    - `review` blijft in `open/`; alleen `done` verhuist naar `done/`
    - constants, parser, writer, repository, sort-policy, config, tests, taskflow-verify en docs-statusmodel bijwerken
 
-2. **Manual sorting regels aanscherpen**
+1. **Manual sorting regels aanscherpen**
    - nieuwe taken komen standaard **bovenaan** in manual sorting
-   - zodra een taak actief in uitvoering komt, wordt die automatisch **bovenaan zijn huidige statuskolom** gezet
+   - zodra een taak actief in uitvoering komt, wordt die automatisch **bovenaan zijn huidige statuskolom** gezet en in de list view, volledig boven aan de list, lane onafhankelijk.
    - dit moet robuust zijn bij **meerdere agents tegelijk**: bestaande `sort_order` herschrijven per lane/status, zonder cross-lane chaos
    - actieve taken staan dus bovenaan binnen hun statuskolom
 
@@ -1553,6 +1717,7 @@ Onderstaande planstructuur is expliciet bewaard omdat deze later nog uitvoerwaar
    - zodra klaar: geen animatie en geen actieve chip meer
 
 10. **Agent metadata opslaan in task-md**
+
 Ik stel voor een vaste metadata- en sectiestructuur toe te voegen, bijvoorbeeld:
 
 - frontmatter velden voor actuele agentstatus
@@ -1629,13 +1794,14 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 ## Status per requirement
 
 - [x] `review` status toegevoegd — status: gebouwd.
+
 - [~] Manual sorting regels voor actieve taken bovenaan binnen hun status — status: gedeeltelijk / niet bevestigd als generieke repo-regel.
 - [x] `Due` vervangen door `Last change` — status: gebouwd.
 - [x] Checklist compacter met gedeelde progress-chip / kleurbanden — status: gebouwd.
-- [~] `onlyOpen` default / open taken filter — status: gedeeltelijk; technisch aanwezig maar nog niet correct als list-only requirement.
+- [x] `onlyOpen` default / open taken filter — status: gebouwd; nu alleen zichtbaar en toegepast in list view.
 - [x] Linker rail icon-first — status: gebouwd, met nog open visuele bevestiging voor refresh-sizing.
 - [x] Resizable detail pane — status: gebouwd.
-- [~] Fullscreen detail toggle — status: gedeeltelijk; state/toggle aanwezig maar rendering nog niet structureel correct.
+- [~] Fullscreen detail toggle — status: opnieuw in uitvoering; eerdere claim was te vroeg, structurele herbouw loopt nu in fase 1.
 - [~] Actieve agent indicator in board/list/detail — status: gedeeltelijk; basisweergave aanwezig, animatie en consistente detail-state ontbreken nog.
 - [~] Agent metadata opslaan in task-md — status: gedeeltelijk; frontmattermodel aanwezig, activity-/commit-secties ontbreken nog.
 - [ ] `## Commits` automatisch vullen — status: nog niet gebouwd.
@@ -1646,7 +1812,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - `review` status toegevoegd in plugin statusmodel (`backlog -> ready -> in_progress -> review -> blocked -> done`).
 - `Due` in list view vervangen door `Last change` met sortering op wijzigingsdatum.
 - Checklist-progress compacter gemaakt met gedeelde helper/presentatielaag voor board + list.
-- `onlyOpen` default technisch toegevoegd (`true`), maar nog niet volgens de latere list-only wens afgebakend.
+- `onlyOpen` default blijft actief voor list view en is niet langer een board-brede filter.
 - Linker rail omgezet naar icon-first navigatie.
 - Resize-handle en fullscreen toggle voor task detail toegevoegd.
 - Frontmatter support toegevoegd voor agentvelden (`active_agent`, model, runtime, since, status, settings).
@@ -1655,45 +1821,39 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 ### Gedeeltelijk gebouwd / nog niet af
 
 - **Punt 5 — only open taken**
-  - Staat nu als generieke filter/default in code.
-  - Moet nog worden aangescherpt zodat het **alleen in list view zichtbaar én alleen daar toegepast** wordt.
-
+  - Staat nu standaard actief voor list view.
+  - Is aangescherpt zodat het **alleen in list view zichtbaar én alleen daar toegepast** wordt.
 - **Punt 9 — actieve agent indicator**
   - Basis chip/label bestaat in board/list.
   - Nog niet af: subtiele animatie zolang actief, en nog geen uniforme visuele active-state in board + list + detail.
-
 - **Punt 10 — agent metadata in task-md**
   - Frontmatter velden bestaan en worden al geparsed/geschreven.
   - Nog niet af: expliciete sectiestructuur/historiek zoals `## Agent activity` en verdere activity-log per taak.
-
 - **Punt 8 — fullscreen detail toggle**
   - Toggle/state bestaat.
-  - Nog niet af: structureel stabiele fullscreen-rendering zonder overlap/lege side-pane placeholder.
+  - Eerdere fullscreen-fix bleek niet structureel genoeg; renderpad wordt nu expliciet herbouwd buiten de split-layout.
 
 ### Nog niet overtuigend gebouwd / niet als klaar te claimen
 
 - **Punt 2 — manual sorting regels voor actieve taken bovenaan binnen hun status**
   - Nieuwe taken bovenaan lijkt grotendeels aanwezig.
   - Niet bevestigd als generieke repo-regel: taken met actieve agent automatisch bovenaan binnen hun status.
-
 - **Punt 11 — `## Commits` automatisch vullen**
   - Nog geen bewijs dat nieuwe commits automatisch naar relevante taskfiles worden gelogd.
-
 - **Punt 12 — concurrency-aanpak voor multi-agent activity + sort order**
   - Bestaande file-version/conflictchecks helpen al deels.
   - De specifieke multi-agent uitbreiding uit het plan is nog niet als afgeronde feature zichtbaar.
 
 ## Bekende resterende punten uit deze sessie
 
-- Fullscreen detail is nog niet volledig correct: in de huidige WIP kan de oude rechter-placeholder zichtbaar blijven terwijl detail over de list/board heen valt.
-- Oorzaak lijkt structureel: de fullscreen task-detail render gebruikt nog niet overal een echt los fullscreen layoutpad en leunt deels nog op de side-pane/split-pane structuur.
-- De refresh-knop in de linker rail is codematig verder gelijkgetrokken, maar moet nog visueel bevestigd worden als exact dezelfde maat als de andere rail-icon buttons.
-- Drag-vs-click suppressie is in code toegevoegd, maar heeft nog runtime-bevestiging nodig voordat dit als volledig afgerond UX-gedrag geldt.
-- `onlyOpen` is volgens de nieuwste productscope nog niet correct: het hoort alleen in de list-filter te bestaan en alleen daar effect te hebben, niet als board-brede filter/default.
+- Fullscreen toggle werkt nu wel, maar de rest van de interactiestack is nog niet opgelost.
+- Task-openen moet structureel opnieuw worden ontworpen: openen over lane/board/list-context, niet in de rechter placeholder naast board/list.
+- Nieuwe regressie bevestigd: klikken op verschillende tasks opent nu telkens dezelfde actieve kaart (bijv. `Entry photo gallery volledige end-user E2E flows`) in plaats van de geselecteerde task.
+- Task-openen en drag/drop in board + list hebben op dit moment regressies (taken niet goed aanklikbaar en niet sleepbaar voor lane/sortering).
 - Actieve agent-visualisatie is nog niet volledig volgens plan: animatie en consistente visual state in board/list/detail ontbreken nog.
 - Agent metadata bestaat nu vooral als frontmatter-model; de geplande activity-/commit-secties in task-md zijn nog niet uitgewerkt.
 - Commit-logging en de expliciete multi-agent concurrency-uitbreiding uit het uitgebreide plan zijn nog niet afgerond.
-- De taak blijft bewust `in_progress` totdat deze laatste plugin-layout regressies én de handmatige smoke-check zijn afgerond.
+- De taak blijft bewust `in_progress` totdat het nieuwe 3-fasenplan volledig is uitgevoerd en met runtime-checks bevestigd is.
 
 ## Blockers / afhankelijkheden
 
@@ -1705,6 +1865,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - In `tools/budio-workspace-vscode/`: `npm run typecheck`
 - In `tools/budio-workspace-vscode/`: `npm run test`
 - In `tools/budio-workspace-vscode/`: `npm run apply:workspace`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
 - Handmatige smoke-check in VS Code:
   - activity-bar icoon opent direct list view
   - oude `Workspace` launcher/menu verschijnt niet meer als betekenisvolle tussenlaag
@@ -1717,6 +1879,35 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - `tools/budio-workspace-vscode/package.json`
 - `tools/budio-workspace-vscode/src/extension.ts`
 - `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- `onlyOpen` filter afgebakend naar list view: alleen daar zichtbaar en alleen daar functioneel actief.
+- Start gemaakt met hook-first detail-layout herstructurering (`use-task-detail-layout`) zodat fullscreen niet meer als ad-hoc CSS-truc op de split-layout hoeft te leunen.
+- Refresh-knop in de activity rail dezelfde icon-sizing gegeven als de andere rail-buttons.
+- Fase 1 verify opnieuw gedraaid: plugin `typecheck`, plugin `test`, `taskflow:verify`, `docs:bundle`, `docs:bundle:verify` en `apply:workspace` zijn opnieuw succesvol uitgevoerd na de herstructurering.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Activity-bar opent direct list view zonder oude workspace-menu tussenlaag.
+- Fullscreen detail toggle van tasks werkend op board + list.
+- Resize en fullscreen moeten samenwerken zonder lege rechterkolom of overlap.
+- Actieve taken moeten ordering-promotie krijgen, robuust bij meerdere agents.
+- Agent-activiteit volledig zichtbaar in board, list en task detail.
+- Automatische commit logging voor nieuwe commits.
+- Multi-agent robuustheid expliciet uitvoeren.
+
+## Reconciliation voor afronding
+
+- **Oorspronkelijk plan binnen deze task:** activity-bar direct naar list view, launcher-opruiming, full task interaction flow structureel goed, plus de resterende requirements uit het uitgebreide plan.
+- **In deze ronde aantoonbaar afgerond:** list-only `onlyOpen`, start van detail-layout herbouw via aparte hook, plugin typecheck/test/docs-verify in de vorige ronde.
+- **Later toegevoegd of opnieuw geopend:** fullscreen/detail claims teruggezet naar in uitvoering omdat runtime nog fout was; board/list click+drag regressies horen expliciet in fase 1 thuis.
+- **Open / blocked:** taak blijft `in_progress` totdat fase 1 runtime-stabiel is en daarna fase 2/3 inclusief handmatige smoke-check bevestigd zijn.
+
+
+## Commits
+
+- dbe712d — docs(task): update plugin task status with unresolved bugs and 3-phase plan
 ```
 
 ---
@@ -1743,7 +1934,7 @@ summary: "De lokale `.env.local` krijgt de ontbrekende `STITCH_API_KEY`, zodat d
 tags: [mcp, stitch, local-dev, env]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context

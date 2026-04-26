@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-26T19:57:29.572Z
-Source Commit: 09d9374
+Build Timestamp (UTC): 2026-04-26T22:50:09.861Z
+Source Commit: dbe712d
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -831,7 +831,7 @@ Conclusie: deployment wordt nu niet geblokkeerd door NPM/Node. Het echte restere
 ```md
 ---
 id: task-hme-me-research-fase-1-local-data-en-downloader-spike
-title: HME-ME research fase 1: local data en downloader spike
+title: "HME-ME research fase 1: local data en downloader spike"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p2
@@ -843,6 +843,7 @@ workstream: idea
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -1022,6 +1023,11 @@ Het goedgekeurde plan:
 - `docs/project/40-ideas/60-personal-research/hme-me-local-first-research.md`
 - `modules/hme-me-research/README.md`
 - `.local-data/experiments/hme-me-research/`
+
+
+## Commits
+
+- aec1b28 — docs/tooling: add HME-ME local-first downloader spike
 ```
 
 ---
