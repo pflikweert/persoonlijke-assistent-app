@@ -6,7 +6,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: split-from-task-moment-detail-foto-reorder-productiebug-herstel
 updated_at: 2026-04-27
-summary: Client-side prepare-step voor moment detail foto-upload is aangescherpt voor Android/web picker-assets. Codepad bevestigt `upload_prepare` als zichtbare faalfase; productie browser/Vercel-evidence in deze sessie blijft nog blocked.
+summary: Client-side prepare-step voor moment detail foto-upload is aangescherpt voor Android/web picker-assets. Live deploy op `assistent.budio.nl` en een productie Playwright smoke bevestigen nu upload + cleanup op de vaste fixture-entry; browser/Supabase/Vercel deep-diagnose buiten die smoke blijft nog deels open.
 tags: [moment-detail, photos, production, upload, diagnostics]
 workstream: app
 due_date: null
@@ -97,8 +97,8 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - Fasekoppeling van zichtbare fout naar `upload_prepare` — status: gebouwd / bevestigd via codepad.
 - Android/web picker-asset hardening in prepare-stap — status: gebouwd.
 - Browser/Supabase/Vercel productie-evidence in dezelfde sessie — status: gedeeltelijk; codepad bevestigd, productie browser/Vercel-spoor nog blocked.
-- Verify (`lint`, `typecheck`, tests, taskflow, docs bundle`) — status: grotendeels gebouwd; gallery smoke draaide maar skipte zonder lokale fixture-env.
-- Productie-herrepro na fix — status: nog niet gebouwd / blocked door ontbrekende directe productie-run in deze sessie.
+- Verify (`lint`, `typecheck`, tests, taskflow, docs bundle`) — status: gebouwd; productie Playwright smoke toegevoegd en groen.
+- Productie-herrepro na fix — status: gebouwd; vaste fixture-entry uploadt en ruimt weer op zonder zichtbare gallery-fout.
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -115,9 +115,19 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - ✅ `npm run test:unit -- tests/unit/entry-photo-gallery-flow.test.ts`
 - ✅ `npm run test:unit`
 - ⚠️ `npm run test:e2e:gallery:smoke` draaide, maar skipte zonder `GALLERY_E2E_ENTRY_URL` / `GALLERY_E2E_PHOTO_IDS`
+- ✅ `GALLERY_E2E_PROD=1 npm run test:e2e:gallery:prod-upload`
 - ✅ `npm run taskflow:verify`
 - ✅ `npm run docs:bundle`
 - ✅ `npm run docs:bundle:verify`
+- ✅ Live deploy bevestigd op `2026-04-27 16:19:00Z`
+  - route basis: `https://assistent.budio.nl`
+  - `last-modified: Mon, 27 Apr 2026 16:19:00 GMT`
+  - `x-vercel-id: fra1::kt7sj-1777306739955-5eff1d2fbf39`
+- ✅ Productie Playwright smoke bevestigd op `2026-04-27` rond `16:27Z`
+  - fixture-entry: `/entry/f806e61f-1148-49d1-9694-78ecdda41301`
+  - login via Supabase admin magic link voor de dedicated prod test-user
+  - upload succesvol: gallery ging van `4` naar `5` foto's zonder alert `Foto's zijn nu niet beschikbaar`
+  - cleanup succesvol: dezelfde smoke verwijderde de net toegevoegde foto en bracht de gallery terug naar `4`
 
 ## Bevestigde oorzaak / diagnose
 
@@ -125,6 +135,7 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - `bevestigd`: de fout ligt daarom vóór `upload_display`, `upload_thumb`, `upload_insert` en `upload_post_refresh`.
 - `bevestigd`: de prepare-stap vertrouwde volledig op een URI-only pad voor `ImageManipulator.manipulateAsync(...)` plus een latere `fetch(result.uri).arrayBuffer()`.
 - `bevestigd`: dat pad is kwetsbaar voor Android/web picker-assets, vooral wanneer Chrome/Google Photos een web `File` levert maar de URI-route zelf fragiel blijft.
+- `bevestigd`: na deploy op `2026-04-27 16:19Z` werkt de productieflow op de vaste fixture-entry weer end-to-end voor upload + cleanup.
 - `onbevestigd`: welke exacte substap in productie faalde op `2026-04-27 10:08` NL-tijd (`display_manipulate`, `thumb_manipulate`, `display_bytes` of `thumb_bytes`) kon nog niet met browser-capture worden vastgelegd in deze sessie.
 
 ## Fix
@@ -138,6 +149,10 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
   - diagnostische velden uitgebreid voor prepare-fouten
 - `tests/unit/entry-photo-gallery-flow.test.ts`
   - unit-test toegevoegd die prepare-diagnostiek borgt
+- `tests/e2e/gallery-prod-upload.spec.mjs`
+  - nieuwe herhaalbare productie-smoke voor magic-link login, één foto uploaden en cleanup op vaste fixture-entry
+- `package.json`
+  - script `test:e2e:gallery:prod-upload` toegevoegd voor toekomstige productie-validatie
 
 ## Relevante links
 
@@ -170,7 +185,5 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - Later toegevoegd:
   - extra prepare-diagnostiek met picker-metadata en substap-label
 - Nog open / blocked:
-  - echte productie browser console + network capture na fix
-  - Vercel runtime-context voor dezelfde productiesessie
+  - echte productie browser console + network capture na fix buiten de Playwright smoke
   - bevestigde Supabase productie-logsporen in plaats van lokale MCP-sporen
-  - resterende verify-stappen (`lint`, bredere tests, taskflow, docs bundle checks)
