@@ -27,6 +27,8 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
      - `Status: ...`
    - Noem in elk inhoudelijk plan expliciet het concrete taskfile-pad.
    - Voeg in Plan Mode-plannen altijd een korte `Taskflow summary` toe: gebruikte of nieuw aangemaakte taskfile, verwachte statuswijziging, en wanneer extra werk een eigen task krijgt.
+   - Nieuwe uitvoerbare P1/P2 tasks en subtasks moeten spec-ready zijn vóór bouwstart: vul `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
+   - Zet `spec_ready: true` pas wanneer die secties concreet genoeg zijn voor een developer of agent zonder sessiecontext.
 
 2. **Tijdens uitvoering**
    - Houd `updated_at` actueel bij betekenisvolle voortgang.
@@ -39,6 +41,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
    - Als de gebruiker een bestaand uitgebreid plan, blokstructuur of genummerde requirementlijst expliciet wil behouden, leg die vast als aparte bronsectie en vervang die nooit door alleen een afgeleide samenvatting.
    - Houd onder `## Status per requirement` bij wat gebouwd, gedeeltelijk gebouwd, nog niet gebouwd of nog user-review nodig is.
    - Leg aanvullingen of correcties tijdens uitvoering vast onder `## Toegevoegde verbeteringen tijdens uitvoering`.
+   - Als tijdens uitvoering blijkt dat een task of epic te vaag is, stop dan niet alleen lokaal met gokken: hard eerst de taskfile met flow-, UX/copy-, data/IO- en acceptatiecriteria.
 
 3. **Bij blokkade**
    - Zet status op `blocked` met korte blocker in taskfile.
@@ -71,3 +74,4 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 - Geen grote big-bang uitvoering wanneer het werk logisch in veilige blokken kan.
 - Geen nieuwe statuswaarden buiten: `backlog`, `ready`, `in_progress`, `review`, `blocked`, `done`.
 - Geen taak automatisch op `done` zetten zonder verify-resultaat en afrondingscontext.
+- Geen nieuwe bouwtask of epic aanmaken als alleen titel, samenvatting en checklist zijn ingevuld; dat is onvoldoende spec-ready.

@@ -74,6 +74,11 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 27. Een taak mag niet naar `done` zolang de reconciliation niet expliciet aangeeft wat van het oorspronkelijke plan is afgerond, wat later is toegevoegd en wat nog open staat.
 28. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
 29. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
+30. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
+31. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
+32. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
+33. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
+34. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
 
 ## Korte voorbeelden
 
@@ -88,6 +93,7 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
    - In Plan Mode: gebruik een bestaande task bij duidelijke match, anders maak je direct een nieuwe task aan.
    - Vraag alleen bij echte classificatie-, lane- of scope-twijfel.
    - Zet de nieuwe taak direct bovenaan de doel-lane en sla de nieuwe lane-volgorde expliciet op via `sort_order`.
+   - Vul voor nieuwe P1/P2 bouwtaken direct de spec-readiness secties in of laat `spec_ready: false` en markeer de taak nog niet als bouwbaar.
 2. **Triage**
    - Kies status, prioriteit en fase.
    - Link terug naar bron in planning of `open-points.md`.
@@ -126,3 +132,4 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 - Geen open status in `done/`.
 - Gebruik de taaklaag niet als vervanging van `current-status.md`.
 - Geen afronding zonder expliciete `Task`/`Task file`/`Status` in updates en eindresultaat.
+- Geen nieuwe P1/P2 bouwtask zonder happy/non-happy flows, UX/copy en acceptatiecriteria.

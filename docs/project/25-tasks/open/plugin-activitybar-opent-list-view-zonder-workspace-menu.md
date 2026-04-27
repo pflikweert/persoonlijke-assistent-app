@@ -10,8 +10,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 6
+sort_order: 5
 ---
+
 
 
 
@@ -356,3 +357,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - dbe712d — docs(task): update plugin task status with unresolved bugs and 3-phase plan
 
 - a9e2961 — docs(task): add selection bug to plugin task status
+
+- ad43300 — chore: commit all remaining local changes

@@ -16,6 +16,7 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
 De eerste gallery QA-basis bewijst de kerninteractie voor thumbnail-reorder en legt unit/smoke-infra neer. De volledige end-user dekking voor alle gallery-flows bestaat nog niet.
@@ -83,3 +84,8 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 - `tests/e2e/gallery-full.spec.mjs`
 - `scripts/seed-local-entry-photo-gallery-smoke.mjs`
 - `docs/dev/qa-test-strategy.md`
+
+
+## Commits
+
+- ad43300 — chore: commit all remaining local changes

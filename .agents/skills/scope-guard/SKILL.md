@@ -17,9 +17,12 @@ Gebruik bij elke taak met risico op scope-uitloop of over-architectuur.
 8. Bij UI-werk: eerst hergebruik/scaffold-check doen via `docs/dev/ui-assembly-decision-tree.md`.
 9. Refactor alleen binnen de aangeraakte flow en alleen wanneer dit testbaarheid, leesbaarheid of risicoreductie helpt.
 10. Grotere opruimingen, repo-brede cleanup of refactors buiten de actieve flow krijgen een eigen task.
+11. Maak nieuwe plans/tasks altijd spec-ready: user outcome, functional slice, entry/exit, happy flow, non-happy flows, UX/copy, data/IO, acceptance en verify.
+12. Laat UX/copy en failure states niet open voor latere implementatie-agents wanneer de gebruiker om een concrete flow of bouwtaak vraagt.
 
 # Niet doen
 - Geen nieuwe productrichting introduceren.
 - Geen ongevraagde infra of architectuurlagen toevoegen.
 - Geen big-bang refactor onder de vlag van een kleine taak.
 - Geen herhaling van projectcontext in output.
+- Geen uitvoerbare taak opleveren die alleen richting beschrijft maar niet duidelijk maakt wat gebouwd, getoond, opgeslagen en getest moet worden.

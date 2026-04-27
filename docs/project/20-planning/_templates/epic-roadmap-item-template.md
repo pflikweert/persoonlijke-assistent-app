@@ -27,6 +27,17 @@ Beschrijf het gedrag op productniveau in 2-4 zinnen.
 - Welke output of toestand ziet de gebruiker?
 - Welke bestaande flow wordt versterkt?
 
+### Flow en failure states
+
+- Happy flow op epicniveau:
+- Belangrijkste non-happy flows:
+- Empty/loading/error/retry states:
+
+### UX / copy richting
+
+- Welke bestaande UX- of copybron is leidend?
+- Welke producttaal of labels staan vast?
+
 ### Waarom prioriteit
 
 - User value:
@@ -50,3 +61,9 @@ Beschrijf het gedrag op productniveau in 2-4 zinnen.
 ### Acceptatie op epicniveau
 
 - Hoe weten we dat deze epic op maandniveau voldoende is?
+
+### Promotie naar tasks
+
+- Welke P1 tasks zijn nodig voor de eerste werkende versie?
+- Welke nice-to-have tasks blijven P2?
+- Welke task moet eerst spec-ready gemaakt worden?

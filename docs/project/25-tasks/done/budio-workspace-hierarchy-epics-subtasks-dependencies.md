@@ -1,6 +1,6 @@
 ---
 id: task-budio-workspace-hierarchy-epics-subtasks-dependencies
-title: Budio Workspace hierarchy met epics, subtasks en dependencies
+title: "Budio Workspace hierarchy met epics, subtasks en dependencies"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -17,6 +17,7 @@ task_kind: task
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace hierarchy met epics, subtasks en dependencies
 
@@ -126,3 +127,8 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 - `docs/project/25-tasks/open/budio-workspace-command-room-research-en-startpunt-vastleggen.md`
 - `docs/project/40-ideas/40-platform-and-architecture/100-linear-geinspireerde-budio-workspace-structuurlaag.md`
 - `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+
+
+## Commits
+
+- 0b5c2d3 — feat: add workspace epic hierarchy

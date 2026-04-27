@@ -6,7 +6,38 @@ const VALID_STATUSES = new Set(['backlog', 'ready', 'in_progress', 'review', 'bl
 const TASKFILE_PREFIX = 'docs/project/25-tasks/';
 const OPEN_PREFIX = 'docs/project/25-tasks/open/';
 const DONE_PREFIX = 'docs/project/25-tasks/done/';
+const EPIC_PREFIX = 'docs/project/24-epics/';
 const REQUIRED_BUNDLE_PATHS = ['docs/project/25-tasks/README.md', 'docs/project/open-points.md'];
+const BUILD_TASK_KINDS = new Set(['task', 'subtask']);
+const FULL_SPEC_SECTIONS = [
+  'User outcome',
+  'Functional slice',
+  'Entry / exit',
+  'Happy flow',
+  'Non-happy flows',
+  'UX / copy',
+  'Data / IO',
+  'Acceptance criteria',
+  'Verify / bewijs',
+];
+const LIGHT_SPEC_SECTIONS = [
+  'User outcome',
+  'Functional slice',
+  'Acceptance criteria',
+  'Verify / bewijs',
+];
+const EPIC_SPEC_SECTIONS = [
+  'Doel',
+  'Gewenste uitkomst',
+  'Scope en grenzen',
+  'P1 / P2 scheiding',
+  'UX / copy contract',
+  'Flow contract',
+  'Linked tasks',
+  'Volgorde van uitvoeren',
+  'Dependencies',
+  'Acceptatie',
+];
 
 function run(command) {
   return execSync(command, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -56,6 +87,14 @@ function isTaskfilePath(filePath) {
   return /^docs\/project\/25-tasks\/(open|done)\/.*\.md$/.test(filePath);
 }
 
+function isEpicPath(filePath) {
+  return (
+    /^docs\/project\/24-epics\/.*\.md$/.test(filePath) &&
+    !filePath.endsWith('/README.md') &&
+    !filePath.endsWith('/_template.md')
+  );
+}
+
 function parseFrontmatter(content) {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   if (!match) {
@@ -77,10 +116,48 @@ function parseFrontmatter(content) {
   return values;
 }
 
+function parseHeadings(content) {
+  return new Set(
+    String(content ?? '')
+      .split('\n')
+      .map((line) => line.match(/^##\s+(.+?)\s*$/)?.[1]?.trim())
+      .filter(Boolean),
+  );
+}
+
+function frontmatterBoolean(value) {
+  return String(value ?? '').trim().toLowerCase() === 'true';
+}
+
+function missingSections(content, requiredSections) {
+  const headings = parseHeadings(content);
+  return requiredSections.filter((section) => !headings.has(section));
+}
+
+function shouldCheckTaskSpec({ filePath, frontmatter, addedPaths }) {
+  if (filePath.endsWith('/_template.md')) {
+    return false;
+  }
+
+  const priority = frontmatter.priority;
+  if (!['p1', 'p2'].includes(priority)) {
+    return false;
+  }
+
+  return addedPaths.includes(filePath) || frontmatterBoolean(frontmatter.spec_ready);
+}
+
+function taskSpecRequiredSections(frontmatter) {
+  const taskKind = frontmatter.task_kind || 'task';
+  return BUILD_TASK_KINDS.has(taskKind) ? FULL_SPEC_SECTIONS : LIGHT_SPEC_SECTIONS;
+}
+
 export function evaluateTaskflow(input) {
   const issues = [];
   const relevantPaths = input.changedPaths.filter((filePath) => !isIgnoredPath(filePath));
   const taskfilePaths = relevantPaths.filter((filePath) => isTaskfilePath(filePath));
+  const epicPaths = relevantPaths.filter((filePath) => isEpicPath(filePath));
+  const addedPaths = input.addedPaths ?? [];
 
   if (relevantPaths.length === 0) {
     return { ok: true, issues: [], relevantPaths: [], taskfilePaths: [] };
@@ -124,6 +201,33 @@ export function evaluateTaskflow(input) {
     if (taskfilePath.startsWith(OPEN_PREFIX) && status === 'done') {
       issues.push(`Taskfile met status done mag niet in open/ staan: ${taskfilePath}`);
     }
+
+    if (shouldCheckTaskSpec({ filePath: taskfilePath, frontmatter, addedPaths })) {
+      const missing = missingSections(taskfileContent, taskSpecRequiredSections(frontmatter));
+      for (const section of missing) {
+        issues.push(`Task mist verplichte spec-readiness sectie: ## ${section} (${taskfilePath})`);
+      }
+    }
+  }
+
+  for (const epicPath of epicPaths) {
+    const epicContent = input.epicContents?.[epicPath];
+    if (!epicContent) {
+      continue;
+    }
+
+    const frontmatter = parseFrontmatter(epicContent);
+    if (!frontmatter) {
+      issues.push(`Epic mist geldige frontmatter: ${epicPath}`);
+      continue;
+    }
+
+    if (addedPaths.includes(epicPath) || frontmatterBoolean(frontmatter.spec_ready)) {
+      const missing = missingSections(epicContent, EPIC_SPEC_SECTIONS);
+      for (const section of missing) {
+        issues.push(`Epic mist verplichte spec-readiness sectie: ## ${section} (${epicPath})`);
+      }
+    }
   }
 
   if (input.hasDoneTransition) {
@@ -156,6 +260,7 @@ function collectRepoState() {
   const allEntries = [...staged, ...unstaged, ...untracked];
   const changedPathsSet = new Set();
   let hasDoneTransition = false;
+  const addedPathsSet = new Set();
 
   for (const entry of allEntries) {
     if (entry.oldPath) {
@@ -163,6 +268,10 @@ function collectRepoState() {
     }
     if (entry.newPath) {
       changedPathsSet.add(entry.newPath);
+    }
+
+    if (entry.type === 'A' && entry.oldPath) {
+      addedPathsSet.add(entry.oldPath);
     }
 
     if (
@@ -176,13 +285,14 @@ function collectRepoState() {
 
   return {
     changedPaths: [...changedPathsSet],
+    addedPaths: [...addedPathsSet],
     hasDoneTransition,
   };
 }
 
-async function readTaskfileContents(taskfilePaths) {
+async function readFileContents(filePaths) {
   const contents = {};
-  for (const taskfilePath of taskfilePaths) {
+  for (const taskfilePath of filePaths) {
     try {
       contents[taskfilePath] = await fs.readFile(taskfilePath, 'utf8');
     } catch {
@@ -195,11 +305,15 @@ async function readTaskfileContents(taskfilePaths) {
 async function main() {
   const repoState = collectRepoState();
   const possibleTaskfiles = repoState.changedPaths.filter((filePath) => isTaskfilePath(filePath));
-  const taskfileContents = await readTaskfileContents(possibleTaskfiles);
+  const possibleEpics = repoState.changedPaths.filter((filePath) => isEpicPath(filePath));
+  const taskfileContents = await readFileContents(possibleTaskfiles);
+  const epicContents = await readFileContents(possibleEpics);
 
   const result = evaluateTaskflow({
     changedPaths: repoState.changedPaths,
+    addedPaths: repoState.addedPaths,
     taskfileContents,
+    epicContents,
     hasDoneTransition: repoState.hasDoneTransition,
   });
 

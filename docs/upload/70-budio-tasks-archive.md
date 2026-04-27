@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 30
+- Totaal tasks opgenomen: 32
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -93,6 +93,182 @@ Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een smalle br
 - `docs/project/20-planning/20-active-phase.md`
 - `docs/project/20-planning/30-now-next-later.md`
 - `docs/project/20-planning/40-deviations-and-decisions.md`
+```
+
+---
+
+## Admin/founder meeting capture — epic en taakpakket aanmaken
+
+- Path: `docs/project/25-tasks/done/admin-founder-meeting-capture-epic-en-taakpakket-aanmaken.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-epic-en-taakpakket-aanmaken
+title: Admin/founder meeting capture — epic en taakpakket aanmaken
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Maak de Meeting Capture epic, idea-doc en volledige P1/P2 taskbundel aan als eerste praktijktest van de nieuwe Budio Workspace hierarchy-laag."
+tags: [meeting-capture, admin, audio, workspace, hierarchy]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Admin/founder meeting capture — epic en taakpakket aanmaken
+
+## Probleem / context
+
+Meeting Capture is inhoudelijk klaar om als project opgepakt te worden, maar staat nog niet als epic met concrete child tasks in de repo. Daardoor kan de nieuwe hierarchy-laag nog niet als praktijkworkflow getest worden.
+
+## Gewenste uitkomst
+
+Er staat één idea-doc, één epic-doc en een volledig P1/P2 taakpakket voor Meeting Capture. De plugin kan deze epic als bundel tonen, met dependencies en duidelijke volgorde.
+
+## User outcome
+
+Een developer of agent ziet Meeting Capture als epic met linked P1/P2 taken en kan de eerste bouwtask kiezen.
+
+## Functional slice
+
+Operationele projectsetup: idea-doc, epic-doc, taskbundle, dependencies en verify.
+
+## Entry / exit
+
+- Entry: Meeting Capture research staat buiten de repo in losse markdownbronnen.
+- Exit: Meeting Capture bestaat als repo-epic met concrete child tasks.
+
+## Happy flow
+
+1. Agent maakt idea-doc aan.
+2. Agent maakt epic-doc aan.
+3. Agent maakt P1 en P2 taskfiles aan.
+4. Agent koppelt alle taskfiles via `epic_id`.
+5. Agent draait taskflow en docs bundle verify.
+
+## Non-happy flows
+
+- Geen bestaande taskmatch: maak nieuwe projectsetup-task aan.
+- Verify faalt: herstel taskflow/docs voordat setup done gaat.
+- Extra runtimewerk ontstaat: maak aparte bouwtask, niet in deze setup-task.
+
+## UX / copy
+
+- Geen runtime UI.
+- Projecttaal blijft `Admin/founder meeting capture` en `Gespreksopname`.
+
+## Data / IO
+
+- Input: researchbronnen en gebruikersplan.
+- Output: markdown idea/epic/taskdocs.
+- Geen app runtime data.
+
+## Waarom nu
+
+- De workspace hierarchy is net opgeleverd en heeft een echte projecttest nodig.
+- Meeting Capture is groot genoeg voor epic/task/subtask-dependency structuur.
+- Morgen moet uitvoering kunnen starten zonder opnieuw te plannen.
+
+## In scope
+
+- Idea-doc aanmaken.
+- Epic-doc aanmaken.
+- Alle P1 en P2 taskfiles aanmaken met `epic_id`.
+- Dependencies, priority en volgorde vastleggen.
+- Verify draaien voor taskflow en docs bundle.
+
+## Buiten scope
+
+- Runtime Meeting Capture bouwen.
+- DB migrations of app-code aanpassen.
+- Workflowdocs inhoudelijk herschrijven zonder bewezen frictie.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Start Meeting Capture als eerste praktijktest van de nieuwe `Epic -> Task -> Subtask/dependency` workspace-laag.
+- Maak één epic onder `docs/project/24-epics/**` en meerdere taskfiles onder `docs/project/25-tasks/open/**`.
+- Taken starten `backlog`; alleen deze actieve projectsetup-taak staat op `in_progress`.
+- Workflowverbeteringen komen alleen op basis van echte frictie tijdens uitvoering.
+
+## Expliciete user requirements / detailbehoud
+
+- Alle P1 bouwtaken moeten een eigen task krijgen.
+- Alle nice-to-have onderdelen krijgen ook een eigen task onder dezelfde epic.
+- Upload/import van bestaand audiobestand moet expliciet als P2 taak mee.
+- Bestaande captureflow niet functioneel aanpassen.
+- Layout/copy moet aansluiten op bestaande capture-, moment-, dag-, selectie-, header- en footerpatronen.
+- OpenAI Codex/PLANS/skills learnings tijdens uitvoering bewaken en alleen bewezen verbeteringen verwerken.
+
+## Status per requirement
+
+- [x] Epic-doc aangemaakt — status: gebouwd
+- [x] Idea-doc aangemaakt — status: gebouwd
+- [x] P1 taskfiles aangemaakt — status: gebouwd
+- [x] P2 taskfiles aangemaakt — status: gebouwd
+- [x] Dependencies en volgorde vastgelegd — status: gebouwd
+- [x] Verify afgerond — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: epic, idea-doc en taskfiles aanmaken.
+- [x] Blok 3: docs bundle verify draaien en afronden.
+
+## Concrete checklist
+
+- [x] Meeting Capture idea-doc toevoegen.
+- [x] Meeting Capture epic-doc toevoegen.
+- [x] P1 taken toevoegen.
+- [x] P2 nice-to-have taken toevoegen.
+- [x] Dependencies en `epic_id` metadata invullen.
+- [x] `npm run taskflow:verify`
+- [x] `npm run docs:bundle`
+- [x] `npm run docs:bundle:verify`
+
+## Acceptance criteria
+
+- [x] Epic-doc bestaat.
+- [x] P1/P2 taskfiles bestaan en linken naar dezelfde epic.
+- [x] Verify is groen.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: Meeting Capture als epic + taskbundel vastleggen en daarmee de nieuwe hierarchy-flow testen.
+- Toegevoegde verbeteringen: geen.
+- Afgerond: idea-doc, epic-doc, P1/P2 taskfiles, dependencies, taskflow verify en docs bundle verify zijn afgerond.
+- Open / blocked: geen binnen deze setup-taak; daadwerkelijke bouw start in de volgende P1 task.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+- `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
 ```
 
 ---
@@ -272,7 +448,7 @@ De advieszone heeft een vaste hoogte zodat onderliggende UI niet verspringt. Sli
 ```md
 ---
 id: task-budio-workspace-hierarchy-epics-subtasks-dependencies
-title: Budio Workspace hierarchy met epics, subtasks en dependencies
+title: "Budio Workspace hierarchy met epics, subtasks en dependencies"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -289,6 +465,7 @@ task_kind: task
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace hierarchy met epics, subtasks en dependencies
 
@@ -398,6 +575,11 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 - `docs/project/25-tasks/open/budio-workspace-command-room-research-en-startpunt-vastleggen.md`
 - `docs/project/40-ideas/40-platform-and-architecture/100-linear-geinspireerde-budio-workspace-structuurlaag.md`
 - `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+
+
+## Commits
+
+- 0b5c2d3 — feat: add workspace epic hierarchy
 ```
 
 ---
@@ -987,6 +1169,7 @@ sort_order: 1
 ---
 
 
+
 ## Probleem / context
 
 De gebruiker wil een persoonlijk HME-ME researchspoor starten binnen de Budio
@@ -1170,6 +1353,8 @@ Het goedgekeurde plan:
 ## Commits
 
 - aec1b28 — docs/tooling: add HME-ME local-first downloader spike
+
+- ad43300 — chore: commit all remaining local changes
 ```
 
 ---
@@ -1881,6 +2066,197 @@ Een bestaand privacy/security-idee in `docs/project/40-ideas/**` is bijgewerkt m
 
 - `docs/project/40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md`
 - `https://openai.com/index/introducing-openai-privacy-filter/`
+```
+
+---
+
+## Plan/spec quality guardrails voor ideas, epics en tasks
+
+- Path: `docs/project/25-tasks/done/plan-spec-quality-guardrails-voor-ideas-epics-en-tasks.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-plan-spec-quality-guardrails-voor-ideas-epics-en-tasks
+title: Plan/spec quality guardrails voor ideas, epics en tasks
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Hard de repo-workflow zodat toekomstige agents zelfstandig uitvoerbare ideas, research, epics, tasks en subtasks aanmaken met flow-, UX/copy-, non-happy- en verify-details."
+tags: [workflow, planning, tasks, epics, agents, verify]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Plan/spec quality guardrails voor ideas, epics en tasks
+
+## Probleem / context
+
+De repo borgt taskflow, status en planintegriteit al beter dan voorheen, maar nieuwe plannen kunnen nog te richtinggevend blijven. Daardoor kunnen developers of agents later een task oppakken zonder genoeg UX, copy, happy/non-happy flows, data/IO en acceptatiecriteria.
+
+Dit is zichtbaar geworden bij het Meeting Capture taakpakket: de hiërarchie stond goed, maar meerdere P1 taken waren nog niet zelfstandig uitvoerbaar zonder sessiecontext.
+
+## Gewenste uitkomst
+
+Toekomstige agents maken standaard ideas, researchdocs, epics, tasks en subtasks aan die zelfstandig bruikbaar zijn. Nieuwe uitvoerbare tasks krijgen een spec-readiness contract en verify faalt bij nieuwe incomplete task/epic files.
+
+## Waarom nu
+
+- Dit is P1 omdat slechte plannen downstream bouwkwaliteit, agent-efficiëntie en reviewbaarheid direct raken.
+- Meeting Capture moet eerst goed gehard worden voordat runtimebouw start.
+
+## In scope
+
+- Task- en epic-templates uitbreiden met spec-readiness secties.
+- Idea/research/planning workflowregels aanscherpen.
+- AGENTS, docs/dev workflows en relevante skills updaten.
+- Verify-script uitbreiden voor nieuwe task/epic files en expliciet spec-ready bestaande files.
+- Bundlescript uitbreiden zodat `24-epics/**` als echte projectlaag in upload/generated context komt.
+- Meeting Capture P1/P2 taskfiles en epic-doc als eerste toepassing hardenen.
+
+## Buiten scope
+
+- Runtime Meeting Capture bouwen.
+- Alle legacy tasks in één keer herschrijven.
+- Nieuwe productscope toevoegen.
+
+## User outcome
+
+Een toekomstige developer of agent kan een nieuwe P1/P2 task oppakken zonder chatgeschiedenis en ziet direct: wat gebouwd moet worden, welke UX/copy geldt, welke non-happy flows bestaan, welke data/IO verandert en wanneer de taak klaar is.
+
+## Functional slice
+
+Deze taak levert een werkende workflow/verify-slice op: templates + docs + skills + verify-script + bundlescript + Meeting Capture toepassing.
+
+## Entry / exit
+
+- Entry: nieuwe ideas/epics/tasks worden via templates of agentflow aangemaakt.
+- Exit: nieuwe of expliciet `spec_ready: true` task/epic files falen verify wanneer verplichte spec-secties ontbreken.
+
+## Happy flow
+
+1. Agent krijgt een nieuw groter werkpakket.
+2. Agent maakt of kiest een taskfile.
+3. Agent gebruikt de geharde template.
+4. Agent vult user outcome, flows, UX/copy, data/IO, acceptance en verify in.
+5. `npm run taskflow:verify` valideert de spec-readiness.
+6. Docs bundle neemt epics en tasks mee in upload/generated context.
+
+## Non-happy flows
+
+- Nieuwe task mist happy/non-happy flow: verify faalt met concrete sectienaam.
+- Nieuwe epic mist linked tasks/dependencies/acceptance: verify faalt.
+- Legacy task zonder spec_ready blijft voorlopig geldig, tenzij inhoudelijk gehard of nieuw aangemaakt.
+- Bundlescript mist epics: bundle-verificatie of `rg`-acceptatie faalt.
+
+## UX / copy
+
+Workflowcopy in foutmeldingen blijft concreet en herstelbaar, bijvoorbeeld: `Task mist verplichte spec-readiness sectie: ## Happy flow`.
+
+## Data / IO
+
+- Wijzigt markdown templates, workflowdocs, skills en docs scripts.
+- Wijzigt gegenereerde docs/upload output via `npm run docs:bundle`.
+- Geen runtime app-data of Supabase-data.
+
+## Acceptance criteria
+
+- [x] Nieuwe incomplete P1/P2 task faalt `taskflow:verify`.
+- [x] Complete research/polish task met lichtere secties slaagt.
+- [x] Nieuwe incomplete epic faalt `taskflow:verify`.
+- [x] `24-epics/**` komt volledig in upload/generated context.
+- [x] Meeting Capture P1 tasks zijn zelfstandig uitvoerbaar met UX/copy en failure flows.
+- [x] Docs/taskflow verify groen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Repo zo harden dat toekomstige agents zonder sessiecontext goede ideas, research, planning-items, epics, tasks en subtasks aanmaken.
+- Spec-readiness standaard toevoegen.
+- Templates, workflowdocs, skills, verify-script en bundlescript aanpassen.
+- Meeting Capture docs als eerste toepassing repareren.
+
+## Expliciete user requirements / detailbehoud
+
+- Dit is P1.
+- Dit mag in de toekomst nooit meer fout gaan.
+- Toekomstige agents moeten zonder context van deze sessie weten hoe ze plannen en uitvoertaken goed uitschrijven.
+- Ideas, research tasks, planning, projectbeschrijvingen, epics, taken en subtaken vallen onder de hardening.
+
+## Status per requirement
+
+- [x] Repo-brede spec-readiness standaard — status: gebouwd
+- [x] Templates gehard — status: gebouwd
+- [x] Workflowdocs en skills gehard — status: gebouwd
+- [x] Verify-script gate toegevoegd — status: gebouwd
+- [x] Bundlescript epics toegevoegd — status: gebouwd
+- [x] Meeting Capture docs gehard — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow-preflight en P1 task aanmaken.
+- [x] Blok 2: templates, workflowdocs en skills harden.
+- [x] Blok 3: verify-script en tests uitbreiden.
+- [x] Blok 4: bundlescript epics toevoegen.
+- [x] Blok 5: Meeting Capture docs harden.
+- [x] Blok 6: verify, docs bundle en reconciliation afronden.
+
+## Concrete checklist
+
+- [x] `docs/project/25-tasks/_template.md` uitbreiden.
+- [x] `docs/project/24-epics/_template.md` uitbreiden.
+- [x] `docs/project/40-ideas/README.md` template uitbreiden.
+- [x] `docs/dev/task-lifecycle-workflow.md` en `docs/dev/idea-lifecycle-workflow.md` uitbreiden.
+- [x] `docs/dev/cline-workflow.md`, `AGENTS.md` en skills uitbreiden.
+- [x] `scripts/docs/verify-taskflow-enforcement.mjs` uitbreiden met spec-readiness.
+- [x] Tests toevoegen.
+- [x] `scripts/docs/build-docs-bundles.mjs` epics laten laden.
+- [x] Meeting Capture docs harden.
+- [x] Verify draaien.
+
+## Blockers / afhankelijkheden
+
+- Geen functionele blocker; let op bestaande dirty worktree met eerdere Meeting Capture docs.
+
+## Verify / bewijs
+
+- `node --test scripts/docs/verify-taskflow-enforcement.test.mjs`
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+- `rg "admin-founder-meeting-capture|epic-admin-founder" docs/upload docs/project/generated`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+- `rg "admin-founder-meeting-capture|epic-admin-founder" docs/upload docs/project/generated`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: spec-quality guardrails repo-breed afdwingen en Meeting Capture als eerste toepassing repareren.
+- Toegevoegde verbeteringen: `spec_ready` metadata toegevoegd als pragmatische gate zodat nieuwe files hard falen, terwijl legacy tasks niet in één keer geblokkeerd worden.
+- Afgerond: templates, workflowdocs, skills, AGENTS, verify-script, verify-tests, bundle epic-discovery en Meeting Capture task/epic hardening.
+- Open / blocked: geen binnen deze workflow-hardening; runtime Meeting Capture bouw blijft in de bestaande P1 child tasks.
+
+## Relevante links
+
+- `docs/project/25-tasks/_template.md`
+- `docs/project/24-epics/_template.md`
+- `scripts/docs/verify-taskflow-enforcement.mjs`
 ```
 
 ---

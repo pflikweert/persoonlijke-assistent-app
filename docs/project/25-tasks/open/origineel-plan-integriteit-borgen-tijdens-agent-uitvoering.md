@@ -10,7 +10,7 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context

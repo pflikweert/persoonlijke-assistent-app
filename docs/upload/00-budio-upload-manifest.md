@@ -2,8 +2,8 @@
 
 # Budio Upload Manifest
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 ## Beheerde uploadset (maximaal 10 bestanden)
 
@@ -37,6 +37,7 @@ Source Commit: ad43300
 | --- | --- |
 | Strategie-review | `docs/upload/chatgpt-project-context.md`, `docs/upload/10-budio-core-product-and-planning.md`, `docs/upload/20-budio-strategy-research-and-ideas.md` |
 | Planherziening / opportunity review | `docs/upload/chatgpt-project-context.md`, `docs/upload/20-budio-strategy-research-and-ideas.md` |
+| Epic/project planning review | `docs/upload/chatgpt-project-context.md`, `docs/upload/10-budio-core-product-and-planning.md`, `docs/upload/60-budio-tasks-current.md` |
 | Roadmapplanning / maandblokken | `docs/upload/chatgpt-project-context.md`, `docs/upload/50-budio-roadmap-planning-pack.md` |
 | Current task review | `docs/upload/chatgpt-project-context.md`, `docs/upload/60-budio-tasks-current.md` |
 | Task archive review | `docs/upload/chatgpt-project-context.md`, `docs/upload/70-budio-tasks-archive.md` |

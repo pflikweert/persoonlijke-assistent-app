@@ -2,8 +2,8 @@
 
 # Budio Roadmap Planning Pack
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 Doel: uploadklare roadmapbundle voor maandblokken, epicniveau planning en post-basis roadmap review.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -628,6 +628,15 @@ Beschrijf in 1-2 zinnen welke uitkomst deze maand moet opleveren.
 | --- | --- | --- | --- |
 | `<epic titel>` | `<gedrag op epicniveau>` | `<user/business reden>` | `<basis of vorige maand>` |
 
+### Spec-readiness per must-have epic
+
+- User outcome:
+- Happy flow:
+- Belangrijkste non-happy flows:
+- UX/copy richting:
+- Data/IO impact:
+- Eerste task die spec-ready moet zijn:
+
 ### Nice-to-have epics
 
 | Epic | Wat voegt het toe | Waarom niet must-have |
@@ -677,6 +686,17 @@ Beschrijf het gedrag op productniveau in 2-4 zinnen.
 - Welke output of toestand ziet de gebruiker?
 - Welke bestaande flow wordt versterkt?
 
+### Flow en failure states
+
+- Happy flow op epicniveau:
+- Belangrijkste non-happy flows:
+- Empty/loading/error/retry states:
+
+### UX / copy richting
+
+- Welke bestaande UX- of copybron is leidend?
+- Welke producttaal of labels staan vast?
+
 ### Waarom prioriteit
 
 - User value:
@@ -700,6 +720,12 @@ Beschrijf het gedrag op productniveau in 2-4 zinnen.
 ### Acceptatie op epicniveau
 
 - Hoe weten we dat deze epic op maandniveau voldoende is?
+
+### Promotie naar tasks
+
+- Welke P1 tasks zijn nodig voor de eerste werkende versie?
+- Welke nice-to-have tasks blijven P2?
+- Welke task moet eerst spec-ready gemaakt worden?
 
 ---
 

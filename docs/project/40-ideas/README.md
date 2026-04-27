@@ -97,4 +97,15 @@ now | next | later | unknown
 ## Open vragen
 
 ## Volgende stap
+
+## Promotiecriteria
+- Wanneer wordt dit een epic?
+- Wanneer wordt dit een task?
+- Wat moet eerst worden uitgezocht?
+
+## Spec-readiness bij promotie
+- Welke user outcome hoort hierbij?
+- Welke happy en non-happy flows zijn nu al bekend?
+- Welke UX/copy guardrails gelden?
+- Welke data/IO of systeemimpact is waarschijnlijk?
 ```

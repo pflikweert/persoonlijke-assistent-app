@@ -7,6 +7,7 @@ owner: null
 phase: transitiemaand-consumer-beta
 updated_at: 2026-04-27
 summary: ""
+spec_ready: false
 sort_order: null
 ---
 
@@ -24,6 +25,23 @@ Beschrijf wat functioneel klaar is wanneer deze epic als afgerond geldt.
 
 - Wat hoort expliciet wel bij deze epic.
 - Wat hoort expliciet niet bij deze epic.
+
+## P1 / P2 scheiding
+
+- P1: wat is nodig voor de eerste werkende versie?
+- P2: wat is nice-to-have of vervolgfase?
+
+## UX / copy contract
+
+- Welke bestaande UX-patronen, schermen of copyregels zijn leidend?
+- Welke copy of tone mag niet door implementatie-agents worden verzonnen?
+
+## Flow contract
+
+- Happy flow:
+- Non-happy flows:
+- Empty/loading/failure states:
+- Recovery/retry/cancel gedrag:
 
 ## Linked tasks
 

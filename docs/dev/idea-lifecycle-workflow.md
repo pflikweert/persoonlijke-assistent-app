@@ -34,6 +34,8 @@ Dit document is operationeel en niet-canoniek voor productscope/status.
 3. **Promotie**
    - Gebruik template uit `docs/project/40-ideas/README.md`.
    - Kies expliciet: `Status`, `Type`, `Horizon`, `Open vragen`, `Volgende stap`.
+   - Voeg promotiecriteria toe: wanneer wordt dit een epic, task of researchspoor?
+   - Noteer bekende user outcome, happy/non-happy flows, UX/copy guardrails en data/IO impact zodra het idee richting uitvoering gaat.
 4. **Optionele doorstroom**
    - Alleen bij duidelijke impact: voeg korte verwijzing toe in `20-planning/30-now-next-later.md`.
 5. **Niet doen zonder expliciet besluit**
@@ -63,3 +65,4 @@ Dit document is operationeel en niet-canoniek voor productscope/status.
 
 - Bij wijzigingen in `docs/project/**`: `npm run docs:bundle` + `npm run docs:bundle:verify`.
 - Commit pas na geslaagde verify.
+- Bij promoted/candidate ideas: controleer dat `Open vragen`, `Volgende stap` en `Promotiecriteria` niet leeg zijn.

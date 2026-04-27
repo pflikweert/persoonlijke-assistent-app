@@ -14,6 +14,7 @@ parent_task_id: null
 depends_on: []
 follows_after: []
 task_kind: task
+spec_ready: false
 due_date: null
 sort_order: null
 ---
@@ -28,6 +29,44 @@ Beschrijf kort welk concreet gat, risico of uitvoeringsprobleem deze taak oplost
 ## Gewenste uitkomst
 
 Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
+
+## User outcome
+
+Beschrijf concreet wat de gebruiker, admin, developer of agent na deze taak kan doen.
+
+## Functional slice
+
+Beschrijf welk afgerond functioneel onderdeel deze taak oplevert. Eén taak hoort één werkende slice te leveren, geen vage bundel.
+
+## Entry / exit
+
+- Entry: waar start de gebruiker/agent/flow?
+- Exit: waar eindigt de gebruiker/agent/flow wanneer de taak klaar is?
+
+## Happy flow
+
+1. Stap 1 met expected result.
+2. Stap 2 met expected result.
+3. Stap 3 met expected result.
+
+## Non-happy flows
+
+- Empty state:
+- Permission denied / unavailable:
+- Validation / unsupported state:
+- Failure / retry / cancel:
+
+## UX / copy
+
+- Exacte labels, helpertekst, notices, buttoncopy en errorcopy, of expliciete verwijzing naar bestaande copybron.
+- Voor UI: benoem welke bestaande schermen, scaffolds of shared components leidend zijn.
+
+## Data / IO
+
+- Input:
+- Output:
+- Opslag/API/service/file-impact:
+- Statussen:
 
 ## Waarom nu
 
@@ -68,6 +107,12 @@ Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 
 - [ ] Eerste concrete stap
 - [ ] Tweede concrete stap
+
+## Acceptance criteria
+
+- [ ] Objectief acceptatiescenario 1.
+- [ ] Objectief acceptatiescenario 2.
+- [ ] Objectief acceptatiescenario 3.
 
 ## Blockers / afhankelijkheden
 

@@ -2,8 +2,8 @@
 
 # Budio Agent Workflow and Docs Tooling
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -486,6 +486,7 @@ Regels:
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
 - Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
+- Voor nieuwe uitvoerbare plans/tasks: maak de task spec-ready vóór bouwstart. Minimaal: user outcome, functional slice, entry/exit, happy flow, non-happy flows, UX/copy, data/IO, acceptance en verify.
 
 ## Design-implementatie guardrails (operationeel)
 
@@ -597,6 +598,7 @@ Gebruik Act mode voor:
 - Leg expliciete user-details met latere uitvoer- of reviewwaarde vast onder een aparte requirement-sectie in de taskfile; alleen een samenvatting is niet genoeg.
 - Maak onderscheid tussen review-uitkomst en requirement-uitkomst: de taskfile moet niet alleen de conclusie bevatten, maar ook de concrete requirement-details waarop die conclusie rust.
 - Als de gebruiker een bestaand uitgebreid plan of detailblok expliciet in de taskfile wil terugzien, moet dat bronblok als eigen sectie behouden blijven; een statusreview of samenvatting mag dat niet vervangen.
+- Nieuwe P1/P2 bouwtaken of subtasks zijn pas bouwbaar wanneer ze zelfstandig uitvoerbaar zijn zonder sessiecontext; zet anders `spec_ready: false` en voeg eerst een hardeningstap toe.
 - Leg latere regressies, polish of user-correcties vast als **toegevoegde verbeteringen tijdens uitvoering**, tenzij de gebruiker expliciet de hoofdscope wijzigt.
 - Rond een taak pas af na een expliciete **plan reconciliation**: oorspronkelijk plan, later toegevoegd werk en resterende open punten moeten allemaal zichtbaar zijn.
 
@@ -910,6 +912,11 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 27. Een taak mag niet naar `done` zolang de reconciliation niet expliciet aangeeft wat van het oorspronkelijke plan is afgerond, wat later is toegevoegd en wat nog open staat.
 28. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
 29. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
+30. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
+31. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
+32. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
+33. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
+34. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
 
 ## Korte voorbeelden
 
@@ -924,6 +931,7 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
    - In Plan Mode: gebruik een bestaande task bij duidelijke match, anders maak je direct een nieuwe task aan.
    - Vraag alleen bij echte classificatie-, lane- of scope-twijfel.
    - Zet de nieuwe taak direct bovenaan de doel-lane en sla de nieuwe lane-volgorde expliciet op via `sort_order`.
+   - Vul voor nieuwe P1/P2 bouwtaken direct de spec-readiness secties in of laat `spec_ready: false` en markeer de taak nog niet als bouwbaar.
 2. **Triage**
    - Kies status, prioriteit en fase.
    - Link terug naar bron in planning of `open-points.md`.
@@ -962,6 +970,7 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 - Geen open status in `done/`.
 - Gebruik de taaklaag niet als vervanging van `current-status.md`.
 - Geen afronding zonder expliciete `Task`/`Task file`/`Status` in updates en eindresultaat.
+- Geen nieuwe P1/P2 bouwtask zonder happy/non-happy flows, UX/copy en acceptatiecriteria.
 
 ---
 
@@ -1236,6 +1245,19 @@ Voor AI-gedrag, prompting en evaluatie:
   - werk tijdens uitvoering checklist + `updated_at` bij op echte voortgang
   - elk inhoudelijk plan noemt expliciet de concrete taskfile-path
   - elk inhoudelijk Plan Mode-plan bevat een korte `Taskflow summary`: welke taskfile gebruikt of aangemaakt wordt, welke statuswijziging verwacht wordt, en wanneer extra werk een eigen task krijgt
+  - nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten spec-ready zijn vóór bouwstart:
+    - `User outcome`
+    - `Functional slice`
+    - `Entry / exit`
+    - `Happy flow`
+    - `Non-happy flows`
+    - `UX / copy`
+    - `Data / IO`
+    - `Acceptance criteria`
+    - `Verify / bewijs`
+  - zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder sessiecontext
+  - nieuwe epics/projectbeschrijvingen moeten P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies, linked tasks en acceptatie bevatten; een epic is meer dan een takenlijst
+  - promoted/candidate ideas en researchdocs moeten promotiecriteria, open vragen, volgende stap en bekende UX/flow/data-impact bevatten; ze mogen geen runtimewaarheid claimen zonder bewijs
   - verbeteringen die direct voortkomen uit testen van dezelfde flow blijven in dezelfde task; nieuw niet-relevant werk krijgt een eigen task
   - updates en eindresultaat bevatten altijd:
     - `Task: <taaktitel>`
@@ -1507,6 +1529,8 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
      - `Status: ...`
    - Noem in elk inhoudelijk plan expliciet het concrete taskfile-pad.
    - Voeg in Plan Mode-plannen altijd een korte `Taskflow summary` toe: gebruikte of nieuw aangemaakte taskfile, verwachte statuswijziging, en wanneer extra werk een eigen task krijgt.
+   - Nieuwe uitvoerbare P1/P2 tasks en subtasks moeten spec-ready zijn vóór bouwstart: vul `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
+   - Zet `spec_ready: true` pas wanneer die secties concreet genoeg zijn voor een developer of agent zonder sessiecontext.
 
 2. **Tijdens uitvoering**
    - Houd `updated_at` actueel bij betekenisvolle voortgang.
@@ -1519,6 +1543,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
    - Als de gebruiker een bestaand uitgebreid plan, blokstructuur of genummerde requirementlijst expliciet wil behouden, leg die vast als aparte bronsectie en vervang die nooit door alleen een afgeleide samenvatting.
    - Houd onder `## Status per requirement` bij wat gebouwd, gedeeltelijk gebouwd, nog niet gebouwd of nog user-review nodig is.
    - Leg aanvullingen of correcties tijdens uitvoering vast onder `## Toegevoegde verbeteringen tijdens uitvoering`.
+   - Als tijdens uitvoering blijkt dat een task of epic te vaag is, stop dan niet alleen lokaal met gokken: hard eerst de taskfile met flow-, UX/copy-, data/IO- en acceptatiecriteria.
 
 3. **Bij blokkade**
    - Zet status op `blocked` met korte blocker in taskfile.
@@ -1551,6 +1576,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 - Geen grote big-bang uitvoering wanneer het werk logisch in veilige blokken kan.
 - Geen nieuwe statuswaarden buiten: `backlog`, `ready`, `in_progress`, `review`, `blocked`, `done`.
 - Geen taak automatisch op `done` zetten zonder verify-resultaat en afrondingscontext.
+- Geen nieuwe bouwtask of epic aanmaken als alleen titel, samenvatting en checklist zijn ingevuld; dat is onvoldoende spec-ready.
 
 ---
 
@@ -1575,12 +1601,15 @@ Gebruik bij elke taak met risico op scope-uitloop of over-architectuur.
 8. Bij UI-werk: eerst hergebruik/scaffold-check doen via `docs/dev/ui-assembly-decision-tree.md`.
 9. Refactor alleen binnen de aangeraakte flow en alleen wanneer dit testbaarheid, leesbaarheid of risicoreductie helpt.
 10. Grotere opruimingen, repo-brede cleanup of refactors buiten de actieve flow krijgen een eigen task.
+11. Maak nieuwe plans/tasks altijd spec-ready: user outcome, functional slice, entry/exit, happy flow, non-happy flows, UX/copy, data/IO, acceptance en verify.
+12. Laat UX/copy en failure states niet open voor latere implementatie-agents wanneer de gebruiker om een concrete flow of bouwtaak vraagt.
 
 # Niet doen
 - Geen nieuwe productrichting introduceren.
 - Geen ongevraagde infra of architectuurlagen toevoegen.
 - Geen big-bang refactor onder de vlag van een kleine taak.
 - Geen herhaling van projectcontext in output.
+- Geen uitvoerbare taak opleveren die alleen richting beschrijft maar niet duidelijk maakt wat gebouwd, getoond, opgeslagen en getest moet worden.
 
 ---
 

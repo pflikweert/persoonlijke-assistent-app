@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -32,6 +32,10 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/copy-instructions.md
 - docs/project/ai-quality-studio.md
 - docs/dev/cline-workflow.md
+- docs/project/24-epics/README.md
+- docs/project/24-epics/_template.md
+- docs/project/24-epics/admin-founder-meeting-capture.md
+- docs/project/24-epics/budio-workspace-hierarchy-linear-lite.md
 - docs/project/20-planning/README.md
 - docs/project/20-planning/10-roadmap-phases.md
 - docs/project/20-planning/20-active-phase.md
@@ -913,6 +917,14 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | Taak | Status | Prioriteit | Fase | Korte omschrijving |
 | --- | --- | --- | --- | --- |
 | [1.2B outputkwaliteit expliciteren en afronden](25-tasks/open/1-2b-outputkwaliteit-expliciteren-en-afronden.md) | Backlog | p1 | transitiemaand-consumer-beta | Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt wat voor de huidige consumer beta als "voldoende goed" geldt. De ta... |
+| [Admin/founder meeting capture — fase 1 tests en smokebewijs](25-tasks/open/admin-founder-meeting-capture-fase-1-tests-en-smokebewijs.md) | Backlog | p1 | transitiemaand-consumer-beta | Er ligt bewijs dat de audio-safe v1 werkt: opname starten/stoppen, reload recovery, upload/retry, overzicht/detail, playback/download en... |
+| [Admin/founder meeting capture — lokale failsafe en recovery](25-tasks/open/admin-founder-meeting-capture-lokale-failsafe-en-recovery.md) | Backlog | p1 | transitiemaand-consumer-beta | Opnamechunks worden tijdens recording lokaal veiliggesteld in IndexedDB. Na reload/crash kan de gebruiker een onafgemaakte opname terugvi... |
+| [Admin/founder meeting capture — metadata, private storage en uploadstatus](25-tasks/open/admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus.md) | Backlog | p1 | transitiemaand-consumer-beta | Er is een minimale DB/storage-fundering voor recordings en uploadstatus. Upload/retry is idempotent genoeg om dubbele recordings te voork... |
+| [Admin/founder meeting capture — opname start/stop web MVP](25-tasks/open/admin-founder-meeting-capture-opname-start-stop-web-mvp.md) | Backlog | p1 | transitiemaand-consumer-beta | Admin kan een opname voorbereiden, starten, timer/status zien, stoppen en bewaren of annuleren met confirm. De flow bevat titel/type/cont... |
+| [Admin/founder meeting capture — overzicht/detail met playback en download](25-tasks/open/admin-founder-meeting-capture-overzicht-detail-playback-download.md) | Backlog | p1 | transitiemaand-consumer-beta | Admin ziet een rustige lijst met recordings en kan een detail openen met audio playback, download, metadata en statusblokken. De UI voelt... |
+| [Admin/founder meeting capture — scope en eerste versie vastleggen](25-tasks/open/admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen.md) | Backlog | p1 | transitiemaand-consumer-beta | De scope voor v1 staat scherp: admin/founder-only, audio-safe web recording, buiten dagboekcapture, met transcriptie en insights als late... |
+| [Admin/founder meeting capture — web route en IA](25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md) | Backlog | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
+| [Admin/founder meeting capture — workflow-retro en docs/skill update](25-tasks/open/admin-founder-meeting-capture-workflow-retro-en-docs-skill-update.md) | Backlog | p1 | transitiemaand-consumer-beta | Na de eerste functionele slice is duidelijk wat beter moet aan AGENTS, taskflow, skills, plugin of docs/dev. Alleen concrete, bewezen ver... |
 | [AIQS productie live zetten voor bestaande OpenAI-calls](25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md) | Backlog | p1 | transitiemaand-consumer-beta | De bestaande AIQS-adminflow werkt betrouwbaar in productie voor de huidige OpenAI-calls. Er worden geen nieuwe calls toegevoegd en geen n... |
 | [Entry photo gallery volledige end-user E2E flows](25-tasks/open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | Ready | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
 | [Moment detail foto-upload productieflakiness onderzoeken](25-tasks/open/moment-detail-foto-upload-productieflakiness-onderzoek.md) | Ready | p1 | transitiemaand-consumer-beta | Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een upload met de vaste agent-testaccount werkt betrouwbaar... |
@@ -921,6 +933,12 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | In Progress | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
 | [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Moments-overzicht primaire foto thumbnail en viewer](25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | Blocked | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
+| [Admin/founder meeting capture — admin processing controls](25-tasks/open/admin-founder-meeting-capture-admin-processing-controls.md) | Backlog | p2 | transitiemaand-consumer-beta | Admin kan upload/transcript/summary processing veilig retryen of rerunnen met duidelijke status en failure feedback. |
+| [Admin/founder meeting capture — audio upload/import flow](25-tasks/open/admin-founder-meeting-capture-audio-upload-import-flow.md) | Backlog | p2 | transitiemaand-consumer-beta | Een admin kan een bestaand audiobestand uploaden naar hetzelfde Meeting Capture archief, met dezelfde metadata, uploadstatus, detailweerg... |
+| [Admin/founder meeting capture — gespreksinzichten](25-tasks/open/admin-founder-meeting-capture-gespreksinzichten.md) | Backlog | p2 | transitiemaand-consumer-beta | Detail toont brongetrouwe inzichten: auto-title, korte samenvatting, kernpunten, besluiten, actiepunten, open vragen en onderwerpen. Fout... |
+| [Admin/founder meeting capture — retentie en export hardening](25-tasks/open/admin-founder-meeting-capture-retentie-export-hardening.md) | Backlog | p2 | transitiemaand-consumer-beta | Meeting Capture heeft een heldere keep-audio/retentievoorbereiding en robuuste download/export flow, zonder de eerste audio-safe v1 te ve... |
+| [Admin/founder meeting capture — speaker labels en mapping](25-tasks/open/admin-founder-meeting-capture-speaker-labels-en-mapping.md) | Backlog | p2 | transitiemaand-consumer-beta | Transcriptdetail ondersteunt eenvoudige speakerlabels en hernoemen/mappen van sprekers zonder transcriptverlies. |
+| [Admin/founder meeting capture — transcript pipeline](25-tasks/open/admin-founder-meeting-capture-transcript-pipeline.md) | Backlog | p2 | transitiemaand-consumer-beta | Een opgeslagen recording kan queued/background worden getranscribeerd. Status, retry en failure zijn zichtbaar op detail. Audio blijft be... |
 | [AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)](25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md) | Backlog | p2 | transitiemaand-consumer-beta | AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.... |
 | [Budio webapp compatible maken](25-tasks/open/budio-webapp-compatible-maken.md) | Backlog | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 | [Budio Workspace Command Room research en startpunt vastleggen](25-tasks/open/budio-workspace-command-room-research-en-startpunt-vastleggen.md) | Backlog | p2 | transitiemaand-consumer-beta | Er staat één nieuw idea/research-document in `docs/project/40-ideas/40-platform-and-architecture/` dat de richting vastlegt voor een Line... |
@@ -2720,6 +2738,7 @@ Regels:
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
 - Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
+- Voor nieuwe uitvoerbare plans/tasks: maak de task spec-ready vóór bouwstart. Minimaal: user outcome, functional slice, entry/exit, happy flow, non-happy flows, UX/copy, data/IO, acceptance en verify.
 
 ## Design-implementatie guardrails (operationeel)
 
@@ -2831,6 +2850,7 @@ Gebruik Act mode voor:
 - Leg expliciete user-details met latere uitvoer- of reviewwaarde vast onder een aparte requirement-sectie in de taskfile; alleen een samenvatting is niet genoeg.
 - Maak onderscheid tussen review-uitkomst en requirement-uitkomst: de taskfile moet niet alleen de conclusie bevatten, maar ook de concrete requirement-details waarop die conclusie rust.
 - Als de gebruiker een bestaand uitgebreid plan of detailblok expliciet in de taskfile wil terugzien, moet dat bronblok als eigen sectie behouden blijven; een statusreview of samenvatting mag dat niet vervangen.
+- Nieuwe P1/P2 bouwtaken of subtasks zijn pas bouwbaar wanneer ze zelfstandig uitvoerbaar zijn zonder sessiecontext; zet anders `spec_ready: false` en voeg eerst een hardeningstap toe.
 - Leg latere regressies, polish of user-correcties vast als **toegevoegde verbeteringen tijdens uitvoering**, tenzij de gebruiker expliciet de hoofdscope wijzigt.
 - Rond een taak pas af na een expliciete **plan reconciliation**: oorspronkelijk plan, later toegevoegd werk en resterende open punten moeten allemaal zichtbaar zijn.
 
@@ -2925,6 +2945,322 @@ Voor productiebug-onderzoek:
 - `docs/upload/**` gebruiken als bron van waarheid.
 - Productdocs vullen met operationele toolinguitleg.
 - “Klaar” melden zonder volledige verify.
+
+---
+
+## README
+
+---
+title: Epics workspace
+audience: both
+doc_type: operational
+source_role: reference
+visual_profile: budio-terminal
+upload_bundle: 10-budio-core-product-and-planning.md
+---
+
+# Epics workspace
+
+## Doel
+
+`docs/project/24-epics/**` is de lichte operationele bovenlaag voor groter, samenhangend werk dat uit meerdere taken bestaat.
+
+Belangrijk:
+
+- epics zijn **geen** nieuwe canonieke productwaarheid
+- epics vervangen **niet** `docs/project/25-tasks/**`
+- taskfiles blijven de uitvoerlaag voor echte bouw-, research- en verify-actie
+
+## Plaats in de repo
+
+```text
+20-planning   = richting en focus
+24-epics      = grotere werkpakketten / projectbundels
+25-tasks      = concrete uitvoering
+40-ideas      = voorstelruimte / pre-task
+```
+
+## Gebruik
+
+- gebruik een epic als meerdere taken logisch bij hetzelfde werkpakket horen
+- leg hier scope, rationale, linked tasks, volgorde en afhankelijkheden vast
+- gebruik subtasks nog steeds als gewone taskfiles in `25-tasks/**`
+- houd dependencies expliciet en klein; gebruik parent/child niet als vervanging voor dependencies
+
+## Minimal model
+
+- `Epic/Project`
+- `Task`
+- `Subtask`
+
+Dependencies blijven aparte relaties:
+
+- `depends_on`
+- `follows_after`
+- afgeleid in tooling:
+  - `blocked_by`
+  - `blocks`
+
+## Template
+
+Gebruik `_template.md` als startpunt voor nieuwe epic-docs.
+
+## Relatie met plugin en agents
+
+- de Budio Workspace plugin leest epics als extra planningslaag boven tasks
+- agents plannen op epic/taskniveau en voeren uit op task/subtaskniveau
+- los werk zonder duidelijke parent blijft een gewone task
+
+---
+
+## Template
+
+---
+id: epic-example-id
+title: Voorbeeld epic
+status: backlog
+priority: p2
+owner: null
+phase: transitiemaand-consumer-beta
+updated_at: 2026-04-27
+summary: ""
+spec_ready: false
+sort_order: null
+---
+
+# Voorbeeld epic
+
+## Doel
+
+Beschrijf kort welk groter werkpakket deze epic bundelt en waarom de taken samen horen.
+
+## Gewenste uitkomst
+
+Beschrijf wat functioneel klaar is wanneer deze epic als afgerond geldt.
+
+## Scope en grenzen
+
+- Wat hoort expliciet wel bij deze epic.
+- Wat hoort expliciet niet bij deze epic.
+
+## P1 / P2 scheiding
+
+- P1: wat is nodig voor de eerste werkende versie?
+- P2: wat is nice-to-have of vervolgfase?
+
+## UX / copy contract
+
+- Welke bestaande UX-patronen, schermen of copyregels zijn leidend?
+- Welke copy of tone mag niet door implementatie-agents worden verzonnen?
+
+## Flow contract
+
+- Happy flow:
+- Non-happy flows:
+- Empty/loading/failure states:
+- Recovery/retry/cancel gedrag:
+
+## Linked tasks
+
+- `docs/project/25-tasks/open/example.md`
+
+## Volgorde van uitvoeren
+
+1. Eerste taak
+2. Tweede taak
+3. Derde taak
+
+## Dependencies
+
+- Geen of nog te bepalen.
+
+## Acceptatie
+
+- Noem de belangrijkste signalen waaraan je ziet dat deze epic echt bruikbaar is.
+
+## Relevante links
+
+- `docs/project/25-tasks/README.md`
+
+---
+
+## Admin Founder Meeting Capture
+
+---
+id: epic-admin-founder-meeting-capture
+title: Admin/founder meeting capture
+status: backlog
+priority: p1
+owner: Pieter Flikweert
+phase: transitiemaand-consumer-beta
+updated_at: 2026-04-27
+summary: "Aparte admin/founder lane voor lange overlegopnames buiten de dagboekflow, met audio-safe web recording als eerste versie en transcript/insights als vervolgfase."
+spec_ready: true
+sort_order: 2
+---
+
+# Admin/founder meeting capture
+
+## Doel
+
+Een aparte admin/founder recording-lane bouwen voor lange gesprekken, los van de bestaande dagboekcapture. De eerste waarde is audio betrouwbaar opnemen, lokaal veiligstellen, uploaden, terugvinden, afspelen en downloaden.
+
+## Gewenste uitkomst
+
+De eerste versie werkt als audio-safe web MVP: een admin kan een gesprek opnemen, browser- of netwerkproblemen overleven via lokale recovery, de opname uploaden naar private storage en de opname terugvinden in een rustig overzicht/detail met playback en download.
+
+Transcriptie, speakerlabels, gespreksinzichten, upload/import van bestaande audio en retentiebeleid zijn eigen vervolg-taken binnen dezelfde epic.
+
+## Scope en grenzen
+
+- Wel: admin-only, audio-first, web recording, local-first recovery, private upload, overview/detail/playback/download.
+- Wel: alle P2-extra's als eigen taken onder dezelfde epic, met priority `p2`.
+- Niet: bestaande dagboekcapture functioneel aanpassen.
+- Niet: live assistant, meeting bot, calendar-integratie, team sharing of publieke Pro UI.
+
+## P1 / P2 scheiding
+
+- P1: scope en eerste versie, web route/IA, opname start/stop, lokale failsafe/recovery, metadata/private storage/uploadstatus, overzicht/detail/playback/download en fase-1 smokebewijs.
+- P2: audio upload/import, transcript pipeline, speaker labels, gespreksinzichten, admin processing controls en retentie/export hardening.
+- P2 mag nooit audio-safe v1 blokkeren.
+
+## UX / copy contract
+
+- Gebruik bestaande capture-, moment-, dag-, selectie-, header- en footerpatronen als visuele familie.
+- Geen dashboardisering, meeting-suite look, live assistant UI of brede Pro/Business taal.
+- Copy blijft kort en geruststellend: `Gespreksopname`, `Start opname`, `Stop en bewaar`, `Audio wordt veilig opgeslagen`, `Upload opnieuw proberen`, `Transcript mislukt. De audio is bewaard.`
+- Consentcopy blijft sober: `Zorg dat iedereen weet dat je dit gesprek opneemt.`
+
+## Flow contract
+
+- Happy flow: admin opent Meeting Capture, start opname, stopt en bewaart, audio wordt lokaal veiliggesteld, upload voltooit, recording verschijnt in overzicht, detail speelt audio af en download werkt.
+- Non-happy flows: mic-permission geweigerd, browser unsupported, reload/crash met lokale recovery, upload failure met lokaal veilige audio, annuleren/verwijderen met confirm.
+- Empty state: archief toont rustige uitleg en primaire actie `Start opname`.
+- Recovery/retry/cancel: recovery toont `Upload opname` en `Verwijder lokale opname`; upload failure toont retry zonder audioverlies.
+
+## Linked tasks
+
+- `docs/project/25-tasks/done/admin-founder-meeting-capture-epic-en-taakpakket-aanmaken.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-opname-start-stop-web-mvp.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-lokale-failsafe-en-recovery.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-overzicht-detail-playback-download.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-fase-1-tests-en-smokebewijs.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-workflow-retro-en-docs-skill-update.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-audio-upload-import-flow.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-transcript-pipeline.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-speaker-labels-en-mapping.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-gespreksinzichten.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-admin-processing-controls.md`
+- `docs/project/25-tasks/open/admin-founder-meeting-capture-retentie-export-hardening.md`
+
+## Volgorde van uitvoeren
+
+1. Epic + taakpakket aanmaken.
+2. Scope en eerste versie vastleggen.
+3. Web route en IA.
+4. Opname start/stop web MVP.
+5. Lokale failsafe en recovery.
+6. Metadata, private storage en uploadstatus.
+7. Overzicht/detail met playback en download.
+8. Fase 1 tests en smokebewijs.
+9. Workflow-retro en docs/skill update.
+10. P2 taken pas na bewezen audio-safe v1.
+
+## Dependencies
+
+- `task-admin-founder-meeting-capture-web-route-en-ia` depends on `task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen`.
+- `task-admin-founder-meeting-capture-opname-start-stop-web-mvp` depends on route/IA.
+- `task-admin-founder-meeting-capture-lokale-failsafe-en-recovery` depends on start/stop recording.
+- `task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus` follows after scope and blocks playback/detail.
+- `task-admin-founder-meeting-capture-overzicht-detail-playback-download` depends on metadata/storage.
+- P2 transcript/insight taken depend on audio-safe archive.
+
+## Acceptatie
+
+- De Budio Workspace plugin toont deze epic met alle child tasks.
+- P1 en P2 taken zijn duidelijk gescheiden via priority.
+- Dependencies maken zichtbaar welke taken blocked of ready zijn.
+- Een agent kan morgen één functionele slice oppakken zonder opnieuw scope te moeten reconstrueren.
+
+## Relevante links
+
+- `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
+- `/Users/pieterflikweert/Downloads/Meeting Capture 1.md`
+- `/Users/pieterflikweert/Downloads/Meeting Capture 2.md`
+
+---
+
+## Budio Workspace Hierarchy Linear Lite
+
+---
+id: epic-budio-workspace-hierarchy-linear-lite
+title: Budio Workspace hierarchy — Linear-lite epic/task/subtask
+status: done
+priority: p1
+owner: Pieter Flikweert
+phase: transitiemaand-consumer-beta
+updated_at: 2026-04-27
+summary: "Voeg een kleine epic-laag, subtasks en dependencies toe aan de Budio Workspace plugin en taskflow, zodat groter werk rustig gegroepeerd en uitgevoerd kan worden zonder de markdown-first agentflow te breken."
+sort_order: 1
+---
+
+# Budio Workspace hierarchy — Linear-lite epic/task/subtask
+
+## Doel
+
+Een rustige planningslaag boven de bestaande taskfiles toevoegen, geïnspireerd door Linear: één epic boven meerdere taken, subtasks als gewone taskfiles met parent-link, en dependencies als aparte relatie.
+
+## Gewenste uitkomst
+
+De repo bevat een operationele epic-laag onder `docs/project/24-epics/**`, taskfiles ondersteunen parent/subtask/dependency metadata en de Budio Workspace plugin kan epics, linked tasks, subtasks en blocked-relaties tonen zonder bestaande vlakke tasks te breken.
+
+## Scope en grenzen
+
+- Wel:
+  - nieuwe epic-docslaag
+  - hiërarchievelden in tasks
+  - plugin parsing en UI voor epics/subtasks/dependencies
+  - agent/taskflow docs uitbreiden
+- Niet:
+  - Jira-achtige issue-type matrix
+  - roadmap/timeline UI
+  - browser shell
+  - autonome AI-subtask generatie
+
+## Linked tasks
+
+- `docs/project/25-tasks/open/budio-workspace-hierarchy-epics-subtasks-dependencies.md`
+- `docs/project/25-tasks/open/budio-workspace-command-room-research-en-startpunt-vastleggen.md`
+- `docs/project/25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md`
+
+## Volgorde van uitvoeren
+
+1. Epic-laag en templates toevoegen.
+2. Task-metadata uitbreiden met `epic_id`, `parent_task_id`, `depends_on`, `follows_after`, `task_kind`.
+3. Plugin parser/repository/snapshot uitbreiden.
+4. Plugin UI voor epic overview, task-relaties en filters toevoegen.
+5. Tests, workspace apply en repo-verify afronden.
+
+## Dependencies
+
+- Leunt inhoudelijk op het Linear/Command Room researchspoor.
+- Mag bestaande markdown-first taskflow niet breken.
+
+## Acceptatie
+
+- Een epic toont meerdere linked tasks.
+- Een task kan subtasks hebben zonder apart bestandstype.
+- Een blocked task toont zijn blockers duidelijk.
+- Vlakke oude taskfiles blijven volledig bruikbaar.
+
+## Relevante links
+
+- `docs/project/40-ideas/40-platform-and-architecture/100-linear-geinspireerde-budio-workspace-structuurlaag.md`
+- `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+- `docs/project/25-tasks/open/budio-workspace-hierarchy-epics-subtasks-dependencies.md`
 
 ---
 

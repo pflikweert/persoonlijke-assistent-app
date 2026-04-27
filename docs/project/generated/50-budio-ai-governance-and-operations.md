@@ -2,8 +2,8 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -233,10 +233,7 @@ Regels:
 - Voor Stitch-werk: gebruik `docs/dev/stitch-workflow.md` als operationele workflowbron.
 - Voor idee-capture/promotie: gebruik `docs/dev/idea-lifecycle-workflow.md`.
 - Voor taakaanmaak en statusflow: gebruik `docs/dev/task-lifecycle-workflow.md`.
-
-## Design-implementatie guardrails (operationeel)
-
-- `theme/tokens
+- Voor nieuwe uitvoerbare plans/tasks: maak de task spec-ready vóór
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 

@@ -126,6 +126,19 @@ Voor AI-gedrag, prompting en evaluatie:
   - werk tijdens uitvoering checklist + `updated_at` bij op echte voortgang
   - elk inhoudelijk plan noemt expliciet de concrete taskfile-path
   - elk inhoudelijk Plan Mode-plan bevat een korte `Taskflow summary`: welke taskfile gebruikt of aangemaakt wordt, welke statuswijziging verwacht wordt, en wanneer extra werk een eigen task krijgt
+  - nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten spec-ready zijn vóór bouwstart:
+    - `User outcome`
+    - `Functional slice`
+    - `Entry / exit`
+    - `Happy flow`
+    - `Non-happy flows`
+    - `UX / copy`
+    - `Data / IO`
+    - `Acceptance criteria`
+    - `Verify / bewijs`
+  - zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder sessiecontext
+  - nieuwe epics/projectbeschrijvingen moeten P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies, linked tasks en acceptatie bevatten; een epic is meer dan een takenlijst
+  - promoted/candidate ideas en researchdocs moeten promotiecriteria, open vragen, volgende stap en bekende UX/flow/data-impact bevatten; ze mogen geen runtimewaarheid claimen zonder bewijs
   - verbeteringen die direct voortkomen uit testen van dezelfde flow blijven in dezelfde task; nieuw niet-relevant werk krijgt een eigen task
   - updates en eindresultaat bevatten altijd:
     - `Task: <taaktitel>`

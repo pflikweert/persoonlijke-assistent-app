@@ -38,6 +38,15 @@ Beschrijf in 1-2 zinnen welke uitkomst deze maand moet opleveren.
 | --- | --- | --- | --- |
 | `<epic titel>` | `<gedrag op epicniveau>` | `<user/business reden>` | `<basis of vorige maand>` |
 
+### Spec-readiness per must-have epic
+
+- User outcome:
+- Happy flow:
+- Belangrijkste non-happy flows:
+- UX/copy richting:
+- Data/IO impact:
+- Eerste task die spec-ready moet zijn:
+
 ### Nice-to-have epics
 
 | Epic | Wat voegt het toe | Waarom niet must-have |

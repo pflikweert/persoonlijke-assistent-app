@@ -97,6 +97,7 @@ let projectSources = [...projectCoreSources];
 let researchSources = [];
 let strategySources = [];
 let planningSources = [];
+let epicSources = [];
 let ideaSources = [];
 let taskSources = [];
 
@@ -392,10 +393,11 @@ function prioritizeReadme(paths) {
 }
 
 async function discoverProjectLayerSources() {
-  const [strategyFiles, planningFiles, researchFiles, ideaFiles] = await Promise.all([
+  const [strategyFiles, planningFiles, researchFiles, epicFiles, ideaFiles] = await Promise.all([
     listMarkdownFiles('docs/project/10-strategy'),
     listMarkdownFiles('docs/project/20-planning'),
     listMarkdownFiles('docs/project/30-research'),
+    listMarkdownFiles('docs/project/24-epics'),
     listMarkdownFiles('docs/project/40-ideas', { recursive: true }),
   ]);
 
@@ -409,6 +411,10 @@ async function discoverProjectLayerSources() {
       title: sourceTitleFromPath(sourcePath),
     })),
     research: prioritizeReadme(researchFiles).map((sourcePath) => ({
+      path: sourcePath,
+      title: sourceTitleFromPath(sourcePath),
+    })),
+    epics: prioritizeReadme(epicFiles).map((sourcePath) => ({
       path: sourcePath,
       title: sourceTitleFromPath(sourcePath),
     })),
@@ -1114,6 +1120,7 @@ function renderPrimaryUploadManifest({ buildTimestamp, commitHash }) {
     '| --- | --- |',
     `| Strategie-review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadStrategyResearchIdeas}\` |`,
     `| Planherziening / opportunity review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadStrategyResearchIdeas}\` |`,
+    `| Epic/project planning review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadCoreProductPlanning}\`, \`${outputPaths.uploadTasksCurrent}\` |`,
     `| Roadmapplanning / maandblokken | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadRoadmapPlanningPack}\` |`,
     `| Current task review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadTasksCurrent}\` |`,
     `| Task archive review | \`${outputPaths.uploadChatgptProjectContext}\`, \`${outputPaths.uploadTasksArchive}\` |`,
@@ -1535,6 +1542,7 @@ function assertDiscoveredSources() {
     ['strategy', strategySources],
     ['planning', planningSources],
     ['research', researchSources],
+    ['epics', epicSources],
     ['ideas', ideaSources],
   ];
 
@@ -1679,6 +1687,7 @@ async function assertRequiredSourcesExist(pageMarkdownRefs) {
     ...researchSources.map((item) => item.path),
     ...strategySources.map((item) => item.path),
     ...planningSources.map((item) => item.path),
+    ...epicSources.map((item) => item.path),
     ...ideaSources.map((item) => item.path),
     ...taskSources.map((item) => item.path),
     ...roadmapPlanningPackSources.map((item) => item.path),
@@ -1771,8 +1780,9 @@ async function main() {
     strategySources = discovered.strategy;
     planningSources = discovered.planning;
     researchSources = discovered.research;
+    epicSources = discovered.epics;
     ideaSources = discovered.ideas;
-    projectSources = [...projectCoreSources];
+    projectSources = [...projectCoreSources, ...epicSources];
     assertDiscoveredSources();
     const metadata = await resolveBuildMetadata(isCheckMode);
     const inputs = await loadBundleInputs();

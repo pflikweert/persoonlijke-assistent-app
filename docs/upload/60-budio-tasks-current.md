@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
-Source Commit: ad43300
+Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
+Source Commit: 0b5c2d3
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 18
+- Totaal tasks opgenomen: 32
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -204,6 +204,2220 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 
 ---
 
+## Admin/founder meeting capture — admin processing controls
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-admin-processing-controls.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-admin-processing-controls
+title: Admin/founder meeting capture — admin processing controls
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-27
+summary: "Voeg later minimale admin controls toe voor retry/rerun van upload, transcript en summary processing."
+tags: [meeting-capture, admin, processing, retry]
+workstream: aiqs
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-transcript-pipeline]
+follows_after: [task-admin-founder-meeting-capture-gespreksinzichten]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 14
+---
+
+# Admin/founder meeting capture — admin processing controls
+
+## Probleem / context
+
+Processing kan falen of later opnieuw nodig zijn. Admin heeft minimale controls nodig, maar geen brede admin-suite.
+
+## Gewenste uitkomst
+
+Admin kan upload/transcript/summary processing veilig retryen of rerunnen met duidelijke status en failure feedback.
+
+## User outcome
+
+Een admin kan mislukte of verouderde processing opnieuw starten zonder handmatig data te repareren.
+
+## Functional slice
+
+Minimale admin retry/rerun controls voor Meeting Capture processing.
+
+## Entry / exit
+
+- Entry: detail toont upload/transcript/summary status.
+- Exit: retry/rerun is gestart of fout is zichtbaar.
+
+## Happy flow
+
+1. Admin opent detail met failed processing.
+2. Admin kiest retry/rerun.
+3. Status gaat naar queued/processing.
+4. Resultaat wordt bijgewerkt.
+
+## Non-happy flows
+
+- Geen admin: controls verborgen.
+- Retry faalt: status blijft failed met foutmelding.
+- Processing loopt al: actie disabled.
+
+## UX / copy
+
+- Actions: `Opnieuw proberen`, `Samenvatting opnieuw maken`.
+- Status: `Wordt verwerkt`.
+- Failure: `Opnieuw proberen mislukt.`
+
+## Data / IO
+
+- Input: recording id en processing type.
+- Output: nieuwe processing job/status.
+- Statussen: idle, queued, processing, failed.
+
+## Waarom nu
+
+- P2 na transcript/insights.
+
+## In scope
+
+- Retry/rerun controls.
+- Statusfeedback.
+- Guardrails voor admin-only.
+
+## Buiten scope
+
+- Brede AIQS-verbouwing.
+- Niet-admin controls.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Minimale admin controls, geen zware workflow.
+
+## Expliciete user requirements / detailbehoud
+
+- Alleen noodzakelijke controls.
+
+## Status per requirement
+
+- [ ] Admin processing controls — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: processing statusmodel lezen.
+- [ ] Blok 2: controls bouwen.
+- [ ] Blok 3: retry/rerun verify.
+
+## Concrete checklist
+
+- [ ] Retry transcript.
+- [ ] Retry summary.
+- [ ] Status/failure feedback.
+
+## Acceptance criteria
+
+- [ ] Alleen admin ziet controls.
+- [ ] Retry/rerun start juiste processing.
+- [ ] Running/failed states zijn duidelijk.
+
+## Blockers / afhankelijkheden
+
+- Depends on transcript pipeline; follows after insights.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: admin processing controls toevoegen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: P2.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — audio upload/import flow
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-audio-upload-import-flow.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-audio-upload-import-flow
+title: Admin/founder meeting capture — audio upload/import flow
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-27
+summary: "Voeg later een flow toe waarmee een bestaand audiobestand in hetzelfde Meeting Capture archief kan landen."
+tags: [meeting-capture, upload, import, audio]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus, task-admin-founder-meeting-capture-overzicht-detail-playback-download]
+follows_after: [task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 10
+---
+
+# Admin/founder meeting capture — audio upload/import flow
+
+## Probleem / context
+
+Niet elk belangrijk gesprek zal live in Budio worden opgenomen. De gebruiker wil ook bestaande audiobestanden kunnen uploaden.
+
+## Gewenste uitkomst
+
+Een admin kan een bestaand audiobestand uploaden naar hetzelfde Meeting Capture archief, met dezelfde metadata, uploadstatus, detailweergave en latere processingroute als live opgenomen audio.
+
+## User outcome
+
+Een admin kan een bestaande opname alsnog in het Meeting Capture archief plaatsen.
+
+## Functional slice
+
+Bestand-upload/import naar hetzelfde recording model als live audio.
+
+## Entry / exit
+
+- Entry: admin kiest `Audio uploaden` vanuit overview of new flow.
+- Exit: audio staat in hetzelfde archief of upload is retrybaar mislukt.
+
+## Happy flow
+
+1. Admin kiest audiobestand.
+2. Admin vult optionele titel/type/notitie in.
+3. Upload gebruikt hetzelfde metadata/storage model.
+4. Recording verschijnt in overzicht.
+5. Detail gebruikt dezelfde playback/download UI.
+
+## Non-happy flows
+
+- Ongeldig bestandstype: toon rustige validatiefout.
+- Te groot bestand: toon limiet/fout zonder crash.
+- Upload failure: retry mogelijk, geen dubbele recording.
+- Annuleren: geen recording aanmaken.
+
+## UX / copy
+
+- Action: `Audio uploaden`.
+- Failure: `Upload mislukt. Probeer opnieuw.`
+- Validation: `Kies een audiobestand.`
+
+## Data / IO
+
+- Input: local audio file en metadata.
+- Output: recording metadata + private storage object.
+- Statussen: selected, uploading, uploaded, upload_failed.
+
+## Waarom nu
+
+- Belangrijk genoeg om expliciet te plannen.
+- Niet noodzakelijk voor audio-safe v1.
+
+## In scope
+
+- Bestand kiezen/uploaden.
+- Metadata invullen.
+- Zelfde archive/detail model gebruiken.
+- Failure states en retry.
+
+## Buiten scope
+
+- Nieuwe aparte import-lane.
+- Transcriptie of insights.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Upload/import hoort onder dezelfde epic, priority `p2`.
+
+## Expliciete user requirements / detailbehoud
+
+- Dit is nice to have maar moet wel een eigen taak krijgen.
+
+## Status per requirement
+
+- [ ] Upload/import flow — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: bestaande uploadpatronen lezen.
+- [ ] Blok 2: importflow bouwen.
+- [ ] Blok 3: verify/smoke.
+
+## Concrete checklist
+
+- [ ] File picker/upload.
+- [ ] Metadata naar recording model.
+- [ ] Detail/playback hergebruiken.
+- [ ] Failure/retry tonen.
+
+## Acceptance criteria
+
+- [ ] Upload gebruikt hetzelfde archiefmodel.
+- [ ] Detail/playback hergebruikt bestaande flow.
+- [ ] Invalid/upload failure states zijn zichtbaar.
+
+## Blockers / afhankelijkheden
+
+- Depends on metadata/storage en overzicht/detail.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Web smoke upload/import.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: bestaande audio upload/import toevoegen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: P2.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — fase 1 tests en smokebewijs
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-fase-1-tests-en-smokebewijs.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs
+title: Admin/founder meeting capture — fase 1 tests en smokebewijs
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Rond fase 1 af met gerichte tests en runtime-smokebewijs voor opnemen, recovery, upload, playback en download."
+tags: [meeting-capture, tests, smoke, quality]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-web-route-en-ia, task-admin-founder-meeting-capture-opname-start-stop-web-mvp, task-admin-founder-meeting-capture-lokale-failsafe-en-recovery, task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus, task-admin-founder-meeting-capture-overzicht-detail-playback-download]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 8
+---
+
+# Admin/founder meeting capture — fase 1 tests en smokebewijs
+
+## Probleem / context
+
+Fase 1 raakt browser recording, lokale opslag, private upload en UI. Lint/typecheck alleen is onvoldoende bewijs voor deze interactieve flow.
+
+## Gewenste uitkomst
+
+Er ligt bewijs dat de audio-safe v1 werkt: opname starten/stoppen, reload recovery, upload/retry, overzicht/detail, playback/download en admin-only gating.
+
+## User outcome
+
+Het team kan met bewijs zeggen dat Meeting Capture fase 1 betrouwbaar genoeg is om verder op te bouwen.
+
+## Functional slice
+
+Afsluitende test- en smoke-slice voor de volledige audio-safe v1.
+
+## Entry / exit
+
+- Entry: P1 bouwtaken zijn gebouwd.
+- Exit: bewijs staat in taskfile en failures zijn opgelost of expliciet blocked.
+
+## Happy flow
+
+1. Draai lint/typecheck.
+2. Draai unit/helper tests voor recorder/recovery/storage.
+3. Smoke admin-only routing.
+4. Smoke opname start/stop.
+5. Smoke reload recovery.
+6. Smoke upload, playback en download.
+7. Check light/dark UI.
+
+## Non-happy flows
+
+- Test faalt: fix binnen dezelfde flow als regressie relevant is.
+- Runtime smoke niet mogelijk: leg exact vast waarom en welk handmatig commando nodig is.
+- Audioverlies-scenario faalt: fase 1 blijft niet klaar.
+
+## UX / copy
+
+- Verifieer verplichte copy uit epic-flowcontract in UI.
+- Geen nieuwe copy introduceren zonder taskfile-update.
+
+## Data / IO
+
+- Input: lokale dev-server op standaard target indien beschikbaar, testdata/recording mocks.
+- Output: testresultaten, smoke-notities en bewijs in taskfile.
+- Geen productie-data.
+
+## Waarom nu
+
+- Fase 1 mag pas als klaar gelden met runtimebewijs.
+
+## In scope
+
+- Unit/integratietests voor complexe helpers.
+- Lint/typecheck.
+- Web smoke voor kernscenario's.
+- Light/dark runtime-check voor geraakte UI.
+
+## Buiten scope
+
+- Volledige E2E suite voor P2 transcript/insights.
+- Productie-monitoring.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Nieuwe complexe helpermodules mikken op minimaal 80% coverage.
+- Interactieve UI vereist runtime/smoke-check.
+
+## Expliciete user requirements / detailbehoud
+
+- Task is pas klaar wanneer het werkt, niet alleen wanneer files bestaan.
+- Bestaande flow mag niet regressief geraakt zijn.
+
+## Status per requirement
+
+- [ ] Helper-tests — status: niet gebouwd
+- [ ] Runtime smoke — status: niet gebouwd
+- [ ] Light/dark check — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: testbare helpers en smoke-scenario's inventariseren.
+- [ ] Blok 2: tests/smoke uitvoeren en fixes binnen flow oplossen.
+- [ ] Blok 3: evidence vastleggen en phase-1 reconciliation doen.
+
+## Concrete checklist
+
+- [ ] Admin ziet ingang, niet-admin niet.
+- [ ] Opname start/stop werkt.
+- [ ] Chunks worden lokaal bewaard.
+- [ ] Reload recovery werkt.
+- [ ] Upload failure veroorzaakt geen audioverlies.
+- [ ] Detail toont playback en download.
+
+## Acceptance criteria
+
+- [ ] Admin-only toegang bewezen.
+- [ ] Start/stop opname bewezen.
+- [ ] Reload recovery bewezen.
+- [ ] Upload failure veroorzaakt geen audioverlies.
+- [ ] Playback/download bewezen.
+- [ ] Light/dark UI-check uitgevoerd of expliciet blocked met reden.
+
+## Blockers / afhankelijkheden
+
+- Depends on alle P1 bouwtaken voor fase 1.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Gerichte tests.
+- Web smoke light/dark.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: fase 1 bewijzen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op uitvoering.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — gespreksinzichten
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-gespreksinzichten.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-gespreksinzichten
+title: Admin/founder meeting capture — gespreksinzichten
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-27
+summary: "Voeg later brongetrouwe gespreksinzichten toe: auto-title, samenvatting, kernpunten, besluiten, actiepunten, open vragen en onderwerpen."
+tags: [meeting-capture, insights, summary, ai]
+workstream: aiqs
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-transcript-pipeline]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 13
+---
+
+# Admin/founder meeting capture — gespreksinzichten
+
+## Probleem / context
+
+Lange gesprekken bevatten besluiten, actiepunten en productrichting. Die waarde moet later overzichtelijk worden gemaakt, maar alleen op basis van transcript/audio.
+
+## Gewenste uitkomst
+
+Detail toont brongetrouwe inzichten: auto-title, korte samenvatting, kernpunten, besluiten, actiepunten, open vragen en onderwerpen. Fouten in insights blokkeren transcript/audio niet.
+
+## User outcome
+
+Een admin kan snel besluiten, actiepunten en kernpunten uit een gesprek terugzien met behoud van audio/transcript als bron.
+
+## Functional slice
+
+Brongetrouwe insights processing en detailweergave bovenop transcript.
+
+## Entry / exit
+
+- Entry: recording heeft transcript.
+- Exit: insights zijn zichtbaar of failure is geïsoleerd.
+
+## Happy flow
+
+1. Insights job start op transcript.
+2. Status toont processing.
+3. Output bevat titel, samenvatting, kernpunten, besluiten, actiepunten, open vragen en onderwerpen.
+4. Detail toont insights aanvullend op audio/transcript.
+
+## Non-happy flows
+
+- Insight failure: transcript/audio blijven zichtbaar.
+- Onvoldoende transcript: toon dat insights nog niet beschikbaar zijn.
+- Retry: start insights opnieuw zonder transcriptverlies.
+
+## UX / copy
+
+- Section: `Inzichten`.
+- Failure: `Inzichten maken mislukt. De audio en het transcript zijn bewaard.`
+- Action: `Inzichten opnieuw proberen`.
+
+## Data / IO
+
+- Input: transcript.
+- Output: structured insights.
+- Statussen: queued, processing, completed, failed.
+
+## Waarom nu
+
+- P2 na transcript pipeline.
+
+## In scope
+
+- Prompt/output-contract voor inzichten.
+- Status/failure isolation.
+- Detailweergave voor inzichten.
+
+## Buiten scope
+
+- Medische interpretatie of advies.
+- Volledige AIQS control plane verbouwen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Insights zijn aanvullend, niet vervangend.
+- Altijd terug kunnen naar audio en transcript.
+
+## Expliciete user requirements / detailbehoud
+
+- Strikt brongetrouw.
+- Geen medische interpretatie.
+
+## Status per requirement
+
+- [ ] Gespreksinzichten — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: AIQS/content rules lezen.
+- [ ] Blok 2: insights processing bouwen.
+- [ ] Blok 3: brontrouw/failure tests.
+
+## Concrete checklist
+
+- [ ] Outputcontract bepalen.
+- [ ] Processing aansluiten.
+- [ ] Detail UI toevoegen.
+- [ ] Failure isolation valideren.
+
+## Acceptance criteria
+
+- [ ] Insights zijn brongetrouw.
+- [ ] Failure blokkeert audio/transcript niet.
+- [ ] Geen medische interpretatie of advies.
+
+## Blockers / afhankelijkheden
+
+- Depends on transcript pipeline.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Gerichte AI/output tests.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: gespreksinzichten toevoegen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: P2.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+- `docs/project/content-processing-rules.md`
+- `docs/project/ai-quality-studio.md`
+```
+
+---
+
+## Admin/founder meeting capture — lokale failsafe en recovery
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-lokale-failsafe-en-recovery.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-lokale-failsafe-en-recovery
+title: Admin/founder meeting capture — lokale failsafe en recovery
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Voeg MediaRecorder chunking, IndexedDB local-first opslag en recovery na reload/crash toe zodat audioverlies wordt voorkomen."
+tags: [meeting-capture, indexeddb, recovery, audio]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-opname-start-stop-web-mvp]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 5
+---
+
+# Admin/founder meeting capture — lokale failsafe en recovery
+
+## Probleem / context
+
+Lange browseropnames zijn kwetsbaar voor reloads, crashes en netwerkproblemen. Audioverlies is de grootste v1-risico.
+
+## Gewenste uitkomst
+
+Opnamechunks worden tijdens recording lokaal veiliggesteld in IndexedDB. Na reload/crash kan de gebruiker een onafgemaakte opname terugvinden en kiezen voor uploaden/herstellen of verwijderen.
+
+## User outcome
+
+Een admin verliest een lange opname niet door reload, crash of tijdelijk netwerkprobleem.
+
+## Functional slice
+
+Local-first chunkopslag en recovery UI voor onafgemaakte Meeting Capture opnames.
+
+## Entry / exit
+
+- Entry: actieve recorder schrijft chunks tijdens opname.
+- Exit: chunks zijn lokaal herstelbaar, geüpload in vervolgflow of bewust verwijderd.
+
+## Happy flow
+
+1. Recorder produceert korte audiochunks.
+2. Elke chunk wordt met metadata in IndexedDB opgeslagen.
+3. Bij stop worden chunks samengevoegd of klaar gezet voor upload.
+4. Bij nieuwe sessie detecteert de app onafgemaakte lokale opname.
+5. Admin kiest `Upload opname` of `Verwijder lokale opname`.
+
+## Non-happy flows
+
+- Reload/crash: recovery state verschijnt bij terugkomst.
+- IndexedDB unavailable/quota: toon fout dat lokale veilige opslag niet beschikbaar is.
+- Chunk write faalt: opname stopt veilig met foutmelding, geen stille success.
+- Verwijderen: destructive confirm voordat lokale chunks weg zijn.
+
+## UX / copy
+
+- Recovery title: `Niet-geüploade opname gevonden`.
+- Recovery body: `De audio staat nog lokaal op dit apparaat.`
+- Actions: `Upload opname`, `Verwijder lokale opname`.
+- Failure: `Lokaal bewaren lukt niet. Stop de opname en probeer opnieuw.`
+
+## Data / IO
+
+- Input: MediaRecorder chunks en recording draft metadata.
+- Output: IndexedDB records per chunk en recovery manifest.
+- Statussen: local_saving, local_safe, recovery_available, local_delete_pending, local_error.
+
+## Waarom nu
+
+- V1 is pas bruikbaar als opnameverlies actief wordt beperkt.
+
+## In scope
+
+- `MediaRecorder` chunking met korte slices.
+- IndexedDB opslag per chunk.
+- Recovery-detectie.
+- Recovery UI met herstellen/uploaden of verwijderen.
+
+## Buiten scope
+
+- Private Supabase upload implementeren.
+- Transcriptie.
+- Native background recording.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Audioverlies mag niet optreden door transcript- of uploadfouten.
+- Local-first recovery is kern van v1.
+
+## Expliciete user requirements / detailbehoud
+
+- Houd het simpel en functioneel.
+- Geen nieuwe visuele patronen voor recovery als bestaande status/sheet patronen voldoen.
+
+## Status per requirement
+
+- [ ] Chunking — status: niet gebouwd
+- [ ] IndexedDB opslag — status: niet gebouwd
+- [ ] Recovery UI — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: bestaande storage/offline patronen lezen.
+- [ ] Blok 2: IndexedDB helper + recorder koppeling bouwen.
+- [ ] Blok 3: recovery scenario's testen.
+
+## Concrete checklist
+
+- [ ] Chunk metadata bepalen.
+- [ ] IndexedDB helper unit-testbaar maken.
+- [ ] Recovery detectie toevoegen.
+- [ ] Recovery UI aansluiten.
+- [ ] Reload/crash smoke uitvoeren.
+
+## Acceptance criteria
+
+- [ ] Chunks worden tijdens opname lokaal geschreven.
+- [ ] Reload detecteert onafgemaakte opname.
+- [ ] Admin kan upload/herstel vervolgen.
+- [ ] Admin kan lokale opname bewust verwijderen.
+- [ ] Schrijffout wordt zichtbaar en niet als succes behandeld.
+
+## Blockers / afhankelijkheden
+
+- Depends on `task-admin-founder-meeting-capture-opname-start-stop-web-mvp`.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Unit-tests voor helperlogica waar toegevoegd.
+- Web smoke voor reload recovery.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: lokale failsafe en recovery bouwen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op uitvoering.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — metadata, private storage en uploadstatus
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus
+title: Admin/founder meeting capture — metadata, private storage en uploadstatus
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Voeg minimale DB/storage-fundering toe voor recordings, private audio upload, idempotente retry en uploadstatus los van latere processing."
+tags: [meeting-capture, supabase, storage, database]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen]
+follows_after: [task-admin-founder-meeting-capture-lokale-failsafe-en-recovery]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 6
+---
+
+# Admin/founder meeting capture — metadata, private storage en uploadstatus
+
+## Probleem / context
+
+Meeting Capture heeft eigen metadata en private audio-opslag nodig. Upload mag niet gelijk worden aan transcriptie of samenvatting; audio-opslag is de v1-succesdefinitie.
+
+## Gewenste uitkomst
+
+Er is een minimale DB/storage-fundering voor recordings en uploadstatus. Upload/retry is idempotent genoeg om dubbele recordings te voorkomen. Uploadstatus staat los van transcript- of insightstatus.
+
+## User outcome
+
+Een admin kan erop vertrouwen dat bewaarde audio private wordt opgeslagen en dat uploadstatus losstaat van latere AI-verwerking.
+
+## Functional slice
+
+Minimale Supabase metadata/storage/uploadstatus voor Meeting Capture recordings.
+
+## Entry / exit
+
+- Entry: lokaal veilige recording of audio blob staat klaar voor upload.
+- Exit: recording metadata en private audio-object bestaan, of upload failure is retrybaar zonder duplicatie.
+
+## Happy flow
+
+1. Uploadflow ontvangt recording draft en lokale audio/chunks.
+2. Metadatarecord wordt aangemaakt of hergebruikt.
+3. Audio uploadt naar private storagepad.
+4. Uploadstatus wordt `uploaded`.
+5. Detail/overview kan metadata en audio-url ophalen.
+
+## Non-happy flows
+
+- Netwerkfout: status `upload_failed`, lokale audio blijft veilig.
+- Retry: hergebruikt bestaande recording/upload target en maakt geen dubbele recording.
+- RLS/storage denial: duidelijke admin-only fout, geen stille success.
+- Partial upload: status blijft retrybaar.
+
+## UX / copy
+
+- Uploading: `Audio wordt opgeslagen`.
+- Local safe during failure: `De audio staat nog lokaal veilig.`
+- Failure: `Upload mislukt. Probeer opnieuw.`
+- Success: `Audio opgeslagen.`
+
+## Data / IO
+
+- Input: recording metadata, local blob/chunks, authenticated admin user.
+- Output: DB recording row, storage object, uploadstatus.
+- Statussen: pending_upload, uploading, uploaded, upload_failed.
+
+## Waarom nu
+
+- Playback/detail en latere transcriptie kunnen pas betrouwbaar op een opgeslagen recording bouwen.
+
+## In scope
+
+- Minimale Supabase schema/storage aanpak.
+- Private bucket/padstrategie.
+- Uploadstatus en failure states.
+- Retry zonder duplicatie.
+
+## Buiten scope
+
+- Transcriptstatus volledig implementeren.
+- Retentiebeleid.
+- Exportpakket.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Nieuwe DB/storage-structuur apart voor conversation recordings.
+- Niet de bestaande dagboek `source_type` oprekken als hoofdroute.
+
+## Expliciete user requirements / detailbehoud
+
+- Upload en processing blijven expliciet ontkoppeld.
+- Audio bewaard betekent v1-succes, ook als transcript later faalt.
+
+## Status per requirement
+
+- [ ] Metadata model — status: niet gebouwd
+- [ ] Private storage upload — status: niet gebouwd
+- [ ] Uploadstatus/retry — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: bestaande Supabase/audio storage patronen lezen.
+- [ ] Blok 2: migratie/service/RLS/storage implementeren.
+- [ ] Blok 3: lokale DB-stap, lint/typecheck en gerichte tests.
+
+## Concrete checklist
+
+- [ ] Schema en storage pad bepalen.
+- [ ] Migration toevoegen.
+- [ ] Service/helpers toevoegen.
+- [ ] Upload/retry states aansluiten.
+- [ ] Lokale DB push/reset uitvoeren indien nodig.
+
+## Acceptance criteria
+
+- [ ] Metadata en private storagepad zijn gedefinieerd.
+- [ ] Uploadstatus staat los van transcriptstatus.
+- [ ] Retry maakt geen dubbele recording.
+- [ ] Upload failure behoudt lokale audio/recovery.
+
+## Blockers / afhankelijkheden
+
+- Depends on scope-task; follows after local failsafe voor volledige v1-flow.
+
+## Verify / bewijs
+
+- `npx supabase db push --local` of passende lokale DB-stap bij migration.
+- `npm run lint`
+- `npm run typecheck`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: metadata/private storage/uploadstatus bouwen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op uitvoering.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — opname start/stop web MVP
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-opname-start-stop-web-mvp.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-opname-start-stop-web-mvp
+title: Admin/founder meeting capture — opname start/stop web MVP
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Bouw de minimale webopnameflow voor Meeting Capture met voor-opnamescherm, timer, status, stop/bewaar en annuleren."
+tags: [meeting-capture, recording, mediarecorder, ui]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-web-route-en-ia]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 4
+---
+
+# Admin/founder meeting capture — opname start/stop web MVP
+
+## Probleem / context
+
+De gebruiker moet lange gesprekken kunnen starten en stoppen zonder dagboekcapture te gebruiken. De eerste recorder hoeft niet slim te zijn; hij moet duidelijk en betrouwbaar zijn.
+
+## Gewenste uitkomst
+
+Admin kan een opname voorbereiden, starten, timer/status zien, stoppen en bewaren of annuleren met confirm. De flow bevat titel/type/contextnotitie en consent reminder. Er is geen live transcript of AI-verwerking in deze taak.
+
+## User outcome
+
+Een admin kan in de browser een gesprek starten, opname-status volgen en bewust stoppen/bewaren of annuleren.
+
+## Functional slice
+
+Minimale `MediaRecorder` start/stop flow met UI-state, zonder IndexedDB recovery of upload.
+
+## Entry / exit
+
+- Entry: nieuwe-opname route vanuit Meeting Capture overview.
+- Exit: opname is gestopt met een lokaal blob/resultaat voor vervolgtaak, of bewust geannuleerd.
+
+## Happy flow
+
+1. Admin opent `Gespreksopname`.
+2. Admin ziet optionele titel, type/contextnotitie en consent reminder.
+3. Admin kiest `Start opname`.
+4. Browser vraagt microfoontoegang indien nodig.
+5. Timer en status `Opname loopt` verschijnen.
+6. Admin kiest `Stop en bewaar`.
+7. Flow levert audio blob/recording state op voor lokale failsafe/upload vervolg.
+
+## Non-happy flows
+
+- Mic denied: toon `Microfoontoegang is nodig om op te nemen.` met `Probeer opnieuw`.
+- Browser unsupported: toon `Opnemen werkt niet in deze browser.` zonder crash.
+- Annuleren tijdens opname: destructive confirm met `Opname annuleren?` en `Deze opname wordt niet bewaard.`
+- Recorder error: toon rustige fout en behoud UI-controle.
+
+## UX / copy
+
+- Title: `Gespreksopname`.
+- Primary: `Start opname`; active primary: `Stop en bewaar`; secondary: `Annuleer`.
+- Status: `Opname loopt`; helper: `Audio wordt veilig opgeslagen zodra je stopt.`
+- Consent: `Zorg dat iedereen weet dat je dit gesprek opneemt.`
+
+## Data / IO
+
+- Input: microfoonstream, titel/type/contextnotitie.
+- Output: audio blob/recording draft state.
+- Statussen: idle, requesting_permission, recording, stopping, stopped, cancelled, error.
+
+## Waarom nu
+
+- Dit is de eerste functionele slice van de v1 flow.
+
+## In scope
+
+- Voor-opnamescherm.
+- Mic-permission en opname-start.
+- Timer/status tijdens opname.
+- Stop/bewaar.
+- Annuleren met bestaande destructive confirm pattern.
+
+## Buiten scope
+
+- IndexedDB recovery.
+- Private upload.
+- Transcriptie.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Web recording MVP, max 60 minuten zichtbaar als guardrail.
+- Audio-first, simpel en betrouwbaar.
+
+## Expliciete user requirements / detailbehoud
+
+- Copy kort en volgens Budio-stijl.
+- Geen extra meeting-suite UI verzinnen.
+
+## Status per requirement
+
+- [ ] Voor-opnamescherm — status: niet gebouwd
+- [ ] Start/stop opname — status: niet gebouwd
+- [ ] Annuleren met confirm — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: bestaande audio/capture helpers en UI primitives lezen.
+- [ ] Blok 2: recorder hook/helper + schermintegratie bouwen.
+- [ ] Blok 3: lint/typecheck en browser-smoke.
+
+## Concrete checklist
+
+- [ ] Browser support/failure states bepalen.
+- [ ] Recorder state implementeren.
+- [ ] UI aansluiten.
+- [ ] Stop/bewaar en annuleren valideren.
+
+## Acceptance criteria
+
+- [ ] Opname start na microfoontoegang.
+- [ ] Timer/status werkt tijdens opname.
+- [ ] Stop en bewaar levert audioresultaat op.
+- [ ] Mic denied en unsupported browser hebben duidelijke UI.
+- [ ] Annuleren vraagt bevestiging.
+
+## Blockers / afhankelijkheden
+
+- Depends on `task-admin-founder-meeting-capture-web-route-en-ia`.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Web smoke voor start/stop.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: opname start/stop MVP bouwen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op uitvoering.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — overzicht/detail met playback en download
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-overzicht-detail-playback-download.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-overzicht-detail-playback-download
+title: Admin/founder meeting capture — overzicht/detail met playback en download
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Bouw het Meeting Capture archief met overzicht, detail, audio playback, download en eenvoudige statusblokken."
+tags: [meeting-capture, ui, playback, archive]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus]
+follows_after: [task-admin-founder-meeting-capture-lokale-failsafe-en-recovery]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 7
+---
+
+# Admin/founder meeting capture — overzicht/detail met playback en download
+
+## Probleem / context
+
+Een opgenomen gesprek moet terugvindbaar en controleerbaar zijn. Zonder archief/detail is upload niet zichtbaar waardevol.
+
+## Gewenste uitkomst
+
+Admin ziet een rustige lijst met recordings en kan een detail openen met audio playback, download, metadata en statusblokken. De UI voelt als familie van bestaande moment/dag-schermen.
+
+## User outcome
+
+Een admin kan opgeslagen gespreksopnames terugvinden, afspelen, downloaden en status begrijpen.
+
+## Functional slice
+
+Meeting Capture archive overview en detail met playback/download en statusblokken.
+
+## Entry / exit
+
+- Entry: admin opent Meeting Capture overview of detail.
+- Exit: admin speelt audio af, downloadt audio of ziet duidelijke status/failure.
+
+## Happy flow
+
+1. Overview laadt recordings.
+2. Admin ziet datum, titel, duur, type en uploadstatus.
+3. Admin opent een recording.
+4. Detail toont metadata en audio player.
+5. Admin speelt audio af of kiest `Download audio`.
+
+## Non-happy flows
+
+- Empty archive: toon empty state met `Start opname`.
+- Audio ontbreekt maar lokaal veilig: toon herstel/uploadstatus, geen playback.
+- Download faalt: toon `Download mislukt. Probeer opnieuw.`
+- Recording niet gevonden: toon not-found met terugactie.
+
+## UX / copy
+
+- Overview title: `Gespreksopnames`.
+- Detail fallback title: `Gespreksopname`.
+- Actions: `Start opname`, `Download audio`, `Upload opnieuw proberen`.
+- Statuses: `Audio opgeslagen`, `Upload bezig`, `Upload mislukt`, `Lokaal veilig`.
+
+## Data / IO
+
+- Input: recording list/detail metadata en private audio URL/download endpoint.
+- Output: rendered list/detail, playback request, download request.
+- Statussen: loading, empty, ready, playback_unavailable, download_failed.
+
+## Waarom nu
+
+- Playback/download maakt de audio-safe v1 sluitend.
+
+## In scope
+
+- Overzichtslijst met datum, titel, duur, type en status.
+- Detail met audio player.
+- Downloadactie.
+- Statusblokken voor lokaal veilig/upload bezig/upload mislukt/bewaard.
+
+## Buiten scope
+
+- Transcript editor.
+- Insights UI.
+- Exportpakket.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Zelfde rustige layouttaal als bestaande moment/dag-schermen.
+- Audio/detail is leidend; latere verwerking aanvullend.
+
+## Expliciete user requirements / detailbehoud
+
+- Geen dashboardisering of meeting-suite look.
+- Copy simpel en geruststellend.
+
+## Status per requirement
+
+- [ ] Overzicht — status: niet gebouwd
+- [ ] Detail — status: niet gebouwd
+- [ ] Playback/download — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: bestaande moment/detail/audio playback patronen lezen.
+- [ ] Blok 2: overzicht/detail/playback bouwen.
+- [ ] Blok 3: runtime smoke light/dark en lint/typecheck.
+
+## Concrete checklist
+
+- [ ] Recording list aansluiten.
+- [ ] Detail metadata tonen.
+- [ ] Audio player aansluiten.
+- [ ] Downloadactie toevoegen.
+- [ ] Failure/empty states tonen.
+
+## Acceptance criteria
+
+- [ ] Overview toont recordings en empty state.
+- [ ] Detail toont metadata en audio player.
+- [ ] Downloadactie werkt of faalt zichtbaar.
+- [ ] Upload/local statuses zijn begrijpelijk.
+
+## Blockers / afhankelijkheden
+
+- Depends on `task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus`.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Light/dark web smoke voor list/detail/playback.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: overzicht/detail/playback/download bouwen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op uitvoering.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — retentie en export hardening
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-retentie-export-hardening.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-retentie-export-hardening
+title: Admin/founder meeting capture — retentie en export hardening
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-27
+summary: "Werk later keep-audio policy, retentievoorbereiding, cleanup en robuuste export/download voor Meeting Capture uit."
+tags: [meeting-capture, retention, export, privacy]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-overzicht-detail-playback-download]
+follows_after: [task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 15
+---
+
+# Admin/founder meeting capture — retentie en export hardening
+
+## Probleem / context
+
+Lange audio-opnames vragen later expliciet beleid rond bewaren, verwijderen, export en cleanup.
+
+## Gewenste uitkomst
+
+Meeting Capture heeft een heldere keep-audio/retentievoorbereiding en robuuste download/export flow, zonder de eerste audio-safe v1 te vertragen.
+
+## User outcome
+
+Een admin begrijpt hoe audio bewaard/exporteerbaar blijft en welke cleanup/retentie later geldt.
+
+## Functional slice
+
+Retentievoorbereiding en export/download hardening voor opgeslagen recordings.
+
+## Entry / exit
+
+- Entry: recordings bestaan met playback/download.
+- Exit: keep-audio/retentie/exportgedrag is expliciet en robuuster.
+
+## Happy flow
+
+1. Admin opent detail.
+2. Audio heeft duidelijke bewaarbeleid/status.
+3. Admin downloadt/exporteert audio betrouwbaar.
+4. Cleanup/retentievelden zijn voorbereid.
+
+## Non-happy flows
+
+- Download expired/denied: toon fout en retry.
+- Audio verwijderd: toon status zonder kapotte player.
+- Export faalt: geen data verwijderen.
+
+## UX / copy
+
+- Status: `Audio bewaard`.
+- Action: `Download audio`.
+- Failure: `Download mislukt. Probeer opnieuw.`
+
+## Data / IO
+
+- Input: stored recording/audio.
+- Output: retention metadata and hardened download/export path.
+- Statussen: retained, deleted, export_failed.
+
+## Waarom nu
+
+- Belangrijk voor privacy en productisering, maar niet v1-blokkerend.
+
+## In scope
+
+- Keep-audio policy voorbereiden.
+- Retentievelden/cleanup richting.
+- Download/export hardening.
+
+## Buiten scope
+
+- Volledige compliance-suite.
+- Team sharing.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Retentie en export hardening later, na bewezen MVP.
+
+## Expliciete user requirements / detailbehoud
+
+- Retentie/export krijgt een eigen taak onder dezelfde epic.
+
+## Status per requirement
+
+- [ ] Retentie/export hardening — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: privacy/audio settings patronen lezen.
+- [ ] Blok 2: retentie/export richting implementeren.
+- [ ] Blok 3: verify.
+
+## Concrete checklist
+
+- [ ] Keep-audio policy uitwerken.
+- [ ] Cleanup/retentie voorbereiden.
+- [ ] Export/download hardening valideren.
+
+## Acceptance criteria
+
+- [ ] Retentiegedrag is expliciet.
+- [ ] Download/export faalt zichtbaar en veilig.
+- [ ] Geen audioverlies door exportfailure.
+
+## Blockers / afhankelijkheden
+
+- Depends on overview/detail/playback/download.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: retentie/export hardening later uitwerken.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: P2.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — scope en eerste versie vastleggen
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen
+title: Admin/founder meeting capture — scope en eerste versie vastleggen
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Leg de audio-first v1 scope vast voor Meeting Capture, inclusief admin-only grens, privacy/consent, anti-scope-creep en relatie tot bestaande captureflow."
+tags: [meeting-capture, scope, audio, admin]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-epic-en-taakpakket-aanmaken]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 2
+---
+
+# Admin/founder meeting capture — scope en eerste versie vastleggen
+
+## Probleem / context
+
+De Meeting Capture flow raakt product, privacy, UI, storage en toekomstige AI-verwerking. Zonder expliciete v1-scope ontstaat risico op transcript-first bouwen, dagboekflow-vervuiling of te brede meeting-suite ideeën.
+
+## Gewenste uitkomst
+
+De scope voor v1 staat scherp: admin/founder-only, audio-safe web recording, buiten dagboekcapture, met transcriptie en insights als latere verwerking. De taak is klaar wanneer een implementatie-agent de v1-grens kan volgen zonder extra productbeslissingen.
+
+## User outcome
+
+Een developer of agent weet exact wat Meeting Capture v1 wel en niet bouwt, welke UX/copy gebruikt wordt en welke failure states verplicht zijn.
+
+## Functional slice
+
+Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet-bouwen-lijst.
+
+## Entry / exit
+
+- Entry: Meeting Capture research en epic bestaan, maar P1 bouwtaken zijn nog niet inhoudelijk gehard.
+- Exit: P1 bouwtaken kunnen zonder chatcontext starten.
+
+## Happy flow
+
+1. Agent leest researchbronnen, epic en bestaande capture/moment/dag patronen.
+2. Agent legt audio-safe v1-scope vast.
+3. Agent vult flow-, UX/copy-, privacy- en non-happy guardrails aan in P1 taskfiles.
+4. `taskflow:verify` en docs bundle blijven groen.
+
+## Non-happy flows
+
+- Scope creep: transcript, insights, upload/import of meeting-suite ideeën blijven P2 of buiten scope.
+- Onduidelijke copy: agent verwijst naar `copy-instructions.md` en legt exacte schermcopy alsnog vast.
+- Onvoldoende taskdetails: taak blijft open en niet bouwbaar totdat spec-readiness compleet is.
+
+## UX / copy
+
+- Leidend: bestaande capture-, moment-, dag-, selectie-, header- en footerpatronen.
+- Verplichte kerncopy: `Gespreksopname`, `Start opname`, `Stop en bewaar`, `Audio wordt veilig opgeslagen`, `Upload opnieuw proberen`.
+- Consent reminder: `Zorg dat iedereen weet dat je dit gesprek opneemt.`
+
+## Data / IO
+
+- Input: Meeting Capture researchdocs, epic en bestaande app/UI/copy docs.
+- Output: geharde scope- en taskdocs.
+- Geen runtime data, DB of storage wijzigingen.
+
+## Waarom nu
+
+- Deze taak blokkeert de eerste bouwslice.
+- De flow moet lean starten en niet uitwaaieren.
+
+## In scope
+
+- V1-scope en anti-scope-creep vastleggen.
+- Privacy/consent copy-richting benoemen.
+- Relatie tot bestaande captureflow expliciteren.
+- Bestaande UI/copy patronen als leidraad benoemen.
+
+## Buiten scope
+
+- Runtime code bouwen.
+- DB-schema ontwerpen.
+- Transcript/summary prompts uitwerken.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Audio-safe v1 is de eerste versie.
+- Bestaande captureflow niet functioneel aanpassen.
+- Copy en layout blijven simpel en consistent met bestaande Budio-patronen.
+
+## Expliciete user requirements / detailbehoud
+
+- `Gespreksopname` is de eenvoudige producttaal.
+- Upload/import is belangrijk, maar niet nodig voor de minimale eerste versie.
+- P2 extra's blijven aan dezelfde epic hangen.
+
+## Status per requirement
+
+- [ ] V1-scope vastgelegd — status: niet gebouwd
+- [ ] Privacy/consent richting vastgelegd — status: niet gebouwd
+- [ ] Anti-scope-creep vastgelegd — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: Meeting Capture bronnen en relevante app/docs patronen herlezen.
+- [ ] Blok 2: scopebesluit en copy/UI guardrails vastleggen.
+- [ ] Blok 3: verify en taskstatus afronden.
+
+## Concrete checklist
+
+- [ ] Bronnen samenvatten tot v1-scope.
+- [ ] Privacy/consent randvoorwaarden vastleggen.
+- [ ] Buiten-scope lijst expliciet maken.
+- [ ] Relevante vervolg-tasks controleren op juiste priority/dependencies.
+
+## Acceptance criteria
+
+- [ ] V1-scope benoemt audio-safe opname als eerste waarde.
+- [ ] Bestaande dagboekcapture blijft expliciet onaangeraakt.
+- [ ] P1 taskfiles bevatten UX/copy en non-happy flow details.
+- [ ] P2 extra's blijven niet-blokkerend.
+
+## Blockers / afhankelijkheden
+
+- Depends on `task-admin-founder-meeting-capture-epic-en-taakpakket-aanmaken`.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: scope en v1-grenzen vastleggen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op uitvoering.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+- `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — speaker labels en mapping
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-speaker-labels-en-mapping.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-speaker-labels-en-mapping
+title: Admin/founder meeting capture — speaker labels en mapping
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-27
+summary: "Voeg later eenvoudige speakerlabels en hernoembare speaker mapping toe aan Meeting Capture transcriptdetail."
+tags: [meeting-capture, transcript, speakers]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-transcript-pipeline]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 12
+---
+
+# Admin/founder meeting capture — speaker labels en mapping
+
+## Probleem / context
+
+Lange gesprekken worden bruikbaarder wanneer sprekers herkenbaar zijn, maar een zware editor-UX past niet bij de eerste fase.
+
+## Gewenste uitkomst
+
+Transcriptdetail ondersteunt eenvoudige speakerlabels en hernoemen/mappen van sprekers zonder transcriptverlies.
+
+## User outcome
+
+Een admin kan sprekers in een transcript begrijpelijk labelen zonder zware editor.
+
+## Functional slice
+
+Eenvoudige speakerlabel mapping op transcriptdetail.
+
+## Entry / exit
+
+- Entry: transcript bestaat met speaker markers of segmenten.
+- Exit: speakerlabels zijn aangepast en persistent.
+
+## Happy flow
+
+1. Admin opent transcriptdetail.
+2. Admin ziet speakerlabels.
+3. Admin hernoemt een speaker.
+4. Transcript toont nieuwe labels.
+5. Mapping blijft bewaard.
+
+## Non-happy flows
+
+- Geen transcript: speaker UI niet tonen.
+- Save failure: toon fout en behoud lokale invoer.
+- Onbekende speaker: fallback label `Spreker`.
+
+## UX / copy
+
+- Label: `Spreker`.
+- Action: `Naam aanpassen`.
+- Failure: `Naam opslaan mislukt.`
+
+## Data / IO
+
+- Input: transcript speakers/segments.
+- Output: speaker mapping.
+- Statussen: editing, saved, save_failed.
+
+## Waarom nu
+
+- P2 na transcript pipeline.
+
+## In scope
+
+- Basale speakerlabels.
+- Speaker hernoemen.
+- Mapping bewaren.
+
+## Buiten scope
+
+- Zware transcript-editor.
+- Automatische diarization perfectie als harde eis.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Speakerlabels zijn nice-to-have na transcriptie.
+
+## Expliciete user requirements / detailbehoud
+
+- Geen zware editor-UX.
+
+## Status per requirement
+
+- [ ] Speaker labels/mapping — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: transcript data shape lezen.
+- [ ] Blok 2: mapping UI/data bouwen.
+- [ ] Blok 3: verify.
+
+## Concrete checklist
+
+- [ ] Labels tonen.
+- [ ] Speaker hernoemen.
+- [ ] Mapping persistent maken.
+
+## Acceptance criteria
+
+- [ ] Labels tonen op transcriptdetail.
+- [ ] Hernoemen werkt persistent.
+- [ ] Save failure is zichtbaar.
+
+## Blockers / afhankelijkheden
+
+- Depends on transcript pipeline.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: speaker labels toevoegen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: P2.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — transcript pipeline
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-transcript-pipeline.md`
+- Bucket: open
+- Status: backlog
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-transcript-pipeline
+title: Admin/founder meeting capture — transcript pipeline
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-27
+summary: "Voeg later queued transcriptie, retries en transcriptstatus toe zonder audio-opslag te blokkeren."
+tags: [meeting-capture, transcript, processing, ai]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus, task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 11
+---
+
+# Admin/founder meeting capture — transcript pipeline
+
+## Probleem / context
+
+Transcriptie is waardevol, maar mag de audio-safe v1 niet blokkeren of audio-opslag fragiel maken.
+
+## Gewenste uitkomst
+
+Een opgeslagen recording kan queued/background worden getranscribeerd. Status, retry en failure zijn zichtbaar op detail. Audio blijft beschikbaar als transcriptie faalt.
+
+## User outcome
+
+Een admin kan transcriptie van een opgeslagen gesprek laten verwerken zonder risico op audioverlies.
+
+## Functional slice
+
+Queued transcript processing met status, retry en transcriptweergave.
+
+## Entry / exit
+
+- Entry: recording heeft opgeslagen audio.
+- Exit: transcript is beschikbaar of failure is zichtbaar en retrybaar.
+
+## Happy flow
+
+1. Transcript job start na audio-upload of handmatige actie.
+2. Status toont `Transcript wordt gemaakt`.
+3. Segmenten/transcript worden verwerkt.
+4. Detail toont transcript.
+5. Audio blijft afspeelbaar.
+
+## Non-happy flows
+
+- Transcript failure: toon `Transcript mislukt. De audio is bewaard.`
+- Retry: start verwerking opnieuw zonder nieuwe recording.
+- Partial failure: eerdere audio/metadata blijven intact.
+- Geen audio: transcriptactie disabled of verklaard.
+
+## UX / copy
+
+- Status: `Transcript wordt gemaakt`.
+- Failure: `Transcript mislukt. De audio is bewaard.`
+- Action: `Transcript opnieuw proberen`.
+
+## Data / IO
+
+- Input: stored audio/segments.
+- Output: transcript text, processing status.
+- Statussen: queued, processing, completed, failed.
+
+## Waarom nu
+
+- P2 na bewezen audio archive.
+
+## In scope
+
+- Queued transcriptstatus.
+- Segmenttranscriptie of passende chunk-aanpak.
+- Transcript stitching.
+- Retry per recording of stap.
+
+## Buiten scope
+
+- Speaker mapping.
+- Insights/samenvatting.
+- Realtime transcriptie.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Transcriptie volgt na audio-safe v1.
+- Processing is gescheiden van capture/upload.
+
+## Expliciete user requirements / detailbehoud
+
+- Transcript mislukt betekent niet dat audio mislukt.
+
+## Status per requirement
+
+- [ ] Transcript pipeline — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: bestaande OpenAI/server processing patronen lezen.
+- [ ] Blok 2: pipeline en statusmodel bouwen.
+- [ ] Blok 3: failure/retry testen.
+
+## Concrete checklist
+
+- [ ] Processing status toevoegen.
+- [ ] Transcriptgeneratie aansluiten.
+- [ ] Retry/failure states tonen.
+- [ ] Detail transcript tonen.
+
+## Acceptance criteria
+
+- [ ] Transcriptstatus is zichtbaar.
+- [ ] Transcript failure blokkeert audio niet.
+- [ ] Retry werkt zonder duplicatie.
+
+## Blockers / afhankelijkheden
+
+- Depends on audio-safe archive.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Gerichte server/helper tests.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: transcript pipeline toevoegen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: P2.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — web route en IA
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-web-route-en-ia
+title: Admin/founder meeting capture — web route en IA
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Bouw de admin-only Meeting Capture ingang, routes en basis-IA zonder de bestaande dagboekcapture te verbreden."
+tags: [meeting-capture, ui, navigation, admin]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 3
+---
+
+# Admin/founder meeting capture — web route en IA
+
+## Probleem / context
+
+Meeting Capture heeft een eigen plek nodig, maar mag de bestaande Today/capture/dagboekroute niet zwaarder maken.
+
+## Gewenste uitkomst
+
+Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien deze ingang niet. De UI gebruikt bestaande screen scaffolds, headers, modal/backdrop en rustige Budio-layoutpatronen.
+
+## User outcome
+
+Een admin kan Meeting Capture openen, het lege archief begrijpen en doorklikken naar een nieuwe gespreksopname of bestaande detailpagina.
+
+## Functional slice
+
+Admin-only route- en schermskelet voor overview, new recording en detail, zonder recorder/storage.
+
+## Entry / exit
+
+- Entry: admin/settings of interne admin navigatie.
+- Exit: admin staat op overview, new recording shell of detail shell; niet-admin ziet geen ingang.
+
+## Happy flow
+
+1. Admin opent de admin-only Meeting Capture ingang.
+2. Overview toont titel `Gespreksopnames` en lege staat als er nog geen opnames zijn.
+3. Admin kiest `Start opname`.
+4. App navigeert naar de nieuwe-opname route.
+5. Detailroute kan een placeholder/status tonen voor een gekozen recording.
+
+## Non-happy flows
+
+- Niet-admin: ingang verborgen of route toont bestaande unauthorized/admin-only state.
+- Geen recordings: empty state met korte uitleg en primaire actie.
+- Routeparameter ontbreekt: detail toont veilige not-found/terug state.
+- Data laden mislukt: rustige error met `Probeer opnieuw`.
+
+## UX / copy
+
+- Overview title: `Gespreksopnames`.
+- Empty state: `Nog geen gespreksopnames.` en `Neem een lang gesprek op buiten je dagboekflow.`
+- Primary action: `Start opname`.
+- Admin-only copy: hergebruik bestaande admin/permission copy.
+
+## Data / IO
+
+- Input: admin auth state en toekomstige recording list.
+- Output: routes/screen shells en navigation wiring.
+- Geen DB/storage writes in deze taak.
+
+## Waarom nu
+
+- Deze IA is de basis voor opname, recovery en playback.
+
+## In scope
+
+- Admin-only route/ingang.
+- Overzicht empty state.
+- Navigatie naar nieuwe opname en detail.
+- Layout/copy volgens bestaande capture/moment/dag/selectie/header/footer patronen.
+
+## Buiten scope
+
+- Recording engine.
+- Storage/upload.
+- Transcriptie of insights.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Nieuwe admin/founder lane, niet op Today als primaire capture-CTA.
+- Geen redesign; bestaande Budio UI-taal volgen.
+
+## Expliciete user requirements / detailbehoud
+
+- Bestaande captureflow niet aanraken.
+- Shared components slim hergebruiken.
+- Copy simpel houden.
+
+## Status per requirement
+
+- [ ] Admin-only ingang — status: niet gebouwd
+- [ ] Overzicht/nieuw/detail routes — status: niet gebouwd
+- [ ] UI volgt bestaande patronen — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: bestaande admin/settings/capture routepatronen lezen.
+- [ ] Blok 2: kleinste route + schermskelet bouwen.
+- [ ] Blok 3: lint/typecheck en light/dark smoke.
+
+## Concrete checklist
+
+- [ ] Relevante route- en admin-gating patronen lokaliseren.
+- [ ] Admin-only ingang toevoegen.
+- [ ] Overzicht empty state bouwen.
+- [ ] Nieuwe-opname en detailroute shell toevoegen.
+- [ ] Runtime check in light/dark.
+
+## Acceptance criteria
+
+- [ ] Admin-only ingang werkt.
+- [ ] Niet-admin kan de flow niet bereiken.
+- [ ] Empty state en primary action zijn zichtbaar.
+- [ ] Nieuwe-opname en detail shells volgen bestaande layoutpatronen.
+
+## Blockers / afhankelijkheden
+
+- Depends on `task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen`.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- Gerichte web smoke in light/dark.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: web route en IA toevoegen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op uitvoering.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+```
+
+---
+
+## Admin/founder meeting capture — workflow-retro en docs/skill update
+
+- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-workflow-retro-en-docs-skill-update.md`
+- Bucket: open
+- Status: backlog
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-workflow-retro-en-docs-skill-update
+title: Admin/founder meeting capture — workflow-retro en docs/skill update
+status: backlog
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Verwerk alleen bewezen Meeting Capture uitvoeringslearnings in AGENTS.md, relevante skills of docs/dev, cheap-first en zonder theoretische workflow-herschrijving."
+tags: [meeting-capture, workflow, codex, skills]
+workstream: plugin
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs]
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 9
+---
+
+# Admin/founder meeting capture — workflow-retro en docs/skill update
+
+## Probleem / context
+
+Meeting Capture is ook een test van de nieuwe workspace hierarchy en Codex workflow. Verbeteringen moeten worden vastgelegd, maar alleen wanneer ze uit echte frictie of herhaalbare winst blijken.
+
+## Gewenste uitkomst
+
+Na de eerste functionele slice is duidelijk wat beter moet aan AGENTS, taskflow, skills, plugin of docs/dev. Alleen concrete, bewezen verbeteringen worden verwerkt; grotere workflowwensen krijgen een eigen task.
+
+## User outcome
+
+Toekomstige agents profiteren van bewezen Meeting Capture uitvoeringslearnings zonder theoretische workflow-uitbreiding.
+
+## Functional slice
+
+Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
+
+## Waarom nu
+
+- Dit voorkomt dat waardevolle agent-learning verdwijnt.
+- Tegelijk voorkomt het theoretische workflow-expansie.
+
+## In scope
+
+- Retrospective op Meeting Capture uitvoering.
+- Kleine update aan bestaande skill/docs/AGENTS wanneer bewezen nuttig.
+- Aparte task aanmaken voor bredere plugin/workflowproblemen.
+
+## Buiten scope
+
+- Grote AGENTS.md rewrite.
+- Nieuwe pluginfeatures zonder eigen task.
+- Subagents inzetten zonder expliciete uservraag.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- OpenAI Codex best practices, PLANS.md, modelkeuze, skills en Instructa prompt-pack lessen meenemen tijdens uitvoering.
+- Alleen bewezen frictie verwerken.
+
+## Expliciete user requirements / detailbehoud
+
+- Exacte files, scope, pass/fail checks en stack traces als praktijkles bewaken.
+- Repeated workflows naar skills wanneer zinvol.
+
+## Status per requirement
+
+- [ ] Retro uitgevoerd — status: niet gebouwd
+- [ ] Bewezen updates verwerkt — status: niet gebouwd
+- [ ] Breder werk als aparte task vastgelegd — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: uitvoering en frictiepunten inventariseren.
+- [ ] Blok 2: kleinste workflowupdate doen of aparte task aanmaken.
+- [ ] Blok 3: docs/taskflow verify draaien.
+
+## Concrete checklist
+
+- [ ] Meeting Capture hierarchy-test beoordelen.
+- [ ] Taskflow/plugin frictie beoordelen.
+- [ ] Alleen concrete workflowupdates toepassen.
+- [ ] Verify draaien.
+
+## Acceptance criteria
+
+- [ ] Alleen bewezen frictie is verwerkt.
+- [ ] Grote vervolgpunten staan in eigen task.
+- [ ] Docs/taskflow verify is groen.
+
+## Blockers / afhankelijkheden
+
+- Depends on fase 1 tests/smokebewijs.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: workflowlearnings verwerken na echte uitvoering.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: nog niet.
+- Open / blocked: wacht op fase 1.
+
+## Relevante links
+
+- https://developers.openai.com/codex/learn/best-practices
+- https://developers.openai.com/cookbook/articles/codex_exec_plans
+- https://developers.openai.com/codex/models
+- https://developers.openai.com/codex/skills
+```
+
+---
+
 ## AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)
 
 - Path: `docs/project/25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md`
@@ -321,7 +2535,7 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 7
+sort_order: 6
 ---
 
 
@@ -620,6 +2834,7 @@ sort_order: 1
 ---
 
 
+
 ## Probleem / context
 
 Er bestaat al een Linear-geïnspireerd Workspace-idee voor structuur, intake en views, maar nog geen expliciet research-startpunt voor een bredere local-first Command Room-richting die ook Cline Kanban en Codex als referenties meeneemt.
@@ -722,6 +2937,8 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 ## Commits
 
 - ad43300 — chore: commit all remaining local changes
+
+- 0b5c2d3 — feat: add workspace epic hierarchy
 ```
 
 ---
@@ -933,6 +3150,7 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
 De eerste gallery QA-basis bewijst de kerninteractie voor thumbnail-reorder en legt unit/smoke-infra neer. De volledige end-user dekking voor alle gallery-flows bestaat nog niet.
@@ -1000,6 +3218,11 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 - `tests/e2e/gallery-full.spec.mjs`
 - `scripts/seed-local-entry-photo-gallery-smoke.mjs`
 - `docs/dev/qa-test-strategy.md`
+
+
+## Commits
+
+- ad43300 — chore: commit all remaining local changes
 ```
 
 ---
@@ -1028,6 +3251,7 @@ workstream: app
 due_date: null
 sort_order: 1
 ---
+
 
 
 
@@ -1094,6 +3318,11 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - `src/lib/entry-photo-gallery/flow.ts`
 - `docs/dev/production-bug-investigation-workflow.md`
 - `docs/project/25-tasks/done/moment-detail-foto-reorder-productiebug-herstel.md`
+
+
+## Commits
+
+- ad43300 — chore: commit all remaining local changes
 ```
 
 ---
@@ -1381,7 +3610,7 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context
@@ -1481,7 +3710,7 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 5
+sort_order: 4
 ---
 
 ## Probleem / context
@@ -1576,8 +3805,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 6
+sort_order: 5
 ---
+
 
 
 
@@ -1922,6 +4152,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - dbe712d — docs(task): update plugin task status with unresolved bugs and 3-phase plan
 
 - a9e2961 — docs(task): add selection bug to plugin task status
+
+- ad43300 — chore: commit all remaining local changes
 ```
 
 ---
@@ -1950,6 +4182,7 @@ workstream: plugin
 due_date: null
 sort_order: 2
 ---
+
 
 ## Probleem / context
 
@@ -1998,4 +4231,9 @@ De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch
 
 - `.codex/config.toml`
 - `docs/dev/stitch-workflow.md`
+
+
+## Commits
+
+- ad43300 — chore: commit all remaining local changes
 ```
