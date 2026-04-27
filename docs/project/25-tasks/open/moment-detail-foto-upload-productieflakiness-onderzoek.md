@@ -20,6 +20,7 @@ sort_order: 1
 
 
 
+
 ## Probleem / context
 
 De reorder-productiebug is hersteld, maar de foto-upload op moment detail is nog niet apart bronvast onderzocht. In productie werkt upload soms wel en soms niet, zonder dat de exacte faalfase al bevestigd is.
@@ -156,6 +157,8 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - 8c8e11b — docs: record task commit evidence
 
 - 27bb3fe — fix: harden moment detail photo upload prepare step
+
+- b59c2b2 — docs: sync upload task commit evidence
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: bevestig faalfase, implementeer de kleinste robuuste fix, voeg gericht bewijs toe en herverifieer.
