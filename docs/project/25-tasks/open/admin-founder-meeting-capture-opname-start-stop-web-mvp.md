@@ -19,6 +19,7 @@ due_date: null
 sort_order: 4
 ---
 
+
 # Admin/founder meeting capture — opname start/stop web MVP
 
 ## Probleem / context
@@ -151,3 +152,8 @@ Minimale `MediaRecorder` start/stop flow met UI-state, zonder IndexedDB recovery
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

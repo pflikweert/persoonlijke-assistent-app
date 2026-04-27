@@ -19,6 +19,7 @@ due_date: null
 sort_order: 7
 ---
 
+
 # Admin/founder meeting capture — overzicht/detail met playback en download
 
 ## Probleem / context
@@ -148,3 +149,8 @@ Meeting Capture archive overview en detail met playback/download en statusblokke
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

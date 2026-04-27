@@ -6,7 +6,7 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-04-27
-summary: "Voeg later eenvoudige speakerlabels en hernoembare speaker mapping toe aan Meeting Capture transcriptdetail."
+summary: Voeg later eenvoudige speakerlabels en hernoembare speaker mapping toe aan Meeting Capture transcriptdetail.
 tags: [meeting-capture, transcript, speakers]
 workstream: app
 epic_id: epic-admin-founder-meeting-capture
@@ -18,6 +18,7 @@ spec_ready: true
 due_date: null
 sort_order: 12
 ---
+
 
 # Admin/founder meeting capture — speaker labels en mapping
 
@@ -136,3 +137,8 @@ Eenvoudige speakerlabel mapping op transcriptdetail.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

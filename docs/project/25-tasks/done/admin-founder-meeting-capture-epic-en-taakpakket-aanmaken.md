@@ -19,6 +19,7 @@ due_date: null
 sort_order: 1
 ---
 
+
 # Admin/founder meeting capture — epic en taakpakket aanmaken
 
 ## Probleem / context
@@ -160,3 +161,8 @@ Operationele projectsetup: idea-doc, epic-doc, taskbundle, dependencies en verif
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
 - `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

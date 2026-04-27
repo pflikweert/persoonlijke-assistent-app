@@ -13,6 +13,7 @@ due_date: null
 sort_order: 2
 ---
 
+
 ## Probleem / context
 
 Tijdens agent-uitvoering ontstaat soms drift tussen het oorspronkelijke goedgekeurde plan en de actuele uitvoerfocus. Zodra er tijdens bouwen correcties, regressies of polish-rondes bijkomen, verschuift de aandacht naar het laatste subprobleem. Daardoor kan een agent ten onrechte denken dat het werk "klaar" is, terwijl onderdelen uit het oorspronkelijke plan nog open staan.
@@ -84,3 +85,8 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - `docs/dev/task-lifecycle-workflow.md`
 - `.agents/skills/task-status-sync-workflow/SKILL.md`
 - `docs/project/25-tasks/_template.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

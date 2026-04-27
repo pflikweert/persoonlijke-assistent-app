@@ -1,6 +1,6 @@
 ---
 id: task-plan-spec-quality-guardrails-voor-ideas-epics-en-tasks
-title: Plan/spec quality guardrails voor ideas, epics en tasks
+title: "Plan/spec quality guardrails voor ideas, epics en tasks"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -18,6 +18,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Plan/spec quality guardrails voor ideas, epics en tasks
 
@@ -175,3 +176,8 @@ Workflowcopy in foutmeldingen blijft concreet en herstelbaar, bijvoorbeeld: `Tas
 - `docs/project/25-tasks/_template.md`
 - `docs/project/24-epics/_template.md`
 - `scripts/docs/verify-taskflow-enforcement.mjs`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

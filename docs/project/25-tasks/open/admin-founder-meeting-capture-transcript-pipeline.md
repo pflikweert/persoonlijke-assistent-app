@@ -19,6 +19,7 @@ due_date: null
 sort_order: 11
 ---
 
+
 # Admin/founder meeting capture — transcript pipeline
 
 ## Probleem / context
@@ -142,3 +143,8 @@ Queued transcript processing met status, retry en transcriptweergave.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

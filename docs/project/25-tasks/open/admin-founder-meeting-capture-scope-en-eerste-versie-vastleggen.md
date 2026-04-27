@@ -19,6 +19,7 @@ due_date: null
 sort_order: 2
 ---
 
+
 # Admin/founder meeting capture — scope en eerste versie vastleggen
 
 ## Probleem / context
@@ -148,3 +149,8 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
 - `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

@@ -19,6 +19,7 @@ due_date: null
 sort_order: 5
 ---
 
+
 # Admin/founder meeting capture — lokale failsafe en recovery
 
 ## Probleem / context
@@ -150,3 +151,8 @@ Local-first chunkopslag en recovery UI voor onafgemaakte Meeting Capture opnames
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

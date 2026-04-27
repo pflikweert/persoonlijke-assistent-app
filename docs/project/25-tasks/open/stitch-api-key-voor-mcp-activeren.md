@@ -14,6 +14,7 @@ sort_order: 2
 ---
 
 
+
 ## Probleem / context
 
 De repo heeft al een geconfigureerde Stitch MCP-server in `.codex/config.toml`, maar `STITCH_API_KEY` ontbreekt nog lokaal in `.env.local`. Daardoor blijft Stitch beschikbaar als setup, maar niet volledig bruikbaar.
@@ -66,3 +67,5 @@ De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch
 ## Commits
 
 - ad43300 — chore: commit all remaining local changes
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

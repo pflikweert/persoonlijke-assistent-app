@@ -28,6 +28,7 @@ sort_order: 6
 
 
 
+
 # AIQS logging valideren in OpenAI dashboard en fallback-logpad
 
 ## Probleem / context
@@ -88,3 +89,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - `docs/project/ai-quality-studio.md`
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

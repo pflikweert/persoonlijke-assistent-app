@@ -19,6 +19,7 @@ due_date: null
 sort_order: 3
 ---
 
+
 # Admin/founder meeting capture — web route en IA
 
 ## Probleem / context
@@ -149,3 +150,8 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

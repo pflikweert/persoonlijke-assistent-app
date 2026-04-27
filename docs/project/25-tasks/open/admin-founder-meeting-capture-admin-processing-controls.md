@@ -19,6 +19,7 @@ due_date: null
 sort_order: 14
 ---
 
+
 # Admin/founder meeting capture — admin processing controls
 
 ## Probleem / context
@@ -135,3 +136,8 @@ Minimale admin retry/rerun controls voor Meeting Capture processing.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

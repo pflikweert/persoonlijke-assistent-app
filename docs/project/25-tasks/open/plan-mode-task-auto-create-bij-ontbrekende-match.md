@@ -13,6 +13,7 @@ due_date: null
 sort_order: 4
 ---
 
+
 ## Probleem / context
 
 De huidige repo-regel blokkeert inhoudelijk werk in Plan Mode wanneer er geen passende bestaande taskfile is. Daardoor moet de gebruiker alsnog expliciet buiten Plan Mode een task laten aanmaken, ook als de nieuwe scope al duidelijk is.
@@ -79,3 +80,8 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - `docs/dev/task-lifecycle-workflow.md`
 - `docs/dev/cline-workflow.md`
 - `scripts/docs/verify-taskflow-enforcement.mjs`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

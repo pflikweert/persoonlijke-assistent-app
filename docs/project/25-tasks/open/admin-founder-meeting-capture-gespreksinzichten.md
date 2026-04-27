@@ -19,6 +19,7 @@ due_date: null
 sort_order: 13
 ---
 
+
 # Admin/founder meeting capture — gespreksinzichten
 
 ## Probleem / context
@@ -141,3 +142,8 @@ Brongetrouwe insights processing en detailweergave bovenop transcript.
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
 - `docs/project/content-processing-rules.md`
 - `docs/project/ai-quality-studio.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

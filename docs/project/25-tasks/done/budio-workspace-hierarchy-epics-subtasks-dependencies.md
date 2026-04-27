@@ -19,6 +19,7 @@ sort_order: 1
 ---
 
 
+
 # Budio Workspace hierarchy met epics, subtasks en dependencies
 
 ## Probleem / context
@@ -132,3 +133,5 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 ## Commits
 
 - 0b5c2d3 — feat: add workspace epic hierarchy
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

@@ -19,6 +19,7 @@ due_date: null
 sort_order: 9
 ---
 
+
 # Admin/founder meeting capture — workflow-retro en docs/skill update
 
 ## Probleem / context
@@ -116,3 +117,8 @@ Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
 - https://developers.openai.com/cookbook/articles/codex_exec_plans
 - https://developers.openai.com/codex/models
 - https://developers.openai.com/codex/skills
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

@@ -16,6 +16,7 @@ sort_order: 5
 
 
 
+
 # Budio Workspace activity-bar opent list view zonder workspace-menu
 
 ## Probleem / context
@@ -359,3 +360,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - a9e2961 — docs(task): add selection bug to plugin task status
 
 - ad43300 — chore: commit all remaining local changes
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

@@ -1,6 +1,6 @@
 ---
 id: task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus
-title: Admin/founder meeting capture — metadata, private storage en uploadstatus
+title: "Admin/founder meeting capture — metadata, private storage en uploadstatus"
 status: backlog
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -18,6 +18,7 @@ spec_ready: true
 due_date: null
 sort_order: 6
 ---
+
 
 # Admin/founder meeting capture — metadata, private storage en uploadstatus
 
@@ -148,3 +149,8 @@ Minimale Supabase metadata/storage/uploadstatus voor Meeting Capture recordings.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

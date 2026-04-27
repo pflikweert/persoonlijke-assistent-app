@@ -19,6 +19,7 @@ due_date: null
 sort_order: 15
 ---
 
+
 # Admin/founder meeting capture — retentie en export hardening
 
 ## Probleem / context
@@ -135,3 +136,8 @@ Retentievoorbereiding en export/download hardening voor opgeslagen recordings.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks

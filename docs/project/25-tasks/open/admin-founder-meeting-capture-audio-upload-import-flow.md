@@ -6,7 +6,7 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-04-27
-summary: "Voeg later een flow toe waarmee een bestaand audiobestand in hetzelfde Meeting Capture archief kan landen."
+summary: Voeg later een flow toe waarmee een bestaand audiobestand in hetzelfde Meeting Capture archief kan landen.
 tags: [meeting-capture, upload, import, audio]
 workstream: app
 epic_id: epic-admin-founder-meeting-capture
@@ -18,6 +18,7 @@ spec_ready: true
 due_date: null
 sort_order: 10
 ---
+
 
 # Admin/founder meeting capture — audio upload/import flow
 
@@ -141,3 +142,8 @@ Bestand-upload/import naar hetzelfde recording model als live audio.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
