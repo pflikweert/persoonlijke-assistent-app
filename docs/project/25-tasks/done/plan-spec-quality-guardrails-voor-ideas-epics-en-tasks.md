@@ -20,6 +20,7 @@ sort_order: 1
 ---
 
 
+
 # Plan/spec quality guardrails voor ideas, epics en tasks
 
 ## Probleem / context
@@ -181,3 +182,5 @@ Workflowcopy in foutmeldingen blijft concreet en herstelbaar, bijvoorbeeld: `Tas
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

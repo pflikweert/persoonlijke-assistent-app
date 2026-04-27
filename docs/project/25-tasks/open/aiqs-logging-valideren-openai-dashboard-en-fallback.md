@@ -29,6 +29,7 @@ sort_order: 6
 
 
 
+
 # AIQS logging valideren in OpenAI dashboard en fallback-logpad
 
 ## Probleem / context
@@ -94,3 +95,5 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

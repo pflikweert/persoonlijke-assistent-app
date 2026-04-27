@@ -20,6 +20,7 @@ sort_order: 6
 ---
 
 
+
 # Admin/founder meeting capture — metadata, private storage en uploadstatus
 
 ## Probleem / context
@@ -154,3 +155,5 @@ Minimale Supabase metadata/storage/uploadstatus voor Meeting Capture recordings.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

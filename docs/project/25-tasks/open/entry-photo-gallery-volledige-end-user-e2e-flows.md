@@ -18,6 +18,7 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
 De eerste gallery QA-basis bewijst de kerninteractie voor thumbnail-reorder en legt unit/smoke-infra neer. De volledige end-user dekking voor alle gallery-flows bestaat nog niet.
@@ -92,3 +93,5 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 - ad43300 — chore: commit all remaining local changes
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

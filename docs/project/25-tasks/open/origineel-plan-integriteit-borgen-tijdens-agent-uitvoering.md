@@ -14,6 +14,7 @@ sort_order: 2
 ---
 
 
+
 ## Probleem / context
 
 Tijdens agent-uitvoering ontstaat soms drift tussen het oorspronkelijke goedgekeurde plan en de actuele uitvoerfocus. Zodra er tijdens bouwen correcties, regressies of polish-rondes bijkomen, verschuift de aandacht naar het laatste subprobleem. Daardoor kan een agent ten onrechte denken dat het werk "klaar" is, terwijl onderdelen uit het oorspronkelijke plan nog open staan.
@@ -90,3 +91,5 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

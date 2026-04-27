@@ -20,6 +20,7 @@ sort_order: 13
 ---
 
 
+
 # Admin/founder meeting capture — gespreksinzichten
 
 ## Probleem / context
@@ -147,3 +148,5 @@ Brongetrouwe insights processing en detailweergave bovenop transcript.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

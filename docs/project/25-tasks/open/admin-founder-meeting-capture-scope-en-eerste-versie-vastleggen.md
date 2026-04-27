@@ -20,6 +20,7 @@ sort_order: 2
 ---
 
 
+
 # Admin/founder meeting capture — scope en eerste versie vastleggen
 
 ## Probleem / context
@@ -154,3 +155,5 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

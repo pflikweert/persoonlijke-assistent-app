@@ -20,6 +20,7 @@ sort_order: 12
 ---
 
 
+
 # Admin/founder meeting capture — speaker labels en mapping
 
 ## Probleem / context
@@ -142,3 +143,5 @@ Eenvoudige speakerlabel mapping op transcriptdetail.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

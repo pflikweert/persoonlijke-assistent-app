@@ -20,6 +20,7 @@ sort_order: 11
 ---
 
 
+
 # Admin/founder meeting capture — transcript pipeline
 
 ## Probleem / context
@@ -148,3 +149,5 @@ Queued transcript processing met status, retry en transcriptweergave.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

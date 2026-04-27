@@ -21,6 +21,7 @@ sort_order: 1
 
 
 
+
 ## Probleem / context
 
 Er bestaat al een Linear-geïnspireerd Workspace-idee voor structuur, intake en views, maar nog geen expliciet research-startpunt voor een bredere local-first Command Room-richting die ook Cline Kanban en Codex als referenties meeneemt.
@@ -127,3 +128,5 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 - 0b5c2d3 — feat: add workspace epic hierarchy
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

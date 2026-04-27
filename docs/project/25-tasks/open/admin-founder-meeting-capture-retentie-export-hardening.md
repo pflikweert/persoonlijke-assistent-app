@@ -20,6 +20,7 @@ sort_order: 15
 ---
 
 
+
 # Admin/founder meeting capture — retentie en export hardening
 
 ## Probleem / context
@@ -141,3 +142,5 @@ Retentievoorbereiding en export/download hardening voor opgeslagen recordings.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

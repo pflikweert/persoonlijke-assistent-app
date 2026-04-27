@@ -20,6 +20,7 @@ sort_order: 4
 ---
 
 
+
 # Admin/founder meeting capture — opname start/stop web MVP
 
 ## Probleem / context
@@ -157,3 +158,5 @@ Minimale `MediaRecorder` start/stop flow met UI-state, zonder IndexedDB recovery
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

@@ -20,6 +20,7 @@ sort_order: 14
 ---
 
 
+
 # Admin/founder meeting capture — admin processing controls
 
 ## Probleem / context
@@ -141,3 +142,5 @@ Minimale admin retry/rerun controls voor Meeting Capture processing.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

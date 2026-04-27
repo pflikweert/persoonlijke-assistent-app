@@ -16,6 +16,7 @@ sort_order: 1
 
 
 
+
 ## Probleem / context
 
 De gebruiker wil een persoonlijk HME-ME researchspoor starten binnen de Budio
@@ -203,3 +204,5 @@ Het goedgekeurde plan:
 - ad43300 — chore: commit all remaining local changes
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

@@ -20,6 +20,7 @@ sort_order: 5
 ---
 
 
+
 # Admin/founder meeting capture — lokale failsafe en recovery
 
 ## Probleem / context
@@ -156,3 +157,5 @@ Local-first chunkopslag en recovery UI voor onafgemaakte Meeting Capture opnames
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

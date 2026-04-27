@@ -20,6 +20,7 @@ sort_order: 9
 ---
 
 
+
 # Admin/founder meeting capture — workflow-retro en docs/skill update
 
 ## Probleem / context
@@ -122,3 +123,5 @@ Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

@@ -20,6 +20,7 @@ sort_order: 10
 ---
 
 
+
 # Admin/founder meeting capture — audio upload/import flow
 
 ## Probleem / context
@@ -147,3 +148,5 @@ Bestand-upload/import naar hetzelfde recording model als live audio.
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

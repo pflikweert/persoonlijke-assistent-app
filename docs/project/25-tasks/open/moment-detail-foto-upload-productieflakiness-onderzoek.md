@@ -18,6 +18,7 @@ sort_order: 1
 
 
 
+
 ## Probleem / context
 
 De reorder-productiebug is hersteld, maar de foto-upload op moment detail is nog niet apart bronvast onderzocht. In productie werkt upload soms wel en soms niet, zonder dat de exacte faalfase al bevestigd is.
@@ -87,3 +88,5 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - ad43300 — chore: commit all remaining local changes
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

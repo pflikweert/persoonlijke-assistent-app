@@ -17,6 +17,7 @@ sort_order: 5
 
 
 
+
 # Budio Workspace activity-bar opent list view zonder workspace-menu
 
 ## Probleem / context
@@ -362,3 +363,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - ad43300 — chore: commit all remaining local changes
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence

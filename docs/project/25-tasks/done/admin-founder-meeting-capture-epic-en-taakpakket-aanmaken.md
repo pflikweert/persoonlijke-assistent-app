@@ -20,6 +20,7 @@ sort_order: 1
 ---
 
 
+
 # Admin/founder meeting capture — epic en taakpakket aanmaken
 
 ## Probleem / context
@@ -166,3 +167,5 @@ Operationele projectsetup: idea-doc, epic-doc, taskbundle, dependencies en verif
 ## Commits
 
 - a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
