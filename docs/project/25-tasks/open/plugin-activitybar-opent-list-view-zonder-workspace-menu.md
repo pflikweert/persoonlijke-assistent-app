@@ -6,7 +6,7 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-04-27
-summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Laatste sessiestatus: fullscreen toggle werkt, maar task-openen/tonen en drag/sort in board + list zijn nog niet opgelost; daarnaast opent klikken op willekeurige tasks nu onterecht steeds dezelfde (actieve) kaart. Dit moet structureel herbouwd worden in maximaal 3 fases."
+summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Laatste sessiestatus: fullscreen toggle werkt, maar task-openen/tonen en drag/sort in board + list zijn nog niet opgelost; daarnaast opende klikken op willekeurige tasks onterecht steeds dezelfde geselecteerde kaart. In deze ronde is wel geborgd dat plugin-UI `Actief` niet langer gebruikt voor selectie en dat done-transities actieve agentmetadata opschonen."
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
@@ -252,6 +252,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - [x] Resizable detail pane — status: gebouwd.
 - [~] Fullscreen detail toggle — status: opnieuw in uitvoering; eerdere claim was te vroeg, structurele herbouw loopt nu in fase 1.
 - [~] Actieve agent indicator in board/list/detail — status: gedeeltelijk; basisweergave aanwezig, animatie en consistente detail-state ontbreken nog.
+- [x] Selectie wordt niet meer als `Actief` gelabeld — status: gebouwd; plugin gebruikt nu expliciet `Geselecteerd` voor selectie en bewaart agentbadges voor echte agentactiviteit.
 - [~] Agent metadata opslaan in task-md — status: gedeeltelijk; frontmattermodel aanwezig, activity-/commit-secties ontbreken nog.
 - [ ] `## Commits` automatisch vullen — status: nog niet gebouwd.
 - [ ] Multi-agent concurrency-aanpak — status: nog niet afgerond / niet bewezen.
@@ -266,6 +267,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - Resize-handle en fullscreen toggle voor task detail toegevoegd.
 - Frontmatter support toegevoegd voor agentvelden (`active_agent`, model, runtime, since, status, settings).
 - Basisweergave van agentactiviteit toegevoegd in board/list en agent metadata in task detail.
+- Selectiebadge gebruikt nu `Geselecteerd` in plaats van misleidend `Actief`; agentbadge blijft exclusief voor echte agentactiviteit.
 
 ### Gedeeltelijk gebouwd / nog niet af
 
@@ -276,7 +278,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
   - Basis chip/label bestaat in board/list.
   - Nog niet af: subtiele animatie zolang actief, en nog geen uniforme visuele active-state in board + list + detail.
 - **Punt 10 — agent metadata in task-md**
-  - Frontmatter velden bestaan en worden al geparsed/geschreven.
+- Frontmatter velden bestaan en worden al geparsed/geschreven.
+- Done-transities schonen nu `active_agent*` metadata automatisch op in repository-updates en lane-moves.
   - Nog niet af: expliciete sectiestructuur/historiek zoals `## Agent activity` en verdere activity-log per taak.
 - **Punt 8 — fullscreen detail toggle**
   - Toggle/state bestaat.
@@ -334,6 +337,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - `onlyOpen` filter afgebakend naar list view: alleen daar zichtbaar en alleen daar functioneel actief.
 - Start gemaakt met hook-first detail-layout herstructurering (`use-task-detail-layout`) zodat fullscreen niet meer als ad-hoc CSS-truc op de split-layout hoeft te leunen.
 - Refresh-knop in de activity rail dezelfde icon-sizing gegeven als de andere rail-buttons.
+- Plugin-UI gebruikt `Actief` niet langer voor selectie; done-taken verliezen actieve agentmetadata bij closeout.
 - Fase 1 verify opnieuw gedraaid: plugin `typecheck`, plugin `test`, `taskflow:verify`, `docs:bundle`, `docs:bundle:verify` en `apply:workspace` zijn opnieuw succesvol uitgevoerd na de herstructurering.
 
 ## Oorspronkelijk plan / afgesproken scope
@@ -352,7 +356,6 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - **In deze ronde aantoonbaar afgerond:** list-only `onlyOpen`, start van detail-layout herbouw via aparte hook, plugin typecheck/test/docs-verify in de vorige ronde.
 - **Later toegevoegd of opnieuw geopend:** fullscreen/detail claims teruggezet naar in uitvoering omdat runtime nog fout was; board/list click+drag regressies horen expliciet in fase 1 thuis.
 - **Open / blocked:** taak blijft `in_progress` totdat fase 1 runtime-stabiel is en daarna fase 2/3 inclusief handmatige smoke-check bevestigd zijn.
-
 
 ## Commits
 

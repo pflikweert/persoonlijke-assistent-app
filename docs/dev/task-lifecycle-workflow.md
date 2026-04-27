@@ -72,13 +72,17 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
     - `## Toegevoegde verbeteringen tijdens uitvoering`
     - `## Reconciliation voor afronding`
 27. Een taak mag niet naar `done` zolang de reconciliation niet expliciet aangeeft wat van het oorspronkelijke plan is afgerond, wat later is toegevoegd en wat nog open staat.
-28. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
-29. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
-30. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
-31. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
-32. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
-33. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
-34. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
+28. `done` betekent ook dat `active_agent*` metadata is opgeschoond; een afgeronde task draagt geen actieve agentcontext meer.
+29. Houd drie toestanden expliciet gescheiden: taskstatus, geselecteerde task in de plugin-UI en echte actieve agentmetadata.
+30. `Actief` in de plugin-UI mag nooit alleen selectie betekenen.
+31. Bij onderbroken sessies of herstel na crash/laptop-uitval: lees eerst de actuele taskfile, folderlocatie (`open/` of `done/`) en `active_agent*` state opnieuw uit vóór verdere uitvoering.
+32. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
+33. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
+34. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
+35. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
+36. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
+37. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
+38. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
 
 ## Korte voorbeelden
 
@@ -111,6 +115,7 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 4. **Done**
    - Zet status op `done`.
    - Verplaats het bestand naar `docs/project/25-tasks/done/`.
+   - Maak `active_agent*` metadata leeg vóór of tegelijk met de done-transitie.
    - Rond pas af nadat de taskfile een expliciete reconciliation bevat tussen oorspronkelijk plan, toegevoegde verbeteringen en resterend werk.
    - Reconciliation bevat bij niet-triviale taken ook de status per expliciet requirement.
 5. **Bundle / verify**

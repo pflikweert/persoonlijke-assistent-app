@@ -144,6 +144,11 @@ Voor AI-gedrag, prompting en evaluatie:
     - `Task: <taaktitel>`
     - `Task file: <pad naar task md>`
     - `Status: <huidige status>`
+  - onderscheid altijd expliciet tussen:
+    - taskstatus in frontmatter
+    - geselecteerde task in de plugin-UI
+    - echte actieve agentactiviteit via `active_agent*` metadata
+  - `Actief` in plugin-UI mag nooit alleen "geselecteerd" betekenen
 - planintegriteit is verplicht:
   - een goedgekeurd oorspronkelijk plan of expliciet afgestemde hoofdscope blijft tijdens uitvoering het vaste referentiepunt
   - vervang of verklein het oorspronkelijke plan nooit stilzwijgend tijdens bouwen, testen of polish-rondes
@@ -170,11 +175,15 @@ Voor AI-gedrag, prompting en evaluatie:
   - afronding vereist:
     - status `done`
     - verplaatsing naar `docs/project/25-tasks/done/`
+    - geen `active_agent*` frontmattervelden meer gevuld
+    - expliciete reconciliation aanwezig
     - `npm run docs:bundle`
     - `npm run docs:bundle:verify`
   - hard guardrail:
     - draai `npm run taskflow:verify` bij relevante repo-uitvoering
     - bij falen eerst taskflow herstellen, daarna pas afronden
+  - interrupted-session guardrail:
+    - lees bij hervatten altijd eerst de actuele taskfile, folderlocatie (`open/` of `done/`) en eventuele `active_agent*` state opnieuw uit vóór nieuwe edits
 - Scope-routing is context-first:
   - default-context is Budio app + AIQS
   - bepaal scope op intentie/formulering (doel, doelgroep, omgeving, planningimpact), niet alleen op letterlijke keywords

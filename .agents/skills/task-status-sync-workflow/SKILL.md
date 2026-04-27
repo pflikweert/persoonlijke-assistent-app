@@ -50,6 +50,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 4. **Bij afronding**
    - Zet status op `done` zodra code + verify klaar zijn en commit/push gereed is.
    - Verplaats taak naar `docs/project/25-tasks/done/` als nog in `open/`.
+   - Maak `active_agent*` metadata leeg; `done` draagt geen actieve agentcontext.
    - Meld in eindresultaat opnieuw `Task`, `Task file`, `Status`.
    - Voer vóór afronding een expliciete reconciliation uit onder `## Reconciliation voor afronding`:
      - oorspronkelijk plan
@@ -58,6 +59,11 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
      - wat afgerond is
      - wat nog open of blocked blijft
    - Markeer een taak niet als klaar zolang die reconciliation niet expliciet laat zien dat het oorspronkelijke plan is meegenomen.
+   - Houd semantiek zuiver:
+     - taskstatus = workflowstatus
+     - geselecteerde task in plugin = alleen UI-selectie
+     - `active_agent*` = echte runtime/WIP-agentactiviteit
+   - `Actief` in plugin-UI mag nooit alleen selectie betekenen.
 
 5. **Bij handmatige user-update**
    - Als status al correct is aangepast door gebruiker: niet overschrijven.
@@ -74,4 +80,5 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 - Geen grote big-bang uitvoering wanneer het werk logisch in veilige blokken kan.
 - Geen nieuwe statuswaarden buiten: `backlog`, `ready`, `in_progress`, `review`, `blocked`, `done`.
 - Geen taak automatisch op `done` zetten zonder verify-resultaat en afrondingscontext.
+- Geen task in `done/` laten staan met gevulde `active_agent*` velden.
 - Geen nieuwe bouwtask of epic aanmaken als alleen titel, samenvatting en checklist zijn ingevuld; dat is onvoldoende spec-ready.

@@ -51,7 +51,7 @@ export function isTaskAgentActive(task: Pick<TaskCardViewModel, 'activeAgent' | 
 
   const normalizedStatus = task.activeAgentStatus?.trim().toLowerCase();
   if (!normalizedStatus) {
-    return true;
+    return false;
   }
 
   return ['active', 'running', 'busy', 'editing', 'working', 'in_progress'].includes(normalizedStatus);

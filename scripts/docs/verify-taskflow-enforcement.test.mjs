@@ -6,6 +6,13 @@ function taskfile(status = 'in_progress', updatedAt = '2026-04-23') {
   return `---\nid: task-test\ntitle: Test\nstatus: ${status}\nphase: transitiemaand-consumer-beta\npriority: p2\nsource: docs/project/open-points.md\nupdated_at: ${updatedAt}\nsummary: \"\"\ntags: []\ndue_date: null\nsort_order: null\n---\n`;
 }
 
+function taskfileWithAgentMetadata({
+  status = 'in_progress',
+  pathStatus = 'running',
+} = {}) {
+  return `---\nid: task-test\ntitle: Test\nstatus: ${status}\nphase: transitiemaand-consumer-beta\npriority: p2\nsource: docs/project/open-points.md\nupdated_at: 2026-04-23\nsummary: \"\"\ntags: []\nactive_agent: Codex\nactive_agent_status: ${pathStatus}\ndue_date: null\nsort_order: null\n---\n`;
+}
+
 function completeTaskfile({ taskKind = 'task', specReady = true } = {}) {
   return `---\nid: task-test\ntitle: Test\nstatus: in_progress\nphase: transitiemaand-consumer-beta\npriority: p1\nsource: docs/project/open-points.md\nupdated_at: 2026-04-23\nsummary: \"\"\ntags: []\ntask_kind: ${taskKind}\nspec_ready: ${specReady}\ndue_date: null\nsort_order: null\n---\n\n## Probleem / context\n\nContext.\n\n## Gewenste uitkomst\n\nOutcome.\n\n## User outcome\n\nUser can do the thing.\n\n## Functional slice\n\nOne working slice.\n\n## Entry / exit\n\n- Entry: start.\n- Exit: end.\n\n## Happy flow\n\n1. Start.\n2. Complete.\n\n## Non-happy flows\n\n- Failure: show retry.\n\n## UX / copy\n\n- Label: Do thing.\n\n## Data / IO\n\n- Input: A.\n- Output: B.\n\n## Acceptance criteria\n\n- [ ] Scenario passes.\n\n## Verify / bewijs\n\n- npm run test\n`;
 }
@@ -66,6 +73,40 @@ test('fails on done transition without bundle evidence paths', () => {
 
   assert.equal(result.ok, false);
   assert.match(result.issues.join('\n'), /bundelspoor ontbreekt/);
+});
+
+test('fails when a done task still contains active agent metadata', () => {
+  const result = evaluateTaskflow({
+    changedPaths: ['docs/project/25-tasks/done/test.md'],
+    taskfileContents: {
+      'docs/project/25-tasks/done/test.md': taskfileWithAgentMetadata({
+        status: 'done',
+        pathStatus: 'running',
+      }),
+    },
+    hasDoneTransition: false,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.issues.join('\n'), /mag geen active_agent-velden bevatten/);
+  assert.match(result.issues.join('\n'), /actieve agentstatus mag niet op done staan/);
+});
+
+test('fails when an open task claims done and still carries agent metadata', () => {
+  const result = evaluateTaskflow({
+    changedPaths: ['docs/project/25-tasks/open/test.md'],
+    taskfileContents: {
+      'docs/project/25-tasks/open/test.md': taskfileWithAgentMetadata({
+        status: 'done',
+        pathStatus: 'active',
+      }),
+    },
+    hasDoneTransition: false,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.issues.join('\n'), /mag niet in open\/ staan/);
+  assert.match(result.issues.join('\n'), /mag geen active_agent-velden bevatten/);
 });
 
 test('fails for newly added build task without spec-readiness sections', () => {

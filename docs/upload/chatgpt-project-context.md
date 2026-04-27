@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-04-27T16:23:14.633Z
-Source Commit: 88ee31b
+Build Timestamp (UTC): 2026-04-27T17:04:55.707Z
+Source Commit: d6eeb0a
 
 Doel: uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects, afgeleid van canonieke projectdocs.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -913,7 +913,6 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [Admin/founder meeting capture — web route en IA](25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md) | In Progress | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
-| [Moment detail foto-upload productieflakiness onderzoeken](25-tasks/open/moment-detail-foto-upload-productieflakiness-onderzoek.md) | In Progress | p1 | transitiemaand-consumer-beta | Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een upload met de vaste agent-testaccount werkt betrouwbaar... |
 | [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | In Progress | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
 | [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Moments-overzicht primaire foto thumbnail en viewer](25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | Blocked | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
@@ -2846,6 +2845,21 @@ Gebruik Act mode voor:
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
+
+## Closeout-semantiek
+
+- `done` betekent altijd allemaal tegelijk:
+  - frontmatter `status: done`
+  - file staat in `docs/project/25-tasks/done/`
+  - `active_agent*` velden zijn leeg/null
+  - reconciliation is ingevuld
+  - vereiste verify en bundling zijn gedraaid
+- Houd drie begrippen uit elkaar:
+  - taskstatus = workflowstatus van de taskfile
+  - geselecteerde task = alleen UI-selectie in de plugin
+  - actieve agent = runtime/WIP-metadata in `active_agent*`
+- `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
+- Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
 
 ## ChatGPT Projects uploaddiscipline
 

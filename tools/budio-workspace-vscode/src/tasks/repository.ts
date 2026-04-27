@@ -12,6 +12,25 @@ import type {
   TaskMutationResult,
 } from './types';
 
+function doneStatusCleanupPatch(): Pick<
+  TaskFieldPatch,
+  | 'activeAgent'
+  | 'activeAgentModel'
+  | 'activeAgentRuntime'
+  | 'activeAgentSince'
+  | 'activeAgentStatus'
+  | 'activeAgentSettings'
+> {
+  return {
+    activeAgent: null,
+    activeAgentModel: null,
+    activeAgentRuntime: null,
+    activeAgentSince: null,
+    activeAgentStatus: null,
+    activeAgentSettings: null,
+  };
+}
+
 export class TaskRepository {
   constructor(
     private readonly workspaceRoot: string,
@@ -35,9 +54,16 @@ export class TaskRepository {
     const tasks = await this.scan();
     const task = requireTask(tasks, taskId);
     assertVersion(task, expectedVersion);
+    const normalizedPatch =
+      patch.status === 'done'
+        ? {
+            ...patch,
+            ...doneStatusCleanupPatch(),
+          }
+        : patch;
 
-    const statusChanged = patch.status !== undefined && patch.status !== task.status;
-    if (statusChanged && patch.status) {
+    const statusChanged = normalizedPatch.status !== undefined && normalizedPatch.status !== task.status;
+    if (statusChanged && normalizedPatch.status) {
       const taskMap = new Map(tasks.map((entry) => [entry.id, entry]));
       const writes = new Map<string, { sourcePath: string; targetPath: string; content: string }>();
 
@@ -47,7 +73,7 @@ export class TaskRepository {
         .map((entry) => entry.id);
 
       const targetLaneIds = tasks
-        .filter((entry) => entry.status === patch.status && entry.id !== task.id)
+        .filter((entry) => entry.status === normalizedPatch.status && entry.id !== task.id)
         .sort((left, right) => (left.sortOrder ?? Number.MAX_SAFE_INTEGER) - (right.sortOrder ?? Number.MAX_SAFE_INTEGER))
         .map((entry) => entry.id);
 
@@ -65,7 +91,7 @@ export class TaskRepository {
       });
 
       const targetPath = await resolveUniqueTargetPath(
-        buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, patch.status),
+        buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, normalizedPatch.status),
         task.sourcePath,
       );
 
@@ -73,7 +99,7 @@ export class TaskRepository {
         sourcePath: task.sourcePath,
         targetPath,
         content: applyTaskFieldPatch(task, {
-          ...patch,
+          ...normalizedPatch,
           sortOrder: 1,
         }),
       });
@@ -98,13 +124,13 @@ export class TaskRepository {
       return { taskId, path: path.relative(this.workspaceRoot, targetPath) };
     }
 
-    const nextPath = patch.status
+    const nextPath = normalizedPatch.status
       ? await resolveUniqueTargetPath(
-          buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, patch.status),
+          buildTargetPathForStatus(task.sourcePath, this.workspaceRoot, this.tasksRootRelative, normalizedPatch.status),
           task.sourcePath,
         )
       : task.sourcePath;
-    const nextContent = applyTaskFieldPatch(task, patch);
+    const nextContent = applyTaskFieldPatch(task, normalizedPatch);
 
     await writeTaskFile(task.sourcePath, nextPath, nextContent);
     return { taskId, path: path.relative(this.workspaceRoot, nextPath) };
@@ -170,6 +196,9 @@ export class TaskRepository {
       if (id === task.id) {
         patch.status = input.targetStatus;
         patch.updatedAt = new Date().toISOString().slice(0, 10);
+        if (input.targetStatus === 'done') {
+          Object.assign(patch, doneStatusCleanupPatch());
+        }
       }
 
       const nextPath =

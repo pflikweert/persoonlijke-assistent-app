@@ -21,11 +21,12 @@ test('checklist progress helpers return compact labels and capped five-band tone
 
 test('agent activity helpers only mark active-like statuses as active labels', () => {
   assert.equal(isTaskAgentActive({ activeAgent: null, activeAgentStatus: null }), false);
-  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: null }), true);
+  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: null }), false);
   assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'active' }), true);
   assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'done' }), false);
   assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'running' }), 'Cline');
   assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'done' }), null);
+  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: null }), null);
 });
 
 test('active agent comparison sorts active tasks before inactive tasks', () => {

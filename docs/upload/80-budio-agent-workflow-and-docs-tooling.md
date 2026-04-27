@@ -2,8 +2,8 @@
 
 # Budio Agent Workflow and Docs Tooling
 
-Build Timestamp (UTC): 2026-04-27T16:23:14.633Z
-Source Commit: 88ee31b
+Build Timestamp (UTC): 2026-04-27T17:04:55.707Z
+Source Commit: d6eeb0a
 
 Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -611,6 +611,21 @@ Gebruik Act mode voor:
 - Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
 
+## Closeout-semantiek
+
+- `done` betekent altijd allemaal tegelijk:
+  - frontmatter `status: done`
+  - file staat in `docs/project/25-tasks/done/`
+  - `active_agent*` velden zijn leeg/null
+  - reconciliation is ingevuld
+  - vereiste verify en bundling zijn gedraaid
+- Houd drie begrippen uit elkaar:
+  - taskstatus = workflowstatus van de taskfile
+  - geselecteerde task = alleen UI-selectie in de plugin
+  - actieve agent = runtime/WIP-metadata in `active_agent*`
+- `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
+- Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
+
 ## ChatGPT Projects uploaddiscipline
 
 - Dit is een uploadrichtlijn voor ChatGPT Projects, geen repo-uitvoerregel.
@@ -910,13 +925,17 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
     - `## Toegevoegde verbeteringen tijdens uitvoering`
     - `## Reconciliation voor afronding`
 27. Een taak mag niet naar `done` zolang de reconciliation niet expliciet aangeeft wat van het oorspronkelijke plan is afgerond, wat later is toegevoegd en wat nog open staat.
-28. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
-29. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
-30. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
-31. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
-32. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
-33. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
-34. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
+28. `done` betekent ook dat `active_agent*` metadata is opgeschoond; een afgeronde task draagt geen actieve agentcontext meer.
+29. Houd drie toestanden expliciet gescheiden: taskstatus, geselecteerde task in de plugin-UI en echte actieve agentmetadata.
+30. `Actief` in de plugin-UI mag nooit alleen selectie betekenen.
+31. Bij onderbroken sessies of herstel na crash/laptop-uitval: lees eerst de actuele taskfile, folderlocatie (`open/` of `done/`) en `active_agent*` state opnieuw uit vóór verdere uitvoering.
+32. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
+33. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
+34. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
+35. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
+36. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
+37. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
+38. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
 
 ## Korte voorbeelden
 
@@ -949,6 +968,7 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 4. **Done**
    - Zet status op `done`.
    - Verplaats het bestand naar `docs/project/25-tasks/done/`.
+   - Maak `active_agent*` metadata leeg vóór of tegelijk met de done-transitie.
    - Rond pas af nadat de taskfile een expliciete reconciliation bevat tussen oorspronkelijk plan, toegevoegde verbeteringen en resterend werk.
    - Reconciliation bevat bij niet-triviale taken ook de status per expliciet requirement.
 5. **Bundle / verify**
@@ -1263,6 +1283,11 @@ Voor AI-gedrag, prompting en evaluatie:
     - `Task: <taaktitel>`
     - `Task file: <pad naar task md>`
     - `Status: <huidige status>`
+  - onderscheid altijd expliciet tussen:
+    - taskstatus in frontmatter
+    - geselecteerde task in de plugin-UI
+    - echte actieve agentactiviteit via `active_agent*` metadata
+  - `Actief` in plugin-UI mag nooit alleen "geselecteerd" betekenen
 - planintegriteit is verplicht:
   - een goedgekeurd oorspronkelijk plan of expliciet afgestemde hoofdscope blijft tijdens uitvoering het vaste referentiepunt
   - vervang of verklein het oorspronkelijke plan nooit stilzwijgend tijdens bouwen, testen of polish-rondes
@@ -1289,11 +1314,15 @@ Voor AI-gedrag, prompting en evaluatie:
   - afronding vereist:
     - status `done`
     - verplaatsing naar `docs/project/25-tasks/done/`
+    - geen `active_agent*` frontmattervelden meer gevuld
+    - expliciete reconciliation aanwezig
     - `npm run docs:bundle`
     - `npm run docs:bundle:verify`
   - hard guardrail:
     - draai `npm run taskflow:verify` bij relevante repo-uitvoering
     - bij falen eerst taskflow herstellen, daarna pas afronden
+  - interrupted-session guardrail:
+    - lees bij hervatten altijd eerst de actuele taskfile, folderlocatie (`open/` of `done/`) en eventuele `active_agent*` state opnieuw uit vóór nieuwe edits
 - Scope-routing is context-first:
   - default-context is Budio app + AIQS
   - bepaal scope op intentie/formulering (doel, doelgroep, omgeving, planningimpact), niet alleen op letterlijke keywords
@@ -1552,6 +1581,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 4. **Bij afronding**
    - Zet status op `done` zodra code + verify klaar zijn en commit/push gereed is.
    - Verplaats taak naar `docs/project/25-tasks/done/` als nog in `open/`.
+   - Maak `active_agent*` metadata leeg; `done` draagt geen actieve agentcontext.
    - Meld in eindresultaat opnieuw `Task`, `Task file`, `Status`.
    - Voer vóór afronding een expliciete reconciliation uit onder `## Reconciliation voor afronding`:
      - oorspronkelijk plan
@@ -1560,6 +1590,11 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
      - wat afgerond is
      - wat nog open of blocked blijft
    - Markeer een taak niet als klaar zolang die reconciliation niet expliciet laat zien dat het oorspronkelijke plan is meegenomen.
+   - Houd semantiek zuiver:
+     - taskstatus = workflowstatus
+     - geselecteerde task in plugin = alleen UI-selectie
+     - `active_agent*` = echte runtime/WIP-agentactiviteit
+   - `Actief` in plugin-UI mag nooit alleen selectie betekenen.
 
 5. **Bij handmatige user-update**
    - Als status al correct is aangepast door gebruiker: niet overschrijven.
@@ -1576,6 +1611,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
 - Geen grote big-bang uitvoering wanneer het werk logisch in veilige blokken kan.
 - Geen nieuwe statuswaarden buiten: `backlog`, `ready`, `in_progress`, `review`, `blocked`, `done`.
 - Geen taak automatisch op `done` zetten zonder verify-resultaat en afrondingscontext.
+- Geen task in `done/` laten staan met gevulde `active_agent*` velden.
 - Geen nieuwe bouwtask of epic aanmaken als alleen titel, samenvatting en checklist zijn ingevuld; dat is onvoldoende spec-ready.
 
 ---

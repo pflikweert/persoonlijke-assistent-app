@@ -394,3 +394,97 @@ sort_order: 2
   assert.match(reviewA, /sort_order: 2/);
   assert.match(reviewB, /sort_order: 3/);
 });
+
+test('repository updateTaskFields clears active agent metadata when moving task to done', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(openRoot, { recursive: true });
+
+  const filePath = path.join(openRoot, 'done-me.md');
+  await fs.writeFile(
+    filePath,
+    `---
+id: task-done-me
+title: Done me
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+active_agent: Codex
+active_agent_model: gpt-5.5
+active_agent_runtime: codex
+active_agent_since: 2026-04-27T10:00:00Z
+active_agent_status: running
+active_agent_settings: default
+---
+
+# Done me
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const [task] = await repository.scan();
+  assert.ok(task);
+
+  const result = await repository.updateTaskFields(task.id, task.version, {
+    status: 'done',
+    updatedAt: '2026-04-27',
+  });
+
+  const donePath = path.resolve(workspaceRoot, result.path);
+  const doneContent = await fs.readFile(donePath, 'utf8');
+
+  assert.match(donePath, /docs\/project\/25-tasks\/done\/done-me\.md$/);
+  assert.match(doneContent, /status: done/);
+  assert.match(doneContent, /active_agent: null/);
+  assert.match(doneContent, /active_agent_status: null/);
+});
+
+test('repository moveTask clears active agent metadata when dropping task into done lane', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(openRoot, { recursive: true });
+
+  await fs.writeFile(
+    path.join(openRoot, 'moving.md'),
+    `---
+id: task-moving
+title: Moving
+status: review
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+active_agent: Codex
+active_agent_status: running
+---
+
+# Moving
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const [task] = await repository.scan();
+  assert.ok(task);
+
+  const result = await repository.moveTask({
+    taskId: task.id,
+    expectedVersion: task.version,
+    targetStatus: 'done',
+    destinationIds: ['task-moving'],
+    sourceIds: [],
+  });
+
+  const donePath = path.resolve(workspaceRoot, result.path);
+  const doneContent = await fs.readFile(donePath, 'utf8');
+
+  assert.match(donePath, /docs\/project\/25-tasks\/done\/moving\.md$/);
+  assert.match(doneContent, /status: done/);
+  assert.match(doneContent, /active_agent: null/);
+  assert.match(doneContent, /active_agent_status: null/);
+});

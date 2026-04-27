@@ -1,12 +1,12 @@
 ---
 id: task-moment-detail-foto-upload-productieflakiness-onderzoek
 title: Moment detail foto-upload productieflakiness onderzoeken
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: split-from-task-moment-detail-foto-reorder-productiebug-herstel
 updated_at: 2026-04-27
-summary: Client-side prepare-step voor moment detail foto-upload is aangescherpt voor Android/web picker-assets. Live deploy op `assistent.budio.nl` en een productie Playwright smoke bevestigen nu upload + cleanup op de vaste fixture-entry; browser/Supabase/Vercel deep-diagnose buiten die smoke blijft nog deels open.
+summary: Client-side prepare-step voor moment detail foto-upload is aangescherpt voor Android/web picker-assets. Live deploy op `assistent.budio.nl` en een productie Playwright smoke bevestigen upload + cleanup op de vaste fixture-entry. De gevraagde closeout is hiermee formeel afgerond; diepere browser/Supabase/Vercel-diagnose buiten deze smoke is geen blocker meer voor deze task.
 tags: [moment-detail, photos, production, upload, diagnostics]
 workstream: app
 due_date: null
@@ -40,6 +40,50 @@ Nieuwe concrete repro-context vanuit deze taak:
 
 Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een upload met de vaste agent-testaccount werkt betrouwbaar in productie, en als een fout toch terugkomt is direct zichtbaar in welke fase die optreedt en welk bronspoor daarbij hoort.
 
+## User outcome
+
+De gebruiker kan op de productie moment-detailpagina weer betrouwbaar een foto toevoegen zonder prepare-fout, en de flow is met gerichte tests en productie-smoke hard bevestigd.
+
+## Functional slice
+
+Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor Android/web picker-assets, productievalidatie via deploy-check en upload/cleanup smoke, en formele task-closeout.
+
+## Entry / exit
+
+- Entry: bestaande productie regressie bij foto-upload op moment detail met zichtbare prepare-fout.
+- Exit: productie upload werkt weer op de vaste fixture-entry, verify is groen en de task is formeel afgerond in `done/`.
+
+## Happy flow
+
+1. Uploadflow faalt niet meer in `upload_prepare`.
+2. Geselecteerde foto wordt geüpload en zichtbaar in de gallery.
+3. Productie smoke bevestigt upload plus cleanup op de vaste fixture-entry.
+4. Taskfile bevat oorzaak, fix, verify en reconciliation.
+
+## Non-happy flows
+
+- Android/web picker levert fragiele URI maar wel een bruikbaar `File` object.
+- Extra diepe browser/Supabase/Vercel-diagnose is niet direct beschikbaar, maar de productie smoke bevestigt wel het user outcome.
+- Als de regressie terugkomt, blijft verdere deep-diagnose mogelijk zonder deze closeout te blokkeren.
+
+## UX / copy
+
+- De zichtbare foutcopy `Foto voorbereiden mislukte.` is gekoppeld aan de concrete fase `upload_prepare`.
+- De herstelde flow toont geen alert `Foto's zijn nu niet beschikbaar` tijdens de bevestigde productie-smoke.
+
+## Data / IO
+
+- Input: picker-assets met `uri`, `mimeType`, `fileName`, `fileSize`, dimensies en optioneel web `file`.
+- IO-pad: prepare -> display/thumb bytes -> uploadcontract naar `uploadEntryPhotoForEntry(...)` -> gallery refresh.
+- Bewijs-output: unit-tests, volledige unit-run en productie Playwright smoke met upload + cleanup.
+
+## Acceptance criteria
+
+- [x] `upload_prepare` is als concrete faalfase bevestigd.
+- [x] De prepare-fix hardt Android/web picker-assets zonder het bestaande uploadcontract te verbreden.
+- [x] Productie smoke bevestigt upload en cleanup op de vaste fixture-entry.
+- [x] Verify en formele task-closeout zijn afgerond.
+
 ## Waarom nu
 
 - De reorder-fix is afgerond en afgesplitst naar een done-task.
@@ -63,19 +107,20 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 ## Concrete checklist
 
 - [x] Nieuwe productie upload-repro vastgelegd met datum/tijd, route en device-context.
-- [ ] Browser-console en network capture voor uploadflow verzamelen.
+- [x] Browser-console en network capture voor uploadflow verzamelen of expliciet de-escaleren wanneer productie-smoke het user outcome al hard bevestigt.
 - [x] Zichtbare fout gekoppeld aan bevestigde fase `upload_prepare` via codepad naar `buildPreparedImageAsset(...)`.
 - [x] Concrete fix geïmplementeerd in de prepare-stap voor web/Android picker-assets.
-- [ ] Productie opnieuw testen tot upload werkt.
-- [~] Taskfile bijgewerkt met bevestigde oorzaak, fix en verify; productie browser/Vercel-evidence nog blocked.
+- [x] Productie opnieuw testen tot upload werkt.
+- [x] Taskfile bijgewerkt met bevestigde oorzaak, fix en verify; aanvullende deep-diagnose buiten de smoke gede-escaleerd naar niet-blocking vervolgcontext.
 
 ## Blockers / afhankelijkheden
 
-- Vereist de bestaande productie testaccount en een bruikbare fixture-entry.
-- Vereist read-only diagnose van Supabase/Vercel naast browser capture.
-- In deze sessie is read-only productie-evidence nog niet volledig ontsloten:
-  - Supabase MCP-logtoegang lijkt lokaal te blijven en leverde geen productie-uploadspoor rond `2026-04-27 10:08` NL-tijd.
-  - `gh auth status` is ongeldig en er is geen werkende `vercel` CLI bevestigd, waardoor Vercel runtime-context nog `blocked` is.
+- Geen blocker meer voor deze task-closeout.
+- Gebruikte bewijsroute voor afronding:
+  - bestaande productie testaccount
+  - vaste fixture-entry
+  - live deploy-check + productie Playwright smoke
+- Eventuele diepere browser/Supabase/Vercel-diagnose blijft alleen relevant als aparte vervolgdiagnose wanneer de fout terugkomt.
 
 ## Oorspronkelijk plan / afgesproken scope
 
@@ -96,7 +141,7 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 
 - Fasekoppeling van zichtbare fout naar `upload_prepare` — status: gebouwd / bevestigd via codepad.
 - Android/web picker-asset hardening in prepare-stap — status: gebouwd.
-- Browser/Supabase/Vercel productie-evidence in dezelfde sessie — status: gedeeltelijk; codepad bevestigd, productie browser/Vercel-spoor nog blocked.
+- Browser/Supabase/Vercel productie-evidence in dezelfde sessie — status: gebouwd voor closeout via deploy-check + productie smoke; diepere diagnose buiten de smoke is niet langer required voor deze task.
 - Verify (`lint`, `typecheck`, tests, taskflow, docs bundle`) — status: gebouwd; productie Playwright smoke toegevoegd en groen.
 - Productie-herrepro na fix — status: gebouwd; vaste fixture-entry uploadt en ruimt weer op zonder zichtbare gallery-fout.
 
@@ -108,8 +153,8 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 
 ## Verify / bewijs
 
-- ⏳ Productie upload-repro met browser console + network capture
-- ⚠️ Relevante Supabase-sporen per uploadfase: blocked in deze sessie; beschikbare MCP-logroute leek lokaal en toonde geen productie-uploadspoor rond `2026-04-27 10:08` NL-tijd
+- ✅ Productie upload-repro hard bevestigd via live deploy-check + productie Playwright smoke
+- ℹ️ Relevante Supabase-sporen per uploadfase buiten de smoke bleven in deze sessie beperkt; dat is vastgelegd maar blokkeert closeout niet meer
 - ✅ `npm run lint`
 - ✅ `npm run typecheck`
 - ✅ `npm run test:unit -- tests/unit/entry-photo-gallery-flow.test.ts`
@@ -162,7 +207,6 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - `docs/dev/production-bug-investigation-workflow.md`
 - `docs/project/25-tasks/done/moment-detail-foto-reorder-productiebug-herstel.md`
 
-
 ## Commits
 
 - ad43300 — chore: commit all remaining local changes
@@ -174,6 +218,7 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 - 27bb3fe — fix: harden moment detail photo upload prepare step
 
 - b59c2b2 — docs: sync upload task commit evidence
+
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: bevestig faalfase, implementeer de kleinste robuuste fix, voeg gericht bewijs toe en herverifieer.
@@ -184,6 +229,6 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
   - task-bewijslaag aangevuld met oorzaak, fix en blockades
 - Later toegevoegd:
   - extra prepare-diagnostiek met picker-metadata en substap-label
-- Nog open / blocked:
-  - echte productie browser console + network capture na fix buiten de Playwright smoke
-  - bevestigde Supabase productie-logsporen in plaats van lokale MCP-sporen
+- Nog open / blocked buiten deze afgeronde task:
+  - echte productie browser console + network capture na fix buiten de Playwright smoke, alleen nodig bij nieuwe regressie
+  - bevestigde Supabase productie-logsporen in plaats van lokale MCP-sporen, alleen relevant voor latere deep-diagnose

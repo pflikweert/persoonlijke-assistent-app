@@ -182,6 +182,21 @@ Gebruik Act mode voor:
 - Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
 
+## Closeout-semantiek
+
+- `done` betekent altijd allemaal tegelijk:
+  - frontmatter `status: done`
+  - file staat in `docs/project/25-tasks/done/`
+  - `active_agent*` velden zijn leeg/null
+  - reconciliation is ingevuld
+  - vereiste verify en bundling zijn gedraaid
+- Houd drie begrippen uit elkaar:
+  - taskstatus = workflowstatus van de taskfile
+  - geselecteerde task = alleen UI-selectie in de plugin
+  - actieve agent = runtime/WIP-metadata in `active_agent*`
+- `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
+- Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
+
 ## ChatGPT Projects uploaddiscipline
 
 - Dit is een uploadrichtlijn voor ChatGPT Projects, geen repo-uitvoerregel.

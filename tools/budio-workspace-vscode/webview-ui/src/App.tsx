@@ -774,7 +774,7 @@ export function App(): React.JSX.Element {
                               <div className="card-header">
                                 <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
                                 <div className="card-header-badges">
-                                  {isSelected ? <span className="active-task-chip">Actief</span> : null}
+                                  {isSelected ? <span className="active-task-chip">Geselecteerd</span> : null}
                                   {agentLabel ? <span className="agent-task-chip">{agentLabel}</span> : null}
                                   <span className="task-ref" title={card.id}>
                                     {formatTaskRef(card.id)}
@@ -1133,7 +1133,7 @@ export function App(): React.JSX.Element {
                   <div className="detail-hero">
                     <h2>{selectedTask.title}</h2>
                     <div className="detail-meta-chips">
-                      <span className="active-task-chip">Actief</span>
+                      <span className="active-task-chip">Geselecteerd</span>
                       {detailAgentLabel ? <span className="agent-task-chip agent-task-chip-pulsing">{detailAgentLabel}</span> : null}
                       <span className={`priority-badge ${selectedTask.priority}`}>{selectedTask.priority.toUpperCase()}</span>
                       <span className="task-ref" title={selectedTask.id}>

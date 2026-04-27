@@ -38,6 +38,15 @@ const EPIC_SPEC_SECTIONS = [
   'Dependencies',
   'Acceptatie',
 ];
+const ACTIVE_AGENT_STATUS_VALUES = new Set(['active', 'running', 'busy', 'editing', 'working', 'in_progress']);
+const ACTIVE_AGENT_FRONTMATTER_FIELDS = [
+  'active_agent',
+  'active_agent_model',
+  'active_agent_runtime',
+  'active_agent_since',
+  'active_agent_status',
+  'active_agent_settings',
+];
 
 function run(command) {
   return execSync(command, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -152,6 +161,18 @@ function taskSpecRequiredSections(frontmatter) {
   return BUILD_TASK_KINDS.has(taskKind) ? FULL_SPEC_SECTIONS : LIGHT_SPEC_SECTIONS;
 }
 
+function hasAgentMetadata(frontmatter) {
+  return ACTIVE_AGENT_FRONTMATTER_FIELDS.some((field) => {
+    const value = String(frontmatter[field] ?? '').trim().toLowerCase();
+    return value && value !== 'null';
+  });
+}
+
+function hasActiveAgentStatus(frontmatter) {
+  const normalizedStatus = String(frontmatter.active_agent_status ?? '').trim().toLowerCase();
+  return ACTIVE_AGENT_STATUS_VALUES.has(normalizedStatus);
+}
+
 export function evaluateTaskflow(input) {
   const issues = [];
   const relevantPaths = input.changedPaths.filter((filePath) => !isIgnoredPath(filePath));
@@ -200,6 +221,18 @@ export function evaluateTaskflow(input) {
 
     if (taskfilePath.startsWith(OPEN_PREFIX) && status === 'done') {
       issues.push(`Taskfile met status done mag niet in open/ staan: ${taskfilePath}`);
+    }
+
+    if (status === 'done' && hasAgentMetadata(frontmatter)) {
+      issues.push(`Taskfile met status done mag geen active_agent-velden bevatten: ${taskfilePath}`);
+    }
+
+    if (taskfilePath.startsWith(DONE_PREFIX) && hasAgentMetadata(frontmatter)) {
+      issues.push(`Taskfile in done/ mag geen active_agent-velden bevatten: ${taskfilePath}`);
+    }
+
+    if (status === 'done' && hasActiveAgentStatus(frontmatter)) {
+      issues.push(`Taskfile met actieve agentstatus mag niet op done staan: ${taskfilePath}`);
     }
 
     if (shouldCheckTaskSpec({ filePath: taskfilePath, frontmatter, addedPaths })) {
