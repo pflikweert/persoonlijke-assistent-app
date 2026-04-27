@@ -9,11 +9,17 @@ updated_at: 2026-04-19
 summary: ""
 tags: []
 workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
 due_date: null
 sort_order: null
 ---
 
 <!-- Gebruik voor workstream één van: idea | plugin | app | aiqs -->
+<!-- Gebruik voor task_kind één van: task | subtask | research | polish -->
 
 ## Probleem / context
 

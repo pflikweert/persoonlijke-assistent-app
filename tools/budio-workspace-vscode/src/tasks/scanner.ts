@@ -1,16 +1,37 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { parseEpicFile } from './epic-parser';
 import { parseTaskFile } from './parser';
-import type { ParsedTaskFile } from './types';
+import type { ParsedEpicFile, ParsedTaskFile } from './types';
 
 export async function scanTaskDocuments(
   workspaceRoot: string,
   tasksRootRelative: string,
 ): Promise<ParsedTaskFile[]> {
-  const tasksRootAbsolute = path.resolve(workspaceRoot, tasksRootRelative);
-  const files = await walkMarkdownFiles(tasksRootAbsolute);
-  const tasks: ParsedTaskFile[] = [];
+  return scanMarkdownDocuments(workspaceRoot, tasksRootRelative, parseTaskFile);
+}
+
+export async function scanEpicDocuments(
+  workspaceRoot: string,
+  epicsRootRelative: string,
+): Promise<ParsedEpicFile[]> {
+  return scanMarkdownDocuments(workspaceRoot, epicsRootRelative, parseEpicFile);
+}
+
+async function scanMarkdownDocuments<TDocument>(
+  workspaceRoot: string,
+  rootRelative: string,
+  parse: (input: {
+    absolutePath: string;
+    relativePath: string;
+    content: string;
+    version: { mtimeMs: number; hash: string };
+  }) => TDocument,
+): Promise<TDocument[]> {
+  const rootAbsolute = path.resolve(workspaceRoot, rootRelative);
+  const files = await walkMarkdownFiles(rootAbsolute);
+  const documents: TDocument[] = [];
 
   for (const filePath of files) {
     const content = await fs.readFile(filePath, 'utf8');
@@ -18,8 +39,8 @@ export async function scanTaskDocuments(
     const relativePath = path.relative(workspaceRoot, filePath);
     const hash = createHash('sha1').update(content).digest('hex');
 
-    tasks.push(
-      parseTaskFile({
+    documents.push(
+      parse({
         absolutePath: filePath,
         relativePath,
         content,
@@ -31,8 +52,12 @@ export async function scanTaskDocuments(
     );
   }
 
-  tasks.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
-  return tasks;
+  documents.sort((left, right) => {
+    const leftPath = (left as { relativePath?: string }).relativePath ?? '';
+    const rightPath = (right as { relativePath?: string }).relativePath ?? '';
+    return leftPath.localeCompare(rightPath);
+  });
+  return documents;
 }
 
 async function walkMarkdownFiles(root: string): Promise<string[]> {

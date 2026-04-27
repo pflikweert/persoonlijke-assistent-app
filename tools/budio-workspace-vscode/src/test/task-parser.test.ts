@@ -104,3 +104,37 @@ sort_order: null
   assert.equal(parsed.summary, 'eerste regel\n\n tweede regel');
   assert.equal(parsed.excerpt, 'eerste regel tweede regel');
 });
+
+test('parseTaskFile reads optional hierarchy metadata when present', () => {
+  const parsed = parseTaskFile({
+    absolutePath: '/workspace/docs/project/25-tasks/open/example-hierarchy.md',
+    relativePath: 'docs/project/25-tasks/open/example-hierarchy.md',
+    content: `---
+id: task-example-hierarchy
+title: Hierarchy test
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-27
+epic_id: epic-example
+parent_task_id: task-parent
+depends_on: [task-a, task-b]
+follows_after: [task-c]
+task_kind: subtask
+---
+
+# Hierarchy test
+`,
+    version: {
+      mtimeMs: 1234,
+      hash: 'hash-4',
+    },
+  });
+
+  assert.equal(parsed.epicId, 'epic-example');
+  assert.equal(parsed.parentTaskId, 'task-parent');
+  assert.deepEqual(parsed.dependsOn, ['task-a', 'task-b']);
+  assert.deepEqual(parsed.followsAfter, ['task-c']);
+  assert.equal(parsed.taskKind, 'subtask');
+});

@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { STATUS_LABELS, WORKSTREAM_LABELS } from '../../src/tasks/constants';
 import type {
   BoardSnapshot,
+  EpicViewModel,
+  TaskKind,
   TaskCardViewModel,
   TaskPriority,
   TaskSort,
@@ -38,8 +40,9 @@ import {
 } from './use-task-detail-layout';
 import { vscode } from './vscode';
 
-type ViewMode = 'board' | 'list' | 'settings';
+type ViewMode = 'board' | 'list' | 'epics' | 'settings';
 type DueFilter = 'all' | 'today' | 'overdue' | 'no_date';
+type HierarchyFilter = 'all' | 'has_epic' | 'no_epic' | 'has_subtasks' | 'blocked' | 'ready_to_start';
 const CLICK_DRAG_SUPPRESSION_MS = 180;
 
 interface Filters {
@@ -48,6 +51,7 @@ interface Filters {
   tag: 'all' | string;
   workstream: 'all' | TaskWorkstream;
   due: DueFilter;
+  hierarchy: HierarchyFilter;
   onlyOpen: boolean;
   onlyChecklistOpen: boolean;
 }
@@ -73,6 +77,7 @@ interface MetadataFormState {
   title: string;
   status: TaskStatus;
   priority: TaskPriority;
+  taskKind: TaskKind;
   summary: string;
   tags: string;
   dueDate: string;
@@ -84,6 +89,7 @@ const EMPTY_FILTERS: Filters = {
   tag: 'all',
   workstream: 'all',
   due: 'all',
+  hierarchy: 'all',
   onlyOpen: true,
   onlyChecklistOpen: false,
 };
@@ -92,6 +98,7 @@ const REFRESH_SUCCESS_MS = 1200;
 const VIEW_TITLES: Record<ViewMode, string> = {
   board: 'Board',
   list: 'List',
+  epics: 'Epics',
   settings: 'Settings',
 };
 
@@ -301,6 +308,23 @@ export function App(): React.JSX.Element {
     () => applySortDirection(filteredCards, sortDirection),
     [filteredCards, sortDirection],
   );
+  const cardMap = useMemo(
+    () => new Map(snapshot?.allCards.map((card) => [card.id, card]) ?? []),
+    [snapshot?.allCards],
+  );
+  const epics = useMemo(() => snapshot?.epics ?? [], [snapshot]);
+  const visibleEpics = useMemo(
+    () =>
+      epics.filter((epic) => {
+        const linkedCards = epic.linkedTaskIds
+          .map((taskId) => cardMap.get(taskId))
+          .filter((card): card is TaskCardViewModel => Boolean(card))
+          .filter((card) => matchesFilters(card, search, effectiveFilters));
+
+        return linkedCards.length > 0 || matchesEpicSearch(epic, search);
+      }),
+    [cardMap, effectiveFilters, epics, search],
+  );
 
   const visibleColumns = useMemo(() => {
     if (!snapshot) {
@@ -422,6 +446,7 @@ export function App(): React.JSX.Element {
       <aside className="icon-rail">
         <IconButton active={activeView === 'board'} icon="▥" label="Board" onClick={() => switchView('board')} />
         <IconButton active={activeView === 'list'} icon="☰" label="List" onClick={() => switchView('list')} />
+        <IconButton active={activeView === 'epics'} icon="◎" label="Epics" onClick={() => switchView('epics')} />
         <IconButton active={activeView === 'settings'} icon="⚙" label="Settings" onClick={() => switchView('settings')} />
         <button
           className={`rail-button rail-icon-button refresh-button icon-only ${refreshState}`}
@@ -587,9 +612,35 @@ export function App(): React.JSX.Element {
                     <option value="no_date">Geen datum</option>
                   </select>
                 </label>
+                <label>
+                  <span>Hierarchie</span>
+                  <select
+                    value={filters.hierarchy}
+                    onChange={(event) => updateFilters({ hierarchy: event.target.value as HierarchyFilter })}
+                  >
+                    <option value="all">Alles</option>
+                    <option value="has_epic">Heeft epic</option>
+                    <option value="no_epic">Loose tasks</option>
+                    <option value="has_subtasks">Heeft subtasks</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="ready_to_start">Ready to start</option>
+                  </select>
+                </label>
               </div>
 
               <div className="filter-toggles">
+                <button className="ghost-button" onClick={() => applyQuickView('epic_planning')}>
+                  Epic planning
+                </button>
+                <button className="ghost-button" onClick={() => applyQuickView('blocked')}>
+                  Blocked
+                </button>
+                <button className="ghost-button" onClick={() => applyQuickView('my_next_tasks')}>
+                  My next tasks
+                </button>
+                <button className="ghost-button" onClick={() => applyQuickView('loose_tasks')}>
+                  Loose tasks
+                </button>
                 {activeView === 'list' ? (
                   <button
                     className={`ghost-button ${filters.onlyOpen ? 'active' : ''}`}
@@ -802,6 +853,23 @@ export function App(): React.JSX.Element {
                     </div>
                   </section>
                 )})}
+              </div>
+            ) : null}
+
+            {activeView === 'epics' ? (
+              <div className="epics-shell">
+                {visibleEpics.length > 0 ? (
+                  visibleEpics.map((epic) => (
+                    <EpicCard
+                      key={epic.id}
+                      epic={epic}
+                      cardsById={cardMap}
+                      onOpenTask={selectTask}
+                    />
+                  ))
+                ) : (
+                  <div className="state-shell">Geen epics gevonden voor de huidige zoek- of filterinstellingen.</div>
+                )}
               </div>
             ) : null}
 
@@ -1148,6 +1216,18 @@ export function App(): React.JSX.Element {
                         <option value="p3">P3</option>
                       </select>
                     </label>
+                    <label>
+                      <span>Type</span>
+                      <select
+                        value={formState.taskKind}
+                        onChange={(event) => patchForm({ taskKind: event.target.value as TaskKind })}
+                      >
+                        <option value="task">Task</option>
+                        <option value="subtask">Subtask</option>
+                        <option value="research">Research</option>
+                        <option value="polish">Polish</option>
+                      </select>
+                    </label>
                   </div>
 
                   <label>
@@ -1177,6 +1257,84 @@ export function App(): React.JSX.Element {
                     >
                       {selectedTask.relativePath}
                     </button>
+                  </div>
+
+                  <div className="detail-section">
+                    <div className="detail-section-header">
+                      <strong>Structuur</strong>
+                      <div className="detail-section-actions">
+                        <button
+                          className="mini-button"
+                          onClick={() => vscode.postMessage({ type: 'createSubtask', parentTaskId: selectedTask.id })}
+                        >
+                          Nieuwe subtask
+                        </button>
+                        <button
+                          className="mini-button"
+                          onClick={() =>
+                            vscode.postMessage({
+                              type: 'setEpicLink',
+                              taskId: selectedTask.id,
+                              expectedVersion: selectedTask.version,
+                            })
+                          }
+                        >
+                          Koppel epic
+                        </button>
+                        <button
+                          className="mini-button"
+                          onClick={() =>
+                            vscode.postMessage({
+                              type: 'addDependency',
+                              taskId: selectedTask.id,
+                              expectedVersion: selectedTask.version,
+                            })
+                          }
+                        >
+                          Dependency
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="detail-meta-grid">
+                      <span className="muted-copy">Epic</span>
+                      <span>{selectedTask.epicId ?? '—'}</span>
+                      <span className="muted-copy">Parent task</span>
+                      <span>{selectedTask.parentTaskId ?? '—'}</span>
+                      <span className="muted-copy">Type</span>
+                      <span>{selectedTask.taskKind}</span>
+                      <span className="muted-copy">Blocked</span>
+                      <span>{selectedTask.isBlocked ? 'Ja' : 'Nee'}</span>
+                    </div>
+
+                    <TaskRelationList
+                      title="Subtasks"
+                      ids={selectedTask.subtaskIds}
+                      cardsById={cardMap}
+                      onOpenTask={selectTask}
+                      emptyLabel="Geen subtasks."
+                    />
+                    <TaskRelationList
+                      title="Blocked by"
+                      ids={selectedTask.blockedByIds}
+                      cardsById={cardMap}
+                      onOpenTask={selectTask}
+                      emptyLabel="Geen blockers."
+                    />
+                    <TaskRelationList
+                      title="Blocks"
+                      ids={selectedTask.blockingIds}
+                      cardsById={cardMap}
+                      onOpenTask={selectTask}
+                      emptyLabel="Blokkeert niets."
+                    />
+                    <TaskRelationList
+                      title="Follows after"
+                      ids={selectedTask.followsAfter}
+                      cardsById={cardMap}
+                      onOpenTask={selectTask}
+                      emptyLabel="Geen vervolgvolgorde vastgelegd."
+                    />
                   </div>
 
                   <div className="detail-section">
@@ -1375,6 +1533,48 @@ export function App(): React.JSX.Element {
     setSortDirection(nextDirection);
   }
 
+  function applyQuickView(view: 'epic_planning' | 'blocked' | 'my_next_tasks' | 'loose_tasks'): void {
+    if (view === 'epic_planning') {
+      setActiveView('epics');
+      setFilters({
+        ...EMPTY_FILTERS,
+        hierarchy: 'has_epic',
+      });
+      applySortChange('manual');
+      return;
+    }
+
+    if (view === 'blocked') {
+      setActiveView('list');
+      setFilters({
+        ...EMPTY_FILTERS,
+        hierarchy: 'blocked',
+        onlyOpen: true,
+      });
+      applySortChange('manual');
+      return;
+    }
+
+    if (view === 'my_next_tasks') {
+      setActiveView('list');
+      setFilters({
+        ...EMPTY_FILTERS,
+        hierarchy: 'ready_to_start',
+        onlyOpen: true,
+      });
+      applySortChange('manual');
+      return;
+    }
+
+    setActiveView('list');
+    setFilters({
+      ...EMPTY_FILTERS,
+      hierarchy: 'no_epic',
+      onlyOpen: true,
+    });
+    applySortChange('manual');
+  }
+
   function handleHeaderSort(column: ListSortColumn): void {
     const next = nextSortStateFromHeader({ sort, direction: sortDirection }, column);
     applySortChange(next.sort, next.direction);
@@ -1412,6 +1612,7 @@ export function App(): React.JSX.Element {
         title: formState.title.trim(),
         status: formState.status,
         priority: formState.priority,
+        taskKind: formState.taskKind,
         summary: formState.summary.trim(),
         tags: splitTags(formState.tags),
         dueDate: formState.dueDate || null,
@@ -1581,6 +1782,9 @@ function isFormDirty(task: TaskCardViewModel | null, formState: MetadataFormStat
   if (formState.priority !== task.priority) {
     return true;
   }
+  if (formState.taskKind !== task.taskKind) {
+    return true;
+  }
   if (formState.summary.trim() !== task.summary) {
     return true;
   }
@@ -1596,6 +1800,91 @@ function IconButton(props: { active: boolean; label: string; icon: string; onCli
     <button className={`rail-button rail-icon-button ${props.active ? 'active' : ''}`} onClick={props.onClick} title={props.label} aria-label={props.label}>
       <span className="rail-button-icon" aria-hidden="true">{props.icon}</span>
     </button>
+  );
+}
+
+function EpicCard(props: {
+  epic: EpicViewModel;
+  cardsById: Map<string, TaskCardViewModel>;
+  onOpenTask: (taskId: string) => void;
+}): React.JSX.Element {
+  const cards = props.epic.linkedTaskIds
+    .map((taskId) => props.cardsById.get(taskId))
+    .filter((card): card is TaskCardViewModel => Boolean(card));
+
+  return (
+    <article className="epic-card">
+      <div className="epic-card-header">
+        <div className="epic-card-copy">
+          <div className="eyebrow">Epic</div>
+          <h2>{props.epic.title}</h2>
+          <p className="muted-copy">{props.epic.summary || 'Geen samenvatting.'}</p>
+        </div>
+        <div className="epic-card-badges">
+          <span className={`priority-badge ${props.epic.priority}`}>{props.epic.priority.toUpperCase()}</span>
+          <StatusBadge status={props.epic.status} />
+        </div>
+      </div>
+
+      <div className="epic-stats">
+        <StatusChip>{props.epic.openTaskCount} open</StatusChip>
+        <StatusChip>{props.epic.doneTaskCount} done</StatusChip>
+        <StatusChip>{props.epic.blockedTaskIds.length} blocked</StatusChip>
+        <StatusChip>{props.epic.subtaskIds.length} subtasks</StatusChip>
+      </div>
+
+      <div className="relationship-list">
+        {cards.length > 0 ? (
+          cards.map((card) => (
+            <button key={card.id} className="relationship-item" onClick={() => props.onOpenTask(card.id)}>
+              <span className="relationship-main">
+                <span className="relationship-title">{card.title}</span>
+                <span className="relationship-meta">
+                  {STATUS_LABELS[card.status]} · {card.taskKind}
+                </span>
+              </span>
+              {card.isBlocked ? <span className="relationship-badge">Blocked</span> : null}
+            </button>
+          ))
+        ) : (
+          <p className="muted-copy">Geen linked tasks.</p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function TaskRelationList(props: {
+  title: string;
+  ids: string[];
+  cardsById: Map<string, TaskCardViewModel>;
+  onOpenTask: (taskId: string) => void;
+  emptyLabel: string;
+}): React.JSX.Element {
+  const cards = props.ids
+    .map((taskId) => props.cardsById.get(taskId))
+    .filter((card): card is TaskCardViewModel => Boolean(card));
+
+  return (
+    <div className="relationship-block">
+      <span className="muted-copy">{props.title}</span>
+      {cards.length > 0 ? (
+        <div className="relationship-list">
+          {cards.map((card) => (
+            <button key={card.id} className="relationship-item" onClick={() => props.onOpenTask(card.id)}>
+              <span className="relationship-main">
+                <span className="relationship-title">{card.title}</span>
+                <span className="relationship-meta">
+                  {STATUS_LABELS[card.status]} · {card.taskKind}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <span className="muted-copy">{props.emptyLabel}</span>
+      )}
+    </div>
   );
 }
 
@@ -1673,8 +1962,39 @@ function matchesFilters(card: TaskCardViewModel, search: string, filters: Filter
   if (!matchesDueFilter(card.dueDate, filters.due)) {
     return false;
   }
+  if (!matchesHierarchyFilter(card, filters.hierarchy)) {
+    return false;
+  }
 
   return true;
+}
+
+function matchesEpicSearch(epic: EpicViewModel, search: string): boolean {
+  const query = search.trim().toLowerCase();
+  if (!query) {
+    return true;
+  }
+
+  return [epic.title, epic.summary, epic.id, epic.relativePath].join(' ').toLowerCase().includes(query);
+}
+
+function matchesHierarchyFilter(card: TaskCardViewModel, filter: HierarchyFilter): boolean {
+  if (filter === 'all') {
+    return true;
+  }
+  if (filter === 'has_epic') {
+    return Boolean(card.epicId);
+  }
+  if (filter === 'no_epic') {
+    return !card.epicId;
+  }
+  if (filter === 'has_subtasks') {
+    return card.subtaskIds.length > 0;
+  }
+  if (filter === 'blocked') {
+    return card.isBlocked;
+  }
+  return card.isReadyToStart;
 }
 
 function matchesDueFilter(dueDate: string | null, filter: DueFilter): boolean {
@@ -1826,9 +2146,9 @@ function toMetadataFormState(task: TaskCardViewModel): MetadataFormState {
     title: task.title,
     status: task.status,
     priority: task.priority,
+    taskKind: task.taskKind,
     summary: task.summary,
     tags: task.tags.join(', '),
     dueDate: task.dueDate ?? '',
   };
 }
-

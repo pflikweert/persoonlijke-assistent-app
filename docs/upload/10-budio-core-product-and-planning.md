@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-04-26T22:50:09.861Z
-Source Commit: dbe712d
+Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
+Source Commit: ad43300
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-04-26T22:50:09.861Z
-Source Commit: dbe712d
+Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
+Source Commit: ad43300
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -67,6 +67,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 
 - `docs/project/10-strategy/**` = lange termijn richting (horizon)
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
+- `docs/project/24-epics/**` = operationele bovenlaag voor grotere werkpakketten boven tasks
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
 - `docs/project/00-docs-governance/**` = audience, metadata en docs-visual-language afspraken
@@ -81,6 +82,7 @@ Regel:
 
 - Strategy hub
 - Planning hub
+- Epics hub
 - Tasks hub
 - Research hub
 - Ideas workspace
@@ -178,6 +180,17 @@ Regel:
 - task-docs zijn operationeel voor de huidige fase en ondergeschikt aan canonieke productwaarheid en actieve planning
 - open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
 - `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
+
+## 3ea) Epic-documenten (operationele bundellaag)
+
+- `docs/project/24-epics/**`
+
+Regel:
+
+- epic-docs zijn een lichte operationele laag voor groter werk dat uit meerdere tasks bestaat
+- epics vervangen geen taskfiles; `25-tasks/**` blijft de uitvoerlaag
+- epics zijn niet canoniek en niet automatisch planningwaarheid
+- epics leggen vooral scope, linked tasks, volgorde en dependencies vast
 
 ## 4) Docs audience en visual language
 
@@ -2685,6 +2698,7 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 Regels:
 
 - `docs/project/**` = canonieke projectwaarheid.
+- `docs/project/24-epics/**` = operationele bundellaag voor groter werk boven tasks.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
 - `docs/project/generated/**` en `docs/design/generated/**` = generated output; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
@@ -2729,6 +2743,7 @@ Regels:
   - tijdelijke sessiecontext: `docs/dev/active-context.md`
   - statuswaarheid: `docs/project/current-status.md`
   - echte gaps/onzekerheden: `docs/project/open-points.md`
+  - operationele epics/projectbundels: `docs/project/24-epics/**`
   - operationele taken: `docs/project/25-tasks/**`
 
 ## Active context tussen sessies
@@ -2808,6 +2823,7 @@ Gebruik Act mode voor:
 
 - Begin met expliciete todo/checklist.
 - Maak of vind vóór het plan eerst de taskfile.
+- Gebruik bij groter gelinkt werk ook het relevante epic-doc als planningsanker wanneer dat bestaat.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
 - Behandel het laatst besproken subprobleem nooit automatisch als de nieuwe hoofdscope.

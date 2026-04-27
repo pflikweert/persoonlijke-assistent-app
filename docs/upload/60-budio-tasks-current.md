@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-26T22:50:09.861Z
-Source Commit: dbe712d
+Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
+Source Commit: ad43300
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -607,12 +607,18 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-04-26
-summary: "Research- en startpunt vastleggen voor een lokale Budio Workspace Command Room die leert van Linear en Cline Kanban en later Codex-ready kan worden."
+summary: Research- en startpunt vastleggen voor een lokale Budio Workspace Command Room die leert van Linear en Cline Kanban en later Codex-ready kan worden.
 tags: [idea, research, plugin, workspace, linear, cline, codex]
 workstream: plugin
+epic_id: epic-budio-workspace-hierarchy-linear-lite
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: research
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -711,6 +717,11 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 - `docs/project/20-planning/50-budio-workspace-plugin-focus.md`
 - `docs/project/40-ideas/40-platform-and-architecture/100-linear-geinspireerde-budio-workspace-structuurlaag.md`
 - `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+
+
+## Commits
+
+- ad43300 — chore: commit all remaining local changes
 ```
 
 ---
@@ -1569,6 +1580,7 @@ sort_order: 6
 ---
 
 
+
 # Budio Workspace activity-bar opent list view zonder workspace-menu
 
 ## Probleem / context
@@ -1908,6 +1920,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 ## Commits
 
 - dbe712d — docs(task): update plugin task status with unresolved bugs and 3-phase plan
+
+- a9e2961 — docs(task): add selection bug to plugin task status
 ```
 
 ---

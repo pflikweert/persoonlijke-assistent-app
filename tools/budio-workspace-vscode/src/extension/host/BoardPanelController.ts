@@ -11,7 +11,7 @@ import type {
 import { getBoardWebviewHtml } from '../../webview-bridge/getWebviewHtml';
 import { getPrimaryWorkspaceFolder, readWorkspaceSettings } from './config';
 
-type PanelView = 'board' | 'list' | 'settings';
+type PanelView = 'board' | 'list' | 'epics' | 'settings';
 
 export class BoardPanelController implements vscode.Disposable {
   private static readonly BACKGROUND_REFRESH_MS = 30000;
@@ -120,6 +120,118 @@ export class BoardPanelController implements vscode.Disposable {
     });
   }
 
+  async createSubtask(parentTaskId: string): Promise<void> {
+    const parentTask = this.lastTasks.get(parentTaskId);
+    if (!parentTask) {
+      return;
+    }
+
+    const title = await vscode.window.showInputBox({
+      title: 'Nieuwe subtask',
+      prompt: `Subtask voor ${parentTask.title}`,
+      placeHolder: 'Bijvoorbeeld: Parser-test voor epic metadata toevoegen',
+      ignoreFocusOut: true,
+      validateInput: (value) => (value.trim().length < 3 ? 'Geef een titel van minimaal 3 tekens.' : null),
+    });
+
+    if (!title) {
+      return;
+    }
+
+    await this.withRepository(async (repository) => {
+      const result = await repository.createTask({
+        title,
+        status: 'ready',
+        priority: parentTask.priority,
+        phase: parentTask.phase,
+        source: parentTask.relativePath,
+        workstream: parentTask.workstream ?? 'plugin',
+        epicId: parentTask.epicId,
+        parentTaskId: parentTask.id,
+        taskKind: 'subtask',
+      });
+      await this.publishSnapshot({ focusTaskId: result.taskId });
+      await vscode.window.showInformationMessage(`Subtask aangemaakt: ${path.basename(result.path)}`);
+    });
+  }
+
+  async setEpicLink(taskId: string, expectedVersion: { mtimeMs: number; hash: string }): Promise<void> {
+    const task = this.lastTasks.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    await this.withRepository(async (repository) => {
+      const epics = await repository.scanEpics();
+      const picked = await vscode.window.showQuickPick(
+        [
+          { label: 'Geen epic', description: 'Verwijder huidige epic-link', id: '' },
+          ...epics.map((epic) => ({
+            label: epic.title,
+            description: epic.id,
+            id: epic.id,
+          })),
+        ],
+        {
+          title: 'Koppel taak aan epic',
+          placeHolder: 'Kies een epic voor deze taak',
+          ignoreFocusOut: true,
+        },
+      );
+
+      if (!picked) {
+        return;
+      }
+
+      await repository.updateTaskFields(taskId, expectedVersion, {
+        epicId: picked.id || null,
+      });
+      await this.publishSnapshot({ focusTaskId: taskId });
+      await vscode.window.showInformationMessage(
+        picked.id ? `Epic gekoppeld: ${picked.description}` : 'Epic-link verwijderd.',
+      );
+    });
+  }
+
+  async addDependency(taskId: string, expectedVersion: { mtimeMs: number; hash: string }): Promise<void> {
+    const task = this.lastTasks.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    await this.withRepository(async (repository) => {
+      const tasks = await repository.scan();
+      const candidates = tasks
+        .filter((candidate) => candidate.id !== taskId)
+        .sort((left, right) => left.title.localeCompare(right.title));
+
+      const picked = await vscode.window.showQuickPick(
+        candidates.map((candidate) => ({
+          label: candidate.title,
+          description: candidate.id,
+          detail: candidate.relativePath,
+          id: candidate.id,
+        })),
+        {
+          title: 'Voeg dependency toe',
+          placeHolder: 'Kies een task die eerst klaar moet zijn',
+          ignoreFocusOut: true,
+        },
+      );
+
+      if (!picked) {
+        return;
+      }
+
+      const nextDependsOn = [...new Set([...(task.dependsOn ?? []), picked.id])];
+      await repository.updateTaskFields(taskId, expectedVersion, {
+        dependsOn: nextDependsOn,
+      });
+      await this.publishSnapshot({ focusTaskId: taskId });
+      await vscode.window.showInformationMessage(`Dependency toegevoegd: ${picked.description}`);
+    });
+  }
+
   private async handleMessage(message: WebviewToHostMessage): Promise<void> {
     if (message.type === 'ready') {
       await this.publishSnapshot();
@@ -138,6 +250,21 @@ export class BoardPanelController implements vscode.Disposable {
 
     if (message.type === 'createTask') {
       await this.createTask(message.status);
+      return;
+    }
+
+    if (message.type === 'createSubtask') {
+      await this.createSubtask(message.parentTaskId);
+      return;
+    }
+
+    if (message.type === 'setEpicLink') {
+      await this.setEpicLink(message.taskId, message.expectedVersion);
+      return;
+    }
+
+    if (message.type === 'addDependency') {
+      await this.addDependency(message.taskId, message.expectedVersion);
       return;
     }
 
@@ -281,13 +408,18 @@ export class BoardPanelController implements vscode.Disposable {
 
     try {
       const settings = readWorkspaceSettings(workspaceFolder);
-      const repository = new TaskRepository(workspaceFolder.uri.fsPath, settings.tasksRoot);
-      const tasks = await repository.scan();
+      const repository = new TaskRepository(
+        workspaceFolder.uri.fsPath,
+        settings.tasksRoot,
+        settings.epicsRoot,
+      );
+      const [tasks, epics] = await Promise.all([repository.scan(), repository.scanEpics()]);
       this.lastTasks = new Map(tasks.map((task) => [task.id, task]));
       const resolvedFocusTaskId = options?.focusTaskId ?? this.resolveFocusedTaskId(tasks);
       this.lastFocusedTaskId = resolvedFocusTaskId ?? null;
       const snapshot = buildBoardSnapshot({
         tasks,
+        epics,
         settings,
         workspaceName: workspaceFolder.name,
         workspacePath: workspaceFolder.uri.fsPath,
@@ -354,7 +486,7 @@ export class BoardPanelController implements vscode.Disposable {
       throw new Error('Geen workspace geopend.');
     }
     const settings = readWorkspaceSettings(workspaceFolder);
-    const repository = new TaskRepository(workspaceFolder.uri.fsPath, settings.tasksRoot);
+    const repository = new TaskRepository(workspaceFolder.uri.fsPath, settings.tasksRoot, settings.epicsRoot);
     await action(repository);
   }
 
@@ -368,7 +500,7 @@ export class BoardPanelController implements vscode.Disposable {
     }
 
     const settings = readWorkspaceSettings(workspaceFolder);
-    this.watcher = createTaskWatcher(workspaceFolder, settings.tasksRoot, () => {
+    this.watcher = createTaskWatcher(workspaceFolder, [settings.tasksRoot, settings.epicsRoot], () => {
       this.scheduleWatcherRefresh();
     });
   }

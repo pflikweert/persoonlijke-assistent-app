@@ -1,6 +1,7 @@
 import type {
   DEFAULT_COLUMNS,
   TASK_PRIORITIES,
+  TASK_KINDS,
   TASK_SORTS,
   TASK_STATUSES,
   TASK_WORKSTREAMS,
@@ -10,6 +11,7 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 export type TaskSort = (typeof TASK_SORTS)[number];
 export type TaskWorkstream = (typeof TASK_WORKSTREAMS)[number];
+export type TaskKind = (typeof TASK_KINDS)[number];
 export type TaskBucket = 'open' | 'done' | 'archived';
 export type FrontmatterValue = string | number | boolean | string[] | null;
 
@@ -43,6 +45,11 @@ export interface ParsedTaskFile {
   summary: string;
   tags: string[];
   workstream: TaskWorkstream | null;
+  epicId: string | null;
+  parentTaskId: string | null;
+  dependsOn: string[];
+  followsAfter: string[];
+  taskKind: TaskKind;
   dueDate: string | null;
   sortOrder: number | null;
   checklist: ChecklistItem[];
@@ -78,6 +85,16 @@ export interface TaskCardViewModel {
   priority: TaskPriority;
   tags: string[];
   workstream: TaskWorkstream | null;
+  epicId: string | null;
+  parentTaskId: string | null;
+  dependsOn: string[];
+  followsAfter: string[];
+  taskKind: TaskKind;
+  subtaskIds: string[];
+  blockedByIds: string[];
+  blockingIds: string[];
+  isBlocked: boolean;
+  isReadyToStart: boolean;
   dueDate: string | null;
   checklistProgress: {
     completed: number;
@@ -113,8 +130,48 @@ export interface BoardColumn {
   cards: TaskCardViewModel[];
 }
 
+export interface ParsedEpicFile {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  owner: string | null;
+  phase: string;
+  updatedAt: string;
+  summary: string;
+  sortOrder: number | null;
+  sourcePath: string;
+  relativePath: string;
+  body: string;
+  raw: string;
+  version: FileVersion;
+  frontmatterValues: Record<string, FrontmatterValue>;
+  frontmatterOrder: string[];
+}
+
+export interface EpicViewModel {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  owner: string | null;
+  phase: string;
+  updatedAt: string;
+  summary: string;
+  sortOrder: number | null;
+  relativePath: string;
+  linkedTaskIds: string[];
+  directTaskIds: string[];
+  subtaskIds: string[];
+  blockedTaskIds: string[];
+  readyTaskIds: string[];
+  doneTaskCount: number;
+  openTaskCount: number;
+}
+
 export interface WorkspaceSettings {
   tasksRoot: string;
+  epicsRoot: string;
   columns: TaskStatus[];
   showDoneColumn: boolean;
   defaultSort: TaskSort;
@@ -124,10 +181,12 @@ export interface BoardSnapshot {
   workspaceName: string;
   workspacePath: string;
   tasksRoot: string;
+  epicsRoot: string;
   generatedAt: string;
   sort: TaskSort;
   columns: BoardColumn[];
   allCards: TaskCardViewModel[];
+  epics: EpicViewModel[];
   totalTasks: number;
   openTaskCount: number;
   doneTaskCount: number;
@@ -141,6 +200,11 @@ export interface TaskFieldPatch {
   summary?: string;
   tags?: string[];
   workstream?: TaskWorkstream | null;
+  epicId?: string | null;
+  parentTaskId?: string | null;
+  dependsOn?: string[];
+  followsAfter?: string[];
+  taskKind?: TaskKind;
   dueDate?: string | null;
   sortOrder?: number | null;
   updatedAt?: string;
@@ -169,6 +233,11 @@ export interface CreateTaskInput {
   summary?: string;
   tags?: string[];
   workstream?: TaskWorkstream;
+  epicId?: string | null;
+  parentTaskId?: string | null;
+  dependsOn?: string[];
+  followsAfter?: string[];
+  taskKind?: TaskKind;
   dueDate?: string | null;
   sortOrder?: number | null;
 }

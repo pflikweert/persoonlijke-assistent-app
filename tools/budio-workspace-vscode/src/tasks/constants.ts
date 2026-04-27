@@ -1,6 +1,7 @@
 export const TASK_STATUSES = ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'] as const;
 export const TASK_PRIORITIES = ['p1', 'p2', 'p3'] as const;
 export const TASK_WORKSTREAMS = ['idea', 'plugin', 'app', 'aiqs'] as const;
+export const TASK_KINDS = ['task', 'subtask', 'research', 'polish'] as const;
 export const TASK_SORTS = [
   'manual',
   'lane_order',
@@ -28,6 +29,11 @@ export const TASK_OPTIONAL_FIELDS = [
   'workstream',
   'due_date',
   'sort_order',
+  'epic_id',
+  'parent_task_id',
+  'depends_on',
+  'follows_after',
+  'task_kind',
   'active_agent',
   'active_agent_model',
   'active_agent_runtime',
@@ -45,6 +51,11 @@ export const PLUGIN_OWNED_FRONTMATTER_FIELDS = [
   'workstream',
   'due_date',
   'sort_order',
+  'epic_id',
+  'parent_task_id',
+  'depends_on',
+  'follows_after',
+  'task_kind',
   'updated_at',
   'active_agent',
   'active_agent_model',

@@ -44,6 +44,21 @@ export function applyTaskFieldPatch(task: ParsedTaskFile, patch: TaskFieldPatch)
   if (patch.workstream !== undefined) {
     nextFrontmatter.workstream = patch.workstream;
   }
+  if (patch.epicId !== undefined) {
+    nextFrontmatter.epic_id = patch.epicId;
+  }
+  if (patch.parentTaskId !== undefined) {
+    nextFrontmatter.parent_task_id = patch.parentTaskId;
+  }
+  if (patch.dependsOn !== undefined) {
+    nextFrontmatter.depends_on = patch.dependsOn;
+  }
+  if (patch.followsAfter !== undefined) {
+    nextFrontmatter.follows_after = patch.followsAfter;
+  }
+  if (patch.taskKind !== undefined) {
+    nextFrontmatter.task_kind = patch.taskKind;
+  }
   if (patch.dueDate !== undefined) {
     nextFrontmatter.due_date = patch.dueDate;
   }
@@ -122,6 +137,11 @@ export function buildNewTaskContent(input: CreateTaskInput & { id: string; updat
     summary: input.summary?.trim() ?? '',
     tags: input.tags ?? [],
     workstream: input.workstream ?? 'app',
+    epic_id: input.epicId ?? null,
+    parent_task_id: input.parentTaskId ?? null,
+    depends_on: input.dependsOn ?? [],
+    follows_after: input.followsAfter ?? [],
+    task_kind: input.taskKind ?? 'task',
     due_date: input.dueDate ?? null,
     sort_order: input.sortOrder ?? null,
     active_agent: null,

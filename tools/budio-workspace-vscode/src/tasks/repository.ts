@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { scanTaskDocuments } from './scanner';
+import { scanEpicDocuments, scanTaskDocuments } from './scanner';
 import { applyChecklistToggle, applyTaskFieldPatch, buildNewTaskContent, buildTargetPathForStatus } from './writer';
 import type {
   CreateTaskInput,
   FileVersion,
+  ParsedEpicFile,
   MoveTaskInput,
   ParsedTaskFile,
   TaskFieldPatch,
@@ -15,10 +16,15 @@ export class TaskRepository {
   constructor(
     private readonly workspaceRoot: string,
     private readonly tasksRootRelative: string,
+    private readonly epicsRootRelative = 'docs/project/24-epics',
   ) {}
 
   async scan(): Promise<ParsedTaskFile[]> {
     return scanTaskDocuments(this.workspaceRoot, this.tasksRootRelative);
+  }
+
+  async scanEpics(): Promise<ParsedEpicFile[]> {
+    return scanEpicDocuments(this.workspaceRoot, this.epicsRootRelative);
   }
 
   async updateTaskFields(

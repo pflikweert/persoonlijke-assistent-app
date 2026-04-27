@@ -2,8 +2,8 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-04-26T22:50:09.861Z
-Source Commit: dbe712d
+Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
+Source Commit: ad43300
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -211,6 +211,7 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 Regels:
 
 - `docs/project/**` = canonieke projectwaarheid.
+- `docs/project/24-epics/**` = operationele bundellaag voor groter werk boven tasks.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
 - `docs/project/generated/**` en `docs/design/generated/**` = generated output; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
@@ -235,8 +236,7 @@ Regels:
 
 ## Design-implementatie guardrails (operationeel)
 
-- `theme/tokens.ts` is de enige tokenbron; afgeleide configbestanden zijn niet leidend.
-- Gebruik ee
+- `theme/tokens
 
 [Excerpt truncated for compact generated handoff; use the source markdown for full screen-specific detail.]
 

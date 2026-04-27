@@ -12,6 +12,12 @@ Deze map is bedoeld voor uitvoeringssturing, niet als nieuwe canonieke productwa
 3. Verplaats een taak pas naar `docs/project/25-tasks/done/` wanneer de status `done` is.
 4. Draai daarna `npm run docs:bundle` en `npm run docs:bundle:verify`.
 
+Bij groter samenhangend werk:
+
+- gebruik eventueel een parent epic in `docs/project/24-epics/**`
+- tasks blijven de uitvoerlaag, ook wanneer ze aan een epic hangen
+- subtasks blijven gewone taskfiles met `task_kind: subtask` en een `parent_task_id`
+
 ## Statusmodel
 
 - `backlog`
@@ -31,6 +37,22 @@ Gebruik in task frontmatter het veld `workstream` met één van deze waarden:
 - `aiqs` = AI Quality Studio
 
 Doel: eenduidige routing en filterbaarheid in de plugin (board + list).
+
+## Lichte hiërarchie
+
+Taskfiles kunnen optioneel deze extra frontmattervelden gebruiken:
+
+- `epic_id` = koppelt de task aan een epic-doc
+- `parent_task_id` = maakt van de task een subtask van een andere task
+- `depends_on` = lijst met task ids die eerst klaar moeten zijn
+- `follows_after` = lijst met task ids waar deze task logisch na komt
+- `task_kind` = compacte soort, bijvoorbeeld `task`, `subtask`, `research` of `polish`
+
+Regels:
+
+- parent/child en dependencies zijn niet hetzelfde
+- gebruik dependencies voor volgorde/blokkade, niet als vervanging voor subtasks
+- laat bestaande vlakke taskfiles ongemoeid als hiërarchie niet nodig is
 
 ## Taakindex
 <!-- TASK_INDEX:START -->
@@ -85,6 +107,7 @@ _Geen taken._
 | [Actieve maandplanning herijkt naar transitiemaand](done/actieve-maandplanning-herijkt-naar-transitiemaand.md) | p1 | transitiemaand-consumer-beta | Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een smalle brugpilot expliciet prioriteit krijgen. |
 | [Always-on taskflow enforcement (agent-onafhankelijk)](done/always-on-taskflow-enforcement-agent-onafhankelijk.md) | p1 | transitiemaand-consumer-beta | Elke inhoudelijke agentsessie (plan/research/bug/implementatie) loopt automatisch via een taskfile in `docs/project/25-tasks/**`, inclusi... |
 | [Audio-instellingen testadvies stabiliseren en mic-selectie polish](done/audio-instellingen-testadvies-stabiliseren-en-mic-selectie-polish.md) | p1 | transitiemaand-consumer-beta | Op het scherm Audio Instellingen is het advies tijdens testen rustiger en gebaseerd op langere sampleperiodes. Het eerste advies komt pas... |
+| [Budio Workspace hierarchy met epics, subtasks en dependencies](done/budio-workspace-hierarchy-epics-subtasks-dependencies.md) | p1 | transitiemaand-consumer-beta | De repo krijgt een kleine operationele epic-laag boven `docs/project/25-tasks/**`, plus lichte hiërarchievelden in taskfiles. De plugin k... |
 | [Entry photo gallery QA-basis: unit, smoke en end-user tests](done/entry-photo-gallery-qa-basis-unit-smoke-e2e.md) | p1 | transitiemaand-consumer-beta | Er is een eerste QA-basis voor de entry photo gallery: snelle unit-tests voor complexe sorteerlogica, scripts voor gallery smoke/full tes... |
 | [GitHub Actions Node 24 hardening en lokale Node-align](done/github-actions-node24-hardening-en-lokale-node-align.md) | p1 | transitiemaand-consumer-beta | GitHub workflows gebruiken actuele Node-24-compatibele action-versies, zodat de tijdelijke warning-constructie niet meer nodig is of mini... |
 | [GitHub deployment Node/NPM-versie diagnose](done/github-deployment-node-npm-versie-diagnose.md) | p1 | transitiemaand-consumer-beta | Er ligt een korte diagnose met: - actuele repo Node/NPM-config - actuele GitHub Actions deployment-config - relevante recente GitHub run/... |

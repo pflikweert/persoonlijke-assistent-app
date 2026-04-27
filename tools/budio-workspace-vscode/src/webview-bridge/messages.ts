@@ -7,7 +7,7 @@ import type {
 } from '../tasks/types';
 
 export type HostToWebviewMessage =
-  | { type: 'hydrateBoard'; snapshot: BoardSnapshot; focusTaskId?: string; view?: 'board' | 'list' | 'settings' }
+  | { type: 'hydrateBoard'; snapshot: BoardSnapshot; focusTaskId?: string; view?: 'board' | 'list' | 'epics' | 'settings' }
   | { type: 'refreshStarted' }
   | { type: 'refreshCompleted' }
   | { type: 'refreshFailed'; message: string }
@@ -15,7 +15,7 @@ export type HostToWebviewMessage =
   | { type: 'saveCompleted'; message: string }
   | { type: 'saveFailed'; message: string }
   | { type: 'conflictDetected'; message: string }
-  | { type: 'switchView'; view: 'board' | 'list' | 'settings' };
+  | { type: 'switchView'; view: 'board' | 'list' | 'epics' | 'settings' };
 
 export type WebviewToHostMessage =
   | { type: 'ready' }
@@ -47,6 +47,20 @@ export type WebviewToHostMessage =
       title?: string;
     }
   | {
+      type: 'createSubtask';
+      parentTaskId: string;
+    }
+  | {
+      type: 'setEpicLink';
+      taskId: string;
+      expectedVersion: FileVersion;
+    }
+  | {
+      type: 'addDependency';
+      taskId: string;
+      expectedVersion: FileVersion;
+    }
+  | {
       type: 'openSourceFile';
       taskId: string;
     }
@@ -70,7 +84,7 @@ export type WebviewToHostMessage =
     }
   | {
       type: 'switchView';
-      view: 'board' | 'list' | 'settings';
+      view: 'board' | 'list' | 'epics' | 'settings';
     }
   | {
       type: 'updateSetting';

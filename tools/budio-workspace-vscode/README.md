@@ -1,6 +1,6 @@
 # Budio Workspace VS Code Extension
 
-Lokale VS Code board-plugin voor `docs/project/25-tasks/**/*.md`.
+Lokale VS Code board-plugin voor `docs/project/25-tasks/**/*.md`, met een lichte epic-laag uit `docs/project/24-epics/**/*.md`.
 
 ## License en gebruiksrechten
 - Deze extensie is **source-visible maar niet open source**.
@@ -33,6 +33,8 @@ Lokale VS Code board-plugin voor `docs/project/25-tasks/**/*.md`.
 
 ## MVP
 - board + list + settings views
+- epics overview met linked tasks
+- subtasks en dependency-relaties in task detail
 - drag/drop met markdown writeback
 - detailpane met veilige metadata-editing
 - live refresh via file watcher

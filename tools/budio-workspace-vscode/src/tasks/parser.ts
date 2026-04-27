@@ -1,11 +1,18 @@
 import path from 'node:path';
-import { CONCRETE_CHECKLIST_HEADING, TASK_PRIORITIES, TASK_STATUSES, TASK_WORKSTREAMS } from './constants';
+import {
+  CONCRETE_CHECKLIST_HEADING,
+  TASK_KINDS,
+  TASK_PRIORITIES,
+  TASK_STATUSES,
+  TASK_WORKSTREAMS,
+} from './constants';
 import type {
   ChecklistItem,
   FileVersion,
   FrontmatterValue,
   ParsedTaskFile,
   TaskBucket,
+  TaskKind,
   TaskPriority,
   TaskSectionRange,
   TaskStatus,
@@ -49,6 +56,11 @@ export function parseTaskFile(input: {
   const summary = normalizeSummaryText(readOptionalString(frontmatterValues.summary) ?? deriveSummary(sections));
   const tags = readStringArray(frontmatterValues.tags);
   const workstream = readTaskWorkstream(frontmatterValues.workstream);
+  const epicId = readOptionalString(frontmatterValues.epic_id);
+  const parentTaskId = readOptionalString(frontmatterValues.parent_task_id);
+  const dependsOn = readStringArray(frontmatterValues.depends_on);
+  const followsAfter = readStringArray(frontmatterValues.follows_after);
+  const taskKind = readTaskKind(frontmatterValues.task_kind);
   const dueDate = readOptionalString(frontmatterValues.due_date);
   const sortOrder = readOptionalNumber(frontmatterValues.sort_order);
   const activeAgent = readOptionalString(frontmatterValues.active_agent);
@@ -71,6 +83,11 @@ export function parseTaskFile(input: {
     summary,
     tags,
     workstream,
+    epicId,
+    parentTaskId,
+    dependsOn,
+    followsAfter,
+    taskKind,
     dueDate,
     sortOrder,
     activeAgent,
@@ -289,6 +306,13 @@ function readTaskWorkstream(value: FrontmatterValue | undefined): TaskWorkstream
     return null;
   }
   return TASK_WORKSTREAMS.includes(value as TaskWorkstream) ? (value as TaskWorkstream) : null;
+}
+
+function readTaskKind(value: FrontmatterValue | undefined): TaskKind {
+  if (typeof value !== 'string' || !value.trim()) {
+    return 'task';
+  }
+  return TASK_KINDS.includes(value as TaskKind) ? (value as TaskKind) : 'task';
 }
 
 function stripQuotes(input: string): string {

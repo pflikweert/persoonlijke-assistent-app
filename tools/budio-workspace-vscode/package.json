@@ -54,6 +54,11 @@
           "default": "docs/project/25-tasks",
           "description": "Relative path to the task root folder."
         },
+        "budioWorkspace.epicsRoot": {
+          "type": "string",
+          "default": "docs/project/24-epics",
+          "description": "Relative path to the epic root folder."
+        },
         "budioWorkspace.columns": {
           "type": "array",
           "default": [

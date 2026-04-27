@@ -18,6 +18,7 @@ export function readWorkspaceSettings(workspaceFolder: vscode.WorkspaceFolder): 
 
   return {
     tasksRoot: sanitizeRelativePath(configuration.get<string>('tasksRoot', 'docs/project/25-tasks')),
+    epicsRoot: sanitizeRelativePath(configuration.get<string>('epicsRoot', 'docs/project/24-epics')),
     columns: columns.length > 0 ? columns : [...DEFAULT_COLUMNS],
     showDoneColumn: configuration.get<boolean>('showDoneColumn', true),
     defaultSort,

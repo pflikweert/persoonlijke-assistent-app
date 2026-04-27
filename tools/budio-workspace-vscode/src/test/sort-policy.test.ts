@@ -4,7 +4,20 @@ import { sortTaskCards } from '../tasks/sort-policy';
 import type { TaskCardViewModel } from '../tasks/types';
 
 function card(overrides: Partial<TaskCardViewModel>): TaskCardViewModel {
-  const { workstream = null, ...restOverrides } = overrides;
+  const {
+    workstream = null,
+    epicId = null,
+    parentTaskId = null,
+    dependsOn = [],
+    followsAfter = [],
+    taskKind = 'task',
+    subtaskIds = [],
+    blockedByIds = [],
+    blockingIds = [],
+    isBlocked = false,
+    isReadyToStart = true,
+    ...restOverrides
+  } = overrides;
   return {
     id: 'task-default',
     title: 'Default',
@@ -13,6 +26,16 @@ function card(overrides: Partial<TaskCardViewModel>): TaskCardViewModel {
     priority: 'p2',
     tags: [],
     workstream,
+    epicId,
+    parentTaskId,
+    dependsOn,
+    followsAfter,
+    taskKind,
+    subtaskIds,
+    blockedByIds,
+    blockingIds,
+    isBlocked,
+    isReadyToStart,
     dueDate: null,
     checklistProgress: {
       completed: 0,

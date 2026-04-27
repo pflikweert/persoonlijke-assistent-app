@@ -35,6 +35,7 @@ Operationele werkwijze voor werken met ChatGPT Projects + Cline, zonder productw
 Regels:
 
 - `docs/project/**` = canonieke projectwaarheid.
+- `docs/project/24-epics/**` = operationele bundellaag voor groter werk boven tasks.
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase.
 - `docs/dev/**` = workflowafspraken.
 - `docs/project/generated/**` en `docs/design/generated/**` = generated output; geen repo-bron, geen agentbron, geen uitvoerbron voor Cline/Codex.
@@ -79,6 +80,7 @@ Regels:
   - tijdelijke sessiecontext: `docs/dev/active-context.md`
   - statuswaarheid: `docs/project/current-status.md`
   - echte gaps/onzekerheden: `docs/project/open-points.md`
+  - operationele epics/projectbundels: `docs/project/24-epics/**`
   - operationele taken: `docs/project/25-tasks/**`
 
 ## Active context tussen sessies
@@ -158,6 +160,7 @@ Gebruik Act mode voor:
 
 - Begin met expliciete todo/checklist.
 - Maak of vind vóór het plan eerst de taskfile.
+- Gebruik bij groter gelinkt werk ook het relevante epic-doc als planningsanker wanneer dat bestaat.
 - Splits in: lezen → plan → edits → verify.
 - Werk per duidelijke milestone en update checklist tussendoor.
 - Behandel het laatst besproken subprobleem nooit automatisch als de nieuwe hoofdscope.

@@ -16,6 +16,7 @@ plus een lean operating system voor strategie, planning en ideeën.
 
 - `docs/project/10-strategy/**` = lange termijn richting (horizon)
 - `docs/project/20-planning/**` = actieve fase, roadmap, now/next/later en afwijkingslog
+- `docs/project/24-epics/**` = operationele bovenlaag voor grotere werkpakketten boven tasks
 - `docs/project/25-tasks/**` = operationele taaklaag voor de huidige fase-uitvoering
 - `docs/project/40-ideas/**` = gestructureerde ideeënruimte (één idee per file + inbox)
 - `docs/project/00-docs-governance/**` = audience, metadata en docs-visual-language afspraken
@@ -30,6 +31,7 @@ Regel:
 
 - [[10-strategy/README|Strategy hub]]
 - [[20-planning/README|Planning hub]]
+- [[24-epics/README|Epics hub]]
 - [[25-tasks/README|Tasks hub]]
 - [[30-research/README|Research hub]]
 - [[40-ideas/README|Ideas workspace]]
@@ -127,6 +129,17 @@ Regel:
 - task-docs zijn operationeel voor de huidige fase en ondergeschikt aan canonieke productwaarheid en actieve planning
 - open taken staan in `25-tasks/open/`, afgeronde taken in `25-tasks/done/`
 - `open-points.md` toont een automatisch bijgewerkt taakoverzicht, maar blijft het document voor echte gaps, risico's en onzekerheden
+
+## 3ea) Epic-documenten (operationele bundellaag)
+
+- `docs/project/24-epics/**`
+
+Regel:
+
+- epic-docs zijn een lichte operationele laag voor groter werk dat uit meerdere tasks bestaat
+- epics vervangen geen taskfiles; `25-tasks/**` blijft de uitvoerlaag
+- epics zijn niet canoniek en niet automatisch planningwaarheid
+- epics leggen vooral scope, linked tasks, volgorde en dependencies vast
 
 ## 4) Docs audience en visual language
 

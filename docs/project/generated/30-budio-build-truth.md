@@ -2,8 +2,8 @@
 
 # Budio Build Truth
 
-Build Timestamp (UTC): 2026-04-26T22:50:09.861Z
-Source Commit: dbe712d
+Build Timestamp (UTC): 2026-04-27T13:59:14.925Z
+Source Commit: ad43300
 
 Doel: primaire buildbundle met routes, componentarchitectuur, services, runtime functions en contracts.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
