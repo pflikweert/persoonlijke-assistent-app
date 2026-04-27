@@ -55,6 +55,20 @@ type PreparedImageAsset = {
   thumbSizeBytes: number;
 };
 
+type PickerUploadAsset = {
+  uri: string;
+  width: number;
+  height: number;
+  mimeType?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  file?: File | null;
+};
+
+function isWebFile(value: unknown): value is File {
+  return typeof File !== "undefined" && value instanceof File;
+}
+
 type BaseProps = {
   rawEntryId: string;
   refreshToken?: number;
@@ -109,35 +123,111 @@ function getPointerPageX(event: GestureResponderEvent | any): number {
 }
 
 async function buildPreparedImageAsset(
-  uri: string,
-  width: number,
-  height: number
+  asset: PickerUploadAsset
 ): Promise<PreparedImageAsset> {
+  const { uri, width, height } = asset;
   const displayResize = getLongEdgeResize(width, height, 1600);
   const thumbResize = getLongEdgeResize(width, height, 560);
+  const useWebBase64 = Platform.OS === "web";
 
-  const display = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: displayResize }],
-    {
-      compress: 0.8,
-      format: ImageManipulator.SaveFormat.JPEG,
+  const readDataUrlFromBlob = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onerror = () => {
+        reject(new Error("Web-fotobestand kon niet gelezen worden."));
+      };
+
+      reader.onloadend = () => {
+        if (typeof reader.result !== "string" || !reader.result.trim()) {
+          reject(new Error("Web-fotobestand leverde geen geldige data op."));
+          return;
+        }
+
+        resolve(reader.result);
+      };
+
+      reader.readAsDataURL(blob);
+    });
+
+  const decodeBase64ToArrayBuffer = (value: string) => {
+    const base64 = value.includes(",") ? value.slice(value.indexOf(",") + 1) : value;
+    const normalized = base64.trim();
+    if (!normalized) {
+      throw new Error("Web-fotodata ontbreekt.");
     }
-  );
 
-  const thumb = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: thumbResize }],
-    {
-      compress: 0.75,
-      format: ImageManipulator.SaveFormat.JPEG,
+    const binary = globalThis.atob(normalized);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return bytes.buffer;
+  };
+
+  const readManipulatedBytes = async (result: ImageManipulator.ImageResult) => {
+    if (useWebBase64 && typeof result.base64 === "string" && result.base64.trim()) {
+      return decodeBase64ToArrayBuffer(result.base64);
     }
-  );
 
-  const [displayBytes, thumbBytes] = await Promise.all([
-    fetch(display.uri).then((response) => response.arrayBuffer()),
-    fetch(thumb.uri).then((response) => response.arrayBuffer()),
-  ]);
+    const response = await fetch(result.uri);
+    if (!response.ok) {
+      throw new Error(`Gemapte fotodata ophalen mislukte (${response.status}).`);
+    }
+
+    return response.arrayBuffer();
+  };
+
+  let manipulateUri = uri;
+  if (useWebBase64 && isWebFile(asset.file)) {
+    manipulateUri = await readDataUrlFromBlob(asset.file);
+  }
+
+  const saveOptions = {
+    compress: 0.8,
+    format: ImageManipulator.SaveFormat.JPEG,
+    ...(useWebBase64 ? { base64: true } : {}),
+  };
+  const thumbSaveOptions = {
+    compress: 0.75,
+    format: ImageManipulator.SaveFormat.JPEG,
+    ...(useWebBase64 ? { base64: true } : {}),
+  };
+
+  let display: ImageManipulator.ImageResult;
+  try {
+    display = await ImageManipulator.manipulateAsync(
+      manipulateUri,
+      [{ resize: displayResize }],
+      saveOptions
+    );
+  } catch (error) {
+    throw new Error(
+      `display_manipulate:${error instanceof Error ? error.message : "onbekende fout"}`
+    );
+  }
+
+  let thumb: ImageManipulator.ImageResult;
+  try {
+    thumb = await ImageManipulator.manipulateAsync(
+      manipulateUri,
+      [{ resize: thumbResize }],
+      thumbSaveOptions
+    );
+  } catch (error) {
+    throw new Error(`thumb_manipulate:${error instanceof Error ? error.message : "onbekende fout"}`);
+  }
+
+  let displayBytes: ArrayBuffer;
+  try {
+    displayBytes = await readManipulatedBytes(display);
+  } catch (error) {
+    throw new Error(`display_bytes:${error instanceof Error ? error.message : "onbekende fout"}`);
+  }
+
+  let thumbBytes: ArrayBuffer;
+  try {
+    thumbBytes = await readManipulatedBytes(thumb);
+  } catch (error) {
+    throw new Error(`thumb_bytes:${error instanceof Error ? error.message : "onbekende fout"}`);
+  }
 
   return {
     displayBytes,
@@ -694,7 +784,7 @@ export function EntryPhotoGallery({
   );
 
   const runUpload = useCallback(
-    async (assets: { uri: string; width: number; height: number }[]) => {
+    async (assets: PickerUploadAsset[]) => {
       if (!assets.length) {
         return;
       }
@@ -705,12 +795,25 @@ export function EntryPhotoGallery({
         for (const asset of assets) {
           let prepared: PreparedImageAsset;
           try {
-            prepared = await buildPreparedImageAsset(asset.uri, asset.width, asset.height);
+            prepared = await buildPreparedImageAsset(asset);
           } catch (nextError) {
             throw createEntryPhotoPhaseError(
               "upload_prepare",
               nextError,
-              "Foto voorbereiden mislukte."
+              "Foto voorbereiden mislukte.",
+              {
+                rawEntryId,
+                pickerUri: asset.uri,
+                pickerUriScheme: asset.uri.split(":")[0] ?? null,
+                pickerMimeType: asset.mimeType?.trim() || null,
+                pickerFileName: asset.fileName?.trim() || null,
+                pickerFileSize: typeof asset.fileSize === "number" ? asset.fileSize : null,
+                pickerHasFile: isWebFile(asset.file),
+                prepareStep:
+                  nextError instanceof Error && nextError.message.includes(":")
+                    ? nextError.message.split(":")[0] ?? null
+                    : null,
+              }
             );
           }
 
@@ -758,7 +861,15 @@ export function EntryPhotoGallery({
 
     const selected = result.assets
       .slice(0, remainingSlots)
-      .map((asset) => ({ uri: asset.uri, width: asset.width ?? 1, height: asset.height ?? 1 }));
+      .map((asset) => ({
+        uri: asset.uri,
+        width: asset.width ?? 1,
+        height: asset.height ?? 1,
+        mimeType: asset.mimeType,
+        fileName: asset.fileName,
+        fileSize: asset.fileSize,
+        file: "file" in asset ? asset.file ?? null : null,
+      }));
 
     await runUpload(selected);
   }, [remainingSlots, runUpload, setError]);
@@ -791,6 +902,10 @@ export function EntryPhotoGallery({
         uri: first.uri,
         width: first.width ?? 1,
         height: first.height ?? 1,
+        mimeType: first.mimeType,
+        fileName: first.fileName,
+        fileSize: first.fileSize,
+        file: "file" in first ? first.file ?? null : null,
       },
     ]);
   }, [remainingSlots, runUpload, setError]);

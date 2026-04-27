@@ -89,7 +89,6 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | Taak | Prioriteit | Fase | Korte omschrijving |
 | --- | --- | --- | --- |
 | [Entry photo gallery volledige end-user E2E flows](open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
-| [Moment detail foto-upload productieflakiness onderzoeken](open/moment-detail-foto-upload-productieflakiness-onderzoek.md) | p1 | transitiemaand-consumer-beta | Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een upload met de vaste agent-testaccount werkt betrouwbaar... |
 
 ### In Progress
 
@@ -98,6 +97,7 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [1.2E beta-readiness expliciteren en afronden](open/1-2e-beta-readiness-expliciteren-en-afronden.md) | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [Admin/founder meeting capture — web route en IA](open/admin-founder-meeting-capture-web-route-en-ia.md) | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
+| [Moment detail foto-upload productieflakiness onderzoeken](open/moment-detail-foto-upload-productieflakiness-onderzoek.md) | p1 | transitiemaand-consumer-beta | Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een upload met de vaste agent-testaccount werkt betrouwbaar... |
 | [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
 | [Plan Mode task auto-create bij ontbrekende match](open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |

@@ -25,6 +25,13 @@ export type EntryPhotoErrorDiagnostics = {
   nextOrder?: string[];
   originIndex?: number | null;
   targetIndex?: number | null;
+  pickerUri?: string | null;
+  pickerUriScheme?: string | null;
+  pickerMimeType?: string | null;
+  pickerFileName?: string | null;
+  pickerFileSize?: number | null;
+  pickerHasFile?: boolean | null;
+  prepareStep?: string | null;
   supabaseCode?: string | null;
   supabaseMessage?: string | null;
   supabaseDetails?: string | null;

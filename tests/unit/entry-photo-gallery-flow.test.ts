@@ -62,6 +62,33 @@ describe("entry photo gallery flow helpers", () => {
     expect(detail.detail).toBe("Displayversie uploaden mislukte. storage timeout");
   });
 
+  it("preserves prepare diagnostics for picker-backed upload errors", () => {
+    const error = createEntryPhotoPhaseError(
+      "upload_prepare",
+      new Error("display_bytes:Failed to fetch"),
+      "Foto voorbereiden mislukte.",
+      {
+        rawEntryId: "raw-prepare",
+        pickerUri: "blob:https://assistant.budio.nl/example",
+        pickerUriScheme: "blob",
+        pickerMimeType: "image/jpeg",
+        pickerFileName: "picked.jpg",
+        pickerFileSize: 12345,
+        pickerHasFile: true,
+        prepareStep: "display_bytes",
+      }
+    );
+
+    const diagnostics = getEntryPhotoErrorDiagnostics(error);
+    expect(diagnostics.rawEntryId).toBe("raw-prepare");
+    expect(diagnostics.pickerUriScheme).toBe("blob");
+    expect(diagnostics.pickerMimeType).toBe("image/jpeg");
+    expect(diagnostics.pickerFileName).toBe("picked.jpg");
+    expect(diagnostics.pickerFileSize).toBe(12345);
+    expect(diagnostics.pickerHasFile).toBe(true);
+    expect(diagnostics.prepareStep).toBe("display_bytes");
+  });
+
   it("preserves diagnostic metadata for reorder errors", () => {
     const error = createEntryPhotoPhaseError(
       "reorder_persist",

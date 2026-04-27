@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-27T15:05:46.115Z
-Source Commit: 2e162f5
+Build Timestamp (UTC): 2026-04-27T16:02:09.035Z
+Source Commit: 7eb841d
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -315,6 +315,7 @@ sort_order: 1
 
 
 
+
 # Admin/founder meeting capture — scope en eerste versie vastleggen
 
 ## Probleem / context
@@ -451,6 +452,8 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 14ed6b1 — feat: add meeting capture route shells
 ```
 
 ---
