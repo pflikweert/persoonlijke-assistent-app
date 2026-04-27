@@ -29,6 +29,7 @@ type SettingsRoute = {
     | "audio"
     | "obsidian"
     | "regeneration"
+    | "meeting-capture"
     | "ai-quality-studio";
   label: string;
   description: string;
@@ -39,6 +40,7 @@ type SettingsRoute = {
     | "/settings-audio"
     | "/settings-obsidian"
     | "/settings-regeneration"
+    | "/meeting-capture"
     | "/settings-ai-quality-studio";
 };
 
@@ -92,6 +94,14 @@ const ADMIN_AI_QUALITY_ROUTE: SettingsRoute = {
   route: "/settings-ai-quality-studio",
 };
 
+const ADMIN_MEETING_CAPTURE_ROUTE: SettingsRoute = {
+  key: "meeting-capture",
+  label: "Gespreksopnames",
+  description: "Neem lange gesprekken op buiten je dagboekflow.",
+  icon: "graphic-eq",
+  route: "/meeting-capture",
+};
+
 const ADMIN_OBSIDIAN_ROUTE: SettingsRoute = {
   key: "obsidian",
   label: "Obsidian integratie",
@@ -110,7 +120,7 @@ const DELETE_ROW: RowItem = {
 export default function SettingsScreen() {
   const obsidianEnabled = isObsidianSettingsEnabled();
   const [menuVisible, setMenuVisible] = useState(false);
-  const [, setAdminAccess] = useState<boolean | null>(null);
+  const [adminAccess, setAdminAccess] = useState<boolean | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleteSheetState, setDeleteSheetState] =
@@ -155,8 +165,8 @@ export default function SettingsScreen() {
   const adminRoutes = useMemo(
     () =>
       obsidianEnabled
-        ? [ADMIN_ROUTE, ADMIN_OBSIDIAN_ROUTE, ADMIN_AI_QUALITY_ROUTE]
-        : [ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE],
+        ? [ADMIN_MEETING_CAPTURE_ROUTE, ADMIN_ROUTE, ADMIN_OBSIDIAN_ROUTE, ADMIN_AI_QUALITY_ROUTE]
+        : [ADMIN_MEETING_CAPTURE_ROUTE, ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE],
     [obsidianEnabled],
   );
 
@@ -223,7 +233,7 @@ export default function SettingsScreen() {
           />
         </ThemedView>
 
-        {adminRoutes.length > 0 ? (
+        {adminAccess === true && adminRoutes.length > 0 ? (
           <ThemedView style={styles.sectionGroup}>
             <SettingsSectionLabel label="Beheer" />
             <ThemedView style={styles.menuList}>

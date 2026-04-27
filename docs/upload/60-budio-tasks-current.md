@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
-Source Commit: 0b5c2d3
+Build Timestamp (UTC): 2026-04-27T15:05:46.115Z
+Source Commit: 2e162f5
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 32
+- Totaal tasks opgenomen: 31
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -235,6 +235,8 @@ due_date: null
 sort_order: 14
 ---
 
+
+
 # Admin/founder meeting capture — admin processing controls
 
 ## Probleem / context
@@ -351,6 +353,13 @@ Minimale admin retry/rerun controls voor Meeting Capture processing.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -373,7 +382,7 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-04-27
-summary: "Voeg later een flow toe waarmee een bestaand audiobestand in hetzelfde Meeting Capture archief kan landen."
+summary: Voeg later een flow toe waarmee een bestaand audiobestand in hetzelfde Meeting Capture archief kan landen.
 tags: [meeting-capture, upload, import, audio]
 workstream: app
 epic_id: epic-admin-founder-meeting-capture
@@ -385,6 +394,8 @@ spec_ready: true
 due_date: null
 sort_order: 10
 ---
+
+
 
 # Admin/founder meeting capture — audio upload/import flow
 
@@ -508,6 +519,13 @@ Bestand-upload/import naar hetzelfde recording model als live audio.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -542,6 +560,8 @@ spec_ready: true
 due_date: null
 sort_order: 8
 ---
+
+
 
 # Admin/founder meeting capture — fase 1 tests en smokebewijs
 
@@ -674,6 +694,13 @@ Afsluitende test- en smoke-slice voor de volledige audio-safe v1.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -708,6 +735,8 @@ spec_ready: true
 due_date: null
 sort_order: 13
 ---
+
+
 
 # Admin/founder meeting capture — gespreksinzichten
 
@@ -831,6 +860,13 @@ Brongetrouwe insights processing en detailweergave bovenop transcript.
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
 - `docs/project/content-processing-rules.md`
 - `docs/project/ai-quality-studio.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -865,6 +901,8 @@ spec_ready: true
 due_date: null
 sort_order: 5
 ---
+
+
 
 # Admin/founder meeting capture — lokale failsafe en recovery
 
@@ -997,6 +1035,13 @@ Local-first chunkopslag en recovery UI voor onafgemaakte Meeting Capture opnames
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -1013,7 +1058,7 @@ Local-first chunkopslag en recovery UI voor onafgemaakte Meeting Capture opnames
 ```md
 ---
 id: task-admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus
-title: Admin/founder meeting capture — metadata, private storage en uploadstatus
+title: "Admin/founder meeting capture — metadata, private storage en uploadstatus"
 status: backlog
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -1031,6 +1076,8 @@ spec_ready: true
 due_date: null
 sort_order: 6
 ---
+
+
 
 # Admin/founder meeting capture — metadata, private storage en uploadstatus
 
@@ -1161,6 +1208,13 @@ Minimale Supabase metadata/storage/uploadstatus voor Meeting Capture recordings.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -1195,6 +1249,8 @@ spec_ready: true
 due_date: null
 sort_order: 4
 ---
+
+
 
 # Admin/founder meeting capture — opname start/stop web MVP
 
@@ -1328,6 +1384,13 @@ Minimale `MediaRecorder` start/stop flow met UI-state, zonder IndexedDB recovery
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -1362,6 +1425,8 @@ spec_ready: true
 due_date: null
 sort_order: 7
 ---
+
+
 
 # Admin/founder meeting capture — overzicht/detail met playback en download
 
@@ -1492,6 +1557,13 @@ Meeting Capture archive overview en detail met playback/download en statusblokke
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -1526,6 +1598,8 @@ spec_ready: true
 due_date: null
 sort_order: 15
 ---
+
+
 
 # Admin/founder meeting capture — retentie en export hardening
 
@@ -1643,170 +1717,13 @@ Retentievoorbereiding en export/download hardening voor opgeslagen recordings.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
-```
 
----
 
-## Admin/founder meeting capture — scope en eerste versie vastleggen
+## Commits
 
-- Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen.md`
-- Bucket: open
-- Status: backlog
-- Priority: p1
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-27
+- a258f95 — feat: harden planning specs and meeting capture tasks
 
-```md
----
-id: task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen
-title: Admin/founder meeting capture — scope en eerste versie vastleggen
-status: backlog
-phase: transitiemaand-consumer-beta
-priority: p1
-source: user-request
-updated_at: 2026-04-27
-summary: "Leg de audio-first v1 scope vast voor Meeting Capture, inclusief admin-only grens, privacy/consent, anti-scope-creep en relatie tot bestaande captureflow."
-tags: [meeting-capture, scope, audio, admin]
-workstream: app
-epic_id: epic-admin-founder-meeting-capture
-parent_task_id: null
-depends_on: [task-admin-founder-meeting-capture-epic-en-taakpakket-aanmaken]
-follows_after: []
-task_kind: task
-spec_ready: true
-due_date: null
-sort_order: 2
----
-
-# Admin/founder meeting capture — scope en eerste versie vastleggen
-
-## Probleem / context
-
-De Meeting Capture flow raakt product, privacy, UI, storage en toekomstige AI-verwerking. Zonder expliciete v1-scope ontstaat risico op transcript-first bouwen, dagboekflow-vervuiling of te brede meeting-suite ideeën.
-
-## Gewenste uitkomst
-
-De scope voor v1 staat scherp: admin/founder-only, audio-safe web recording, buiten dagboekcapture, met transcriptie en insights als latere verwerking. De taak is klaar wanneer een implementatie-agent de v1-grens kan volgen zonder extra productbeslissingen.
-
-## User outcome
-
-Een developer of agent weet exact wat Meeting Capture v1 wel en niet bouwt, welke UX/copy gebruikt wordt en welke failure states verplicht zijn.
-
-## Functional slice
-
-Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet-bouwen-lijst.
-
-## Entry / exit
-
-- Entry: Meeting Capture research en epic bestaan, maar P1 bouwtaken zijn nog niet inhoudelijk gehard.
-- Exit: P1 bouwtaken kunnen zonder chatcontext starten.
-
-## Happy flow
-
-1. Agent leest researchbronnen, epic en bestaande capture/moment/dag patronen.
-2. Agent legt audio-safe v1-scope vast.
-3. Agent vult flow-, UX/copy-, privacy- en non-happy guardrails aan in P1 taskfiles.
-4. `taskflow:verify` en docs bundle blijven groen.
-
-## Non-happy flows
-
-- Scope creep: transcript, insights, upload/import of meeting-suite ideeën blijven P2 of buiten scope.
-- Onduidelijke copy: agent verwijst naar `copy-instructions.md` en legt exacte schermcopy alsnog vast.
-- Onvoldoende taskdetails: taak blijft open en niet bouwbaar totdat spec-readiness compleet is.
-
-## UX / copy
-
-- Leidend: bestaande capture-, moment-, dag-, selectie-, header- en footerpatronen.
-- Verplichte kerncopy: `Gespreksopname`, `Start opname`, `Stop en bewaar`, `Audio wordt veilig opgeslagen`, `Upload opnieuw proberen`.
-- Consent reminder: `Zorg dat iedereen weet dat je dit gesprek opneemt.`
-
-## Data / IO
-
-- Input: Meeting Capture researchdocs, epic en bestaande app/UI/copy docs.
-- Output: geharde scope- en taskdocs.
-- Geen runtime data, DB of storage wijzigingen.
-
-## Waarom nu
-
-- Deze taak blokkeert de eerste bouwslice.
-- De flow moet lean starten en niet uitwaaieren.
-
-## In scope
-
-- V1-scope en anti-scope-creep vastleggen.
-- Privacy/consent copy-richting benoemen.
-- Relatie tot bestaande captureflow expliciteren.
-- Bestaande UI/copy patronen als leidraad benoemen.
-
-## Buiten scope
-
-- Runtime code bouwen.
-- DB-schema ontwerpen.
-- Transcript/summary prompts uitwerken.
-
-## Oorspronkelijk plan / afgesproken scope
-
-- Audio-safe v1 is de eerste versie.
-- Bestaande captureflow niet functioneel aanpassen.
-- Copy en layout blijven simpel en consistent met bestaande Budio-patronen.
-
-## Expliciete user requirements / detailbehoud
-
-- `Gespreksopname` is de eenvoudige producttaal.
-- Upload/import is belangrijk, maar niet nodig voor de minimale eerste versie.
-- P2 extra's blijven aan dezelfde epic hangen.
-
-## Status per requirement
-
-- [ ] V1-scope vastgelegd — status: niet gebouwd
-- [ ] Privacy/consent richting vastgelegd — status: niet gebouwd
-- [ ] Anti-scope-creep vastgelegd — status: niet gebouwd
-
-## Toegevoegde verbeteringen tijdens uitvoering
-
-- Geen.
-
-## Uitvoerblokken / fasering
-
-- [ ] Blok 1: Meeting Capture bronnen en relevante app/docs patronen herlezen.
-- [ ] Blok 2: scopebesluit en copy/UI guardrails vastleggen.
-- [ ] Blok 3: verify en taskstatus afronden.
-
-## Concrete checklist
-
-- [ ] Bronnen samenvatten tot v1-scope.
-- [ ] Privacy/consent randvoorwaarden vastleggen.
-- [ ] Buiten-scope lijst expliciet maken.
-- [ ] Relevante vervolg-tasks controleren op juiste priority/dependencies.
-
-## Acceptance criteria
-
-- [ ] V1-scope benoemt audio-safe opname als eerste waarde.
-- [ ] Bestaande dagboekcapture blijft expliciet onaangeraakt.
-- [ ] P1 taskfiles bevatten UX/copy en non-happy flow details.
-- [ ] P2 extra's blijven niet-blokkerend.
-
-## Blockers / afhankelijkheden
-
-- Depends on `task-admin-founder-meeting-capture-epic-en-taakpakket-aanmaken`.
-
-## Verify / bewijs
-
-- `npm run taskflow:verify`
-- `npm run docs:bundle`
-- `npm run docs:bundle:verify`
-
-## Reconciliation voor afronding
-
-- Oorspronkelijk plan: scope en v1-grenzen vastleggen.
-- Toegevoegde verbeteringen: nog geen.
-- Afgerond: nog niet.
-- Open / blocked: wacht op uitvoering.
-
-## Relevante links
-
-- `docs/project/24-epics/admin-founder-meeting-capture.md`
-- `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -1829,7 +1746,7 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-04-27
-summary: "Voeg later eenvoudige speakerlabels en hernoembare speaker mapping toe aan Meeting Capture transcriptdetail."
+summary: Voeg later eenvoudige speakerlabels en hernoembare speaker mapping toe aan Meeting Capture transcriptdetail.
 tags: [meeting-capture, transcript, speakers]
 workstream: app
 epic_id: epic-admin-founder-meeting-capture
@@ -1841,6 +1758,8 @@ spec_ready: true
 due_date: null
 sort_order: 12
 ---
+
+
 
 # Admin/founder meeting capture — speaker labels en mapping
 
@@ -1959,6 +1878,13 @@ Eenvoudige speakerlabel mapping op transcriptdetail.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -1993,6 +1919,8 @@ spec_ready: true
 due_date: null
 sort_order: 11
 ---
+
+
 
 # Admin/founder meeting capture — transcript pipeline
 
@@ -2117,6 +2045,13 @@ Queued transcript processing met status, retry en transcriptweergave.
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -2125,7 +2060,7 @@ Queued transcript processing met status, retry en transcriptweergave.
 
 - Path: `docs/project/25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md`
 - Bucket: open
-- Status: backlog
+- Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
 - Updated_at: 2026-04-27
@@ -2134,7 +2069,7 @@ Queued transcript processing met status, retry en transcriptweergave.
 ---
 id: task-admin-founder-meeting-capture-web-route-en-ia
 title: Admin/founder meeting capture — web route en IA
-status: backlog
+status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
@@ -2149,8 +2084,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 1
 ---
+
+
 
 # Admin/founder meeting capture — web route en IA
 
@@ -2239,28 +2176,28 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
-- Geen.
+- Scope-dependency is afgerond als aparte done-task voordat route/IA bouw startte.
 
 ## Uitvoerblokken / fasering
 
-- [ ] Blok 1: bestaande admin/settings/capture routepatronen lezen.
-- [ ] Blok 2: kleinste route + schermskelet bouwen.
-- [ ] Blok 3: lint/typecheck en light/dark smoke.
+- [x] Blok 1: bestaande admin/settings/capture routepatronen lezen.
+- [x] Blok 2: kleinste route + schermskelet bouwen.
+- [ ] Blok 3: lint/typecheck en light/dark smoke. Lint/typecheck/docs zijn groen; runtime smoke is blocked omdat `http://localhost:8081` geen verbinding accepteert.
 
 ## Concrete checklist
 
-- [ ] Relevante route- en admin-gating patronen lokaliseren.
-- [ ] Admin-only ingang toevoegen.
-- [ ] Overzicht empty state bouwen.
-- [ ] Nieuwe-opname en detailroute shell toevoegen.
-- [ ] Runtime check in light/dark.
+- [x] Relevante route- en admin-gating patronen lokaliseren.
+- [x] Admin-only ingang toevoegen.
+- [x] Overzicht empty state bouwen.
+- [x] Nieuwe-opname en detailroute shell toevoegen.
+- [ ] Runtime check in light/dark — blocked: lokale web devserver draait niet of accepteert geen verbinding op `http://localhost:8081`.
 
 ## Acceptance criteria
 
-- [ ] Admin-only ingang werkt.
-- [ ] Niet-admin kan de flow niet bereiken.
-- [ ] Empty state en primary action zijn zichtbaar.
-- [ ] Nieuwe-opname en detail shells volgen bestaande layoutpatronen.
+- [x] Admin-only ingang werkt in code via settings-ingang en route-level access gate.
+- [x] Niet-admin kan de flow niet bereiken via route-level access gate.
+- [x] Empty state en primary action zijn zichtbaar.
+- [x] Nieuwe-opname en detail shells volgen bestaande layoutpatronen.
 
 ## Blockers / afhankelijkheden
 
@@ -2268,20 +2205,31 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 
 ## Verify / bewijs
 
-- `npm run lint`
-- `npm run typecheck`
-- Gerichte web smoke in light/dark.
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run taskflow:verify` — geslaagd
+- `npm run docs:bundle` — geslaagd
+- `npm run docs:bundle:verify` — geslaagd
+- Gerichte web smoke in light/dark — nog open
+- Browser smoke poging: `http://localhost:8081/meeting-capture` gaf `net::ERR_CONNECTION_REFUSED`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: web route en IA toevoegen.
 - Toegevoegde verbeteringen: nog geen.
-- Afgerond: nog niet.
-- Open / blocked: wacht op uitvoering.
+- Afgerond: routegroep, overview, new shell, detail shell, settings-ingang en access gate zijn gebouwd.
+- Open / blocked: runtime smoke in light/dark zodra de lokale web devserver draait.
 
 ## Relevante links
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -2316,6 +2264,8 @@ spec_ready: true
 due_date: null
 sort_order: 9
 ---
+
+
 
 # Admin/founder meeting capture — workflow-retro en docs/skill update
 
@@ -2414,6 +2364,13 @@ Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
 - https://developers.openai.com/cookbook/articles/codex_exec_plans
 - https://developers.openai.com/codex/models
 - https://developers.openai.com/codex/skills
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -2553,6 +2510,8 @@ sort_order: 6
 
 
 
+
+
 # AIQS logging valideren in OpenAI dashboard en fallback-logpad
 
 ## Probleem / context
@@ -2613,6 +2572,13 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - `docs/project/ai-quality-studio.md`
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -2835,6 +2801,8 @@ sort_order: 1
 
 
 
+
+
 ## Probleem / context
 
 Er bestaat al een Linear-geïnspireerd Workspace-idee voor structuur, intake en views, maar nog geen expliciet research-startpunt voor een bredere local-first Command Room-richting die ook Cline Kanban en Codex als referenties meeneemt.
@@ -2939,6 +2907,10 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 - ad43300 — chore: commit all remaining local changes
 
 - 0b5c2d3 — feat: add workspace epic hierarchy
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -3151,6 +3123,8 @@ sort_order: 2
 
 
 
+
+
 ## Probleem / context
 
 De eerste gallery QA-basis bewijst de kerninteractie voor thumbnail-reorder en legt unit/smoke-infra neer. De volledige end-user dekking voor alle gallery-flows bestaat nog niet.
@@ -3223,6 +3197,10 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 ## Commits
 
 - ad43300 — chore: commit all remaining local changes
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -3251,6 +3229,8 @@ workstream: app
 due_date: null
 sort_order: 1
 ---
+
+
 
 
 
@@ -3323,6 +3303,10 @@ Voor moment detail foto-upload is de productieoorzaak bevestigd en hersteld. Een
 ## Commits
 
 - ad43300 — chore: commit all remaining local changes
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -3613,6 +3597,8 @@ due_date: null
 sort_order: 2
 ---
 
+
+
 ## Probleem / context
 
 Tijdens agent-uitvoering ontstaat soms drift tussen het oorspronkelijke goedgekeurde plan en de actuele uitvoerfocus. Zodra er tijdens bouwen correcties, regressies of polish-rondes bijkomen, verschuift de aandacht naar het laatste subprobleem. Daardoor kan een agent ten onrechte denken dat het werk "klaar" is, terwijl onderdelen uit het oorspronkelijke plan nog open staan.
@@ -3684,6 +3670,13 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - `docs/dev/task-lifecycle-workflow.md`
 - `.agents/skills/task-status-sync-workflow/SKILL.md`
 - `docs/project/25-tasks/_template.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -3712,6 +3705,8 @@ workstream: app
 due_date: null
 sort_order: 4
 ---
+
+
 
 ## Probleem / context
 
@@ -3779,6 +3774,13 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - `docs/dev/task-lifecycle-workflow.md`
 - `docs/dev/cline-workflow.md`
 - `scripts/docs/verify-taskflow-enforcement.mjs`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -3807,6 +3809,8 @@ workstream: plugin
 due_date: null
 sort_order: 5
 ---
+
+
 
 
 
@@ -4154,6 +4158,10 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - a9e2961 — docs(task): add selection bug to plugin task status
 
 - ad43300 — chore: commit all remaining local changes
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -4182,6 +4190,8 @@ workstream: plugin
 due_date: null
 sort_order: 2
 ---
+
+
 
 
 ## Probleem / context
@@ -4236,4 +4246,8 @@ De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch
 ## Commits
 
 - ad43300 — chore: commit all remaining local changes
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```

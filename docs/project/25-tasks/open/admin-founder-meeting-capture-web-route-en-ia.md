@@ -1,7 +1,7 @@
 ---
 id: task-admin-founder-meeting-capture-web-route-en-ia
 title: Admin/founder meeting capture — web route en IA
-status: backlog
+status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
@@ -16,7 +16,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 1
 ---
 
 
@@ -108,28 +108,28 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
-- Geen.
+- Scope-dependency is afgerond als aparte done-task voordat route/IA bouw startte.
 
 ## Uitvoerblokken / fasering
 
-- [ ] Blok 1: bestaande admin/settings/capture routepatronen lezen.
-- [ ] Blok 2: kleinste route + schermskelet bouwen.
-- [ ] Blok 3: lint/typecheck en light/dark smoke.
+- [x] Blok 1: bestaande admin/settings/capture routepatronen lezen.
+- [x] Blok 2: kleinste route + schermskelet bouwen.
+- [ ] Blok 3: lint/typecheck en light/dark smoke. Lint/typecheck/docs zijn groen; runtime smoke is blocked omdat `http://localhost:8081` geen verbinding accepteert.
 
 ## Concrete checklist
 
-- [ ] Relevante route- en admin-gating patronen lokaliseren.
-- [ ] Admin-only ingang toevoegen.
-- [ ] Overzicht empty state bouwen.
-- [ ] Nieuwe-opname en detailroute shell toevoegen.
-- [ ] Runtime check in light/dark.
+- [x] Relevante route- en admin-gating patronen lokaliseren.
+- [x] Admin-only ingang toevoegen.
+- [x] Overzicht empty state bouwen.
+- [x] Nieuwe-opname en detailroute shell toevoegen.
+- [ ] Runtime check in light/dark — blocked: lokale web devserver draait niet of accepteert geen verbinding op `http://localhost:8081`.
 
 ## Acceptance criteria
 
-- [ ] Admin-only ingang werkt.
-- [ ] Niet-admin kan de flow niet bereiken.
-- [ ] Empty state en primary action zijn zichtbaar.
-- [ ] Nieuwe-opname en detail shells volgen bestaande layoutpatronen.
+- [x] Admin-only ingang werkt in code via settings-ingang en route-level access gate.
+- [x] Niet-admin kan de flow niet bereiken via route-level access gate.
+- [x] Empty state en primary action zijn zichtbaar.
+- [x] Nieuwe-opname en detail shells volgen bestaande layoutpatronen.
 
 ## Blockers / afhankelijkheden
 
@@ -137,16 +137,20 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 
 ## Verify / bewijs
 
-- `npm run lint`
-- `npm run typecheck`
-- Gerichte web smoke in light/dark.
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run taskflow:verify` — geslaagd
+- `npm run docs:bundle` — geslaagd
+- `npm run docs:bundle:verify` — geslaagd
+- Gerichte web smoke in light/dark — nog open
+- Browser smoke poging: `http://localhost:8081/meeting-capture` gaf `net::ERR_CONNECTION_REFUSED`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: web route en IA toevoegen.
 - Toegevoegde verbeteringen: nog geen.
-- Afgerond: nog niet.
-- Open / blocked: wacht op uitvoering.
+- Afgerond: routegroep, overview, new shell, detail shell, settings-ingang en access gate zijn gebouwd.
+- Open / blocked: runtime smoke in light/dark zodra de lokale web devserver draait.
 
 ## Relevante links
 

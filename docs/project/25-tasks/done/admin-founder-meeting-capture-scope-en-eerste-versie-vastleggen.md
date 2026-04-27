@@ -1,7 +1,7 @@
 ---
 id: task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen
 title: Admin/founder meeting capture — scope en eerste versie vastleggen
-status: backlog
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
@@ -16,7 +16,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 1
 ---
 
 
@@ -101,9 +101,9 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 
 ## Status per requirement
 
-- [ ] V1-scope vastgelegd — status: niet gebouwd
-- [ ] Privacy/consent richting vastgelegd — status: niet gebouwd
-- [ ] Anti-scope-creep vastgelegd — status: niet gebouwd
+- [x] V1-scope vastgelegd — status: vastgelegd
+- [x] Privacy/consent richting vastgelegd — status: vastgelegd
+- [x] Anti-scope-creep vastgelegd — status: vastgelegd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -111,23 +111,23 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 
 ## Uitvoerblokken / fasering
 
-- [ ] Blok 1: Meeting Capture bronnen en relevante app/docs patronen herlezen.
-- [ ] Blok 2: scopebesluit en copy/UI guardrails vastleggen.
-- [ ] Blok 3: verify en taskstatus afronden.
+- [x] Blok 1: Meeting Capture bronnen en relevante app/docs patronen herlezen.
+- [x] Blok 2: scopebesluit en copy/UI guardrails vastleggen.
+- [x] Blok 3: verify en taskstatus afronden.
 
 ## Concrete checklist
 
-- [ ] Bronnen samenvatten tot v1-scope.
-- [ ] Privacy/consent randvoorwaarden vastleggen.
-- [ ] Buiten-scope lijst expliciet maken.
-- [ ] Relevante vervolg-tasks controleren op juiste priority/dependencies.
+- [x] Bronnen samenvatten tot v1-scope.
+- [x] Privacy/consent randvoorwaarden vastleggen.
+- [x] Buiten-scope lijst expliciet maken.
+- [x] Relevante vervolg-tasks controleren op juiste priority/dependencies.
 
 ## Acceptance criteria
 
-- [ ] V1-scope benoemt audio-safe opname als eerste waarde.
-- [ ] Bestaande dagboekcapture blijft expliciet onaangeraakt.
-- [ ] P1 taskfiles bevatten UX/copy en non-happy flow details.
-- [ ] P2 extra's blijven niet-blokkerend.
+- [x] V1-scope benoemt audio-safe opname als eerste waarde.
+- [x] Bestaande dagboekcapture blijft expliciet onaangeraakt.
+- [x] P1 taskfiles bevatten UX/copy en non-happy flow details.
+- [x] P2 extra's blijven niet-blokkerend.
 
 ## Blockers / afhankelijkheden
 
@@ -143,8 +143,8 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 
 - Oorspronkelijk plan: scope en v1-grenzen vastleggen.
 - Toegevoegde verbeteringen: nog geen.
-- Afgerond: nog niet.
-- Open / blocked: wacht op uitvoering.
+- Afgerond: v1-scope, privacy/consent, anti-scope-creep, P1/P2 scheiding en vervolgtaakdetails zijn vastgelegd.
+- Open / blocked: geen.
 
 ## Relevante links
 

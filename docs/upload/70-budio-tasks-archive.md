@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-27T14:43:09.972Z
-Source Commit: 0b5c2d3
+Build Timestamp (UTC): 2026-04-27T15:05:46.115Z
+Source Commit: 2e162f5
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 32
+- Totaal tasks opgenomen: 33
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -127,6 +127,8 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
+
 
 # Admin/founder meeting capture — epic en taakpakket aanmaken
 
@@ -269,6 +271,186 @@ Operationele projectsetup: idea-doc, epic-doc, taskbundle, dependencies en verif
 
 - `docs/project/24-epics/admin-founder-meeting-capture.md`
 - `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
+```
+
+---
+
+## Admin/founder meeting capture — scope en eerste versie vastleggen
+
+- Path: `docs/project/25-tasks/done/admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-27
+
+```md
+---
+id: task-admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen
+title: Admin/founder meeting capture — scope en eerste versie vastleggen
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-27
+summary: "Leg de audio-first v1 scope vast voor Meeting Capture, inclusief admin-only grens, privacy/consent, anti-scope-creep en relatie tot bestaande captureflow."
+tags: [meeting-capture, scope, audio, admin]
+workstream: app
+epic_id: epic-admin-founder-meeting-capture
+parent_task_id: null
+depends_on: [task-admin-founder-meeting-capture-epic-en-taakpakket-aanmaken]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+
+
+# Admin/founder meeting capture — scope en eerste versie vastleggen
+
+## Probleem / context
+
+De Meeting Capture flow raakt product, privacy, UI, storage en toekomstige AI-verwerking. Zonder expliciete v1-scope ontstaat risico op transcript-first bouwen, dagboekflow-vervuiling of te brede meeting-suite ideeën.
+
+## Gewenste uitkomst
+
+De scope voor v1 staat scherp: admin/founder-only, audio-safe web recording, buiten dagboekcapture, met transcriptie en insights als latere verwerking. De taak is klaar wanneer een implementatie-agent de v1-grens kan volgen zonder extra productbeslissingen.
+
+## User outcome
+
+Een developer of agent weet exact wat Meeting Capture v1 wel en niet bouwt, welke UX/copy gebruikt wordt en welke failure states verplicht zijn.
+
+## Functional slice
+
+Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet-bouwen-lijst.
+
+## Entry / exit
+
+- Entry: Meeting Capture research en epic bestaan, maar P1 bouwtaken zijn nog niet inhoudelijk gehard.
+- Exit: P1 bouwtaken kunnen zonder chatcontext starten.
+
+## Happy flow
+
+1. Agent leest researchbronnen, epic en bestaande capture/moment/dag patronen.
+2. Agent legt audio-safe v1-scope vast.
+3. Agent vult flow-, UX/copy-, privacy- en non-happy guardrails aan in P1 taskfiles.
+4. `taskflow:verify` en docs bundle blijven groen.
+
+## Non-happy flows
+
+- Scope creep: transcript, insights, upload/import of meeting-suite ideeën blijven P2 of buiten scope.
+- Onduidelijke copy: agent verwijst naar `copy-instructions.md` en legt exacte schermcopy alsnog vast.
+- Onvoldoende taskdetails: taak blijft open en niet bouwbaar totdat spec-readiness compleet is.
+
+## UX / copy
+
+- Leidend: bestaande capture-, moment-, dag-, selectie-, header- en footerpatronen.
+- Verplichte kerncopy: `Gespreksopname`, `Start opname`, `Stop en bewaar`, `Audio wordt veilig opgeslagen`, `Upload opnieuw proberen`.
+- Consent reminder: `Zorg dat iedereen weet dat je dit gesprek opneemt.`
+
+## Data / IO
+
+- Input: Meeting Capture researchdocs, epic en bestaande app/UI/copy docs.
+- Output: geharde scope- en taskdocs.
+- Geen runtime data, DB of storage wijzigingen.
+
+## Waarom nu
+
+- Deze taak blokkeert de eerste bouwslice.
+- De flow moet lean starten en niet uitwaaieren.
+
+## In scope
+
+- V1-scope en anti-scope-creep vastleggen.
+- Privacy/consent copy-richting benoemen.
+- Relatie tot bestaande captureflow expliciteren.
+- Bestaande UI/copy patronen als leidraad benoemen.
+
+## Buiten scope
+
+- Runtime code bouwen.
+- DB-schema ontwerpen.
+- Transcript/summary prompts uitwerken.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Audio-safe v1 is de eerste versie.
+- Bestaande captureflow niet functioneel aanpassen.
+- Copy en layout blijven simpel en consistent met bestaande Budio-patronen.
+
+## Expliciete user requirements / detailbehoud
+
+- `Gespreksopname` is de eenvoudige producttaal.
+- Upload/import is belangrijk, maar niet nodig voor de minimale eerste versie.
+- P2 extra's blijven aan dezelfde epic hangen.
+
+## Status per requirement
+
+- [x] V1-scope vastgelegd — status: vastgelegd
+- [x] Privacy/consent richting vastgelegd — status: vastgelegd
+- [x] Anti-scope-creep vastgelegd — status: vastgelegd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: Meeting Capture bronnen en relevante app/docs patronen herlezen.
+- [x] Blok 2: scopebesluit en copy/UI guardrails vastleggen.
+- [x] Blok 3: verify en taskstatus afronden.
+
+## Concrete checklist
+
+- [x] Bronnen samenvatten tot v1-scope.
+- [x] Privacy/consent randvoorwaarden vastleggen.
+- [x] Buiten-scope lijst expliciet maken.
+- [x] Relevante vervolg-tasks controleren op juiste priority/dependencies.
+
+## Acceptance criteria
+
+- [x] V1-scope benoemt audio-safe opname als eerste waarde.
+- [x] Bestaande dagboekcapture blijft expliciet onaangeraakt.
+- [x] P1 taskfiles bevatten UX/copy en non-happy flow details.
+- [x] P2 extra's blijven niet-blokkerend.
+
+## Blockers / afhankelijkheden
+
+- Depends on `task-admin-founder-meeting-capture-epic-en-taakpakket-aanmaken`.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: scope en v1-grenzen vastleggen.
+- Toegevoegde verbeteringen: nog geen.
+- Afgerond: v1-scope, privacy/consent, anti-scope-creep, P1/P2 scheiding en vervolgtaakdetails zijn vastgelegd.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `docs/project/24-epics/admin-founder-meeting-capture.md`
+- `docs/project/40-ideas/10-product/admin-founder-meeting-capture.md`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -467,6 +649,8 @@ sort_order: 1
 ---
 
 
+
+
 # Budio Workspace hierarchy met epics, subtasks en dependencies
 
 ## Probleem / context
@@ -580,6 +764,10 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 ## Commits
 
 - 0b5c2d3 — feat: add workspace epic hierarchy
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -1170,6 +1358,8 @@ sort_order: 1
 
 
 
+
+
 ## Probleem / context
 
 De gebruiker wil een persoonlijk HME-ME researchspoor starten binnen de Budio
@@ -1355,6 +1545,10 @@ Het goedgekeurde plan:
 - aec1b28 — docs/tooling: add HME-ME local-first downloader spike
 
 - ad43300 — chore: commit all remaining local changes
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---
@@ -2082,7 +2276,7 @@ Een bestaand privacy/security-idee in `docs/project/40-ideas/**` is bijgewerkt m
 ```md
 ---
 id: task-plan-spec-quality-guardrails-voor-ideas-epics-en-tasks
-title: Plan/spec quality guardrails voor ideas, epics en tasks
+title: "Plan/spec quality guardrails voor ideas, epics en tasks"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -2100,6 +2294,8 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
+
 
 # Plan/spec quality guardrails voor ideas, epics en tasks
 
@@ -2257,6 +2453,13 @@ Workflowcopy in foutmeldingen blijft concreet en herstelbaar, bijvoorbeeld: `Tas
 - `docs/project/25-tasks/_template.md`
 - `docs/project/24-epics/_template.md`
 - `scripts/docs/verify-taskflow-enforcement.mjs`
+
+
+## Commits
+
+- a258f95 — feat: harden planning specs and meeting capture tasks
+
+- 8c8e11b — docs: record task commit evidence
 ```
 
 ---

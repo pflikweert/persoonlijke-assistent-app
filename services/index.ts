@@ -1,5 +1,8 @@
 // Service layer for API/data orchestration lives here.
 export {
+    hasAdminMeetingCaptureAccess
+} from "./admin-meeting-capture";
+export {
     fetchAdminRegenerationJobStatus,
     fetchLatestAdminRegenerationJob,
     hasAdminRegenerationAccess,
