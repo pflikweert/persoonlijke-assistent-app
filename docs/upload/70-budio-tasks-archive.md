@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-28T22:04:29.457Z
-Source Commit: 382957f
+Build Timestamp (UTC): 2026-04-28T22:14:15.050Z
+Source Commit: e1b4b0a
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3945,6 +3945,7 @@ due_date: null
 sort_order: 1
 ---
 
+
 # Task commit hook rename-case fixen
 
 ## Probleem / context
@@ -4077,6 +4078,11 @@ De post-push review van de hook-fix vond direct een live rename-regressie. Dit b
 - `scripts/task-commit-log.mjs`
 - `scripts/task-commit-log.test.mjs`
 - `docs/project/25-tasks/done/hook-fix-publicatie-en-post-push-review.md`
+
+
+## Commits
+
+- 2026-04-29T00:05:17+02:00 — fix: handle task commit log renames
 ```
 
 ---

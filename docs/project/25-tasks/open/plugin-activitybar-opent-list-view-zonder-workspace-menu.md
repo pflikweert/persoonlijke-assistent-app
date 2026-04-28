@@ -20,6 +20,7 @@ sort_order: 7
 
 
 
+
 # Budio Workspace activity-bar opent list view zonder workspace-menu
 
 ## Probleem / context
@@ -374,3 +375,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 942af46 — docs: sync local workspace state
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-04-29T00:14:29+02:00 — docs: sync task commit logs

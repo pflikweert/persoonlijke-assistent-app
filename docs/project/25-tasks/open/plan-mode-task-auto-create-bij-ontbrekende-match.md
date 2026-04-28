@@ -17,6 +17,7 @@ sort_order: 6
 
 
 
+
 ## Probleem / context
 
 De huidige repo-regel blokkeert inhoudelijk werk in Plan Mode wanneer er geen passende bestaande taskfile is. Daardoor moet de gebruiker alsnog expliciet buiten Plan Mode een task laten aanmaken, ook als de nieuwe scope al duidelijk is.
@@ -94,3 +95,5 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 942af46 — docs: sync local workspace state
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-04-29T00:14:29+02:00 — docs: sync task commit logs

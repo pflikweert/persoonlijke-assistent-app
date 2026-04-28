@@ -20,6 +20,8 @@ sort_order: 1
 ---
 
 
+
+
 # Hook-fix publicatie en post-push review
 
 ## Probleem / context
@@ -207,3 +209,7 @@ Een publicatie- en review-slice voor bestaand lokaal werk:
 ## Commits
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-04-28T23:26:59+02:00 — docs: close hook fix publication review task
+
+- 2026-04-29T00:14:29+02:00 — docs: sync task commit logs

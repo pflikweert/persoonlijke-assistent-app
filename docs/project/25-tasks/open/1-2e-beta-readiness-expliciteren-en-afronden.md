@@ -27,6 +27,7 @@ sort_order: 5
 
 
 
+
 # 1.2E beta-readiness expliciteren en afronden
 
 ## Probleem / context
@@ -83,3 +84,5 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 942af46 — docs: sync local workspace state
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-04-29T00:14:29+02:00 — docs: sync task commit logs

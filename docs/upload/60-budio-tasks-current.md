@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-28T22:04:29.457Z
-Source Commit: 382957f
+Build Timestamp (UTC): 2026-04-28T22:14:15.050Z
+Source Commit: e1b4b0a
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -2990,7 +2990,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-04-28
-summary: "Maak text- en achtergrondkleuren volledig theme-reactive op token/shared layer zodat light/dark direct en zonder refresh wisselt."
+summary: Maak text- en achtergrondkleuren volledig theme-reactive op token/shared layer zodat light/dark direct en zonder refresh wisselt.
 tags: [theme, dark-mode, light-mode, ui, tokens]
 workstream: app
 epic_id: null
@@ -3002,6 +3002,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Dark/light mode theming (text + background) zonder refresh fix
 
@@ -3144,6 +3145,7 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 
 - Nog niet gecommit in deze sessie.
 
+- 2026-04-29T00:07:02+02:00 — fix: make theme surfaces react instantly on dark-light switch
 ## Relevante links
 
 - `theme/tokens.ts`

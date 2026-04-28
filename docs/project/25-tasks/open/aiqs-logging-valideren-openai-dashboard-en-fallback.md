@@ -32,6 +32,7 @@ sort_order: 8
 
 
 
+
 # AIQS logging valideren in OpenAI dashboard en fallback-logpad
 
 ## Probleem / context
@@ -103,3 +104,5 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 942af46 — docs: sync local workspace state
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-04-29T00:14:29+02:00 — docs: sync task commit logs

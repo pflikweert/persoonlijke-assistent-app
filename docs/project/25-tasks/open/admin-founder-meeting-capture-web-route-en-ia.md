@@ -23,6 +23,7 @@ sort_order: 3
 
 
 
+
 # Admin/founder meeting capture — web route en IA
 
 ## Probleem / context
@@ -168,3 +169,5 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 942af46 — docs: sync local workspace state
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
