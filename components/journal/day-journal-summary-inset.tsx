@@ -17,8 +17,8 @@ export function DayJournalSummaryInset({
   textStyle,
 }: DayJournalSummaryInsetProps) {
   const scheme = useColorScheme() ?? 'light';
-  const accentColor = scheme === 'dark' ? '#B8A47A' : '#8A6A1F';
   const palette = colorTokens[scheme];
+  const accentColor = palette.accentWarm;
 
   return (
     <ThemedView

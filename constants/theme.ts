@@ -2,6 +2,8 @@ import { colorTokens, typography } from '@/theme';
 
 export const Colors = {
   light: {
+    appShell: colorTokens.light.appShell,
+    accentWarm: colorTokens.light.accentWarm,
     text: colorTokens.light.text,
     background: colorTokens.light.background,
     tint: colorTokens.light.primary,
@@ -27,6 +29,8 @@ export const Colors = {
     error: colorTokens.light.error,
   },
   dark: {
+    appShell: colorTokens.dark.appShell,
+    accentWarm: colorTokens.dark.accentWarm,
     text: colorTokens.dark.text,
     background: colorTokens.dark.background,
     tint: colorTokens.dark.primary,

@@ -2,6 +2,8 @@ import { Platform, StyleSheet } from "react-native";
 
 export const colorTokens = {
   light: {
+    appShell: "#F2F0E9",
+    accentWarm: "#8A6A1F",
     text: "#1B1C1A",
     background: "#FAF9F4",
     surface: "#EFEEEB",
@@ -28,6 +30,8 @@ export const colorTokens = {
     destructiveSoftBorder: "#ECC1BF",
   },
   dark: {
+    appShell: "#0E0E0C",
+    accentWarm: "#D1B574",
     text: "#F4F1E8",
     background: "#171714",
     surface: "#201F1C",

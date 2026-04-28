@@ -131,6 +131,16 @@ a:focus-visible,
   }, []);
 
   useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") {
+      return;
+    }
+
+    document.documentElement.style.backgroundColor = palette.appShell;
+    document.body.style.backgroundColor = palette.appShell;
+    document.documentElement.style.colorScheme = colorScheme === "dark" ? "dark" : "light";
+  }, [colorScheme, palette.appShell]);
+
+  useEffect(() => {
     let mounted = true;
     getCurrentSession()
       .then((nextSession) => {
@@ -207,8 +217,8 @@ a:focus-visible,
 
   if (!authReady) {
     return (
-      <View style={[styles.rootShell, styles.webBackdrop]}>
-        <View style={[styles.rootShell, styles.webAppShell]}>
+      <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
+        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
           <AppBackground tone="ambient" />
           <View style={styles.loadingContainer}>
             <ActivityIndicator color={palette.primary} />
@@ -220,8 +230,8 @@ a:focus-visible,
 
   return (
     <ThemeProvider value={appTheme}>
-      <View style={[styles.rootShell, styles.webBackdrop]}>
-        <View style={[styles.rootShell, styles.webAppShell]}>
+      <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
+        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
           <AppBackground tone="flat" />
           <Stack
             // Use in-app headers consistently and avoid accidental native double top-nav

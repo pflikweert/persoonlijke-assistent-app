@@ -116,7 +116,8 @@ export function DetailSectionHeader({
   style,
 }: DetailSectionHeaderProps) {
   const scheme = useColorScheme() ?? "light";
-  const warmAccent = scheme === "dark" ? "#D1B574" : "#8A6A1F";
+  const palette = colorTokens[scheme];
+  const warmAccent = palette.accentWarm;
 
   return (
     <ThemedView style={[styles.detailSectionHeaderRow, style]}>
