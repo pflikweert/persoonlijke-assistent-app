@@ -16,7 +16,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 

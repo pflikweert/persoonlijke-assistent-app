@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-27T17:04:55.707Z
-Source Commit: d6eeb0a
+Build Timestamp (UTC): 2026-04-28T17:38:12.199Z
+Source Commit: 5a7e3e0
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -1973,6 +1973,7 @@ sort_order: 1
 
 
 
+
 ## Probleem / context
 
 De reorder-productiebug is hersteld, maar de foto-upload op moment detail is nog niet apart bronvast onderzocht. In productie werkt upload soms wel en soms niet, zonder dat de exacte faalfase al bevestigd is.
@@ -2171,6 +2172,7 @@ Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor
 
 - b59c2b2 — docs: sync upload task commit evidence
 
+- b64cb74 — fix: harden task closeout and plugin active state
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: bevestig faalfase, implementeer de kleinste robuuste fix, voeg gericht bewijs toe en herverifieer.

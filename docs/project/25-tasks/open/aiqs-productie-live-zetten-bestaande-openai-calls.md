@@ -25,6 +25,7 @@ sort_order: 2
 
 
 
+
 # AIQS productie live zetten voor bestaande OpenAI-calls
 
 ## Probleem / context
@@ -83,3 +84,8 @@ Deze taak is klaar wanneer de productieroute aantoonbaar werkt en de minimale op
 - `docs/project/ai-quality-studio.md`
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
+
+
+## Commits
+
+- 5a7e3e0 — docs: add service status backlog task

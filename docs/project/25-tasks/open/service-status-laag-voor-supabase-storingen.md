@@ -6,7 +6,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-04-27
-summary: "Implementeer een minimale production service-status laag die Supabase status-webhooks vertaalt naar een rustige banner en tijdelijke write-lock voor relevante Budio-flows."
+summary: Implementeer een minimale production service-status laag die Supabase status-webhooks vertaalt naar een rustige banner en tijdelijke write-lock voor relevante Budio-flows.
 tags: [supabase, production, incidents, reliability, ux]
 workstream: app
 epic_id: null
@@ -18,6 +18,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Service-status laag voor Supabase storingen
 
@@ -255,3 +256,8 @@ Bronprompt voor toekomstige uitvoering, bewust als minimale v1:
 
 - `docs/project/open-points.md`
 - `docs/project/25-tasks/README.md`
+
+
+## Commits
+
+- 5a7e3e0 — docs: add service status backlog task

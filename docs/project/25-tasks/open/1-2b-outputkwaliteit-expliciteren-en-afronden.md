@@ -29,6 +29,7 @@ sort_order: 3
 
 
 
+
 # 1.2B outputkwaliteit expliciteren en afronden
 
 ## Probleem / context
@@ -78,3 +79,8 @@ De taak is klaar wanneer de criteria, verificatiestappen en bewijsregel helder g
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
 - `docs/project/20-planning/20-active-phase.md`
+
+
+## Commits
+
+- 5a7e3e0 — docs: add service status backlog task

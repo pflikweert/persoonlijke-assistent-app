@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-27T18:34:34.232Z
-Source Commit: b64cb74
+Build Timestamp (UTC): 2026-04-28T17:38:12.199Z
+Source Commit: 5a7e3e0
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 31
+- Totaal tasks opgenomen: 32
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -44,6 +44,7 @@ workstream: app
 due_date: null
 sort_order: 3
 ---
+
 
 
 
@@ -110,6 +111,11 @@ De taak is klaar wanneer de criteria, verificatiestappen en bewijsregel helder g
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
 - `docs/project/20-planning/20-active-phase.md`
+
+
+## Commits
+
+- 5a7e3e0 — docs: add service status backlog task
 ```
 
 ---
@@ -136,7 +142,7 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
 
 
@@ -2084,7 +2090,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 
@@ -2492,7 +2498,7 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
 
 
@@ -2620,6 +2626,7 @@ sort_order: 2
 
 
 
+
 # AIQS productie live zetten voor bestaande OpenAI-calls
 
 ## Probleem / context
@@ -2678,6 +2685,11 @@ Deze taak is klaar wanneer de productieroute aantoonbaar werkt en de minimale op
 - `docs/project/ai-quality-studio.md`
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
+
+
+## Commits
+
+- 5a7e3e0 — docs: add service status backlog task
 ```
 
 ---
@@ -3205,6 +3217,170 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 
 ---
 
+## Lokale wijzigingen committen en pushen
+
+- Path: `docs/project/25-tasks/open/lokale-wijzigingen-committen-en-pushen.md`
+- Bucket: open
+- Status: in_progress
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-28
+
+```md
+---
+id: task-lokale-wijzigingen-committen-en-pushen
+title: Lokale wijzigingen committen en pushen
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-04-28
+summary: "Commit en push alle huidige lokale worktree-wijzigingen, inclusief bestaand docs-WIP en post-commit taaklog-updates, zonder verdere inhoudelijke scopewijziging."
+tags: [git, workflow, docs]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De lokale worktree bevat op dit moment meerdere ongestagede documentatie- en taakbestandswijzigingen. De gebruiker wil die huidige lokale staat in zijn geheel vastleggen en naar remote pushen, in plaats van nog verder te splitsen of op te schonen.
+
+## Gewenste uitkomst
+
+Alle huidige lokale wijzigingen staan in een nieuwe commit op de actieve branch en zijn gepusht naar `origin`.
+
+De repo-taskflow blijft daarbij correct: deze uitvoertaak is vastgelegd, de taakoverzichten zijn opnieuw gebundeld en de commit bevat de actuele lokale docs-state.
+
+## User outcome
+
+De gebruiker heeft één actuele remote commit waarin alle huidige lokale wijzigingen zijn meegenomen.
+
+## Functional slice
+
+Een operationele git-slice: taskflow vastleggen, docs/task-overzichten synchroniseren, alles committen en pushen.
+
+## Entry / exit
+
+- Entry: er zijn lokale wijzigingen aanwezig in de huidige worktree.
+- Exit: `git status` is schoon of bevat alleen nieuwe post-push side-effects, en de commit staat op `origin/<branch>`.
+
+## Happy flow
+
+1. Bevestig de huidige worktree en leg de uitvoertaak vast in `docs/project/25-tasks/open/`.
+2. Werk taakflow-docs bij via bundling en valideer de tasklaag.
+3. Stage alle lokale wijzigingen, maak één commit en push die naar remote.
+
+## Non-happy flows
+
+- Git push faalt: leg de fout vast en laat de lokale commit staan.
+- Verify faalt: herstel eerst de taskflow/docs-consistentie voordat er gecommit wordt.
+- Post-commit hook maakt extra lokale wijzigingen: stage die ook mee als ze binnen de expliciete "alles lokaal" scope vallen.
+
+## UX / copy
+
+- Geen product-UI scope; alleen repo-workflow en git-communicatie.
+
+## Data / IO
+
+- Input: huidige git worktree met lokale docs/task-wijzigingen.
+- Output: nieuwe git commit op remote.
+- Opslag/API/service/file-impact: `docs/project/25-tasks/**`, gebundelde docsbestanden en overige huidige lokale docs-wijzigingen.
+- Statussen: `in_progress` tijdens uitvoering, daarna `done`.
+
+## Waarom nu
+
+- De gebruiker vraagt expliciet om alle lokale wijzigingen nu te committen en pushen.
+
+## In scope
+
+- Nieuwe taskfile voor deze uitvoertaak.
+- Eventuele vereiste `sort_order`-updates in `in_progress`.
+- `npm run taskflow:verify`.
+- `npm run docs:bundle`.
+- `npm run docs:bundle:verify`.
+- `git add -A`, commit en push.
+
+## Buiten scope
+
+- Inhoudelijke code- of docs-refactors buiten wat al lokaal klaarstaat.
+- Nieuwe feature-implementatie.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Commit en push alles van lokaal.
+
+## Expliciete user requirements / detailbehoud
+
+- Neem alles wat nu lokaal gewijzigd is mee in de commit.
+- Push de commit direct door naar remote.
+
+## Status per requirement
+
+- [ ] Taskflow vastgelegd — status: gebouwd
+- [ ] Alle lokale wijzigingen gecommit — status: niet gebouwd
+- [ ] Commit naar remote gepusht — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, worktree en taskflow bevestigen.
+- [ ] Blok 2: docs/task-overzichten synchroniseren en verify draaien.
+- [ ] Blok 3: alles committen, pushen en closeout vastleggen.
+
+## Concrete checklist
+
+- [x] Nieuwe uitvoertaak aangemaakt.
+- [ ] In-progress lane-sortering bijgewerkt.
+- [ ] Taskflow verify geslaagd.
+- [ ] Docs bundle geslaagd.
+- [ ] Docs bundle verify geslaagd.
+- [ ] Alle lokale wijzigingen gestaged.
+- [ ] Commit gemaakt.
+- [ ] Push geslaagd.
+
+## Acceptance criteria
+
+- [ ] Er is een nieuwe commit met alle huidige lokale wijzigingen.
+- [ ] De commit staat op de actieve remote branch.
+- [ ] Taskflow/docs-state is niet kapot na bundling en commit.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+- `git status`
+- `git log --oneline -1`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: commit en push alles van lokaal.
+- Toegevoegde verbeteringen: geen.
+- Afgerond: nog niet.
+- Open / blocked: nog niet.
+
+## Relevante links
+
+- `docs/project/open-points.md`
+- `docs/project/25-tasks/README.md`
+```
+
+---
+
 ## Moments-overzicht primaire foto thumbnail en viewer
 
 - Path: `docs/project/25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md`
@@ -3488,7 +3664,7 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 
@@ -3599,7 +3775,7 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
 
 
@@ -3703,7 +3879,7 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 5
+sort_order: 6
 ---
 
 
@@ -4083,7 +4259,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-04-27
-summary: "Implementeer een minimale production service-status laag die Supabase status-webhooks vertaalt naar een rustige banner en tijdelijke write-lock voor relevante Budio-flows."
+summary: Implementeer een minimale production service-status laag die Supabase status-webhooks vertaalt naar een rustige banner en tijdelijke write-lock voor relevante Budio-flows.
 tags: [supabase, production, incidents, reliability, ux]
 workstream: app
 epic_id: null
@@ -4095,6 +4271,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Service-status laag voor Supabase storingen
 
@@ -4332,6 +4509,11 @@ Bronprompt voor toekomstige uitvoering, bewust als minimale v1:
 
 - `docs/project/open-points.md`
 - `docs/project/25-tasks/README.md`
+
+
+## Commits
+
+- 5a7e3e0 — docs: add service status backlog task
 ```
 
 ---
