@@ -26,6 +26,7 @@ sort_order: 2
 
 
 
+
 # AIQS productie live zetten voor bestaande OpenAI-calls
 
 ## Probleem / context
@@ -89,3 +90,5 @@ Deze taak is klaar wanneer de productieroute aantoonbaar werkt en de minimale op
 ## Commits
 
 - 5a7e3e0 — docs: add service status backlog task
+
+- 942af46 — docs: sync local workspace state

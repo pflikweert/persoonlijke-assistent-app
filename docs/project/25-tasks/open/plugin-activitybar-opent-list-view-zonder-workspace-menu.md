@@ -10,8 +10,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 6
+sort_order: 5
 ---
+
 
 
 
@@ -368,3 +369,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 942af46 — docs: sync local workspace state

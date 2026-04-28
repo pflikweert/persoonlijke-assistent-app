@@ -21,6 +21,7 @@ sort_order: 8
 
 
 
+
 # Admin/founder meeting capture — fase 1 tests en smokebewijs
 
 ## Probleem / context
@@ -159,3 +160,5 @@ Afsluitende test- en smoke-slice voor de volledige audio-safe v1.
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 942af46 — docs: sync local workspace state

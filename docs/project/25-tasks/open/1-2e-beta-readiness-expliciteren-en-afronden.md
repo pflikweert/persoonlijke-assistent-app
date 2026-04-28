@@ -10,8 +10,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 4
+sort_order: 3
 ---
+
 
 
 
@@ -74,3 +75,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - `docs/project/current-status.md`
 - `docs/project/open-points.md`
 - `docs/project/20-planning/20-active-phase.md`
+
+
+## Commits
+
+- 942af46 — docs: sync local workspace state

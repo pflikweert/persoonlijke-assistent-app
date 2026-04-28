@@ -10,8 +10,9 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 3
+sort_order: 2
 ---
+
 
 
 
@@ -95,3 +96,5 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 942af46 — docs: sync local workspace state

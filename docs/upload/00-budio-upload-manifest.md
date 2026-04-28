@@ -2,8 +2,8 @@
 
 # Budio Upload Manifest
 
-Build Timestamp (UTC): 2026-04-28T17:38:12.199Z
-Source Commit: 5a7e3e0
+Build Timestamp (UTC): 2026-04-28T17:39:50.439Z
+Source Commit: 942af46
 
 ## Beheerde uploadset (maximaal 10 bestanden)
 

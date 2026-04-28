@@ -20,6 +20,7 @@ sort_order: 1
 ---
 
 
+
 # Service-status laag voor Supabase storingen
 
 ## Probleem / context
@@ -261,3 +262,5 @@ Bronprompt voor toekomstige uitvoering, bewust als minimale v1:
 ## Commits
 
 - 5a7e3e0 — docs: add service status backlog task
+
+- 942af46 — docs: sync local workspace state

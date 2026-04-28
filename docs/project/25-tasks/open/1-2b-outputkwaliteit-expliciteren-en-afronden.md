@@ -30,6 +30,7 @@ sort_order: 3
 
 
 
+
 # 1.2B outputkwaliteit expliciteren en afronden
 
 ## Probleem / context
@@ -84,3 +85,5 @@ De taak is klaar wanneer de criteria, verificatiestappen en bewijsregel helder g
 ## Commits
 
 - 5a7e3e0 — docs: add service status backlog task
+
+- 942af46 — docs: sync local workspace state

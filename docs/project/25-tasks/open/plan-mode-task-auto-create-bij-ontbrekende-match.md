@@ -10,8 +10,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 5
+sort_order: 4
 ---
+
 
 
 
@@ -88,3 +89,5 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 942af46 — docs: sync local workspace state

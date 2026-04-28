@@ -21,6 +21,7 @@ sort_order: 7
 
 
 
+
 # Admin/founder meeting capture — overzicht/detail met playback en download
 
 ## Probleem / context
@@ -157,3 +158,5 @@ Meeting Capture archive overview en detail met playback/download en statusblokke
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 942af46 — docs: sync local workspace state

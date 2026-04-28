@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 1
 ---
+
 
 
 
@@ -162,3 +163,5 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 942af46 — docs: sync local workspace state

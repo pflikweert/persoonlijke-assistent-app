@@ -22,6 +22,7 @@ sort_order: 1
 
 
 
+
 ## Probleem / context
 
 De reorder-productiebug is hersteld, maar de foto-upload op moment detail is nog niet apart bronvast onderzocht. In productie werkt upload soms wel en soms niet, zonder dat de exacte faalfase al bevestigd is.
@@ -221,6 +222,8 @@ Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor
 - b59c2b2 — docs: sync upload task commit evidence
 
 - b64cb74 — fix: harden task closeout and plugin active state
+
+- 942af46 — docs: sync local workspace state
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: bevestig faalfase, implementeer de kleinste robuuste fix, voeg gericht bewijs toe en herverifieer.
