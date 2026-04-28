@@ -149,6 +149,9 @@ Voor AI-gedrag, prompting en evaluatie:
     - geselecteerde task in de plugin-UI
     - echte actieve agentactiviteit via `active_agent*` metadata
   - `Actief` in plugin-UI mag nooit alleen "geselecteerd" betekenen
+  - repo-managed hooks mogen geen normale dirty-worktree-loop veroorzaken na een commit die taskfiles raakt
+  - `## Commits` in taskfiles is auto-managed en gebruikt een stabiele entry zonder commit-hash (`author date + subject`)
+  - `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet als standaard closeout-route
 - planintegriteit is verplicht:
   - een goedgekeurd oorspronkelijk plan of expliciet afgestemde hoofdscope blijft tijdens uitvoering het vaste referentiepunt
   - vervang of verklein het oorspronkelijke plan nooit stilzwijgend tijdens bouwen, testen of polish-rondes

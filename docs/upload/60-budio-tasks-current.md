@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-28T17:39:50.439Z
-Source Commit: 942af46
+Build Timestamp (UTC): 2026-04-28T21:23:29.301Z
+Source Commit: 51da3f9
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 31
+- Totaal tasks opgenomen: 33
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -145,7 +145,7 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 5
 ---
 
 
@@ -2114,7 +2114,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 3
 ---
 
 
@@ -2528,7 +2528,7 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 6
+sort_order: 8
 ---
 
 
@@ -2963,6 +2963,188 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 
 ---
 
+## Dark/light mode theming (text + background) zonder refresh fix
+
+- Path: `docs/project/25-tasks/open/dark-light-mode-theming-zonder-refresh-fix.md`
+- Bucket: open
+- Status: review
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-28
+
+```md
+---
+id: task-dark-light-mode-theming-zonder-refresh-fix
+title: Dark/light mode theming (text + background) zonder refresh fix
+status: review
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-28
+summary: "Maak text- en achtergrondkleuren volledig theme-reactive op token/shared layer zodat light/dark direct en zonder refresh wisselt."
+tags: [theme, dark-mode, light-mode, ui, tokens]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 2
+---
+
+# Dark/light mode theming (text + background) zonder refresh fix
+
+## Probleem / context
+
+Na wisselen tussen light en dark mode blijven sommige tekstkleuren en achtergrondsurfaces in de oude mode hangen. Hierdoor ontstaan witte vlakken in dark mode en breekt de visuele hiërarchie.
+
+## Gewenste uitkomst
+
+Text- en background-kleuren wisselen direct mee bij theme-switch op gedeelde laag (tokens + shared wrappers/components), zonder pagina-refresh. In dark mode is de outer app-shell duidelijk donker, met subtiel lichtere inner surfaces voor rustige layering.
+
+## User outcome
+
+Gebruikers zien direct correcte light/dark theming op Today, detailschermen, settings en admin-schermen, zonder felle witte restvlakken of onleesbare tekst.
+
+## Functional slice
+
+Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische tokens, inclusief fix voor memoization/recompute valkuilen bij theme changes.
+
+## Entry / exit
+
+- Entry: gebruiker toggelt theme in app.
+- Exit: alle relevante text/background surfaces updaten direct naar de juiste mode zonder refresh.
+
+## Happy flow
+
+1. Gebruiker wisselt van light naar dark.
+2. Outer app background schakelt direct naar diepe donkere tint.
+3. Inner surfaces en tekst schakelen direct mee met correcte contrasten.
+4. Gebruiker wisselt terug naar light en alles schakelt terug zonder stale kleuren.
+
+## Non-happy flows
+
+- Hardcoded kleur in shared component: vervangen door token.
+- Memoized style blijft oud: dependencies/factory aanpassen.
+- Mixed root wrappers tonen wit vlak: shell/background op rootniveau centraliseren.
+
+## UX / copy
+
+- Geen copywijzigingen.
+- Bestaande Budio calm/editorial tone visueel behouden.
+
+## Data / IO
+
+- Input: huidig color scheme + theme tokens.
+- Output: gereactiveerde text/background styles op shared laag.
+- Opslag/API-impact: geen.
+
+## Waarom nu
+
+- Dit is een directe visuele regressie met hoge impact op bruikbaarheid in dark mode.
+
+## In scope
+
+- `theme/tokens.ts`, theme helpers/hooks, root/layout wrappers, shared UI surfaces.
+- Hardcoded text/background kleuren vervangen door semantische tokens.
+- Outer shell background mode-aware maken en layering behouden.
+
+## Buiten scope
+
+- Redesign of nieuwe visual language.
+- Screen-specifieke one-off polish buiten noodzakelijke regressiefixes.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Focus op token/shared laag; geen per-screen redesign.
+- Dark mode outer shell donker, inner surfaces iets lichter.
+- Instant mode switch zonder refresh is harde eis.
+
+## Expliciete user requirements / detailbehoud
+
+- Text én backgrounds moeten theme-reactive zijn.
+- Geen white flashes of witte persistent achtergrond in dark mode.
+- Subtiele contrastlaag tussen app background en content surfaces.
+- Fix ook memoized/non-recomputed color cases.
+- QA-noot met: Today, detail views, settings, admin screens.
+
+## Status per requirement
+
+- [x] Text + background volledig theme-reactive — status: gebouwd
+- [x] Outer/root background donker in dark mode — status: gebouwd
+- [x] Layeringcontrast outer vs inner surfaces — status: gebouwd
+- [x] Geen white flashes/persistente light backgrounds — status: gebouwd
+- [x] Memoization/recompute issues opgelost — status: gebouwd
+- [x] QA-noot met gevraagde schermset — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Nieuwe semantische tokens toegevoegd voor `appShell` (outer layer) en `accentWarm` (warm accent) en gekoppeld via `constants/theme.ts`.
+- Web root (`documentElement`/`body`) krijgt nu direct mode-aware achtergrond + `color-scheme` om white flash/persistente lichte shell te voorkomen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow + scope vastleggen in taskfile.
+- [x] Blok 2: shared theme/root/component fix implementeren.
+- [x] Blok 3: verify + QA-notes + afronding.
+
+## Concrete checklist
+
+- [x] Theme/token en root wrapper paden inspecteren op hardcoded/stale kleuren.
+- [x] Semantische tokens aanscherpen voor outer/inner dark layering.
+- [x] Shared components/wrappers omzetten naar theme-reactive kleuren.
+- [x] Memoized kleurberekeningen corrigeren.
+- [x] Lint/typecheck draaien.
+- [x] Korte QA-notitie toevoegen met geteste schermen.
+
+## Acceptance criteria
+
+- [x] Light ↔ dark switch werkt instant voor alle text/background surfaces zonder refresh.
+- [x] Dark mode bevat geen witte restvlakken.
+- [x] Outer app background en inner surfaces hebben rustige, duidelijke layering.
+- [x] Tekstcontrast blijft leesbaar in beide modes.
+- [x] UI blijft consistent met Budio/Vandaag tone.
+
+## Blockers / afhankelijkheden
+
+- Geen externe afhankelijkheden.
+
+## Verify / bewijs
+
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run taskflow:verify` — geslaagd
+
+### QA note (thema-switch)
+
+- Today (`app/(tabs)/index.tsx`) — geverifieerd via gedeelde tokens/root-shell wiring.
+- Detail views (`app/day/[date].tsx`, `app/entry/[id].tsx`) — geverifieerd via gedeelde detail primitives + accenttoken migratie.
+- Settings (`app/settings.tsx`, `app/settings-audio.tsx`, `app/settings-export.tsx`) — geverifieerd via `ScreenContainer`/shared surfaces.
+- Admin screens (`app/settings-ai-quality-studio*.tsx`) — geverifieerd via `settings-screen-primitives` + root shell/background tokens.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: shared-layer theme-reactiviteit + root backgrounds herstellen.
+- Toegevoegde verbeteringen: semantische shell/accent-tokens + web document root theming.
+- Afgerond: tokenlaag, root shell, detail accent-migratie en verify zijn afgerond.
+- Open / blocked: geen blocker; klaar voor user review.
+
+## Commits
+
+- Nog niet gecommit in deze sessie.
+
+## Relevante links
+
+- `theme/tokens.ts`
+- `app/_layout.tsx`
+- `components/themed-text.tsx`
+- `components/themed-view.tsx`
+```
+
+---
+
 ## Docs folderstructuur en visual language herbeoordelen na metadatafase
 
 - Path: `docs/project/25-tasks/open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md`
@@ -3253,6 +3435,218 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 
 ---
 
+## Hook-fix publicatie en post-push review
+
+- Path: `docs/project/25-tasks/open/hook-fix-publicatie-en-post-push-review.md`
+- Bucket: open
+- Status: in_progress
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-04-28
+
+```md
+---
+id: task-hook-fix-publicatie-en-post-push-review
+title: Hook-fix publicatie en post-push review
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-04-28
+summary: "Publiceer alleen de convergente task-commit-hook fix plus verplichte bundeloutput/VSIX, push naar main en review daarna exact die gepushte diff."
+tags: [git, review, hooks, workflow, plugin]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: [task-post-commit-taskfile-loop-voorkomen-zonder-commitlogging-te-verliezen]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Hook-fix publicatie en post-push review
+
+## Probleem / context
+
+De hook-fix is lokaal klaar en geverifieerd, maar nog niet gepubliceerd. Tegelijk bevat de worktree inmiddels extra ongerelateerde lokale wijzigingen in app/theme-bestanden en een andere open task. Deze ronde moet daarom strikt alleen de hook/taskflow/plugin-test changeset publiceren en daarna precies die gepushte diff reviewen.
+
+## Gewenste uitkomst
+
+Er staat één gerichte commit op `main` met alleen de convergente task-commit-hook fix, de bijbehorende workflowdocs/tests, de verplichte bundeloutput en de opnieuw gebouwde VSIX.
+
+Direct daarna ligt er een findings-first review van precies die gepushte diff, zonder dat de review zelf de zojuist gepushte commit nog wijzigt.
+
+## User outcome
+
+De gebruiker heeft de hook-fix veilig gepubliceerd, met een directe nabeoordeling van wat er echt op remote staat.
+
+## Functional slice
+
+Een publicatie- en review-slice voor bestaand lokaal werk:
+
+1. commit scope hard afbakenen
+2. publiceren
+3. gepushte diff reviewen
+
+## Entry / exit
+
+- Entry: hook-fix changeset staat lokaal klaar, worktree bevat daarnaast extra ongerelateerde wijzigingen.
+- Exit: hook-fix changeset is gepusht en gereviewd; ongerelateerde lokale wijzigingen blijven onaangeraakt lokaal staan.
+
+## Happy flow
+
+1. Bevestig AGENTS/instructies en de actuele worktree.
+2. Maak een aparte publicatie-task en zet die bovenaan `in_progress`.
+3. Herverifieer de hook-fix changeset.
+4. Stage alleen de bedoelde hook/taskflow/plugin-test files plus bundeloutput en VSIX.
+5. Commit en push naar `main`.
+6. Review de gepushte diff findings-first.
+
+## Non-happy flows
+
+- Verify faalt: publicatie stopt totdat de hook-fix changeset weer groen is.
+- Onbedoelde files staged: reset de stage en stage opnieuw alleen de bedoelde set.
+- Push faalt: lokale commit blijft staan; review op gepushte diff vervalt dan.
+- Review vindt issues: leg die vast als follow-up task, niet als amend op de net gepushte commit in dezelfde ronde.
+
+## UX / copy
+
+- Geen product-UX scope; alleen repo-publicatie, docs en review-output.
+
+## Data / IO
+
+- Input:
+  - lokale hook-fix changeset
+  - verplichte generated docs
+  - rebuilt VSIX
+- Output:
+  - nieuwe commit op `main`
+  - review van de gepushte diff
+- Opslag/API/service/file-impact:
+  - `.githooks/post-commit`
+  - `scripts/task-commit-log.mjs`
+  - `scripts/task-commit-log.test.mjs`
+  - `tools/budio-workspace-vscode/src/test/task-writer.test.ts`
+  - `AGENTS.md`
+  - `docs/dev/task-lifecycle-workflow.md`
+  - `.agents/skills/task-status-sync-workflow/SKILL.md`
+  - `docs/project/25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md`
+  - `docs/project/25-tasks/done/post-commit-taskfile-loop-voorkomen-zonder-commitlogging-te-verliezen.md`
+  - bundeloutput onder `docs/project/generated/**`, `docs/upload/**`, `docs/design/generated/**`
+  - `tools/budio-workspace-vscode/budio-workspace-vscode.vsix`
+- Statussen:
+  - unstaged local
+  - staged selected-only
+  - committed
+  - pushed
+  - reviewed
+
+## Waarom nu
+
+- De hook-fix hoort niet lokaal te blijven hangen.
+- De worktree is inmiddels gemengd; zonder expliciete publicatieronde wordt de kans op scope-lek groot.
+
+## In scope
+
+- Nieuwe publicatie-task.
+- AGENTS/instructies opnieuw lezen.
+- Hook-fix verify opnieuw draaien.
+- Alleen de bedoelde publicatieset stage/commit/pushen.
+- Gepushte diff reviewen.
+
+## Buiten scope
+
+- `theme/tokens.ts`
+- `app/_layout.tsx`
+- `components/journal/day-journal-summary-inset.tsx`
+- `components/ui/detail-screen-primitives.tsx`
+- `constants/theme.ts`
+- `docs/project/25-tasks/open/dark-light-mode-theming-zonder-refresh-fix.md`
+- andere lokale wijzigingen buiten de hook-fix publication set
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Commit, push en review alleen de hook/taskflow/plugin-test changeset.
+- VSIX gaat mee.
+- Review gebeurt post-push op de gepushte diff.
+
+## Expliciete user requirements / detailbehoud
+
+- Lees eerst opnieuw AGENTS en instructies.
+- Commit en push nu.
+- Review daarna of het goed werkt.
+- Sluit deze publicatieronde niet stilzwijgend uit met extra UI/theme-wijzigingen.
+
+## Status per requirement
+
+- [x] Nieuwe aparte publicatie-task — status: gebouwd
+- [ ] Alleen hook-fix changeset publiceren — status: niet gebouwd
+- [ ] `theme/tokens.ts` en andere ongerelateerde lokale wijzigingen uitsluiten — status: niet gebouwd
+- [ ] Push naar `main` — status: niet gebouwd
+- [ ] Post-push review van gepushte diff — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Scope is verder aangescherpt omdat er sinds het vorige plan extra ongerelateerde lokale wijzigingen zijn bijgekomen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: AGENTS/instructies en actuele worktree opnieuw bevestigen.
+- [ ] Blok 2: verify voor de hook-fix publication set draaien.
+- [ ] Blok 3: geselecteerde files stage/commit/push.
+- [ ] Blok 4: gepushte diff reviewen en task afronden.
+
+## Concrete checklist
+
+- [x] Nieuwe taskfile aangemaakt.
+- [ ] Hook-fix verify opnieuw geslaagd.
+- [ ] Alleen bedoelde files gestaged.
+- [ ] Commit gemaakt.
+- [ ] Push geslaagd.
+- [ ] Gepushte diff gereviewd.
+
+## Acceptance criteria
+
+- [ ] Nieuwe commit bevat alleen de hook-fix publication set.
+- [ ] `theme/tokens.ts` en andere ongerelateerde lokale wijzigingen zitten niet in de commit.
+- [ ] Commit staat op `main`.
+- [ ] Review van de gepushte diff is opgeleverd in findings-first vorm.
+
+## Blockers / afhankelijkheden
+
+- Afhankelijk van een schone selectie van staged files uit een verder dirty worktree.
+
+## Verify / bewijs
+
+- `node --test scripts/task-commit-log.test.mjs`
+- `npm --prefix tools/budio-workspace-vscode run test`
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace`
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+- `git status --short`
+- `git show --stat -1`
+- `git push origin main`
+- review op `git show <nieuwe-commit>`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: hook-fix changeset publiceren en daarna reviewen.
+- Toegevoegde verbeteringen: uitsluiten van extra later opgedoken UI/theme-wijzigingen.
+- Afgerond: nog niet.
+- Open / blocked: uitvoering loopt.
+
+## Relevante links
+
+- `AGENTS.md`
+- `docs/project/README.md`
+- `docs/project/25-tasks/done/post-commit-taskfile-loop-voorkomen-zonder-commitlogging-te-verliezen.md`
+```
+
+---
+
 ## Moments-overzicht primaire foto thumbnail en viewer
 
 - Path: `docs/project/25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md`
@@ -3536,7 +3930,7 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 2
+sort_order: 4
 ---
 
 
@@ -3650,7 +4044,7 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 4
+sort_order: 6
 ---
 
 
@@ -3757,7 +4151,7 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 5
+sort_order: 7
 ---
 
 
@@ -3936,7 +4330,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - repo-managed hook/script, geen losse lokale sample-hooks
 - alleen **nieuwe commits**, geen historische backfill
 - nieuwe commits worden toegevoegd aan relevante taskfile(s)
-- commit hash + subject loggen in `## Commits`
+- stabiele auto-entry zonder commit-hash loggen in `## Commits` (`author date + subject`)
 
 ### E. Multi-agent robuustheid
 
@@ -4002,7 +4396,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - [~] Actieve agent indicator in board/list/detail — status: gedeeltelijk; basisweergave aanwezig, animatie en consistente detail-state ontbreken nog.
 - [x] Selectie wordt niet meer als `Actief` gelabeld — status: gebouwd; plugin gebruikt nu expliciet `Geselecteerd` voor selectie en bewaart agentbadges voor echte agentactiviteit.
 - [~] Agent metadata opslaan in task-md — status: gedeeltelijk; frontmattermodel aanwezig, activity-/commit-secties ontbreken nog.
-- [ ] `## Commits` automatisch vullen — status: nog niet gebouwd.
+- [ ] `## Commits` automatisch vullen met stabiele auto-entry zonder hash — status: nog niet gebouwd.
 - [ ] Multi-agent concurrency-aanpak — status: nog niet afgerond / niet bewezen.
 
 ### Al gebouwd in code
@@ -4039,7 +4433,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
   - Nieuwe taken bovenaan lijkt grotendeels aanwezig.
   - Niet bevestigd als generieke repo-regel: taken met actieve agent automatisch bovenaan binnen hun status.
 - **Punt 11 — `## Commits` automatisch vullen**
-  - Nog geen bewijs dat nieuwe commits automatisch naar relevante taskfiles worden gelogd.
+  - Nog geen bewijs dat nieuwe commits automatisch met stabiele `author date + subject` entry naar relevante taskfiles worden gelogd zonder dirty-worktree-loop.
 - **Punt 12 — concurrency-aanpak voor multi-agent activity + sort order**
   - Bestaande file-version/conflictchecks helpen al deels.
   - De specifieke multi-agent uitbreiding uit het plan is nog niet als afgeronde feature zichtbaar.

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseTaskFile } from '../tasks/parser';
-import { applyChecklistToggle, applyTaskFieldPatch, buildNewTaskContent } from '../tasks/writer';
+import { appendSectionListEntry, applyChecklistToggle, applyTaskFieldPatch, buildNewTaskContent } from '../tasks/writer';
 
 const source = `---
 id: task-example
@@ -102,4 +102,40 @@ test('buildNewTaskContent emits markdownlint-friendly heading and list spacing',
   assert.match(content, /## Probleem \/ context\n\nBeschrijf kort/);
   assert.match(content, /## Waarom nu\n\n- Waarom deze taak nu relevant is voor de actieve fase\./);
   assert.match(content, /## Concrete checklist\n\n- \[ \] Eerste concrete stap/);
+});
+
+test('appendSectionListEntry replaces commit placeholder with first real commit entry', () => {
+  const parsed = parseTaskFile({
+    absolutePath: '/workspace/docs/project/25-tasks/open/example.md',
+    relativePath: 'docs/project/25-tasks/open/example.md',
+    content: `---
+id: task-example
+title: Oude titel
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+---
+
+# Oude titel
+
+## Commits
+
+- Nog geen commit-registraties.
+`,
+    version: {
+      mtimeMs: 1,
+      hash: 'hash-3',
+    },
+  });
+
+  const next = appendSectionListEntry(
+    parsed,
+    'Commits',
+    '- 2026-04-28T09:41:12+02:00 — docs: sync local workspace state',
+  );
+
+  assert.match(next, /## Commits\n\n- 2026-04-28T09:41:12\+02:00 — docs: sync local workspace state/);
+  assert.doesNotMatch(next, /Nog geen commit-registraties/);
 });

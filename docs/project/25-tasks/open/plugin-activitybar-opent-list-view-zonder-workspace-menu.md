@@ -10,8 +10,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 5
+sort_order: 7
 ---
+
 
 
 
@@ -189,7 +190,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - repo-managed hook/script, geen losse lokale sample-hooks
 - alleen **nieuwe commits**, geen historische backfill
 - nieuwe commits worden toegevoegd aan relevante taskfile(s)
-- commit hash + subject loggen in `## Commits`
+- stabiele auto-entry zonder commit-hash loggen in `## Commits` (`author date + subject`)
 
 ### E. Multi-agent robuustheid
 
@@ -255,7 +256,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - [~] Actieve agent indicator in board/list/detail — status: gedeeltelijk; basisweergave aanwezig, animatie en consistente detail-state ontbreken nog.
 - [x] Selectie wordt niet meer als `Actief` gelabeld — status: gebouwd; plugin gebruikt nu expliciet `Geselecteerd` voor selectie en bewaart agentbadges voor echte agentactiviteit.
 - [~] Agent metadata opslaan in task-md — status: gedeeltelijk; frontmattermodel aanwezig, activity-/commit-secties ontbreken nog.
-- [ ] `## Commits` automatisch vullen — status: nog niet gebouwd.
+- [ ] `## Commits` automatisch vullen met stabiele auto-entry zonder hash — status: nog niet gebouwd.
 - [ ] Multi-agent concurrency-aanpak — status: nog niet afgerond / niet bewezen.
 
 ### Al gebouwd in code
@@ -292,7 +293,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
   - Nieuwe taken bovenaan lijkt grotendeels aanwezig.
   - Niet bevestigd als generieke repo-regel: taken met actieve agent automatisch bovenaan binnen hun status.
 - **Punt 11 — `## Commits` automatisch vullen**
-  - Nog geen bewijs dat nieuwe commits automatisch naar relevante taskfiles worden gelogd.
+  - Nog geen bewijs dat nieuwe commits automatisch met stabiele `author date + subject` entry naar relevante taskfiles worden gelogd zonder dirty-worktree-loop.
 - **Punt 12 — concurrency-aanpak voor multi-agent activity + sort order**
   - Bestaande file-version/conflictchecks helpen al deels.
   - De specifieke multi-agent uitbreiding uit het plan is nog niet als afgeronde feature zichtbaar.
@@ -371,3 +372,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 8c8e11b — docs: record task commit evidence
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge

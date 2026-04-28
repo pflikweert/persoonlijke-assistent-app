@@ -83,6 +83,9 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 36. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
 37. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
 38. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
+39. Repo-managed hooks moeten convergent zijn: na een commit die taskfiles raakt mag geen normale dirty-worktree-loop achterblijven.
+40. `## Commits` in taskfiles is auto-managed en gebruikt een stabiele entry zonder commit-hash: `author date + subject`.
+41. `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet als standaard closeout-route.
 
 ## Korte voorbeelden
 

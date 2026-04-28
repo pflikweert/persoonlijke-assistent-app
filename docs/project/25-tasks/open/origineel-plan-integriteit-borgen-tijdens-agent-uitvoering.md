@@ -10,8 +10,9 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 2
+sort_order: 4
 ---
+
 
 
 
@@ -98,3 +99,5 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 8c8e11b — docs: record task commit evidence
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge

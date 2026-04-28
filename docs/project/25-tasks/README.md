@@ -98,13 +98,16 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [1.2E beta-readiness expliciteren en afronden](open/1-2e-beta-readiness-expliciteren-en-afronden.md) | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [Admin/founder meeting capture — web route en IA](open/admin-founder-meeting-capture-web-route-en-ia.md) | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
+| [Hook-fix publicatie en post-push review](open/hook-fix-publicatie-en-post-push-review.md) | p1 | transitiemaand-consumer-beta | Er staat één gerichte commit op `main` met alleen de convergente task-commit-hook fix, de bijbehorende workflowdocs/tests, de verplichte... |
 | [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
 | [Plan Mode task auto-create bij ontbrekende match](open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
 
 ### Review
 
-_Geen taken._
+| Taak | Prioriteit | Fase | Korte omschrijving |
+| --- | --- | --- | --- |
+| [Dark/light mode theming (text + background) zonder refresh fix](open/dark-light-mode-theming-zonder-refresh-fix.md) | p1 | transitiemaand-consumer-beta | Text- en background-kleuren wisselen direct mee bij theme-switch op gedeelde laag (tokens + shared wrappers/components), zonder pagina-re... |
 
 ### Blocked
 
@@ -133,6 +136,7 @@ _Geen taken._
 | [Moment fotoviewer swipe/zoom verbeteren en markdownstructuur tonen](done/moment-fotoviewer-swipe-zoom-en-markdown-weergave.md) | p1 | transitiemaand-consumer-beta | De fotoviewer voelt op mobiel beheerst en direct aan: per swipe land je op de bedoelde vorige of volgende foto, en ingezoomde foto's kun... |
 | [Plan/spec quality guardrails voor ideas, epics en tasks](done/plan-spec-quality-guardrails-voor-ideas-epics-en-tasks.md) | p1 | transitiemaand-consumer-beta | Toekomstige agents maken standaard ideas, researchdocs, epics, tasks en subtasks aan die zelfstandig bruikbaar zijn. Nieuwe uitvoerbare t... |
 | [Plugin drag-drop sortering in board en list herstellen](done/plugin-drag-drop-sortering-board-en-list-herstel.md) | p1 | transitiemaand-consumer-beta | Taken moeten weer met de muis versleept kunnen worden in board én list view, inclusief statusverplaatsing en herordening. |
+| [Post-commit taskfile-loop voorkomen zonder commitlogging te verliezen](done/post-commit-taskfile-loop-voorkomen-zonder-commitlogging-te-verliezen.md) | p1 | transitiemaand-consumer-beta | Automatische taskfile commitlogging blijft bestaan, maar gebruikt voortaan een stabiele entry zonder commit-hash. De hook mag taskfiles a... |
 | [Thumbnail reorder productiebug in moment detail](done/thumbnail-reorder-productiebug-moment-detail.md) | p1 | transitiemaand-consumer-beta | De galerij-reorder werkt in productie vloeiend en betrouwbaar: tijdens slepen beweegt de actieve thumbnail correct mee en blijft niet vas... |
 | [Dev-browser configureerbaar voor local web](done/dev-browser-configureerbaar-voor-local-web.md) | p2 | transitiemaand-consumer-beta | `npm run dev` blijft standaard hetzelfde werken wanneer er geen browser-env is gezet. Als `BUDIO_DEV_BROWSER` lokaal is gezet, gebruikt d... |
 | [Docs UX, audience-metadata en uploadbundels opschonen](done/docs-ux-audience-taxonomie-en-uploadbundels.md) | p2 | transitiemaand-consumer-beta | De docs krijgen een kleine metadata- en visuele laag die duidelijk maakt voor wie een document bedoeld is en hoe het gebruikt moet worden... |

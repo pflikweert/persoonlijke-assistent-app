@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 3
 ---
+
 
 
 
@@ -165,3 +166,5 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 8c8e11b — docs: record task commit evidence
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge

@@ -10,8 +10,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 5
 ---
+
 
 
 
@@ -80,3 +81,5 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 ## Commits
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge

@@ -10,8 +10,9 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 6
+sort_order: 8
 ---
+
 
 
 
@@ -100,3 +101,5 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 8c8e11b — docs: record task commit evidence
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge

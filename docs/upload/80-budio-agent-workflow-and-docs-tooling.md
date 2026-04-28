@@ -2,8 +2,8 @@
 
 # Budio Agent Workflow and Docs Tooling
 
-Build Timestamp (UTC): 2026-04-28T17:39:50.439Z
-Source Commit: 942af46
+Build Timestamp (UTC): 2026-04-28T21:23:29.301Z
+Source Commit: 51da3f9
 
 Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -936,6 +936,9 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 36. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
 37. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
 38. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
+39. Repo-managed hooks moeten convergent zijn: na een commit die taskfiles raakt mag geen normale dirty-worktree-loop achterblijven.
+40. `## Commits` in taskfiles is auto-managed en gebruikt een stabiele entry zonder commit-hash: `author date + subject`.
+41. `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet als standaard closeout-route.
 
 ## Korte voorbeelden
 
@@ -1288,6 +1291,9 @@ Voor AI-gedrag, prompting en evaluatie:
     - geselecteerde task in de plugin-UI
     - echte actieve agentactiviteit via `active_agent*` metadata
   - `Actief` in plugin-UI mag nooit alleen "geselecteerd" betekenen
+  - repo-managed hooks mogen geen normale dirty-worktree-loop veroorzaken na een commit die taskfiles raakt
+  - `## Commits` in taskfiles is auto-managed en gebruikt een stabiele entry zonder commit-hash (`author date + subject`)
+  - `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet als standaard closeout-route
 - planintegriteit is verplicht:
   - een goedgekeurd oorspronkelijk plan of expliciet afgestemde hoofdscope blijft tijdens uitvoering het vaste referentiepunt
   - vervang of verklein het oorspronkelijke plan nooit stilzwijgend tijdens bouwen, testen of polish-rondes
@@ -1582,6 +1588,9 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
    - Zet status op `done` zodra code + verify klaar zijn en commit/push gereed is.
    - Verplaats taak naar `docs/project/25-tasks/done/` als nog in `open/`.
    - Maak `active_agent*` metadata leeg; `done` draagt geen actieve agentcontext.
+   - Repo-managed hooks horen convergent te zijn: na een commit die taskfiles raakt blijft de repo schoon zonder extra handmatige cleanup.
+   - `## Commits` is auto-managed met een stabiele entry zonder commit-hash (`author date + subject`).
+   - `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet de normale closeout-route.
    - Meld in eindresultaat opnieuw `Task`, `Task file`, `Status`.
    - Voer vóór afronding een expliciete reconciliation uit onder `## Reconciliation voor afronding`:
      - oorspronkelijk plan
