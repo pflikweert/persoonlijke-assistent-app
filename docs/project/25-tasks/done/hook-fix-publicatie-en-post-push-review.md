@@ -1,7 +1,7 @@
 ---
 id: task-hook-fix-publicatie-en-post-push-review
 title: Hook-fix publicatie en post-push review
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
@@ -136,10 +136,10 @@ Een publicatie- en review-slice voor bestaand lokaal werk:
 ## Status per requirement
 
 - [x] Nieuwe aparte publicatie-task — status: gebouwd
-- [ ] Alleen hook-fix changeset publiceren — status: niet gebouwd
-- [ ] `theme/tokens.ts` en andere ongerelateerde lokale wijzigingen uitsluiten — status: niet gebouwd
-- [ ] Push naar `main` — status: niet gebouwd
-- [ ] Post-push review van gepushte diff — status: niet gebouwd
+- [x] Alleen hook-fix changeset publiceren — status: gebouwd
+- [x] `theme/tokens.ts` en andere ongerelateerde lokale wijzigingen uitsluiten — status: gebouwd
+- [x] Push naar `main` — status: gebouwd
+- [x] Post-push review van gepushte diff — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -148,25 +148,25 @@ Een publicatie- en review-slice voor bestaand lokaal werk:
 ## Uitvoerblokken / fasering
 
 - [x] Blok 1: AGENTS/instructies en actuele worktree opnieuw bevestigen.
-- [ ] Blok 2: verify voor de hook-fix publication set draaien.
-- [ ] Blok 3: geselecteerde files stage/commit/push.
-- [ ] Blok 4: gepushte diff reviewen en task afronden.
+- [x] Blok 2: verify voor de hook-fix publication set draaien.
+- [x] Blok 3: geselecteerde files stage/commit/push.
+- [x] Blok 4: gepushte diff reviewen en task afronden.
 
 ## Concrete checklist
 
 - [x] Nieuwe taskfile aangemaakt.
-- [ ] Hook-fix verify opnieuw geslaagd.
-- [ ] Alleen bedoelde files gestaged.
-- [ ] Commit gemaakt.
-- [ ] Push geslaagd.
-- [ ] Gepushte diff gereviewd.
+- [x] Hook-fix verify opnieuw geslaagd.
+- [x] Alleen bedoelde files gestaged.
+- [x] Commit gemaakt.
+- [x] Push geslaagd.
+- [x] Gepushte diff gereviewd.
 
 ## Acceptance criteria
 
-- [ ] Nieuwe commit bevat alleen de hook-fix publication set.
-- [ ] `theme/tokens.ts` en andere ongerelateerde lokale wijzigingen zitten niet in de commit.
-- [ ] Commit staat op `main`.
-- [ ] Review van de gepushte diff is opgeleverd in findings-first vorm.
+- [x] Nieuwe commit bevat alleen de hook-fix publication set.
+- [x] `theme/tokens.ts` en andere ongerelateerde lokale wijzigingen zitten niet in de commit.
+- [x] Commit staat op `main`.
+- [x] Review van de gepushte diff is opgeleverd in findings-first vorm.
 
 ## Blockers / afhankelijkheden
 
@@ -189,8 +189,13 @@ Een publicatie- en review-slice voor bestaand lokaal werk:
 
 - Oorspronkelijk plan: hook-fix changeset publiceren en daarna reviewen.
 - Toegevoegde verbeteringen: uitsluiten van extra later opgedoken UI/theme-wijzigingen.
-- Afgerond: nog niet.
-- Open / blocked: uitvoering loopt.
+- Afgerond: hook-fix changeset is als `4bfc187` naar `main` gepusht, uitsluitingen zijn gerespecteerd en de gepushte diff is daarna findings-first gereviewd.
+- Open / blocked: geen.
+
+## Reviewresultaat
+
+- Geen findings op de gepushte hook-fix diff.
+- Residueel risico: de review heeft de echte commit met actieve hook en de script-level amend-smoke bevestigd, maar geen extra handmatige tweede live-commit in deze hoofdrepo na de push uitgevoerd buiten de bestaande test- en commitflow.
 
 ## Relevante links
 
