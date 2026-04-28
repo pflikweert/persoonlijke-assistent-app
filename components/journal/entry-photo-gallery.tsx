@@ -31,10 +31,13 @@ import {
   uploadEntryPhotoForEntry,
 } from "@/services";
 import {
+  buildEntryPhotoPickerDiagnostics,
   buildEntryPhotoPreviewSlots,
+  classifyEntryPhotoPrepareStep,
   createEntryPhotoPhaseError,
   describeEntryPhotoError,
   getEntryPhotoErrorDiagnostics,
+  getEntryPhotoRuntimeDiagnostics,
 } from "@/src/lib/entry-photo-gallery/flow";
 import {
   getGalleryDragLeft,
@@ -62,11 +65,22 @@ type PickerUploadAsset = {
   mimeType?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
-  file?: File | null;
+  file?: unknown | null;
 };
 
-function isWebFile(value: unknown): value is File {
-  return typeof File !== "undefined" && value instanceof File;
+type BinaryPickerSource = {
+  arrayBuffer: () => Promise<ArrayBuffer>;
+  size?: number;
+  type?: string;
+  name?: string;
+};
+
+function isBinaryPickerSource(value: unknown): value is BinaryPickerSource {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  return typeof (value as { arrayBuffer?: unknown }).arrayBuffer === "function";
 }
 
 type BaseProps = {
@@ -85,6 +99,17 @@ const DRAG_PLACEHOLDER_SCALE = 0.94;
 const SORT_HOLD_MS = 120;
 const TAP_MOVE_TOLERANCE = 8;
 const REORDER_LOG_PREFIX = "[entry-photo:reorder]";
+const PREPARE_LOG_PREFIX = "[entry-photo:prepare]";
+const SUPPORTED_IMAGE_EXTENSIONS = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+  "heic",
+  "heif",
+  "gif",
+  "bmp",
+]);
 
 function getLongEdgeResize(width: number, height: number, maxLongEdge: number) {
   if (width <= 0 || height <= 0) {
@@ -129,26 +154,67 @@ async function buildPreparedImageAsset(
   const displayResize = getLongEdgeResize(width, height, 1600);
   const thumbResize = getLongEdgeResize(width, height, 560);
   const useWebBase64 = Platform.OS === "web";
+  const extension = asset.fileName?.trim().split(".").pop()?.toLowerCase() ?? "";
 
-  const readDataUrlFromBlob = (blob: Blob) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
+  const mimeFromExtension = (value: string) => {
+    switch (value) {
+      case "jpg":
+      case "jpeg":
+        return "image/jpeg";
+      case "png":
+        return "image/png";
+      case "webp":
+        return "image/webp";
+      case "heic":
+        return "image/heic";
+      case "heif":
+        return "image/heif";
+      case "gif":
+        return "image/gif";
+      case "bmp":
+        return "image/bmp";
+      default:
+        return null;
+    }
+  };
 
-      reader.onerror = () => {
-        reject(new Error("Web-fotobestand kon niet gelezen worden."));
-      };
+  const normalizeMimeType = (value: string | null | undefined) => {
+    const normalized = value?.trim().toLowerCase() ?? "";
+    return normalized || null;
+  };
 
-      reader.onloadend = () => {
-        if (typeof reader.result !== "string" || !reader.result.trim()) {
-          reject(new Error("Web-fotobestand leverde geen geldige data op."));
-          return;
-        }
+  const encodeArrayBufferToBase64 = (value: ArrayBuffer) => {
+    const bytes = new Uint8Array(value);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let index = 0; index < bytes.length; index += chunkSize) {
+      const chunk = bytes.subarray(index, index + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    return globalThis.btoa(binary);
+  };
 
-        resolve(reader.result);
-      };
+  const readDataUrlFromBinarySource = async (source: BinaryPickerSource) => {
+    let bytes: ArrayBuffer;
+    try {
+      bytes = await source.arrayBuffer();
+    } catch (error) {
+      throw new Error(
+        `picker_file_read:${error instanceof Error ? error.message : "onbekende fout"}`
+      );
+    }
 
-      reader.readAsDataURL(blob);
-    });
+    if (bytes.byteLength === 0) {
+      throw new Error("picker_zero_size:Gekozen fotobestand is leeg.");
+    }
+
+    const sourceMime =
+      normalizeMimeType(asset.mimeType) ||
+      normalizeMimeType(source.type) ||
+      mimeFromExtension(extension) ||
+      "image/jpeg";
+    return `data:${sourceMime};base64,${encodeArrayBufferToBase64(bytes)}`;
+  };
 
   const decodeBase64ToArrayBuffer = (value: string) => {
     const base64 = value.includes(",") ? value.slice(value.indexOf(",") + 1) : value;
@@ -167,6 +233,14 @@ async function buildPreparedImageAsset(
       return decodeBase64ToArrayBuffer(result.base64);
     }
 
+    if (useWebBase64 && typeof result.uri === "string" && result.uri.startsWith("data:")) {
+      return decodeBase64ToArrayBuffer(result.uri);
+    }
+
+    if (!result.uri?.trim()) {
+      throw new Error("Gemapte fotodata ontbreekt.");
+    }
+
     const response = await fetch(result.uri);
     if (!response.ok) {
       throw new Error(`Gemapte fotodata ophalen mislukte (${response.status}).`);
@@ -175,9 +249,38 @@ async function buildPreparedImageAsset(
     return response.arrayBuffer();
   };
 
-  let manipulateUri = uri;
-  if (useWebBase64 && isWebFile(asset.file)) {
-    manipulateUri = await readDataUrlFromBlob(asset.file);
+  const normalizedUri = uri.trim();
+  const normalizedMimeType = normalizeMimeType(asset.mimeType);
+  const binarySource = isBinaryPickerSource(asset.file) ? asset.file : null;
+
+  let manipulateUri = normalizedUri;
+  if (useWebBase64) {
+    const hasSupportedExtension = SUPPORTED_IMAGE_EXTENSIONS.has(extension);
+    if (binarySource === null && !normalizedUri) {
+      throw new Error("picker_missing_source:Geen bruikbare fotobron ontvangen.");
+    }
+    if (normalizedMimeType && !normalizedMimeType.startsWith("image/") && !hasSupportedExtension) {
+      throw new Error("picker_unsupported_type:Gekozen bestand is geen ondersteunde afbeelding.");
+    }
+    if (!normalizedMimeType && !hasSupportedExtension && binarySource) {
+      throw new Error("picker_unsupported_type:Afbeeldingstype ontbreekt of wordt niet ondersteund.");
+    }
+
+    const binarySize =
+      typeof asset.fileSize === "number"
+        ? asset.fileSize
+        : typeof binarySource?.size === "number"
+          ? binarySource.size
+          : null;
+    if (typeof binarySize === "number" && binarySize === 0) {
+      throw new Error("picker_zero_size:Gekozen fotobestand is leeg.");
+    }
+
+    if (binarySource) {
+      manipulateUri = await readDataUrlFromBinarySource(binarySource);
+    } else if (!normalizedUri) {
+      throw new Error("picker_missing_uri:Fotobron mist een geldige URI.");
+    }
   }
 
   const saveOptions = {
@@ -432,6 +535,10 @@ export function EntryPhotoGallery({
     },
     []
   );
+
+  const logPrepare = useCallback((event: string, details: Record<string, unknown>) => {
+    console.error(PREPARE_LOG_PREFIX, event, details);
+  }, []);
 
   useEffect(() => {
     onPhotosSnapshotChange?.(photos);
@@ -793,26 +900,34 @@ export function EntryPhotoGallery({
       setError(null);
       try {
         for (const asset of assets) {
+          const flowId = createClientFlowId("entry-photo");
           let prepared: PreparedImageAsset;
           try {
             prepared = await buildPreparedImageAsset(asset);
           } catch (nextError) {
+            const runtimeDiagnostics = getEntryPhotoRuntimeDiagnostics();
+            const pickerDiagnostics = buildEntryPhotoPickerDiagnostics({
+              file: asset.file,
+              uri: asset.uri,
+              fileName: asset.fileName,
+              fileSize: asset.fileSize,
+            });
+
             throw createEntryPhotoPhaseError(
               "upload_prepare",
               nextError,
               "Foto voorbereiden mislukte.",
               {
+                flowId,
                 rawEntryId,
                 pickerUri: asset.uri,
-                pickerUriScheme: asset.uri.split(":")[0] ?? null,
                 pickerMimeType: asset.mimeType?.trim() || null,
                 pickerFileName: asset.fileName?.trim() || null,
                 pickerFileSize: typeof asset.fileSize === "number" ? asset.fileSize : null,
-                pickerHasFile: isWebFile(asset.file),
-                prepareStep:
-                  nextError instanceof Error && nextError.message.includes(":")
-                    ? nextError.message.split(":")[0] ?? null
-                    : null,
+                pickerHasFile: isBinaryPickerSource(asset.file),
+                prepareStep: classifyEntryPhotoPrepareStep(nextError),
+                ...pickerDiagnostics,
+                ...runtimeDiagnostics,
               }
             );
           }
@@ -827,12 +942,22 @@ export function EntryPhotoGallery({
         onPhotosChanged?.();
       } catch (nextError) {
         const classified = describeEntryPhotoError(nextError, "Foto uploaden mislukte.");
+        if (classified.phase === "upload_prepare") {
+          logPrepare("prepare_failed", {
+            ...classified.diagnostics,
+            detail: classified.detail,
+            routePathname:
+              Platform.OS === "web" && typeof window !== "undefined"
+                ? window.location.pathname
+                : null,
+          });
+        }
         setError(classified.detail);
       } finally {
         setUploading(false);
       }
     },
-    [onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
+    [logPrepare, onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
   );
 
   const pickFromLibrary = useCallback(async () => {

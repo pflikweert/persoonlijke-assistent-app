@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildEntryPhotoPickerDiagnostics,
   buildEntryPhotoPreviewSlots,
+  classifyEntryPhotoPickerSource,
+  classifyEntryPhotoPrepareStep,
   createEntryPhotoPhaseError,
   describeEntryPhotoError,
   getEntryPhotoErrorDiagnostics,
+  getEntryPhotoFileExtension,
+  getEntryPhotoFileSizeBucket,
+  getEntryPhotoUriScheme,
 } from "@/src/lib/entry-photo-gallery/flow";
 
 describe("entry photo gallery flow helpers", () => {
@@ -75,7 +81,15 @@ describe("entry photo gallery flow helpers", () => {
         pickerFileName: "picked.jpg",
         pickerFileSize: 12345,
         pickerHasFile: true,
+        pickerFileExtension: "jpg",
+        pickerFileSizeBucket: "1b-64kb",
+        pickerSourceKind: "file_like",
         prepareStep: "display_bytes",
+        runtimePlatform: "web",
+        runtimeOs: "android",
+        runtimeBrowser: "chrome",
+        runtimeBrowserMajor: "135",
+        hasServiceWorkerController: true,
       }
     );
 
@@ -86,7 +100,71 @@ describe("entry photo gallery flow helpers", () => {
     expect(diagnostics.pickerFileName).toBe("picked.jpg");
     expect(diagnostics.pickerFileSize).toBe(12345);
     expect(diagnostics.pickerHasFile).toBe(true);
+    expect(diagnostics.pickerFileExtension).toBe("jpg");
+    expect(diagnostics.pickerFileSizeBucket).toBe("1b-64kb");
+    expect(diagnostics.pickerSourceKind).toBe("file_like");
     expect(diagnostics.prepareStep).toBe("display_bytes");
+    expect(diagnostics.runtimePlatform).toBe("web");
+    expect(diagnostics.runtimeOs).toBe("android");
+    expect(diagnostics.runtimeBrowser).toBe("chrome");
+    expect(diagnostics.runtimeBrowserMajor).toBe("135");
+    expect(diagnostics.hasServiceWorkerController).toBe(true);
+  });
+
+  it("extracts picker diagnostics for blob-backed Android web assets", () => {
+    const fileLike = {
+      name: "picked.webp",
+      size: 640000,
+      type: "image/webp",
+      arrayBuffer: async () => new ArrayBuffer(8),
+    };
+
+    expect(classifyEntryPhotoPickerSource({ file: fileLike, uri: "blob:https://assistent.budio.nl/example" })).toBe(
+      "file_like"
+    );
+    expect(getEntryPhotoUriScheme("blob:https://assistent.budio.nl/example")).toBe("blob");
+    expect(getEntryPhotoFileExtension("picked.webp")).toBe("webp");
+    expect(getEntryPhotoFileSizeBucket(640000)).toBe("513kb-2mb");
+    expect(
+      buildEntryPhotoPickerDiagnostics({
+        file: fileLike,
+        uri: "blob:https://assistent.budio.nl/example",
+        fileName: "picked.webp",
+        fileSize: 640000,
+      })
+    ).toEqual({
+      pickerUriScheme: "blob",
+      pickerFileExtension: "webp",
+      pickerFileSizeBucket: "513kb-2mb",
+      pickerSourceKind: "file_like",
+    });
+  });
+
+  it("classifies uri-only and missing picker sources", () => {
+    expect(classifyEntryPhotoPickerSource({ file: null, uri: "content://picked-image" })).toBe(
+      "uri_only"
+    );
+    expect(classifyEntryPhotoPickerSource({ file: null, uri: "" })).toBe("missing");
+  });
+
+  it("classifies explicit prepare validation and bytes steps", () => {
+    expect(classifyEntryPhotoPrepareStep(new Error("picker_zero_size:Gekozen fotobestand is leeg."))).toBe(
+      "picker_zero_size"
+    );
+    expect(classifyEntryPhotoPrepareStep(new Error("picker_unsupported_type:Afbeeldingstype ontbreekt."))).toBe(
+      "picker_unsupported_type"
+    );
+    expect(classifyEntryPhotoPrepareStep(new Error("display_bytes:Failed to fetch"))).toBe(
+      "display_bytes"
+    );
+    expect(classifyEntryPhotoPrepareStep(new Error("iets anders"))).toBeNull();
+  });
+
+  it("buckets zero-size and missing file metadata safely", () => {
+    expect(getEntryPhotoFileSizeBucket(0)).toBe("0b");
+    expect(getEntryPhotoFileSizeBucket(null)).toBeNull();
+    expect(getEntryPhotoFileExtension("no-extension")).toBeNull();
+    expect(getEntryPhotoUriScheme("")).toBeNull();
   });
 
   it("preserves diagnostic metadata for reorder errors", () => {

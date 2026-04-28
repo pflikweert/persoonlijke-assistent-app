@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 2
 ---
+
 
 
 
@@ -171,3 +172,5 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression

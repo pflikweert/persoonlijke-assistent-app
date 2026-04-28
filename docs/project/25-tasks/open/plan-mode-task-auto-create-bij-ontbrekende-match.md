@@ -10,8 +10,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 6
+sort_order: 5
 ---
+
 
 
 
@@ -97,3 +98,5 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression

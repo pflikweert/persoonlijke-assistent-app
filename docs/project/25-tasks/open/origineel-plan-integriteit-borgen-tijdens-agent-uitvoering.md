@@ -10,8 +10,9 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 4
+sort_order: 3
 ---
+
 
 
 
@@ -104,3 +105,5 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
