@@ -24,7 +24,7 @@ export async function runTaskCommitLog({
   const writer = appendSectionListEntry ?? (await loadWriter(repoRootPath));
 
   const taskfilePaths = collectTaskfilePaths(
-    git(['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']),
+    git(['diff-tree', '--no-commit-id', '--name-status', '--diff-filter=ACMR', '-r', 'HEAD']),
   );
 
   if (taskfilePaths.length === 0) {
@@ -86,11 +86,26 @@ export function buildCommitLogEntry({ authorDate, subject }) {
 }
 
 export function collectTaskfilePaths(changedFilesOutput) {
-  return String(changedFilesOutput)
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((filePath) => TASKFILE_PATTERN.test(filePath));
+  const paths = [];
+
+  for (const line of String(changedFilesOutput).split('\n')) {
+    const columns = line.trim().split('\t').filter(Boolean);
+    if (columns.length === 0) {
+      continue;
+    }
+
+    const status = columns[0];
+    if (status.startsWith('D')) {
+      continue;
+    }
+
+    const filePath = status.startsWith('R') || status.startsWith('C') ? columns[2] : columns[1] ?? columns[0];
+    if (filePath && TASKFILE_PATTERN.test(filePath) && !paths.includes(filePath)) {
+      paths.push(filePath);
+    }
+  }
+
+  return paths;
 }
 
 async function createExecGit(repoRootPath) {

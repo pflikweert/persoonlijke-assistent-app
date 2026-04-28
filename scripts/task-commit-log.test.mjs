@@ -25,15 +25,29 @@ test('buildCommitLogEntry uses author date plus subject', () => {
 
 test('collectTaskfilePaths filters HEAD changes to taskfiles only', () => {
   const output = [
-    'docs/project/25-tasks/open/example.md',
-    'app/today.tsx',
-    'docs/project/25-tasks/done/finished.md',
+    'M\tdocs/project/25-tasks/open/example.md',
+    'M\tapp/today.tsx',
+    'A\tdocs/project/25-tasks/done/finished.md',
     '',
   ].join('\n');
 
   assert.deepEqual(collectTaskfilePaths(output), [
     'docs/project/25-tasks/open/example.md',
     'docs/project/25-tasks/done/finished.md',
+  ]);
+});
+
+test('collectTaskfilePaths uses the destination path for renamed taskfiles', () => {
+  const output = [
+    'R082\tdocs/project/25-tasks/open/example.md\tdocs/project/25-tasks/done/example.md',
+    'R100\tdocs/project/25-tasks/open/old.md\tdocs/project/25-tasks/open/new.md',
+    'D\tdocs/project/25-tasks/open/deleted.md',
+    'M\tdocs/project/25-tasks/open/new.md',
+  ].join('\n');
+
+  assert.deepEqual(collectTaskfilePaths(output), [
+    'docs/project/25-tasks/done/example.md',
+    'docs/project/25-tasks/open/new.md',
   ]);
 });
 
@@ -53,6 +67,9 @@ test('runTaskCommitLog no-ops when HEAD has no taskfiles', async () => {
     execGit(args) {
       if (args.join(' ') === 'diff-tree --no-commit-id --name-only -r HEAD') {
         return 'app/today.tsx\nservices/foo.ts\n';
+      }
+      if (args.join(' ') === 'diff-tree --no-commit-id --name-status --diff-filter=ACMR -r HEAD') {
+        return 'M\tapp/today.tsx\nM\tservices/foo.ts\n';
       }
       throw new Error(`Unexpected git args: ${args.join(' ')}`);
     },
@@ -98,8 +115,8 @@ ${entry}
     execGit(args) {
       gitCalls.push(args.join(' '));
       const command = args.join(' ');
-      if (command === 'diff-tree --no-commit-id --name-only -r HEAD') {
-        return 'docs/project/25-tasks/open/example.md';
+      if (command === 'diff-tree --no-commit-id --name-status --diff-filter=ACMR -r HEAD') {
+        return 'M\tdocs/project/25-tasks/open/example.md';
       }
       if (command === 'show -s --format=%aI HEAD') {
         return '2026-04-28T09:41:12+02:00';
@@ -131,12 +148,84 @@ ${entry}
   assert.deepEqual(
     gitCalls,
     [
-      'diff-tree --no-commit-id --name-only -r HEAD',
+      'diff-tree --no-commit-id --name-status --diff-filter=ACMR -r HEAD',
       'show -s --format=%aI HEAD',
       'show -s --format=%s HEAD',
     ],
   );
   assert.equal(await fs.readFile(taskfilePath, 'utf8'), content);
+});
+
+test('runTaskCommitLog handles taskfile rename to done and does not stage unrelated local work', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-task-log-rename-'));
+  await fs.mkdir(path.join(tempRoot, 'scripts'), { recursive: true });
+  await fs.mkdir(path.join(tempRoot, 'tools/budio-workspace-vscode/src/tasks'), { recursive: true });
+  await copyFixtureFiles(tempRoot, [
+    'scripts/task-commit-log.mjs',
+    'tools/budio-workspace-vscode/src/tasks/parser.ts',
+    'tools/budio-workspace-vscode/src/tasks/writer.ts',
+    'tools/budio-workspace-vscode/src/tasks/constants.ts',
+    'tools/budio-workspace-vscode/src/tasks/types.ts',
+  ]);
+
+  runGit(tempRoot, ['init']);
+  runGit(tempRoot, ['config', 'user.name', 'Budio Test']);
+  runGit(tempRoot, ['config', 'user.email', 'budio@example.com']);
+
+  const openTaskfilePath = path.join(tempRoot, 'docs/project/25-tasks/open/example.md');
+  const doneTaskfilePath = path.join(tempRoot, 'docs/project/25-tasks/done/example.md');
+  const unrelatedPath = path.join(tempRoot, 'theme/tokens.ts');
+  await fs.mkdir(path.dirname(openTaskfilePath), { recursive: true });
+  await fs.mkdir(path.dirname(unrelatedPath), { recursive: true });
+  await fs.writeFile(
+    openTaskfilePath,
+    `---
+id: task-example
+title: Example
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-28
+---
+
+# Example
+
+## Commits
+
+- Nog geen commit-registraties.
+`,
+    'utf8',
+  );
+  await fs.writeFile(unrelatedPath, 'export const token = "initial";\n', 'utf8');
+
+  runGit(tempRoot, ['add', '.']);
+  runGit(tempRoot, ['commit', '-m', 'docs: initial task']);
+
+  await fs.mkdir(path.dirname(doneTaskfilePath), { recursive: true });
+  await fs.rename(openTaskfilePath, doneTaskfilePath);
+  let renamedContent = await fs.readFile(doneTaskfilePath, 'utf8');
+  renamedContent = renamedContent.replace('status: in_progress', 'status: done');
+  await fs.writeFile(doneTaskfilePath, renamedContent, 'utf8');
+
+  runGit(tempRoot, ['add', 'docs/project/25-tasks/open/example.md', 'docs/project/25-tasks/done/example.md']);
+  runGit(tempRoot, ['commit', '-m', 'docs: complete task']);
+
+  await fs.writeFile(unrelatedPath, 'export const token = "parallel-agent-work";\n', 'utf8');
+
+  const scriptPath = path.join(tempRoot, 'scripts/task-commit-log.mjs');
+  execFileSync(process.execPath, ['--import', 'tsx', scriptPath], {
+    cwd: REAL_REPO_ROOT,
+    env: process.env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  const finalContent = await fs.readFile(doneTaskfilePath, 'utf8');
+  const authorDate = runGit(tempRoot, ['show', '-s', '--format=%aI', 'HEAD']);
+  assert.match(finalContent, new RegExp(`- ${escapeRegExp(authorDate)} — docs: complete task`));
+  assert.equal(runGit(tempRoot, ['diff', '--cached', '--name-only']), '');
+  assert.equal(runGit(tempRoot, ['status', '--short']), 'M theme/tokens.ts');
+  assert.equal(runGit(tempRoot, ['show', '-s', '--format=%s', 'HEAD']), 'docs: complete task');
 });
 
 test('runTaskCommitLog appends entry, amends once, and leaves repo clean', async () => {
