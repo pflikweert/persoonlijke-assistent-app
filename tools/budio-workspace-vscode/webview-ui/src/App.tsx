@@ -39,8 +39,8 @@ import {
   useTaskDetailLayout,
 } from './use-task-detail-layout';
 import { vscode } from './vscode';
+import { WORKSPACE_VIEW_TITLES, type WorkspaceView } from '../../src/navigation';
 
-type ViewMode = 'board' | 'list' | 'epics' | 'settings';
 type DueFilter = 'all' | 'today' | 'overdue' | 'no_date';
 type HierarchyFilter = 'all' | 'has_epic' | 'no_epic' | 'has_subtasks' | 'blocked' | 'ready_to_start';
 const CLICK_DRAG_SUPPRESSION_MS = 180;
@@ -95,16 +95,10 @@ const EMPTY_FILTERS: Filters = {
 };
 
 const REFRESH_SUCCESS_MS = 1200;
-const VIEW_TITLES: Record<ViewMode, string> = {
-  board: 'Board',
-  list: 'List',
-  epics: 'Epics',
-  settings: 'Settings',
-};
 
 export function App(): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<BoardSnapshot | null>(null);
-  const [activeView, setActiveView] = useState<ViewMode>('board');
+  const [activeView, setActiveView] = useState<WorkspaceView>('board');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
@@ -443,27 +437,11 @@ export function App(): React.JSX.Element {
 
   return (
     <div className={`app-shell viewport-${viewport} detail-${detailMode} ${isFullscreenDetail ? 'detail-fullscreen' : ''}`}>
-      <aside className="icon-rail">
-        <IconButton active={activeView === 'board'} icon="▥" label="Board" onClick={() => switchView('board')} />
-        <IconButton active={activeView === 'list'} icon="☰" label="List" onClick={() => switchView('list')} />
-        <IconButton active={activeView === 'epics'} icon="◎" label="Epics" onClick={() => switchView('epics')} />
-        <IconButton active={activeView === 'settings'} icon="⚙" label="Settings" onClick={() => switchView('settings')} />
-        <button
-          className={`rail-button rail-icon-button refresh-button icon-only ${refreshState}`}
-          onClick={handleRefresh}
-          title={refreshButtonTitle(refreshState)}
-          aria-label={refreshButtonTitle(refreshState)}
-          disabled={refreshState === 'loading'}
-        >
-          <span className="rail-button-icon" aria-hidden="true">↻</span>
-        </button>
-      </aside>
-
       <main className="workspace-shell">
         <header className="topbar">
           <div className="topbar-main">
             <div className="topbar-title-wrap">
-              <div className="topbar-title">{VIEW_TITLES[activeView]}</div>
+              <div className="topbar-title">{WORKSPACE_VIEW_TITLES[activeView]}</div>
               <div className="eyebrow">Budio Workspace</div>
             </div>
 
@@ -474,6 +452,7 @@ export function App(): React.JSX.Element {
               {activeView === 'list' && !listDragEnabled ? (
                 <StatusChip>List drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
               ) : null}
+              {refreshState === 'loading' ? <StatusChip>Verversen...</StatusChip> : null}
               {savingTaskId ? <StatusChip>Opslaan...</StatusChip> : null}
               {pendingDiskChanges ? <StatusChip>Nieuwe disk-wijzigingen beschikbaar (je edits blijven behouden)</StatusChip> : null}
               {notice ? <StatusChip>{notice}</StatusChip> : null}
@@ -510,15 +489,6 @@ export function App(): React.JSX.Element {
                   </select>
                 ) : null}
               </div>
-              <button
-                className={`ghost-button refresh-button icon-only ${refreshState}`}
-                onClick={handleRefresh}
-                title={refreshButtonTitle(refreshState)}
-                aria-label={refreshButtonTitle(refreshState)}
-                disabled={refreshState === 'loading'}
-              >
-                <span aria-hidden="true">↻</span>
-              </button>
             </div>
           </div>
 
@@ -1516,11 +1486,6 @@ export function App(): React.JSX.Element {
     );
   }
 
-  function switchView(view: ViewMode): void {
-    setActiveView(view);
-    vscode.postMessage({ type: 'switchView', view });
-  }
-
   function updateFilters(patch: Partial<Filters>): void {
     setFilters((current) => ({
       ...current,
@@ -1719,14 +1684,6 @@ export function App(): React.JSX.Element {
     closeDetail();
   }
 
-  function handleRefresh(): void {
-    if (refreshState === 'loading') {
-      return;
-    }
-    setRefreshState('loading');
-    vscode.postMessage({ type: 'refreshBoard' });
-  }
-
   function moveTaskToListEdge(taskId: string, edge: 'start' | 'end'): void {
     if (!snapshot || !listDragEnabled) {
       return;
@@ -1755,19 +1712,6 @@ export function App(): React.JSX.Element {
   }
 }
 
-function refreshButtonTitle(state: 'idle' | 'loading' | 'success' | 'error'): string {
-  if (state === 'loading') {
-    return 'Verversen...';
-  }
-  if (state === 'success') {
-    return 'Verversd';
-  }
-  if (state === 'error') {
-    return 'Verversen mislukt';
-  }
-  return 'Refresh';
-}
-
 function isFormDirty(task: TaskCardViewModel | null, formState: MetadataFormState | null): boolean {
   if (!task || !formState) {
     return false;
@@ -1793,14 +1737,6 @@ function isFormDirty(task: TaskCardViewModel | null, formState: MetadataFormStat
   }
 
   return splitTags(formState.tags).join(',') !== task.tags.join(',');
-}
-
-function IconButton(props: { active: boolean; label: string; icon: string; onClick: () => void }): React.JSX.Element {
-  return (
-    <button className={`rail-button rail-icon-button ${props.active ? 'active' : ''}`} onClick={props.onClick} title={props.label} aria-label={props.label}>
-      <span className="rail-button-icon" aria-hidden="true">{props.icon}</span>
-    </button>
-  );
 }
 
 function EpicCard(props: {
@@ -1907,7 +1843,7 @@ function WorkstreamBadge(props: { workstream: TaskWorkstream | null }): React.JS
   );
 }
 
-function hasActiveFiltering(search: string, filters: Filters, activeView: ViewMode): boolean {
+function hasActiveFiltering(search: string, filters: Filters, activeView: WorkspaceView): boolean {
   return Boolean(search.trim()) || Object.entries(filters).some(([key, value]) => {
     if (key === 'onlyOpen') {
       return activeView === 'list' ? Boolean(value) : false;
@@ -1919,7 +1855,7 @@ function hasActiveFiltering(search: string, filters: Filters, activeView: ViewMo
   });
 }
 
-function getEffectiveFilters(filters: Filters, activeView: ViewMode): Filters {
+function getEffectiveFilters(filters: Filters, activeView: WorkspaceView): Filters {
   if (activeView === 'list') {
     return filters;
   }

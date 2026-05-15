@@ -5,13 +5,14 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
-updated_at: 2026-04-27
-summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Laatste sessiestatus: fullscreen toggle werkt, maar task-openen/tonen en drag/sort in board + list zijn nog niet opgelost; daarnaast opende klikken op willekeurige tasks onterecht steeds dezelfde geselecteerde kaart. In deze ronde is wel geborgd dat plugin-UI `Actief` niet langer gebruikt voor selectie en dat done-transities actieve agentmetadata opschonen."
+updated_at: 2026-05-15
+summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Deze ronde voegt expliciet toe dat de VS Code-sidebar de primaire pluginnavigatie wordt met alle huidige menu-items uit de interne rail, terwijl de bestaande contentweergave inhoudelijk gelijk blijft."
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
 sort_order: 17
 ---
+
 
 
 
@@ -75,6 +76,7 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 - [x] Rail refresh-knop gelijkgetrokken met de andere icon-buttons.
 - [x] `Last change` compact gemaakt (`Apr 25`) zodat de datum niet over twee regels breekt.
 - [x] Drag-vs-click structureel gescheiden zodat slepen niet meer meteen task detail opent.
+- [x] VS Code-sidebar/menu-structuur als primaire pluginnavigatie gebruiken met Board, List, Epics, Settings en Refresh; bestaande content blijft inhoudelijk ongewijzigd.
 - [ ] Task-openen en tonen structureel herzien: openen altijd in het taakvlak boven board/lane of list (niet in een lege placeholder rechts naast board/list).
 - [ ] Selectiebug herstellen: klikken op willekeurige task in board/list opent nu steeds dezelfde actieve kaart i.p.v. de aangeklikte task.
 - [ ] Task-openen weer klikbaar en betrouwbaar maken in board + list na de structurele herbouw.
@@ -112,6 +114,11 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 - verify-flow afronden
 
 ## Status tegen uitgebreid plan uit deze sessie
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Gebruik de linker VS Code-sidebar/menu-structuur als primaire pluginnavigatie, met alle huidige menu-items uit de topnavigatie erin. Content blijft ongewijzigd.
+- De bestaande activity-bar/sidebar mag niet leeg blijven; de kleinste schone implementatie is een compacte sidebar-webview die de bestaande panelviews en refresh-actie opent zonder content-redesign.
 
 ## Oorspronkelijk uitgebreid plan / detailbehoud
 
@@ -244,6 +251,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - Bij code-review van requirementstatus geldt: als iets al in code bestaat dan moet dat als **user-review nodig** worden vastgelegd; anders blijft het **nog bouwen**.
 - De uitgebreide requirements hieronder zijn expliciet relevant om later opnieuw op deze task te kunnen bouwen en mogen niet worden teruggebracht tot alleen een samenvatting.
 - Punt 11 (`## Commits` automatisch vullen) en punt 12 (multi-agent concurrency) moeten als expliciete open requirements zichtbaar blijven zolang ze niet volledig zijn gebouwd; een reviewconclusie mag deze bronpunten niet vervangen.
+- Gebruik de linker VS Code-sidebar/menu-structuur als primaire pluginnavigatie, met alle huidige menu-items uit de topnavigatie erin. Content blijft ongewijzigd.
+- Icoon én label van elk sidebar-item moeten klikbaar zijn en dezelfde bestaande view/action switchen.
 
 ## Status per requirement
 
@@ -254,6 +263,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - [x] Checklist compacter met gedeelde progress-chip / kleurbanden — status: gebouwd.
 - [x] `onlyOpen` default / open taken filter — status: gebouwd; nu alleen zichtbaar en toegepast in list view.
 - [x] Linker rail icon-first — status: gebouwd, met nog open visuele bevestiging voor refresh-sizing.
+- [x] VS Code-sidebar als primaire navigatie met Board/List/Epics/Settings/Refresh — status: gebouwd; activity-bar toont nu een compacte menu-webview en de interne rail is uit de panel-content verwijderd.
 - [x] Resizable detail pane — status: gebouwd.
 - [~] Fullscreen detail toggle — status: opnieuw in uitvoering; eerdere claim was te vroeg, structurele herbouw loopt nu in fase 1.
 - [~] Actieve agent indicator in board/list/detail — status: gedeeltelijk; basisweergave aanwezig, animatie en consistente detail-state ontbreken nog.
@@ -383,3 +393,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-15T17:03:51+02:00 — feat: move budio workspace nav into sidebar

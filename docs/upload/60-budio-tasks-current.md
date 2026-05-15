@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
-Source Commit: 7a1cfac
+Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
+Source Commit: 1b70d37
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3395,7 +3395,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-05-15
-summary: "De regressie-follow-up is verbreed van kleine hardening naar een structurele web/Android fix: momentdetail gebruikt nu een browser File API fallback op web, materialiseert bytes direct in de prepare-pipeline, scheidt gallery-load errors van action-errors en logt alleen privacyveilige prepare-context. Productie upload/delete smoke is opnieuw geslaagd; lokale multi-add/delete smoke ligt klaar maar kon in deze sessie niet starten omdat `http://localhost:8081` niet draaide."
+summary: "De regressie-follow-up is verbreed van kleine hardening naar een structurele web/Android fix: momentdetail gebruikt nu een browser File API fallback op web, materialiseert bytes direct in de prepare-pipeline, scheidt gallery-load errors van action-errors en logt alleen privacyveilige prepare-context. Productie upload/delete smoke en lokale browser-smokes voor multi-add/delete plus read-failure fallback zijn nu geslaagd."
 tags: [moment-detail, photos, android, chrome, production, regression, diagnostics]
 workstream: app
 epic_id: null
@@ -3407,6 +3407,7 @@ spec_ready: true
 due_date: null
 sort_order: 12
 ---
+
 
 
 
@@ -3581,7 +3582,7 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 ## Blockers / afhankelijkheden
 
 - Handmatige Android productie-smoke op echt toestel blijft afhankelijk van user/device-toegang.
-- Lokale browser multi-add/delete smoke vereist een draaiende app op `http://localhost:8081`; in deze sessie gaf `curl` daarop `connection refused`, dus die runtime-check kon niet non-interactief worden afgerond zonder handmatige dev-serverstart.
+- Geen andere blockers meer voor repo- of browserbewijs; alleen echt Android toestelbewijs blijft open.
 
 ## Verify / bewijs
 
@@ -3594,10 +3595,14 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - ✅ `GALLERY_E2E_PROD=1 npm run test:e2e:gallery:prod-upload`
   - geslaagd op `2026-05-15`
   - upload + cleanup op de productie fixture-entry bevestigd
-- ⚠️ `tests/e2e/gallery-full.spec.mjs`
-  - nieuwe lokale test toegevoegd voor twee uploads + twee deletes op een seeded fixture
-  - seed-script draaide succesvol op `2026-05-15`
-  - uitvoering blokkeerde daarna op ontbrekende lokale app-server: `http://localhost:8081` gaf `connection refused`
+- ✅ lokale fixture-seed `node scripts/seed-local-entry-photo-gallery-smoke.mjs`
+  - geslaagd op `2026-05-15`
+- ✅ lokale browser-smoke `tests/e2e/gallery-full.spec.mjs`
+  - `adds two photos and removes them again on the local fixture entry`
+  - geslaagd op `2026-05-15`
+- ✅ lokale failure-regressietest `tests/e2e/gallery-full.spec.mjs`
+  - `keeps existing photos visible when a new web upload fails during file-byte materialization`
+  - geslaagd op `2026-05-15`
 - Handmatige productie-smoke blijft open en noteert per run:
   - slaagt/faalt
   - foutcopy
@@ -3649,6 +3654,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
   - gallery/action error-state scheiding
   - gerichte unit-tests
   - lint, typecheck, taskflow en docs verify
+  - lokale browser-smokes voor multi-add/delete en failed add fallback
+  - productie upload/delete smoke
 - Open / blocked:
   - handmatige Android productie-smoke op echt toestel
   - bevestiging welke prepare-substap in echte productie nu optreedt of juist niet meer optreedt
@@ -3668,6 +3675,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-15T10:09:20+02:00 — fix: harden moment detail web photo uploads
 ```
 
 ---
@@ -4203,7 +4212,7 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - Status: in_progress
 - Priority: p2
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-27
+- Updated_at: 2026-05-15
 
 ```md
 ---
@@ -4213,8 +4222,8 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
-updated_at: 2026-04-27
-summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Laatste sessiestatus: fullscreen toggle werkt, maar task-openen/tonen en drag/sort in board + list zijn nog niet opgelost; daarnaast opende klikken op willekeurige tasks onterecht steeds dezelfde geselecteerde kaart. In deze ronde is wel geborgd dat plugin-UI `Actief` niet langer gebruikt voor selectie en dat done-transities actieve agentmetadata opschonen."
+updated_at: 2026-05-15
+summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Deze ronde voegt expliciet toe dat de VS Code-sidebar de primaire pluginnavigatie wordt met alle huidige menu-items uit de interne rail, terwijl de bestaande contentweergave inhoudelijk gelijk blijft."
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
@@ -4283,6 +4292,7 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 - [x] Rail refresh-knop gelijkgetrokken met de andere icon-buttons.
 - [x] `Last change` compact gemaakt (`Apr 25`) zodat de datum niet over twee regels breekt.
 - [x] Drag-vs-click structureel gescheiden zodat slepen niet meer meteen task detail opent.
+- [x] VS Code-sidebar/menu-structuur als primaire pluginnavigatie gebruiken met Board, List, Epics, Settings en Refresh; bestaande content blijft inhoudelijk ongewijzigd.
 - [ ] Task-openen en tonen structureel herzien: openen altijd in het taakvlak boven board/lane of list (niet in een lege placeholder rechts naast board/list).
 - [ ] Selectiebug herstellen: klikken op willekeurige task in board/list opent nu steeds dezelfde actieve kaart i.p.v. de aangeklikte task.
 - [ ] Task-openen weer klikbaar en betrouwbaar maken in board + list na de structurele herbouw.
@@ -4320,6 +4330,11 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 - verify-flow afronden
 
 ## Status tegen uitgebreid plan uit deze sessie
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Gebruik de linker VS Code-sidebar/menu-structuur als primaire pluginnavigatie, met alle huidige menu-items uit de topnavigatie erin. Content blijft ongewijzigd.
+- De bestaande activity-bar/sidebar mag niet leeg blijven; de kleinste schone implementatie is een compacte sidebar-webview die de bestaande panelviews en refresh-actie opent zonder content-redesign.
 
 ## Oorspronkelijk uitgebreid plan / detailbehoud
 
@@ -4452,6 +4467,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - Bij code-review van requirementstatus geldt: als iets al in code bestaat dan moet dat als **user-review nodig** worden vastgelegd; anders blijft het **nog bouwen**.
 - De uitgebreide requirements hieronder zijn expliciet relevant om later opnieuw op deze task te kunnen bouwen en mogen niet worden teruggebracht tot alleen een samenvatting.
 - Punt 11 (`## Commits` automatisch vullen) en punt 12 (multi-agent concurrency) moeten als expliciete open requirements zichtbaar blijven zolang ze niet volledig zijn gebouwd; een reviewconclusie mag deze bronpunten niet vervangen.
+- Gebruik de linker VS Code-sidebar/menu-structuur als primaire pluginnavigatie, met alle huidige menu-items uit de topnavigatie erin. Content blijft ongewijzigd.
+- Icoon én label van elk sidebar-item moeten klikbaar zijn en dezelfde bestaande view/action switchen.
 
 ## Status per requirement
 
@@ -4462,6 +4479,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - [x] Checklist compacter met gedeelde progress-chip / kleurbanden — status: gebouwd.
 - [x] `onlyOpen` default / open taken filter — status: gebouwd; nu alleen zichtbaar en toegepast in list view.
 - [x] Linker rail icon-first — status: gebouwd, met nog open visuele bevestiging voor refresh-sizing.
+- [x] VS Code-sidebar als primaire navigatie met Board/List/Epics/Settings/Refresh — status: gebouwd; activity-bar toont nu een compacte menu-webview en de interne rail is uit de panel-content verwijderd.
 - [x] Resizable detail pane — status: gebouwd.
 - [~] Fullscreen detail toggle — status: opnieuw in uitvoering; eerdere claim was te vroeg, structurele herbouw loopt nu in fase 1.
 - [~] Actieve agent indicator in board/list/detail — status: gedeeltelijk; basisweergave aanwezig, animatie en consistente detail-state ontbreken nog.

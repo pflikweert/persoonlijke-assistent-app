@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
-Source Commit: 7a1cfac
+Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
+Source Commit: 1b70d37
 
 Doel: uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects, afgeleid van canonieke projectdocs.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

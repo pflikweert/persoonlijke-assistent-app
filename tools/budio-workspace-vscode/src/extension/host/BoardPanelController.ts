@@ -9,21 +9,31 @@ import type {
   WebviewToHostMessage,
 } from '../../webview-bridge/messages';
 import { getBoardWebviewHtml } from '../../webview-bridge/getWebviewHtml';
+import { WORKSPACE_VIEW_TITLES, type WorkspaceView } from '../../navigation';
 import { getPrimaryWorkspaceFolder, readWorkspaceSettings } from './config';
+import { getActivityMenuHtml } from './getActivityMenuHtml';
 
-type PanelView = 'board' | 'list' | 'epics' | 'settings';
+type PanelView = WorkspaceView;
+type ActivityMenuMessage =
+  | { type: 'openView'; view: WorkspaceView }
+  | { type: 'refresh' };
 
-export class BoardPanelController implements vscode.Disposable {
+export class BoardPanelController implements vscode.Disposable, vscode.WebviewViewProvider {
   private static readonly BACKGROUND_REFRESH_MS = 30000;
   private static readonly WATCHER_REFRESH_DEBOUNCE_MS = 350;
+  private static readonly ACTIVITY_REFRESH_RESET_MS = 1200;
 
   private panel: vscode.WebviewPanel | null = null;
+  private activityView: vscode.WebviewView | null = null;
   private watcher: vscode.Disposable | null = null;
   private backgroundRefreshTimer: NodeJS.Timeout | null = null;
   private watcherRefreshTimer: NodeJS.Timeout | null = null;
+  private activityRefreshResetTimer: NodeJS.Timeout | null = null;
   private readonly disposables: vscode.Disposable[] = [];
   private lastTasks = new Map<string, ParsedTaskFile>();
   private lastFocusedTaskId: string | null = null;
+  private currentView: PanelView = 'list';
+  private activityRefreshState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
 
   constructor(private readonly extensionUri: vscode.Uri) {
     this.resetWatcher();
@@ -42,9 +52,26 @@ export class BoardPanelController implements vscode.Disposable {
   dispose(): void {
     this.stopBackgroundRefresh();
     this.stopWatcherRefresh();
+    this.stopActivityRefreshReset();
     this.panel?.dispose();
     this.watcher?.dispose();
     vscode.Disposable.from(...this.disposables).dispose();
+  }
+
+  resolveWebviewView(webviewView: vscode.WebviewView): void {
+    this.activityView = webviewView;
+    webviewView.webview.options = {
+      enableScripts: true,
+    };
+    webviewView.webview.onDidReceiveMessage(
+      (message: ActivityMenuMessage) => {
+        void this.handleActivityMessage(message);
+      },
+      null,
+      this.disposables,
+    );
+    this.renderActivityView();
+    void this.open('list');
   }
 
   async open(view: PanelView): Promise<void> {
@@ -54,10 +81,12 @@ export class BoardPanelController implements vscode.Disposable {
       return;
     }
 
+    this.currentView = view;
+
     if (!this.panel) {
       this.panel = vscode.window.createWebviewPanel(
         'budioWorkspace.board',
-        'Budio Workspace',
+        this.getPanelTitle(),
         vscode.ViewColumn.One,
         {
           enableScripts: true,
@@ -83,10 +112,12 @@ export class BoardPanelController implements vscode.Disposable {
         this.disposables,
       );
     } else {
+      this.panel.title = this.getPanelTitle();
       this.panel.reveal(vscode.ViewColumn.One);
     }
 
     this.startBackgroundRefresh();
+    this.renderActivityView();
 
     await this.publishSnapshot({ view });
   }
@@ -244,6 +275,11 @@ export class BoardPanelController implements vscode.Disposable {
     }
 
     if (message.type === 'switchView') {
+      this.currentView = message.view;
+      if (this.panel) {
+        this.panel.title = this.getPanelTitle();
+      }
+      this.renderActivityView();
       this.postMessage({ type: 'switchView', view: message.view });
       return;
     }
@@ -348,6 +384,18 @@ export class BoardPanelController implements vscode.Disposable {
     }
   }
 
+  private async handleActivityMessage(message: ActivityMenuMessage): Promise<void> {
+    if (message.type === 'openView') {
+      await this.open(message.view);
+      return;
+    }
+
+    if (!this.panel) {
+      await this.open(this.currentView);
+    }
+    await this.runRefresh();
+  }
+
   private async runMutation(
     taskId: string,
     action: (repository: TaskRepository) => Promise<void>,
@@ -387,13 +435,16 @@ export class BoardPanelController implements vscode.Disposable {
   }
 
   private async runRefresh(): Promise<void> {
+    this.setActivityRefreshState('loading');
     this.postMessage({ type: 'refreshStarted' });
     try {
       await this.publishSnapshot(undefined, true);
       this.postMessage({ type: 'refreshCompleted' });
+      this.setActivityRefreshState('success');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Kon board niet verversen.';
       this.postMessage({ type: 'refreshFailed', message });
+      this.setActivityRefreshState('error');
     }
   }
 
@@ -442,6 +493,47 @@ export class BoardPanelController implements vscode.Disposable {
 
   private postMessage(message: HostToWebviewMessage): void {
     void this.panel?.webview.postMessage(message);
+  }
+
+  private renderActivityView(): void {
+    if (!this.activityView) {
+      return;
+    }
+
+    this.activityView.webview.html = getActivityMenuHtml(this.activityView.webview, {
+      activeView: this.currentView,
+      refreshState: this.activityRefreshState,
+    });
+  }
+
+  private getPanelTitle(): string {
+    return `Budio Workspace: ${WORKSPACE_VIEW_TITLES[this.currentView]}`;
+  }
+
+  private setActivityRefreshState(state: 'idle' | 'loading' | 'success' | 'error'): void {
+    this.activityRefreshState = state;
+    this.renderActivityView();
+
+    if (state === 'loading' || state === 'idle') {
+      this.stopActivityRefreshReset();
+      return;
+    }
+
+    this.stopActivityRefreshReset();
+    this.activityRefreshResetTimer = setTimeout(() => {
+      this.activityRefreshResetTimer = null;
+      this.activityRefreshState = 'idle';
+      this.renderActivityView();
+    }, BoardPanelController.ACTIVITY_REFRESH_RESET_MS);
+  }
+
+  private stopActivityRefreshReset(): void {
+    if (!this.activityRefreshResetTimer) {
+      return;
+    }
+
+    clearTimeout(this.activityRefreshResetTimer);
+    this.activityRefreshResetTimer = null;
   }
 
   private async openSourceFile(taskId: string): Promise<void> {

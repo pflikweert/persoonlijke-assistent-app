@@ -2,8 +2,8 @@
 
 # Budio UI System and Design Truth
 
-Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
-Source Commit: 7a1cfac
+Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
+Source Commit: 1b70d37
 
 Doel: primaire UI/designbundle met designregels, tokens en implementatieguardrails.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -475,8 +475,8 @@ Rules:
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
-Source Commit: 7a1cfac
+Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
+Source Commit: 1b70d37
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

@@ -75,62 +75,8 @@ button {
 }
 
 .app-shell {
-  display: grid;
-  grid-template-columns: var(--rail-size) minmax(0, 1fr);
   height: 100%;
   overflow: hidden;
-}
-
-.icon-rail {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4) 10px;
-  border-right: 1px solid var(--border);
-  background: rgba(10, 12, 16, 0.78);
-  backdrop-filter: blur(14px);
-}
-
-.rail-button {
-  min-height: 50px;
-  padding: 10px 8px;
-  font-size: 12px;
-  line-height: 1.15;
-  color: var(--muted);
-  text-align: center;
-  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
-}
-
-.rail-button:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.rail-button.active {
-  background: var(--accent-soft);
-  border-color: var(--accent-border);
-  color: var(--text);
-}
-
-.rail-icon-button {
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  aspect-ratio: 1;
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.rail-icon-button.icon-only {
-  width: 100%;
-  min-width: 0;
-  aspect-ratio: 1;
-}
-
-.rail-button-icon {
-  font-size: 18px;
-  line-height: 1;
 }
 
 .refresh-button.loading {
@@ -1535,25 +1481,6 @@ button {
 }
 
 @media (max-width: 1024px) {
-  .app-shell {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-
-  .icon-rail {
-    flex-direction: row;
-    padding: var(--space-3) var(--space-4);
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-  }
-
-  .rail-button {
-    min-width: max-content;
-    min-height: 42px;
-    padding-inline: 14px;
-  }
-
   .topbar {
     gap: var(--space-3);
     padding-inline: var(--space-4);
@@ -1694,10 +1621,6 @@ button {
 }
 
 @media (max-width: 420px) {
-  .rail-button {
-    font-size: 11px;
-  }
-
   .board-column {
     width: calc(100vw - 26px);
     min-width: calc(100vw - 26px);

@@ -118,7 +118,7 @@
         {
           "type": "webview",
           "id": "budioWorkspace.activityEntry",
-          "name": " "
+          "name": "Menu"
         }
       ]
     }

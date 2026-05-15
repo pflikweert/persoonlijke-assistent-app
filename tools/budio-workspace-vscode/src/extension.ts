@@ -6,19 +6,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     controller,
-    vscode.window.registerWebviewViewProvider('budioWorkspace.activityEntry', {
-      resolveWebviewView(webviewView) {
-        void controller.open('list');
-        webviewView.webview.options = {
-          enableCommandUris: true,
-          localResourceRoots: [context.extensionUri],
-        };
-        webviewView.webview.html = `<!DOCTYPE html>
-<html lang="en">
-  <body style="margin:0; padding:0; background: transparent;"></body>
-</html>`;
-      },
-    }),
+    vscode.window.registerWebviewViewProvider('budioWorkspace.activityEntry', controller),
     vscode.commands.registerCommand('budioWorkspace.openBoard', () => controller.open('board')),
     vscode.commands.registerCommand('budioWorkspace.openListView', () => controller.open('list')),
     vscode.commands.registerCommand('budioWorkspace.openSettings', () => controller.open('settings')),
