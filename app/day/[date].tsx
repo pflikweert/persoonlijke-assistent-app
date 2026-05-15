@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Platform,
+  Pressable,
   StyleSheet,
   type ScrollView,
 } from "react-native";
@@ -37,7 +38,6 @@ import {
 import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import {
   ScreenContainer,
-  SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
 import {
@@ -58,7 +58,8 @@ import {
   updateNormalizedEntryById,
 } from "@/services";
 import { buildDayJournalCopyPayload } from "@/src/lib/copy-payloads";
-import { colorTokens, radius, spacing } from "@/theme";
+import { buildCaptureParams, buildDayReturnToPath } from "@/src/lib/capture-shared";
+import { borders, colorTokens, radius, spacing } from "@/theme";
 
 type RouteParams = {
   date?: string | string[];
@@ -201,6 +202,59 @@ function blurActiveElementOnWeb() {
 
   const active = document.activeElement as HTMLElement | null;
   active?.blur?.();
+}
+
+function MomentSectionActionButton({
+  label,
+  accessibilityLabel,
+  onPress,
+  disabled = false,
+}: {
+  label: string;
+  accessibilityLabel: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      disabled={disabled}
+      focusable={!disabled}
+      hitSlop={8}
+      onBlur={() => setFocused(false)}
+      onFocus={() => setFocused(true)}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.momentActionButton,
+        {
+          backgroundColor: pressed ? palette.surface : palette.surfaceLow,
+          borderColor: focused ? palette.accentWarm : palette.border,
+          opacity: disabled ? 0.55 : 1,
+        },
+      ]}
+    >
+      <MaterialIcons
+        name="add"
+        size={14}
+        color={focused ? palette.accentWarm : palette.mutedSoft}
+      />
+      <ThemedText
+        type="caption"
+        numberOfLines={1}
+        style={[
+          styles.momentActionButtonLabel,
+          { color: focused ? palette.text : palette.muted },
+        ]}
+      >
+        {label}
+      </ThemedText>
+    </Pressable>
+  );
 }
 
 export default function DayDetailScreen() {
@@ -346,6 +400,10 @@ export default function DayDetailScreen() {
     () => formatLongDate(journalDate),
     [journalDate],
   );
+  const addMomentAccessibilityLabel = useMemo(
+    () => `Moment toevoegen aan ${readableDate}`,
+    [readableDate],
+  );
   const copyDateTitle = useMemo(
     () => formatDayCopyTitle(journalDate),
     [journalDate],
@@ -425,6 +483,10 @@ export default function DayDetailScreen() {
       }),
     [copyDateTitle, insightText, narrativeText, previewSections, summary],
   );
+  const captureParams = useMemo(
+    () => buildCaptureParams(journalDate, buildDayReturnToPath(journalDate)),
+    [journalDate],
+  );
 
   useEffect(() => {
     if (!pendingFocusEntryId || loading || Boolean(error)) {
@@ -467,6 +529,13 @@ export default function DayDetailScreen() {
       return { ...current, [id]: y };
     });
   }, []);
+
+  const handleAddMoment = useCallback(() => {
+    router.push({
+      pathname: "/capture",
+      params: captureParams,
+    });
+  }, [captureParams]);
 
   function closeEditModal() {
     if (mutationBusy) {
@@ -643,14 +712,6 @@ export default function DayDetailScreen() {
           />
         ) : null}
 
-        {!loading && !error && !summary && visibleEntries.length === 0 ? (
-          <StateBlock
-            tone="empty"
-            message="Geen inhoud gevonden voor deze dag."
-            detail="Leg een notitie vast om deze dag te vullen."
-          />
-        ) : null}
-
         {!loading && !error && summary ? (
           <DayJournalSummaryInset text={summary} />
         ) : null}
@@ -721,6 +782,13 @@ export default function DayDetailScreen() {
             <DetailSectionHeader
               icon="auto-awesome"
               title="Individuele momenten"
+              trailingAction={
+                <MomentSectionActionButton
+                  label="Moment toevoegen"
+                  accessibilityLabel={addMomentAccessibilityLabel}
+                  onPress={handleAddMoment}
+                />
+              }
             />
             <MomentsTimelineSection
               entries={visibleEntries}
@@ -738,6 +806,25 @@ export default function DayDetailScreen() {
           </ThemedView>
         ) : null}
 
+        {!loading && !error && visibleEntries.length === 0 ? (
+          <ThemedView style={styles.momentsSection}>
+            <DetailSectionHeader
+              icon="auto-awesome"
+              title="Individuele momenten"
+            />
+            <ThemedView style={styles.emptyMomentsState}>
+              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                Nog geen momenten voor deze dag.
+              </ThemedText>
+              <MomentSectionActionButton
+                label="Moment toevoegen aan deze dag"
+                accessibilityLabel={addMomentAccessibilityLabel}
+                onPress={handleAddMoment}
+              />
+            </ThemedView>
+          </ThemedView>
+        ) : null}
+
         <TextEditorModal
           visible={Boolean(editingEntry)}
           title="Moment aanpassen"
@@ -751,18 +838,6 @@ export default function DayDetailScreen() {
           onSubmit={() => void handleSaveEdit()}
         />
         <ProcessingScreen visible={showEditProcessing} variant="entry-edit" />
-
-        <ThemedView style={styles.bottomActionWrap}>
-          <SecondaryButton
-            label="Nieuw moment vastleggen"
-            onPress={() =>
-              router.push({
-                pathname: "/capture",
-                params: { date: journalDate },
-              })
-            }
-          />
-        </ThemedView>
 
         {!loading && !error && (weekReflection || monthReflection) ? (
           <ThemedView style={styles.reflectionCardsBlock}>
@@ -864,10 +939,25 @@ const styles = StyleSheet.create({
   momentsSection: {
     gap: spacing.md,
   },
-  bottomActionWrap: {
+  emptyMomentsState: {
+    gap: spacing.md,
+  },
+  momentActionButton: {
+    minHeight: 32,
+    minWidth: 0,
+    maxWidth: "100%",
+    alignSelf: "flex-start",
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
+    gap: spacing.xs,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    borderWidth: borders.subtle,
+  },
+  momentActionButtonLabel: {
+    flexShrink: 1,
+    lineHeight: 16,
   },
   reflectionCardsBlock: {
     gap: spacing.lg,

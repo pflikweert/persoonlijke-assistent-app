@@ -10,8 +10,9 @@ summary: Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt w
 tags: [consumer-beta, outputkwaliteit]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
+
 
 
 
@@ -87,3 +88,5 @@ De taak is klaar wanneer de criteria, verificatiestappen en bewijsregel helder g
 - 5a7e3e0 — docs: add service status backlog task
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

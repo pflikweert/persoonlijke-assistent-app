@@ -10,8 +10,9 @@ summary: "Beoordeel de huidige npm audit meldingen na de testinfra-uitbreiding, 
 tags: [npm, audit, dependencies, security]
 workstream: app
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
+
 
 ## Probleem / context
 
@@ -63,3 +64,8 @@ Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief on
 
 - `package.json`
 - `package-lock.json`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import { TextEntryEditor } from "@/components/feedback/text-entry-editor";
+import { ThemedText } from "@/components/themed-text";
+import { NoticeCard } from "@/components/ui/notice-card";
 import {
   CaptureBackHeader,
   CaptureErrorStack,
@@ -31,6 +33,7 @@ import {
   clearCaptureProcessingSession,
   createCaptureProcessingSession,
   createClientProcessingId,
+  getUtcTodayDate,
   loadCaptureProcessingSession,
   logCaptureProcessing,
   refreshDerivedAfterCaptureInBackground,
@@ -48,7 +51,10 @@ import { spacing } from "@/theme";
 import {
   buildCaptureParams,
   createCaptureContext,
+  extractJournalDateFromDayReturnTo,
+  formatCaptureTargetDateLabel,
   resolveCaptureJournalDate,
+  resolveCaptureReturnTo,
   type CaptureRouteParams,
 } from "@/src/lib/capture-shared";
 
@@ -58,9 +64,15 @@ const RECOVERY_RECHECK_MS = 3_000;
 export default function CaptureTypeScreen() {
   const scheme = useColorScheme() ?? "light";
   const insets = useSafeAreaInsets();
-  const { date } = useLocalSearchParams<CaptureRouteParams>();
-  const journalDate = resolveCaptureJournalDate(date);
-  const returnParams = buildCaptureParams(journalDate);
+  const { date, targetDate, returnTo } =
+    useLocalSearchParams<CaptureRouteParams>();
+  const journalDate = resolveCaptureJournalDate(date, targetDate);
+  const resolvedReturnTo = journalDate ? resolveCaptureReturnTo(returnTo) : null;
+  const returnParams = buildCaptureParams(journalDate, resolvedReturnTo);
+  const targetDateLabel = formatCaptureTargetDateLabel(journalDate);
+  const showTargetDateNotice = Boolean(
+    journalDate && journalDate !== getUtcTodayDate() && targetDateLabel,
+  );
   const [rawText, setRawText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [retryingDerived, setRetryingDerived] = useState(false);
@@ -81,6 +93,7 @@ export default function CaptureTypeScreen() {
   );
 
   const hasTextDraft = rawText.trim().length > 0;
+  const characterCount = rawText.length;
   const derivedNeedsAttention = Boolean(
     savedEntry && derivedResult && derivedResult.status !== "success",
   );
@@ -94,16 +107,32 @@ export default function CaptureTypeScreen() {
     router.replace({ pathname: "/capture", params: returnParams });
   }
 
-  const goToEntry = useCallback((entryId: string, nextJournalDate: string) => {
-    router.replace({
-      pathname: "/entry/[id]",
-      params: {
-        id: entryId,
-        source: "capture",
-        date: nextJournalDate,
-      },
-    });
-  }, []);
+  const goToEntry = useCallback(
+    (entryId: string, nextJournalDate: string) => {
+      const returnToDate = extractJournalDateFromDayReturnTo(resolvedReturnTo);
+      if (returnToDate) {
+        router.replace({
+          pathname: "/day/[date]",
+          params: {
+            date: returnToDate,
+            processed: "1",
+            entryId,
+          },
+        });
+        return;
+      }
+
+      router.replace({
+        pathname: "/entry/[id]",
+        params: {
+          id: entryId,
+          source: "capture",
+          date: nextJournalDate,
+        },
+      });
+    },
+    [resolvedReturnTo],
+  );
 
   const refreshDerivedQuietly = useCallback((nextJournalDate: string, clientProcessingId: string) => {
     void refreshDerivedAfterCaptureInBackground(nextJournalDate)
@@ -381,7 +410,7 @@ export default function CaptureTypeScreen() {
       setError({
         message: parsed.nonRecoverable
           ? "Dit moment kan niet automatisch worden hersteld. Leg het opnieuw vast."
-          : parsed.message,
+          : "Opslaan mislukt. Probeer opnieuw.",
         retryable: parsed.retryable,
         requestId: parsed.requestId,
       });
@@ -395,14 +424,7 @@ export default function CaptureTypeScreen() {
       return;
     }
 
-    router.replace({
-      pathname: "/entry/[id]",
-      params: {
-        id: savedEntry.normalizedEntryId,
-        source: "capture",
-        date: savedEntry.journalDate,
-      },
-    });
+    goToEntry(savedEntry.normalizedEntryId, savedEntry.journalDate);
   }
 
   async function handleRetryDerived() {
@@ -440,11 +462,20 @@ export default function CaptureTypeScreen() {
       >
         <View style={styles.content}>
           <CaptureIntro
-            title="Wat houdt je bezig?"
-            subtitle="Schrijf op wat je wilt vastleggen"
+            title="Wat wil je vastleggen?"
+            subtitle="Schrijf op wat je wilt onthouden, verwerken of bewaren."
             style={styles.copyBlock}
             subtitleStyle={styles.subtitle}
           />
+
+          {showTargetDateNotice && targetDateLabel ? (
+            <NoticeCard
+              compact
+              compactCentered
+              body={`Je voegt dit toe aan ${targetDateLabel}.`}
+              style={styles.notice}
+            />
+          ) : null}
 
           {error ? (
             <CaptureErrorStack>
@@ -484,20 +515,25 @@ export default function CaptureTypeScreen() {
             </CaptureErrorStack>
           ) : null}
 
-          <TextEntryEditor
-            autoFocus
-            editable={
-              !submitting &&
-              !retryingDerived &&
-              !recoveryStatus &&
-              !derivedNeedsAttention
-            }
-            value={rawText}
-            onChangeText={setRawText}
-            placeholder="Wat wil je vastleggen?"
-            variant="capture"
-            style={styles.input}
-          />
+          <View style={styles.editorBlock}>
+            <TextEntryEditor
+              autoFocus
+              editable={
+                !submitting &&
+                !retryingDerived &&
+                !recoveryStatus &&
+                !derivedNeedsAttention
+              }
+              value={rawText}
+              onChangeText={setRawText}
+              placeholder="Begin met schrijven…"
+              variant="capture"
+              style={styles.input}
+            />
+            <ThemedText type="caption" style={styles.counter}>
+              {characterCount} / 20000
+            </ThemedText>
+          </View>
         </View>
 
         <View style={styles.footer}>
@@ -580,22 +616,35 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: spacing.xxxl - spacing.xs,
+    paddingTop: spacing.xl,
   },
   copyBlock: {
     alignItems: "flex-start",
   },
   subtitle: {
-    maxWidth: 280,
+    maxWidth: 360,
+  },
+  notice: {
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   derivedActions: {
     gap: spacing.sm,
   },
+  editorBlock: {
+    flex: 1,
+    minHeight: 0,
+    marginTop: spacing.md,
+  },
   input: {
     flex: 1,
   },
+  counter: {
+    alignSelf: "flex-end",
+    marginTop: spacing.sm,
+  },
   footer: {
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.xs,
   },
 });

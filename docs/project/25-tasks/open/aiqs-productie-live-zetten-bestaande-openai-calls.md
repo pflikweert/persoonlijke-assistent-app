@@ -10,8 +10,9 @@ summary: "Zet de huidige AIQS-variant snel en gecontroleerd live in productie vo
 tags: [aiqs, productie, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
+
 
 
 
@@ -92,3 +93,5 @@ Deze taak is klaar wanneer de productieroute aantoonbaar werkt en de minimale op
 - 5a7e3e0 — docs: add service status backlog task
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

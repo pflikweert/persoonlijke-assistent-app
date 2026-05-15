@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 13
+sort_order: 14
 ---
+
 
 
 
@@ -150,3 +151,5 @@ Brongetrouwe insights processing en detailweergave bovenop transcript.
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

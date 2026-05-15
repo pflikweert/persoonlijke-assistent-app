@@ -21,7 +21,9 @@ pkill -f "$FUNCTION_CMD" 2>/dev/null || true
 cd "$ROOT_DIR"
 
 echo "Starting Supabase functions runtime in background..."
-npx $FUNCTION_CMD >"$LOG_FILE" 2>&1 &
+# Keep the runtime detached from the launching shell, otherwise it can die
+# immediately when the wrapper script exits.
+nohup npx $FUNCTION_CMD >"$LOG_FILE" 2>&1 </dev/null &
 FUNCTION_PID=$!
 echo "$FUNCTION_PID" >"$PID_FILE"
 

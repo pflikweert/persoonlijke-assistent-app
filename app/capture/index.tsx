@@ -16,11 +16,15 @@ import {
   SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
+import { NoticeCard } from "@/components/ui/notice-card";
 import { colorTokens, spacing } from "@/theme";
+import { getUtcTodayDate } from "@/services";
 
 import {
   buildCaptureParams,
+  formatCaptureTargetDateLabel,
   resolveCaptureJournalDate,
+  resolveCaptureReturnTo,
   type CaptureRouteParams,
 } from "@/src/lib/capture-shared";
 
@@ -28,9 +32,15 @@ export default function CaptureStartScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const insets = useSafeAreaInsets();
-  const { date, validation } = useLocalSearchParams<CaptureRouteParams>();
-  const journalDate = resolveCaptureJournalDate(date);
-  const params = buildCaptureParams(journalDate);
+  const { date, targetDate, returnTo, validation } =
+    useLocalSearchParams<CaptureRouteParams>();
+  const journalDate = resolveCaptureJournalDate(date, targetDate);
+  const resolvedReturnTo = journalDate ? resolveCaptureReturnTo(returnTo) : null;
+  const params = buildCaptureParams(journalDate, resolvedReturnTo);
+  const targetDateLabel = formatCaptureTargetDateLabel(journalDate);
+  const showTargetDateNotice = Boolean(
+    journalDate && journalDate !== getUtcTodayDate() && targetDateLabel,
+  );
   const validationCode = Array.isArray(validation)
     ? (validation[0] ?? "")
     : (validation ?? "");
@@ -90,6 +100,15 @@ export default function CaptureStartScreen() {
 
         <CaptureIntro title="Leg iets vast" style={styles.copyBlock} />
 
+        {showTargetDateNotice && targetDateLabel ? (
+          <NoticeCard
+            compact
+            compactCentered
+            body={`Je voegt dit toe aan ${targetDateLabel}.`}
+            style={styles.notice}
+          />
+        ) : null}
+
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
@@ -131,6 +150,9 @@ const styles = StyleSheet.create({
   },
   validationActions: {
     gap: spacing.sm,
+  },
+  notice: {
+    marginTop: spacing.lg,
   },
   actions: {
     marginTop: spacing.xxxl,

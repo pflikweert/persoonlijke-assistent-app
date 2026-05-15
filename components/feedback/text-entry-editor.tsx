@@ -63,7 +63,6 @@ const styles = StyleSheet.create({
   },
   capture: {
     flex: 1,
-    marginTop: spacing.xl,
     fontSize: typography.roles.sectionTitle.size,
     lineHeight: typography.roles.sectionTitle.lineHeight,
     paddingVertical: 0,

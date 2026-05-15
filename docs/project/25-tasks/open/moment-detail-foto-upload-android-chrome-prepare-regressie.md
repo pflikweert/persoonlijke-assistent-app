@@ -16,8 +16,9 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 12
 ---
+
 
 
 ## Probleem / context
@@ -248,3 +249,5 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 ## Commits
 
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

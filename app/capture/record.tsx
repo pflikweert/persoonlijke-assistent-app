@@ -24,6 +24,7 @@ import {
   ProcessingScreen,
   type ProcessingVariant,
 } from "@/components/feedback/processing-screen";
+import { NoticeCard } from "@/components/ui/notice-card";
 import {
   CaptureBackHeader,
   CaptureErrorStack,
@@ -42,6 +43,7 @@ import {
   createCaptureProcessingSession,
   createClientProcessingId,
   fetchUserAudioPreferences,
+  getUtcTodayDate,
   loadCaptureProcessingSession,
   logCaptureProcessing,
   refreshDerivedAfterCaptureInBackground,
@@ -61,9 +63,12 @@ import {
   audioUriToBase64,
   buildCaptureParams,
   createCaptureContext,
+  extractJournalDateFromDayReturnTo,
+  formatCaptureTargetDateLabel,
   formatDuration,
   mimeTypeFromUri,
   resolveCaptureJournalDate,
+  resolveCaptureReturnTo,
   type CaptureRouteParams,
 } from "@/src/lib/capture-shared";
 
@@ -235,9 +240,15 @@ export default function CaptureRecordScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const insets = useSafeAreaInsets();
-  const { date } = useLocalSearchParams<CaptureRouteParams>();
-  const journalDate = resolveCaptureJournalDate(date);
-  const returnParams = buildCaptureParams(journalDate);
+  const { date, targetDate, returnTo } =
+    useLocalSearchParams<CaptureRouteParams>();
+  const journalDate = resolveCaptureJournalDate(date, targetDate);
+  const resolvedReturnTo = journalDate ? resolveCaptureReturnTo(returnTo) : null;
+  const returnParams = buildCaptureParams(journalDate, resolvedReturnTo);
+  const targetDateLabel = formatCaptureTargetDateLabel(journalDate);
+  const showTargetDateNotice = Boolean(
+    journalDate && journalDate !== getUtcTodayDate() && targetDateLabel,
+  );
   const recorder = useAudioRecorder(AUDIO_CAPTURE_RECORDING_OPTIONS);
   const recorderState = useAudioRecorderState(recorder, 250);
 
@@ -608,16 +619,32 @@ export default function CaptureRecordScreen() {
     [],
   );
 
-  const goToEntry = useCallback((entryId: string, nextJournalDate: string) => {
-    router.replace({
-      pathname: "/entry/[id]",
-      params: {
-        id: entryId,
-        source: "capture",
-        date: nextJournalDate,
-      },
-    });
-  }, []);
+  const goToEntry = useCallback(
+    (entryId: string, nextJournalDate: string) => {
+      const returnToDate = extractJournalDateFromDayReturnTo(resolvedReturnTo);
+      if (returnToDate) {
+        router.replace({
+          pathname: "/day/[date]",
+          params: {
+            date: returnToDate,
+            processed: "1",
+            entryId,
+          },
+        });
+        return;
+      }
+
+      router.replace({
+        pathname: "/entry/[id]",
+        params: {
+          id: entryId,
+          source: "capture",
+          date: nextJournalDate,
+        },
+      });
+    },
+    [resolvedReturnTo],
+  );
 
   const refreshDerivedQuietly = useCallback(
     (nextJournalDate: string, clientProcessingId: string) => {
@@ -765,7 +792,7 @@ export default function CaptureRecordScreen() {
         setError({
           message: parsed.nonRecoverable
             ? "Deze opname kan niet automatisch worden hersteld. Neem opnieuw op."
-            : parsed.message,
+            : "Opslaan mislukt. Probeer opnieuw.",
           retryable: parsed.retryable,
           requestId: parsed.requestId,
         });
@@ -1200,14 +1227,7 @@ export default function CaptureRecordScreen() {
       return;
     }
 
-    router.replace({
-      pathname: "/entry/[id]",
-      params: {
-        id: savedEntry.normalizedEntryId,
-        source: "capture",
-        date: savedEntry.journalDate,
-      },
-    });
+    goToEntry(savedEntry.normalizedEntryId, savedEntry.journalDate);
   }
 
   async function handleRetryDerived() {
@@ -1435,6 +1455,15 @@ export default function CaptureRecordScreen() {
       <View
         style={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]}
       >
+        {showTargetDateNotice && targetDateLabel ? (
+          <NoticeCard
+            compact
+            compactCentered
+            body={`Je voegt dit toe aan ${targetDateLabel}.`}
+            style={styles.notice}
+          />
+        ) : null}
+
         <View
           style={[
             styles.waveCard,
@@ -1681,6 +1710,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 88,
     alignItems: "center",
+  },
+  notice: {
+    width: "100%",
+    maxWidth: 360,
+    marginBottom: spacing.lg,
   },
   waveCard: {
     width: "100%",

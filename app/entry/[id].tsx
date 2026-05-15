@@ -17,7 +17,6 @@ import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary
 import { EditorialNarrativeBlock } from "@/components/journal/editorial-narrative-block";
 import { EntryAudioPlayer } from "@/components/journal/entry-audio-player";
 import {
-  EntryPhotoFeaturedPreview,
   EntryPhotoGallery,
 } from "@/components/journal/entry-photo-gallery";
 import { ScreenHeader } from "@/components/layout/screen-header";
@@ -25,10 +24,8 @@ import { BottomTabBarStandalone } from "@/components/navigation/BottomTabBar";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
-  DetailActionStack,
   DetailSectionHeader,
   DetailScreenHero,
-  DetailTertiaryAction,
 } from "@/components/ui/detail-screen-primitives";
 import { CopyIconButton } from "@/components/ui/copy-icon-button";
 import {
@@ -36,7 +33,6 @@ import {
 } from "@/components/ui/header-icon-button";
 import {
   ScreenContainer,
-  SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
 import { BrandHeaderLockup } from "@/components/ui/screen-scaffolds";
@@ -52,7 +48,7 @@ import {
   updateNormalizedEntryById,
 } from "@/services";
 import { buildEntryCopyPayload } from "@/src/lib/copy-payloads";
-import { colorTokens, spacing } from "@/theme";
+import { colorTokens, radius, spacing } from "@/theme";
 
 type RouteParams = {
   id?: string | string[];
@@ -76,6 +72,46 @@ function formatCapturedAtLabel(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatAddedAtAuditLabel(value: string): string | null {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  const label = parsed.toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const time = parsed.toLocaleTimeString("nl-NL", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `Toegevoegd ${label} om ${time}`;
+}
+
+function formatLaterAddedHeroLabel(value: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(`${value}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  const label = parsed.toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+  return `${label} · later toegevoegd`;
 }
 
 function cleanEntryText(value: string): string {
@@ -157,22 +193,18 @@ function formatDayActionLabel(value: string): string {
   return `Ga naar ${label}`;
 }
 
-function formatLastEditedLabel(value: string): string {
+function formatEditedAuditLabel(value: string): string | null {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
-    return "Laatst gewijzigd";
+    return null;
   }
 
-  const dayMonth = parsed.toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "long",
-  });
   const time = parsed.toLocaleTimeString("nl-NL", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  return `${dayMonth} om ${time}`;
+  return `Bijgewerkt om ${time}`;
 }
 
 function sanitizeDownloadSegment(value: string): string {
@@ -365,6 +397,27 @@ export default function EntryCompletionScreen() {
   );
   const title = entry?.title?.trim() || "Je entry";
   const dayDate = entry?.journal_date ?? routeDate;
+  const isLaterAddedMoment = useMemo(() => {
+    if (!entry?.captured_at || !entry?.journal_date) {
+      return false;
+    }
+
+    return entry.captured_at.slice(0, 10) !== entry.journal_date;
+  }, [entry?.captured_at, entry?.journal_date]);
+  const detailSubtitle = useMemo(() => {
+    if (isLaterAddedMoment) {
+      return formatLaterAddedHeroLabel(entry?.journal_date ?? "") ?? capturedAtLabel;
+    }
+
+    return capturedAtLabel;
+  }, [capturedAtLabel, entry?.journal_date, isLaterAddedMoment]);
+  const addedAtAuditLabel = useMemo(() => {
+    if (!isLaterAddedMoment) {
+      return null;
+    }
+
+    return formatAddedAtAuditLabel(entry?.captured_at ?? "");
+  }, [entry?.captured_at, isLaterAddedMoment]);
   const dayActionLabel = useMemo(
     () => formatDayActionLabel(dayDate),
     [dayDate],
@@ -376,10 +429,12 @@ export default function EntryCompletionScreen() {
 
     return new Date(entry.updated_at).getTime() > new Date(entry.created_at).getTime();
   }, [entry?.created_at, entry?.updated_at]);
-  const lastEditedLabel = useMemo(
-    () => formatLastEditedLabel(entry?.updated_at ?? ""),
+  const editedAuditLabel = useMemo(
+    () => formatEditedAuditLabel(entry?.updated_at ?? ""),
     [entry?.updated_at],
   );
+  const hasResolvedPhotoState = photoSnapshot !== null;
+  const hasPhotos = (photoSnapshot?.length ?? 0) > 0;
   const entryCopyPayload = useMemo(
     () =>
       buildEntryCopyPayload({
@@ -390,18 +445,6 @@ export default function EntryCompletionScreen() {
       }),
     [title, capturedAtLabel, showAssistantCopy, summaryShortText, cleanedBody],
   );
-  const cleanedBodyLineCount = useMemo(() => {
-    const lines = cleanedBody
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-    return lines.length;
-  }, [cleanedBody]);
-  const isShortContentLayout = useMemo(() => {
-    const hasShortBody = cleanedBodyLineCount <= 2;
-    const hasShortSummary = !showAssistantCopy || summaryShortText.length <= 90;
-    return hasShortBody && hasShortSummary;
-  }, [cleanedBodyLineCount, showAssistantCopy, summaryShortText]);
   const audioPathMissing =
     entry?.source_type === "audio" && !(entry?.audio_storage_path?.trim());
 
@@ -638,10 +681,11 @@ export default function EntryCompletionScreen() {
           <>
             <DetailScreenHero
               title={title}
-              subtitle={capturedAtLabel}
+              subtitle={detailSubtitle}
               subtitleType="meta"
               style={styles.titleBlock}
               titleStyle={{ color: palette.text }}
+              subtitleStyle={styles.heroMeta}
             />
 
             {showAssistantCopy ? (
@@ -650,21 +694,12 @@ export default function EntryCompletionScreen() {
               </ThemedView>
             ) : null}
 
-            <ThemedView style={styles.summarySectionBlock}>
-              <EntryPhotoFeaturedPreview
-                rawEntryId={entry.raw_entry_id}
-                refreshToken={photoRefreshTick}
-                onPhotosChanged={handlePhotosChanged}
-                onPhotosSnapshotChange={setPhotoSnapshot}
-                photosOverride={photoSnapshot}
-              />
-            </ThemedView>
-
             {entry.source_type === "audio" && !audioPathMissing ? (
               <ThemedView style={[styles.sectionBlock, styles.primarySectionSpacing]}>
                 <DetailSectionHeader
                   icon="mic"
                   title="Opname"
+                  tone="muted"
                 />
                 {audioPlaybackUrl ? (
                   <EntryAudioPlayer
@@ -731,6 +766,7 @@ export default function EntryCompletionScreen() {
                     ? "Uitgeschreven opname"
                     : "Geschreven moment"
                 }
+                tone="accent"
                 trailingAction={
                   <CopyIconButton
                     payload={entryCopyPayload}
@@ -743,59 +779,117 @@ export default function EntryCompletionScreen() {
                 text={cleanedBody || "Deze entry bevat nog geen tekst."}
                 style={styles.narrativeBlock}
               />
+            </ThemedView>
+
+            <EntryPhotoGallery
+              rawEntryId={entry.raw_entry_id}
+              refreshToken={photoRefreshTick}
+              onPhotosChanged={handlePhotosChanged}
+              onPhotosSnapshotChange={setPhotoSnapshot}
+            />
+
+            <ThemedView
+              style={[
+                styles.momentDetailsSection,
+                {
+                  backgroundColor: palette.surface,
+                },
+              ]}
+            >
+              <DetailSectionHeader
+                icon="info-outline"
+                title="Momentdetails"
+                tone="muted"
+              />
+
+              {addedAtAuditLabel || (hasEditedTimestamp && editedAuditLabel) ? (
+                <ThemedView
+                  style={[
+                    styles.detailMetaStack,
+                    { borderBottomColor: palette.separator },
+                  ]}
+                >
+                  {addedAtAuditLabel ? (
+                    <ThemedText type="caption" style={[styles.detailMetaText, { color: palette.mutedSoft }]}>
+                      {addedAtAuditLabel}
+                    </ThemedText>
+                  ) : null}
+                  {hasEditedTimestamp && editedAuditLabel ? (
+                    <ThemedText type="caption" style={[styles.detailMetaText, { color: palette.mutedSoft }]}>
+                      {editedAuditLabel}
+                    </ThemedText>
+                  ) : null}
+                </ThemedView>
+              ) : null}
+
+              <ThemedView style={styles.detailActionsStack}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Moment bewerken"
+                  onPress={() => setEditVisible(true)}
+                  style={styles.detailActionRow}
+                >
+                  <ThemedView style={styles.detailActionLeading}>
+                    <MaterialIcons name="edit" size={16} color={palette.mutedSoft} />
+                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                      Bewerken
+                    </ThemedText>
+                  </ThemedView>
+                  <MaterialIcons name="chevron-right" size={14} color={palette.mutedSoft} />
+                </Pressable>
+
+                {hasResolvedPhotoState && !hasPhotos ? (
+                  <EntryPhotoGallery
+                    rawEntryId={entry.raw_entry_id}
+                    refreshToken={photoRefreshTick}
+                    onPhotosChanged={handlePhotosChanged}
+                    onPhotosSnapshotChange={setPhotoSnapshot}
+                    variant="trigger"
+                  />
+                ) : null}
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={dayActionLabel}
+                  onPress={() => goToDayDetail({ includeEntryFocus: true })}
+                  style={styles.detailActionRow}
+                >
+                  <ThemedView style={styles.detailActionLeading}>
+                    <MaterialIcons name="calendar-today" size={16} color={palette.mutedSoft} />
+                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                      {dayActionLabel}
+                    </ThemedText>
+                  </ThemedView>
+                  <MaterialIcons name="chevron-right" size={14} color={palette.mutedSoft} />
+                </Pressable>
+              </ThemedView>
 
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Moment bewerken"
-                onPress={() => setEditVisible(true)}
-                style={styles.inlineEditAction}
+                accessibilityLabel={deleting ? "Moment verwijderen..." : "Moment verwijderen"}
+                accessibilityState={{ disabled: isProcessing }}
+                disabled={isProcessing}
+                onPress={handleDelete}
+                style={[
+                  styles.deleteActionRow,
+                  { borderTopColor: palette.separator },
+                ]}
               >
-                <MaterialIcons name="edit" size={14} color={palette.mutedSoft} />
-                <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                  Bewerken
-                </ThemedText>
-              </Pressable>
-
-              {hasEditedTimestamp ? (
-                <ThemedView style={styles.editedMetaWrap}>
+                <ThemedView style={styles.detailActionLeading}>
+                  <MaterialIcons
+                    name="delete-outline"
+                    size={16}
+                    color={palette.destructiveSoftText}
+                  />
                   <ThemedText
-                    type="caption"
-                    style={[styles.editedMetaText, { color: palette.mutedSoft }]}
+                    type="bodySecondary"
+                    style={{ color: palette.destructiveSoftText }}
                   >
-                    Laatst gewijzigd: {lastEditedLabel}
+                    {deleting ? "Verwijderen..." : "Verwijderen"}
                   </ThemedText>
                 </ThemedView>
-              ) : null}
+              </Pressable>
             </ThemedView>
-
-            <ThemedView style={styles.summarySectionBlock}>
-              <EntryPhotoGallery
-                rawEntryId={entry.raw_entry_id}
-                refreshToken={photoRefreshTick}
-                onPhotosChanged={handlePhotosChanged}
-                onPhotosSnapshotChange={setPhotoSnapshot}
-              />
-            </ThemedView>
-
-            <DetailActionStack
-              style={
-                isShortContentLayout
-                  ? styles.actionStackShortContent
-                  : styles.actionStackDefault
-              }
-            >
-              <SecondaryButton
-                label={dayActionLabel}
-                onPress={() => goToDayDetail({ includeEntryFocus: true })}
-              />
-              <DetailTertiaryAction
-                onPress={handleDelete}
-                disabled={isProcessing}
-                label={deleting ? "Verwijderen..." : "Verwijderen"}
-                tone="destructive"
-                uppercase={false}
-              />
-            </DetailActionStack>
           </>
         ) : null}
 
@@ -846,6 +940,9 @@ const styles = StyleSheet.create({
   titleBlock: {
     marginBottom: spacing.lg,
   },
+  heroMeta: {
+    letterSpacing: 0.9,
+  },
   sectionBlock: {
     gap: spacing.xs,
   },
@@ -865,18 +962,45 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingVertical: spacing.xs,
   },
-  editedMetaWrap: {
+  momentDetailsSection: {
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radius.xl,
+    gap: spacing.md,
+  },
+  detailMetaStack: {
+    paddingBottom: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: spacing.xxs,
+  },
+  detailMetaText: {
+    fontSize: 11,
+    lineHeight: 15,
+    letterSpacing: 0.05,
+  },
+  detailActionsStack: {
+    gap: spacing.xxs,
+  },
+  detailActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    minHeight: 38,
+    paddingVertical: 6,
+  },
+  detailActionLeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    flexShrink: 1,
+  },
+  deleteActionRow: {
+    minHeight: 38,
+    justifyContent: "center",
     marginTop: spacing.xxs,
-  },
-  editedMetaText: {
-    fontStyle: "italic",
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  actionStackDefault: {
-    marginTop: spacing.md,
-  },
-  actionStackShortContent: {
-    marginTop: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

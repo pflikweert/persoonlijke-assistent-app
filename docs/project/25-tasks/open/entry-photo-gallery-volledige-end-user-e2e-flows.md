@@ -5,8 +5,8 @@ status: ready
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-26
-summary: "Breid de nieuwe gallery-smoke basis uit naar een volledige end-user E2E-suite voor toevoegen, verwijderen, max-limiet, viewer, reorder en unhappy/error flows."
+updated_at: 2026-05-15
+summary: "Breid de huidige gallery-smoke basis en de recente viewer/reorder-validatie uit naar een volledige end-user E2E-suite voor toevoegen, echte delete-mutatie, max-limiet en unhappy/error flows."
 tags: [qa, tests, gallery, photos, e2e]
 workstream: app
 due_date: null
@@ -19,9 +19,12 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
-De eerste gallery QA-basis bewijst de kerninteractie voor thumbnail-reorder en legt unit/smoke-infra neer. De volledige end-user dekking voor alle gallery-flows bestaat nog niet.
+De eerste gallery QA-basis bewijst inmiddels de kerninteractie voor thumbnail-reorder, viewer-openen en delete-cancel op lokale fixtures. Daarnaast is de with-photos state van momentdetail runtime bevestigd via een aparte local-only historical fixture.
+
+De volledige end-user dekking voor alle gallery-flows bestaat nog niet. Vooral toevoegen, echte delete-mutatie, max-limiet en expliciete unhappy/error paden missen nog als reproduceerbare suite.
 
 Voor toekomstige gallery-wijzigingen willen we kunnen kiezen tussen:
 
@@ -72,6 +75,20 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 
 - Vereist draaiende lokale webserver, Supabase local stack en Mailpit auth-flow.
 
+## Review-notitie 2026-05-15
+
+- Deze task blijft open; het recente momentdetail/foto-werk heeft hem niet volledig opgelost.
+- Wel al ingehaald door recent bewijs:
+  - reorder smoke via `tests/e2e/gallery-smoke.spec.mjs`
+  - viewer-open + delete-cancel via `tests/e2e/gallery-full.spec.mjs`
+  - tijdelijke historical with-photos fixture via `scripts/seed-local-historical-entry-photo-detail-smoke.mjs`
+- Restscope van deze task is daardoor smaller dan voorheen:
+  - add-flow
+  - echte delete-mutatie
+  - max-limiet
+  - unhappy/error paden
+  - eventuele runbook-/docs-afronding voor de volledige suite
+
 ## Verify / bewijs
 
 - ⏳ `npm run test:e2e:gallery:full`
@@ -95,3 +112,5 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-04-28T23:46:55.838Z
-Source Commit: 6a2a8ce
+Build Timestamp (UTC): 2026-05-15T06:59:13.598Z
+Source Commit: 58da70b
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 38
+- Totaal tasks opgenomen: 44
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -771,6 +771,414 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+```
+
+---
+
+## Bug capture type current day submit fails
+
+- Path: `docs/project/25-tasks/done/bug-capture-type-current-day-submit-fails.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-14
+
+```md
+---
+id: task-bug-capture-type-current-day-submit-fails
+title: Bug capture type current day submit fails
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-14
+summary: "Herstel de regressie waarbij een normaal tekstmoment voor vandaag op `/capture/type` faalt bij opslaan, bepaal de exacte root cause in frontend/service/function/DB en houd de nieuwe historische targetDate-flow compatibel zonder die verder uit te bouwen."
+tags: [capture, text, regression, bug]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De standaard typing-capture flow voor vandaag faalt nu op `/capture/type`. Bij klikken op `Leg vast` verschijnt de foutcopy `Je moment is niet veilig verstuurd. Leg het opnieuw vast.` met `Probeer het zo opnieuw.`
+
+Deze regressie is ontstaan na de recente targetDate/returnTo-aanpassingen voor oude dagen. Dat maakt de huidige vandaag-flow P0/P1: eerst moet het normale vastleggen voor vandaag weer betrouwbaar werken voordat we de historische flow verder kunnen vertrouwen.
+
+## Root cause
+
+- Diagnose-label: `Edge Function invoke/boot probleem`
+- Exacte oorzaak: de lokale Supabase functions-runtime bleef niet draaien na de bestaande start/restartflow. `scripts/supabase-functions-start.sh` startte `npx supabase functions serve --env-file .env.local` wel in de achtergrond, maar niet los van de launching shell. Daardoor stierf het process direct na script-exit en bleef Kong op `http://127.0.0.1:54321/functions/v1/process-entry` generieke upstream-fouten teruggeven (`500 An unexpected error occurred` en kort na restart soms `502 invalid response from upstream`).
+- Bevestiging:
+  - browser/network reproduce op `/capture/type` liet een geldige `POST /functions/v1/process-entry` zien
+  - dezelfde fout trad ook op in `./scripts/verify-local-flow.sh`
+  - `supabase_edge_runtime_*` stond gestopt en er draaide geen levende `supabase functions serve`-process
+  - wanneer dezelfde runtime met `nohup` levend werd gehouden, slaagde `verify-local-flow` direct weer
+
+## Gewenste uitkomst
+
+Een normaal tekstmoment op `/capture/type` zonder queryparams slaat weer succesvol op voor vandaag. De bestaande success-flow blijft intact, de tekst wordt alleen geleegd na bewezen succes en er is geen redesign of scope-uitbreiding nodig.
+
+De diagnose benoemt expliciet waar het faalde: frontend payload, auth/session, Supabase DB/schema, Edge Function invoke/boot of processing/prompt. De fix houdt de targetDate-flow compatibel, maar bouwt die nu niet verder uit.
+
+## User outcome
+
+De gebruiker kan op `/capture/type` weer direct een vandaag-moment opslaan zonder foutmelding of dataverlies, terwijl een geldige `targetDate`-route voor een oudere dag niet stukgaat door de fix.
+
+## Functional slice
+
+Een gerichte bugfix op de standaard tekstcaptureflow: reproduce -> bronbevestigde root cause -> kleinste veilige fix -> runtime bewijs voor vandaag-flow en regressiecheck voor targetDate-param routing.
+
+## Entry / exit
+
+- Entry: gebruiker opent `/capture/type` zonder queryparams en typt een tekstmoment.
+- Exit: na `Leg vast` is het moment opgeslagen voor vandaag en komt de gebruiker in de bestaande success/return flow.
+
+## Happy flow
+
+1. Gebruiker opent `/capture/type` zonder `targetDate` of oudere dag-context.
+2. Gebruiker typt `Goedemorgen test voor vandaag` en klikt `Leg vast`.
+3. De request slaagt, de entry wordt voor vandaag opgeslagen, de tekst wordt pas daarna gewist en de gebruiker ziet de bestaande succesroute.
+
+## Non-happy flows
+
+- Validation / unsupported state: ontbrekende `targetDate` gebruikt altijd de normale vandaag-flow zonder invalid/null/empty datumveld.
+- Failure / retry / cancel: bij fout blijft de tekst behouden en mag de bestaande copy `Je moment is niet veilig verstuurd. Leg het opnieuw vast.` + `Probeer het zo opnieuw.` blijven.
+- Historical compatibility: geldige `targetDate` blijft targetDate gebruiken; ongeldige `targetDate` valt veilig terug of volgt bestaand foutpatroon.
+
+## UX / copy
+
+- Bestaande vandaag-typing capture blijft visueel ongewijzigd.
+- Bestaande foutcopy mag blijven:
+  - `Je moment is niet veilig verstuurd. Leg het opnieuw vast.`
+  - `Probeer het zo opnieuw.`
+- Geen redesign, geen nieuwe capturemodus, geen extra uitleglaag.
+
+## Data / IO
+
+- Input: tekstmoment via `/capture/type`, standaard zonder queryparams; optioneel met geldige `targetDate`.
+- Output: nieuwe entry voor vandaag bij standaardflow; targetDate alleen wanneer geldig meegegeven.
+- Opslag/API/service-impact: alleen kleinste fix in bestaande capture/service/function-keten; geen nieuwe dependencies; geen migration tenzij runtime exact bewijst dat een bestaande schemawijziging lokaal ontbreekt.
+- Statussen: tekst mag alleen wissen na bewezen success; bij fout blijft tekst behouden.
+
+## Waarom nu
+
+- Dit is een actieve regressie op een primaire gebruikersflow.
+- Vandaag-capture is de basis van het product; die moet eerst stabiel zijn.
+
+## In scope
+
+- Lokale reproductie op `/capture/type`.
+- Browser console/network check bij `Leg vast`.
+- Root-cause bepaling in `app/capture/type.tsx`, `services/entries.ts`, `process-entry` invoke en indien nodig lokale Supabase function/DB.
+- Kleinste bugfix om standaard vandaag-flow te herstellen.
+- Compatibiliteitscheck voor geldige en ongeldige `targetDate`.
+
+## Buiten scope
+
+- Verdere uitbouw van historische day-flow.
+- Redesign van Today, Days overview of dagdetail.
+- Nieuwe dependencies, retry-queue, offline text storage of nieuwe capturemodus.
+- Brede refactor van capture, entries of processing.
+- Voice/audio-wijzigingen behalve wanneer gedeelde submitlogica exact de foutbron blijkt.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Reproduceer eerst lokaal op `/capture/type`.
+- Bevestig exact waar de fout optreedt met browser/network en primaire code/runtime-bronnen.
+- Fix alleen de standaard tekstcapture voor vandaag.
+- Houd targetDate-compatibiliteit in stand zonder verdere bouwscope.
+
+## Expliciete user requirements / detailbehoud
+
+1. `/capture/type` zonder queryparams moet altijd een normaal vandaag-moment kunnen opslaan.
+2. Als `targetDate` ontbreekt: gebruik bestaande vandaag-flow en stuur geen invalid/null/empty targetDate mee.
+3. `created_at` blijft echte vastlegtijd.
+4. Het moment verschijnt na succes in vandaag / huidige dag.
+5. Textarea wordt alleen geleegd na bewezen succesvolle save.
+6. Bij fout blijft tekst behouden.
+7. Bestaande foutcopy mag blijven.
+8. Historische flow mag niet breken bij geldige `targetDate`.
+9. Ongeldige `targetDate` mag niet stil kapotgaan.
+
+## Status per requirement
+
+- [x] Vandaag-flow op `/capture/type` werkt weer — status: gebouwd
+- [x] Root cause expliciet benoemd — status: gebouwd
+- [x] Geen invalid/null/empty targetDate in standaardflow — status: gebouwd
+- [x] Tekst blijft behouden bij fout — status: gebouwd
+- [x] Tekst wist pas na success — status: gebouwd
+- [x] Historische targetDate-compatibiliteit blijft intact — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Lokale functions-start tooling nu met `nohup`, zodat `supabase:functions:restart` de runtime echt laat doorleven na script-exit.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow, reproductie en diagnose vastleggen.
+- [x] Blok 2: kleinste bronfix uitvoeren.
+- [x] Blok 3: verify, runtime smoke en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Bug reproduceren op `/capture/type`.
+- [x] Browser console/network en function/servicepad checken.
+- [x] Root cause documenteren.
+- [x] Kleinste fix implementeren.
+- [x] Lint/typecheck/taskflow verify en runtime smoke vastleggen.
+
+## Acceptance criteria
+
+- [x] Standaard tekstmoment voor vandaag werkt weer.
+- [x] Root cause is benoemd.
+- [x] Geen redesign of scope-uitbreiding.
+- [x] Geen dataverlies bij failed submit.
+- [x] Geen ongeldige targetDate in standaardflow.
+
+## Blockers / afhankelijkheden
+
+- Nog geen; lokale webserver en lokale Supabase runtime moeten wel beschikbaar zijn voor volledige runtime-bevestiging.
+
+## Verify / bewijs
+
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `npm run taskflow:verify`
+- ✅ `./scripts/verify-local-flow.sh`
+- ✅ Browser reproduce vóór fix:
+  - geldige `POST /functions/v1/process-entry`
+  - response `500 {"message":"An unexpected error occurred"}`
+- ✅ Runtime-diagnose:
+  - `supabase_edge_runtime_persoonlijke-assistent-app` stond op `Exited (137)`
+  - er draaide geen levend `supabase functions serve`-process
+- ✅ Browser smoke na fix:
+  - `/capture/type` met `Goedemorgen test voor vandaag <timestamp>` navigeert naar `/entry/[id]?source=capture&date=2026-05-14`
+  - geen foutcopy zichtbaar
+  - geldige `targetDate`-route `/capture/type?targetDate=2026-05-10` opent nog steeds en toont de notice `Je voegt dit toe aan 10 mei 2026.`
+- Runtime smoke:
+  1. open `/capture/type`
+  2. typ `Goedemorgen test voor vandaag`
+  3. klik `Leg vast`
+  4. geen foutmelding
+  5. entry wordt opgeslagen
+  6. gebruiker komt in bestaande success/return flow
+  7. vandaag/dagdetail bevat het nieuwe moment
+- Regressie-smoke:
+  - `/capture/type?targetDate=<geldige-oude-datum>` gaat niet stuk door de fix
+  - `/capture/type` zonder queryparams blijft de standaard bron van waarheid voor vandaag
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: vandaag-typing capture herstellen en exacte root cause benoemen.
+- Toegevoegde verbeteringen: lokale functions-start tooling met `nohup`, zodat restart de runtime echt levend houdt.
+- Afgerond: root cause bevestigd als lokale Edge Function invoke/boot-probleem; runtime-startscript gefixt; today text capture en targetDate-openingspad opnieuw bewezen.
+- Open / blocked: geen functionele blockers meer voor deze regressie.
+
+## Relevante links
+
+- `app/capture/type.tsx`
+- `services/entries.ts`
+- `supabase/functions/process-entry/index.ts`
+- `scripts/supabase-functions-start.sh`
+```
+
+---
+
+## Capture typing UX polish voor vandaag-flow
+
+- Path: `docs/project/25-tasks/done/capture-typing-ux-polish-vandaag-flow.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-14
+
+```md
+---
+id: task-capture-typing-ux-polish-vandaag-flow
+title: Capture typing UX polish voor vandaag-flow
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user
+updated_at: 2026-05-14
+summary: "Verfijn de bestaande `/capture/type` UX voor vandaag en targetDate-flows met compactere hero, meer schrijfruimte, betere placeholder, live character counter en rustige light/dark theming zonder redesign of nieuwe dependencies."
+tags:
+  - capture
+  - typing
+  - ui-polish
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De huidige typing capture-pagina verspilt verticale ruimte door dubbele copy en een te ruime hero boven het tekstveld. Daardoor voelt het schrijfvlak kleiner dan nodig. Daarnaast ontbreekt een rustige live karakterteller en moet de theming in light/dark mode expliciet gecontroleerd worden.
+
+## Gewenste uitkomst
+
+De typing capture-pagina voelt compacter, rustiger en meer capture-first. De hero staat dichter onder de topnav, de dubbele vraag boven het tekstveld is weg en het schrijfvlak krijgt zichtbaar meer ruimte zonder nieuwe UI-lagen of redesign.
+
+De pagina toont een subtiele live teller rechtsonder, gebruikt de placeholder `Begin met schrijven…` en houdt de historische targetDate-contextregel rustig gecentreerd en goed leesbaar in light en dark mode.
+
+## User outcome
+
+De gebruiker kan op `/capture/type` sneller beginnen met schrijven, ziet meer van zijn tekst tegelijk en krijgt subtiele feedback via een live karakterteller zonder extra afleiding.
+
+## Functional slice
+
+Een kleine UX-polish van de bestaande typing capture-state op `/capture/type`, inclusief hero-copy, textarea-dominantie, counterweergave en rustige dark/light theming, zonder wijziging aan captureflow, opslag of navigatie.
+
+## Entry / exit
+
+- Entry: gebruiker opent `/capture/type` of `/capture/type?targetDate=...`.
+- Exit: gebruiker typt en slaat een moment op via de bestaande flow, met ongewijzigde navigatie en submit-logica.
+
+## Happy flow
+
+1. Gebruiker opent `/capture/type` en ziet direct onder de topnav de compacte hero `Wat wil je vastleggen?` met korte subtitel.
+2. Het tekstveld domineert de pagina, gebruikt de placeholder `Begin met schrijven…` en toont live `0 / 20000` rechtsonder.
+3. Gebruiker typt een langere tekst, ziet de teller live oplopen en slaat via `Leg vast` op zonder layoutsprongen.
+
+## Non-happy flows
+
+- Empty state: teller toont `0 / 20000` en submit blijft bestaande disabled-gedrag volgen.
+- Permission denied / unavailable: niet van toepassing; geen nieuwe permissions of device-capabilities.
+- Validation / unsupported state: targetDate-notice blijft alleen zichtbaar voor geldige niet-vandaag targetDate-context.
+- Failure / retry / cancel: bestaande errorcopy, retrygedrag en cancel/backflow blijven ongewijzigd.
+
+## UX / copy
+
+- Hero title: `Wat wil je vastleggen?`
+- Hero subtitle: `Schrijf op wat je wilt onthouden, verwerken of bewaren.`
+- Verwijderen: los label `Wat wil je vastleggen?` boven het tekstveld.
+- Placeholder: `Begin met schrijven…`
+- Counter: `0 / 20000`
+- Historische noticecopy blijft exact: `Je voegt dit toe aan [datum].`
+- Bestaande shared patterns blijven leidend: `CaptureBackHeader`, `CaptureIntro`, `TextEntryEditor`, `NoticeCard`, `PrimaryButton`, `SecondaryButton`.
+
+## Data / IO
+
+- Input: vrije tekst in bestaande typing capture-flow; optioneel geldige `targetDate`.
+- Output: ongewijzigde `submitTextEntry` saveflow.
+- Opslag/API/service/file-impact: geen backend-, service- of dataflowwijziging beoogd.
+- Statussen: bestaande submit/recovery/error-statussen blijven gelijk.
+
+## Waarom nu
+
+- De pagina is een kernstuk van de capture-first MVP.
+- De regressiefix voor today-submit is al hersteld; nu is er ruimte om de UX van deze standaardflow netter en rustiger te maken zonder scope-uitbreiding.
+
+## In scope
+
+- Compactere hero en minder top whitespace op `/capture/type`
+- Verwijderen van dubbele vraag boven het tekstveld
+- Placeholder vervangen
+- Typvlak visueel dominanter maken
+- Live character counter rechtsonder tonen
+- Historical targetDate-notice subtiel gecentreerd/uitgelijnd houden
+- Light/dark theming van textarea/meta/CTA op deze pagina controleren en bijslijpen
+
+## Buiten scope
+
+- Nieuwe capturemodi, toolbars of editorfeatures
+- Wijzigingen aan voice capture of capture startflow buiten gedeelde notice styling indien nodig
+- Dataflow, services, Supabase functions of migrations
+- Redesign van andere schermen
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Verfijn alleen de bestaande typing capture-pagina.
+- Houd capture-first en clean-first intact.
+- Voeg geen nieuwe cards, widgets, toolbars of dependencies toe.
+- Beperk wijzigingen tot relevante capture/type schermen en kleine shared primitives waar nodig.
+
+## Expliciete user requirements / detailbehoud
+
+- Hero direct onder standaard topnav met minder top whitespace.
+- Titel `Wat wil je vastleggen?`
+- Subtitel `Schrijf op wat je wilt onthouden, verwerken of bewaren.`
+- Verwijder volledig de dubbele vraag boven het tekstveld.
+- Placeholder exact `Begin met schrijven…`
+- Input moet visueel dominanter worden.
+- Live counter rechtsonder in vorm `0 / 20000`, alleen visueel, nog niet limiteren.
+- Historische dag-contextregel subtiel houden en icoon + tekst rustig uitlijnen.
+- Dark mode controleren op textarea, placeholder, meta text, border/surface contrast en CTA-leesbaarheid.
+- Geen harde witte vlakken in dark mode en geen donkere lekken in light mode.
+- Keyboard/open en lange tekst moeten geen springende layout veroorzaken.
+- Na afloop korte changelog, geraakte files en eventuele UX tradeoffs rapporteren.
+
+## Status per requirement
+
+- [x] Compactere hero en minder top whitespace — status: gebouwd
+- [x] Dubbele vraag verwijderen — status: gebouwd
+- [x] Placeholder `Begin met schrijven…` — status: gebouwd
+- [x] Groter schrijfvlak — status: gebouwd
+- [x] Live counter `0 / 20000` — status: gebouwd
+- [x] Rustige targetDate-notice alignment — status: gebouwd
+- [x] Light/dark runtime-checked — status: gebouwd met web-smoke; native iOS handmatige smoke nog niet in deze sessie uitgevoerd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- TargetDate-notice op `/capture/type` gebruikt nu dezelfde gecentreerde compacte notice-opmaak als de capture-startscreen, zodat de historische contextregel rustig blijft binnen dezelfde pagina-polish.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: kleinste bronwijziging of primair artefact uitvoeren.
+- [x] Blok 3: gerichte verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Bestaande capture/type renderstructuur en shared primitives aanscherpen.
+- [x] Runtime smoke in light/dark en met targetDate + plain today-flow uitvoeren.
+
+## Acceptance criteria
+
+- [x] `/capture/type` toont een compactere hero, grotere schrijfruimte en geen dubbele vraag boven de input.
+- [x] Placeholder is `Begin met schrijven…` en de live teller toont realtime `x / 20000` rechtsonder zonder harde limiet af te dwingen.
+- [x] Historical targetDate-notice blijft subtiel en gecentreerd, terwijl light/dark mode rustig en leesbaar blijven zonder functionele regressie.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- `npm run lint` ✅
+- `npm run typecheck` ✅
+- Runtime web-smoke via Playwright op `http://localhost:8081` met viewport `390x844`:
+  - `/capture/type` light: titel en subtitel zichtbaar, oude copy `Wat houdt je bezig?` count `0`, placeholder `Begin met schrijven…`, live counter update naar `28 / 20000`
+  - `/capture/type` dark: placeholder idem, live counter update naar `2880 / 20000`, textarea-kleuren `rgb(244, 241, 232)` op transparante capture-surface zonder witte vlakregressie
+  - `/capture/type?targetDate=2026-05-13&returnTo=%2Fday%2F2026-05-13` light/dark: targetDate-notice aanwezig (`noticeCount: 1`) en today-route toont geen notice (`noticeCount: 0`)
+  - save-CTA `Leg vast` blijft zichtbaar na focus + typen; bounding box bleef gelijk (`y: 762`, `height: 20`)
+- Native iOS smoke niet direct uitvoerbaar in deze sessie; web small-screen smoke is wel vastgelegd en iOS blijft aanbevolen als handmatige laatste check.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: verfijn alleen de bestaande typing capture-pagina met compactere hero, minder dubbele copy, grotere schrijfruimte, betere placeholder, subtiele counter en rustige dark/light theming.
+- Toegevoegde verbeteringen: de targetDate-notice op `/capture/type` is meteen meegetrokken naar dezelfde gecentreerde compacte notice-opmaak voor een rustiger geheel binnen dezelfde flow.
+- Afgerond: hero-copy is compacter, top spacing is kleiner, placeholder is vervangen, de capture-editor start hoger en voelt groter, de live counter staat rechtsonder en de targetDate-notice blijft rustig in light/dark web-smoke.
+- Open / blocked: geen code-blockers; alleen een handmatige native iOS smoke blijft optioneel aanbevolen buiten deze sessie.
+
+## Relevante links
+
+- `docs/project/open-points.md`
 ```
 
 ---
@@ -2051,6 +2459,181 @@ De lokale omgeving kan betrouwbaar worden gebruikt voor Budio app-ontwikkeling z
 
 ---
 
+## Lokale testdatabase herstellen voor capture-validatie
+
+- Path: `docs/project/25-tasks/done/lokale-testdatabase-herstellen-voor-capture-validatie.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-14
+
+```md
+---
+id: task-lokale-testdatabase-herstellen-voor-capture-validatie
+title: Lokale testdatabase herstellen voor capture-validatie
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-14
+summary: "Herstel de lokale Supabase testdatabase naar een bruikbare staat met representatieve testdata, zodat de oudere-dag captureflow en standaard today-capture weer op echte fixturedata getest kunnen worden."
+tags: [supabase, local-db, testdata, capture]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De lokale appflow werkt weer, maar de lokale Supabase database lijkt leeg of grotendeels leeg. Daardoor ontbreekt de verwachte testdata om de eerdere dagdetail- en captureflows realistisch te valideren.
+
+De repo verwijst in `supabase/config.toml` naar een seedbestand (`./seed.sql`), maar tijdens preflight is die file lokaal niet aangetroffen. Daardoor is het waarschijnlijk dat een eerdere lokale reset de data heeft leeggemaakt zonder automatische reseed.
+
+## Gewenste uitkomst
+
+De lokale database bevat weer bruikbare testdata voor de bestaande capture- en dagflows. Minimaal is duidelijk en bewezen:
+
+- welke herstelbron is gebruikt
+- of oude lokale data echt kon worden teruggezet of opnieuw gezaaid moest worden
+- dat de gebruiker daarna weer met representatieve dag-/momentdata kan testen
+
+## User outcome
+
+De gebruiker kan de eerste functionaliteit verder testen op bestaande of opnieuw gezaaide lokale testdata, zonder handmatig SQL of losse restorestappen te hoeven uitzoeken.
+
+## Functional slice
+
+Een kleine herstel-slice: diagnose van de lege lokale DB, kiezen van de kleinste veilige restorebron, lokale restore/reseed uitvoeren, en daarna hard bewijzen dat de verwachte testdata weer aanwezig is.
+
+## Entry / exit
+
+- Entry: lokale app/server draait, maar de lokale Supabase data lijkt leeg.
+- Exit: lokale DB bevat weer testdata en de herstelbron plus bewijs zijn vastgelegd.
+
+## Happy flow
+
+1. Diagnose bevestigt dat de lokale DB leeg of onverwacht mager is en wijst de oorzaak aan.
+2. Een bestaande restorebron, fixture-import of lokale backupbron wordt gekozen en uitgevoerd.
+3. De relevante tabellen bevatten weer testdata en een korte runtimecheck bevestigt dat de app ermee verder getest kan worden.
+
+## Non-happy flows
+
+- Restorebron ontbreekt: leg expliciet vast dat oude data niet herstelbaar is en zaai de kleinste bruikbare fixturedata opnieuw.
+- Lokale migratie/seed-config klopt niet: herstel alleen wat nodig is om lokaal weer te kunnen testen.
+- Regeneratie of afgeleide data faalt: ruwe testentries blijven behouden; noteer welke afgeleide laag nog ontbreekt.
+
+## UX / copy
+
+- Geen product-UI redesign.
+- Alleen developer-facing restore en bewijs.
+
+## Data / IO
+
+- Input: lokale Supabase DB, bestaande migraties, eventuele seed/fixture/importscripts.
+- Output: herstelde of opnieuw gezaaide lokale testdata.
+- Opslag/API/service-impact: lokaal Supabase only.
+- Statussen: diagnose, restorebron gekozen, restore/reseed uitgevoerd, bewijs bevestigd.
+
+## Waarom nu
+
+- De gebruiker wil eerst de eerdere functionaliteit op echte testdata valideren voordat verdere flowbouw doorgaat.
+
+## In scope
+
+- Lokale DB-state bevestigen.
+- Restore/seedbron in repo of lokale Docker/Supabase-context zoeken.
+- Kleinste veilige restore/reseed uitvoeren.
+- Bewijs vastleggen in taskfile.
+
+## Buiten scope
+
+- Productie- of remote-database herstel.
+- Nieuwe brede seedarchitectuur.
+- Nieuwe dependencies of redesign.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Herstel de lokale testdatabase zodat bestaande testdata weer bruikbaar is voor functionele validatie van capture en oudere-dag werk.
+
+## Expliciete user requirements / detailbehoud
+
+- De lokale database lijkt leeg.
+- Er zou een veel rijkere set testdata aanwezig moeten zijn.
+- De eerdere bugfix voor vandaag-capture is geslaagd; dit herstel is bedoeld om de eerste functionaliteit nu op testdata te kunnen testen.
+
+## Status per requirement
+
+- [x] Lokale DB-state bevestigd — status: gebouwd
+- [x] Herstelbron bepaald — status: gebouwd
+- [x] Lokale testdata hersteld of opnieuw gezaaid — status: gebouwd
+- [x] Bewijs vastgelegd — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De restore-fixture is niet alleen op `pflikweert@gmail.com`, maar ook op de actieve lokale smoke-user gezet nadat runtime-bewijs liet zien dat de browser niet op dezelfde account zat.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: kleinste restore- of reseedbron uitvoeren.
+- [x] Blok 3: gerichte verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Lokale DB inhoud tellen en oorzaak bevestigen.
+- [x] Restore- of reseedpad uitvoeren.
+- [x] Capture/dagtestdata kort verifiëren.
+
+## Acceptance criteria
+
+- [x] Het is expliciet duidelijk of oude lokale data is hersteld of dat een nieuwe lokale testdataset is gezaaid.
+- [x] De lokale database bevat weer bruikbare data voor capture/dagtests.
+- [x] De gebruikte herstelstappen en het bewijs zijn vastgelegd.
+
+## Blockers / afhankelijkheden
+
+- De oorspronkelijke rijke lokale dataset was niet uit de repo of gitgeschiedenis terug te halen; restore is daarom uitgevoerd als nieuwe lokale fixture-seed, niet als echte historische restore.
+
+## Verify / bewijs
+
+- Bevestigd via lokale Postgres inspectie:
+  - `supabase/config.toml` verwijst naar `./seed.sql`, maar die file ontbreekt lokaal.
+  - `git log --all --name-status -- supabase/seed.sql` gaf geen historie terug.
+  - tabeltellingen vóór restore wezen op een zeer kleine dataset (`entries_raw=7`, `entries_normalized=6`, `day_journals=5` totaal over alle users).
+- Bevestigd via user-specifieke inspectie:
+  - `pflikweert@gmail.com` had slechts 4 raw entries.
+  - de actieve browser-sessie draaide op `smoke.default.local@example.com` (`localStorage` sessietoken bevestigd).
+- Restore uitgevoerd via lokale SQL fixture-seed op beide users:
+  - `pflikweert@gmail.com`
+  - `smoke.default.local@example.com`
+- Tellingen na restore voor de actieve smoke-user:
+  - `entries_raw = 12`
+  - `day_journals = 8`
+- Runtime-smoke in browser:
+  - `http://localhost:8081/day/2026-05-13` toont weer dagsummary, dagverhaal, kernpunten, week/maandreflectie en 2 individuele momenten (`09:58`, `21:26`).
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: lokale testdatabase herstellen voor capture-validatie.
+- Toegevoegde verbeteringen: restore-fixture ook naar de actieve smoke-user gebracht toen runtime-bewijs liet zien dat de browser niet op `pflikweert@gmail.com` zat.
+- Afgerond: oorzaak bevestigd, herstelbron bepaald, representatieve lokale fixturedata gezaaid, runtimecheck bevestigd.
+- Open / blocked: de repo heeft nog steeds geen committed `supabase/seed.sql` of andere duurzame restorebron voor deze rijkere dataset.
+
+## Relevante links
+
+- `docs/project/open-points.md`
+- `supabase/config.toml`
+```
+
+---
+
 ## Lokale wijzigingen committen en pushen
 
 - Path: `docs/project/25-tasks/done/lokale-wijzigingen-committen-en-pushen.md`
@@ -2767,6 +3350,398 @@ Dag- en momenttekst tonen markdownstructuur display-only via gedeelde componente
 
 ---
 
+## Momentdetail with-photos runtime-validatie
+
+- Path: `docs/project/25-tasks/done/momentdetail-with-photos-runtime-validatie.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-15
+
+```md
+---
+id: task-momentdetail-with-photos-runtime-validatie
+title: Momentdetail with-photos runtime-validatie
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-15
+summary: "De with-photos state van historical momentdetail is lokaal runtime-bewezen met een reproduceerbare JPEG fixture-seed en cleanup-flow; de bestaande UI bleek zonder extra app-codewijziging al te voldoen aan de afgesproken foto-UX."
+tags: [moments, photos, moment-detail, qa]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: ["task-oude-dag-moment-toevoegen-via-bestaande-captureflow"]
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De oude-dag captureflow en momentdetail-polish zijn functioneel afgerond, maar de with-photos state van momentdetail kon nog niet runtime-bevestigd worden omdat de lokale testdatabase geen `entry_photos` records bevatte.
+
+Daardoor is de UI voor foto's wel in code gepolijst, maar ontbreekt nog hard bewijs dat de historische detailpagina met echte thumbnails, uploadactieplaatsing en foto-viewer zich in runtime precies zo gedraagt als bedoeld.
+
+## Gewenste uitkomst
+
+Er is een reproduceerbare lokale smoke-fixture voor één historische momentdetail-entry met 2-3 foto's. Daarmee kunnen we de with-photos state van momentdetail in light/dark mode valideren zonder de afgeronde oude-dag-task te heropenen.
+
+Als de runtime-smoke nog een kleine visuele regressie laat zien, valt die binnen deze taak en wordt die met de kleinste rustige UI-aanpassing opgelost. Als de smoke direct groen is, blijft deze taak vooral seed + bewijs.
+
+## User outcome
+
+We kunnen met echte lokale foto-data bevestigen dat de momentdetailpagina zowel zonder foto's als met foto's rustig, editorial en logisch blijft, inclusief juiste uploadactieplaatsing.
+
+## Functional slice
+
+Een kleine QA/polish-slice: lokale historical photo fixture seeden -> historische momentdetail met foto's openen -> UX-contracten bevestigen -> eventueel mini-polish -> cleanup/verify/documentatie afronden.
+
+## Entry / exit
+
+- Entry: developer/agent draait de lokale seed voor een historische entry met foto's.
+- Exit: de with-photos momentdetailstate is runtime-bewezen en vastgelegd in een aparte follow-up task.
+
+## Happy flow
+
+1. Een lokale historical detail-fixture wordt gezaaid met 2-3 foto's op een bekende smoke-user en entry-route.
+2. De historische momentdetailpagina toont een rustige `Foto's`-sectie boven `Momentdetails`, met `Foto toevoegen` alleen daar.
+3. Runtime-smoke bevestigt thumbnails, teller, viewer en utility-laag; eventuele mini-polish wordt doorgevoerd en opnieuw bevestigd.
+
+## Non-happy flows
+
+- Empty state: valt buiten deze taak; de no-photos state is al in de vorige taak bewezen.
+- Permission denied / unavailable: als local auth of storage niet werkt, vastleggen als blocker met lokaal reproduceerbare fout.
+- Validation / unsupported state: als de fixture-entry ontbreekt, maakt de seed zelf een local-only historical fixture aan.
+- Failure / retry / cancel: als foto-seed of cleanup faalt, blijft dat binnen deze taak en mag de productflow zelf niet aangepast worden.
+
+## UX / copy
+
+- Geen nieuwe user-facing copy buiten bestaande labels.
+- Bestaande labels die expliciet bewaakt moeten blijven:
+  - `Foto's`
+  - `Foto toevoegen`
+  - `Momentdetails`
+  - `Bewerken`
+  - `Ga naar woensdag 13 mei`
+  - `Verwijderen`
+- UI blijft volgen op bestaande detail-primitives en gallery-patronen.
+
+## Data / IO
+
+- Input: bestaande repo-assets als fotobron, bestaande local smoke-user, bestaande `entry_photos` tabel en `entry-photos` bucket.
+- Output: 1 reproduceerbare local historical fixture-entry met 2-3 foto's en een concrete detail-URL voor smoke-test.
+- Opslag/API/service/file-impact:
+  - kleine developer-facing seed/cleanup uitbreiding in `scripts/**`
+  - optionele kleine UI-polish in momentdetail/gallery alleen als runtime daar aanleiding toe geeft
+- Statussen:
+  - seed klaar
+  - runtime bewezen
+  - optionele polish gebouwd
+  - cleanup bevestigd
+
+## Waarom nu
+
+- Dit is de laatste open onzekerheid op de historische momentdetailflow.
+- De taak blijft klein, gebruikt bestaande infrastructuur en voorkomt dat we een afgeronde task inhoudelijk weer open moeten trekken.
+
+## In scope
+
+- Nieuwe kleine follow-up taskfile.
+- Reproduceerbare lokale seed/cleanup voor historical detail met foto's.
+- Runtime-smoke van with-photos state op momentdetail.
+- Alleen kleine polish in detail/gallery als de smoke nog iets blootlegt.
+
+## Buiten scope
+
+- Nieuwe migrations of schemawijzigingen.
+- Nieuwe uploadarchitectuur.
+- Brede testdataset-herbouw.
+- Captureflow- of dagdetailwijzigingen.
+- Nieuwe E2E-suite buiten deze gerichte smoke.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak een aparte follow-up task voor with-photos runtime-validatie.
+- Hergebruik de bestaande lokale gallery-seed richting.
+- Seed exact één bekende historical entry met foto's.
+- Houd app-code standaard ongemoeid tenzij de runtime-smoke nog regressies toont.
+
+## Expliciete user requirements / detailbehoud
+
+1. De bestaande oude-dag-task blijft `done`.
+2. Gebruik een aparte kleine follow-up task.
+3. Hergebruik `scripts/seed-local-entry-photo-gallery-smoke.mjs` als richting, niet `supabase/seed.sql`.
+4. Seed exact één historische detail-entry met 2-3 foto's.
+5. Gebruik bestaande repo-assets als fotobron.
+6. Geen publieke API-wijzigingen.
+7. Geen schemawijzigingen of migrations.
+8. Cleanup hoort expliciet bij de taak.
+9. Runtime-smoke moet expliciet bewijzen:
+   - fotosectie boven `Momentdetails`
+   - `Foto toevoegen` alleen in fotosectie wanneer foto's bestaan
+   - geen dubbele uploadactie
+   - thumbnails groter/netter/rustig
+   - teller netjes in fotosectie
+   - `Momentdetails` blijft utilitylaag
+
+## Status per requirement
+
+- [x] Aparte follow-up task bestaat en is spec-ready — status: gebouwd
+- [x] Historical photo fixture seeding werkt reproduceerbaar lokaal — status: gebouwd
+- [x] Cleanup verwijdert seeded rows en storage objects weer netjes — status: gebouwd
+- [x] With-photos runtime-smoke op historical momentdetail is vastgelegd — status: gebouwd
+- [x] Alleen indien nodig is kleine UI-polish gebouwd na smoke — status: gebouwd; niet nodig gebleken
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De historical photo detail-fixture gebruikt nu expliciet bestaande repo-assets als bron en converteert die lokaal naar tijdelijke JPEG-bestanden, zodat de seed compatibel blijft met de bestaande `entry-photos` bucket constraint zonder nieuwe dependencies.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow, bestaande seed-route en historical fixture-aanpak bevestigen.
+- [x] Blok 2: local historical photo seed/cleanup bouwen en draaien.
+- [x] Blok 3: runtime-smoke, eventuele mini-polish, verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Taskfile aanmaken en bovenaan open-lane zetten.
+- [x] Seed/cleanup script voor historical photo detail-fixture toevoegen of uitbreiden.
+- [x] Local auth/smoke user voor fixture bevestigen.
+- [x] Runtime-smoke uitvoeren op historical with-photos detailstate.
+- [x] Alleen indien nodig: kleine UI-polish uitvoeren.
+- [x] Verify, cleanup, taskflow en docs afronden.
+
+## Acceptance criteria
+
+- [x] Er is een reproduceerbare local-only historical entry met 2-3 foto's voor smoke-test.
+- [x] Historical momentdetail met foto's toont `Foto toevoegen` alleen in de fotosectie en niet dubbel in `Momentdetails`.
+- [x] De with-photos layout voelt rustig, editorial en functioneel correct.
+- [x] Cleanup laat geen fixture-rommel achter in `entry_photos` of storage.
+
+## Blockers / afhankelijkheden
+
+- Lokale Supabase stack en Mailpit/local auth moeten beschikbaar zijn.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run taskflow:verify`
+- Runtime smoke historical with-photos detail:
+  - light mode: historische fixture-entry `/entry/a17f9aaa-de67-4da8-a504-405ef4994630?source=day&date=2026-05-13` toont `Foto's` boven `Momentdetails`
+  - `Foto toevoegen` staat alleen in de fotosectie en niet meer in `Momentdetails`
+  - drie thumbnails renderen in een rustige horizontale strip met teller `3 / 5 foto's`
+  - `Momentdetails` blijft utilitylaag met `Bewerken`, daglink en `Verwijderen`
+  - geen aanvullende UI-polish nodig gebleken na smoke
+- Cleanup-bewijs:
+  - `node --env-file=.env.local scripts/seed-local-historical-entry-photo-detail-smoke.mjs --cleanup`
+  - output: `PASS historical-photo-detail-cleanup email=smoke.default.local@example.com`
+- Beperking:
+  - dark-mode runtime en viewer-interactie konden in deze sessie niet volledig bevestigd worden met de beschikbare browsertools; de taak legt die beperking expliciet vast in plaats van extra ongeverifieerde UI-wijzigingen te maken.
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: losse follow-up task voor with-photos runtime-validatie op historical momentdetail.
+- Toegevoegde verbeteringen: local-only historical fixture seeden via bestaande gallery-smoke richting, maar met bestaande repo-assets die tijdelijk naar JPEG worden geconverteerd voor bucketcompatibiliteit.
+- Afgerond: aparte taskfile, reproduceerbare historical photo seed/cleanup, expliciete lokale auth-route, with-photos runtime-smoke in light mode en cleanup-bewijs.
+- Open / blocked: dark-mode runtime en viewer-click smoke zijn met de huidige browsertooling nog niet volledig bewezen; er is geen aanvullende app-code open blijven staan vanuit deze taak.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/oude-dag-moment-toevoegen-via-bestaande-captureflow.md`
+- `scripts/seed-local-entry-photo-gallery-smoke.mjs`
+- `app/entry/[id].tsx`
+- `components/journal/entry-photo-gallery.tsx`
+```
+
+---
+
+## Open taken reviewen en opschonen na recente moment/capture fixes
+
+- Path: `docs/project/25-tasks/done/open-taken-reviewen-en-opschonen-na-recente-moment-capture-fixes.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-15
+
+```md
+---
+id: task-open-taken-reviewen-en-opschonen-na-recente-moment-capture-fixes
+title: Open taken reviewen en opschonen na recente moment/capture fixes
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-15
+summary: "Review alle open tasks op overlap met de recent afgeronde oude-dag-capture, momentdetail- en foto-state fixes, sluit of versmal ingehaalde taken, en commit/push daarna de opgeschoonde tasklaag samen met de recente featurewijzigingen."
+tags: [tasks, review, docs, capture, moment-detail]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 12
+---
+
+## Probleem / context
+
+Er staan nog meerdere open tasks in `docs/project/25-tasks/open/` die inhoudelijk kunnen overlappen met het recent afgeronde werk rond oude-dag capture, momentdetail-polish, foto-state UX en with-photos runtime-validatie. Zonder review blijft de tasklaag ruis bevatten en lijkt werk nog open te staan dat feitelijk al opgelost of deels ingehaald is.
+
+De gebruiker wil daarom eerst een gerichte taskreview en pas daarna een commit/push van de actuele change-set.
+
+## Gewenste uitkomst
+
+De open tasklaag is opgeschoond: taken die volledig door recent werk zijn opgelost worden gesloten of verplaatst naar `done/`, taken die deels zijn ingehaald worden versmald of krijgen een expliciete notitie, en niet-gerelateerde open taken blijven ongemoeid.
+
+Daarna wordt de huidige change-set gecontroleerd, gecommit en gepusht met een duidelijke scope.
+
+## User outcome
+
+De gebruiker ziet weer een geloofwaardige open backlog zonder schijn-open werk, en heeft een gepushte branch waarin zowel de featurefixes als de task-opschoning zijn vastgelegd.
+
+## Functional slice
+
+Eén review-slice over de huidige open tasklaag, beperkt tot overlap met de recent afgeronde moment/capture/foto flows, plus gecontroleerde repository-closeout via commit en push.
+
+## Entry / exit
+
+- Entry: huidige open tasklaag en recente afgeronde tasks/diffs rond oude-dag capture en momentdetail/foto-state.
+- Exit: relevante open tasks zijn opgeschoond, verify is groen, commit is gemaakt en branch is gepusht.
+
+## Happy flow
+
+1. Agent reviewt alle open tasktitels/samenvattingen en leest overlap-kandidaten volledig.
+2. Agent beslist per kandidaat: sluiten, versmallen/noteren, of open laten, met taskfile-bewijs.
+3. Agent draait verify, commit de opgeschoonde tasklaag samen met de bestaande change-set en pusht de branch.
+
+## Non-happy flows
+
+- Geen overlap gevonden: alle open taken blijven staan, maar de reviewconclusie wordt wel vastgelegd.
+- Dubieuze overlap: taak blijft open en krijgt een expliciete notitie waarom recent werk hem niet volledig afdekt.
+- Verify faalt: eerst task/docs of code herstellen, daarna pas commit/push.
+- Push faalt: commit blijft lokaal bestaan en de fout wordt expliciet teruggekoppeld.
+
+## UX / copy
+
+- Geen product-UI scope; dit is een task/docs- en repo-cleanup flow.
+- Reviewcopy in taskfiles blijft kort, feitelijk en bewijsgebonden.
+
+## Data / IO
+
+- Input: open taskfiles, recente done taskfiles, actuele git diff en runtime-/testbewijzen.
+- Output: opgeschoonde taskstatussen, eventuele verplaatste taskfiles en een gepushte git-commit.
+- Opslag/API/service/file-impact: alleen task/docs-metadata en git-history.
+- Statussen: `open -> done` alleen wanneer recent werk de taak volledig dekt; anders expliciete open notitie.
+
+## Waarom nu
+
+- De gebruiker wil pas afronden en pushen nadat de open tasklaag weer klopt met de werkelijkheid.
+- Dit voorkomt dat recent opgelost werk onnodig als open backlog blijft terugkomen.
+
+## In scope
+
+- Alle huidige open tasktitels/samenvattingen reviewen op overlap.
+- Kandidaten inhoudelijk lezen en beoordelen op recente moment/capture/foto-fixes.
+- Relevante open tasks sluiten, verplaatsen of verduidelijken.
+- Verify draaien voor task/docs-wijzigingen.
+- Commit en push van de actuele change-set.
+
+## Buiten scope
+
+- Nieuwe productfeatures bouwen.
+- Niet-gerelateerde backlog herprioriteren.
+- Grote roadmap- of strategieaanpassingen.
+- PR-tekst of release notes schrijven tenzij later expliciet gevraagd.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Review alle open taken op overlap met recente fixes.
+- Ruim alleen ingehaalde of dubbel geworden open tasks op.
+- Commit en push pas na deze review.
+
+## Expliciete user requirements / detailbehoud
+
+1. Review alle open taken, niet alleen de meest voor de hand liggende.
+2. Als iets nu opgelost is en niet meer gedaan hoeft te worden, werk de tasklaag daarop bij.
+3. Doe pas daarna commit en push.
+
+## Status per requirement
+
+- [x] Alle open taken zijn op overlap gereviewd — status: gebouwd
+- [x] Ingehaalde open taken zijn opgeschoond — status: gebouwd
+- [x] De actuele change-set is gecommit en gepusht — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De review bevestigde dat geen enkele open task volledig kon sluiten op basis van het recente moment/capture/foto-werk.
+- De gallery E2E-task is wel inhoudelijk versmald: reorder, viewer-open en delete-cancel zijn inmiddels deels bewezen, waardoor de restscope nu explicieter op add/max/echte delete/error flows ligt.
+- Andere overlap-kandidaten bleven bewust open:
+  - Android photo-upload regressie: nog steeds afhankelijk van echte Android toestel-smoke
+  - moments-overzicht foto/viewer: blijft blocked door aparte web drag-swipe/viewer-issues
+  - web runtime warnings: volledig losstaande hardening-scope, nog onopgelost
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: task aanmaken, open tasklaag breed scannen en overlap-kandidaten selecteren.
+- [x] Blok 2: kandidaten inhoudelijk beoordelen en taskfiles opschonen.
+- [x] Blok 3: verify, commit en push afronden.
+
+## Concrete checklist
+
+- [x] Frontmatter-overzicht van alle open tasks langslopen.
+- [x] Overlap-kandidaten inhoudelijk lezen.
+- [x] Relevante taskstatussen en/of summaries updaten.
+- [x] `npm run taskflow:verify` draaien.
+- [x] `npm run docs:bundle` draaien.
+- [x] `npm run docs:bundle:verify` draaien.
+- [x] Commit maken.
+- [x] Branch pushen.
+
+## Acceptance criteria
+
+- [x] Er blijft geen open task staan die volledig door recent bewezen werk is opgelost.
+- [x] Open taken die slechts deels geraakt zijn blijven open met correcte scope.
+- [x] De branch met de actuele changes en task-opschoning staat op remote.
+
+## Blockers / afhankelijkheden
+
+- Geen, zolang git push en lokale verify beschikbaar blijven.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+- Reviewnotities in relevante taskfiles
+- `git push` output
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: review open tasks op overlap met recent moment/capture/foto werk, ruim de tasklaag op, commit en push.
+- Toegevoegde verbeteringen: expliciete restscope-notitie voor de gallery E2E-task zodat recente viewer/reorder-validatie niet meer als onzichtbare overlap blijft hangen.
+- Afgerond: alle open tasks zijn op titel/summary gereviewd; inhoudelijke overlap-kandidaten zijn verdiept gelezen; geen task kon volledig sluiten; één task is inhoudelijk versmald/notitie bijgewerkt; verify is groen; change-set is gecommit en gepusht.
+- Open / blocked: geen binnen deze task.
+
+## Relevante links
+
+- `docs/project/25-tasks/open/`
+- `docs/project/25-tasks/done/oude-dag-moment-toevoegen-via-bestaande-captureflow.md`
+- `docs/project/25-tasks/done/momentdetail-with-photos-runtime-validatie.md`
+```
+
+---
+
 ## OpenAI Codex Automations en AI use-case scaling vertalen naar ideeën
 
 - Path: `docs/project/25-tasks/done/openai-codex-automations-en-ai-use-case-scaling-vertalen-naar-ideeen.md`
@@ -2915,6 +3890,342 @@ Een bestaand privacy/security-idee in `docs/project/40-ideas/**` is bijgewerkt m
 
 - `docs/project/40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md`
 - `https://openai.com/index/introducing-openai-privacy-filter/`
+```
+
+---
+
+## Oude dag moment toevoegen via bestaande captureflow
+
+- Path: `docs/project/25-tasks/done/oude-dag-moment-toevoegen-via-bestaande-captureflow.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-15
+
+```md
+---
+id: task-oude-dag-moment-toevoegen-via-bestaande-captureflow
+title: Oude dag moment toevoegen via bestaande captureflow
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-15
+summary: "Vanuit een oudere dag kan de gebruiker via een rustige secundaire section-action een nieuw moment toevoegen via de bestaande captureflow, met targetDate/returnTo routing, correcte dagkoppeling bij opslag, `Later toegevoegd` timeline-labeling, een editorial momentdetail-hiërarchie, rustiger detail- en fotozones, een compatibele foto-uploadtrigger zonder deprecated ImagePicker API en een herstelde hoofdfoto-weergave op momentdetail."
+tags: [capture, moments, day-detail, journal]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De app laat nu vooral capture vanuit vandaag starten. Daardoor ontbreekt een kleine, gerichte route om achteraf nog een moment toe te voegen aan een oudere dag zonder de bestaande captureflow te verbreden of te redesignen.
+
+De gewenste oplossing moet reading-first blijven op dagdetail, de huidige capturemodi intact laten en alleen een minimale targetDate/returnTo-koppeling toevoegen waar de bestaande dataflow dat nodig heeft.
+
+## Gewenste uitkomst
+
+Op een dagdetail kan de gebruiker via een secundaire actie `Moment toevoegen` een nieuw moment starten voor precies die dag. Op lege dagen verschijnt een compacte empty state met `Nog geen momenten voor deze dag.` en `Moment toevoegen aan deze dag`.
+
+De bestaande captureflow blijft hetzelfde qua modes (`idle`, `voice`, `typing`). Alleen wanneer de capture voor een niet-vandaag datum opent, verschijnt een korte notice dat het moment aan die dag wordt toegevoegd. Na opslaan komt de gebruiker terug op die dag en wordt die dag opnieuw bijgewerkt.
+
+## User outcome
+
+De gebruiker kan later alsnog een relevant moment vastleggen onder de juiste eerdere dag, zonder nieuwe capturemodus, zonder datumkiezer op Today en zonder dat de huidige Today-captureflow verandert.
+
+## Functional slice
+
+Een kleine end-to-end slice van dagdetail -> bestaande captureflow -> entry-opslag -> dagregeneratie -> terug naar dezelfde dag, inclusief correcte timeline-labeling voor later toegevoegde momenten zonder originele tijd op die dag.
+
+## Entry / exit
+
+- Entry: gebruiker opent `app/day/[date].tsx` voor een oudere of lege dag en kiest `Moment toevoegen`.
+- Exit: na succesvol opslaan staat het nieuwe moment op die gekozen dag en keert de gebruiker terug naar `/day/[date]`.
+
+## Happy flow
+
+1. Gebruiker opent een dagdetail van een oudere dag en ziet een secundaire actie `Moment toevoegen`.
+2. De actie opent de bestaande captureflow met `targetDate` en `returnTo`; capture toont alleen bij een niet-vandaag dag de notice `Je voegt dit toe aan [datum].`
+3. Gebruiker slaat een tekst- of spraakmoment op; de entry wordt aan `targetDate` gekoppeld, `created_at` blijft de echte opslagtijd, de gekozen dag regenereert en de app keert terug naar de gekozen dag.
+
+## Non-happy flows
+
+- Empty state: toon `Nog geen momenten voor deze dag.` en `Moment toevoegen aan deze dag`.
+- Validation / unsupported state: ontbrekende of ongeldige `targetDate` valt veilig terug op de bestaande vandaag-flow.
+- Failure / retry / cancel: bij opslaan tonen we `Opslaan mislukt. Probeer opnieuw.`; bij regeneratiefout blijft de entry bewaard en tonen we geen dataverliescopy.
+
+## UX / copy
+
+- Dagdetail moments/timeline-sectie krijgt een secundaire actie: `Moment toevoegen`
+- Lege dag toont:
+  - `Nog geen momenten voor deze dag.`
+  - `Moment toevoegen aan deze dag`
+- Capture-notice bij niet-vandaag:
+  - `Je voegt dit toe aan [datum].`
+- Foutcopy:
+  - `Opslaan mislukt. Probeer opnieuw.`
+- Geen extra AI-, coach-, dashboard- of systeemtaal.
+- Dagdetail blijft reading-first; days overview krijgt geen rij-CTA's of redesign.
+
+## Data / IO
+
+- Input: bestaande capture-input plus optionele `targetDate` en `returnTo` routeparams.
+- Output: nieuwe entry gekoppeld aan geselecteerde dag; succesvolle save navigeert terug naar `/day/[date]`.
+- Opslag/API/service-impact: alleen minimale uitbreiding van bestaande entry/capture model en dagregeneratieflow; `created_at` blijft de echte vastlegtijd.
+- Statussen: bestaande capturestaten blijven `idle`, `voice`, `typing`.
+
+## Waarom nu
+
+- Dit vult een concrete gebruikerskloof in de dagdetailflow zonder bredere productscope te openen.
+- De slice is klein, goed af te bakenen en past binnen de huidige MVP-guardrails.
+
+## In scope
+
+- Secundaire toevoegactie op dagdetail en lege dag.
+- Routing van dagdetail naar bestaande captureflow met `targetDate` en `returnTo`.
+- Compacte capture-notice alleen voor niet-vandaag.
+- Entry-opslag koppelen aan `targetDate` waar nodig.
+- Terugnavigeer naar de gekozen dag na opslaan.
+- Gekozen dag opnieuw bijwerken/regenereren.
+- Timeline-label `Later toegevoegd` wanneer geen originele tijd op `targetDate` aanwezig is.
+
+## Buiten scope
+
+- Nieuwe capturemodus.
+- Datumkiezer op Today.
+- Plus-knoppen in dagenoverzicht.
+- Verplaatsen van bestaande momenten.
+- Volledige kalenderflow.
+- Nieuwe AI-flowarchitectuur, dependencies of redesign.
+- Wijzigingen aan settings, export/import, AIQS of week/maandreflectie-redesign.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Bouw een minimale oude-dag-toevoegroute vanuit `app/day/[date].tsx` naar de bestaande captureflow.
+- Houd de bestaande capture states, Today-CTA en globale capture-UX intact.
+- Voeg alleen de kleinste dataflow-uitbreiding toe die nodig is om een entry aan `targetDate` te koppelen en daarna de gekozen dag te regenereren.
+- Toon voor later toegevoegde momenten zonder originele dagtijd geen actuele kloktijd maar `Later toegevoegd`.
+
+## Expliciete user requirements / detailbehoud
+
+1. Geen nieuwe capturemodus.
+2. Geen datumkiezer op Today.
+3. Geen plus-knop op elke rij in het dagenoverzicht.
+4. Geen verplaatsen van bestaande momenten.
+5. Geen volledige kalenderflow.
+6. Geen nieuwe AI-flowarchitectuur.
+7. Geen nieuwe dependencies.
+8. Geen redesign.
+9. `created_at` blijft de echte vastlegtijd.
+10. `targetDate` ontbreekt of is ongeldig: val veilig terug op vandaag of veilige fout.
+11. Regenerate-failure mag de opgeslagen entry niet als verloren laten voelen.
+12. `Moment toevoegen` blijft zichtbare copy, maar moet als rustige klikbare section-action ogen.
+13. Geen primary gold CTA, geen floating action button en geen extra bottom-nav actie.
+14. Accessibility label moet datumcontext bevatten, bijvoorbeeld `Moment toevoegen aan 13 mei 2026`.
+15. In de momentenlijst blijft alleen `Later toegevoegd` zichtbaar; geen tweede datumlaag zoals `Toegevoegd op 14 mei`.
+16. Momentdetail-hero voor later toegevoegde momenten gebruikt dagleidende meta `WOENSDAG 13 MEI 2026 · LATER TOEGEVOEGD`.
+17. Auditmetadata verhuist naar een compacte `Momentdetails`-onderzone onder `Geschreven moment`.
+18. Zonder foto’s verschijnt geen lege `Foto's bij dit moment` sectie; `Foto toevoegen` blijft als rustige actie beschikbaar.
+19. `ImagePicker.MediaTypeOptions` wordt vervangen door de actuele Expo ImagePicker mediaTypes-config zonder uploadflow-redesign.
+20. Zodra er foto’s zijn, verhuist `Foto toevoegen` uit `Momentdetails` naar de fotosectie zodat er geen dubbele uploadactie zichtbaar is.
+21. `Momentdetails` en de fotosectie moeten premium, calm en editorial voelen, zonder settings-card of te veel goudaccent.
+22. Als er foto’s zijn, toont momentdetail de eerste foto weer als grote hoofdfoto boven de thumbnailstrip; reorder van de eerste positie wijzigt daarmee ook de hoofdfoto.
+
+## Status per requirement
+
+- [x] Dagdetail toont `Moment toevoegen` — status: gebouwd
+- [x] Lege dag toont empty state met CTA — status: gebouwd
+- [x] Capture opent met `targetDate` en `returnTo` — status: gebouwd
+- [x] Capture-notice verschijnt alleen bij niet-vandaag — status: gebouwd
+- [x] Capture states blijven `idle`, `voice`, `typing` — status: gebouwd
+- [x] Opslag koppelt entry aan `targetDate` — status: gebouwd
+- [x] `created_at` blijft echte vastlegtijd — status: gebouwd
+- [x] Timeline toont `Later toegevoegd` zonder verkeerde huidige tijd — status: gebouwd
+- [x] Succes navigeert terug naar gekozen dag — status: gebouwd
+- [x] Gekozen dag regenereert/opfrist na opslaan — status: gebouwd
+- [x] Foutcopy toont `Opslaan mislukt. Probeer opnieuw.` — status: gebouwd
+- [x] Section-action oogt duidelijk klikbaar maar blijft secundair — status: gebouwd
+- [x] Empty state gebruikt dezelfde rustige action-richting zonder primary gold styling — status: gebouwd
+- [x] Accessibility label bevat datumcontext — status: gebouwd
+- [x] Momentdetail-hero gebruikt dagleidende historical meta — status: gebouwd
+- [x] Auditmetadata en acties zitten in compacte `Momentdetails`-onderzone — status: gebouwd
+- [x] Lege foto-sectie wordt niet meer als groot blok gerenderd — status: gebouwd
+- [x] Deprecated ImagePicker-mediaTypes zijn vervangen zonder uploadflowwijziging — status: gebouwd
+- [x] `Foto toevoegen` verdwijnt uit `Momentdetails` zodra een fotosectie zichtbaar is — status: gebouwd
+- [x] Final polish geeft detail- en fotosecties een rustigere editorial hiërarchie — status: gebouwd
+- [x] De eerste foto rendert weer als grote hoofdfoto boven de thumbnails en volgt reorder van de eerste positie — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- `returnTo` wordt alleen gebruikt wanneer de meegegeven dag ook geldig is, zodat een ongeldige `targetDate` veilig terugvalt op de bestaande vandaag-flow.
+- De moments-sectie gebruikt nu een compacte pill-action met plus-icoon, subtiele border/surface en datum-specifiek accessibility label, zodat `Moment toevoegen` duidelijk klikbaar is zonder het day-detail zwaarder of primair te maken.
+- UX-besluit voor historische momentenlijst: toon alleen `Later toegevoegd` als zachte tijdvervanger; toon in de lijst geen added-on datum of `created_at` context.
+- Mini-polish: `Later toegevoegd` is visueel verkleind en rustiger gemaakt, dichter bij tijdmetadata dan bij contenttekst.
+- Mini-polish: `Moment toevoegen` is visueel verkleind tot een compactere section-action, zodat de knop minder concurreert met `Individuele momenten`.
+- Mini-polish: de historische capture-contextregel op het capture startscherm centreert icoon + tekst als één rustige metadataregel.
+- Mini-polish: de historische targetDate-notice op de opnamepagina centreert nu de volledige compacte pill, inclusief icoon + tekst, zodat hij consistent voelt met de rest van de historical capture-context.
+- Mini-polish: momentdetail gebruikt voor later toegevoegde momenten een dagleidende subtitel met optionele auditregel, en de lege foto-sectie wordt compacter zonder grote verticale reserve.
+- Momentdetail-hiërarchie is verder hersteld: hero-meta werd kort en editorial (`WOENSDAG 13 MEI · LATER TOEGEVOEGD`), auditmetadata verhuisde naar `Momentdetails`, acties zijn compact gegroepeerd en de lege fotosectie is volledig weggehaald.
+- De `Momentdetails`-zone gebruikt nu een rustige warm-neutral surface met compacte action rows, terwijl de fotossectie alleen nog rendert wanneer er echt thumbnails bestaan en de Expo ImagePicker-warning is weggehaald via de actuele `mediaTypes: [\"images\"]` API.
+- Final polish-pass: section headers gebruiken nu minder accentdruk, `Momentdetails` heeft een zachtere tonal group zonder harde kaartlook, metadata leest rustiger en de fotostrip gebruikt grotere thumbnails met stillere ritmiek.
+- Laatste foto-polish: de eerste foto is opnieuw de grote contentlaag van de fotosectie, terwijl de strip eronder de bestaande upload-, viewer- en reorder-interactie behoudt.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: kleinste route-, UI- en dataflowwijziging uitvoeren.
+- [x] Blok 3: gerichte verify, smoke-check en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Dagdetail-entrypoint en empty state toevoegen.
+- [x] Capture-routeparams uitlezen en notice tonen.
+- [x] Entry-opslag en dagregeneratie koppelen aan `targetDate`.
+- [x] Timeline-labeling voor later-toegevoegde momenten corrigeren.
+- [x] Section-action styling polish en accessibility-context toevoegen.
+- [x] Historische metadata-label zachter maken zonder tweede datumlaag toe te voegen.
+- [x] `Later toegevoegd` nog kleiner/rustiger maken zonder copy- of datawijziging.
+- [x] `Moment toevoegen` visueel compacter maken zonder copy- of flowwijziging.
+- [x] Historische capture-contextregel centreren zonder copy- of flowwijziging.
+- [x] Historische opname-notice centreren zonder wijzigingen aan opname-UI of acties.
+- [x] Momentdetail-subtitel en lege foto-state voor historische momenten polijsten.
+- [x] Momentdetail-hiërarchie herstellen met compacte `Momentdetails`-onderzone en conditionele fotosectie.
+- [x] Foto-action state en ImagePicker-compatibiliteit polijsten zonder uploadflow-redesign.
+- [x] Final polish-pass op `Momentdetails` en foto-state UX uitvoeren.
+- [x] Hoofdfoto-weergave op momentdetail herstellen zonder cover-photo feature of dataflowwijziging.
+- [x] Lint, typecheck, taskflow verify en gerichte smoke uitvoeren.
+
+## Acceptance criteria
+
+- [x] Vanuit een oudere dag kan de gebruiker via `Moment toevoegen` de bestaande captureflow openen zonder extra modus of redesign.
+- [x] Een opgeslagen moment verschijnt op de gekozen dag en niet op vandaag, terwijl `created_at` de echte opslagtijd blijft.
+- [x] Later toegevoegde momenten zonder originele dagtijd tonen `Later toegevoegd` in plaats van een verkeerde huidige tijd.
+- [x] De gebruiker keert na opslaan terug naar de gekozen dag en Today blijft ongewijzigd in primaire CTA en captureflow.
+- [x] `Moment toevoegen` voelt als rustige secundaire section-action en niet als losse tekst of primary CTA.
+- [x] Historisch toegevoegd moment toont alleen `Later toegevoegd` als rustige metadata, zonder `14 mei` of added-on datum in de lijst.
+- [x] `Later toegevoegd` voelt duidelijk kleiner/rustiger dan de momenttitel en meer als tijdmetadata.
+- [x] `Moment toevoegen` voelt als kleine section-action en concurreert niet meer met de sectietitel.
+- [x] Historische contextregel voelt als één subtiele gecentreerde hint, niet als losse icon + tekst.
+- [x] Historische opname-notice voelt als één subtiele gecentreerde hint op het record-scherm, zonder layoutshift of redesign.
+- [x] Momentdetail toont bij later toegevoegde momenten de gekoppelde dag leidend en houdt de lege foto-state compact.
+- [x] Momentdetail voelt weer als rustige editorial reading page met compacte metadata- en actiezone.
+- [x] Foto-upload gebruikt geen deprecated `ImagePicker.MediaTypeOptions` meer en de fotossectie verschijnt alleen wanneer thumbnails bestaan.
+- [x] Zodra er foto’s zijn leeft `Foto toevoegen` alleen nog in de fotosectie, en `Momentdetails` voelt na de final pass minder als settings/app-card.
+- [x] Als er foto’s zijn, verschijnt de eerste foto weer groot boven de strip en blijft de strip de bestaande upload/reorder/viewer-interactie dragen.
+
+## Blockers / afhankelijkheden
+
+- Geen externe blockers bekend; afhankelijk van bestaande capture-routing en entry-verwerkingsflow.
+
+## Verify / bewijs
+
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `npm run taskflow:verify`
+- Light/dark smoke op `http://localhost:8081`:
+  1. Open oudere dag.
+  2. Klik `Moment toevoegen`.
+  3. Bevestig juiste datum-notice in capture.
+  4. Sla tekstmoment op.
+  5. Keer terug naar oude dag.
+  6. Bevestig dat moment op oude dag staat, niet vandaag.
+  7. Bevestig dat geen verkeerde huidige tijd wordt getoond.
+  8. Controleer dat Today-CTA en bestaande captureflow ongewijzigd blijven.
+- Runtime-bewijs 2026-05-14 op `http://localhost:8081/day/2026-05-13`:
+- Runtime-bewijs 2026-05-14 op `http://localhost:8081/day/2026-05-13`:
+  - `Moment toevoegen` rendert als pill-button met plus-icoon, `min-height: 44px`, subtiele border en rustige surface.
+  - Klik navigeert naar `/capture?targetDate=2026-05-13&returnTo=%2Fday%2F2026-05-13`.
+  - Typflow opent op `/capture/type?targetDate=2026-05-13&returnTo=%2Fday%2F2026-05-13` met notice `Je voegt dit toe aan 13 mei 2026.`
+  - Opslaan van `UI polish smoke voor oudere dag` keert terug naar `/day/2026-05-13?processed=1&entryId=...` en toont het nieuwe moment met label `Later toegevoegd`.
+  - Today-regressie op `/capture/type` zonder queryparams toont geen target-date notice en slaat `Vandaag flow smoke na section action polish` succesvol op naar `/entry/[id]?source=capture&date=2026-05-14`.
+  - Dark-mode check bevestigt dezelfde compositie met rustige button-styling (`backgroundColor: rgb(43, 41, 37)`, `borderColor: rgb(79, 73, 62)`), zonder zware extra panelen.
+- Aanvullende polish nog uit te voeren:
+  - afgerond: `Later toegevoegd` gebruikt nu een zachtere meta-weergave (`11px`, `14px` line-height, `textTransform: none`) dan echte tijden (`12px`, `18px` line-height).
+  - afgerond: de lijst toont geen added-on datum zoals `14 mei` of `Toegevoegd op 14 mei`.
+- Aanvullende runtime-bewijzen 2026-05-14:
+  - Light mode: `/day/2026-05-13` toont `09:58`, `21:26` en exact `Later toegevoegd`; geen `14 mei` of `Toegevoegd op 14 mei` in de moments-lijst.
+  - Dark mode: `Later toegevoegd` blijft rustig (`rgb(181, 173, 155)`), zonder badge of extra surface.
+  - Klik op `UI polish smoke voor oudere dag` opent bestaande momentdetailroute `/entry/[id]?source=day&date=2026-05-13`.
+  - `Moment toevoegen` navigeert nog steeds naar `/capture?targetDate=2026-05-13&returnTo=%2Fday%2F2026-05-13`.
+  - `/capture/type` zonder queryparams toont geen historical notice.
+- Mini-polish nog uit te voeren:
+  - afgerond: `Later toegevoegd` gebruikt nu een subtielere caption-variant (`10px`, `12px` line-height, `0.15px` letter-spacing, 80% muted tint) dan de bestaande tijdlabels (`12px`, `18px`).
+  - afgerond: geen copy-, datum- of dataflowwijziging nodig geweest.
+  - uit te voeren: `Moment toevoegen` compacter maken met kleinere icon/text/padding en lagere visuele hoogte, zonder gold/CTA-uitstraling.
+  - afgerond: `Moment toevoegen` gebruikt nu een compactere section-action stijl (`32px` min-height, `5px 10px` padding, `14px` icon, caption-label, geen shadow) en klikt nog steeds door naar dezelfde captureflow.
+- Runtime-bewijs 2026-05-15 op `http://localhost:8081/entry/4a07efac-b5d8-46b7-9711-9c1b997523fd?source=day&date=2026-05-13`:
+  - Hero toont `WOENSDAG 13 MEI 2026 · LATER TOEGEVOEGD` en geen audittekst in de hero.
+  - Zonder foto’s verschijnt geen aparte `Foto's`-sectie of lege placeholder.
+  - `Momentdetails` rendert als rustige warm-neutral zone met compacte rows voor `Bewerken`, `Foto toevoegen`, `Ga naar woensdag 13 mei` en een subtiele danger-row `Verwijderen`.
+  - `Ga naar woensdag 13 mei` is geen centrale pill meer maar een gewone navigatierow.
+- Runtime-bewijs 2026-05-15 op `http://localhost:8081/entry/363699f4-dc01-4697-9cdf-c581601d1ee9?source=capture&date=2026-05-14`:
+  - Normaal moment behoudt bestaande hero-meta `DONDERDAG 14 MEI OM 14:43`.
+  - `Momentdetails` blijft compact en rustig zonder historische added-later copy.
+- Final polish-smoke 2026-05-15:
+  - Historisch no-photo momentdetail toont geen aparte fotosectie; `Foto toevoegen` leeft alleen in `Momentdetails`.
+  - `Momentdetails` gebruikt een stillere tonal surface zonder duidelijke borderkaart, met subtielere metadata en minder goudaccent.
+  - Normaal momentdetail behoudt dezelfde rustigere `Momentdetails`-opbouw zonder regressie in hero-meta of actions.
+- Compatibiliteitsbewijs:
+  - Code gebruikt nu `mediaTypes: [\"images\"]` in plaats van `ImagePicker.MediaTypeOptions.Images`.
+  - Console-smoke op beide detailroutes toonde geen `expo-image-picker` deprecation-warning; alleen een bestaande web-warning over `shadow*` style props.
+- Opgeloste beperking:
+  - De standaard lokale testdatabase bevatte geen `entry_photos` records, maar die onzekerheid is afgevangen via een tijdelijke lokale smoke-fixture met cleanup.
+- Aanvullend with-photos bewijs 2026-05-15 via lokale fixture:
+  - `node scripts/seed-local-historical-entry-photo-detail-smoke.mjs` seeded één historisch momentdetail met drie foto’s op `http://localhost:8081/entry/58161b89-bced-4f39-8b29-065504011406?source=day&date=2026-05-13`.
+  - Light en dark runtime-smokes tonen weer een grote hoofdfoto direct onder `Foto's`, met daaronder de compacte strip en `Foto toevoegen` alleen in de fotosectie.
+  - `npx playwright test tests/e2e/gallery-smoke.spec.mjs` slaagt op reorder van de strip; de eerste positie blijft daarmee de bron van truth voor de hoofdfoto.
+  - `npx playwright test tests/e2e/gallery-full.spec.mjs --grep 'opens the viewer'` slaagt ook, dus viewer-openen en delete-cancel blijven werken na de hoofdfoto-fix.
+  - `node scripts/seed-local-historical-entry-photo-detail-smoke.mjs --cleanup` heeft de tijdelijke fixture daarna weer opgeruimd.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan:
+  - Oude-dag toevoegen via bestaande captureflow met rustige secundaire entrypoint en correcte dagkoppeling.
+  - Historische momenten rustig labelen en terug laten keren naar de gekozen dag zonder Today-flow te wijzigen.
+- Later toegevoegde verbeteringen:
+  - Section-action polish, gecentreerde historical notices, subtielere `Later toegevoegd`-labeling en een rustiger momentdetail.
+  - Compacte `Momentdetails`-onderzone, conditionele fotosectie en ImagePicker-compatibiliteitsfix.
+- Afgerond:
+  - Dagdetail-entrypoint, capture-routing, opslag, dagregeneratie, timeline-labeling en momentdetail-polish zijn gebouwd en gerichte verify is uitgevoerd.
+  - Historische momentdetail-hero is weer editorial, auditmetadata staat onderaan, de lege fotozone is verdwenen en de deprecated ImagePicker API is vervangen.
+- Nog open / beperkt:
+  - De fotosectie-met-thumbnails kon lokaal niet runtime-bevestigd worden omdat de huidige fixture-database geen `entry_photos` bevat.
+  - uit te voeren: contextregel `Je voegt dit toe aan 13 mei 2026.` op `/capture?...` centreren als één compacte icon+tekst-regel.
+  - afgerond: compacte `NoticeCard` kan nu optioneel gecentreerd renderen, en `/capture?...` gebruikt die alleen voor deze historische contextregel.
+  - afgerond: `/capture/record?...` gebruikt nu ook de gecentreerde compacte `NoticeCard`, zodat de targetDate-pill daar exact in het midden staat.
+  - aanvullende runtime-smoke 2026-05-14 op `/capture/record?targetDate=2026-05-13&returnTo=%2Fday%2F2026-05-13` met viewport `390x844`:
+    - light: notice zichtbaar, `justifyContent: center`, `alignItems: center`, `gap: 8px`, `textAlign: center`, `centerOffset: 0`
+    - dark: dezelfde gecentreerde layout, `centerOffset: 0`, zonder layoutshift op small screen
+  - afgerond: momentdetail toont voor later toegevoegde momenten hero-meta `WOENSDAG 13 MEI · LATER TOEGEVOEGD`, terwijl `Toegevoegd donderdag 14 mei om 14:42` alleen in `Momentdetails` staat; normale momenten behouden hun bestaande datum/tijd-regel.
+  - afgerond: lege foto-state toont geen zware lead/body-copy meer en geen grote vertical reserve; de foto-sectie bleef in runtime-smoke compact (`height: 30`) met alleen `Foto toevoegen`.
+  - aanvullende redesign-smoke 2026-05-15 op momentdetail:
+    - historisch moment `/entry/...date=2026-05-13`: hero toont `WOENSDAG 13 MEI · LATER TOEGEVOEGD`, toont niet `Moment bij woensdag 13 mei 2026`, en toont `Toegevoegd donderdag 14 mei om 14:42` alleen in `Momentdetails`
+    - `Momentdetails` bevat compacte acties `Bewerken`, `Foto toevoegen`, `Ga naar woensdag 13 mei`, `Verwijderen`
+    - `Ga naar woensdag 13 mei` is geen grote pill meer (`height: 18`)
+    - zonder foto’s is `Foto's bij dit moment` afwezig in light en dark mode, terwijl `Foto toevoegen` beschikbaar blijft
+    - normaal moment `/entry/...date=2026-05-14` behoudt de bestaande hero-meta `DONDERDAG 14 MEI OM 09:15`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: minimale oude-dag capture toevoegen via bestaande flow, zonder redesign of extra productoppervlak.
+- Toegevoegde verbeteringen: veilige fallback zodat ongeldige `targetDate` niet alsnog via `returnTo` naar een oude dag terugstuurt; plus een rustige pill-style section-action zodat `Moment toevoegen` duidelijk klikbaar blijft zonder primary styling; plus polish om `Later toegevoegd` in de lijst zachter te laten voelen zonder tweede datumlaag of added-on datum; plus gecentreerde targetDate-hints op start-, type- en opname-schermen; plus momentdetail-copy die de gekoppelde dag leidend maakt, auditmetadata bundelt in `Momentdetails` en de lege foto-state volledig weghaalt.
+- Afgerond: dagdetail-CTA/empty state, capture-routecontext, save-terugroute naar dagdetail, echte capturetijd behouden, `Later toegevoegd` label, section-action polish, accessibility label en runtime-smokes voor oudere dag plus today-regressie, inclusief gecentreerde opname-notice, historical momentdetail-hiërarchie, compacte `Momentdetails`-zone en conditionele fotosectie.
+- Open / blocked: geen binnen deze taak.
+
+## Relevante links
+
+- `docs/project/open-points.md`
+- `app/day/[date].tsx`
+- `app/capture/index.tsx`
+- `services/entries.ts`
 ```
 
 ---

@@ -10,8 +10,9 @@ summary: "Implementeer PWA-installatieprompt voor webgebruikers om de app als de
 tags: [pwa, webapp, installatie, modal, cookie]
 workstream: app
 due_date: null
-sort_order: 9
+sort_order: 10
 ---
+
 
 ## Probleem / context
 
@@ -71,3 +72,8 @@ Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie 
 - `docs/project/open-points.md`
 - [PWA Install Prompt Guide](https://web.dev/customize-install/)
 - [Expo PWA documentation](https://docs.expo.dev/guides/progressive-web-apps/)
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

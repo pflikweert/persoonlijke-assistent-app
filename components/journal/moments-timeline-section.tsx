@@ -18,6 +18,12 @@ export type TimelineMomentEntry = {
   body: string;
   source_type: string | null;
   captured_at: string;
+  journal_date: string;
+};
+
+type TimelineLabelMeta = {
+  label: string;
+  isHistorical: boolean;
 };
 
 type MomentsTimelineSectionProps = {
@@ -117,6 +123,7 @@ export function MomentsTimelineSection({
           {entries.map((entry, index) => {
             const entryPhotos = entryPhotosByRawEntryId[entry.raw_entry_id] ?? [];
             const primaryPhoto = entryPhotos[0] ?? null;
+            const timelineLabel = formatTimelineLabel(entry);
 
             return (
               <ThemedView
@@ -138,8 +145,16 @@ export function MomentsTimelineSection({
                 ]}>
                 <ThemedView style={styles.timeCol}>
                   <ThemedView style={styles.timeMetaRow}>
-                    <ThemedText type="caption" style={[styles.timeText, { color: palette.mutedSoft }]}>
-                      {formatTime(entry.captured_at)}
+                    <ThemedText
+                      type="caption"
+                      style={[
+                        styles.timeText,
+                        timelineLabel.isHistorical ? styles.timeTextHistorical : null,
+                        {
+                          color: timelineLabel.isHistorical ? `${palette.mutedSoft}CC` : palette.mutedSoft,
+                        },
+                      ]}>
+                      {timelineLabel.label}
                     </ThemedText>
                   </ThemedView>
 
@@ -201,6 +216,20 @@ export function MomentsTimelineSection({
   );
 }
 
+function formatTimelineLabel(entry: Pick<TimelineMomentEntry, "captured_at" | "journal_date">): TimelineLabelMeta {
+  if (entry.journal_date && entry.captured_at.slice(0, 10) !== entry.journal_date) {
+    return {
+      label: "Later toegevoegd",
+      isHistorical: true,
+    };
+  }
+
+  return {
+    label: formatTime(entry.captured_at),
+    isHistorical: false,
+  };
+}
+
 function formatTime(isoValue: string): string {
   const date = new Date(isoValue);
   if (Number.isNaN(date.getTime())) {
@@ -237,7 +266,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   timeCol: {
-    width: 48,
+    width: 56,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     paddingTop: 1,
@@ -250,6 +279,11 @@ const styles = StyleSheet.create({
   },
   timeText: {
     letterSpacing: 0.2,
+  },
+  timeTextHistorical: {
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: 0.15,
   },
   thumbButton: {
     width: 44,

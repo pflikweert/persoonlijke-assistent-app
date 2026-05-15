@@ -18,6 +18,7 @@ export type NormalizedDayEntry = Pick<
 > & {
   source_type: 'text' | 'audio';
   captured_at: string;
+  journal_date: string;
 };
 
 export type RecentNormalizedEntry = Pick<
@@ -416,6 +417,8 @@ export async function fetchNormalizedEntriesByDate(journalDate: string): Promise
         ...row,
         source_type: meta?.source_type ?? 'text',
         captured_at: meta?.captured_at ?? row.created_at,
+        journal_date:
+          meta?.journal_date ?? deriveJournalDateFromIsoLocal(meta?.captured_at ?? row.created_at),
       };
     });
 }

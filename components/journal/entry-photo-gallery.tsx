@@ -21,7 +21,7 @@ import { MomentPhotoViewerModal } from "@/components/journal/moment-photo-viewer
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { DetailSectionHeader } from "@/components/ui/detail-screen-primitives";
-import { PrimaryButton, StateBlock } from "@/components/ui/screen-primitives";
+import { StateBlock } from "@/components/ui/screen-primitives";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   deleteEntryPhotoById,
@@ -89,11 +89,12 @@ type BaseProps = {
   onPhotosChanged?: () => void;
   onPhotosSnapshotChange?: (photos: EntryPhotoAsset[]) => void;
   photosOverride?: EntryPhotoAsset[] | null;
+  variant?: "section" | "trigger";
 };
 
 const MAX_PHOTOS = 5;
-const THUMB_SIZE = 84;
-const THUMB_GAP = spacing.sm;
+const THUMB_SIZE = 104;
+const THUMB_GAP = spacing.md;
 const THUMB_SLOT_WIDTH = THUMB_SIZE + THUMB_GAP;
 const DRAG_PLACEHOLDER_SCALE = 0.94;
 const SORT_HOLD_MS = 120;
@@ -401,8 +402,10 @@ export function EntryPhotoFeaturedPreview({
   const isLoading = loading && photosOverride === null;
 
   useEffect(() => {
-    onPhotosSnapshotChange?.(photos);
-  }, [onPhotosSnapshotChange, photos]);
+    if (!loading) {
+      onPhotosSnapshotChange?.(photos);
+    }
+  }, [loading, onPhotosSnapshotChange, photos]);
 
   const requestDeleteFromViewer = useCallback((photo: EntryPhotoAsset) => {
     setViewerIndex(null);
@@ -438,7 +441,7 @@ export function EntryPhotoFeaturedPreview({
         onPress={() => setViewerIndex(0)}
         style={[styles.featuredWrap, { backgroundColor: palette.surfaceLow }]}
       >
-        <Image source={effectivePhotos[0]?.thumbSource} contentFit="cover" style={styles.featuredImage} />
+        <Image source={effectivePhotos[0]?.displaySource} contentFit="cover" style={styles.featuredImage} />
       </Pressable>
 
       <MomentPhotoViewerModal
@@ -479,6 +482,7 @@ export function EntryPhotoGallery({
   refreshToken = 0,
   onPhotosChanged,
   onPhotosSnapshotChange,
+  variant = "section",
 }: BaseProps) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
@@ -514,6 +518,7 @@ export function EntryPhotoGallery({
   const pendingDragStartedAtRef = useRef(0);
 
   const hasPhotos = photos.length > 0;
+  const primaryPhoto = photos[0] ?? null;
   const remainingSlots = Math.max(0, MAX_PHOTOS - photos.length);
   const galleryBusy = uploading || refreshingPhotos || reordering || deleting;
   const draggingPhoto =
@@ -541,8 +546,10 @@ export function EntryPhotoGallery({
   }, []);
 
   useEffect(() => {
-    onPhotosSnapshotChange?.(photos);
-  }, [onPhotosSnapshotChange, photos]);
+    if (!loading) {
+      onPhotosSnapshotChange?.(photos);
+    }
+  }, [loading, onPhotosSnapshotChange, photos]);
 
   const applyConfirmedPhotos = useCallback(
     (nextPhotos: EntryPhotoAsset[]) => {
@@ -973,7 +980,7 @@ export function EntryPhotoGallery({
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: false,
       quality: 1,
       allowsMultipleSelection: remainingSlots > 1,
@@ -1012,7 +1019,7 @@ export function EntryPhotoGallery({
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: false,
       quality: 1,
     });
@@ -1092,39 +1099,118 @@ export function EntryPhotoGallery({
     [captureFromCamera, pickFromLibrary, remainingSlots]
   );
 
+  if (variant === "trigger") {
+    return (
+      <>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Foto toevoegen"
+          disabled={galleryBusy || remainingSlots <= 0}
+          onPress={() => {
+            if (!galleryBusy) {
+              setPickerVisible(true);
+            }
+          }}
+          style={styles.triggerRow}
+        >
+          <ThemedView style={styles.actionLeading}>
+            <MaterialIcons name="add-a-photo" size={16} color={palette.mutedSoft} />
+            <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+              {uploading ? "Foto verwerken..." : "Foto toevoegen"}
+            </ThemedText>
+          </ThemedView>
+          <MaterialIcons name="chevron-right" size={16} color={palette.mutedSoft} />
+        </Pressable>
+
+        {error ? (
+          <ThemedText
+            type="caption"
+            style={[styles.triggerError, { color: palette.destructiveSoftText }]}
+          >
+            {error}
+          </ThemedText>
+        ) : null}
+
+        <ConfirmSheet
+          visible={pickerVisible}
+          title="Foto toevoegen"
+          message="Kies hoe je een foto wilt toevoegen aan dit moment."
+          actions={pickerActions}
+          onCancel={() => setPickerVisible(false)}
+          onConfirm={() => setPickerVisible(false)}
+        />
+      </>
+    );
+  }
+
+  if (!hasPhotos && !error) {
+    return null;
+  }
+
   return (
     <>
       <ThemedView style={styles.sectionWrap}>
-        <DetailSectionHeader icon="photo-library" title="Foto's bij dit moment" />
+        <DetailSectionHeader
+          icon="photo-library"
+          title="Foto's"
+          tone="muted"
+          trailingAction={
+            remainingSlots > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Foto toevoegen"
+                disabled={galleryBusy}
+                onPress={() => {
+                  if (!galleryBusy) {
+                    setPickerVisible(true);
+                  }
+                }}
+                style={styles.addInlineButton}
+              >
+                <MaterialIcons name="add-a-photo" size={14} color={palette.mutedSoft} />
+                <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                  {uploading ? "Foto verwerken..." : "Foto toevoegen"}
+                </ThemedText>
+              </Pressable>
+            ) : null
+          }
+        />
 
-        {loading ? <StateBlock tone="loading" message="Foto's laden..." detail="Even geduld." /> : null}
+        {loading && hasPhotos ? (
+          <StateBlock tone="loading" message="Foto's laden..." detail="Even geduld." />
+        ) : null}
         {refreshingPhotos && !loading ? (
           <StateBlock tone="loading" message="Foto's vernieuwen..." detail="Even geduld." />
         ) : null}
 
         {error ? <StateBlock tone="error" message="Foto's zijn nu niet beschikbaar" detail={error} /> : null}
 
-        {!loading && !hasPhotos ? (
-          <ThemedView style={[styles.emptyState, { backgroundColor: palette.surfaceLow }]}> 
-            <ThemedText type="defaultSemiBold">Bewaar een beeld bij dit moment</ThemedText>
-            <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-              Leg een foto vast zodat je dit moment later rustig kunt terugzien.
-            </ThemedText>
-            <PrimaryButton
-              label={uploading ? "Foto verwerken..." : "Foto toevoegen"}
-              icon="add-a-photo"
-              disabled={galleryBusy || remainingSlots <= 0}
-              onPress={() => {
-                if (!galleryBusy) {
-                  setPickerVisible(true);
-                }
-              }}
-            />
-          </ThemedView>
-        ) : null}
-
         {!loading && hasPhotos ? (
           <>
+            {primaryPhoto ? (
+              <Pressable
+                accessibilityRole="imagebutton"
+                accessibilityLabel="Open hoofdfoto"
+                onPress={() => handleThumbPress(0)}
+                style={[
+                  styles.featuredCard,
+                  {
+                    backgroundColor: palette.surfaceLow,
+                    aspectRatio:
+                      primaryPhoto.displayWidth > 0 && primaryPhoto.displayHeight > 0
+                        ? primaryPhoto.displayWidth / primaryPhoto.displayHeight
+                        : 4 / 3,
+                  },
+                ]}
+              >
+                <Image
+                  source={primaryPhoto.displaySource}
+                  contentFit="cover"
+                  style={styles.featuredImage}
+                />
+              </Pressable>
+            ) : null}
+
             <ThemedView style={styles.galleryStack}>
               <ScrollView
                 horizontal
@@ -1151,7 +1237,7 @@ export function EntryPhotoGallery({
                             styles.dragPlaceholder,
                             {
                               backgroundColor: palette.surfaceLow,
-                              borderColor: palette.primary,
+                              borderColor: palette.separator,
                             },
                           ]}
                         />
@@ -1199,15 +1285,15 @@ export function EntryPhotoGallery({
                             {
                               backgroundColor: palette.surfaceLow,
                               opacity: isDragging ? 0.08 : 1,
-                              borderWidth: isFirst ? 2 : 0,
-                              borderColor: isFirst ? palette.primary : "transparent",
+                              borderWidth: isFirst ? StyleSheet.hairlineWidth : 0,
+                              borderColor: isFirst ? palette.separator : "transparent",
                             },
                           ]}
                         >
                           <Image source={photo.thumbSource} contentFit="cover" style={styles.thumbImage} />
                           {isFirst ? (
-                            <View style={[styles.thumbBadge, { backgroundColor: palette.primaryStrong }]}>
-                              <MaterialIcons name="image" size={8} color={palette.primaryOn} />
+                            <View style={[styles.thumbBadge, { backgroundColor: palette.surface }]}>
+                              <MaterialIcons name="image" size={8} color={palette.mutedSoft} />
                             </View>
                           ) : null}
                         </Pressable>
@@ -1232,8 +1318,8 @@ export function EntryPhotoGallery({
                     ]}
                   >
                     <Image source={draggingPhoto.thumbSource} contentFit="cover" style={styles.thumbImage} />
-                    <View style={[styles.thumbBadge, { backgroundColor: palette.primaryStrong }]}>
-                      <MaterialIcons name="drag-indicator" size={8} color={palette.primaryOn} />
+                    <View style={[styles.thumbBadge, { backgroundColor: palette.surface }]}>
+                      <MaterialIcons name="drag-indicator" size={8} color={palette.mutedSoft} />
                     </View>
                   </Animated.View>
                 </View>
@@ -1241,7 +1327,7 @@ export function EntryPhotoGallery({
             </ThemedView>
 
             {photos.length > 1 ? (
-              <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+              <ThemedText type="caption" style={[styles.galleryHint, { color: palette.mutedSoft }]}>
                 Houd een foto ingedrukt om de volgorde en thumbnail te veranderen.
               </ThemedText>
             ) : null}
@@ -1250,22 +1336,6 @@ export function EntryPhotoGallery({
               <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
                 {photos.length} / {MAX_PHOTOS} foto&apos;s
               </ThemedText>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Foto toevoegen"
-                disabled={galleryBusy || remainingSlots <= 0}
-                onPress={() => {
-                  if (!galleryBusy) {
-                    setPickerVisible(true);
-                  }
-                }}
-                style={styles.addInlineButton}
-              >
-                <MaterialIcons name="add-a-photo" size={16} color={palette.primary} />
-                <ThemedText type="caption" style={{ color: palette.primary }}>
-                  Toevoegen
-                </ThemedText>
-              </Pressable>
             </ThemedView>
           </>
         ) : null}
@@ -1323,17 +1393,17 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  featuredCard: {
+    width: "100%",
+    borderRadius: radius.xl,
+    overflow: "hidden",
+  },
   sectionWrap: {
     gap: spacing.md,
+    marginBottom: spacing.xl,
   },
   galleryStack: {
     position: "relative",
-  },
-  emptyState: {
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
   },
   galleryRow: {
     gap: spacing.sm,
@@ -1345,12 +1415,12 @@ const styles = StyleSheet.create({
   thumbWrap: {
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     overflow: "hidden",
   },
   dragPlaceholder: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 2,
     borderStyle: "dashed",
     opacity: 0.7,
@@ -1366,7 +1436,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     overflow: "hidden",
     borderWidth: 2,
     borderColor: "transparent",
@@ -1384,8 +1454,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 4,
     bottom: 4,
-    width: 22,
-    height: 22,
+    width: 18,
+    height: 18,
     borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
@@ -1393,12 +1463,36 @@ const styles = StyleSheet.create({
   galleryMetaRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+  },
+  galleryHint: {
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.05,
   },
   addInlineButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
+    minHeight: 28,
+    paddingVertical: spacing.xxs,
+  },
+  triggerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    minHeight: 40,
     paddingVertical: spacing.xs,
+  },
+  actionLeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    flexShrink: 1,
+  },
+  triggerError: {
+    marginTop: spacing.xxs,
+    marginLeft: 24,
   },
 });

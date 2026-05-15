@@ -5,6 +5,8 @@ import { isValidJournalDate } from '@/services';
 
 export type CaptureRouteParams = {
   date?: string | string[];
+  targetDate?: string | string[];
+  returnTo?: string | string[];
   validation?: 'short' | 'no_speech' | string | string[];
 };
 
@@ -14,31 +16,6 @@ export function formatDuration(seconds: number): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-function combineLocalDateWithCurrentTime(journalDate: string, now = new Date()): Date | null {
-  if (!isValidJournalDate(journalDate)) {
-    return null;
-  }
-
-  const [yearRaw, monthRaw, dayRaw] = journalDate.split('-');
-  const year = Number(yearRaw);
-  const month = Number(monthRaw);
-  const day = Number(dayRaw);
-
-  if (!year || !month || !day) {
-    return null;
-  }
-
-  return new Date(
-    year,
-    month - 1,
-    day,
-    now.getHours(),
-    now.getMinutes(),
-    now.getSeconds(),
-    now.getMilliseconds(),
-  );
-}
-
 function toLocalJournalDate(value: Date): string {
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, '0');
@@ -46,13 +23,58 @@ function toLocalJournalDate(value: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function resolveCaptureJournalDate(value: string | string[] | undefined): string | null {
-  const candidate = Array.isArray(value) ? value[0] ?? '' : value ?? '';
+function readSingleRouteParam(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? value[0] ?? '' : value ?? '';
+}
+
+export function resolveCaptureJournalDate(
+  value: string | string[] | undefined,
+  targetValue?: string | string[] | undefined
+): string | null {
+  const preferred = readSingleRouteParam(targetValue);
+  if (isValidJournalDate(preferred)) {
+    return preferred;
+  }
+
+  const candidate = readSingleRouteParam(value);
   return isValidJournalDate(candidate) ? candidate : null;
 }
 
-export function buildCaptureParams(journalDate: string | null): { date: string } | undefined {
-  return journalDate ? { date: journalDate } : undefined;
+export function buildDayReturnToPath(journalDate: string | null): string | null {
+  return journalDate ? `/day/${journalDate}` : null;
+}
+
+export function resolveCaptureReturnTo(value: string | string[] | undefined): string | null {
+  const candidate = readSingleRouteParam(value).trim();
+  if (!candidate) {
+    return null;
+  }
+
+  const match = /^\/day\/(\d{4}-\d{2}-\d{2})$/.exec(candidate);
+  if (!match) {
+    return null;
+  }
+
+  return isValidJournalDate(match[1]) ? candidate : null;
+}
+
+export function buildCaptureParams(
+  journalDate: string | null,
+  returnTo?: string | null
+): { targetDate: string; returnTo?: string } | undefined {
+  if (!journalDate) {
+    return undefined;
+  }
+
+  const params: { targetDate: string; returnTo?: string } = {
+    targetDate: journalDate,
+  };
+
+  if (returnTo) {
+    params.returnTo = returnTo;
+  }
+
+  return params;
 }
 
 export function createCaptureContext(now = new Date(), journalDateOverride?: string): {
@@ -60,14 +82,43 @@ export function createCaptureContext(now = new Date(), journalDateOverride?: str
   journalDate: string;
   timezoneOffsetMinutes: number;
 } {
-  const captureDate = journalDateOverride ? combineLocalDateWithCurrentTime(journalDateOverride, now) : now;
-
   return {
-    capturedAt: (captureDate ?? now).toISOString(),
+    capturedAt: now.toISOString(),
     journalDate:
       journalDateOverride && isValidJournalDate(journalDateOverride) ? journalDateOverride : toLocalJournalDate(now),
-    timezoneOffsetMinutes: (captureDate ?? now).getTimezoneOffset(),
+    timezoneOffsetMinutes: now.getTimezoneOffset(),
   };
+}
+
+export function formatCaptureTargetDateLabel(journalDate: string | null): string | null {
+  if (!journalDate || !isValidJournalDate(journalDate)) {
+    return null;
+  }
+
+  const parsed = new Date(`${journalDate}T12:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toLocaleDateString('nl-NL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+export function extractJournalDateFromDayReturnTo(returnTo: string | null): string | null {
+  if (!returnTo) {
+    return null;
+  }
+
+  const match = /^\/day\/(\d{4}-\d{2}-\d{2})$/.exec(returnTo);
+  if (!match) {
+    return null;
+  }
+
+  return isValidJournalDate(match[1]) ? match[1] : null;
 }
 
 export function mimeTypeFromUri(uri: string): string {

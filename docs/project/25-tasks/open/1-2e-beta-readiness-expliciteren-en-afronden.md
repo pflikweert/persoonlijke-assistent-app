@@ -10,8 +10,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 4
+sort_order: 15
 ---
+
 
 
 
@@ -89,3 +90,5 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
 
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

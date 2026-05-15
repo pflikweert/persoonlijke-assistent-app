@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-04-28T23:46:55.838Z
-Source Commit: 6a2a8ce
+Build Timestamp (UTC): 2026-05-15T06:59:13.598Z
+Source Commit: 58da70b
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 33
+- Totaal tasks opgenomen: 34
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -42,7 +42,7 @@ summary: Een expliciete kwaliteitsset voor outputkwaliteit die duidelijk maakt w
 tags: [consumer-beta, outputkwaliteit]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
 
 
@@ -145,8 +145,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 4
+sort_order: 15
 ---
+
 
 
 
@@ -221,6 +222,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 ```
 
 ---
@@ -253,7 +256,7 @@ follows_after: [task-admin-founder-meeting-capture-gespreksinzichten]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 14
+sort_order: 15
 ---
 
 
@@ -413,7 +416,7 @@ follows_after: [task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 10
+sort_order: 11
 ---
 
 
@@ -579,7 +582,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 8
+sort_order: 9
 ---
 
 
@@ -757,7 +760,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 13
+sort_order: 14
 ---
 
 
@@ -923,7 +926,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 5
+sort_order: 6
 ---
 
 
@@ -1101,7 +1104,7 @@ follows_after: [task-admin-founder-meeting-capture-lokale-failsafe-en-recovery]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
 
 
@@ -1277,7 +1280,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
 
 
@@ -1456,7 +1459,7 @@ follows_after: [task-admin-founder-meeting-capture-lokale-failsafe-en-recovery]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 7
+sort_order: 8
 ---
 
 
@@ -1632,7 +1635,7 @@ follows_after: [task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 15
+sort_order: 16
 ---
 
 
@@ -1792,7 +1795,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 12
+sort_order: 13
 ---
 
 
@@ -1953,7 +1956,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 11
+sort_order: 12
 ---
 
 
@@ -2120,8 +2123,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 13
 ---
+
 
 
 
@@ -2275,6 +2279,8 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 ```
 
 ---
@@ -2307,7 +2313,7 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 9
+sort_order: 10
 ---
 
 
@@ -2445,7 +2451,7 @@ summary: "Geef AIQS admin een helderder en strakker eigen thema, geïnspireerd d
 tags: [aiqs, admin-ui, thema, design]
 workstream: aiqs
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
 
 
@@ -2540,8 +2546,9 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 7
+sort_order: 18
 ---
+
 
 
 
@@ -2636,6 +2643,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 ```
 
 ---
@@ -2662,7 +2671,7 @@ summary: "Zet de huidige AIQS-variant snel en gecontroleerd live in productie vo
 tags: [aiqs, productie, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 
@@ -2770,7 +2779,7 @@ summary: "Implementeer PWA-installatieprompt voor webgebruikers om de app als de
 tags: [pwa, webapp, installatie, modal, cookie]
 workstream: app
 due_date: null
-sort_order: 9
+sort_order: 10
 ---
 
 ## Probleem / context
@@ -2862,7 +2871,7 @@ depends_on: []
 follows_after: []
 task_kind: research
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 
@@ -3009,7 +3018,7 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 
@@ -3187,7 +3196,7 @@ summary: "Beoordeel pas na de metadata- en bundlingfase of een bredere docs-fold
 tags: [docs, structure, metadata, visual-language]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 # Docs folderstructuur en visual language herbeoordelen na metadatafase
@@ -3278,7 +3287,7 @@ summary: "Werk een besluitbaar plan uit om strategische docs naar een aparte pri
 tags: [docs, governance, security, repo-structuur, planning]
 workstream: idea
 due_date: null
-sort_order: 11
+sort_order: 12
 ---
 
 
@@ -3351,7 +3360,7 @@ Het resultaat van deze taak is een besluit- en uitvoeringskader; geen directe te
 - Status: ready
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-26
+- Updated_at: 2026-05-15
 
 ```md
 ---
@@ -3361,8 +3370,8 @@ status: ready
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-26
-summary: "Breid de nieuwe gallery-smoke basis uit naar een volledige end-user E2E-suite voor toevoegen, verwijderen, max-limiet, viewer, reorder en unhappy/error flows."
+updated_at: 2026-05-15
+summary: "Breid de huidige gallery-smoke basis en de recente viewer/reorder-validatie uit naar een volledige end-user E2E-suite voor toevoegen, echte delete-mutatie, max-limiet en unhappy/error flows."
 tags: [qa, tests, gallery, photos, e2e]
 workstream: app
 due_date: null
@@ -3377,7 +3386,9 @@ sort_order: 2
 
 ## Probleem / context
 
-De eerste gallery QA-basis bewijst de kerninteractie voor thumbnail-reorder en legt unit/smoke-infra neer. De volledige end-user dekking voor alle gallery-flows bestaat nog niet.
+De eerste gallery QA-basis bewijst inmiddels de kerninteractie voor thumbnail-reorder, viewer-openen en delete-cancel op lokale fixtures. Daarnaast is de with-photos state van momentdetail runtime bevestigd via een aparte local-only historical fixture.
+
+De volledige end-user dekking voor alle gallery-flows bestaat nog niet. Vooral toevoegen, echte delete-mutatie, max-limiet en expliciete unhappy/error paden missen nog als reproduceerbare suite.
 
 Voor toekomstige gallery-wijzigingen willen we kunnen kiezen tussen:
 
@@ -3427,6 +3438,20 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 ## Blockers / afhankelijkheden
 
 - Vereist draaiende lokale webserver, Supabase local stack en Mailpit auth-flow.
+
+## Review-notitie 2026-05-15
+
+- Deze task blijft open; het recente momentdetail/foto-werk heeft hem niet volledig opgelost.
+- Wel al ingehaald door recent bewijs:
+  - reorder smoke via `tests/e2e/gallery-smoke.spec.mjs`
+  - viewer-open + delete-cancel via `tests/e2e/gallery-full.spec.mjs`
+  - tijdelijke historical with-photos fixture via `scripts/seed-local-historical-entry-photo-detail-smoke.mjs`
+- Restscope van deze task is daardoor smaller dan voorheen:
+  - add-flow
+  - echte delete-mutatie
+  - max-limiet
+  - unhappy/error paden
+  - eventuele runbook-/docs-afronding voor de volledige suite
 
 ## Verify / bewijs
 
@@ -3483,8 +3508,9 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 12
 ---
+
 
 ## Probleem / context
 
@@ -3709,6 +3735,11 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 - `docs/project/25-tasks/done/moment-entry-fotos-galerij-beveiligde-upload.md`
 - `components/journal/entry-photo-gallery.tsx`
 - `src/lib/entry-photo-gallery/flow.ts`
+
+
+## Commits
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 ```
 
 ---
@@ -3735,7 +3766,7 @@ summary: "Toon in het gedeelde moments-overzicht een primaire foto-thumb op maxi
 tags: [moments-overzicht, photos, ui, viewer]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 ## Probleem / context
@@ -3848,7 +3879,7 @@ summary: "screenshots van Flow verwerken tot ideeen. todo, ideeen etc taggen in 
 tags: []
 workstream: idea
 due_date: null
-sort_order: 10
+sort_order: 11
 ---
 
 
@@ -3917,7 +3948,7 @@ summary: "Beoordeel de huidige npm audit meldingen na de testinfra-uitbreiding, 
 tags: [npm, audit, dependencies, security]
 workstream: app
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 ## Probleem / context
@@ -3996,8 +4027,9 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 3
+sort_order: 14
 ---
+
 
 
 
@@ -4090,6 +4122,8 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 ```
 
 ---
@@ -4116,8 +4150,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 5
+sort_order: 16
 ---
+
 
 
 
@@ -4203,6 +4238,8 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 ```
 
 ---
@@ -4229,8 +4266,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 6
+sort_order: 17
 ---
+
 
 
 
@@ -4596,6 +4634,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 ```
 
 ---
@@ -4628,7 +4668,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
 
 
@@ -4902,7 +4942,7 @@ summary: "De lokale `.env.local` krijgt de ontbrekende `STITCH_API_KEY`, zodat d
 tags: [mcp, stitch, local-dev, env]
 workstream: plugin
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 
@@ -4964,4 +5004,202 @@ De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+```
+
+---
+
+## Web runtime warnings styling accessibility hardening
+
+- Path: `docs/project/25-tasks/open/web-runtime-warnings-styling-accessibility-hardening.md`
+- Bucket: open
+- Status: ready
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-15
+
+```md
+---
+id: task-web-runtime-warnings-styling-accessibility-hardening
+title: Web runtime warnings styling accessibility hardening
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-15
+summary: "Los actuele web/runtime warnings op rond deprecated shadow props, aria-hidden focus-conflicten en deprecated pointerEvents props, zonder functionele redesigns of interactieregressies."
+tags: [web, accessibility, polish, overlays, runtime]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De web/runtime console toont op dit moment concrete warnings rond styling-compatibiliteit en accessibility-gedrag. Het gaat niet om nieuwe features, maar om hardening van bestaande shared surfaces, overlays en detailflows.
+
+De warnings wijzen op drie technische gaten:
+- deprecated React Native web shadow props die op web nog doorlekken
+- `aria-hidden` op verborgen lagen terwijl een gefocust descendant actief blijft
+- deprecated `pointerEvents` usage als prop in plaats van via `style.pointerEvents`
+
+Deze warnings maken de runtime minder schoon, kunnen op termijn compatibiliteitsproblemen geven en vergroten het risico op subtiele accessibility-regressies in momentdetail-, overlay- en navigatieflows.
+
+## Gewenste uitkomst
+
+De relevante web/runtime warnings zijn opgelost zonder zichtbare redesigns of nieuwe dependencies. Shared overlay- en surface-primitives gebruiken moderne compatibele props, en verborgen overlay-content veroorzaakt geen focusconflict meer.
+
+De momentdetailflow, overlays, modals en bottom-nav blijven hetzelfde werken voor klik, touch, ESC/back en keyboard-focus, maar zonder de huidige console-waarschuwingen.
+
+## User outcome
+
+Gebruikers merken geen redesign, maar de webapp voelt technisch stabieler: overlays en detailschermen blijven correct toegankelijk en interactioneel betrouwbaar, ook met keyboard-focus op web.
+
+## Functional slice
+
+Een kleine hardening-slice: deprecated web props opsporen en moderniseren in bestaande shared components, accessibility-conflict bij verborgen overlays oplossen, daarna gerichte runtime-smoke op momentdetail- en overlayflows.
+
+## Entry / exit
+
+- Entry: gebruiker opent day detail, momentdetail en bestaande overlays/menu's/modals in de webapp.
+- Exit: dezelfde flows werken nog steeds, maar de console toont geen warnings meer voor deprecated shadow props, `aria-hidden` focusconflict of deprecated `pointerEvents`.
+
+## Happy flow
+
+1. De relevante shared overlay-, backdrop-, navigation- en surface-componenten worden gevonden en aangepast zonder visuele redesign.
+2. Deprecated shadow props worden op web vervangen door een compatibele `boxShadow`-richting, terwijl native gedrag intact blijft.
+3. Overlay-hidden state behandelt focus correct en `pointerEvents` usage is web-compatibel, waarna runtime-smoke bevestigt dat console en interacties schoon blijven.
+
+## Non-happy flows
+
+- Empty state: niet van toepassing; deze taak gaat over bestaande runtime warnings.
+- Permission denied / unavailable: als een specifieke browserwarning niet lokaal reproduceerbaar blijkt, vastleggen met concrete route/componentcontext in plaats van gokken.
+- Validation / unsupported state: native-only style paths mogen behouden blijven zolang web een compatibele fallback krijgt.
+- Failure / retry / cancel: als een fix een overlay- of focusregressie veroorzaakt, terugschalen naar de kleinste veilige shared fix in plaats van grotere architectuurwijzigingen.
+
+## UX / copy
+
+- Geen nieuwe user-facing copy.
+- Geen redesign van overlays, momentdetail, navigatie of bottom tabs.
+- Bestaande shared components en UI-structuur blijven leidend.
+
+## Data / IO
+
+- Input: bestaande shared UI components, overlay/backdrop primitives en detail surfaces die op web warnings veroorzaken.
+- Output: schonere web/runtime zonder de drie actuele warningtypes.
+- Opslag/API/service/file-impact: geen dataflow- of API-wijzigingen; alleen shared UI/runtime hardening.
+- Statussen:
+  - warnings gelokaliseerd
+  - shadow-fix gebouwd
+  - aria-hidden/focus-fix gebouwd
+  - pointerEvents-fix gebouwd
+  - runtime-smoke bevestigd
+
+## Waarom nu
+
+- De warnings zitten in actuele webflows rond momentdetail en overlays.
+- Dit is goedkope technische hardening die toekomstige web- en accessibility-regressies voorkomt zonder productscope te verbreden.
+
+## In scope
+
+- Deprecated shadow prop usage op web opsporen en moderniseren.
+- `aria-hidden` focusconflict op verborgen overlays/modals/menu's oplossen.
+- Deprecated `pointerEvents` prop usage vervangen door `style.pointerEvents` waar relevant.
+- Gerichte runtime-smoke op day detail, momentdetail, overlays/menu's/modals en keyboard-focus.
+
+## Buiten scope
+
+- Nieuwe dependencies of accessibility-library.
+- Nieuwe overlayarchitectuur.
+- Routing- of animatiesysteemwijzigingen.
+- Visuele redesigns van surfaces, modals, menu's of bottom nav.
+- Nieuwe feature- of flow-uitbreidingen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak een aparte hardening/polish-taak voor de actuele console warnings.
+- Los alleen de drie genoemde warningfamilies op.
+- Houd gedrag en vormgeving zoveel mogelijk gelijk, behalve waar accessibility-correctheid een kleine gedragsfix vereist.
+
+## Expliciete user requirements / detailbehoud
+
+1. Geen redesign.
+2. Geen nieuwe dependencies.
+3. Geen gedragswijzigingen tenzij nodig voor accessibility-correctheid.
+4. Shadow warning oplossen via moderne compatibele oplossing zoals `boxShadow`, zonder native te breken.
+5. `aria-hidden` focus warning correct oplossen volgens web accessibility best practices.
+6. Geen keyboard trap of focusverliesbug introduceren.
+7. `pointerEvents` als deprecated prop vervangen zonder click/touch regressies.
+8. Overlays, backdrops, bottom nav en capture/menu flows moeten werkend blijven.
+9. Runtime-smoke moet expliciet keyboard-focus en open/sluit gedrag op web meenemen.
+
+## Status per requirement
+
+- [ ] Deprecated shadow prop paths zijn gelokaliseerd en opgelost — status: niet gebouwd
+- [ ] `aria-hidden` focusconflict is opgelost zonder accessibility-regressie — status: niet gebouwd
+- [ ] Deprecated `pointerEvents` prop usage is vervangen — status: niet gebouwd
+- [ ] Gerichte web/runtime-smoke bevestigt schone console en werkende interacties — status: niet gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Nog leeg.
+
+## Uitvoerblokken / fasering
+
+- [ ] Blok 1: warningbronnen en relevante shared components lokaliseren.
+- [ ] Blok 2: kleinste shared hardening-fixes uitvoeren.
+- [ ] Blok 3: runtime-smoke, verify en docs/task-afronding.
+
+## Concrete checklist
+
+- [ ] Shadow-props op web doorzoeken en compatibele oplossing kiezen.
+- [ ] Overlay/focus-conflict rond `aria-hidden` reproduceren en fixen.
+- [ ] `pointerEvents` prop-usage doorzoeken en vervangen.
+- [ ] Day detail, momentdetail en overlayflows op web smoke-testen.
+- [ ] Lint/typecheck/taskflow/docs verify afronden.
+
+## Acceptance criteria
+
+- [ ] Console toont geen warning meer voor deprecated shadow props.
+- [ ] Console toont geen `aria-hidden` focus warning meer bij overlay/menu/modal gebruik.
+- [ ] Console toont geen warning meer voor deprecated `pointerEvents` prop usage.
+- [ ] Overlays en detailflows blijven klikbaar, focusbaar en visueel ongewijzigd binnen normale tolerantie.
+
+## Blockers / afhankelijkheden
+
+- Geen externe blockers verwacht; afhankelijk van lokale web reproduceerbaarheid van de warnings.
+
+## Verify / bewijs
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run taskflow:verify`
+- Runtime smoke:
+  1. open day detail
+  2. open momentdetail
+  3. open/sluit overlays/menu's/modals
+  4. gebruik keyboard focus op web
+  5. bevestig geen shadow/aria-hidden/pointerEvents warnings
+  6. bevestig klik/touch/focus/ESC/back/bottom-nav gedrag
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: actuele web/runtime warnings oplossen zonder redesigns.
+- Toegevoegde verbeteringen: nog te bepalen tijdens uitvoering.
+- Afgerond: nog te bepalen.
+- Open / blocked: nog te bepalen.
+
+## Relevante links
+
+- `docs/project/open-points.md`
+- `components/navigation/fullscreen-menu-overlay.tsx`
+- `components/ui/modal-backdrop.tsx`
+- `components/ui/detail-screen-primitives.tsx`
 ```

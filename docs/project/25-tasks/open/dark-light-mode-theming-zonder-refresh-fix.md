@@ -16,8 +16,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 
 # Dark/light mode theming (text + background) zonder refresh fix
@@ -162,6 +163,8 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 - Nog niet gecommit in deze sessie.
 
 - 2026-04-29T00:07:02+02:00 — fix: make theme surfaces react instantly on dark-light switch
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ## Relevante links
 
 - `theme/tokens.ts`

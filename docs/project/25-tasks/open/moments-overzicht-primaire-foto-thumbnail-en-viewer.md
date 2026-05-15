@@ -10,8 +10,9 @@ summary: "Toon in het gedeelde moments-overzicht een primaire foto-thumb op maxi
 tags: [moments-overzicht, photos, ui, viewer]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 ## Probleem / context
 
@@ -97,3 +98,8 @@ De viewerbasis is gedeeld met de bestaande moment-detail galerij, zodat swipeged
 - `components/journal/moments-timeline-section.tsx`
 - `components/journal/entry-photo-gallery.tsx`
 - `services/entry-photos.ts`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

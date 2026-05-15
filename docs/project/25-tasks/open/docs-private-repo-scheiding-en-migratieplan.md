@@ -10,8 +10,9 @@ summary: "Werk een besluitbaar plan uit om strategische docs naar een aparte pri
 tags: [docs, governance, security, repo-structuur, planning]
 workstream: idea
 due_date: null
-sort_order: 11
+sort_order: 12
 ---
+
 
 
 
@@ -72,3 +73,8 @@ Het resultaat van deze taak is een besluit- en uitvoeringskader; geen directe te
 - `docs/project/README.md`
 - `docs/dev/cline-workflow.md`
 - `docs/dev/task-lifecycle-workflow.md`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

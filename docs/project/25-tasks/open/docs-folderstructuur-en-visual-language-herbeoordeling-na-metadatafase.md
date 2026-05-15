@@ -6,12 +6,13 @@ phase: transitiemaand-consumer-beta
 priority: p3
 source: docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md
 updated_at: 2026-04-25
-summary: "Beoordeel pas na de metadata- en bundlingfase of een bredere docs-foldermigratie of verdere visual-language uitbouw echt nodig is."
+summary: Beoordeel pas na de metadata- en bundlingfase of een bredere docs-foldermigratie of verdere visual-language uitbouw echt nodig is.
 tags: [docs, structure, metadata, visual-language]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 # Docs folderstructuur en visual language herbeoordelen na metadatafase
 
@@ -75,3 +76,8 @@ Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een ko
 
 - `docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md`
 - `docs/project/README.md`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

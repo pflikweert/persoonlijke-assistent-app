@@ -10,8 +10,9 @@ summary: "Geef AIQS admin een helderder en strakker eigen thema, geïnspireerd d
 tags: [aiqs, admin-ui, thema, design]
 workstream: aiqs
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
+
 
 
 
@@ -79,3 +80,8 @@ De interface ondersteunt prettig gebruik op telefoon én desktop/fullscreen, zon
 - `docs/project/ai-quality-studio.md`
 - `docs/design/mvp-design-spec-1.2.1.md`
 - `design_refs/1.2.1/ethos_ivory/DESIGN.md`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

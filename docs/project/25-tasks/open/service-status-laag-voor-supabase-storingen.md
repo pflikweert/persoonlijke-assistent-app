@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 
 
@@ -264,3 +265,5 @@ Bronprompt voor toekomstige uitvoering, bewust als minimale v1:
 - 5a7e3e0 — docs: add service status backlog task
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish

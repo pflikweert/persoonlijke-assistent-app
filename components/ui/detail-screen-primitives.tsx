@@ -36,6 +36,7 @@ type DetailSectionHeaderProps = {
   title: string;
   trailingAction?: ReactNode;
   style?: ViewStyle;
+  tone?: "accent" | "muted";
 };
 
 type DetailReadingSectionProps = {
@@ -114,16 +115,17 @@ export function DetailSectionHeader({
   title,
   trailingAction,
   style,
+  tone = "accent",
 }: DetailSectionHeaderProps) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
-  const warmAccent = palette.accentWarm;
+  const headerColor = tone === "accent" ? palette.accentWarm : palette.mutedSoft;
 
   return (
     <ThemedView style={[styles.detailSectionHeaderRow, style]}>
       <ThemedView style={styles.detailSectionHeaderLeading}>
-        <MaterialIcons name={icon} size={18} color={warmAccent} />
-        <ThemedText type="defaultSemiBold" style={[styles.detailSectionHeaderTitle, { color: warmAccent }]}>
+        <MaterialIcons name={icon} size={16} color={headerColor} />
+        <ThemedText type="defaultSemiBold" style={[styles.detailSectionHeaderTitle, { color: headerColor }]}>
           {title}
         </ThemedText>
       </ThemedView>

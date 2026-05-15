@@ -12,6 +12,7 @@ export function NoticeCard({
   body,
   icon,
   compact = false,
+  compactCentered = false,
   tone = "info",
   style,
 }: {
@@ -19,6 +20,7 @@ export function NoticeCard({
   body: string;
   icon?: ReactNode;
   compact?: boolean;
+  compactCentered?: boolean;
   tone?: "info";
   style?: ViewStyle;
 }) {
@@ -34,10 +36,21 @@ export function NoticeCard({
       <ThemedView
         lightColor={colorTokens.light.surfaceLow}
         darkColor={colorTokens.dark.surfaceLow}
-        style={[styles.card, styles.compactCard, style]}
+        style={[
+          styles.card,
+          styles.compactCard,
+          compactCentered ? styles.compactCardCentered : null,
+          style,
+        ]}
       >
         <ThemedView style={styles.iconWrap}>{noticeIcon}</ThemedView>
-        <ThemedText type="caption" style={{ color: palette.muted }}>
+        <ThemedText
+          type="caption"
+          style={[
+            { color: palette.muted },
+            compactCentered ? styles.compactBodyCentered : null,
+          ]}
+        >
           {body}
         </ThemedText>
       </ThemedView>
@@ -87,6 +100,12 @@ const styles = StyleSheet.create({
   compactCard: {
     alignItems: "center",
     paddingVertical: spacing.sm,
+  },
+  compactCardCentered: {
+    justifyContent: "center",
+  },
+  compactBodyCentered: {
+    textAlign: "center",
   },
   content: {
     flex: 1,
