@@ -77,6 +77,7 @@ test.describe("entry photo gallery full end-user flow", () => {
     page,
   }) => {
     const thumbs = page.locator('[data-testid^="entry-photo-thumb-"]');
+    await expect(thumbs.first()).toBeVisible({ timeout: 15000 });
     const initialCount = await thumbs.count();
     test.skip(initialCount < 1, "This flow needs at least one existing fixture photo.");
 

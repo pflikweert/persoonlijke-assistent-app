@@ -6,7 +6,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-05-15
-summary: "De regressie-follow-up is verbreed van kleine hardening naar een structurele web/Android fix: momentdetail gebruikt nu een browser File API fallback op web, materialiseert bytes direct in de prepare-pipeline, scheidt gallery-load errors van action-errors en logt alleen privacyveilige prepare-context. Productie upload/delete smoke is opnieuw geslaagd; lokale multi-add/delete smoke ligt klaar maar kon in deze sessie niet starten omdat `http://localhost:8081` niet draaide."
+summary: "De regressie-follow-up is verbreed van kleine hardening naar een structurele web/Android fix: momentdetail gebruikt nu een browser File API fallback op web, materialiseert bytes direct in de prepare-pipeline, scheidt gallery-load errors van action-errors en logt alleen privacyveilige prepare-context. Productie upload/delete smoke en lokale browser-smokes voor multi-add/delete plus read-failure fallback zijn nu geslaagd."
 tags: [moment-detail, photos, android, chrome, production, regression, diagnostics]
 workstream: app
 epic_id: null
@@ -18,6 +18,7 @@ spec_ready: true
 due_date: null
 sort_order: 12
 ---
+
 
 
 
@@ -193,7 +194,7 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 ## Blockers / afhankelijkheden
 
 - Handmatige Android productie-smoke op echt toestel blijft afhankelijk van user/device-toegang.
-- Lokale browser multi-add/delete smoke vereist een draaiende app op `http://localhost:8081`; in deze sessie gaf `curl` daarop `connection refused`, dus die runtime-check kon niet non-interactief worden afgerond zonder handmatige dev-serverstart.
+- Geen andere blockers meer voor repo- of browserbewijs; alleen echt Android toestelbewijs blijft open.
 
 ## Verify / bewijs
 
@@ -206,10 +207,14 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - ✅ `GALLERY_E2E_PROD=1 npm run test:e2e:gallery:prod-upload`
   - geslaagd op `2026-05-15`
   - upload + cleanup op de productie fixture-entry bevestigd
-- ⚠️ `tests/e2e/gallery-full.spec.mjs`
-  - nieuwe lokale test toegevoegd voor twee uploads + twee deletes op een seeded fixture
-  - seed-script draaide succesvol op `2026-05-15`
-  - uitvoering blokkeerde daarna op ontbrekende lokale app-server: `http://localhost:8081` gaf `connection refused`
+- ✅ lokale fixture-seed `node scripts/seed-local-entry-photo-gallery-smoke.mjs`
+  - geslaagd op `2026-05-15`
+- ✅ lokale browser-smoke `tests/e2e/gallery-full.spec.mjs`
+  - `adds two photos and removes them again on the local fixture entry`
+  - geslaagd op `2026-05-15`
+- ✅ lokale failure-regressietest `tests/e2e/gallery-full.spec.mjs`
+  - `keeps existing photos visible when a new web upload fails during file-byte materialization`
+  - geslaagd op `2026-05-15`
 - Handmatige productie-smoke blijft open en noteert per run:
   - slaagt/faalt
   - foutcopy
@@ -261,6 +266,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
   - gallery/action error-state scheiding
   - gerichte unit-tests
   - lint, typecheck, taskflow en docs verify
+  - lokale browser-smokes voor multi-add/delete en failed add fallback
+  - productie upload/delete smoke
 - Open / blocked:
   - handmatige Android productie-smoke op echt toestel
   - bevestiging welke prepare-substap in echte productie nu optreedt of juist niet meer optreedt
@@ -282,3 +289,5 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-15T10:09:20+02:00 — fix: harden moment detail web photo uploads
+
+- 2026-05-15T14:36:40+02:00 — test: verify local entry photo gallery flows
