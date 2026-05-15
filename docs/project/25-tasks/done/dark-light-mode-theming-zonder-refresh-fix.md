@@ -1,12 +1,12 @@
 ---
 id: task-dark-light-mode-theming-zonder-refresh-fix
 title: Dark/light mode theming (text + background) zonder refresh fix
-status: review
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-28
-summary: Maak text- en achtergrondkleuren volledig theme-reactive op token/shared layer zodat light/dark direct en zonder refresh wisselt.
+updated_at: 2026-05-15
+summary: Herstelt web theme-switch zonder refresh door op web de live browser color-scheme als bron van waarheid te gebruiken.
 tags: [theme, dark-mode, light-mode, ui, tokens]
 workstream: app
 epic_id: null
@@ -18,6 +18,7 @@ spec_ready: true
 due_date: null
 sort_order: 2
 ---
+
 
 
 
@@ -108,8 +109,8 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
-- Nieuwe semantische tokens toegevoegd voor `appShell` (outer layer) en `accentWarm` (warm accent) en gekoppeld via `constants/theme.ts`.
-- Web root (`documentElement`/`body`) krijgt nu direct mode-aware achtergrond + `color-scheme` om white flash/persistente lichte shell te voorkomen.
+- Heropeningsfix op 2026-05-15: `hooks/use-color-scheme.web.ts` gebruikt nu op web altijd de live `matchMedia("(prefers-color-scheme: dark)")`-state als bron van waarheid, zodat shared tokens niet meer op een stale RN Appearance-waarde blijven hangen tot een refresh.
+- De bestaande web root-theming in `app/_layout.tsx` profiteert hierdoor nu direct mee: `documentElement`, `body` en `color-scheme` schakelen meteen mee bij mode-switch.
 
 ## Uitvoerblokken / fasering
 
@@ -143,20 +144,23 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 - `npm run lint` — geslaagd
 - `npm run typecheck` — geslaagd
 - `npm run taskflow:verify` — geslaagd
+- `npm run docs:bundle` — geslaagd
+- `npm run docs:bundle:verify` — geslaagd
 
 ### QA note (thema-switch)
 
-- Today (`app/(tabs)/index.tsx`) — geverifieerd via gedeelde tokens/root-shell wiring.
-- Detail views (`app/day/[date].tsx`, `app/entry/[id].tsx`) — geverifieerd via gedeelde detail primitives + accenttoken migratie.
-- Settings (`app/settings.tsx`, `app/settings-audio.tsx`, `app/settings-export.tsx`) — geverifieerd via `ScreenContainer`/shared surfaces.
-- Admin screens (`app/settings-ai-quality-studio*.tsx`) — geverifieerd via `settings-screen-primitives` + root shell/background tokens.
+- Live web hook-smoke: unauthenticated Playwright check op `http://localhost:8081/` bevestigt direct `light -> dark -> light` switch van `html`, `body`, heading en CTA zonder refresh.
+- Authenticated reflections-smoke: Playwright magic-link login naar `http://localhost:8081/reflections` bevestigt direct `light -> dark -> light` switch van `html`, `body` en `documentElement.colorScheme` zonder refresh.
+- Reflections week/maand: dezelfde authenticated smoke bevestigt dat brand, hero, quote, section copy, segmented control en bottom-nav context niet op de oude mode blijven hangen.
+- Today (`app/(tabs)/index.tsx`) — geverifieerd via dezelfde authenticated browser-session na dark toggle; root shell blijft direct donker zonder refresh.
+- Dagdetail en momentdetail gebruiken dezelfde hook- en tokenlaag; geen extra screen-lokale hardcoded theming aangepast in deze fixronde.
 
 ## Reconciliation voor afronding
 
-- Oorspronkelijk plan: shared-layer theme-reactiviteit + root backgrounds herstellen.
-- Toegevoegde verbeteringen: semantische shell/accent-tokens + web document root theming.
-- Afgerond: tokenlaag, root shell, detail accent-migratie en verify zijn afgerond.
-- Open / blocked: geen blocker; klaar voor user review.
+- Oorspronkelijk plan: shared-layer theme-reactiviteit + root backgrounds herstellen zonder screen-redesign.
+- Toegevoegde verbeteringen: web hook-bron van waarheid vastgezet op live browser `matchMedia`, zodat bestaande shared tokens en root-shell wiring weer meteen meeschakelen.
+- Afgerond: de stale web theme-bron is opgelost, light/dark schakelt zonder refresh terug op root- en reflectielaag, en verify + runtime-bewijs zijn bijgewerkt.
+- Open / blocked: geen blocker binnen deze scope.
 
 ## Commits
 
@@ -165,6 +169,8 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 - 2026-04-29T00:07:02+02:00 — fix: make theme surfaces react instantly on dark-light switch
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-15T09:40:13+02:00 — fix: make web theme switching reactive
 ## Relevante links
 
 - `theme/tokens.ts`

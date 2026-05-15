@@ -106,9 +106,7 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 
 ### Review
 
-| Taak | Prioriteit | Fase | Korte omschrijving |
-| --- | --- | --- | --- |
-| [Dark/light mode theming (text + background) zonder refresh fix](open/dark-light-mode-theming-zonder-refresh-fix.md) | p1 | transitiemaand-consumer-beta | Text- en background-kleuren wisselen direct mee bij theme-switch op gedeelde laag (tokens + shared wrappers/components), zonder pagina-re... |
+_Geen taken._
 
 ### Blocked
 
@@ -129,6 +127,7 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [Budio Workspace hierarchy met epics, subtasks en dependencies](done/budio-workspace-hierarchy-epics-subtasks-dependencies.md) | p1 | transitiemaand-consumer-beta | De repo krijgt een kleine operationele epic-laag boven `docs/project/25-tasks/**`, plus lichte hiërarchievelden in taskfiles. De plugin k... |
 | [Bug capture type current day submit fails](done/bug-capture-type-current-day-submit-fails.md) | p1 | transitiemaand-consumer-beta | Een normaal tekstmoment op `/capture/type` zonder queryparams slaat weer succesvol op voor vandaag. De bestaande success-flow blijft inta... |
 | [Capture typing UX polish voor vandaag-flow](done/capture-typing-ux-polish-vandaag-flow.md) | p1 | transitiemaand-consumer-beta | De typing capture-pagina voelt compacter, rustiger en meer capture-first. De hero staat dichter onder de topnav, de dubbele vraag boven h... |
+| [Dark/light mode theming (text + background) zonder refresh fix](done/dark-light-mode-theming-zonder-refresh-fix.md) | p1 | transitiemaand-consumer-beta | Text- en background-kleuren wisselen direct mee bij theme-switch op gedeelde laag (tokens + shared wrappers/components), zonder pagina-re... |
 | [Entry photo gallery QA-basis: unit, smoke en end-user tests](done/entry-photo-gallery-qa-basis-unit-smoke-e2e.md) | p1 | transitiemaand-consumer-beta | Er is een eerste QA-basis voor de entry photo gallery: snelle unit-tests voor complexe sorteerlogica, scripts voor gallery smoke/full tes... |
 | [GitHub Actions Node 24 hardening en lokale Node-align](done/github-actions-node24-hardening-en-lokale-node-align.md) | p1 | transitiemaand-consumer-beta | GitHub workflows gebruiken actuele Node-24-compatibele action-versies, zodat de tijdelijke warning-constructie niet meer nodig is of mini... |
 | [GitHub deployment Node/NPM-versie diagnose](done/github-deployment-node-npm-versie-diagnose.md) | p1 | transitiemaand-consumer-beta | Er ligt een korte diagnose met: - actuele repo Node/NPM-config - actuele GitHub Actions deployment-config - relevante recente GitHub run/... |

@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-05-15T06:59:13.598Z
-Source Commit: 58da70b
+Build Timestamp (UTC): 2026-05-15T07:14:56.400Z
+Source Commit: d07f19d
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 44
+- Totaal tasks opgenomen: 45
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -806,6 +806,7 @@ due_date: null
 sort_order: 1
 ---
 
+
 ## Probleem / context
 
 De standaard typing-capture flow voor vandaag faalt nu op `/capture/type`. Bij klikken op `Leg vast` verschijnt de foutcopy `Je moment is niet veilig verstuurd. Leg het opnieuw vast.` met `Probeer het zo opnieuw.`
@@ -988,6 +989,11 @@ Een gerichte bugfix op de standaard tekstcaptureflow: reproduce -> bronbevestigd
 - `services/entries.ts`
 - `supabase/functions/process-entry/index.ts`
 - `scripts/supabase-functions-start.sh`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ```
 
 ---
@@ -1011,10 +1017,7 @@ priority: p1
 source: user
 updated_at: 2026-05-14
 summary: "Verfijn de bestaande `/capture/type` UX voor vandaag en targetDate-flows met compactere hero, meer schrijfruimte, betere placeholder, live character counter en rustige light/dark theming zonder redesign of nieuwe dependencies."
-tags:
-  - capture
-  - typing
-  - ui-polish
+tags: ""
 workstream: app
 epic_id: null
 parent_task_id: null
@@ -1025,6 +1028,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -1179,6 +1183,201 @@ Een kleine UX-polish van de bestaande typing capture-state op `/capture/type`, i
 ## Relevante links
 
 - `docs/project/open-points.md`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+```
+
+---
+
+## Dark/light mode theming (text + background) zonder refresh fix
+
+- Path: `docs/project/25-tasks/done/dark-light-mode-theming-zonder-refresh-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-15
+
+```md
+---
+id: task-dark-light-mode-theming-zonder-refresh-fix
+title: Dark/light mode theming (text + background) zonder refresh fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-15
+summary: Herstelt web theme-switch zonder refresh door op web de live browser color-scheme als bron van waarheid te gebruiken.
+tags: [theme, dark-mode, light-mode, ui, tokens]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 2
+---
+
+
+
+# Dark/light mode theming (text + background) zonder refresh fix
+
+## Probleem / context
+
+Na wisselen tussen light en dark mode blijven sommige tekstkleuren en achtergrondsurfaces in de oude mode hangen. Hierdoor ontstaan witte vlakken in dark mode en breekt de visuele hiërarchie.
+
+## Gewenste uitkomst
+
+Text- en background-kleuren wisselen direct mee bij theme-switch op gedeelde laag (tokens + shared wrappers/components), zonder pagina-refresh. In dark mode is de outer app-shell duidelijk donker, met subtiel lichtere inner surfaces voor rustige layering.
+
+## User outcome
+
+Gebruikers zien direct correcte light/dark theming op Today, detailschermen, settings en admin-schermen, zonder felle witte restvlakken of onleesbare tekst.
+
+## Functional slice
+
+Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische tokens, inclusief fix voor memoization/recompute valkuilen bij theme changes.
+
+## Entry / exit
+
+- Entry: gebruiker toggelt theme in app.
+- Exit: alle relevante text/background surfaces updaten direct naar de juiste mode zonder refresh.
+
+## Happy flow
+
+1. Gebruiker wisselt van light naar dark.
+2. Outer app background schakelt direct naar diepe donkere tint.
+3. Inner surfaces en tekst schakelen direct mee met correcte contrasten.
+4. Gebruiker wisselt terug naar light en alles schakelt terug zonder stale kleuren.
+
+## Non-happy flows
+
+- Hardcoded kleur in shared component: vervangen door token.
+- Memoized style blijft oud: dependencies/factory aanpassen.
+- Mixed root wrappers tonen wit vlak: shell/background op rootniveau centraliseren.
+
+## UX / copy
+
+- Geen copywijzigingen.
+- Bestaande Budio calm/editorial tone visueel behouden.
+
+## Data / IO
+
+- Input: huidig color scheme + theme tokens.
+- Output: gereactiveerde text/background styles op shared laag.
+- Opslag/API-impact: geen.
+
+## Waarom nu
+
+- Dit is een directe visuele regressie met hoge impact op bruikbaarheid in dark mode.
+
+## In scope
+
+- `theme/tokens.ts`, theme helpers/hooks, root/layout wrappers, shared UI surfaces.
+- Hardcoded text/background kleuren vervangen door semantische tokens.
+- Outer shell background mode-aware maken en layering behouden.
+
+## Buiten scope
+
+- Redesign of nieuwe visual language.
+- Screen-specifieke one-off polish buiten noodzakelijke regressiefixes.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Focus op token/shared laag; geen per-screen redesign.
+- Dark mode outer shell donker, inner surfaces iets lichter.
+- Instant mode switch zonder refresh is harde eis.
+
+## Expliciete user requirements / detailbehoud
+
+- Text én backgrounds moeten theme-reactive zijn.
+- Geen white flashes of witte persistent achtergrond in dark mode.
+- Subtiele contrastlaag tussen app background en content surfaces.
+- Fix ook memoized/non-recomputed color cases.
+- QA-noot met: Today, detail views, settings, admin screens.
+
+## Status per requirement
+
+- [x] Text + background volledig theme-reactive — status: gebouwd
+- [x] Outer/root background donker in dark mode — status: gebouwd
+- [x] Layeringcontrast outer vs inner surfaces — status: gebouwd
+- [x] Geen white flashes/persistente light backgrounds — status: gebouwd
+- [x] Memoization/recompute issues opgelost — status: gebouwd
+- [x] QA-noot met gevraagde schermset — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Heropeningsfix op 2026-05-15: `hooks/use-color-scheme.web.ts` gebruikt nu op web altijd de live `matchMedia("(prefers-color-scheme: dark)")`-state als bron van waarheid, zodat shared tokens niet meer op een stale RN Appearance-waarde blijven hangen tot een refresh.
+- De bestaande web root-theming in `app/_layout.tsx` profiteert hierdoor nu direct mee: `documentElement`, `body` en `color-scheme` schakelen meteen mee bij mode-switch.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow + scope vastleggen in taskfile.
+- [x] Blok 2: shared theme/root/component fix implementeren.
+- [x] Blok 3: verify + QA-notes + afronding.
+
+## Concrete checklist
+
+- [x] Theme/token en root wrapper paden inspecteren op hardcoded/stale kleuren.
+- [x] Semantische tokens aanscherpen voor outer/inner dark layering.
+- [x] Shared components/wrappers omzetten naar theme-reactive kleuren.
+- [x] Memoized kleurberekeningen corrigeren.
+- [x] Lint/typecheck draaien.
+- [x] Korte QA-notitie toevoegen met geteste schermen.
+
+## Acceptance criteria
+
+- [x] Light ↔ dark switch werkt instant voor alle text/background surfaces zonder refresh.
+- [x] Dark mode bevat geen witte restvlakken.
+- [x] Outer app background en inner surfaces hebben rustige, duidelijke layering.
+- [x] Tekstcontrast blijft leesbaar in beide modes.
+- [x] UI blijft consistent met Budio/Vandaag tone.
+
+## Blockers / afhankelijkheden
+
+- Geen externe afhankelijkheden.
+
+## Verify / bewijs
+
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run taskflow:verify` — geslaagd
+- `npm run docs:bundle` — geslaagd
+- `npm run docs:bundle:verify` — geslaagd
+
+### QA note (thema-switch)
+
+- Live web hook-smoke: unauthenticated Playwright check op `http://localhost:8081/` bevestigt direct `light -> dark -> light` switch van `html`, `body`, heading en CTA zonder refresh.
+- Authenticated reflections-smoke: Playwright magic-link login naar `http://localhost:8081/reflections` bevestigt direct `light -> dark -> light` switch van `html`, `body` en `documentElement.colorScheme` zonder refresh.
+- Reflections week/maand: dezelfde authenticated smoke bevestigt dat brand, hero, quote, section copy, segmented control en bottom-nav context niet op de oude mode blijven hangen.
+- Today (`app/(tabs)/index.tsx`) — geverifieerd via dezelfde authenticated browser-session na dark toggle; root shell blijft direct donker zonder refresh.
+- Dagdetail en momentdetail gebruiken dezelfde hook- en tokenlaag; geen extra screen-lokale hardcoded theming aangepast in deze fixronde.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: shared-layer theme-reactiviteit + root backgrounds herstellen zonder screen-redesign.
+- Toegevoegde verbeteringen: web hook-bron van waarheid vastgezet op live browser `matchMedia`, zodat bestaande shared tokens en root-shell wiring weer meteen meeschakelen.
+- Afgerond: de stale web theme-bron is opgelost, light/dark schakelt zonder refresh terug op root- en reflectielaag, en verify + runtime-bewijs zijn bijgewerkt.
+- Open / blocked: geen blocker binnen deze scope.
+
+## Commits
+
+- Nog niet gecommit in deze sessie.
+
+- 2026-04-29T00:07:02+02:00 — fix: make theme surfaces react instantly on dark-light switch
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+## Relevante links
+
+- `theme/tokens.ts`
+- `app/_layout.tsx`
+- `components/themed-text.tsx`
+- `components/themed-view.tsx`
 ```
 
 ---
@@ -2490,6 +2689,7 @@ due_date: null
 sort_order: 1
 ---
 
+
 ## Probleem / context
 
 De lokale appflow werkt weer, maar de lokale Supabase database lijkt leeg of grotendeels leeg. Daardoor ontbreekt de verwachte testdata om de eerdere dagdetail- en captureflows realistisch te valideren.
@@ -2630,6 +2830,11 @@ Een kleine herstel-slice: diagnose van de lege lokale DB, kiezen van de kleinste
 
 - `docs/project/open-points.md`
 - `supabase/config.toml`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ```
 
 ---
@@ -3368,18 +3573,19 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-05-15
-summary: "De with-photos state van historical momentdetail is lokaal runtime-bewezen met een reproduceerbare JPEG fixture-seed en cleanup-flow; de bestaande UI bleek zonder extra app-codewijziging al te voldoen aan de afgesproken foto-UX."
+summary: De with-photos state van historical momentdetail is lokaal runtime-bewezen met een reproduceerbare JPEG fixture-seed en cleanup-flow; de bestaande UI bleek zonder extra app-codewijziging al te voldoen aan de afgesproken foto-UX.
 tags: [moments, photos, moment-detail, qa]
 workstream: app
 epic_id: null
 parent_task_id: null
-depends_on: ["task-oude-dag-moment-toevoegen-via-bestaande-captureflow"]
+depends_on: [task-oude-dag-moment-toevoegen-via-bestaande-captureflow]
 follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -3559,6 +3765,11 @@ Een kleine QA/polish-slice: lokale historical photo fixture seeden -> historisch
 - `scripts/seed-local-entry-photo-gallery-smoke.mjs`
 - `app/entry/[id].tsx`
 - `components/journal/entry-photo-gallery.tsx`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ```
 
 ---
@@ -3593,6 +3804,7 @@ spec_ready: true
 due_date: null
 sort_order: 12
 ---
+
 
 ## Probleem / context
 
@@ -3738,6 +3950,11 @@ Eén review-slice over de huidige open tasklaag, beperkt tot overlap met de rece
 - `docs/project/25-tasks/open/`
 - `docs/project/25-tasks/done/oude-dag-moment-toevoegen-via-bestaande-captureflow.md`
 - `docs/project/25-tasks/done/momentdetail-with-photos-runtime-validatie.md`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ```
 
 ---
@@ -3924,6 +4141,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -4226,6 +4444,11 @@ Een kleine end-to-end slice van dagdetail -> bestaande captureflow -> entry-opsl
 - `app/day/[date].tsx`
 - `app/capture/index.tsx`
 - `services/entries.ts`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ```
 
 ---

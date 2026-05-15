@@ -36,8 +36,18 @@ export function useColorScheme(): Scheme {
     return () => media.removeEventListener("change", apply);
   }, []);
 
-  if (rnScheme === "dark" || rnScheme === "light") {
-    return rnScheme;
+  const resolvedRnScheme =
+    rnScheme === "dark" || rnScheme === "light" ? rnScheme : null;
+
+  if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+    // On web, browser media queries are the most reliable live source during
+    // appearance switches. Some RN web environments keep returning a stale
+    // Appearance value until refresh, which causes mixed light/dark tokens.
+    return browserScheme;
+  }
+
+  if (resolvedRnScheme) {
+    return resolvedRnScheme;
   }
 
   return browserScheme;
