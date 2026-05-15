@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-05-15T07:14:56.400Z
-Source Commit: d07f19d
+Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
+Source Commit: 7a1cfac
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-05-15T07:14:56.400Z
-Source Commit: d07f19d
+Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
+Source Commit: 7a1cfac
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -930,7 +930,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
 | [Admin/founder meeting capture — web route en IA](25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md) | In Progress | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
-| [Moment detail foto-upload Android Chrome prepare regressie](25-tasks/open/moment-detail-foto-upload-android-chrome-prepare-regressie.md) | In Progress | p1 | transitiemaand-consumer-beta | De moment detail foto-upload op Android Chrome faalt niet meer op fragiele web picker-assets. Als de prepare-fase toch stukloopt, logt de... |
+| [Moment detail foto-upload Android Chrome prepare regressie](25-tasks/open/moment-detail-foto-upload-android-chrome-prepare-regressie.md) | In Progress | p1 | transitiemaand-consumer-beta | De moment detail foto-upload op Android Chrome faalt niet meer op fragiele web picker-assets. Web/browser prepare werkt primair op direct... |
 | [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | In Progress | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
 | [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Moments-overzicht primaire foto thumbnail en viewer](25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | Blocked | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |

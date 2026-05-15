@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import path from "node:path";
 import {
   assertLocalTarget,
   requestMagicLink,
@@ -11,6 +12,7 @@ const orderedPhotoIds = (process.env.GALLERY_E2E_PHOTO_IDS ?? "")
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean);
+const uploadFixture = path.resolve("assets/images/icon.png");
 
 async function loginWithLocalMagicLink(page) {
   const context = resolveLocalAuthSmokeContext();
@@ -69,5 +71,92 @@ test.describe("entry photo gallery full end-user flow", () => {
       true,
       "Add deterministic local-only upload and max-limit fixtures before enabling full add/max gallery coverage."
     );
+  });
+
+  test("keeps existing photos visible when a new web upload fails during file-byte materialization", async ({
+    page,
+  }) => {
+    const thumbs = page.locator('[data-testid^="entry-photo-thumb-"]');
+    const initialCount = await thumbs.count();
+    test.skip(initialCount < 1, "This flow needs at least one existing fixture photo.");
+
+    await page.evaluate(() => {
+      const original = File.prototype.arrayBuffer;
+      let failedOnce = false;
+
+      Object.defineProperty(window, "__entryPhotoRestoreArrayBuffer", {
+        configurable: true,
+        value: () => {
+          File.prototype.arrayBuffer = original;
+        },
+      });
+
+      File.prototype.arrayBuffer = async function patchedArrayBuffer() {
+        if (!failedOnce) {
+          failedOnce = true;
+          throw new Error("simulated picker file read failure");
+        }
+
+        return original.call(this);
+      };
+    });
+
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: /foto toevoegen/i }).click();
+    await page.getByRole("button", { name: /foto's kiezen/i }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(uploadFixture);
+
+    await expect(
+      page.getByText("Foto voorbereiden mislukte. Kies de foto opnieuw of download hem eerst naar je toestel.")
+    ).toBeVisible();
+    await expect(page.getByText("Foto's zijn nu niet beschikbaar")).toHaveCount(0);
+    await expect(thumbs).toHaveCount(initialCount);
+
+    await page.evaluate(() => {
+      window.__entryPhotoRestoreArrayBuffer?.();
+      delete window.__entryPhotoRestoreArrayBuffer;
+    });
+  });
+
+  test("adds two photos and removes them again on the local fixture entry", async ({ page }) => {
+    const thumbs = page.locator('[data-testid^="entry-photo-thumb-"]');
+    const initialCount = await thumbs.count();
+    test.skip(initialCount < 1, "This flow needs at least one existing fixture photo.");
+
+    const uploadOnePhoto = async () => {
+      const fileChooserPromise = page.waitForEvent("filechooser");
+      await page.getByRole("button", { name: /foto toevoegen/i }).click();
+      await page.getByRole("button", { name: /foto's kiezen/i }).click();
+      const fileChooser = await fileChooserPromise;
+      await fileChooser.setFiles(uploadFixture);
+      await expect(page.getByText("Foto verwerken...")).toHaveCount(0, { timeout: 30000 });
+      await expect(page.getByText("Foto's vernieuwen...")).toHaveCount(0, { timeout: 30000 });
+      await expect(page.getByText("Foto's zijn nu niet beschikbaar")).toHaveCount(0, {
+        timeout: 30000,
+      });
+    };
+
+    await uploadOnePhoto();
+    await expect(thumbs).toHaveCount(initialCount + 1, { timeout: 30000 });
+
+    await uploadOnePhoto();
+    await expect(thumbs).toHaveCount(initialCount + 2, { timeout: 30000 });
+
+    for (let index = 0; index < 2; index += 1) {
+      const newestThumb = thumbs.nth(await thumbs.count() - 1);
+      await newestThumb.click();
+      await expect(page.getByLabel("Foto verwijderen")).toBeVisible({ timeout: 15000 });
+      await page.getByLabel("Foto verwijderen").click();
+      await expect(page.getByText("Foto verwijderen?")).toBeVisible({ timeout: 15000 });
+      await page.getByText("Verwijderen").last().click();
+      await expect(page.getByText("Foto verwijderen?")).toHaveCount(0, { timeout: 30000 });
+      await expect(page.getByText("Foto's zijn nu niet beschikbaar")).toHaveCount(0, {
+        timeout: 30000,
+      });
+      await expect(thumbs).toHaveCount(initialCount + 1 - index, { timeout: 30000 });
+    }
+
+    await expect(thumbs).toHaveCount(initialCount, { timeout: 30000 });
   });
 });

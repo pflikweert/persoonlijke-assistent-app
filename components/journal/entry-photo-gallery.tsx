@@ -1,6 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image } from "expo-image";
-import * as ImageManipulator from "expo-image-manipulator";
+import Constants from "expo-constants";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -33,6 +33,7 @@ import {
 import {
   buildEntryPhotoPickerDiagnostics,
   buildEntryPhotoPreviewSlots,
+  classifyEntryPhotoPrepareCode,
   classifyEntryPhotoPrepareStep,
   createEntryPhotoPhaseError,
   describeEntryPhotoError,
@@ -40,48 +41,19 @@ import {
   getEntryPhotoRuntimeDiagnostics,
 } from "@/src/lib/entry-photo-gallery/flow";
 import {
+  buildPreparedImageAsset as prepareEntryPhotoUploadAsset,
+  isBinaryPickerSource,
+  type PickerUploadAsset,
+  type PreparedImageAsset,
+} from "@/src/lib/entry-photo-gallery/prepare";
+import {
   getGalleryDragLeft,
   getGalleryDragTargetIndex,
   reorderGalleryItems,
 } from "@/src/lib/entry-photo-gallery/sorting";
+import { openWebImageFilePicker } from "@/src/lib/entry-photo-gallery/web-picker";
 import { colorTokens, radius, spacing } from "@/theme";
 import { createClientFlowId } from "@/services/function-error";
-
-type PreparedImageAsset = {
-  displayBytes: ArrayBuffer;
-  thumbBytes: ArrayBuffer;
-  displayWidth: number;
-  displayHeight: number;
-  thumbWidth: number;
-  thumbHeight: number;
-  displaySizeBytes: number;
-  thumbSizeBytes: number;
-};
-
-type PickerUploadAsset = {
-  uri: string;
-  width: number;
-  height: number;
-  mimeType?: string | null;
-  fileName?: string | null;
-  fileSize?: number | null;
-  file?: unknown | null;
-};
-
-type BinaryPickerSource = {
-  arrayBuffer: () => Promise<ArrayBuffer>;
-  size?: number;
-  type?: string;
-  name?: string;
-};
-
-function isBinaryPickerSource(value: unknown): value is BinaryPickerSource {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  return typeof (value as { arrayBuffer?: unknown }).arrayBuffer === "function";
-}
 
 type BaseProps = {
   rawEntryId: string;
@@ -101,33 +73,6 @@ const SORT_HOLD_MS = 120;
 const TAP_MOVE_TOLERANCE = 8;
 const REORDER_LOG_PREFIX = "[entry-photo:reorder]";
 const PREPARE_LOG_PREFIX = "[entry-photo:prepare]";
-const SUPPORTED_IMAGE_EXTENSIONS = new Set([
-  "jpg",
-  "jpeg",
-  "png",
-  "webp",
-  "heic",
-  "heif",
-  "gif",
-  "bmp",
-]);
-
-function getLongEdgeResize(width: number, height: number, maxLongEdge: number) {
-  if (width <= 0 || height <= 0) {
-    return { width: maxLongEdge, height: maxLongEdge };
-  }
-
-  const longEdge = Math.max(width, height);
-  if (longEdge <= maxLongEdge) {
-    return { width: Math.round(width), height: Math.round(height) };
-  }
-
-  const ratio = maxLongEdge / longEdge;
-  return {
-    width: Math.max(1, Math.round(width * ratio)),
-    height: Math.max(1, Math.round(height * ratio)),
-  };
-}
 
 function getPointerPageX(event: GestureResponderEvent | any): number {
   const directPageX = event?.nativeEvent?.pageX;
@@ -151,204 +96,13 @@ function getPointerPageX(event: GestureResponderEvent | any): number {
 async function buildPreparedImageAsset(
   asset: PickerUploadAsset
 ): Promise<PreparedImageAsset> {
-  const { uri, width, height } = asset;
-  const displayResize = getLongEdgeResize(width, height, 1600);
-  const thumbResize = getLongEdgeResize(width, height, 560);
-  const useWebBase64 = Platform.OS === "web";
-  const extension = asset.fileName?.trim().split(".").pop()?.toLowerCase() ?? "";
-
-  const mimeFromExtension = (value: string) => {
-    switch (value) {
-      case "jpg":
-      case "jpeg":
-        return "image/jpeg";
-      case "png":
-        return "image/png";
-      case "webp":
-        return "image/webp";
-      case "heic":
-        return "image/heic";
-      case "heif":
-        return "image/heif";
-      case "gif":
-        return "image/gif";
-      case "bmp":
-        return "image/bmp";
-      default:
-        return null;
-    }
-  };
-
-  const normalizeMimeType = (value: string | null | undefined) => {
-    const normalized = value?.trim().toLowerCase() ?? "";
-    return normalized || null;
-  };
-
-  const encodeArrayBufferToBase64 = (value: ArrayBuffer) => {
-    const bytes = new Uint8Array(value);
-    let binary = "";
-    const chunkSize = 0x8000;
-    for (let index = 0; index < bytes.length; index += chunkSize) {
-      const chunk = bytes.subarray(index, index + chunkSize);
-      binary += String.fromCharCode(...chunk);
-    }
-    return globalThis.btoa(binary);
-  };
-
-  const readDataUrlFromBinarySource = async (source: BinaryPickerSource) => {
-    let bytes: ArrayBuffer;
-    try {
-      bytes = await source.arrayBuffer();
-    } catch (error) {
-      throw new Error(
-        `picker_file_read:${error instanceof Error ? error.message : "onbekende fout"}`
-      );
-    }
-
-    if (bytes.byteLength === 0) {
-      throw new Error("picker_zero_size:Gekozen fotobestand is leeg.");
-    }
-
-    const sourceMime =
-      normalizeMimeType(asset.mimeType) ||
-      normalizeMimeType(source.type) ||
-      mimeFromExtension(extension) ||
-      "image/jpeg";
-    return `data:${sourceMime};base64,${encodeArrayBufferToBase64(bytes)}`;
-  };
-
-  const decodeBase64ToArrayBuffer = (value: string) => {
-    const base64 = value.includes(",") ? value.slice(value.indexOf(",") + 1) : value;
-    const normalized = base64.trim();
-    if (!normalized) {
-      throw new Error("Web-fotodata ontbreekt.");
-    }
-
-    const binary = globalThis.atob(normalized);
-    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-    return bytes.buffer;
-  };
-
-  const readManipulatedBytes = async (result: ImageManipulator.ImageResult) => {
-    if (useWebBase64 && typeof result.base64 === "string" && result.base64.trim()) {
-      return decodeBase64ToArrayBuffer(result.base64);
-    }
-
-    if (useWebBase64 && typeof result.uri === "string" && result.uri.startsWith("data:")) {
-      return decodeBase64ToArrayBuffer(result.uri);
-    }
-
-    if (!result.uri?.trim()) {
-      throw new Error("Gemapte fotodata ontbreekt.");
-    }
-
-    const response = await fetch(result.uri);
-    if (!response.ok) {
-      throw new Error(`Gemapte fotodata ophalen mislukte (${response.status}).`);
-    }
-
-    return response.arrayBuffer();
-  };
-
-  const normalizedUri = uri.trim();
-  const normalizedMimeType = normalizeMimeType(asset.mimeType);
-  const binarySource = isBinaryPickerSource(asset.file) ? asset.file : null;
-
-  let manipulateUri = normalizedUri;
-  if (useWebBase64) {
-    const hasSupportedExtension = SUPPORTED_IMAGE_EXTENSIONS.has(extension);
-    if (binarySource === null && !normalizedUri) {
-      throw new Error("picker_missing_source:Geen bruikbare fotobron ontvangen.");
-    }
-    if (normalizedMimeType && !normalizedMimeType.startsWith("image/") && !hasSupportedExtension) {
-      throw new Error("picker_unsupported_type:Gekozen bestand is geen ondersteunde afbeelding.");
-    }
-    if (!normalizedMimeType && !hasSupportedExtension && binarySource) {
-      throw new Error("picker_unsupported_type:Afbeeldingstype ontbreekt of wordt niet ondersteund.");
-    }
-
-    const binarySize =
-      typeof asset.fileSize === "number"
-        ? asset.fileSize
-        : typeof binarySource?.size === "number"
-          ? binarySource.size
-          : null;
-    if (typeof binarySize === "number" && binarySize === 0) {
-      throw new Error("picker_zero_size:Gekozen fotobestand is leeg.");
-    }
-
-    if (binarySource) {
-      manipulateUri = await readDataUrlFromBinarySource(binarySource);
-    } else if (!normalizedUri) {
-      throw new Error("picker_missing_uri:Fotobron mist een geldige URI.");
-    }
-  }
-
-  const saveOptions = {
-    compress: 0.8,
-    format: ImageManipulator.SaveFormat.JPEG,
-    ...(useWebBase64 ? { base64: true } : {}),
-  };
-  const thumbSaveOptions = {
-    compress: 0.75,
-    format: ImageManipulator.SaveFormat.JPEG,
-    ...(useWebBase64 ? { base64: true } : {}),
-  };
-
-  let display: ImageManipulator.ImageResult;
-  try {
-    display = await ImageManipulator.manipulateAsync(
-      manipulateUri,
-      [{ resize: displayResize }],
-      saveOptions
-    );
-  } catch (error) {
-    throw new Error(
-      `display_manipulate:${error instanceof Error ? error.message : "onbekende fout"}`
-    );
-  }
-
-  let thumb: ImageManipulator.ImageResult;
-  try {
-    thumb = await ImageManipulator.manipulateAsync(
-      manipulateUri,
-      [{ resize: thumbResize }],
-      thumbSaveOptions
-    );
-  } catch (error) {
-    throw new Error(`thumb_manipulate:${error instanceof Error ? error.message : "onbekende fout"}`);
-  }
-
-  let displayBytes: ArrayBuffer;
-  try {
-    displayBytes = await readManipulatedBytes(display);
-  } catch (error) {
-    throw new Error(`display_bytes:${error instanceof Error ? error.message : "onbekende fout"}`);
-  }
-
-  let thumbBytes: ArrayBuffer;
-  try {
-    thumbBytes = await readManipulatedBytes(thumb);
-  } catch (error) {
-    throw new Error(`thumb_bytes:${error instanceof Error ? error.message : "onbekende fout"}`);
-  }
-
-  return {
-    displayBytes,
-    thumbBytes,
-    displayWidth: display.width,
-    displayHeight: display.height,
-    thumbWidth: thumb.width,
-    thumbHeight: thumb.height,
-    displaySizeBytes: displayBytes.byteLength,
-    thumbSizeBytes: thumbBytes.byteLength,
-  };
+  return prepareEntryPhotoUploadAsset(asset);
 }
 
 function useEntryPhotos(rawEntryId: string, refreshToken: number) {
   const [photos, setPhotos] = useState<EntryPhotoAsset[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadPhotos = useCallback(async () => {
     const id = rawEntryId.trim();
@@ -361,9 +115,9 @@ function useEntryPhotos(rawEntryId: string, refreshToken: number) {
     try {
       const next = await fetchEntryPhotosByRawEntryId(id);
       setPhotos(next);
-      setError(null);
+      setLoadError(null);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Foto's laden mislukte.");
+      setLoadError(nextError instanceof Error ? nextError.message : "Foto's laden mislukte.");
     } finally {
       setLoading(false);
     }
@@ -377,8 +131,7 @@ function useEntryPhotos(rawEntryId: string, refreshToken: number) {
     photos,
     setPhotos,
     loading,
-    error,
-    setError,
+    loadError,
     loadPhotos,
   };
 }
@@ -490,10 +243,10 @@ export function EntryPhotoGallery({
     photos,
     setPhotos,
     loading,
-    error,
-    setError,
+    loadError,
   } = useEntryPhotos(rawEntryId, refreshToken);
 
+  const [actionError, setActionError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [refreshingPhotos, setRefreshingPhotos] = useState(false);
   const [reordering, setReordering] = useState(false);
@@ -521,6 +274,8 @@ export function EntryPhotoGallery({
   const primaryPhoto = photos[0] ?? null;
   const remainingSlots = Math.max(0, MAX_PHOTOS - photos.length);
   const galleryBusy = uploading || refreshingPhotos || reordering || deleting;
+  const galleryUnavailable = Boolean(loadError && !hasPhotos);
+  const visibleInlineError = actionError ?? null;
   const draggingPhoto =
     draggingPhotoId === null ? null : photos.find((photo) => photo.id === draggingPhotoId) ?? null;
   const previewSlots = useMemo(
@@ -718,18 +473,18 @@ export function EntryPhotoGallery({
               detail: retryDetail.detail,
               ...getEntryPhotoErrorDiagnostics(retryError),
             });
-            setError(retryDetail.detail);
+            setActionError(retryDetail.detail);
             return;
           }
         }
 
         applyConfirmedPhotos(previousPhotos);
-        setError(classified.detail);
+        setActionError(classified.detail);
       } finally {
         setReordering(false);
       }
     },
-    [applyConfirmedPhotos, logReorder, onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
+    [applyConfirmedPhotos, logReorder, onPhotosChanged, rawEntryId, refreshConfirmedPhotos]
   );
 
   const finishDrag = useCallback(
@@ -904,7 +659,7 @@ export function EntryPhotoGallery({
       }
 
       setUploading(true);
-      setError(null);
+      setActionError(null);
       try {
         for (const asset of assets) {
           const flowId = createClientFlowId("entry-photo");
@@ -927,14 +682,15 @@ export function EntryPhotoGallery({
               {
                 flowId,
                 rawEntryId,
-                pickerUri: asset.uri,
                 pickerMimeType: asset.mimeType?.trim() || null,
                 pickerFileName: asset.fileName?.trim() || null,
                 pickerFileSize: typeof asset.fileSize === "number" ? asset.fileSize : null,
                 pickerHasFile: isBinaryPickerSource(asset.file),
                 prepareStep: classifyEntryPhotoPrepareStep(nextError),
+                prepareCode: classifyEntryPhotoPrepareCode(nextError),
                 ...pickerDiagnostics,
                 ...runtimeDiagnostics,
+                appVersionHint: Constants.expoConfig?.version ?? null,
               }
             );
           }
@@ -959,12 +715,12 @@ export function EntryPhotoGallery({
                 : null,
           });
         }
-        setError(classified.detail);
+        setActionError(classified.detail);
       } finally {
         setUploading(false);
       }
     },
-    [logPrepare, onPhotosChanged, rawEntryId, refreshConfirmedPhotos, setError]
+    [logPrepare, onPhotosChanged, rawEntryId, refreshConfirmedPhotos]
   );
 
   const pickFromLibrary = useCallback(async () => {
@@ -973,9 +729,20 @@ export function EntryPhotoGallery({
       return;
     }
 
+    setActionError(null);
+    if (Platform.OS === "web") {
+      const selected = await openWebImageFilePicker({
+        limit: remainingSlots,
+        multiple: remainingSlots > 1,
+        capture: null,
+      });
+      await runUpload(selected);
+      return;
+    }
+
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError("Toegang tot je fotobibliotheek is nodig om foto's te kiezen.");
+      setActionError("Toegang tot je fotobibliotheek is nodig om foto's te kiezen.");
       return;
     }
 
@@ -1004,7 +771,7 @@ export function EntryPhotoGallery({
       }));
 
     await runUpload(selected);
-  }, [remainingSlots, runUpload, setError]);
+  }, [remainingSlots, runUpload]);
 
   const captureFromCamera = useCallback(async () => {
     setPickerVisible(false);
@@ -1012,9 +779,20 @@ export function EntryPhotoGallery({
       return;
     }
 
+    setActionError(null);
+    if (Platform.OS === "web") {
+      const selected = await openWebImageFilePicker({
+        limit: 1,
+        multiple: false,
+        capture: "environment",
+      });
+      await runUpload(selected);
+      return;
+    }
+
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      setError("Toegang tot je camera is nodig om een foto te maken.");
+      setActionError("Toegang tot je camera is nodig om een foto te maken.");
       return;
     }
 
@@ -1040,7 +818,7 @@ export function EntryPhotoGallery({
         file: "file" in first ? first.file ?? null : null,
       },
     ]);
-  }, [remainingSlots, runUpload, setError]);
+  }, [remainingSlots, runUpload]);
 
   const requestDeleteFromViewer = useCallback((photo: EntryPhotoAsset) => {
     if (galleryBusy) {
@@ -1064,11 +842,11 @@ export function EntryPhotoGallery({
       onPhotosChanged?.();
     } catch (nextError) {
       const classified = describeEntryPhotoError(nextError, "Foto verwijderen mislukte.");
-      setError(classified.detail);
+      setActionError(classified.detail);
     } finally {
       setDeleting(false);
     }
-  }, [deleteTarget, galleryBusy, onPhotosChanged, refreshConfirmedPhotos, setError]);
+  }, [deleteTarget, galleryBusy, onPhotosChanged, refreshConfirmedPhotos]);
 
   const pickerActions = useMemo<ConfirmSheetAction[]>(
     () => [
@@ -1122,12 +900,12 @@ export function EntryPhotoGallery({
           <MaterialIcons name="chevron-right" size={16} color={palette.mutedSoft} />
         </Pressable>
 
-        {error ? (
+        {visibleInlineError ? (
           <ThemedText
             type="caption"
             style={[styles.triggerError, { color: palette.destructiveSoftText }]}
           >
-            {error}
+            {visibleInlineError}
           </ThemedText>
         ) : null}
 
@@ -1143,7 +921,7 @@ export function EntryPhotoGallery({
     );
   }
 
-  if (!hasPhotos && !error) {
+  if (!hasPhotos && !galleryUnavailable) {
     return null;
   }
 
@@ -1183,7 +961,14 @@ export function EntryPhotoGallery({
           <StateBlock tone="loading" message="Foto's vernieuwen..." detail="Even geduld." />
         ) : null}
 
-        {error ? <StateBlock tone="error" message="Foto's zijn nu niet beschikbaar" detail={error} /> : null}
+        {galleryUnavailable ? (
+          <StateBlock
+            tone="error"
+            message="Foto's zijn nu niet beschikbaar"
+            detail={loadError}
+          />
+        ) : null}
+        {visibleInlineError ? <StateBlock tone="error" message={visibleInlineError} /> : null}
 
         {!loading && hasPhotos ? (
           <>

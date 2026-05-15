@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-05-15T07:14:56.400Z
-Source Commit: d07f19d
+Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
+Source Commit: 7a1cfac
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3384,7 +3384,7 @@ Er is een volledige Playwright end-user suite voor entry photo gallery flows. De
 - Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-29
+- Updated_at: 2026-05-15
 
 ```md
 ---
@@ -3394,8 +3394,8 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-29
-summary: "De follow-up task staat nu bovenaan `in_progress` en hardt de web prepare-flow verder: blob/file-achtige picker-bronnen worden explicieter gevalideerd, `upload_prepare` logt coarse runtime/picker context en gerichte unit-tests plus verify zijn groen. Handmatige Android productie-smoke blijft bewust open als laatste toestelbewijs."
+updated_at: 2026-05-15
+summary: "De regressie-follow-up is verbreed van kleine hardening naar een structurele web/Android fix: momentdetail gebruikt nu een browser File API fallback op web, materialiseert bytes direct in de prepare-pipeline, scheidt gallery-load errors van action-errors en logt alleen privacyveilige prepare-context. Productie upload/delete smoke is opnieuw geslaagd; lokale multi-add/delete smoke ligt klaar maar kon in deze sessie niet starten omdat `http://localhost:8081` niet draaide."
 tags: [moment-detail, photos, android, chrome, production, regression, diagnostics]
 workstream: app
 epic_id: null
@@ -3418,9 +3418,9 @@ De afgeronde task `docs/project/25-tasks/done/moment-detail-foto-upload-producti
 
 ## Gewenste uitkomst
 
-De moment detail foto-upload op Android Chrome faalt niet meer op fragiele web picker-assets. Als de prepare-fase toch stukloopt, logt de flow bronvast welke substap faalde en welke coarse picker/runtime-context daarbij hoorde, zonder gevoelige data of raw image data vast te leggen.
+De moment detail foto-upload op Android Chrome faalt niet meer op fragiele web picker-assets. Web/browser prepare werkt primair op direct gematerialiseerde bytes uit een echte `File`/blob-bron en niet langer op een langdurig hergebruikte picker-`uri`.
 
-De follow-up blijft klein: alleen de bestaande gallery-flow, prepare-diagnostiek en gerichte tests worden aangescherpt. De eerdere done-task blijft afgerond en dient als historische basis, niet als stil heropende task.
+Als de prepare-fase toch stukloopt, logt de flow bronvast welke prepare-stap faalde (`source_materialize`, `source_validate`, `display_prepare`, `thumb_prepare`) plus coarse picker/runtime-context, zonder raw image data, base64 of volledige lokale paden vast te leggen.
 
 ## User outcome
 
@@ -3428,7 +3428,7 @@ Een gebruiker kan op Android Chrome weer betrouwbaar een foto toevoegen aan een 
 
 ## Functional slice
 
-Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch onderscheiden, web-picker input robuuster voorbereiden, user-facing foutcopy rustig houden en gerichte testdekking toevoegen.
+Eén afgebakende regressieslice: web/Android picker-input structureel materialiseren, upload-prepare opsplitsen in duidelijke pipeline-stappen, browser File API fallback inzetten voor momentdetail-web en gallery-brede foutstates loskoppelen van één mislukte nieuwe upload.
 
 ## Entry / exit
 
@@ -3450,16 +3450,16 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 
 ## UX / copy
 
-- User-facing foutcopy blijft rustig en ongewijzigd: `Foto voorbereiden mislukte.`
-- Bestaande state block `Foto's zijn nu niet beschikbaar` blijft het surface-level error frame.
+- User-facing prepare-foutcopy voor Android/web read-failures wordt rustig en expliciet: `Foto voorbereiden mislukte. Kies de foto opnieuw of download hem eerst naar je toestel.`
+- `Foto's zijn nu niet beschikbaar` wordt alleen nog gebruikt wanneer de gallery zelf niet geladen kan worden, niet bij één mislukte nieuwe upload.
 - Geen redesign van gallery, picker of moment detail UI.
 
 ## Data / IO
 
 - Input: picker asset met `uri`, `mimeType`, `fileName`, `fileSize`, dimensies en optioneel web `file`/blob-achtige bron.
-- Output: display/thumb bytes plus prepare-diagnostiek met `prepareStep`, picker bronclassificatie, uri-scheme, extension, filesize-bucket en coarse runtime context.
-- Opslag/API/service-impact: primair `components/journal/entry-photo-gallery.tsx` en `src/lib/entry-photo-gallery/flow.ts`; `services/entry-photos.ts` alleen bij bewezen noodzaak.
-- Statussen: bestaande faseclassificatie blijft gelijk; alleen diagnostische details binnen `upload_prepare` worden verbreed.
+- Output: display/thumb bytes plus prepare-diagnostiek met `prepareStep`, `prepareCode`, picker bronclassificatie, uri-scheme, extension, filesize-bucket, browser/OS-context, service worker state en app-version hint indien beschikbaar.
+- Opslag/API/service-impact: primair `components/journal/entry-photo-gallery.tsx`, `src/lib/entry-photo-gallery/prepare.ts`, `src/lib/entry-photo-gallery/flow.ts` en `src/lib/entry-photo-gallery/web-picker.ts`; `services/entry-photos.ts` bleef ongewijzigd.
+- Statussen: bestaande uploadfasen blijven gelijk, maar `upload_prepare` onderscheidt nu expliciet pipeline-step en failure-code.
 
 ## Waarom nu
 
@@ -3471,7 +3471,9 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 
 - Nieuwe follow-up task aanmaken en koppelen aan de relevante done-tasks.
 - Prepare diagnostics uitbreiden met veilige coarse metadata en vaste log-prefix.
-- Kleine hardening voor web picker-assets in de bestaande gallery-flow.
+- Structurele web/Android hardening voor fragiele picker references in de bestaande gallery-flow.
+- Web-only browser File API fallback toevoegen voor momentdetail upload/camera-keuze.
+- Error-state scheiding: gallery-load versus failed add/delete/reorder.
 - Gerichte unit-tests voor Android/web picker edge cases.
 - Taskfile bijwerken met diagnose, fix, verify en open handmatige Android smoke.
 
@@ -3488,7 +3490,7 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 - Behandel dit als nieuwe regressie-follow-up task, niet als stille heropening van de eerdere done-task.
 - Bevestig exact welke `upload_prepare`-substap faalt op Android/web picker-assets.
 - Voeg minimale, productie-veilige diagnostiek toe zonder raw image data.
-- Bouw alleen een kleine prepare-hardening als de oorzaak of waarschijnlijke oorzaak duidelijk is.
+- Bouw een structurele prepare-fix zodra bevestigd is dat de webflow te fragiel op picker-`uri` vertrouwt.
 - Voeg of update gerichte tests; laat bredere web/PWA-cache of uploadarchitectuur buiten scope.
 
 ## Expliciete user requirements / detailbehoud
@@ -3533,46 +3535,53 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 ## Status per requirement
 
 - [x] Nieuwe regressie-follow-up task aangemaakt en gekoppeld aan eerdere done-task — status: gebouwd
-- [x] Exacte `upload_prepare`-substap bronvast onderscheiden op Android/web picker-assets — status: in code aanwezig maar nog user-review nodig
+- [x] Exacte `upload_prepare`-substap bronvast onderscheiden op Android/web picker-assets — status: gebouwd
 - [x] Veilige coarse prepare diagnostics toegevoegd — status: gebouwd
-- [x] Kleine web picker hardening gebouwd zonder gallery/service redesign — status: gebouwd
+- [x] Structurele web/Android prepare-fix gebouwd zonder gallery/service redesign — status: gebouwd
+- [x] Browser File API fallback voor momentdetail-web toegevoegd — status: gebouwd
+- [x] Gallery-wide unavailable state niet meer gebruikt voor één mislukte nieuwe upload — status: gebouwd
 - [x] Gerichte unit-tests voor Android/web picker edge cases toegevoegd — status: gebouwd
-- [x] Verify gedraaid en handmatige Android smoke expliciet open gelaten — status: gebouwd
+- [x] Volledige verify gedraaid en handmatige Android smoke expliciet open gelaten — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
-- `upload_prepare` logt nu met vaste prefix `[entry-photo:prepare]` een coarse diagnostisch pakket met `flowId`, prepare-substep, picker bronclassificatie, uri-scheme, mime, extension, filesize-bucket, browser/OS-context en `hasServiceWorkerController`.
-- Web prepare accepteert nu ook blob/file-achtige picker-bronnen via `arrayBuffer()` in plaats van alleen `instanceof File`.
-- De prepare-flow valideert nu explicieter op ontbrekende bron, zero-size assets en unsupported/ontbrekende image-typen voordat image manipulation start.
-- Web byte-reading decodeert indien mogelijk direct uit `base64` of `data:` URIs zodat `fetch(result.uri)` niet langer het enige pad is.
+- De prepare-flow is opgesplitst in expliciete stappen: `picker_selected`, `source_materialize`, `source_validate`, `display_prepare`, `thumb_prepare`, `upload_ready`.
+- `upload_prepare` logt nu met vaste prefix `[entry-photo:prepare]` een coarse diagnostisch pakket met `flowId`, `prepareStep`, `prepareCode`, picker bronclassificatie, uri-scheme, mime, extension, filesize-bucket, browser/OS-context, `hasServiceWorkerController` en app-version hint.
+- Momentdetail gebruikt op web een eigen browser File API route (`<input type="file" accept="image/*">`) voor library en camera, zodat we direct met een echte `File` werken.
+- Web prepare materialiseert bytes nu direct via `arrayBuffer()` en bouwt daaruit een eigen stabiele object URL voor image preprocessing.
+- Gallery-load errors en action-errors zijn gescheiden, zodat bestaande foto's zichtbaar blijven wanneer één nieuwe add faalt.
 
 ## Uitvoerblokken / fasering
 
 - [x] Blok 1: taskflow en regressiecontext vastleggen.
-- [x] Blok 2: prepare diagnostics en kleine hardening implementeren.
-- [x] Blok 3: gerichte tests, verify en taskfile-updates afronden.
+- [x] Blok 2: structurele web/browser prepare-pipeline en fallback implementeren.
+- [x] Blok 3: gerichte tests, volledige verify en taskfile-updates afronden.
 
 ## Concrete checklist
 
 - [x] Taskfile aangemaakt en bovenaan `in_progress` lane gezet.
 - [x] Prepare diagnostics/helpers uitgebreid met web picker context.
-- [x] Gallery prepare-flow gehard voor file/blob-achtige web assets.
-- [x] Unit-tests uitgebreid voor prepare-step en picker edge cases.
+- [x] Gallery prepare-flow structureel omgezet naar vroege byte-materialisatie voor web assets.
+- [x] Browser File API fallback toegevoegd voor momentdetail-web upload/camera.
+- [x] Gallery/action error states gescheiden zodat bestaande foto's zichtbaar blijven.
+- [x] Unit-tests uitgebreid voor prepare-step, prepare-code en web source-materialisatie.
 - [x] Verify en taskflow/docs scripts gedraaid.
-- [x] Taskfile bijgewerkt met diagnose, fix en open handmatige smoke.
+- [x] Taskfile bijgewerkt met definitief verify-bewijs en open handmatige smoke.
 
 ## Acceptance criteria
 
 - [x] `upload_prepare` errors onderscheiden minimaal de relevante substap of validatiefout op web/Android picker-input.
 - [x] Productie-veilige prepare logging bevat geen raw image data, maar wel voldoende picker/runtime-context om Android regressies bronvast te maken.
-- [x] Web picker-assets met bruikbare file/blob bron vertrouwen niet meer blind op URI-only gedrag.
-- [x] User-facing foutcopy blijft rustig en gallery-scope blijft ongewijzigd.
+- [x] Web prepare werkt primair met stabiele bytes/object URL vanuit `File`/blob, niet met fragiele picker-URI-only aannames.
+- [x] Browser File API fallback is aanwezig voor momentdetail-web wanneer webpicker-bronnen fragiel zijn.
+- [x] Bestaande foto's verdwijnen niet bij een failed upload; gallery-wide unavailable state wordt niet gebruikt voor één mislukte add.
+- [x] User-facing foutcopy blijft rustig en niet-technisch.
 - [x] Gerichte unit-tests en verify zijn groen; handmatige Android smoke staat expliciet nog open als bewijsstap.
 
 ## Blockers / afhankelijkheden
 
 - Handmatige Android productie-smoke op echt toestel blijft afhankelijk van user/device-toegang.
-- Geen andere blockers bekend bij start.
+- Lokale browser multi-add/delete smoke vereist een draaiende app op `http://localhost:8081`; in deze sessie gaf `curl` daarop `connection refused`, dus die runtime-check kon niet non-interactief worden afgerond zonder handmatige dev-serverstart.
 
 ## Verify / bewijs
 
@@ -3582,6 +3591,13 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 - ✅ `npm run taskflow:verify`
 - ✅ `npm run docs:bundle`
 - ✅ `npm run docs:bundle:verify`
+- ✅ `GALLERY_E2E_PROD=1 npm run test:e2e:gallery:prod-upload`
+  - geslaagd op `2026-05-15`
+  - upload + cleanup op de productie fixture-entry bevestigd
+- ⚠️ `tests/e2e/gallery-full.spec.mjs`
+  - nieuwe lokale test toegevoegd voor twee uploads + twee deletes op een seeded fixture
+  - seed-script draaide succesvol op `2026-05-15`
+  - uitvoering blokkeerde daarna op ontbrekende lokale app-server: `http://localhost:8081` gaf `connection refused`
 - Handmatige productie-smoke blijft open en noteert per run:
   - slaagt/faalt
   - foutcopy
@@ -3594,33 +3610,43 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 ## Diagnose / bevestigde oorzaak
 
 - `bevestigd`: de zichtbare foutcopy blijft gekoppeld aan `upload_prepare`; de follow-up richt zich dus bewust op de client-side prepare-laag.
-- `bevestigd`: de web prepare-flow vertrouwde nog te veel op twee fragiele aannames tegelijk:
-  - web picker-bronnen moesten netjes door een `instanceof File` guard vallen
-  - byte-reading kon uiteindelijk terugvallen op `fetch(result.uri)` als impliciet herstelpad
-- `bevestigd`: de eerdere task had al `display_*` en `thumb_*` substappen, maar onderscheidde nog niet expliciet vroege picker-validatiefouten zoals ontbrekende bron, zero-size of unsupported type.
+- `bevestigd`: de web/Android flow las de echte bytes niet vroeg genoeg veilig vast; verdere prepare-stappen konden daardoor alsnog leunen op een verlopen of onleesbare picker-reference.
+- `bevestigd`: Google Photos / Android picker / cloud-backed assets werden in de webflow nog te veel behandeld alsof de picker-`uri` of latere manipulator-`uri` stabiel genoeg was voor vervolgreads.
+- `bevestigd`: de oude component gebruikte één generieke `error` state voor gallery-load én nieuwe upload failures, waardoor één mislukte add de gallery-brede melding `Foto's zijn nu niet beschikbaar` kon tonen.
+- `bevestigd`: de eerdere task had al `display_*` en `thumb_*` substappen, maar onderscheidde nog niet expliciet vroege pipeline-fases zoals `source_materialize` en `source_validate`.
 - `onbevestigd`: de exacte echte productie-substap op het Android toestel van `2026-04-28` blijft zonder nieuwe toestel-smoke/logcapture nog onbewezen; de code logt die substap nu wel bronvaster zodra de flow opnieuw wordt doorlopen.
 
 ## Fix
 
 - `src/lib/entry-photo-gallery/flow.ts`
-  - nieuwe pure helpers voor uri-scheme, extension, filesize-bucket, picker source kind, prepare-step classificatie en coarse runtime diagnostics
-  - `EntryPhotoErrorDiagnostics` uitgebreid met prepare/runtimevelden voor veilige bronvaste logging
+  - prepare-diagnostiek onderscheidt nu `prepareStep` en `prepareCode`
+  - rustige user copy voor `picker_file_read` en vergelijkbare web read-failures wordt centraal gemapt
+  - `EntryPhotoErrorDiagnostics` uitgebreid met prepare/runtimevelden en app-version hint voor veilige bronvaste logging
+- `src/lib/entry-photo-gallery/prepare.ts`
+  - nieuwe prepare-helper materialiseert web `File`/blob bytes direct, bouwt daaruit een eigen stabiele object URL en laat alle verdere preprocessing daarop draaien
+  - validatie voor zero-size, unsupported type en missing source gebeurt vóór image manipulation
+  - display/thumb preprocessing gooit nu structurele `EntryPhotoPrepareError` waarden met expliciete step/code in plaats van losse message parsing
+- `src/lib/entry-photo-gallery/web-picker.ts`
+  - nieuwe web-only browser File API route voor library/camera-selectie in momentdetail zonder extra dependency
 - `components/journal/entry-photo-gallery.tsx`
-  - web prepare accepteert nu blob/file-achtige picker-bronnen via `arrayBuffer()` als primaire bron
-  - expliciete validatie toegevoegd voor missing source, zero-size en unsupported/ontbrekende image types
-  - prepare-fouten krijgen nu coarse picker/runtime-diagnostics en worden gelogd onder `[entry-photo:prepare]`
-  - web byte-reading decodeert waar mogelijk direct uit `base64` of `data:` URIs
+  - web gebruikt nu de browser File API fallback in plaats van de Expo web picker-route voor momentdetail photo add/camera
+  - action errors zijn gescheiden van gallery-load errors, zodat bestaande foto's zichtbaar blijven bij een failed add/delete/reorder
+  - prepare-fouten krijgen nu coarse picker/runtime-diagnostics en worden gelogd onder `[entry-photo:prepare]` zonder raw uri of lokale paden
 - `tests/unit/entry-photo-gallery-flow.test.ts`
-  - helpertests toegevoegd voor blob/file-like Android web assets, uri-only/missing source, filesize-buckets en prepare-step classificatie
+  - helpertests toegevoegd voor file-like en blob-like materialisatie, uri-only read-failure, zero-size, unsupported mime, prepare-step/code classificatie en rustige prepare-copy
+- `tests/e2e/gallery-full.spec.mjs`
+  - lokale regressietest toegevoegd die een mislukte `File.arrayBuffer()` simuleert en borgt dat bestaande foto's zichtbaar blijven zonder gallery-wide unavailable state
+  - extra lokale smoke toegevoegd voor twee uploads + twee deletes op een seeded fixture-entry
 
 ## Reconciliation voor afronding
 
-- Oorspronkelijk plan: nieuwe regressie-follow-up task, bronvaste prepare-diagnostiek, kleine web-picker hardening en gerichte tests.
-- Toegevoegde verbeteringen: prepare-logging kreeg ook coarse runtime/build-context (`browser`, `OS`, `hasServiceWorkerController`) zodat stale-bundle vermoedens later sneller uitgesloten kunnen worden.
+- Oorspronkelijk plan: nieuwe regressie-follow-up task, bronvaste prepare-diagnostiek, structurele web-picker fix en gerichte tests.
+- Toegevoegde verbeteringen: browser File API fallback, expliciete prepare step/code modellering, gescheiden gallery/action error states en coarse runtime/build-context (`browser`, `OS`, `hasServiceWorkerController`, `appVersionHint`).
 - Afgerond:
-  - nieuwe follow-up task en lane-sortering
   - prepare diagnostics/helpers
-  - web picker hardening
+  - structurele web/browser byte-materialisatie
+  - browser File API fallback voor momentdetail-web
+  - gallery/action error-state scheiding
   - gerichte unit-tests
   - lint, typecheck, taskflow en docs verify
 - Open / blocked:
@@ -3633,6 +3659,8 @@ Eén afgebakende regressieslice: exacte `upload_prepare`-substap diagnostisch on
 - `docs/project/25-tasks/done/moment-entry-fotos-galerij-beveiligde-upload.md`
 - `components/journal/entry-photo-gallery.tsx`
 - `src/lib/entry-photo-gallery/flow.ts`
+- `src/lib/entry-photo-gallery/prepare.ts`
+- `src/lib/entry-photo-gallery/web-picker.ts`
 
 
 ## Commits

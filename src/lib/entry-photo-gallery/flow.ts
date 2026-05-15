@@ -1,4 +1,10 @@
 import { reorderGalleryItems } from "./sorting";
+import {
+  EntryPhotoPrepareError,
+  type EntryPhotoPrepareCode,
+  type EntryPhotoPrepareStep,
+  isBinaryPickerSource,
+} from "./prepare";
 
 export type EntryPhotoPhase =
   | "upload_prepare"
@@ -34,12 +40,14 @@ export type EntryPhotoErrorDiagnostics = {
   pickerFileExtension?: string | null;
   pickerFileSizeBucket?: string | null;
   pickerSourceKind?: string | null;
-  prepareStep?: string | null;
+  prepareStep?: EntryPhotoPrepareStep | null;
+  prepareCode?: EntryPhotoPrepareCode | null;
   runtimePlatform?: string | null;
   runtimeOs?: string | null;
   runtimeBrowser?: string | null;
   runtimeBrowserMajor?: string | null;
   hasServiceWorkerController?: boolean | null;
+  appVersionHint?: string | null;
   supabaseCode?: string | null;
   supabaseMessage?: string | null;
   supabaseDetails?: string | null;
@@ -53,6 +61,7 @@ export type EntryPhotoRuntimeDiagnostics = Pick<
   | "runtimeBrowser"
   | "runtimeBrowserMajor"
   | "hasServiceWorkerController"
+  | "appVersionHint"
 >;
 
 export type EntryPhotoPickerDiagnostics = Pick<
@@ -99,7 +108,7 @@ const RETRYABLE_REORDER_PATTERNS = [
   "fotovolgorde bevat onbekende",
 ];
 
-const KNOWN_PREPARE_STEPS = new Set([
+const KNOWN_PREPARE_CODES = new Set<EntryPhotoPrepareCode>([
   "picker_missing_source",
   "picker_missing_uri",
   "picker_unsupported_type",
@@ -197,37 +206,76 @@ export function classifyEntryPhotoPickerSource(input: {
   file: unknown;
   uri?: string | null;
 }): string {
-  const candidate = input.file;
-  if (candidate && typeof candidate === "object") {
-    const record = candidate as {
-      arrayBuffer?: unknown;
-      slice?: unknown;
-      size?: unknown;
-      type?: unknown;
-      name?: unknown;
-    };
-
-    const hasBinaryInterface =
-      typeof record.arrayBuffer === "function" || typeof record.slice === "function";
-    if (hasBinaryInterface && typeof record.name === "string") {
-      return "file_like";
-    }
-    if (hasBinaryInterface || typeof record.size === "number" || typeof record.type === "string") {
-      return "blob_like";
-    }
+  const candidate = input.file as
+    | {
+        size?: unknown;
+        type?: unknown;
+        name?: unknown;
+      }
+    | null;
+  if (isBinaryPickerSource(candidate) && typeof candidate.name === "string") {
+    return "file_like";
+  }
+  if (isBinaryPickerSource(candidate) || typeof candidate?.size === "number" || typeof candidate?.type === "string") {
+    return "blob_like";
   }
 
   return (input.uri ?? "").trim() ? "uri_only" : "missing";
 }
 
-export function classifyEntryPhotoPrepareStep(error: unknown): string | null {
+export function classifyEntryPhotoPrepareStep(error: unknown): EntryPhotoPrepareStep | null {
+  if (error instanceof EntryPhotoPrepareError) {
+    return error.step;
+  }
+
   const message = errorMessage(error);
   if (!message) {
     return null;
   }
 
   const candidate = message.split(":")[0]?.trim().toLowerCase() ?? "";
-  return KNOWN_PREPARE_STEPS.has(candidate) ? candidate : null;
+  if (
+    candidate === "picker_selected" ||
+    candidate === "source_materialize" ||
+    candidate === "source_validate" ||
+    candidate === "display_prepare" ||
+    candidate === "thumb_prepare" ||
+    candidate === "upload_ready"
+  ) {
+    return candidate;
+  }
+  return null;
+}
+
+export function classifyEntryPhotoPrepareCode(error: unknown): EntryPhotoPrepareCode | null {
+  if (error instanceof EntryPhotoPrepareError) {
+    return error.code;
+  }
+
+  const message = errorMessage(error);
+  if (!message) {
+    return null;
+  }
+
+  const candidate = message.split(":").pop()?.trim().toLowerCase() ?? "";
+  return KNOWN_PREPARE_CODES.has(candidate as EntryPhotoPrepareCode)
+    ? (candidate as EntryPhotoPrepareCode)
+    : null;
+}
+
+function getPrepareUserMessage(code: EntryPhotoPrepareCode | null) {
+  switch (code) {
+    case "picker_file_read":
+    case "picker_missing_source":
+    case "picker_missing_uri":
+      return "Foto voorbereiden mislukte. Kies de foto opnieuw of download hem eerst naar je toestel.";
+    case "picker_zero_size":
+      return "Foto voorbereiden mislukte. Kies een andere foto en probeer het opnieuw.";
+    case "picker_unsupported_type":
+      return "Deze foto wordt niet ondersteund. Kies een andere foto en probeer het opnieuw.";
+    default:
+      return null;
+  }
 }
 
 export function getEntryPhotoRuntimeDiagnostics(): EntryPhotoRuntimeDiagnostics {
@@ -326,8 +374,19 @@ export function describeEntryPhotoError(
   const match = rawMessage.match(PHASE_PREFIX);
   const phase = (match?.[1] ?? null) as EntryPhotoPhase | null;
   const stripped = match ? rawMessage.replace(PHASE_PREFIX, "").trim() : rawMessage;
-  const label = phase ? PHASE_LABELS[phase] : fallbackMessage;
-  const suffix = stripped && stripped !== label ? ` ${stripped}` : "";
+  const diagnostics = getEntryPhotoErrorDiagnostics(error);
+  const label =
+    phase === "upload_prepare"
+      ? getPrepareUserMessage(diagnostics.prepareCode ?? null) ?? PHASE_LABELS.upload_prepare
+      : phase
+        ? PHASE_LABELS[phase]
+        : fallbackMessage;
+  const suffix =
+    phase === "upload_prepare"
+      ? ""
+      : stripped && stripped !== label
+        ? ` ${stripped}`
+        : "";
 
   return {
     phase,
@@ -337,7 +396,7 @@ export function describeEntryPhotoError(
       RETRYABLE_REORDER_PATTERNS.some((pattern) =>
         stripped.toLowerCase().includes(pattern)
       ),
-    diagnostics: getEntryPhotoErrorDiagnostics(error),
+    diagnostics,
   };
 }
 

@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-05-15T07:14:56.400Z
-Source Commit: d07f19d
+Build Timestamp (UTC): 2026-05-15T08:09:13.605Z
+Source Commit: 7a1cfac
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -1225,6 +1225,7 @@ sort_order: 2
 
 
 
+
 # Dark/light mode theming (text + background) zonder refresh fix
 
 ## Probleem / context
@@ -1372,6 +1373,8 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 - 2026-04-29T00:07:02+02:00 — fix: make theme surfaces react instantly on dark-light switch
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-15T09:40:13+02:00 — fix: make web theme switching reactive
 ## Relevante links
 
 - `theme/tokens.ts`
