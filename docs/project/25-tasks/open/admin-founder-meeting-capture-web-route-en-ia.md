@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 13
+sort_order: 2
 ---
+
 
 
 
@@ -177,3 +178,5 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes

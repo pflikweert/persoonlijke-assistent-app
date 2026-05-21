@@ -2,8 +2,8 @@
 
 # Budio Agent Workflow and Docs Tooling
 
-Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
-Source Commit: 1b70d37
+Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
+Source Commit: b90e144
 
 Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -1207,6 +1207,7 @@ Voor AI-gedrag, prompting en evaluatie:
 - Refactor bestaande code alleen binnen de aangeraakte flow; grotere opruimingen krijgen een eigen task.
 - Nieuwe complexe helperlogica krijgt unit-tests; simpele render/glue-code hoeft niet standaard getest te worden.
 - Bij interactieve UI is `lint`/`typecheck` niet genoeg als de wijziging gedrag raakt: draai een relevante smoke-test of leg expliciet vast waarom dat nog niet kan.
+- Bij interactieve regressies of upload/browser-flows: bewijs idealiter zowel een happy path als minimaal één belangrijke unhappy/failure-state, tenzij de taak expliciet kleiner is en dat onderbouwd is vastgelegd.
 - 80% coverage is de KPI; nieuwe complexe helpermodules mikken direct op minimaal 80% coverage, zonder legacy code in één keer als gate te blokkeren.
 - Hypothese-first is toegestaan, maar advies pas na bronbevestiging:
   - formuleer bij onduidelijkheid eerst een expliciete hypothese
@@ -1455,6 +1456,17 @@ Na relevante wijzigingen expliciet melden welke extra stap nodig is:
 - `supabase/migrations/**` gewijzigd -> lokale `db push`/`db reset` + eventuele type-regeneratie
 - geen relevante runtime-impact -> expliciet melden dat niets extra's nodig is
 
+Aanvulling voor lokale runtime-verificatie:
+
+- als gevraagd runtime-bewijs, smoke of browserverificatie anders ontbreekt, mag Codex de kleinste benodigde lokale app-target zelf starten of herstarten
+- kies dan de lichtste passende stap:
+  - bestaande app herladen/herstarten als dat genoeg is
+  - anders lokale web/app-start voor het relevante target
+- meld daarna expliciet:
+  - welk commando is gebruikt
+  - welk lokaal target nu draait
+  - of het process nog actief blijft na de sessie
+
 Standaarduitvoering:
 
 - Bij `supabase/migrations/**` wijzigingen voert Codex deze lokale DB-stap standaard zelf uit (`npx supabase db push --local` of, indien nodig, `npx supabase db reset`) zonder extra gebruikersprompt.
@@ -1514,15 +1526,15 @@ Voer na relevante wijzigingen uit:
 
 # Dev server policy
 
-- Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask.
-- Assume the local dev server is already running.
+- Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask, of tenzij lokaal runtime-bewijs anders ontbreekt en de sessie al expliciet toestemming geeft om die lokale start/restart zelf te doen.
+- Assume the local dev server is already running, behalve wanneer een gevraagde smoke-check of runtime-verify concreet laat zien dat het target niet beschikbaar is.
 - Voor deze repo is `http://localhost:8081` de standaard lokale web dev/smoke-test target wanneer geen andere lokale webtarget is opgegeven.
 - Never prefix local dev-server commands with `CI=1`.
 - For validation, use one-shot commands only, such as:
   - `npm run lint`
   - `npm run typecheck`
   - project verify scripts
-- If a live server is required, tell me the exact command to run manually instead of running it yourself (example: `npx expo start --web --localhost`).
+- Als een live server alleen nodig zou zijn buiten gegeven toestemming of buiten lokale verificatiescope, geef dan het exacte handmatige commando in plaats van hem zelf te starten.
 
 ## VS Code plugin workflow (Budio Workspace)
 

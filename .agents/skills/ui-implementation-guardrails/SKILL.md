@@ -24,10 +24,13 @@ Lees alleen wat nodig is:
 7. Houd copy compact: liever hero + action + notice dan dubbele uitleg.
 8. Maak background-modi en surfaces mode-aware; dark mode is nooit de impliciete default voor light mode.
 9. Verifieer met relevante design refs en een gerichte dark + light runtime/smoke-check voordat je “klaar” zegt.
-10. Voor deze repo is `http://localhost:8081` de standaard lokale web smoke-test target wanneer een bestaande lokale web devserver draait en geen andere target is opgegeven.
-11. Bij interactieve UI met complexe state: houd de zichtbare component vooral rendering + wiring; zet branchy berekeningen in helpers en lifecycle-heavy eventlogica in een kleine hook waar dat begrip of testbaarheid verbetert.
-12. Technische complexiteit mag niet lekken naar extra UI-copy, surfaces of controls; versimpel de zichtbare UI waar mogelijk.
-13. Bij gedrag/interactie: draai relevante unit-tests voor helperlogica en een smoke-test voor de kerninteractie, of leg expliciet vast waarom smoke nog niet mogelijk is.
+10. Voor deze repo is `http://localhost:8081` de standaard lokale web smoke-test target wanneer geen andere target is opgegeven.
+11. Als gevraagd runtime-bewijs anders ontbreekt en de lokale web-app niet draait, mag je de kleinste benodigde lokale app-start of restart zelf doen; meld daarna commando, target en of het process nog blijft draaien.
+12. Wacht in browser-smokes eerst op een zichtbare stabiele baseline voordat je counts, skips of vervolgasserties bepaalt.
+13. Bij interactieve regressies bewijs je idealiter zowel het belangrijkste happy path als één relevante unhappy/failure-state, tenzij de taak aantoonbaar kleiner is.
+14. Bij interactieve UI met complexe state: houd de zichtbare component vooral rendering + wiring; zet branchy berekeningen in helpers en lifecycle-heavy eventlogica in een kleine hook waar dat begrip of testbaarheid verbetert.
+15. Technische complexiteit mag niet lekken naar extra UI-copy, surfaces of controls; versimpel de zichtbare UI waar mogelijk.
+16. Bij gedrag/interactie: draai relevante unit-tests voor helperlogica en een smoke-test voor de kerninteractie, of leg expliciet vast waarom smoke nog niet mogelijk is.
 
 # Niet doen
 - Geen redesign zonder expliciete opdracht.

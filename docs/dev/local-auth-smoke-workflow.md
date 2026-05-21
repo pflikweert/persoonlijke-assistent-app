@@ -87,9 +87,15 @@ Guardrails:
 ## Aanbevolen smoke test-volgorde voor UI
 
 1. `npm run verify:local-auth-login`
-2. open app op lokale web-url
+2. bevestig dat de lokale app-url bereikbaar is; als gevraagd runtime-bewijs anders ontbreekt mag de agent de kleinste benodigde lokale app-target zelf starten of herstarten
 3. maak/bekijk entries
 4. voer de specifieke feature smoke uit (bijv. entry detail galerij/audio)
+
+Leg bij zo'n lokale start/restart kort vast:
+
+- commando
+- target-url
+- of het process nog draait na de check
 
 ## Galerij smoke checklist (entry detail)
 
@@ -99,3 +105,4 @@ Guardrails:
 - twee+ foto’s: swipe + correcte teller/index
 - fullscreen close rechtsboven overlay
 - delete-actie onderin + confirm op voorgrond
+- bij uploadregressies: bewijs niet alleen add/remove happy path, maar ook een relevante failure-state waarbij bestaande gallery-content zichtbaar blijft

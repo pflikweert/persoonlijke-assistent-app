@@ -2,8 +2,8 @@
 
 # ChatGPT Project Context
 
-Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
-Source Commit: 1b70d37
+Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
+Source Commit: b90e144
 
 Doel: uitsluitend bedoeld als uploadbare bootstrap/startcontext voor ChatGPT Projects, afgeleid van canonieke projectdocs.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3321,12 +3321,12 @@ De repo bevat een operationele epic-laag onder `docs/project/24-epics/**`, taskf
 ### Kwaliteit
 - `npm run lint`
 - `npm run typecheck`
-- Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask.
-- Assume the local dev server is already running.
+- Never run long-lived dev servers like `npx expo start`, `npm run dev`, `vite`, `next dev`, `supabase functions serve`, or similar unless I explicitly ask, of tenzij lokaal runtime-bewijs anders ontbreekt en de sessie al expliciet toestemming geeft om die lokale start/restart zelf te doen.
+- Assume the local dev server is already running, behalve wanneer een gevraagde smoke-check of runtime-verify concreet laat zien dat het target niet beschikbaar is.
 - Voor deze repo is `http://localhost:8081` de standaard lokale web dev/smoke-test target wanneer geen andere lokale webtarget is opgegeven.
 - Never prefix local dev-server commands with `CI=1`.
 - For validation, use one-shot commands only, such as:
 - `npm run lint`
 - `npm run typecheck`
 - project verify scripts
-- If a live server is required, tell me the exact command to run manually instead of running it yourself (example: `npx expo start --web --localhost`).
+- Als een live server alleen nodig zou zijn buiten gegeven toestemming of buiten lokale verificatiescope, geef dan het exacte handmatige commando in plaats van hem zelf te starten.

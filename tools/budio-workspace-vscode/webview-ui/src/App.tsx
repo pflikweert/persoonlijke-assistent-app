@@ -845,71 +845,99 @@ export function App(): React.JSX.Element {
 
             {activeView === 'list' ? (
               <div className="list-shell">
-	                <div className="list-table-shell">
-	                  <table>
-	                    <thead>
-	                      <tr>
-	                        <th>{renderSortHeader('title', 'Titel')}</th>
-	                        <th>Domein</th>
-	                        <th>{renderSortHeader('status', 'Status')}</th>
-	                        <th>{renderSortHeader('priority', 'Priority')}</th>
-	                        <th>{renderSortHeader('due', 'Last change')}</th>
-	                        <th>{renderSortHeader('checklist', 'Checklist')}</th>
-	                        <th>Volgorde</th>
-	                      </tr>
-	                    </thead>
-	                    <tbody>
-	                      {listCards.map((card) => {
-	                        const isSelected = selectedTask?.id === card.id;
-	                        const agentLabel = activeAgentLabel(card);
-	                        return (
-                        <tr
+                <div className="list-table-shell">
+                  <div className="list-header-row list-grid-row" role="row">
+                    <div className="list-cell list-cell-title list-cell-header" role="columnheader">
+                      {renderSortHeader('title', 'Titel')}
+                    </div>
+                    <div className="list-cell list-cell-domain list-cell-header list-cell-center" role="columnheader">
+                      Domein
+                    </div>
+                    <div className="list-cell list-cell-status list-cell-header list-cell-center" role="columnheader">
+                      {renderSortHeader('status', 'Status')}
+                    </div>
+                    <div className="list-cell list-cell-priority list-cell-header list-cell-center" role="columnheader">
+                      {renderSortHeader('priority', 'Priority')}
+                    </div>
+                    <div className="list-cell list-cell-last-change list-cell-header list-cell-center" role="columnheader">
+                      {renderSortHeader('due', 'Last change')}
+                    </div>
+                    <div className="list-cell list-cell-checklist list-cell-header list-cell-center" role="columnheader">
+                      {renderSortHeader('checklist', 'Checklist')}
+                    </div>
+                    <div className="list-cell list-cell-order list-cell-header list-cell-end" role="columnheader">
+                      Volgorde
+                    </div>
+                  </div>
+
+                  <div className="list-rows-desktop" role="rowgroup">
+                    {listCards.map((card) => {
+                      const isSelected = selectedTask?.id === card.id;
+                      const agentLabel = activeAgentLabel(card);
+                      const surfaceProps = getListSurfaceProps(card, isSelected);
+                      return (
+                        <div
                           key={card.id}
-                          className={
-                            `${isSelected ? 'list-row-selected' : ''} ${
-                              listDropIndicator?.targetTaskId === card.id
-                                ? `list-row-drop-target ${
-                                    listDropIndicator.placement === 'before'
-                                      ? 'list-row-drop-target-before'
-                                      : 'list-row-drop-target-after'
-                                  }`
-                                : ''
-                            }`.trim()
-                          }
-                          aria-selected={isSelected}
-                          draggable={listDragEnabled}
-                          onDragStart={() => handleTaskDragStart(card.id, card.status)}
-                          onDragEnd={() => {
-                            setDragState(null);
-                            setListDropIndicator(null);
-                          }}
-                          onDragOver={(event) => {
-                            if (!listDragEnabled || !dragState || dragState.taskId === card.id) {
-                              return;
-                            }
-                            event.preventDefault();
-                            const placement = getDropPlacementForEvent(event);
-                            setListDropIndicator({
-                              targetTaskId: card.id,
-                              placement,
-                            });
-                          }}
-                          onDrop={(event) => {
-                            if (!listDragEnabled || !dragState || dragState.taskId === card.id) {
-                              return;
-                            }
-                            event.preventDefault();
-                            event.stopPropagation();
-                            const placement = getDropPlacementForEvent(event);
-                            commitMove({
-                              targetStatus: card.status,
-                              anchorTaskId: card.id,
-                              placement,
-                            });
-                          }}
-                          onClick={() => handleTaskSurfaceClick(card.id)}
+                          {...surfaceProps}
+                          className={`${surfaceProps.className ?? ''} list-task-row list-grid-row`.trim()}
+                          role="row"
                         >
-                          <td>
+                          <div className="list-cell list-cell-title" role="gridcell">
+                            <div className="list-title-cell">
+                              <span className={`status-accent-rail ${statusRailClass(card.status)}`} aria-hidden="true" />
+                              <div className="list-title-main">
+                                <div className="list-title-copy">
+                                  <strong>
+                                    {card.title}
+                                    {agentLabel ? <span className="inline-agent-chip">{agentLabel}</span> : null}
+                                  </strong>
+                                  <span>{card.excerpt}</span>
+                                </div>
+                                <div className="list-order-actions list-order-actions-inline">
+                                  {renderListOrderActions(card)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="list-cell list-cell-domain list-cell-center" role="gridcell">
+                            <WorkstreamBadge workstream={card.workstream} />
+                          </div>
+                          <div className="list-cell list-cell-status list-cell-center" role="gridcell">
+                            <span className={`list-status-text ${statusTextClass(card.status)}`}>
+                              {STATUS_LABELS[card.status]}
+                            </span>
+                          </div>
+                          <div className="list-cell list-cell-priority list-cell-center" role="gridcell">
+                            <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
+                          </div>
+                          <div className="list-cell list-cell-last-change list-cell-center" role="gridcell">
+                            <span className="list-meta-text">{formatLastChangeDate(card.updatedAt)}</span>
+                          </div>
+                          <div className="list-cell list-cell-checklist list-cell-center" role="gridcell">
+                            {renderListChecklist(card)}
+                          </div>
+                          <div className="list-cell list-cell-order list-cell-end" role="gridcell">
+                            <div className="list-order-actions">
+                              {renderListOrderActions(card)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="list-cards-mobile">
+                    {listCards.map((card) => {
+                      const isSelected = selectedTask?.id === card.id;
+                      const agentLabel = activeAgentLabel(card);
+                      const surfaceProps = getListSurfaceProps(card, isSelected);
+                      return (
+                        <div
+                          key={card.id}
+                          {...surfaceProps}
+                          className={`${surfaceProps.className ?? ''} list-task-card`.trim()}
+                        >
+                          <div className="list-card-top">
                             <div className="list-title-cell">
                               <span className={`status-accent-rail ${statusRailClass(card.status)}`} aria-hidden="true" />
                               <div className="list-title-copy">
@@ -920,63 +948,40 @@ export function App(): React.JSX.Element {
                                 <span>{card.excerpt}</span>
                               </div>
                             </div>
-                          </td>
-                          <td>
-                            <WorkstreamBadge workstream={card.workstream} />
-                          </td>
-                          <td>
-                            <span className={`list-status-text ${statusTextClass(card.status)}`}>
-                              {STATUS_LABELS[card.status]}
+                          </div>
+                          <div className="list-card-meta">
+                            <span className="list-meta-chip">
+                              <span className="list-meta-chip-label">Domein</span>
+                              <WorkstreamBadge workstream={card.workstream} />
                             </span>
-                          </td>
-                          <td>
-                            <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
-                          </td>
-                          <td>{formatLastChangeDate(card.updatedAt)}</td>
-                          <td>
-                            {card.checklistProgress.total > 0 ? (
-                              <span className={`progress-pill ${checklistProgressTone(card.checklistProgress.completed, card.checklistProgress.total)}`}>
-                                {compactChecklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}
+                            <span className="list-meta-chip">
+                              <span className="list-meta-chip-label">Status</span>
+                              <span className={`list-status-text ${statusTextClass(card.status)}`}>
+                                {STATUS_LABELS[card.status]}
                               </span>
-                            ) : (
-                              'Geen checklist'
-                            )}
-                          </td>
-                          <td>
-                            <div className="list-order-actions">
-                              <button
-                                type="button"
-                                className="mini-icon-button"
-                                title="Zet bovenaan in handmatige volgorde"
-                                aria-label="Zet bovenaan in handmatige volgorde"
-                                disabled={!listDragEnabled}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  moveTaskToListEdge(card.id, 'start');
-                                }}
-                              >
-                                ⤒
-                              </button>
-                              <button
-                                type="button"
-                                className="mini-icon-button"
-                                title="Zet onderaan in handmatige volgorde"
-                                aria-label="Zet onderaan in handmatige volgorde"
-                                disabled={!listDragEnabled}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  moveTaskToListEdge(card.id, 'end');
-                                }}
-                              >
-                                ⤓
-                              </button>
+                            </span>
+                            <span className="list-meta-chip">
+                              <span className="list-meta-chip-label">Priority</span>
+                              <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
+                            </span>
+                            <span className="list-meta-chip">
+                              <span className="list-meta-chip-label">Last change</span>
+                              <span className="list-meta-text">{formatLastChangeDate(card.updatedAt)}</span>
+                            </span>
+                            <span className="list-meta-chip">
+                              <span className="list-meta-chip-label">Checklist</span>
+                              {renderListChecklist(card)}
+                            </span>
+                          </div>
+                          <div className="list-card-footer">
+                            <div className="list-order-actions list-order-actions-card">
+                              {renderListOrderActions(card)}
                             </div>
-                          </td>
-                        </tr>
-	                        );
-	                      })}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -1054,6 +1059,7 @@ export function App(): React.JSX.Element {
           ) : null}
 
           {renderMode === 'split' ? renderDetailPane('split') : null}
+          {renderMode === 'overlay' ? renderDetailPane('overlay') : null}
         </div>
 
         {renderMode === 'fullscreen' ? (
@@ -1065,11 +1071,19 @@ export function App(): React.JSX.Element {
     </div>
   );
 
-  function renderDetailPane(mode: Extract<DetailRenderMode, 'split' | 'fullscreen'>): React.JSX.Element {
+  function renderDetailPane(mode: Extract<DetailRenderMode, 'split' | 'overlay' | 'fullscreen'>): React.JSX.Element {
     const detailSnapshot = snapshot;
     const detailAgentLabel = selectedTask ? activeAgentLabel(selectedTask) : null;
     return (
-      <aside className={`detail-pane ${mode === 'fullscreen' ? 'detail-pane-fullscreen' : 'detail-pane-pinned'} open`}>
+      <aside
+        className={`detail-pane ${
+          mode === 'fullscreen'
+            ? 'detail-pane-fullscreen'
+            : mode === 'overlay'
+              ? 'detail-pane-toggle open'
+              : 'detail-pane-pinned open'
+        }`}
+      >
         {selectedTask && formState && detailSnapshot ? (
           <>
             <div className="detail-header">
@@ -1560,6 +1574,58 @@ export function App(): React.JSX.Element {
     );
   }
 
+  function getListSurfaceProps(
+    card: TaskCardViewModel,
+    isSelected: boolean,
+  ): React.HTMLAttributes<HTMLDivElement> {
+    return {
+      className: [
+        isSelected ? 'list-row-selected' : '',
+        listDropIndicator?.targetTaskId === card.id
+          ? `list-row-drop-target ${
+              listDropIndicator.placement === 'before'
+                ? 'list-row-drop-target-before'
+                : 'list-row-drop-target-after'
+            }`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
+      'aria-selected': isSelected,
+      draggable: listDragEnabled,
+      onDragStart: () => handleTaskDragStart(card.id, card.status),
+      onDragEnd: () => {
+        setDragState(null);
+        setListDropIndicator(null);
+      },
+      onDragOver: (event) => {
+        if (!listDragEnabled || !dragState || dragState.taskId === card.id) {
+          return;
+        }
+        event.preventDefault();
+        const placement = getDropPlacementForEvent(event);
+        setListDropIndicator({
+          targetTaskId: card.id,
+          placement,
+        });
+      },
+      onDrop: (event) => {
+        if (!listDragEnabled || !dragState || dragState.taskId === card.id) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const placement = getDropPlacementForEvent(event);
+        commitMove({
+          targetStatus: card.status,
+          anchorTaskId: card.id,
+          placement,
+        });
+      },
+      onClick: () => handleTaskSurfaceClick(card.id),
+    };
+  }
+
   function patchForm(patch: Partial<MetadataFormState>): void {
     setFormState((current) => (current ? { ...current, ...patch } : current));
   }
@@ -1647,6 +1713,7 @@ export function App(): React.JSX.Element {
 
   function selectTask(taskId: string): void {
     if (selectedTaskId === taskId) {
+      setDetailOpen(true);
       return;
     }
 
@@ -1709,6 +1776,56 @@ export function App(): React.JSX.Element {
     setListDropIndicator(null);
     setDropIndicator(null);
     setDragState(null);
+  }
+
+  function renderListChecklist(card: TaskCardViewModel): React.JSX.Element {
+    if (card.checklistProgress.total > 0) {
+      return (
+        <span
+          className={`progress-pill ${checklistProgressTone(
+            card.checklistProgress.completed,
+            card.checklistProgress.total,
+          )}`}
+        >
+          {compactChecklistProgressLabel(card.checklistProgress.completed, card.checklistProgress.total)}
+        </span>
+      );
+    }
+
+    return <span className="list-meta-text">Geen checklist</span>;
+  }
+
+  function renderListOrderActions(card: TaskCardViewModel): React.JSX.Element {
+    return (
+      <>
+        <button
+          type="button"
+          className="mini-icon-button"
+          title="Zet bovenaan in handmatige volgorde"
+          aria-label="Zet bovenaan in handmatige volgorde"
+          disabled={!listDragEnabled}
+          onClick={(event) => {
+            event.stopPropagation();
+            moveTaskToListEdge(card.id, 'start');
+          }}
+        >
+          ⤒
+        </button>
+        <button
+          type="button"
+          className="mini-icon-button"
+          title="Zet onderaan in handmatige volgorde"
+          aria-label="Zet onderaan in handmatige volgorde"
+          disabled={!listDragEnabled}
+          onClick={(event) => {
+            event.stopPropagation();
+            moveTaskToListEdge(card.id, 'end');
+          }}
+        >
+          ⤓
+        </button>
+      </>
+    );
   }
 }
 

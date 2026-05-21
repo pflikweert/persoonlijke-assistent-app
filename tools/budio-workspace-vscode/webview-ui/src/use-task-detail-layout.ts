@@ -75,7 +75,7 @@ export function useTaskDetailLayout(selectedTaskId: string | null) {
       return 'fullscreen';
     }
 
-    return 'split';
+    return viewport === 'desktop' ? 'split' : 'overlay';
   }, [detailFullscreen, detailOpen, selectedTaskId, viewport]);
 
   return {

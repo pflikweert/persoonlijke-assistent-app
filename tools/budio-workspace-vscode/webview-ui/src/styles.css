@@ -393,6 +393,7 @@ button {
 
 .board-canvas,
 .list-shell,
+.epics-shell,
 .settings-shell {
   min-height: 100%;
 }
@@ -401,8 +402,9 @@ button {
   display: flex;
   gap: 10px;
   padding: 4px var(--space-5) var(--space-4);
-  overflow: auto;
-  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: visible;
+  align-items: flex-start;
   scroll-snap-type: x proximity;
 }
 
@@ -477,9 +479,9 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-height: 0;
+  min-height: auto;
   padding: 10px;
-  overflow: auto;
+  overflow: visible;
 }
 
 .column-drop-end-target {
@@ -912,6 +914,7 @@ button {
   border-left: 1px solid var(--border);
   padding: var(--space-4);
   z-index: 4;
+  min-width: 0;
 }
 
 .detail-pane-fullscreen {
@@ -934,6 +937,7 @@ button {
   transition: transform 180ms ease;
   z-index: 4;
   padding: var(--space-4);
+  overflow: auto;
 }
 
 .detail-pane-toggle.open {
@@ -1222,20 +1226,19 @@ button {
 }
 
 .list-shell,
+.epics-shell,
 .settings-shell {
   padding: 6px var(--space-5) var(--space-5);
 }
 
-.list-shell {
+.list-shell,
+.epics-shell,
+.settings-shell {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-height: 100%;
-  overflow: hidden;
-}
-
-.settings-shell {
-  overflow: auto;
+  overflow: visible;
 }
 
 .list-controls {
@@ -1276,60 +1279,93 @@ button {
   border-radius: var(--radius-lg);
   background: var(--bg-panel);
   box-shadow: var(--shadow-soft);
-  overflow: auto;
+  overflow: visible;
+  --list-columns: minmax(360px, 1fr) 108px 96px 88px 98px 96px 72px;
 }
 
-.list-shell table {
-  width: 100%;
-  min-width: 920px;
-  border-collapse: collapse;
+.list-grid-row {
+  display: grid;
+  grid-template-columns: var(--list-columns);
 }
 
-.list-shell th,
-.list-shell td {
-  padding: 12px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-
-.list-shell th {
+.list-header-row {
   position: sticky;
   top: 0;
   z-index: 4;
   background: rgba(15, 19, 26, 0.96);
+  border-bottom: 1px solid var(--border);
 }
 
-.list-shell tr:hover {
+.list-cell {
+  min-width: 0;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  min-height: var(--control-height);
+  max-height: var(--control-height);
+}
+
+.list-cell-header {
+  min-height: 48px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-strong);
+}
+
+.list-cell-center {
+  justify-content: center;
+  text-align: center;
+}
+
+.list-cell-end {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.list-rows-desktop {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-task-row {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 120ms ease;
+}
+
+.list-task-row:hover,
+.list-task-card:hover {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.list-shell tr.list-row-selected {
+.list-row-selected {
   background:
     linear-gradient(90deg, rgba(110, 168, 255, 0.12) 0%, rgba(110, 168, 255, 0.04) 32%, rgba(255, 255, 255, 0.01) 100%);
 }
 
-.list-shell tr.list-row-selected td {
+.list-row-selected {
   box-shadow: inset 0 1px 0 rgba(110, 168, 255, 0.16), inset 0 -1px 0 rgba(110, 168, 255, 0.16);
 }
 
-.list-shell tr.list-row-selected .list-title-copy strong {
+.list-row-selected .list-title-copy strong {
   color: #f5f8ff;
 }
 
-.list-shell tr.list-row-selected .list-title-copy span {
+.list-row-selected .list-title-copy span {
   color: var(--muted-strong);
 }
 
-.list-shell tr.list-row-drop-target {
+.list-row-drop-target {
   background: rgba(110, 168, 255, 0.14);
 }
 
-.list-shell tr.list-row-drop-target-before td {
+.list-row-drop-target-before {
   box-shadow: inset 0 2px 0 rgba(110, 168, 255, 0.95);
 }
 
-.list-shell tr.list-row-drop-target-after td {
+.list-row-drop-target-after {
   box-shadow: inset 0 -2px 0 rgba(110, 168, 255, 0.95);
 }
 
@@ -1338,6 +1374,7 @@ button {
   grid-template-columns: 4px minmax(0, 1fr);
   column-gap: 10px;
   align-items: stretch;
+  width: 100%;
 }
 
 .list-title-cell .status-accent-rail {
@@ -1346,11 +1383,20 @@ button {
   min-height: 0;
 }
 
+.list-title-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
 .list-title-copy {
   grid-column: 2;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .list-title-copy strong {
@@ -1408,6 +1454,60 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.list-order-actions-inline,
+.list-cards-mobile {
+  display: none;
+}
+
+.list-meta-text {
+  color: var(--muted-strong);
+  font-size: 12px;
+}
+
+.list-task-card {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list-card-top,
+.list-card-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.list-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.list-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.list-meta-chip-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.list-card-footer {
+  justify-content: flex-end;
 }
 
 .mini-icon-button {
@@ -1487,32 +1587,37 @@ button {
   }
 
   .topbar-main {
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: 10px;
   }
 
   .topbar-status-center {
+    grid-column: 1 / -1;
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .topbar-main-actions {
+    grid-column: 2;
     justify-content: flex-end;
     flex-wrap: wrap;
   }
 
   .topbar-search-row {
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
 
   .search-input {
-    flex: 0 0 auto;
+    flex: 1 1 20rem;
     min-width: 0;
   }
 
   .header-stats {
     margin-left: 0;
+    width: 100%;
   }
 
   .filter-grid {
@@ -1522,6 +1627,7 @@ button {
   .status-strip,
   .board-canvas,
   .list-shell,
+  .epics-shell,
   .settings-shell {
     padding-left: var(--space-4);
     padding-right: var(--space-4);
@@ -1538,6 +1644,10 @@ button {
 }
 
 @media (max-width: 860px) {
+  .list-table-shell {
+    --list-columns: minmax(280px, 1fr) 92px 86px 78px 92px 92px;
+  }
+
   .topbar-title-wrap {
     flex-wrap: wrap;
   }
@@ -1564,6 +1674,65 @@ button {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .list-cell {
+    padding: 12px 12px;
+  }
+
+  .list-cell-order,
+  .list-header-row .list-cell-order {
+    display: none;
+  }
+
+  .list-order-actions-inline {
+    display: inline-flex;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar-main {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-main-actions {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+
+  .topbar-filter-sort {
+    flex-wrap: wrap;
+  }
+
+  .topbar-search-row {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .header-stats {
+    justify-content: flex-start;
+  }
+
+  .list-table-shell {
+    overflow: hidden;
+  }
+
+  .list-header-row,
+  .list-rows-desktop {
+    display: none;
+  }
+
+  .list-cards-mobile {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .list-title-copy strong {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1575,13 +1744,22 @@ button {
   .status-strip,
   .board-canvas,
   .list-shell,
+  .epics-shell,
   .settings-shell {
     padding-left: var(--space-3);
     padding-right: var(--space-3);
   }
 
-  .ghost-button,
-  .primary-button {
+  .ghost-button {
+    width: 100%;
+  }
+
+  .topbar-search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-main-actions .primary-button {
     width: 100%;
   }
 
@@ -1613,10 +1791,6 @@ button {
   .detail-pane-toggle,
   .detail-pane-pinned {
     padding: var(--space-3);
-  }
-
-  .list-shell table {
-    min-width: 620px;
   }
 }
 

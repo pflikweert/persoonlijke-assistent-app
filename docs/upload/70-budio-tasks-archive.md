@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
-Source Commit: 1b70d37
+Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
+Source Commit: b90e144
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 45
+- Totaal tasks opgenomen: 47
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -1188,6 +1188,367 @@ Een kleine UX-polish van de bestaande typing capture-state op `/capture/type`, i
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+```
+
+---
+
+## Caren-zorgdossier kopie structureren in uploadbestand
+
+- Path: `docs/project/25-tasks/done/caren-zorgdossier-kopie-structureren.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-15
+
+```md
+---
+id: task-caren-zorgdossier-kopie-structureren
+title: Caren-zorgdossier kopie structureren in uploadbestand
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user request 2026-05-15
+updated_at: 2026-05-15
+summary: "Ruwe Care-app/Caren-zorgkopie omzetten naar een nette, gestructureerde markdownfile zonder broninhoud te verliezen, inclusief vervolgtoevoegingen van dezelfde dag."
+tags: ""
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: null
+---
+
+
+## Probleem / context
+
+In `docs/upload/thuiszorg-15-mei-2026-kopie-info.md` staat een ruwe handmatige kopie uit de Caren-zorgapp met door elkaar heen lopende chatberichten, replies, dossieritems, plan-items en rapportages. De inhoud is bruikbaar, maar nu slecht scanbaar.
+
+Na de eerste structuurpatch bleek bovendien dat `docs:bundle` losse handmatige bestanden in `docs/upload/` niet bewaart. Daardoor moet deze vervolgwijziging het uploadbestand ook expliciet herstellen.
+
+## Gewenste uitkomst
+
+De file wordt omgezet naar een nette, gestructureerde markdownopzet waarin duidelijk zichtbaar is welke delen persoonlijke chat/thread-inhoud zijn en welke delen dossier-/rapportage-items uit het zorgdossier zijn.
+
+Bestaande inhoud blijft behouden. Nieuwe structuur mag samenvatten, labelen en rubriceren, maar mag geen broninhoud verwijderen.
+
+## User outcome
+
+De gebruiker kan de gekopieerde zorgapp-inhoud sneller terugvinden, onderscheiden en delen, zonder angst dat ruwe broninformatie verloren is gegaan.
+
+## Functional slice
+
+Eén uploadbestand met:
+- een korte structuuranalyse
+- heldere secties voor chat/thread, dossier en zorgplanitems
+- behoud van de onbewerkte broninhoud
+- aanvullende berichten en notities van 15 mei 2026
+
+## Entry / exit
+
+- Entry: ruwe tekstkopie in `docs/upload/thuiszorg-15-mei-2026-kopie-info.md`
+- Exit: dezelfde file, maar scanbaar en logisch gelabeld
+
+## Happy flow
+
+1. De ruwe kopie wordt gelezen en globaal geclassificeerd.
+2. Er wordt een markdownstructuur toegevoegd die de inhoud in duidelijke blokken verdeelt.
+3. De broninhoud blijft aanwezig en leesbaar binnen de nieuwe structuur.
+4. Nieuwe vervolgberichten worden chronologisch toegevoegd.
+
+## Non-happy flows
+
+- Empty state: als de file door bundling is verdwenen, wordt deze hersteld.
+- Permission denied / unavailable: niet van toepassing voor lokale file-edit.
+- Validation / unsupported state: als de kopie incompleet blijkt, blijft die expliciet als bronkopie gelabeld.
+- Failure / retry / cancel: bij twijfel geen inhoud herschrijven, alleen structureren en labelen.
+
+## UX / copy
+
+- Titel en sectielabels in helder Nederlands.
+- Expliciet benoemen dat de file een handmatige kopie en structuur-analyse bevat.
+- Onderscheid maken tussen `chat/thread`, `dossieritems` en `plan/rapportage`.
+
+## Data / IO
+
+- Input: bestaande markdownfile met ruwe gekopieerde tekst
+- Output: dezelfde markdownfile met extra structuur en behoud van broninhoud
+- Opslag/API/service/file-impact: `docs/upload/thuiszorg-15-mei-2026-kopie-info.md` en deze taskfile
+- Statussen: `in_progress` tijdens uitwerking
+
+## Waarom nu
+
+- De gebruiker wil deze inhoud nu direct bruikbaar en overzichtelijk hebben.
+
+## In scope
+
+- Structuuranalyse van de bestaande tekst
+- Markdownsecties toevoegen
+- Behoud van alle bestaande inhoud
+- Vervolgberichten en notitie van 15 mei 2026 toevoegen
+
+## Buiten scope
+
+- Inhoudelijk juridisch of medisch oordeel over de dossierinhoud
+- Volledige redactieslag van alle losse zinnen naar formele notulen
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak van de bestaande tekst in `docs/upload/thuiszorg-15-mei-2026-kopie-info.md` een nette gestructureerde markdownfile.
+- Analyseer de structuur van de bronkopie.
+- Maak expliciet zichtbaar dat er dossiers, interne threads en chats met het wijkteam in staan.
+- Verlies geen bestaande content.
+
+## Expliciete user requirements / detailbehoud
+
+- De file blijft in `docs/upload/`.
+- De bestaande content blijft behouden.
+- De output moet netjes gestructureerde markdown zijn.
+- De analyse moet benoemen dat de bronkopie dossieritems, interne threads en chats met het wijkteam bevat.
+- De nieuwe berichten van 15 mei 2026 moeten worden toegevoegd.
+- De notitie over Zilveren Kruis, huisarts en hoofdkantoor moet worden toegevoegd.
+
+## Status per requirement
+
+- [x] File blijft in `docs/upload/` — status: gebouwd
+- [x] Bestaande content blijft behouden — status: gebouwd
+- [x] Nette gestructureerde markdown toevoegen — status: gebouwd
+- [x] Structuuranalyse met dossier/thread/chat-onderscheid opnemen — status: gebouwd
+- [x] Vervolgberichten van 15 mei 2026 toevoegen — status: gebouwd
+- [x] Notitie over bemiddeling/klacht toevoegen — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Taskflow-compliance toegevoegd door een aparte taskfile aan te maken.
+- Herstelpatch toegevoegd omdat `docs:bundle` losse handmatige uploadbestanden niet bewaart.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: kleinste bronwijziging of primair artefact uitvoeren.
+- [x] Blok 3: gerichte verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Huidige file state en taskstate bevestigd
+- [x] Uploadfile hersteld of opnieuw aangemaakt
+- [x] Nieuwe berichten toegevoegd
+- [x] Gerichte verify uitvoeren
+
+## Acceptance criteria
+
+- [x] De file heeft duidelijke markdownkoppen en secties.
+- [x] De file maakt onderscheid tussen chat/thread-inhoud en dossier-/rapportage-inhoud.
+- [x] De oorspronkelijke en nieuwe broninhoud is aanwezig voor zover beschikbaar in deze sessie.
+
+## Blockers / afhankelijkheden
+
+- `docs:bundle` verwijdert dit type losse uploadbestand; daarom is die stap in deze specifieke herstelpatch bewust niet opnieuw gedraaid om het gevraagde bestand te behouden.
+
+## Verify / bewijs
+
+- Visuele controle van `docs/upload/thuiszorg-15-mei-2026-kopie-info.md`
+- `npm run taskflow:verify`
+- `docs:bundle` bewust niet opnieuw uitgevoerd, omdat die run dit losse uploadbestand verwijdert
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: ruwe Caren/Care-app kopie structureren zonder inhoudsverlies.
+- Toegevoegde verbeteringen: taskflow-compliance, expliciete inhoudsclassificatie, herstel na bundelverlies en vervolgtoevoegingen van 15 mei 2026.
+- Afgerond: uploadbestand hersteld, gestructureerd en aangevuld; nieuwe berichten en notitie toegevoegd; taskflow verify uitgevoerd.
+- Open / blocked: geen, met uitzondering dat `docs:bundle` voor dit losse uploadbestand destructief blijkt.
+
+## Relevante links
+
+- `docs/upload/thuiszorg-15-mei-2026-kopie-info.md`
+
+
+## Commits
+
+- 2026-05-16T06:54:00+02:00 — docs: add Caren zorgdossier structuring task
+```
+
+---
+
+## Codex workflow learnings — lokale restart en interactieve smokes
+
+- Path: `docs/project/25-tasks/done/codex-workflow-learnings-lokale-restart-en-interactieve-smokes.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-05-15
+
+```md
+---
+id: task-codex-workflow-learnings-lokale-restart-en-interactieve-smokes
+title: Codex workflow learnings — lokale restart en interactieve smokes
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-05-15
+summary: "Structurele sessielearnings uit de Android Chrome foto-uploadfix zijn nu vastgelegd in AGENTS, QA-docs en een relevante UI-skill: lokale app-start/restart mag bij nodig runtime-bewijs, interactieve regressies vragen slimme happy + unhappy smoke, en browser-smokes wachten op een stabiele baseline."
+tags: [codex, workflow, skills, qa, smoke, local-dev]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: [task-moment-detail-foto-upload-android-chrome-prepare-regressie]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De sessie rond de Android Chrome foto-upload liet een paar herhaalbare agentlessen zien die nu nog niet scherp genoeg in repo-guardrails staan. Daardoor kostte het onnodig tijd om van logging naar structurele fix en van verify naar echte runtime-smokes te gaan.
+
+## Gewenste uitkomst
+
+Codex-agents en relevante skills handelen vergelijkbare interactieve regressies in de toekomst consistenter af. Ze mogen lokaal de app starten of herstarten wanneer dat nodig is voor gevraagd runtime-bewijs, ze testen niet alleen het happy pad maar ook een belangrijke failure-state, en browser-smokes wachten eerst op een zichtbare stabiele baseline.
+
+## User outcome
+
+Een developer of agent krijgt sneller echt bewijs bij interactieve regressies, met minder heen-en-weer over lokale restarts en minder risico dat een regressie alleen op `lint`/`typecheck` wordt afgevinkt.
+
+## Functional slice
+
+Een kleine workflow/docs-slice: update van always-on agentregels, QA-richtlijnen en een relevante UI-skill op basis van bevestigde sessielearnings.
+
+## Entry / exit
+
+- Entry: een interactieve web/UI-regressie waarbij runtime-bewijs of lokale app-beschikbaarheid onzeker is.
+- Exit: de workflowdocs en skill beschrijven expliciet wanneer lokale app-start/restart is toegestaan, welke smoke-bewijzen verwacht worden en hoe browser-smokes hun baseline moeten bepalen.
+
+## Happy flow
+
+1. Agent ziet dat een interactieve wijziging echt runtime-bewijs nodig heeft.
+2. Agent start of herstart lokaal de kleinste benodigde app-target wanneer die nog niet draait en dit binnen de sessie is toegestaan.
+3. Agent draait een happy-path smoke plus minimaal één betekenisvolle unhappy-path smoke en legt bewijs vast.
+
+## Non-happy flows
+
+- Bestaande lokale app ontbreekt:
+  agent mag de app lokaal starten of herstarten wanneer runtime-bewijs anders ontbreekt.
+- Interactie is klein en puur visueel:
+  geen volledige smoke-suite nodig; alleen de kleinste relevante runtime-check.
+- Browser test race condition:
+  test wacht eerst op een zichtbare stabiele baseline voordat counts/assertions of skips worden bepaald.
+
+## UX / copy
+
+- Geen product-UI-wijzigingen.
+- Alleen agent-/developer-facing workflowcopy en guardrails.
+
+## Data / IO
+
+- Input: bevestigde sessielearnings uit de foto-upload regressie en lokale/prod smoke-runs.
+- Output: aangescherpte repo-regels in `AGENTS.md`, `docs/dev/qa-test-strategy.md`, `docs/dev/local-auth-smoke-workflow.md` en relevante skill.
+- Opslag/API/service/file-impact: alleen docs/skillfiles; geen runtimecode.
+- Statussen: task blijft `in_progress` totdat docs, skill en verify klaar zijn.
+
+## Waarom nu
+
+- De learning is net bevestigd in echte implementatie + local/prod smoke.
+- Zonder snelle vastlegging vallen agents makkelijk terug op te defensieve dev-serverregels of te lichte interactieve verify.
+
+## In scope
+
+- `AGENTS.md` verduidelijken voor lokale app-start/restart wanneer runtime-bewijs nodig is.
+- QA-docs aanscherpen voor happy + unhappy smoke en stabiele baseline-wachtregel.
+- Relevante UI-skill aanscherpen met dezelfde bewijsregel.
+
+## Buiten scope
+
+- Geen nieuwe skill aanmaken.
+- Geen productdocs wijzigen buiten task-overzichten/bundels.
+- Geen bredere taskflow-refactor of modebeleid aanpassen buiten deze concrete learnings.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Leg alleen structurele, bevestigde learnings vast uit deze sessie.
+- Houd de wijziging klein: AGENTS + QA-doc + relevante skill.
+- Geen brede workflowherschrijving als een compacte guardrail-update genoeg is.
+
+## Expliciete user requirements / detailbehoud
+
+- Voer dit uit als kleine structurele fix.
+- Geen zware of onnodige smoke-uitbreiding als dat niet nodig is.
+- Agents en skills moeten beter leren van deze sessie.
+
+## Status per requirement
+
+- [x] Lokale restart/start-regel voor runtime-bewijs expliciet vastgelegd — status: gebouwd
+- [x] Happy + unhappy smoke-regel voor interactieve regressies expliciet vastgelegd — status: gebouwd
+- [x] Baseline-wachtregel voor browser-smokes expliciet vastgelegd — status: gebouwd
+- [x] Relevante skill bijgewerkt — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- `docs/dev/local-auth-smoke-workflow.md` beschrijft nu ook expliciet hoe een agent lokale app-beschikbaarheid controleert en een noodzakelijke lokale start/restart kort documenteert.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: kleinste bronwijziging of primair artefact uitvoeren.
+- [x] Blok 3: gerichte verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Nieuwe workflow-task aangemaakt en in-progress bovenaan gezet.
+- [x] `AGENTS.md` bijgewerkt.
+- [x] QA-docs en relevante skill bijgewerkt.
+- [x] Taskflow/docs verify gedraaid.
+
+## Acceptance criteria
+
+- [ ] `AGENTS.md` maakt expliciet wanneer Codex lokaal zelf een app mag starten of herstarten voor runtime-bewijs.
+- [ ] QA-docs eisen voor interactieve regressies minimaal een happy path en één belangrijke unhappy path, of expliciete motivatie waarom dat niet kan.
+- [ ] Relevante skill noemt stabiele baseline-check en slimme smoke-keuze in plaats van blind full smoke.
+
+## Blockers / afhankelijkheden
+
+- Geen blockers verwacht.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+Uitgevoerd op `2026-05-15`:
+
+- ✅ `npm run taskflow:verify`
+- ✅ `npm run docs:bundle`
+- ✅ `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: alleen structurele sessielearnings klein vastleggen in AGENTS, QA-docs en een relevante skill.
+- Toegevoegde verbeteringen: ook de local auth smoke-workflow is expliciet aangescherpt op lokale app-beschikbaarheid en korte runtime-rapportage.
+- Afgerond:
+  - AGENTS-regel voor lokale app-start/restart wanneer runtime-bewijs anders ontbreekt
+  - QA-regel voor slim happy + unhappy smoke-bewijs
+  - baseline-wachtregel voor browser-smokes
+  - update van de relevante UI-skill
+  - taskflow/docs verify
+- Open / blocked:
+  - geen; deze workflow-fix is inhoudelijk afgerond
+
+## Commits
+
+## Relevante links
+
+- `AGENTS.md`
+- `docs/dev/qa-test-strategy.md`
+- `docs/dev/local-auth-smoke-workflow.md`
+- `.agents/skills/ui-implementation-guardrails/SKILL.md`
 ```
 
 ---

@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-05-15T12:36:23.674Z
-Source Commit: 1b70d37
+Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
+Source Commit: b90e144
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -148,7 +148,7 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 15
+sort_order: 4
 ---
 
 
@@ -2162,7 +2162,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 13
+sort_order: 2
 ---
 
 
@@ -2597,7 +2597,7 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 18
+sort_order: 7
 ---
 
 
@@ -3405,8 +3405,9 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 12
+sort_order: 1
 ---
+
 
 
 
@@ -3677,6 +3678,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-15T10:09:20+02:00 — fix: harden moment detail web photo uploads
+
+- 2026-05-15T14:36:40+02:00 — test: verify local entry photo gallery flows
 ```
 
 ---
@@ -3982,7 +3985,7 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 14
+sort_order: 3
 ---
 
 
@@ -4108,7 +4111,7 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 16
+sort_order: 5
 ---
 
 
@@ -4212,7 +4215,7 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - Status: in_progress
 - Priority: p2
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-05-15
+- Updated_at: 2026-05-16
 
 ```md
 ---
@@ -4222,13 +4225,14 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
-updated_at: 2026-05-15
-summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Deze ronde voegt expliciet toe dat de VS Code-sidebar de primaire pluginnavigatie wordt met alle huidige menu-items uit de interne rail, terwijl de bestaande contentweergave inhoudelijk gelijk blijft."
+updated_at: 2026-05-16
+summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in list view, maar de task is verbreed naar een structurele herziening van task-openen, detail-rendering, drag/sort interacties, actieve-agent zichtbaarheid, commit logging en multi-agent robuustheid. Na de sidebar-navigatie volgt nu ook een responsive list-view fix zodat smalle VS Code-webviews geen geperste desktop-tabel meer tonen en brede schermen consistente header/body alignment houden, inclusief structurele container-fixes voor globale muisscroll en correcte detail-pane-plaatsing naast de content."
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 17
+sort_order: 6
 ---
+
 
 
 
@@ -4335,6 +4339,9 @@ Board blijft bestaan als secundaire view binnen de plugin en via het command pal
 
 - Gebruik de linker VS Code-sidebar/menu-structuur als primaire pluginnavigatie, met alle huidige menu-items uit de topnavigatie erin. Content blijft ongewijzigd.
 - De bestaande activity-bar/sidebar mag niet leeg blijven; de kleinste schone implementatie is een compacte sidebar-webview die de bestaande panelviews en refresh-actie opent zonder content-redesign.
+- Maak de plugin list view responsive: grid-gebaseerde desktop/medium list met gedeelde kolombreedtes en een compacte card-row variant op smalle VS Code-webviews, zonder Board/Epics/Settings te redesignen.
+- Corrigeer regressie uit de eerste responsive-ronde: list-scroll moet blijven werken en de toolbar/search-layout mag op smalle breedtes niet onnatuurlijk hoog worden.
+- Herstel de plugin-shell containerlogica: muisscroll moet in alle views weer werken en task detail moet op desktop in een echte naastliggende pane openen in plaats van over bestaande content te vallen.
 
 ## Oorspronkelijk uitgebreid plan / detailbehoud
 
@@ -4469,6 +4476,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - Punt 11 (`## Commits` automatisch vullen) en punt 12 (multi-agent concurrency) moeten als expliciete open requirements zichtbaar blijven zolang ze niet volledig zijn gebouwd; een reviewconclusie mag deze bronpunten niet vervangen.
 - Gebruik de linker VS Code-sidebar/menu-structuur als primaire pluginnavigatie, met alle huidige menu-items uit de topnavigatie erin. Content blijft ongewijzigd.
 - Icoon én label van elk sidebar-item moeten klikbaar zijn en dezelfde bestaande view/action switchen.
+- De list view moet op klein scherm overschakelen naar een compacte task-list/card-row layout zonder horizontale overflow als primaire oplossing; op breed scherm blijft het een nette tabel met gedeelde header/body alignment.
+- Detail-pane gedrag moet consistent zijn per viewport: desktop = side-pane naast content, tablet/small = overlay/fullscreen alleen wanneer nodig, zonder verborgen laag die scroll of clicks opvangt.
 
 ## Status per requirement
 
@@ -4480,6 +4489,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - [x] `onlyOpen` default / open taken filter — status: gebouwd; nu alleen zichtbaar en toegepast in list view.
 - [x] Linker rail icon-first — status: gebouwd, met nog open visuele bevestiging voor refresh-sizing.
 - [x] VS Code-sidebar als primaire navigatie met Board/List/Epics/Settings/Refresh — status: gebouwd; activity-bar toont nu een compacte menu-webview en de interne rail is uit de panel-content verwijderd.
+- [~] Responsive list view voor smalle VS Code-webviews + desktop header/body alignment — status: in uitvoering in deze ronde.
+- [~] Globale scroll-container fix + correcte detail-pane-plaatsing naast content — status: in uitvoering in deze ronde.
 - [x] Resizable detail pane — status: gebouwd.
 - [~] Fullscreen detail toggle — status: opnieuw in uitvoering; eerdere claim was te vroeg, structurele herbouw loopt nu in fase 1.
 - [~] Actieve agent indicator in board/list/detail — status: gedeeltelijk; basisweergave aanwezig, animatie en consistente detail-state ontbreken nog.
@@ -4609,6 +4620,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-15T17:03:51+02:00 — feat: move budio workspace nav into sidebar
 ```
 
 ---

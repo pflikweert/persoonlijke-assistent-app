@@ -16,8 +16,9 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 12
+sort_order: 1
 ---
+
 
 
 
@@ -291,3 +292,5 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-05-15T10:09:20+02:00 — fix: harden moment detail web photo uploads
 
 - 2026-05-15T14:36:40+02:00 — test: verify local entry photo gallery flows
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
