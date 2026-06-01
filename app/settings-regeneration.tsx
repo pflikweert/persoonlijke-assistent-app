@@ -309,7 +309,7 @@ export default function SettingsRegenerationScreen() {
           <StateBlock
             tone="info"
             message="Geen toegang"
-            detail="Deze pagina is alleen zichtbaar voor allowlisted admins."
+            detail="Deze pagina is alleen zichtbaar voor admins met rechten voor herverwerking."
           />
         ) : null}
 
@@ -377,7 +377,7 @@ export default function SettingsRegenerationScreen() {
               ) : null}
             </ThemedView>
 
-            <MetaText>Minimaal één datatype selecteren. Alleen allowlisted admins hebben toegang.</MetaText>
+            <MetaText>Minimaal één datatype selecteren. Alleen admins met herverwerkingsrechten hebben toegang.</MetaText>
           </SurfaceSection>
         ) : null}
 

@@ -133,7 +133,7 @@ export default function AiQualityStudioGroupScreen() {
         <StateBlock
           tone="info"
           message="Geen toegang"
-          detail="Deze pagina is alleen zichtbaar voor allowlisted admins."
+          detail="Deze pagina is alleen zichtbaar voor admins met AIQS-rechten."
         />
       ) : null}
 

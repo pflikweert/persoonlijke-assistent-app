@@ -18,7 +18,8 @@ export interface FunctionErrorPayload {
     | 'import-chatgpt-markdown'
     | 'start-user-export'
     | 'admin-regeneration-job'
-    | 'admin-ai-quality-studio';
+    | 'admin-ai-quality-studio'
+    | 'admin-access-control';
   requestId: string;
   flowId: string;
   step: string;
@@ -47,6 +48,7 @@ export function createClientFlowId(
     | 'entry-renormalize'
     | 'import-chatgpt'
     | 'admin-regeneration'
+    | 'admin-access'
     | 'admin-ai-quality'
     | 'export-archive'
     | 'user-preferences'

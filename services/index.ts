@@ -1,5 +1,12 @@
 // Service layer for API/data orchestration lives here.
 export {
+    fetchMyAdminAccess,
+    hasAdminCapabilityAccess,
+    hasAnyAdminAccess,
+    listAdminManagedUsers,
+    updateAdminUserCapabilities,
+} from "./admin-access";
+export {
     hasAdminMeetingCaptureAccess
 } from "./admin-meeting-capture";
 export {

@@ -10,8 +10,9 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
+
 
 
 
@@ -113,3 +114,5 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control

@@ -1,4 +1,5 @@
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
+import { hasAdminCapabilityAccess } from '@/services/admin-access';
 import { ensureAuthenticatedUserSession } from '@/services/auth';
 import {
   createClientFlowId,
@@ -66,15 +67,6 @@ type LatestResponse = {
   requestId: string;
   flowId: string;
   job: AdminRegenerationJobView | null;
-};
-
-type AccessResponse = {
-  status: 'ok';
-  flow: 'admin-regeneration-job';
-  requestId: string;
-  flowId: string;
-  canAccess: boolean;
-  userId: string | null;
 };
 
 function parseFunctionMessage(parsed: unknown): string | null {
@@ -228,31 +220,7 @@ export async function fetchAdminRegenerationJobStatus(input: {
 }
 
 export async function hasAdminRegenerationAccess(): Promise<boolean> {
-  const flowId = createClientFlowId('admin-regeneration');
-  await ensureAuthenticatedUserSession({ flowId, source: 'admin-regeneration-job' });
-
-  try {
-    const data = await invokeAction<AccessResponse>({
-      flowId,
-      body: {
-        action: 'access',
-      },
-    });
-
-    return (
-      data.status === 'ok' &&
-      data.flow === 'admin-regeneration-job' &&
-      Boolean(data.requestId) &&
-      data.canAccess === true
-    );
-  } catch (error) {
-    if (error instanceof FunctionFlowError) {
-      if (error.payload.code === 'AUTH_UNAUTHORIZED' || error.payload.code === 'AUTH_MISSING') {
-        return false;
-      }
-    }
-    throw error;
-  }
+  return hasAdminCapabilityAccess('regeneration');
 }
 
 export async function fetchLatestAdminRegenerationJob(): Promise<AdminRegenerationJobView | null> {

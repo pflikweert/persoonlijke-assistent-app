@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
-Source Commit: b90e144
+Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
+Source Commit: 35f8396
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 33
+- Totaal tasks opgenomen: 34
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -148,8 +148,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
+
 
 
 
@@ -230,6 +231,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ```
 
 ---
@@ -2162,8 +2165,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
+
 
 
 
@@ -2323,6 +2327,8 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ```
 
 ---
@@ -2597,8 +2603,9 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 7
+sort_order: 8
 ---
+
 
 
 
@@ -2699,6 +2706,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ```
 
 ---
@@ -3405,8 +3414,9 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 
 
@@ -3680,6 +3690,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-05-15T10:09:20+02:00 — fix: harden moment detail web photo uploads
 
 - 2026-05-15T14:36:40+02:00 — test: verify local entry photo gallery flows
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ```
 
 ---
@@ -3799,6 +3811,220 @@ De viewerbasis is gedeeld met de bestaande moment-detail galerij, zodat swipeged
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+```
+
+---
+
+## MVP admin + AIQS productie bundel
+
+- Path: `docs/project/25-tasks/open/mvp-admin-aiqs-productie-bundel.md`
+- Bucket: open
+- Status: in_progress
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-01
+
+```md
+---
+id: task-mvp-admin-aiqs-productie-bundel
+title: MVP admin + AIQS productie bundel
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p1
+source: docs/project/open-points.md
+updated_at: 2026-06-01
+summary: "Bundelt AIQS logging-validatie, AIQS productie-livegang en een nieuwe DB-gedreven adminrechtenlaag per admingebied, zodat de bestaande admin-AI-flow snel en veilig naar productie kan."
+tags: [aiqs, admin, productie, permissions, supabase]
+workstream: aiqs
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# MVP admin + AIQS productie bundel
+
+## Probleem / context
+
+De bestaande AIQS-adminflow is functioneel aanwezig, maar live bewijs en operationele logging zijn nog niet hard genoeg afgerond voor snelle productie-inzet. Tegelijk ontbreekt self-service beheer van adminrechten volledig in de product-UI: toegang is nu nog verspreid over allowlists in edge functions en losse access-checks in de app.
+
+## Gewenste uitkomst
+
+De bestaande AIQS-flow is aantoonbaar traceerbaar en inzetbaar voor productiegebruik van de huidige OpenAI-calls, zonder featureverbreding. Logging is voor live testen begrijpelijk en zichtbaar, met een werkend fallback-logpad.
+
+Daarnaast heeft het adminmenu een founder-only beheerroute voor rechten per admingebied. Adminrechten worden primair DB-gedreven in plaats van env-allowlist-gedreven, zodat toegang per gebied beheersbaar is via het product zelf.
+
+## User outcome
+
+Een founder kan in de admin-UI live AIQS testen, logging begrijpen, bestaande AIQS-calls veilig in productie gebruiken en adminrechten per gebied beheren zonder handmatige env-wijzigingen.
+
+## Functional slice
+
+Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
+
+1. duidelijke AIQS logging-controls en aantoonbaar loggingbewijs
+2. een betrouwbaar productiepad voor de bestaande AIQS OpenAI-calls
+3. founder-only beheer van adminrechten per capability in het adminmenu
+
+## Entry / exit
+
+- Entry: founder opent `Instellingen` en gebruikt de bestaande adminroutes voor AIQS/regeneration/meeting capture.
+- Exit: founder kan productie-AIQS gebruiken met zichtbare loggingstatus en kan rechten per gebied toekennen of intrekken via een nieuwe beheerroute.
+
+## Happy flow
+
+1. Founder opent AIQS admin en ziet duidelijke loggingstatus met aan/uit-state en 4-uurs verloop.
+2. Founder voert een bestaande AIQS-test/live-flow uit en kan dezelfde run terugvinden via dashboardlogging en fallback-logging.
+3. Founder opent rechtenbeheer, kent een capability toe aan een gebruiker en ziet dat alleen het bijbehorende admingebied zichtbaar en bruikbaar wordt.
+
+## Non-happy flows
+
+- Empty state: rechtenbeheer toont een duidelijke lege staat wanneer nog geen aanvullende admins zijn geconfigureerd.
+- Permission denied / unavailable: niet-admin of gewone admin ziet de beheerroute niet en krijgt server-side denial bij directe calls.
+- Validation / unsupported state: gebruiker kan niet zonder geldige capability of zonder founder-recht mutaties doen.
+- Failure / retry / cancel: opslaan van rechten of logginginstellingen toont een duidelijke fout en laat veilig opnieuw proberen toe.
+
+## UX / copy
+
+- Hergebruik bestaande settings-scaffold en admin-shell patronen.
+- Nieuwe beheerroute onder label `Adminrechten beheren`.
+- Rechtenlabels minimaal: `AI Quality Studio`, `Data opnieuw verwerken`, `Gespreksopnames`.
+- Founder-only helpertekst maakt expliciet dat alleen founders rechten kunnen wijzigen.
+- Logging-UI noemt expliciet of logging actief is en wanneer deze automatisch vervalt.
+
+## Data / IO
+
+- Input:
+  - authenticated user session
+  - founder beheeracties voor capability grants
+  - logging on/off + TTL-instellingen
+- Output:
+  - capability-based access per user
+  - duidelijke admin-visibility in settings
+  - loggingstatus en traceerbare runs
+- Opslag/API/service/file-impact:
+  - nieuwe Supabase-tabel(len) voor admin capability grants
+  - gedeelde server-side authorisatiehelper
+  - updates aan admin edge functions en client services
+  - nieuwe admin settings-route voor rechtenbeheer
+- Statussen:
+  - access granted / denied
+  - founder-only mutate allowed / denied
+  - logging enabled / disabled / expires_at
+
+## Waarom nu
+
+- Dit is de kortste route naar een bruikbare productie-adminflow voor AIQS.
+- Het voorkomt dat productievalidatie afhankelijk blijft van handmatige env-toegangswijzigingen.
+- Het houdt de scope scherp: bestaande AIQS-calls live krijgen en alleen de minimaal nodige adminrechtenlaag toevoegen.
+
+## In scope
+
+- AIQS loggingstatus en toggle-UX verduidelijken.
+- Logging in OpenAI dashboard en fallback-logpad valideren en waar nodig repareren.
+- Productieroute voor bestaande AIQS-calls valideren en blocker-fixes doen.
+- DB-gedreven admin capability model invoeren voor `ai_quality_studio`, `regeneration` en `meeting_capture`.
+- Founder-only beheerroute in settings toevoegen voor rechtenbeheer.
+- Bestaande access-checks centraliseren via gedeelde helpers en functie-auth.
+
+## Buiten scope
+
+- Nieuwe AI-taken of verbreding van AIQS naar extra workflows.
+- Volledige RBAC met rolleneditor of policy-builder.
+- End-user features buiten admin.
+- Grote control-plane verbouwing of nieuwe observability-suite.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Slice 1: AIQS logging valideren in OpenAI dashboard en fallback-logpad.
+- Slice 2: AIQS productie live zetten voor bestaande OpenAI-calls.
+- Slice 3: nieuwe P1-taak voor self-service adminrechten per admingebied via adminmenu.
+- Rechtenmodel blijft capability-based per admingebied, niet volledige RBAC.
+- Rechtenbeheer is founder-only.
+- DB wordt primaire waarheid voor adminrechten; meeting capture krijgt een eigen capability in plaats van impliciete OR-toegang.
+
+## Expliciete user requirements / detailbehoud
+
+- Logging-toggle en 4-uurs status in AIQS admin moeten duidelijker worden voor live testen.
+- Bestaande AIQS OpenAI-calls moeten aantoonbaar zichtbaar zijn in dashboardlogging en fallback-logging.
+- Productiepad van bestaande AIQS-calls moet werken zonder nieuwe reviewflow of extra calls.
+- Adminrechten moeten via het adminmenu beheerbaar worden.
+- Minimaal drie capabilities: `ai_quality_studio`, `regeneration`, `meeting_capture`.
+- Founder/super-admin mag rechten toekennen of intrekken; gewone admins niet.
+- Niet-admin ziet geen beheerroute.
+- Backend denial moet ook werken zonder UI, bij directe function calls.
+
+## Status per requirement
+
+- [x] Loggingstatus en 4-uurs UX verduidelijkt — status: gebouwd
+- [ ] Dashboardlogging + fallback-logging aantoonbaar werkend — status: nog niet gebouwd
+- [ ] Bestaande AIQS-calls productieproof gemaakt — status: gedeeltelijk gebouwd
+- [x] DB-gedreven capabilities voor drie admingebieden toegevoegd — status: gebouwd
+- [x] Founder-only adminrechtenbeheer in adminmenu toegevoegd — status: gebouwd
+- [x] Backend authorisatie centraal en capability-based gemaakt — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Founder-bootstrap migreert automatisch éénmalig vanuit legacy allowlists naar DB-grants, zodat bestaande admin-toegang niet stilvalt tijdens de overgang.
+- Meeting Capture gebruikt nu een eigen capability in plaats van impliciete toegang via AIQS of regeneration.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow, codecontext en huidige admin/logging-architectuur bevestigen.
+- [x] Blok 2: logging- en productiepad voor AIQS aanscherpen.
+- [x] Blok 3: capability-model, backend authorisatie en adminrechten-UI bouwen.
+- [ ] Blok 4: verify, task/docs-sync en afronding.
+
+## Concrete checklist
+
+- [x] Huidige logging- en rights-flows in code inventariseren.
+- [x] Logging-UX en runtimepad repareren waar nodig.
+- [x] Supabase capability-model en authorisatiehelpers toevoegen.
+- [x] Adminrechtenbeheerroute in settings bouwen.
+- [x] Access-checks en adminroutes migreren naar capability-based gedrag.
+- [x] Verifies en task/docs-sync uitvoeren.
+
+## Acceptance criteria
+
+- [ ] Founder ziet duidelijke loggingstatus en kan bestaande AIQS-calls traceerbaar testen.
+- [ ] Bestaande AIQS productieflow werkt voor huidige calls en blijft geblokkeerd voor non-admins.
+- [ ] Founder kan per gebruiker rechten voor AIQS, regeneration en meeting capture toekennen of intrekken.
+- [ ] Users zien alleen de adminroutes waarvoor ze capability-toegang hebben.
+- [ ] Gewone admins kunnen geen rechten van anderen beheren.
+- [ ] Directe backend-calls zonder juiste capability of founder-recht falen expliciet.
+
+## Blockers / afhankelijkheden
+
+- Productievalidatie in OpenAI dashboard vereist handmatige runtimecheck buiten alleen lokale codecontrole.
+- Founder-bootstrap moet veilig worden gemigreerd zonder bestaande admin-toegang kwijt te raken.
+
+## Verify / bewijs
+
+- Runtime-validatie van logging aan/uit en zichtbare TTL-status.
+- Bewijs van dashboardlogging + fallback-logpad voor bestaande AIQS-calls.
+- Rechten-smoke: founder grant/revoke, beperkte admin, non-admin denial.
+- `npm run lint`
+- `npm run typecheck`
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: logging valideren, AIQS productie live zetten en founder-only capabilitybeheer bouwen.
+- Toegevoegde verbeteringen: éénmalige founder-bootstrap vanuit legacy allowlists en aparte capability voor Meeting Capture.
+- Afgerond: DB-capabilitymodel, founder-only rightsbeheer, centrale authorisatie, settings-menu migratie, logging-UX aanscherping, lint/typecheck/unit-test/taskflow/docs-verifies.
+- Open / blocked: productiebewijs in OpenAI dashboard en echte productie-liveflow van bestaande AIQS-calls zijn nog niet lokaal bewezen in deze ronde.
+
+## Relevante links
+
+- `docs/project/open-points.md`
+- `docs/project/25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md`
+- `docs/project/25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md`
 ```
 
 ---
@@ -3985,8 +4211,9 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
+
 
 
 
@@ -4085,6 +4312,8 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ```
 
 ---
@@ -4111,8 +4340,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 5
+sort_order: 6
 ---
+
 
 
 
@@ -4204,6 +4434,8 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-04-29T01:47:27+02:00 — fix: diagnose Android photo prepare regression
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ```
 
 ---
@@ -4230,8 +4462,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
+
 
 
 
@@ -4622,6 +4855,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-15T17:03:51+02:00 — feat: move budio workspace nav into sidebar
+
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ```
 
 ---

@@ -18,21 +18,13 @@ import type {
 } from '@/types';
 
 import { getSupabaseBrowserClient } from '@/src/lib/supabase';
+import { hasAdminCapabilityAccess } from '@/services/admin-access';
 import { ensureAuthenticatedUserSession } from '@/services/auth';
 import {
   createClientFlowId,
   FunctionFlowError,
   isFunctionErrorPayload,
 } from '@/services/function-error';
-
-type AccessResponse = {
-  status: 'ok';
-  flow: 'admin-ai-quality-studio';
-  requestId: string;
-  flowId: string;
-  canAccess: boolean;
-  userId: string | null;
-};
 
 type ListTasksResponse = {
   status: 'ok';
@@ -200,32 +192,7 @@ async function invokeAction<T>(input: {
 }
 
 export async function hasAdminAiQualityStudioAccess(): Promise<boolean> {
-  const flowId = createClientFlowId('admin-ai-quality');
-  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
-
-  try {
-    const data = await invokeAction<AccessResponse>({
-      flowId,
-      body: {
-        action: 'access',
-      },
-    });
-
-    return (
-      data.status === 'ok' &&
-      data.flow === 'admin-ai-quality-studio' &&
-      Boolean(data.requestId) &&
-      data.canAccess === true
-    );
-  } catch (error) {
-    if (error instanceof FunctionFlowError) {
-      if (error.payload.code === 'AUTH_UNAUTHORIZED' || error.payload.code === 'AUTH_MISSING') {
-        return false;
-      }
-    }
-
-    throw error;
-  }
+  return hasAdminCapabilityAccess('ai_quality_studio');
 }
 
 export async function fetchAdminAiQualityStudioTasks(): Promise<AiTaskSummary[]> {

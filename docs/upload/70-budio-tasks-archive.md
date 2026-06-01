@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
-Source Commit: b90e144
+Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
+Source Commit: 35f8396
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -1405,6 +1405,7 @@ due_date: null
 sort_order: 1
 ---
 
+
 ## Probleem / context
 
 De sessie rond de Android Chrome foto-upload liet een paar herhaalbare agentlessen zien die nu nog niet scherp genoeg in repo-guardrails staan. Daardoor kostte het onnodig tijd om van logging naar structurele fix en van verify naar echte runtime-smokes te gaan.
@@ -1543,6 +1544,7 @@ Uitgevoerd op `2026-05-15`:
 
 ## Commits
 
+- 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 ## Relevante links
 
 - `AGENTS.md`

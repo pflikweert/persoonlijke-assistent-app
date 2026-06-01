@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
+
 
 
 
@@ -180,3 +181,5 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control

@@ -24,6 +24,30 @@ import {
   shouldShowAiQualityGroupScreen,
 } from '@/services/ai-quality-studio/readmodel';
 
+const DEBUG_FLOW_LABELS: Record<AiOpenAiDebugFlowKey, string> = {
+  'admin-ai-quality-studio.prompt_assist_preview': 'Prompt assist preview',
+  'admin-ai-quality-studio.run_test': 'Test run',
+  'generate-reflection.generation': 'Reflectie generatie',
+  'process-entry.generation': 'Entry generatie',
+  'regenerate-day-journal.generation': 'Dagjournal regeneratie',
+};
+
+function formatDebugExpiry(value: string | null): string {
+  if (!value) {
+    return 'geen vervaltijd';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString('nl-NL', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+}
+
 export default function SettingsAiQualityStudioScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
@@ -230,7 +254,7 @@ export default function SettingsAiQualityStudioScreen() {
         <StateBlock
           tone="info"
           message="Geen toegang"
-          detail="Deze pagina is alleen zichtbaar voor allowlisted admins."
+          detail="Deze pagina is alleen zichtbaar voor admins met AIQS-rechten."
         />
       ) : null}
 
@@ -297,17 +321,21 @@ export default function SettingsAiQualityStudioScreen() {
                 Alleen ondersteunde generatiecalls. Audio-transcriptie valt buiten scope.
               </MetaText>
               <MetaText>
-                Master: {debugStorage.masterEnabled ? 'aan' : 'uit'}
-                {debugStorage.masterExpiresAt ? ` · verloopt ${debugStorage.masterExpiresAt}` : ''}
+                Logging staat {debugStorage.masterEnabled ? 'aan' : 'uit'}
+                {debugStorage.masterExpiresAt
+                  ? ` · vervalt ${formatDebugExpiry(debugStorage.masterExpiresAt)}`
+                  : debugStorage.masterEnabled
+                    ? ' · zonder automatische eindtijd'
+                    : ''}
               </MetaText>
               <ThemedView style={styles.debugActionsRow}>
                 <PrimaryButton
-                  label={updatingDebugStorage ? 'Bijwerken…' : 'Master aan (4u)'}
+                  label={updatingDebugStorage ? 'Bijwerken…' : 'Logging 4 uur aanzetten'}
                   onPress={() => void handleSetMasterDebugStorage(true)}
                   disabled={updatingDebugStorage}
                 />
                 <SecondaryButton
-                  label="Master uit"
+                  label="Logging uitzetten"
                   onPress={() => void handleSetMasterDebugStorage(false)}
                   disabled={updatingDebugStorage}
                 />
@@ -315,17 +343,18 @@ export default function SettingsAiQualityStudioScreen() {
 
               {debugStorage.flows.map((flow) => (
                 <ThemedView key={flow.flowKey} style={[styles.taskRow, { backgroundColor: palette.surfaceLow }]}>
-                  <ThemedText type="defaultSemiBold">{flow.flowKey}</ThemedText>
+                  <ThemedText type="defaultSemiBold">{DEBUG_FLOW_LABELS[flow.flowKey] ?? flow.flowKey}</ThemedText>
                   <MetaText>
-                    Status: {flow.state}
+                    Status: {flow.effectiveOn ? 'actief' : flow.desiredOn ? 'aangevraagd, nog niet effectief' : 'uit'}
                     {flow.reason ? ` · reden: ${flow.reason}` : ''}
                   </MetaText>
                   <MetaText>
                     Gewenst: {flow.desiredOn ? 'aan' : 'uit'} · effectief: {flow.effectiveOn ? 'aan' : 'uit'}
+                    {flow.expiresAt ? ` · vervalt ${formatDebugExpiry(flow.expiresAt)}` : ''}
                   </MetaText>
                   <ThemedView style={styles.debugActionsRow}>
                     <PrimaryButton
-                      label="Flow aan (4u)"
+                      label="Flow 4 uur aanzetten"
                       onPress={() => void handleSetFlowDebugStorage(flow.flowKey, true)}
                       disabled={updatingDebugStorage}
                     />

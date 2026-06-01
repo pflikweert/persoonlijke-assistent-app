@@ -14,12 +14,12 @@ import {
   SettingsSectionLabel,
 } from "@/components/ui/settings-nav-primitives";
 import {
-    classifyUnknownError,
-    hasAdminAiQualityStudioAccess,
-    hasAdminRegenerationAccess,
-    isObsidianSettingsEnabled,
-    resetAllUserData,
+  classifyUnknownError,
+  fetchMyAdminAccess,
+  isObsidianSettingsEnabled,
+  resetAllUserData,
 } from "@/services";
+import type { AdminAccessState } from "@/types";
 import { spacing } from "@/theme";
 
 type SettingsRoute = {
@@ -28,6 +28,7 @@ type SettingsRoute = {
     | "import"
     | "audio"
     | "obsidian"
+    | "admin-access"
     | "regeneration"
     | "meeting-capture"
     | "ai-quality-studio";
@@ -39,6 +40,7 @@ type SettingsRoute = {
     | "/settings-import"
     | "/settings-audio"
     | "/settings-obsidian"
+    | "/settings-admin-access"
     | "/settings-regeneration"
     | "/meeting-capture"
     | "/settings-ai-quality-studio";
@@ -110,6 +112,14 @@ const ADMIN_OBSIDIAN_ROUTE: SettingsRoute = {
   route: "/settings-obsidian",
 };
 
+const ADMIN_ACCESS_ROUTE: SettingsRoute = {
+  key: "admin-access",
+  label: "Adminrechten beheren",
+  description: "Ken toegang per admingebied toe of trek die weer in.",
+  icon: "admin-panel-settings",
+  route: "/settings-admin-access",
+};
+
 const DELETE_ROW: RowItem = {
   label: "Verwijder alles",
   description: "Verwijder je momenten, dagen en reflecties.",
@@ -120,7 +130,7 @@ const DELETE_ROW: RowItem = {
 export default function SettingsScreen() {
   const obsidianEnabled = isObsidianSettingsEnabled();
   const [menuVisible, setMenuVisible] = useState(false);
-  const [adminAccess, setAdminAccess] = useState<boolean | null>(null);
+  const [adminAccess, setAdminAccess] = useState<AdminAccessState | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleteSheetState, setDeleteSheetState] =
@@ -134,13 +144,9 @@ export default function SettingsScreen() {
 
     const run = async () => {
       try {
-        const [regenAllowed, aiQualityAllowed] = await Promise.all([
-          hasAdminRegenerationAccess(),
-          hasAdminAiQualityStudioAccess(),
-        ]);
-        const allowed = regenAllowed || aiQualityAllowed;
+        const access = await fetchMyAdminAccess();
         if (!cancelled) {
-          setAdminAccess(allowed);
+          setAdminAccess(access);
           setAccessError(null);
         }
       } catch (error) {
@@ -163,11 +169,31 @@ export default function SettingsScreen() {
   }, []);
 
   const adminRoutes = useMemo(
-    () =>
-      obsidianEnabled
-        ? [ADMIN_MEETING_CAPTURE_ROUTE, ADMIN_ROUTE, ADMIN_OBSIDIAN_ROUTE, ADMIN_AI_QUALITY_ROUTE]
-        : [ADMIN_MEETING_CAPTURE_ROUTE, ADMIN_ROUTE, ADMIN_AI_QUALITY_ROUTE],
-    [obsidianEnabled],
+    () => {
+      const routes: SettingsRoute[] = [];
+
+      if (adminAccess?.capabilities.meeting_capture) {
+        routes.push(ADMIN_MEETING_CAPTURE_ROUTE);
+      }
+
+      if (adminAccess?.capabilities.regeneration) {
+        routes.push(ADMIN_ROUTE);
+      }
+
+      if (adminAccess?.capabilities.ai_quality_studio) {
+        routes.push(ADMIN_AI_QUALITY_ROUTE);
+      }
+
+      if (adminAccess?.isFounder) {
+        routes.push(ADMIN_ACCESS_ROUTE);
+        if (obsidianEnabled) {
+          routes.push(ADMIN_OBSIDIAN_ROUTE);
+        }
+      }
+
+      return routes;
+    },
+    [adminAccess, obsidianEnabled]
   );
 
   function closeDeleteSheet() {
@@ -233,7 +259,7 @@ export default function SettingsScreen() {
           />
         </ThemedView>
 
-        {adminAccess === true && adminRoutes.length > 0 ? (
+        {adminAccess?.canAccessAdminMenu === true && adminRoutes.length > 0 ? (
           <ThemedView style={styles.sectionGroup}>
             <SettingsSectionLabel label="Beheer" />
             <ThemedView style={styles.menuList}>

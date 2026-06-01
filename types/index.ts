@@ -1,5 +1,10 @@
 // App-wide TypeScript domain and DTO types.
 export type {
+  AdminAccessState,
+  AdminManagedUserSummary,
+  UpdateAdminUserCapabilitiesPayload,
+} from "./admin-access";
+export type {
   AiPromptAssistActionDefinition,
   AiPromptAssistActionId,
   AiPromptAssistActionOutputType,

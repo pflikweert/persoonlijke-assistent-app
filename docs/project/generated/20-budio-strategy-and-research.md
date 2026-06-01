@@ -2,8 +2,8 @@
 
 # Budio Strategy and Research
 
-Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
-Source Commit: b90e144
+Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
+Source Commit: 35f8396
 
 Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

@@ -44,6 +44,19 @@ export function getAdminAllowlistFromEnv(args: {
   return new Set();
 }
 
+export function getMergedAdminAllowlistFromEnv(keys: string[]): Set<string> {
+  const merged = new Set<string>();
+
+  for (const key of keys) {
+    const values = parseAdminAllowlist(Deno.env.get(key));
+    for (const value of values) {
+      merged.add(value);
+    }
+  }
+
+  return merged;
+}
+
 export function getInternalTokenFromEnv(args: {
   primaryEnvKey: string;
   fallbackEnvKey?: string;

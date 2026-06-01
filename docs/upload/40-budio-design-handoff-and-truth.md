@@ -2,8 +2,8 @@
 
 # Budio Design Handoff and Truth
 
-Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
-Source Commit: b90e144
+Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
+Source Commit: 35f8396
 
 Doel: primaire domeinbundle voor design handoff en design truth.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -16,8 +16,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio UI System and Design Truth
 
-Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
-Source Commit: b90e144
+Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
+Source Commit: 35f8396
 
 Doel: primaire UI/designbundle met designregels, tokens en implementatieguardrails.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -489,8 +489,8 @@ Rules:
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
-Source Commit: b90e144
+Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
+Source Commit: 35f8396
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -574,8 +574,8 @@ Gebruik de bronbestanden zelf voor volledige screen-specifieke details; deze gen
 
 # Stitch Design Context
 
-Build Timestamp (UTC): 2026-05-16T05:29:31.611Z
-Source Commit: b90e144
+Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
+Source Commit: 35f8396
 
 Doel: compacte Stitch/implementation handoff om design drift te beperken zonder alle projectdocs te dupliceren.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

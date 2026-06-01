@@ -6,7 +6,8 @@ export type FlowName =
   | 'import-chatgpt-markdown'
   | 'start-user-export'
   | 'admin-regeneration-job'
-  | 'admin-ai-quality-studio';
+  | 'admin-ai-quality-studio'
+  | 'admin-access-control';
 
 export type FlowErrorCode =
   | 'AUTH_MISSING'

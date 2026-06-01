@@ -6,6 +6,8 @@ import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
+import { hasCapabilityAccess, loadAdminAccessContext } from '../_shared/admin-capabilities.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
 import { buildEntryNormalizationPromptSpec, ENTRY_NORMALIZATION_PROMPT_VERSION, buildReflectionPromptSpec, REFLECTION_PROMPT_VERSION } from '../_shared/prompt-specs.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import {
@@ -328,20 +330,6 @@ function ensureUuid(value: unknown): string | null {
   return uuidPattern.test(parsed) ? parsed : null;
 }
 
-function parseAdminAllowlist(rawValue: string | undefined): Set<string> {
-  const source = rawValue?.trim() ?? '';
-  if (!source) {
-    return new Set();
-  }
-
-  const items = source
-    .split(',')
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
-
-  return new Set(items);
-}
-
 function getServiceRoleKey(): string {
   const serviceRoleKey =
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
@@ -357,10 +345,6 @@ function getServiceRoleKey(): string {
 
 function getInternalToken(): string {
   return Deno.env.get('ADMIN_REGEN_INTERNAL_TOKEN')?.trim() ?? '';
-}
-
-function getAdminAllowlist(): Set<string> {
-  return parseAdminAllowlist(Deno.env.get('ADMIN_REGEN_ALLOWLIST_USER_IDS'));
 }
 
 function getSupabaseRuntimeEnv(): { supabaseUrl: string; supabaseAnonKey: string } {
@@ -624,37 +608,6 @@ async function triggerWorkerTick(args: {
   }).catch((_error) => {
     // Fire-and-forget worker trigger.
   });
-}
-
-async function authenticateAdmin(args: {
-  request: Request;
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  allowlist: Set<string>;
-}): Promise<{ userId: string }> {
-  const authHeader = args.request.headers.get('Authorization');
-  if (!authHeader) {
-    throw new Error('Missing Authorization header');
-  }
-
-  const supabase = createClient(args.supabaseUrl, args.supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: authHeader,
-      },
-    },
-  });
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    throw new Error('Unauthorized');
-  }
-
-  if (args.allowlist.size === 0 || !args.allowlist.has(data.user.id)) {
-    throw new Error('Forbidden');
-  }
-
-  return { userId: data.user.id };
 }
 
 async function loadEntriesOutdatedCandidateIds(args: {
@@ -1974,7 +1927,6 @@ Deno.serve(async (request: Request) => {
   try {
     const supabaseRuntimeEnv = getSupabaseRuntimeEnv();
     const internalToken = getInternalToken();
-    const adminAllowlist = getAdminAllowlist();
 
     let body: RequestBody;
     try {
@@ -2023,13 +1975,15 @@ Deno.serve(async (request: Request) => {
     let userId: string | null = null;
     if (!isInternal || action === 'start' || action === 'status' || action === 'access' || action === 'latest') {
       try {
-        const authResult = await authenticateAdmin({
+        const access = await loadAdminAccessContext({
           request,
           supabaseUrl: supabaseRuntimeEnv.supabaseUrl,
           supabaseAnonKey: supabaseRuntimeEnv.supabaseAnonKey,
-          allowlist: adminAllowlist,
         });
-        userId = authResult.userId;
+        if (!hasCapabilityAccess(access, 'regeneration')) {
+          throw new Error('Forbidden');
+        }
+        userId = access.userId;
       } catch (authError) {
         const message = authError instanceof Error ? authError.message : 'Unauthorized';
         const code = message === 'Missing Authorization header' ? 'AUTH_MISSING' : 'AUTH_UNAUTHORIZED';
@@ -2040,7 +1994,7 @@ Deno.serve(async (request: Request) => {
           flowId,
           step: 'authenticated',
           code,
-          message: message === 'Forbidden' ? 'You are not allowlisted for this action.' : message,
+          message: message === 'Forbidden' ? 'Je hebt geen rechten om data opnieuw te verwerken.' : message,
         });
       }
     }

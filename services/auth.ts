@@ -62,6 +62,7 @@ export async function ensureAuthenticatedUserSession(args: {
     | 'import-chatgpt-markdown'
     | 'admin-regeneration-job'
     | 'admin-ai-quality-studio'
+    | 'admin-access-control'
     | 'export-archive'
     | 'user-preferences'
     | 'entry-photos';

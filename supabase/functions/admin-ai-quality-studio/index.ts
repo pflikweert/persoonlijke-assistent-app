@@ -4,7 +4,9 @@ import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { authenticateAllowlistedAdmin, getAdminAllowlistFromEnv, getInternalTokenFromEnv } from '../_shared/admin-access.ts';
+import { getInternalTokenFromEnv } from '../_shared/admin-access.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { hasCapabilityAccess, loadAdminAccessContext } from '../_shared/admin-capabilities.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildEntryCleanupTechnicalContract, buildRuntimeBaselineDefinitions } from '../_shared/ai-quality-runtime-baselines.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
@@ -1604,7 +1606,6 @@ Deno.serve(async (request) => {
     }
 
     const internalToken = getInternalTokenFromEnv({ primaryEnvKey: 'ADMIN_AI_QUALITY_INTERNAL_TOKEN', fallbackEnvKey: 'ADMIN_REGEN_INTERNAL_TOKEN' });
-    const adminAllowlist = getAdminAllowlistFromEnv({ primaryEnvKey: 'ADMIN_AI_QUALITY_ALLOWLIST_USER_IDS', fallbackEnvKey: 'ADMIN_REGEN_ALLOWLIST_USER_IDS' });
     const internalHeaderToken = request.headers.get('x-admin-internal-token')?.trim() ?? '';
     const isInternal = internalToken.length > 0 && internalHeaderToken === internalToken;
 
@@ -1612,13 +1613,15 @@ Deno.serve(async (request) => {
     let userId: string | null = null;
     if (!isInternal) {
       try {
-        const auth = await authenticateAllowlistedAdmin({
+        const access = await loadAdminAccessContext({
           request,
           supabaseUrl: supabaseRuntimeEnv.supabaseUrl,
           supabaseAnonKey: supabaseRuntimeEnv.supabaseAnonKey,
-          allowlist: adminAllowlist,
         });
-        userId = auth.userId;
+        if (!hasCapabilityAccess(access, 'ai_quality_studio')) {
+          throw new Error('Forbidden');
+        }
+        userId = access.userId;
       } catch (authError) {
         const message = authError instanceof Error ? authError.message : 'Unauthorized';
         const code = message === 'Missing Authorization header' ? 'AUTH_MISSING' : 'AUTH_UNAUTHORIZED';
@@ -1629,7 +1632,7 @@ Deno.serve(async (request) => {
           flowId,
           step: 'authenticated',
           code,
-          message: message === 'Forbidden' ? 'You are not allowlisted for this action.' : message,
+          message: message === 'Forbidden' ? 'Je hebt geen AIQS-adminrechten voor deze actie.' : message,
         });
       }
     }
