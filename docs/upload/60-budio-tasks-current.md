@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
-Source Commit: 35f8396
+Build Timestamp (UTC): 2026-06-02T05:37:05.619Z
+Source Commit: bc7892e
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -169,6 +169,7 @@ sort_order: 5
 
 
 
+
 # 1.2E beta-readiness expliciteren en afronden
 
 ## Probleem / context
@@ -233,6 +234,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---
@@ -2176,6 +2179,7 @@ sort_order: 3
 
 
 
+
 # Admin/founder meeting capture — web route en IA
 
 ## Probleem / context
@@ -2329,6 +2333,8 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---
@@ -2629,6 +2635,7 @@ sort_order: 8
 
 
 
+
 # AIQS logging valideren in OpenAI dashboard en fallback-logpad
 
 ## Probleem / context
@@ -2708,6 +2715,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---
@@ -3422,6 +3431,7 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
 Op `2026-04-28` trad opnieuw een productiebug op bij foto toevoegen aan een bestaand moment via Android Chrome en de Google Photos / Android photo picker. Desktop Chrome werkt in dezelfde flow wel.
@@ -3692,6 +3702,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-05-15T14:36:40+02:00 — test: verify local entry photo gallery flows
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---
@@ -3822,7 +3834,7 @@ De viewerbasis is gedeeld met de bestaande moment-detail galerij, zodat swipeged
 - Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-01
+- Updated_at: 2026-06-02
 
 ```md
 ---
@@ -3832,7 +3844,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-06-01
+updated_at: 2026-06-02
 summary: "Bundelt AIQS logging-validatie, AIQS productie-livegang en een nieuwe DB-gedreven adminrechtenlaag per admingebied, zodat de bestaande admin-AI-flow snel en veilig naar productie kan."
 tags: [aiqs, admin, productie, permissions, supabase]
 workstream: aiqs
@@ -3845,6 +3857,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # MVP admin + AIQS productie bundel
 
@@ -3971,6 +3984,9 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 
 - Founder-bootstrap migreert automatisch éénmalig vanuit legacy allowlists naar DB-grants, zodat bestaande admin-toegang niet stilvalt tijdens de overgang.
 - Meeting Capture gebruikt nu een eigen capability in plaats van impliciete toegang via AIQS of regeneration.
+- Lokale OpenAI debug-opslag gebruikt weer persistente private storage; een Postgres RPC-conflict op `id` is opgelost via follow-up migratie.
+- Lokale edge-functions restart is gehard; detached startup van `supabase functions serve` wordt nu gevalideerd zodat adminroutes niet stil uitvallen na een lokale restart.
+- Admin capability-RPC is collision-proof gemaakt; een Postgres ambiguity op `capability` in `admin_replace_user_capabilities` is lokaal opgelost via follow-up migraties.
 
 ## Uitvoerblokken / fasering
 
@@ -4006,6 +4022,9 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 
 - Runtime-validatie van logging aan/uit en zichtbare TTL-status.
 - Bewijs van dashboardlogging + fallback-logpad voor bestaande AIQS-calls.
+- Lokale debug-opslag RPC werkt weer persistent zonder `ephemeral_fallback`.
+- Lokale edge-functions detached startup blijft actief na restart en geeft weer responses op admin edge routes.
+- Adminrechtenbeheer geeft lokaal geen `column reference "capability" is ambiguous` meer bij capability-mutations.
 - Rechten-smoke: founder grant/revoke, beperkte admin, non-admin denial.
 - `npm run lint`
 - `npm run typecheck`
@@ -4016,8 +4035,8 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: logging valideren, AIQS productie live zetten en founder-only capabilitybeheer bouwen.
-- Toegevoegde verbeteringen: éénmalige founder-bootstrap vanuit legacy allowlists en aparte capability voor Meeting Capture.
-- Afgerond: DB-capabilitymodel, founder-only rightsbeheer, centrale authorisatie, settings-menu migratie, logging-UX aanscherping, lint/typecheck/unit-test/taskflow/docs-verifies.
+- Toegevoegde verbeteringen: éénmalige founder-bootstrap vanuit legacy allowlists, aparte capability voor Meeting Capture, lokale debug-opslagfix voor persistente AIQS logging-settings, geharde lokale edge-functions restart voor adminroutes en een expliciete capability-RPC ambiguity-fix voor adminrechtenmutaties.
+- Afgerond: DB-capabilitymodel, founder-only rightsbeheer, centrale authorisatie, settings-menu migratie, logging-UX aanscherping, lint/typecheck/unit-test/taskflow/docs-verifies, lokale fix voor persistente debug-opslag-RPC, lokale restart-hardening voor edge functions en lokale fix voor capability-RPC ambiguities.
 - Open / blocked: productiebewijs in OpenAI dashboard en echte productie-liveflow van bestaande AIQS-calls zijn nog niet lokaal bewezen in deze ronde.
 
 ## Relevante links
@@ -4025,6 +4044,11 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - `docs/project/open-points.md`
 - `docs/project/25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md`
 - `docs/project/25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md`
+
+
+## Commits
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---
@@ -4222,6 +4246,7 @@ sort_order: 4
 
 
 
+
 ## Probleem / context
 
 Tijdens agent-uitvoering ontstaat soms drift tussen het oorspronkelijke goedgekeurde plan en de actuele uitvoerfocus. Zodra er tijdens bouwen correcties, regressies of polish-rondes bijkomen, verschuift de aandacht naar het laatste subprobleem. Daardoor kan een agent ten onrechte denken dat het werk "klaar" is, terwijl onderdelen uit het oorspronkelijke plan nog open staan.
@@ -4314,6 +4339,8 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---
@@ -4342,6 +4369,7 @@ workstream: app
 due_date: null
 sort_order: 6
 ---
+
 
 
 
@@ -4436,6 +4464,8 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---
@@ -4464,6 +4494,7 @@ workstream: plugin
 due_date: null
 sort_order: 7
 ---
+
 
 
 
@@ -4857,6 +4888,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-05-15T17:03:51+02:00 — feat: move budio workspace nav into sidebar
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 ```
 
 ---

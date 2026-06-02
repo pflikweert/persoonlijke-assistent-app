@@ -2,8 +2,8 @@
 
 # Budio Roadmap Planning Pack
 
-Build Timestamp (UTC): 2026-06-01T08:58:35.518Z
-Source Commit: 35f8396
+Build Timestamp (UTC): 2026-06-02T05:37:05.619Z
+Source Commit: bc7892e
 
 Doel: uploadklare roadmapbundle voor maandblokken, epicniveau planning en post-basis roadmap review.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
