@@ -134,6 +134,19 @@ type TaskRow = {
   output_type: 'text' | 'json' | 'text_list';
   description: string | null;
   is_active: boolean;
+  runtime_binding_key: string | null;
+  runtime_family:
+    | 'entry_normalization'
+    | 'entry_renormalization'
+    | 'day_journal'
+    | 'week_reflection'
+    | 'month_reflection'
+    | 'unknown'
+    | null;
+  composition_role: 'single' | 'compound_member' | 'runtime_variant' | 'legacy_hidden' | null;
+  managed_output_field: string | null;
+  is_runtime_driver: boolean;
+  variant_role: 'primary' | 'repair' | 'renormalization' | null;
   created_at: string;
   updated_at: string;
 };
@@ -155,6 +168,12 @@ type VersionRow = {
   updated_at: string;
   became_live_at: string | null;
   locked_at: string | null;
+};
+
+type VersionEvidence = {
+  completedTestRunCount: number;
+  positiveReviewCount: number;
+  latestReviewLabel: 'better' | 'equal' | 'worse' | 'fail' | null;
 };
 
 type DraftPayload = {
@@ -230,6 +249,13 @@ type DebugFlowUpdateInput = {
   flowKey: OpenAiDebugFlowKey;
   enabled: boolean;
   ttlHours: number | null;
+};
+
+const REVIEW_LABEL_MAP: Record<'better' | 'equal' | 'worse' | 'fail', 'beter' | 'gelijk' | 'slechter' | 'fout'> = {
+  better: 'beter',
+  equal: 'gelijk',
+  worse: 'slechter',
+  fail: 'fout',
 };
 
 const TEST_CAPABILITIES_BY_TASK_KEY: Record<string, { sourceTypes: SupportedTestSourceType[] }> = {
@@ -448,6 +474,8 @@ function normalizeDraftPayload(value: unknown): { payload: DraftPayload | null; 
 
   const model = parseNonEmptyString(input.model);
   const promptTemplate = typeof input.promptTemplate === 'string' ? input.promptTemplate : null;
+  const systemInstructions =
+    typeof input.systemInstructions === 'string' ? input.systemInstructions : undefined;
   const outputSchemaJson = ensureJsonObject(input.outputSchemaJson);
   const configJson = ensureJsonObject(input.configJson);
   const changelog = input.changelog === null || input.changelog === undefined ? null : String(input.changelog).trim() || null;
@@ -458,18 +486,26 @@ function normalizeDraftPayload(value: unknown): { payload: DraftPayload | null; 
   if (!configJson) return { payload: null, error: 'configJson moet een JSON object zijn.' };
 
   return {
-    payload: { model, promptTemplate, outputSchemaJson, configJson, changelog },
+    payload: {
+      model,
+      promptTemplate,
+      systemInstructions,
+      outputSchemaJson,
+      configJson,
+      changelog,
+    },
     error: null,
   };
 }
 
-function mapVersionRow(row: VersionRow) {
+function mapVersionRow(row: VersionRow, evidence?: VersionEvidence) {
   return {
     id: row.id,
     versionNumber: row.version_number,
     status: row.status,
     model: row.model,
     promptTemplate: row.prompt_template,
+    systemInstructions: row.system_instructions,
     outputSchemaJson: row.output_schema_json ?? {},
     configJson: row.config_json ?? {},
     changelog: row.changelog,
@@ -477,7 +513,44 @@ function mapVersionRow(row: VersionRow) {
     updatedAt: row.updated_at,
     becameLiveAt: row.became_live_at,
     lockedAt: row.locked_at,
+    completedTestRunCount: evidence?.completedTestRunCount ?? 0,
+    positiveReviewCount: evidence?.positiveReviewCount ?? 0,
+    latestReviewLabel: evidence?.latestReviewLabel
+      ? REVIEW_LABEL_MAP[evidence.latestReviewLabel]
+      : null,
   };
+}
+
+function buildVersionEvidenceByVersionId(rows: Array<{
+  task_version_id: string;
+  status: 'queued' | 'completed' | 'failed';
+  reviewer_label: 'better' | 'equal' | 'worse' | 'fail' | null;
+}>): Map<string, VersionEvidence> {
+  const byVersionId = new Map<string, VersionEvidence>();
+
+  for (const row of rows) {
+    const current = byVersionId.get(row.task_version_id) ?? {
+      completedTestRunCount: 0,
+      positiveReviewCount: 0,
+      latestReviewLabel: null,
+    };
+
+    if (row.status === 'completed') {
+      current.completedTestRunCount += 1;
+    }
+
+    if (row.reviewer_label) {
+      current.latestReviewLabel ??= row.reviewer_label;
+    }
+
+    if (row.status === 'completed' && (row.reviewer_label === 'better' || row.reviewer_label === 'equal')) {
+      current.positiveReviewCount += 1;
+    }
+
+    byVersionId.set(row.task_version_id, current);
+  }
+
+  return byVersionId;
 }
 
 function mapTaskSummary(row: TaskRow, liveVersion: VersionRow | null, hasDraft: boolean) {
@@ -489,6 +562,12 @@ function mapTaskSummary(row: TaskRow, liveVersion: VersionRow | null, hasDraft: 
     outputType: row.output_type,
     description: row.description,
     isActive: row.is_active,
+    runtimeBindingKey: row.runtime_binding_key,
+    runtimeFamily: row.runtime_family ?? 'unknown',
+    compositionRole: row.composition_role ?? 'legacy_hidden',
+    managedOutputField: row.managed_output_field,
+    isRuntimeDriver: row.is_runtime_driver === true,
+    variantRole: row.variant_role,
     hasDraft,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -497,13 +576,6 @@ function mapTaskSummary(row: TaskRow, liveVersion: VersionRow | null, hasDraft: 
 }
 
 function mapTestRunRow(row: TestRunRow) {
-  const reviewerLabelMap: Record<'better' | 'equal' | 'worse' | 'fail', 'beter' | 'gelijk' | 'slechter' | 'fout'> = {
-    better: 'beter',
-    equal: 'gelijk',
-    worse: 'slechter',
-    fail: 'fout',
-  };
-
   return {
     id: row.id,
     taskId: row.task_id,
@@ -526,7 +598,7 @@ function mapTestRunRow(row: TestRunRow) {
     promptTokens: row.prompt_tokens,
     completionTokens: row.completion_tokens,
     totalTokens: row.total_tokens,
-    reviewerLabel: row.reviewer_label ? reviewerLabelMap[row.reviewer_label] : null,
+    reviewerLabel: row.reviewer_label ? REVIEW_LABEL_MAP[row.reviewer_label] : null,
     reviewerNotes: row.reviewer_notes,
     createdAt: row.created_at,
   };
@@ -539,13 +611,6 @@ function toCompareView(args: {
   liveOutputText: string | null;
   liveOutputJson: Record<string, unknown> | unknown[] | null;
 }) {
-  const reviewerLabelMap: Record<'better' | 'equal' | 'worse' | 'fail', 'beter' | 'gelijk' | 'slechter' | 'fout'> = {
-    better: 'beter',
-    equal: 'gelijk',
-    worse: 'slechter',
-    fail: 'fout',
-  };
-
   return {
     testRunId: args.row.id,
     taskKey: args.row.task?.key ?? '',
@@ -560,7 +625,7 @@ function toCompareView(args: {
     liveOutputJson: args.liveOutputJson,
     testOutputText: args.row.output_text,
     testOutputJson: args.row.output_json ?? null,
-    reviewerLabel: args.row.reviewer_label ? reviewerLabelMap[args.row.reviewer_label] : null,
+    reviewerLabel: args.row.reviewer_label ? REVIEW_LABEL_MAP[args.row.reviewer_label] : null,
     reviewerNotes: args.row.reviewer_notes,
   };
 }
@@ -620,7 +685,7 @@ function getOpenAiApiKey(): string {
 async function loadTaskByKey(args: { adminClient: any; taskKey: string }): Promise<TaskRow | null> {
   const { data, error } = await args.adminClient
     .from('ai_tasks')
-    .select('id, key, label, input_type, output_type, description, is_active, created_at, updated_at')
+    .select('id, key, label, input_type, output_type, description, is_active, runtime_binding_key, runtime_family, composition_role, managed_output_field, is_runtime_driver, variant_role, created_at, updated_at')
     .eq('key', args.taskKey)
     .maybeSingle();
   if (error) throw new Error(String(error.message ?? error));
@@ -630,7 +695,7 @@ async function loadTaskByKey(args: { adminClient: any; taskKey: string }): Promi
 async function loadVersionsByTaskId(args: { adminClient: any; taskId: string }): Promise<VersionRow[]> {
   const { data, error } = await args.adminClient
     .from('ai_task_versions')
-    .select('id, task_id, version_number, status, model, prompt_template, output_schema_json, config_json, changelog, created_at, updated_at, became_live_at, locked_at')
+    .select('id, task_id, version_number, status, model, prompt_template, system_instructions, output_schema_json, config_json, min_items, max_items, changelog, created_at, updated_at, became_live_at, locked_at')
     .eq('task_id', args.taskId)
     .order('version_number', { ascending: false });
   if (error) throw new Error(String(error.message ?? error));
@@ -641,11 +706,24 @@ async function buildTaskDetail(args: { adminClient: any; taskKey: string }) {
   const task = await loadTaskByKey(args);
   if (!task) return null;
   const versions = await loadVersionsByTaskId({ adminClient: args.adminClient, taskId: task.id });
+  const versionIds = versions.map((version) => version.id);
+  let evidenceByVersionId = new Map<string, VersionEvidence>();
+
+  if (versionIds.length > 0) {
+    const { data: evidenceRows, error: evidenceError } = await args.adminClient
+      .from('ai_test_runs')
+      .select('task_version_id, status, reviewer_label, created_at')
+      .in('task_version_id', versionIds)
+      .order('created_at', { ascending: false });
+    if (evidenceError) throw new Error(String(evidenceError.message ?? evidenceError));
+    evidenceByVersionId = buildVersionEvidenceByVersionId(evidenceRows ?? []);
+  }
+
   const liveVersion = versions.find((version) => version.status === 'live') ?? null;
   const hasDraft = versions.some((version) => version.status === 'draft');
   return {
     ...mapTaskSummary(task, liveVersion, hasDraft),
-    versions: versions.map(mapVersionRow),
+    versions: versions.map((version) => mapVersionRow(version, evidenceByVersionId.get(version.id))),
   };
 }
 
@@ -659,6 +737,7 @@ function parseAction(value: unknown):
   | 'create_draft_version'
   | 'update_draft_version'
   | 'delete_draft_version'
+  | 'promote_version_live'
   | 'prompt_assist_preview'
   | 'list_test_sources'
   | 'run_test'
@@ -677,6 +756,7 @@ function parseAction(value: unknown):
     value === 'create_draft_version' ||
     value === 'update_draft_version' ||
     value === 'delete_draft_version' ||
+    value === 'promote_version_live' ||
     value === 'prompt_assist_preview' ||
     value === 'list_test_sources' ||
     value === 'run_test' ||
@@ -1407,34 +1487,86 @@ function normalizeJsonForCompare(value: unknown): unknown {
 
 function buildVersionBaselineFingerprint(input: {
   model: string;
+  systemInstructions: string;
   promptTemplate: string;
   outputSchemaJson: Record<string, unknown>;
   configJson: Record<string, unknown>;
 }): string {
   return JSON.stringify({
     model: input.model,
+    systemInstructions: input.systemInstructions,
     promptTemplate: input.promptTemplate,
     outputSchemaJson: normalizeJsonForCompare(input.outputSchemaJson),
     configJson: normalizeJsonForCompare(input.configJson),
   });
 }
 
+function buildTaskMetadataFingerprint(input: {
+  label: string;
+  inputType: TaskRow['input_type'];
+  outputType: TaskRow['output_type'];
+  description: string;
+  isActive: boolean;
+  runtimeBindingKey: string | null;
+  runtimeFamily: string;
+  compositionRole: string;
+  managedOutputField: string | null;
+  isRuntimeDriver: boolean;
+  variantRole: string | null;
+}): string {
+  return JSON.stringify({
+    label: input.label,
+    inputType: input.inputType,
+    outputType: input.outputType,
+    description: input.description,
+    isActive: input.isActive,
+    runtimeBindingKey: input.runtimeBindingKey,
+    runtimeFamily: input.runtimeFamily,
+    compositionRole: input.compositionRole,
+    managedOutputField: input.managedOutputField,
+    isRuntimeDriver: input.isRuntimeDriver,
+    variantRole: input.variantRole,
+  });
+}
+
+function isRuntimeCodeBaselineVersion(configJson: Record<string, unknown> | null | undefined): boolean {
+  if (!configJson || typeof configJson !== 'object' || Array.isArray(configJson)) {
+    return false;
+  }
+
+  const baselineImport = configJson.baseline_import;
+  if (!baselineImport || typeof baselineImport !== 'object' || Array.isArray(baselineImport)) {
+    return false;
+  }
+
+  return (baselineImport as Record<string, unknown>).baseline_source === 'runtime_code';
+}
+
 async function importRuntimeBaselines(args: {
   adminClient: any;
   userId: string | null;
 }): Promise<{
-  inserted: string[];
-  skipped_equal: string[];
-  skipped_conflict: string[];
-  unsupported: string[];
-  conflicts: string[];
+  items: Array<{
+    taskKey: string;
+    runtimeBindingKey: string | null;
+    taskStatus: 'created' | 'updated' | 'already_ok' | 'error';
+    liveStatus: 'live_created' | 'updated' | 'already_ok' | 'error';
+    message: string | null;
+  }>;
+  summary: {
+    created: number;
+    updated: number;
+    live_created: number;
+    already_ok: number;
+    error: number;
+  };
 }> {
   const definitions = buildRuntimeBaselineDefinitions({ model: getRuntimeOpenAiModel() });
   const taskKeys = definitions.map((definition) => definition.taskKey);
 
   const { data: taskData, error: taskError } = await args.adminClient
     .from('ai_tasks')
-    .select('id, key, label, input_type, output_type, description, is_active, created_at, updated_at')
+    .select('id, key, label, input_type, output_type, description, is_active, runtime_binding_key, runtime_family, composition_role, managed_output_field, is_runtime_driver, variant_role, created_at, updated_at')
     .in('key', taskKeys);
 
   if (taskError) {
@@ -1446,17 +1578,105 @@ async function importRuntimeBaselines(args: {
     tasksByKey.set(row.key, row);
   }
 
-  const inserted: string[] = [];
-  const skippedEqual: string[] = [];
-  const skippedConflict: string[] = [];
-  const unsupported: string[] = [];
-  const conflicts: string[] = [];
+  const items: Array<{
+    taskKey: string;
+    runtimeBindingKey: string | null;
+    taskStatus: 'created' | 'updated' | 'already_ok' | 'error';
+    liveStatus: 'live_created' | 'updated' | 'already_ok' | 'error';
+    message: string | null;
+  }> = [];
+  const summary = {
+    created: 0,
+    updated: 0,
+    live_created: 0,
+    already_ok: 0,
+    error: 0,
+  };
 
   for (const definition of definitions) {
-    const task = tasksByKey.get(definition.taskKey);
+    let taskStatus: 'created' | 'updated' | 'already_ok' | 'error' = 'already_ok';
+    let liveStatus: 'live_created' | 'updated' | 'already_ok' | 'error' = 'already_ok';
+    let message: string | null = null;
+    let task = tasksByKey.get(definition.taskKey) ?? null;
     if (!task) {
-      unsupported.push(definition.taskKey);
-      continue;
+      const { data: insertedTask, error: insertedTaskError } = await args.adminClient
+        .from('ai_tasks')
+        .insert({
+          key: definition.taskKey,
+          label: definition.label,
+          input_type: definition.inputType,
+          output_type: definition.outputType,
+          description: definition.description,
+          is_active: definition.isActive,
+          runtime_binding_key: definition.runtimeBindingKey,
+          runtime_family: definition.runtimeFamily,
+          composition_role: definition.compositionRole,
+          managed_output_field: definition.managedOutputField,
+          is_runtime_driver: definition.isRuntimeDriver,
+          variant_role: definition.variantRole,
+        })
+        .select('id, key, label, input_type, output_type, description, is_active, runtime_binding_key, runtime_family, composition_role, managed_output_field, is_runtime_driver, variant_role, created_at, updated_at')
+        .single();
+
+      if (insertedTaskError || !insertedTask) {
+        throw new Error(`Failed to insert AIQS task for runtime baseline ${definition.taskKey}.`);
+      }
+
+      task = insertedTask as TaskRow;
+      taskStatus = 'created';
+      tasksByKey.set(definition.taskKey, task);
+    } else {
+      const existingTaskFingerprint = buildTaskMetadataFingerprint({
+        label: task.label,
+        inputType: task.input_type,
+        outputType: task.output_type,
+        description: task.description ?? '',
+        isActive: task.is_active,
+        runtimeBindingKey: task.runtime_binding_key ?? null,
+        runtimeFamily: task.runtime_family ?? 'unknown',
+        compositionRole: task.composition_role ?? 'legacy_hidden',
+        managedOutputField: task.managed_output_field ?? null,
+        isRuntimeDriver: task.is_runtime_driver === true,
+        variantRole: task.variant_role ?? null,
+      });
+      const incomingTaskFingerprint = buildTaskMetadataFingerprint({
+        label: definition.label,
+        inputType: definition.inputType,
+        outputType: definition.outputType,
+        description: definition.description,
+        isActive: definition.isActive,
+        runtimeBindingKey: definition.runtimeBindingKey,
+        runtimeFamily: definition.runtimeFamily,
+        compositionRole: definition.compositionRole,
+        managedOutputField: definition.managedOutputField,
+        isRuntimeDriver: definition.isRuntimeDriver,
+        variantRole: definition.variantRole,
+      });
+
+      if (existingTaskFingerprint !== incomingTaskFingerprint) {
+        const { error: taskUpdateError } = await args.adminClient
+          .from('ai_tasks')
+          .update({
+            label: definition.label,
+            input_type: definition.inputType,
+            output_type: definition.outputType,
+            description: definition.description,
+            is_active: definition.isActive,
+            runtime_binding_key: definition.runtimeBindingKey,
+            runtime_family: definition.runtimeFamily,
+            composition_role: definition.compositionRole,
+            managed_output_field: definition.managedOutputField,
+            is_runtime_driver: definition.isRuntimeDriver,
+            variant_role: definition.variantRole,
+          })
+          .eq('id', task.id);
+
+        if (taskUpdateError) {
+          throw new Error(`Failed to update AIQS task metadata for ${definition.taskKey}.`);
+        }
+
+        taskStatus = 'updated';
+      }
     }
 
     const versions = await loadVersionsByTaskId({ adminClient: args.adminClient, taskId: task.id });
@@ -1464,6 +1684,7 @@ async function importRuntimeBaselines(args: {
 
     const incomingFingerprint = buildVersionBaselineFingerprint({
       model: definition.model,
+      systemInstructions: definition.systemInstructions,
       promptTemplate: definition.promptTemplate,
       outputSchemaJson: definition.outputSchemaJson,
       configJson: definition.configJson,
@@ -1477,6 +1698,7 @@ async function importRuntimeBaselines(args: {
           status: 'live',
           model: definition.model,
           prompt_template: definition.promptTemplate,
+          system_instructions: definition.systemInstructions,
           output_schema_json: definition.outputSchemaJson,
           config_json: definition.configJson,
           changelog: definition.changelog,
@@ -1491,32 +1713,73 @@ async function importRuntimeBaselines(args: {
         throw new Error(`Failed to insert runtime baseline for task ${definition.taskKey}.`);
       }
 
-      inserted.push(definition.taskKey);
-      continue;
+      liveStatus = 'live_created';
+    } else {
+      const existingFingerprint = buildVersionBaselineFingerprint({
+        model: liveVersion.model,
+        systemInstructions: liveVersion.system_instructions,
+        promptTemplate: liveVersion.prompt_template,
+        outputSchemaJson: liveVersion.output_schema_json ?? {},
+        configJson: liveVersion.config_json ?? {},
+      });
+
+      if (existingFingerprint === incomingFingerprint) {
+        liveStatus = 'already_ok';
+      } else if (isRuntimeCodeBaselineVersion(liveVersion.config_json ?? {})) {
+        const { error: liveUpdateError } = await args.adminClient
+          .from('ai_task_versions')
+          .update({
+            model: definition.model,
+            prompt_template: definition.promptTemplate,
+            system_instructions: definition.systemInstructions,
+            output_schema_json: definition.outputSchemaJson,
+            config_json: definition.configJson,
+            changelog: definition.changelog,
+          })
+          .eq('id', liveVersion.id);
+
+        if (liveUpdateError) {
+          throw new Error(`Failed to update runtime baseline for task ${definition.taskKey}.`);
+        }
+
+        liveStatus = 'updated';
+      } else {
+        liveStatus = 'error';
+        message =
+          'Bestaande live versie wijkt af van de runtime-baseline en is niet baseline-managed.';
+      }
     }
 
-    const existingFingerprint = buildVersionBaselineFingerprint({
-      model: liveVersion.model,
-      promptTemplate: liveVersion.prompt_template,
-      outputSchemaJson: liveVersion.output_schema_json ?? {},
-      configJson: liveVersion.config_json ?? {},
+    items.push({
+      taskKey: definition.taskKey,
+      runtimeBindingKey: definition.runtimeBindingKey,
+      taskStatus,
+      liveStatus,
+      message,
     });
 
-    if (existingFingerprint === incomingFingerprint) {
-      skippedEqual.push(definition.taskKey);
-      continue;
+    if (taskStatus === 'created') {
+      summary.created += 1;
+    } else if (taskStatus === 'updated') {
+      summary.updated += 1;
     }
 
-    skippedConflict.push(definition.taskKey);
-    conflicts.push(definition.taskKey);
+    if (liveStatus === 'live_created') {
+      summary.live_created += 1;
+    } else if (liveStatus === 'updated') {
+      summary.updated += 1;
+    } else if (liveStatus === 'error') {
+      summary.error += 1;
+    }
+
+    if (taskStatus === 'already_ok' && liveStatus === 'already_ok') {
+      summary.already_ok += 1;
+    }
   }
 
   return {
-    inserted,
-    skipped_equal: skippedEqual,
-    skipped_conflict: skippedConflict,
-    unsupported,
-    conflicts,
+    items,
+    summary,
   };
 }
 
@@ -1695,7 +1958,7 @@ Deno.serve(async (request) => {
       step = 'list_tasks';
       const { data: taskData, error: taskError } = await adminClient
         .from('ai_tasks')
-        .select('id, key, label, input_type, output_type, description, is_active, created_at, updated_at')
+        .select('id, key, label, input_type, output_type, description, is_active, runtime_binding_key, runtime_family, composition_role, managed_output_field, is_runtime_driver, variant_role, created_at, updated_at')
         .eq('is_active', true)
         .order('key', { ascending: true });
       if (taskError) return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: 'Failed to load AI Quality Studio tasks.' });
@@ -1818,7 +2081,7 @@ Deno.serve(async (request) => {
 
       const { data: existingTaskData, error: existingTaskError } = await adminClient
         .from('ai_tasks')
-        .select('id, key, label, input_type, output_type, description, is_active, created_at, updated_at')
+        .select('id, key, label, input_type, output_type, description, is_active, runtime_binding_key, runtime_family, composition_role, managed_output_field, is_runtime_driver, variant_role, created_at, updated_at')
         .eq('id', (existing as VersionRow).task_id)
         .maybeSingle();
       if (existingTaskError) {
@@ -1835,7 +2098,7 @@ Deno.serve(async (request) => {
         .update({
           model: payload.model,
           prompt_template: payload.promptTemplate,
-          system_instructions: payload.systemInstructions,
+          system_instructions: payload.systemInstructions ?? (existing as VersionRow).system_instructions,
           output_schema_json: payload.outputSchemaJson,
           config_json: payload.configJson,
           min_items: payload.minItems,
@@ -1908,6 +2171,96 @@ Deno.serve(async (request) => {
         requestId,
         flowId,
         deletedVersionId: versionId,
+      });
+    }
+
+    if (action === 'promote_version_live') {
+      step = 'promote_version_live';
+      const taskKey = parseNonEmptyString(body.taskKey);
+      const versionId = parseUuid(body.versionId);
+      if (!taskKey || !versionId) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'taskKey en versionId zijn verplicht.',
+        });
+      }
+
+      const { data: promotionRows, error: promotionError } = await adminClient.rpc(
+        'aiqs_promote_version_live',
+        {
+          p_task_key: taskKey,
+          p_version_id: versionId,
+        }
+      );
+
+      if (promotionError) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: String(promotionError.message ?? 'Versie kon niet live worden gezet.'),
+        });
+      }
+
+      const promotion = Array.isArray(promotionRows) ? promotionRows[0] : promotionRows;
+      if (!promotion?.promoted_version_id) {
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: 'DB_WRITE_FAILED',
+          message: 'Promotie gaf geen promoted version terug.',
+        });
+      }
+
+      const { data: promotedVersion, error: promotedVersionError } = await adminClient
+        .from('ai_task_versions')
+        .select('id, task_id, version_number, status, model, prompt_template, system_instructions, output_schema_json, config_json, min_items, max_items, changelog, created_at, updated_at, became_live_at, locked_at')
+        .eq('id', promotion.promoted_version_id)
+        .maybeSingle();
+
+      if (promotedVersionError) {
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: 'DB_READ_FAILED',
+          message: 'Promoted version kon niet worden geladen.',
+        });
+      }
+      if (!promotedVersion) {
+        return errorResponse({
+          request,
+          httpStatus: 404,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'Promoted version not found.',
+        });
+      }
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        promotedVersion: mapVersionRow(promotedVersion as VersionRow),
+        archivedVersionId: promotion.archived_version_id ?? null,
+        previousLiveVersionNumber: promotion.previous_live_version_number ?? null,
+        mode: promotion.mode,
       });
     }
 

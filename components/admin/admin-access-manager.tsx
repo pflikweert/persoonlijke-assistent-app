@@ -2,7 +2,14 @@ import { Pressable, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { MetaText, StateBlock, SurfaceSection } from "@/components/ui/screen-primitives";
+import {
+  AdminDenseRow,
+  AdminEmptyState,
+  AdminList,
+  AdminPanel,
+  AdminStatusBadge,
+} from "@/components/ui/admin-console-primitives";
+import { MetaText, StateBlock } from "@/components/ui/screen-primitives";
 import {
   ADMIN_CAPABILITY_LABELS,
   getAdminCapabilityEntries,
@@ -51,19 +58,18 @@ export function AdminAccessManager({
 
   if (users.length === 0) {
     return (
-      <SurfaceSection title="Gebruikers">
-        <StateBlock
-          tone="empty"
+      <AdminPanel title="Gebruikers">
+        <AdminEmptyState
           message="Nog geen gebruikers gevonden."
           detail="Zodra iemand een account heeft, kun je hier admingebieden toekennen."
         />
-      </SurfaceSection>
+      </AdminPanel>
     );
   }
 
   return (
-    <SurfaceSection title="Gebruikers" subtitle="Founder-only beheer van rechten per admingebied.">
-      <ThemedView style={styles.list}>
+    <AdminPanel title="Gebruikers" subtitle="Founder-only beheer van rechten per admingebied.">
+      <AdminList>
         {users.map((user) => {
           const capabilityEntries = getAdminCapabilityEntries(user.capabilities);
           const isSaving = savingUserId === user.userId;
@@ -80,30 +86,17 @@ export function AdminAccessManager({
                 },
               ]}
             >
-              <ThemedView style={styles.header}>
-                <ThemedView style={styles.headerCopy}>
-                  <ThemedText type="defaultSemiBold">
-                    {user.displayName || user.email || user.userId}
-                  </ThemedText>
-                  {user.email ? <MetaText>{user.email}</MetaText> : null}
-                  <MetaText>{formatCapabilitySummary(user)}</MetaText>
-                  {isSelf ? <MetaText>Dit ben jij.</MetaText> : null}
-                </ThemedView>
-
-                <ThemedView
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: user.isFounder ? palette.surfaceHigh : palette.surface,
-                      borderColor: palette.separator,
-                    },
-                  ]}
-                >
-                  <ThemedText type="bodySecondary" style={styles.badgeText}>
-                    {user.isFounder ? "Founder" : "Gebruiker"}
-                  </ThemedText>
-                </ThemedView>
-              </ThemedView>
+              <AdminDenseRow
+                title={user.displayName || user.email || user.userId}
+                subtitle={user.email}
+                meta={[formatCapabilitySummary(user), isSelf ? "Dit ben jij." : null].filter(Boolean).join(" · ")}
+                chips={
+                  <>
+                    <AdminStatusBadge label={user.isFounder ? "Founder" : "Gebruiker"} tone={user.isFounder ? "success" : "neutral"} />
+                    {isSaving ? <AdminStatusBadge label="Opslaan" tone="info" /> : null}
+                  </>
+                }
+              />
 
               {user.isFounder ? (
                 <StateBlock
@@ -135,9 +128,11 @@ export function AdminAccessManager({
                         },
                       ]}
                     >
-                      <ThemedText type="defaultSemiBold">{entry.label}</ThemedText>
+                      <ThemedView style={styles.capabilityHeader}>
+                        <ThemedText type="defaultSemiBold">{entry.label}</ThemedText>
+                        <AdminStatusBadge label={entry.enabled ? "Actief" : "Uit"} tone={entry.enabled ? "success" : "neutral"} />
+                      </ThemedView>
                       <MetaText>{entry.description}</MetaText>
-                      <MetaText>{entry.enabled ? "Actief" : "Uit"}</MetaText>
                     </Pressable>
                   ))}
                 </ThemedView>
@@ -145,8 +140,8 @@ export function AdminAccessManager({
             </ThemedView>
           );
         })}
-      </ThemedView>
-    </SurfaceSection>
+      </AdminList>
+    </AdminPanel>
   );
 }
 
@@ -169,16 +164,13 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xs,
   },
-  badge: {
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  badgeText: {
-    fontSize: 12,
-  },
   capabilityList: {
+    gap: spacing.sm,
+  },
+  capabilityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.sm,
   },
   capabilityChip: {

@@ -155,7 +155,7 @@ export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
 ];
 
 export function mapTaskOutputTypeToAssistOutputType(taskKey: string): AiPromptAssistActionOutputType {
-  if (taskKey === 'entry_cleanup') return 'compound';
+  if (isEntryCleanupStructuredTask(taskKey)) return 'compound';
   if (taskKey.includes('highlights') || taskKey.includes('reflection_points')) return 'list';
   if (taskKey.includes('summary') || taskKey.includes('narrative')) return 'text';
   return 'text';
@@ -296,8 +296,8 @@ const STRUCTURED_PROMPT_DEFINITIONS: Record<string, StructuredPromptEditorDefini
     ],
     tokens: ENTRY_CLEANUP_TOKEN_DEFINITIONS,
   },
-  day_summary: {
-    taskKey: 'day_summary',
+  day_narrative: {
+    taskKey: 'day_narrative',
     title: 'Vandaag prompt',
     subtitle: 'Gedeelde prompt voor samenvatting, dagverhaal en secties.',
     runtimeFamilyLabel: 'dag-opbouw',
@@ -340,8 +340,8 @@ const STRUCTURED_PROMPT_DEFINITIONS: Record<string, StructuredPromptEditorDefini
     ],
     tokens: DAY_SHARED_TOKEN_DEFINITIONS,
   },
-  week_summary: {
-    taskKey: 'week_summary',
+  week_narrative: {
+    taskKey: 'week_narrative',
     title: 'Week prompt',
     subtitle: 'Gedeelde prompt voor weekoutput.',
     runtimeFamilyLabel: 'reflectie',
@@ -391,8 +391,8 @@ const STRUCTURED_PROMPT_DEFINITIONS: Record<string, StructuredPromptEditorDefini
     ],
     tokens: REFLECTION_SHARED_TOKEN_DEFINITIONS,
   },
-  month_summary: {
-    taskKey: 'month_summary',
+  month_narrative: {
+    taskKey: 'month_narrative',
     title: 'Maand prompt',
     subtitle: 'Gedeelde prompt voor maandoutput.',
     runtimeFamilyLabel: 'reflectie',
@@ -443,6 +443,23 @@ const STRUCTURED_PROMPT_DEFINITIONS: Record<string, StructuredPromptEditorDefini
     tokens: REFLECTION_SHARED_TOKEN_DEFINITIONS,
   },
 };
+
+const STRUCTURED_PROMPT_TASK_ALIASES: Record<string, string> = {
+  entry_cleanup_repair: 'entry_cleanup',
+  entry_renormalization: 'entry_cleanup',
+  day_summary: 'day_narrative',
+  day_journal_repair: 'day_narrative',
+  week_summary: 'week_narrative',
+  month_summary: 'month_narrative',
+};
+
+function resolveStructuredPromptTaskKey(taskKey: string): string {
+  return STRUCTURED_PROMPT_TASK_ALIASES[taskKey] ?? taskKey;
+}
+
+function isEntryCleanupStructuredTask(taskKey: string): boolean {
+  return ['entry_cleanup', 'entry_cleanup_repair', 'entry_renormalization'].includes(taskKey);
+}
 
 const DEFAULT_STRUCTURED_PROMPT_DEFINITION: StructuredPromptEditorDefinition = {
   taskKey: 'generic',
@@ -505,7 +522,8 @@ function formatLabeledStructuredText(
 }
 
 export function getStructuredPromptEditorDefinition(taskKey: string): StructuredPromptEditorDefinition {
-  return STRUCTURED_PROMPT_DEFINITIONS[taskKey] ?? {
+  const resolvedTaskKey = resolveStructuredPromptTaskKey(taskKey);
+  return STRUCTURED_PROMPT_DEFINITIONS[resolvedTaskKey] ?? {
     ...DEFAULT_STRUCTURED_PROMPT_DEFINITION,
     taskKey,
   };
@@ -514,7 +532,7 @@ export function getStructuredPromptEditorDefinition(taskKey: string): Structured
 export function parseStructuredPromptInstructionSections(taskKey: string, taskInstruction: string): Record<string, string> {
   const definition = getStructuredPromptEditorDefinition(taskKey);
 
-  if (taskKey === 'entry_cleanup') {
+  if (isEntryCleanupStructuredTask(taskKey)) {
     const parsed = parseEntryCleanupInstructionStateFromText(taskInstruction);
     return {
       systemRulesInstruction: parsed.systemRulesInstruction,
@@ -529,7 +547,7 @@ export function parseStructuredPromptInstructionSections(taskKey: string, taskIn
 }
 
 export function formatStructuredPromptInstructionSections(taskKey: string, values: Record<string, string>): string {
-  if (taskKey === 'entry_cleanup') {
+  if (isEntryCleanupStructuredTask(taskKey)) {
     return formatEntryCleanupInstructionStateForEditor({
       systemRulesInstruction: values.systemRulesInstruction ?? '',
       generalInstruction: values.generalInstruction ?? '',
@@ -548,7 +566,7 @@ export function buildStructuredPromptTemplate(args: {
   promptTemplateRaw: string;
   sectionValues: Record<string, string>;
 }): string {
-  if (args.taskKey === 'entry_cleanup') {
+  if (isEntryCleanupStructuredTask(args.taskKey)) {
     return buildEntryCleanupPromptTemplate({
       promptTemplateRaw: args.promptTemplateRaw,
       instructions: {
@@ -1122,7 +1140,8 @@ export type TaskResponseContractField = {
 };
 
 export function getTaskResponseContractFields(taskKey: string): TaskResponseContractField[] {
-  if (taskKey === 'entry_cleanup') {
+  const normalizedTaskKey = resolveStructuredPromptTaskKey(taskKey);
+  if (isEntryCleanupStructuredTask(taskKey) || normalizedTaskKey === 'entry_cleanup') {
     return [
       { name: 'title', type: 'string', required: true },
       { name: 'body', type: 'string', required: true },
@@ -1133,14 +1152,16 @@ export function getTaskResponseContractFields(taskKey: string): TaskResponseCont
 }
 
 export function getTaskInputContractLines(taskKey: string): string[] {
-  if (taskKey === 'entry_cleanup') {
+  const normalizedTaskKey = resolveStructuredPromptTaskKey(taskKey);
+  if (isEntryCleanupStructuredTask(taskKey) || normalizedTaskKey === 'entry_cleanup') {
     return ['rawText: string (broninvoer van 1 entry)'];
   }
   return [];
 }
 
 export function getTaskSystemContractLines(taskKey: string): string[] {
-  if (taskKey === 'entry_cleanup') {
+  const normalizedTaskKey = resolveStructuredPromptTaskKey(taskKey);
+  if (isEntryCleanupStructuredTask(taskKey) || normalizedTaskKey === 'entry_cleanup') {
     return [
       'Gebruik alleen opgegeven bronvelden (geen externe context).',
       'Geef alleen JSON terug volgens het afgesproken contract.',
@@ -1190,6 +1211,7 @@ export function getEntryCleanupTechnicalContractLines(contract: EntryCleanupTech
 }
 
 export function getTaskConsistencyInfo(taskKey: string): TaskConsistencyInfo {
+  const normalizedTaskKey = resolveStructuredPromptTaskKey(taskKey);
   const shared: Record<string, TaskConsistencyInfo> = {
     entry_cleanup: {
       representation: 'shared_runtime_family',
@@ -1215,10 +1237,34 @@ export function getTaskConsistencyInfo(taskKey: string): TaskConsistencyInfo {
       explanation:
         'Deze draft hoort bij een gedeelde dag-opbouw. Je bewerkt hier de taakfocus voor het dagverhaal, binnen dezelfde runtime-familie.',
     },
+    day_journal_repair: {
+      representation: 'shared_runtime_family',
+      affectsLabel: 'samenvatting, dagverhaal en secties',
+      taskOutputLabel: 'dagverhaal repair',
+      familyLabel: 'Dag-opbouw runtime-groep',
+      explanation:
+        'Deze technische variant repareert dezelfde dag-opbouwflow en gebruikt dezelfde outputstructuur.',
+    },
+    week_narrative: {
+      representation: 'shared_runtime_family',
+      affectsLabel: 'weeksamenvatting, weekverhaal, highlights en reflectiepunten',
+      taskOutputLabel: 'weekverhaal',
+      familyLabel: 'Weekreflectie runtime-groep',
+      explanation:
+        'Deze draft is de runtime-driver voor de gedeelde weekreflectie.',
+    },
+    month_narrative: {
+      representation: 'shared_runtime_family',
+      affectsLabel: 'maandsamenvatting, maandverhaal, highlights en reflectiepunten',
+      taskOutputLabel: 'maandverhaal',
+      familyLabel: 'Maandreflectie runtime-groep',
+      explanation:
+        'Deze draft is de runtime-driver voor de gedeelde maandreflectie.',
+    },
   };
 
   return (
-    shared[taskKey] ?? {
+    shared[normalizedTaskKey] ?? {
       representation: 'single_output',
       affectsLabel: 'alleen deze taakoutput',
       taskOutputLabel: 'taakoutput',
@@ -1349,6 +1395,7 @@ export function buildReadOnlyContext(args: {
  * Deze constraints mogen nooit verloren gaan of naar lagere lagen verschuiven.
  */
 export function buildInvariants(taskKey: string): AiPromptAssistInvariant[] {
+  const normalizedTaskKey = resolveStructuredPromptTaskKey(taskKey);
   const base: AiPromptAssistInvariant[] = [
     {
       id: 'no_external_sources',
@@ -1358,7 +1405,7 @@ export function buildInvariants(taskKey: string): AiPromptAssistInvariant[] {
     },
   ];
 
-  if (taskKey === 'entry_cleanup') {
+  if (isEntryCleanupStructuredTask(taskKey) || normalizedTaskKey === 'entry_cleanup') {
     return [
       ...base,
       {
@@ -1388,7 +1435,7 @@ export function buildInvariants(taskKey: string): AiPromptAssistInvariant[] {
     ];
   }
 
-  if (taskKey === 'day_summary' || taskKey === 'day_narrative') {
+  if (normalizedTaskKey === 'day_narrative') {
     return [
       ...base,
       {
@@ -1406,7 +1453,7 @@ export function buildInvariants(taskKey: string): AiPromptAssistInvariant[] {
     ];
   }
 
-  if (taskKey === 'week_summary' || taskKey === 'month_summary') {
+  if (normalizedTaskKey === 'week_narrative' || normalizedTaskKey === 'month_narrative') {
     return [
       ...base,
       {

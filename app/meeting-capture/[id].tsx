@@ -1,8 +1,8 @@
 import { router, useLocalSearchParams } from "expo-router";
 
 import { MeetingCaptureShell } from "@/components/meeting-capture/meeting-capture-shell";
-import { AdminReadOnlyBlock, AdminSection } from "@/components/ui/settings-screen-primitives";
-import { SecondaryButton, StateBlock } from "@/components/ui/screen-primitives";
+import { AdminActionBar, AdminConsoleKeyValue, AdminPanel } from "@/components/ui/admin-console-primitives";
+import { StateBlock } from "@/components/ui/screen-primitives";
 
 export default function MeetingCaptureDetailScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -16,39 +16,35 @@ export default function MeetingCaptureDetailScreen() {
       onBack={() => router.push("/meeting-capture" as never)}
     >
       {!recordingId ? (
-        <AdminSection>
+        <AdminPanel>
           <StateBlock
             tone="error"
             message="Opname niet gevonden."
             detail="Ga terug naar het archief en kies een opname."
           />
-          <SecondaryButton
-            label="Terug naar archief"
-            icon="arrow-back"
-            size="cta"
-            onPress={() => router.push("/meeting-capture" as never)}
+          <AdminActionBar
+            secondary={{
+              label: "Terug naar archief",
+              icon: "arrow-back",
+              onPress: () => router.push("/meeting-capture" as never),
+            }}
           />
-        </AdminSection>
+        </AdminPanel>
       ) : (
         <>
-          <AdminSection title="Playback">
+          <AdminPanel title="Playback">
             <StateBlock
               tone="info"
               message="Opname nog niet geladen."
               detail="Playback en download volgen zodra storage en uploadstatus zijn gebouwd."
             />
-          </AdminSection>
+          </AdminPanel>
 
-          <AdminSection title="Status">
-            <AdminReadOnlyBlock
-              title="Recording"
-              lines={[
-                `ID: ${recordingId}`,
-                "Uploadstatus: volgt",
-                "Transcriptstatus: niet onderdeel van v1",
-              ]}
-            />
-          </AdminSection>
+          <AdminPanel title="Status">
+            <AdminConsoleKeyValue label="ID" value={recordingId} />
+            <AdminConsoleKeyValue label="Uploadstatus" value="Volgt" />
+            <AdminConsoleKeyValue label="Transcriptstatus" value="Niet onderdeel van v1" />
+          </AdminPanel>
         </>
       )}
     </MeetingCaptureShell>

@@ -6,14 +6,9 @@ import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import {
-  buildDayJournalRepairPromptSpec,
-  buildDayJournalPromptSpec,
-  createFallbackDayJournal,
-  finalizeDayJournalDraft,
-  isLowContentDayEntry,
-  orderDayJournalEntries,
-} from '../_shared/day-journal-contract.mjs';
+import { buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
+// @ts-ignore -- Deno runtime supports .mjs imports from functions.
+import { finalizeDayJournalDraftStrict, isLowContentDayEntry, orderDayJournalEntries } from '../_shared/day-journal-contract.mjs';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow } from '../_shared/openai-debug-storage.ts';
 
@@ -57,6 +52,26 @@ const FLOW = 'regenerate-day-journal' as const;
 const NO_SPEECH_TRANSCRIPT = 'Geen spraak herkend in audio-opname.';
 const LOW_CONTENT_TITLE = 'Audio-opname zonder spraak';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+class AiRuntimeOutputError extends Error {
+  reason: string;
+  details: Record<string, unknown>;
+
+  constructor(message: string, reason: string, details: Record<string, unknown> = {}) {
+    super(message);
+    this.name = 'AiRuntimeOutputError';
+    this.reason = reason;
+    this.details = details;
+  }
+}
+
+function isAiRuntimeOutputError(error: unknown): error is AiRuntimeOutputError {
+  return error instanceof AiRuntimeOutputError;
+}
+
+function failAiRuntimeOutput(message: string, reason: string, details: Record<string, unknown> = {}): never {
+  throw new AiRuntimeOutputError(message, reason, details);
+}
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') ?? '*';
@@ -171,6 +186,11 @@ function parseTimezoneOffsetMinutes(value: unknown): number | null {
 async function callOpenAiJson(args: {
   apiKey: string;
   model: string;
+  temperature: number;
+  responseFormat:
+    | { type: 'json_schema'; json_schema: { name: string; strict: true; schema: Record<string, unknown> } }
+    | { type: 'json_object' }
+    | null;
   requestId: string;
   flowId: string;
   step: string;
@@ -197,8 +217,7 @@ async function callOpenAiJson(args: {
     });
     const requestBody: Record<string, unknown> = {
       model: args.model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
+      temperature: args.temperature,
       messages: [
         {
           role: 'system',
@@ -210,6 +229,9 @@ async function callOpenAiJson(args: {
         },
       ],
     };
+    if (args.responseFormat) {
+      requestBody.response_format = args.responseFormat;
+    }
     if (args.debugStore !== undefined) {
       requestBody.store = args.debugStore.store;
       if (args.debugStore.store) {
@@ -309,13 +331,14 @@ async function callOpenAiJson(args: {
 
 async function composeDayJournal(args: {
   apiKey: string;
-  model: string;
   requestId: string;
   flowId: string;
   journalDate: string;
   strictValidation: boolean;
   softQualityGuards: boolean;
   normalizedEntries: NormalizedEntry[];
+  primaryBinding: LiveAiRuntimeBinding;
+  repairBinding: LiveAiRuntimeBinding;
   debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<DayJournalDraft> {
   const orderedEntries = orderDayJournalEntries(args.normalizedEntries);
@@ -327,37 +350,39 @@ async function composeDayJournal(args: {
   );
 
   if (contentEntries.length === 0) {
-    return finalizeDayJournalDraft({
-      aiResult: null,
-      entries: contentEntries,
-      options: {
-        noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
-        lowContentTitle: LOW_CONTENT_TITLE,
-        strictValidation: args.strictValidation,
-        softQualityGuards: args.softQualityGuards,
-      },
+    failAiRuntimeOutput('Geen bruikbare content voor dagjournaal.', 'no_speech', {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+      journalDate: args.journalDate,
     });
   }
 
-  const promptSpec = buildDayJournalPromptSpec({
-    journalDate: args.journalDate,
-    entries: contentEntries,
-  });
-
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
-    model: args.model,
+    model: args.primaryBinding.model,
+    temperature: args.primaryBinding.temperature,
+    responseFormat: args.primaryBinding.responseFormat,
     requestId: args.requestId,
     flowId: args.flowId,
     step: 'day_journal_upserted',
     operation: 'openai_compose_day_journal',
-    promptVersion: promptSpec.promptVersion,
-    systemPrompt: promptSpec.systemPrompt,
-    userPrompt: promptSpec.userPrompt,
+    promptVersion: args.primaryBinding.promptVersion,
+    systemPrompt: args.primaryBinding.systemInstructions,
+    userPrompt: buildAiqsJsonUserPrompt({
+      binding: args.primaryBinding,
+      context: {
+        journal_date: args.journalDate,
+        entries: contentEntries.map((entry) => ({
+          entry_title: entry.title,
+          entry_body: entry.body,
+        })),
+      },
+    }),
     debugStore: args.debugStore,
   });
 
-  const finalized = finalizeDayJournalDraft({
+  const finalizedResult = finalizeDayJournalDraftStrict({
     aiResult,
     entries: contentEntries,
     options: {
@@ -367,6 +392,27 @@ async function composeDayJournal(args: {
       softQualityGuards: args.softQualityGuards,
     },
   });
+  const finalized = finalizedResult.finalized;
+
+  if (!finalizedResult.ok) {
+    logFlow('warn', {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: 'day_journal_upserted',
+      event: 'day_journal_quality_gate_failed',
+      details: {
+        reasons: finalizedResult.reasons,
+      },
+    });
+    failAiRuntimeOutput('OpenAI dagjournaal faalde de quality gate.', 'quality_gate_failed', {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+      journalDate: args.journalDate,
+      reasons: finalizedResult.reasons,
+    });
+  }
 
   if (!args.softQualityGuards && finalized.softQualitySignals.length > 0) {
     logFlow('info', {
@@ -386,7 +432,7 @@ async function composeDayJournal(args: {
     ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
   );
   const narrativeNeedsRepair =
-    args.softQualityGuards && !finalized.usedFallback && narrativeRepairReasons.length > 0;
+    args.softQualityGuards && narrativeRepairReasons.length > 0;
   if (narrativeNeedsRepair) {
     logFlow('info', {
       flow: FLOW,
@@ -397,11 +443,6 @@ async function composeDayJournal(args: {
       details: {
         reasons: narrativeRepairReasons,
       },
-    });
-
-    const repairPrompt = buildDayJournalRepairPromptSpec({
-      journalDate: args.journalDate,
-      entries: contentEntries,
     });
 
     logFlow('info', {
@@ -417,17 +458,28 @@ async function composeDayJournal(args: {
 
     const repairedAiResult = await callOpenAiJson({
       apiKey: args.apiKey,
-      model: args.model,
+      model: args.repairBinding.model,
+      temperature: args.repairBinding.temperature,
+      responseFormat: args.repairBinding.responseFormat,
       requestId: args.requestId,
       flowId: args.flowId,
       step: 'day_journal_upserted',
       operation: 'openai_compose_day_journal_repair',
-      promptVersion: repairPrompt.promptVersion,
-      systemPrompt: repairPrompt.systemPrompt,
-      userPrompt: repairPrompt.userPrompt,
+      promptVersion: args.repairBinding.promptVersion,
+      systemPrompt: args.repairBinding.systemInstructions,
+      userPrompt: buildAiqsJsonUserPrompt({
+        binding: args.repairBinding,
+        context: {
+          journal_date: args.journalDate,
+          entries: contentEntries.map((entry) => ({
+            entry_title: entry.title,
+            entry_body: entry.body,
+          })),
+        },
+      }),
     });
 
-    const repairedFinalized = finalizeDayJournalDraft({
+    const repairedFinalizedResult = finalizeDayJournalDraftStrict({
       aiResult: repairedAiResult,
       entries: contentEntries,
       options: {
@@ -437,11 +489,12 @@ async function composeDayJournal(args: {
         softQualityGuards: args.softQualityGuards,
       },
     });
+    const repairedFinalized = repairedFinalizedResult.finalized;
 
     const remainingNarrativeRepairReasons = repairedFinalized.narrativeQualityReasons.filter((reason) =>
       ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
     );
-    const retrySucceeded = !repairedFinalized.usedFallback && remainingNarrativeRepairReasons.length === 0;
+    const retrySucceeded = repairedFinalizedResult.ok && remainingNarrativeRepairReasons.length === 0;
 
     if (retrySucceeded) {
       logFlow('info', {
@@ -459,9 +512,8 @@ async function composeDayJournal(args: {
       };
     }
 
-    const fallback = createFallbackDayJournal(contentEntries);
-    const retryFailureReasons = repairedFinalized.usedFallback
-      ? repairedFinalized.rejectionReasons
+    const retryFailureReasons = !repairedFinalizedResult.ok
+      ? repairedFinalizedResult.reasons
       : remainingNarrativeRepairReasons;
 
     logFlow('warn', {
@@ -479,56 +531,20 @@ async function composeDayJournal(args: {
       requestId: args.requestId,
       flowId: args.flowId,
       step: 'day_journal_upserted',
-      event: 'day_journal_fallback_used',
+      event: 'day_journal_repair_failed',
       details: {
         dominantReason: retryFailureReasons[0] ?? 'narrative_quality',
         reasons: retryFailureReasons,
       },
     });
 
-    return fallback;
-  }
-
-  if (finalized.usedFallback) {
-    logFlow('warn', {
-      flow: FLOW,
-      requestId: args.requestId,
-      flowId: args.flowId,
-      step: 'day_journal_upserted',
-      event: 'day_journal_fallback_used',
-      details: {
-        dominantReason: finalized.rejectionReasons[0] ?? 'unknown',
-        reasons: finalized.rejectionReasons,
-      },
+    failAiRuntimeOutput('OpenAI dagjournaal-repair faalde de quality gate.', 'repair_failed', {
+      runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+      taskKey: args.repairBinding.taskKey,
+      versionId: args.repairBinding.versionId,
+      journalDate: args.journalDate,
+      reasons: retryFailureReasons,
     });
-  } else {
-    if (finalized.usedFallbackSummary) {
-      logFlow('info', {
-        flow: FLOW,
-        requestId: args.requestId,
-        flowId: args.flowId,
-        step: 'day_journal_upserted',
-        event: 'day_journal_summary_fallback_used',
-        details: {
-          dominantReason: finalized.summaryFallbackReasons[0] ?? 'unknown',
-          reasons: finalized.summaryFallbackReasons,
-        },
-      });
-    }
-
-    if (finalized.usedFallbackSections) {
-      logFlow('info', {
-        flow: FLOW,
-        requestId: args.requestId,
-        flowId: args.flowId,
-        step: 'day_journal_upserted',
-        event: 'day_journal_sections_fallback_used',
-        details: {
-          dominantReason: finalized.sectionFallbackReasons[0] ?? 'unknown',
-          reasons: finalized.sectionFallbackReasons,
-        },
-      });
-    }
   }
 
   return {
@@ -574,39 +590,48 @@ Deno.serve(async (request: Request) => {
     });
 
     const runtimeEnv = getFunctionRuntimeEnv();
+    const serviceRoleKey =
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
+      Deno.env.get('APP_SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
+      '';
+    if (!serviceRoleKey) {
+      throw new Error('Missing service role key for AIQS runtime binding resolution.');
+    }
+    const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const dayPrimaryBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: 'day_journal.primary',
+    });
+    const dayRepairBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: 'day_journal.repair',
+    });
 
     // Load debug storage policy for this flow (best-effort; no-op on error)
     let debugStore: { store: boolean; metadata?: Record<string, string> } | undefined;
     try {
-      const serviceRoleKey =
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
-        Deno.env.get('APP_SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
-        '';
-      if (serviceRoleKey) {
-        const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        });
-        const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
-        const resolution = resolveOpenAiDebugStorageForFlow({
-          settings: debugSettings,
-          flowKey: 'regenerate-day-journal.generation',
-          endpointFamily: 'chat_completions',
-        });
-        const metadata = buildOpenAiDebugMetadata({
-          app: 'persoonlijke-assistent',
-          env: Deno.env.get('APP_ENV') ?? 'production',
-          flow: 'regenerate-day-journal',
-          functionName: 'regenerate-day-journal',
-          taskKey: 'day_journal',
-          runtimeFamily: 'day_journal',
-          requestId,
-          flowId,
-          mode: 'generation',
-          version: '1',
-          actor: 'user',
-        });
-        debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
-      }
+      const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
+      const resolution = resolveOpenAiDebugStorageForFlow({
+        settings: debugSettings,
+        flowKey: 'regenerate-day-journal.generation',
+        endpointFamily: 'chat_completions',
+      });
+      const metadata = buildOpenAiDebugMetadata({
+        app: 'persoonlijke-assistent',
+        env: Deno.env.get('APP_ENV') ?? 'production',
+        flow: 'regenerate-day-journal',
+        functionName: 'regenerate-day-journal',
+        taskKey: dayPrimaryBinding.taskKey,
+        runtimeFamily: dayPrimaryBinding.runtimeFamily,
+        requestId,
+        flowId,
+        mode: 'generation',
+        version: String(dayPrimaryBinding.versionNumber),
+        actor: 'user',
+      });
+      debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
     } catch {
       // debug storage policy load is non-fatal; continue without
     }
@@ -824,13 +849,14 @@ Deno.serve(async (request: Request) => {
     step = 'day_journal_upserted';
     const dayDraft = await composeDayJournal({
       apiKey: runtimeEnv.openAiApiKey,
-      model: runtimeEnv.openAiModel,
       requestId,
       flowId,
       journalDate,
       strictValidation: runtimeEnv.dayJournalStrictValidation,
       softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
       normalizedEntries: normalizedEntriesForDay,
+      primaryBinding: dayPrimaryBinding,
+      repairBinding: dayRepairBinding,
       debugStore,
     });
 
@@ -889,6 +915,33 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
+    if (isAiRuntimeOutputError(error)) {
+      logFlow('warn', {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: 'ai_runtime_output_rejected',
+        details: {
+          reason: error.reason,
+          ...error.details,
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 502,
+        requestId,
+        flowId,
+        step,
+        code: 'UPSTREAM_UNAVAILABLE',
+        message: error.message,
+        details: {
+          reason: error.reason,
+          ...error.details,
+        },
+      });
+    }
+
     logFlow('error', {
       flow: FLOW,
       requestId,

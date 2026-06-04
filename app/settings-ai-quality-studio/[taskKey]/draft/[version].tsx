@@ -13,14 +13,17 @@ import { ModalBackdrop } from '@/components/ui/modal-backdrop';
 import {
   AdminAccordion,
   AdminEditorSection,
-  AdminPageHero,
   AdminReadOnlyBlock,
-  AdminSection,
-  AdminShell,
-  AdminStickyFooterActions,
   AdminTokenRail,
-  SettingsTopNav,
 } from '@/components/ui/settings-screen-primitives';
+import {
+  AdminActionBar,
+  AdminConsoleHeader,
+  AdminConsolePanel,
+  AdminConsoleShell,
+  AdminSplitWorkspace,
+  AdminStatusChip,
+} from '@/components/ui/admin-console-primitives';
 import { AiTokenChipPicker } from '@/components/ui/ai-token-chip-picker';
 import { AiTokenEditor, type PromptEditorState } from '@/components/ui/ai-token-editor';
 import { MetaText, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
@@ -77,6 +80,7 @@ export default function AiQualityStudioDraftScreen() {
   const palette = colorTokens[scheme];
   const { width, height } = useWindowDimensions();
   const isWideAssistLayout = width >= 1100;
+  const isWideWorkspace = width >= 1040;
   const assistOverlayMaxHeight = useMemo(() => Math.max(340, height - spacing.page * 2), [height]);
   const { taskKey, version } = useLocalSearchParams<{ taskKey?: string; version?: string }>();
 
@@ -135,7 +139,7 @@ export default function AiQualityStudioDraftScreen() {
 
     try {
       const nextDetail = await fetchAdminAiQualityStudioTaskDetail(normalizedTaskKey);
-      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label);
+      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label, nextDetail);
       if (metadata.editorScope === 'read_only_part') {
         if (metadata.editorTargetTaskKey) {
           router.replace(`/settings-ai-quality-studio/${metadata.editorTargetTaskKey}` as never);
@@ -419,12 +423,14 @@ export default function AiQualityStudioDraftScreen() {
   }, [assistPreview?.proposedSections, sectionValues, structuredEditor.sections]);
 
   return (
-    <AdminShell
-      fixedHeader={<SettingsTopNav onBack={() => router.back()} onMenu={() => setMenuVisible(true)} />}
+    <AdminConsoleShell
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       fixedFooter={
         !loading && detail && selectedDraft && form ? (
-          <AdminStickyFooterActions
-            primaryAction={{
+          <AdminActionBar
+            floating
+            primary={{
               label: savingDraft ? 'Bezig…' : formDirty && formValid ? 'Opslaan en valideren' : 'Valideren',
               onPress: () => {
                 if (formDirty && formValid) {
@@ -436,45 +442,54 @@ export default function AiQualityStudioDraftScreen() {
               disabled: formDirty ? !formValid : !canValidate,
               icon: 'play-arrow',
             }}
-            secondaryAction={{
+            secondary={{
               label: savingDraft ? 'Opslaan…' : 'Opslaan',
               onPress: () => void handleSaveDraft(),
               disabled: !canSave,
               icon: 'save',
             }}
-            tertiaryAction={{
+            tertiary={{
               label: deletingDraft ? 'Verwijderen…' : 'Verwijderen',
               onPress: () => setShowDeleteDialog(true),
               disabled: savingDraft || deletingDraft,
               icon: 'delete-outline',
-              tone: 'destructive',
+              tone: 'danger',
             }}
           />
         ) : null
       }
       contentContainerStyle={styles.scrollContent}
     >
-      <AdminPageHero title="Draft bewerken" subtitle={detail?.label ?? 'AI Quality Studio'} />
+      <AdminConsoleHeader
+        eyebrow="Prompt editor"
+        title="Draft bewerken"
+        subtitle={detail?.label ?? 'AI Quality Studio'}
+        chips={
+          detail && selectedDraft ? (
+            <>
+              <AdminStatusChip label={`Draft v${selectedDraft.versionNumber}`} tone="info" />
+              <AdminStatusChip
+                label={detail.liveVersion ? `Live v${detail.liveVersion.versionNumber}` : 'Geen live basis'}
+                tone={detail.liveVersion ? 'success' : 'warning'}
+              />
+              <AdminStatusChip label={selectedDraft.model} />
+              {formDirty ? <AdminStatusChip label="Wijzigingen" tone="warning" /> : null}
+            </>
+          ) : null
+        }
+      />
 
       {loading ? <StateBlock tone="loading" message="Draft laden" /> : null}
       {!loading && error ? <StateBlock tone="error" message="Kon draft niet laden." detail={error} /> : null}
 
       {!loading && detail && selectedDraft && form ? (
         <>
-          <ThemedView style={styles.heroBlock}>
-            <ThemedText type="sectionTitle">{structuredEditor.title}</ThemedText>
-            <ThemedText type="bodySecondary">{structuredEditor.subtitle}</ThemedText>
-            <MetaText>
-              Draft v{selectedDraft.versionNumber} · runtime-basis{' '}
-              {detail.liveVersion ? `v${detail.liveVersion.versionNumber}` : 'niet ingesteld'} · {selectedDraft.model}
-            </MetaText>
-            <MetaText>Runtime-groep: {structuredEditor.runtimeFamilyLabel}</MetaText>
-            {taskConsistency ? <MetaText>Beïnvloedt: {taskConsistency.affectsLabel}</MetaText> : null}
-          </ThemedView>
-
           {saveMessage ? <StateBlock tone="success" message={saveMessage} /> : null}
 
-          <AdminSection title="Bewerkbare instructies">
+          <AdminSplitWorkspace
+            wide={isWideWorkspace}
+            main={
+              <AdminConsolePanel title={structuredEditor.title} subtitle={structuredEditor.subtitle}>
             <ThemedView style={styles.editorColumn}>
               {structuredEditor.sections.map((section) => {
                 const assistOpen = activeAssistTarget?.key === section.key;
@@ -528,9 +543,22 @@ export default function AiQualityStudioDraftScreen() {
                 );
               })}
             </ThemedView>
-          </AdminSection>
+              </AdminConsolePanel>
+            }
+            side={
+              <>
+                <AdminConsolePanel title="Runtime contract">
+                  <ThemedView style={styles.fieldGroup}>
+                    <MetaText>Runtime-groep: {structuredEditor.runtimeFamilyLabel}</MetaText>
+                    {taskConsistency ? <MetaText>Beïnvloedt: {taskConsistency.affectsLabel}</MetaText> : null}
+                    <MetaText>Model: {selectedDraft.model}</MetaText>
+                    <MetaText>
+                      Runtime-basis: {detail.liveVersion ? `v${detail.liveVersion.versionNumber}` : 'niet ingesteld'}
+                    </MetaText>
+                  </ThemedView>
+                </AdminConsolePanel>
 
-          <AdminSection title="Geavanceerd">
+                <AdminConsolePanel title="Geavanceerd">
             <AdminAccordion
               title={advancedOpen ? 'Verberg geavanceerd' : 'Toon geavanceerd'}
               summary={advancedOpen ? 'Minder technische details' : 'Technisch contract, model en herkomst'}
@@ -602,7 +630,10 @@ export default function AiQualityStudioDraftScreen() {
                 </ThemedView>
               </ThemedView>
             </AdminAccordion>
-          </AdminSection>
+                </AdminConsolePanel>
+              </>
+            }
+          />
         </>
       ) : null}
 
@@ -765,7 +796,7 @@ export default function AiQualityStudioDraftScreen() {
           </ThemedView>
         </ModalBackdrop>
       </Modal>
-    </AdminShell>
+    </AdminConsoleShell>
   );
 }
 

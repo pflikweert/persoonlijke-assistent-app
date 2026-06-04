@@ -5,8 +5,15 @@ import { Pressable, StyleSheet } from 'react-native';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { AdminMetaStrip, AdminPageHero, AdminShell, SettingsTopNav } from '@/components/ui/settings-screen-primitives';
-import { MetaText, PrimaryButton, StateBlock, SurfaceSection } from '@/components/ui/screen-primitives';
+import {
+  AdminConsoleButton,
+  AdminConsoleHeader,
+  AdminConsolePanel,
+  AdminConsoleShell,
+  AdminDenseRow,
+  AdminStatusChip,
+} from '@/components/ui/admin-console-primitives';
+import { StateBlock } from '@/components/ui/screen-primitives';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   classifyUnknownError,
@@ -15,10 +22,9 @@ import {
   fetchAdminAiQualityStudioTasks,
   hasAdminAiQualityStudioAccess,
 } from '@/services';
-import type { AiTaskSummary } from '@/types';
+import type { AiQualityFamilyTaskReadModel, AiTaskSummary } from '@/types';
 import { colorTokens, radius, spacing } from '@/theme';
 import {
-  getAiQualityEditableTasksForFamily,
   getAiQualityFamilyPrimaryTaskKey,
   getAiQualityFamilyReadModel,
   getAiQualityTaskLabel,
@@ -30,6 +36,15 @@ function taskRowStatus(task: AiTaskSummary): string {
   if (status === 'runtime') return 'Runtime actief';
   if (status === 'draft') return 'Draft actief';
   return 'Niet ingesteld';
+}
+
+function runtimeBadgeLabel(item: AiQualityFamilyTaskReadModel): string {
+  if (item.metadata.isRuntimeDriver) return 'Driver';
+  if (item.metadata.variantRole === 'repair') return 'Repair';
+  if (item.metadata.variantRole === 'renormalization') return 'Renormalization';
+  if (item.metadata.variantRole) return 'Variant';
+  if (item.metadata.editorScope === 'read_only_part') return 'Read-only';
+  return 'Prompt';
 }
 
 export default function AiQualityStudioGroupScreen() {
@@ -48,10 +63,8 @@ export default function AiQualityStudioGroupScreen() {
     () => getAiQualityFamilyReadModel(tasks, typeof groupKey === 'string' ? groupKey : ''),
     [groupKey, tasks]
   );
-  const editableTasks = useMemo(
-    () => getAiQualityEditableTasksForFamily(tasks, typeof groupKey === 'string' ? groupKey : ''),
-    [groupKey, tasks]
-  );
+  const groupTasks = group?.tasks ?? [];
+  const groupIsLive = Boolean(group?.statusSummary.includes('live') && !group.statusSummary.startsWith('0/'));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,13 +98,13 @@ export default function AiQualityStudioGroupScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!group || loading) return;
-      if (editableTasks.length <= 1) {
+      if (groupTasks.length <= 1) {
         const taskKey = getAiQualityFamilyPrimaryTaskKey(tasks, group.key);
         if (taskKey) {
           router.replace(`/settings-ai-quality-studio/${taskKey}` as never);
         }
       }
-    }, [editableTasks.length, group, loading, tasks])
+    }, [group, groupTasks.length, loading, tasks])
   );
 
   async function handleOpenSharedPrompt() {
@@ -117,13 +130,25 @@ export default function AiQualityStudioGroupScreen() {
   }
 
   return (
-    <AdminShell
-      fixedHeader={<SettingsTopNav onBack={() => router.back()} onMenu={() => setMenuVisible(true)} />}
+    <AdminConsoleShell
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
     >
-      <AdminPageHero title={group?.title ?? 'Groep'} subtitle={group?.description ?? 'AI Quality Studio'} />
-
-      {group ? <AdminMetaStrip items={[group.componentCountLabel, group.statusSummary]} /> : null}
+      <AdminConsoleHeader
+        eyebrow={group?.key ?? 'AIQS family'}
+        title={group?.title ?? 'Groep'}
+        subtitle={group?.description ?? 'AI Quality Studio'}
+        chips={
+          group ? (
+            <>
+              <AdminStatusChip label={group.componentCountLabel} />
+              <AdminStatusChip label={group.statusSummary} tone={groupIsLive ? 'success' : 'warning'} />
+              {group.sharedRuntimeCall ? <AdminStatusChip label="Gedeelde runtime-call" tone="info" /> : null}
+            </>
+          ) : null
+        }
+      />
 
       {!group ? (
         <StateBlock tone="error" message="Onbekende groep" detail="Ga terug en kies een geldige groep." />
@@ -143,51 +168,79 @@ export default function AiQualityStudioGroupScreen() {
       {!loading && !error && group ? (
         <>
           {group.editorScope === 'family' && group.editorEntryTaskKey ? (
-            <SurfaceSection title="Gedeelde prompt">
-              <MetaText>
-                Deze runtime-groep draait als één gedeelde call. Bewerk en test via één centrale prompt.
-              </MetaText>
-              <PrimaryButton
+            <AdminConsolePanel
+              title="Gedeelde prompt"
+              subtitle="Deze familie draait via één centrale runtimeprompt."
+              action={
+                <AdminConsoleButton
                 label={openingPrompt ? 'Prompt openen…' : 'Open gedeelde prompt'}
                 onPress={() => void handleOpenSharedPrompt()}
                 disabled={openingPrompt}
-              />
-            </SurfaceSection>
+                  icon="edit"
+                  tone="primary"
+                />
+              }
+            >
+              <ThemedView />
+            </AdminConsolePanel>
           ) : null}
 
-          <SurfaceSection title="Onderdelen">
+          <AdminConsolePanel title="Onderdelen" subtitle="Drivers, technische varianten en compound members blijven zichtbaar.">
             <ThemedView style={styles.taskList}>
-              {editableTasks.map((item) => {
+              {groupTasks.map((item) => {
+                const destinationTaskKey =
+                  item.metadata.editorScope === 'read_only_part'
+                    ? item.metadata.editorTargetTaskKey
+                    : item.task.key;
                 const actionLabel =
-                  item.metadata.editorScope === 'family'
-                    ? 'Onderdeel van de gedeelde prompt'
-                    : item.metadata.editorScope === 'task'
-                      ? 'Zelfstandig onderdeel'
-                      : 'Onderdeel van gedeelde call · niet los bewerkbaar';
+                  item.metadata.isRuntimeDriver
+                    ? 'Runtime-driver voor deze groep'
+                    : item.metadata.variantRole
+                      ? `Technische ${item.metadata.variantRole}-variant`
+                      : item.metadata.editorScope === 'family'
+                        ? 'Onderdeel van de gedeelde prompt'
+                        : item.metadata.editorScope === 'task'
+                          ? 'Zelfstandig onderdeel'
+                          : 'Read-only onderdeel van gedeelde call';
 
                 return (
                   <Pressable
                     key={item.task.id}
                     accessibilityRole="button"
-                    onPress={() => router.push(`/settings-ai-quality-studio/${item.task.key}` as never)}
-                    style={[styles.taskRow, { backgroundColor: palette.surfaceLow }]}
+                    onPress={() => {
+                      if (!destinationTaskKey) return;
+                      router.push(`/settings-ai-quality-studio/${destinationTaskKey}` as never);
+                    }}
+                    style={styles.taskRowPressable}
                   >
-                    <ThemedView style={styles.taskRowTop}>
-                      <ThemedText type="defaultSemiBold">{getAiQualityTaskLabel(item.task.key, item.task.label)}</ThemedText>
-                      <MetaText>{item.task.description ?? 'Onderdeel in outputstructuur.'}</MetaText>
-                    </ThemedView>
-                    <MetaText>Status: {taskRowStatus(item.task)}</MetaText>
-                    {item.metadata.managedOutputField ? (
-                      <MetaText>Outputveld: {item.metadata.managedOutputField}</MetaText>
-                    ) : null}
-                    <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                      {actionLabel}
-                    </ThemedText>
+                    <AdminDenseRow
+                      title={getAiQualityTaskLabel(item.task.key, item.task.label)}
+                      subtitle={item.task.description ?? 'Onderdeel in outputstructuur.'}
+                      meta={[
+                        taskRowStatus(item.task),
+                        item.metadata.managedOutputField ? `Output: ${item.metadata.managedOutputField}` : null,
+                        item.metadata.runtimeBindingKey ? item.metadata.runtimeBindingKey : null,
+                        item.metadata.editorScope === 'read_only_part'
+                          ? `Beheer via ${item.metadata.editorTargetTaskKey ?? 'gedeelde prompt'}`
+                          : null,
+                      ].filter(Boolean).join(' · ')}
+                      chips={
+                        <>
+                          <AdminStatusChip
+                            label={runtimeBadgeLabel(item)}
+                            tone={item.metadata.isRuntimeDriver ? 'success' : item.metadata.variantRole ? 'info' : item.metadata.editorScope === 'read_only_part' ? 'neutral' : 'warning'}
+                          />
+                          {item.task.hasDraft ? <AdminStatusChip label="Draft aanwezig" tone="warning" /> : null}
+                          {item.task.liveVersion ? <AdminStatusChip label="Live" tone="success" /> : null}
+                        </>
+                      }
+                      trailing={<ThemedText type="caption" style={{ color: palette.mutedSoft }}>{actionLabel}</ThemedText>}
+                    />
                   </Pressable>
                 );
               })}
             </ThemedView>
-          </SurfaceSection>
+          </AdminConsolePanel>
         </>
       ) : null}
 
@@ -196,7 +249,7 @@ export default function AiQualityStudioGroupScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </AdminShell>
+    </AdminConsoleShell>
   );
 }
 
@@ -206,15 +259,9 @@ const styles = StyleSheet.create({
     gap: spacing.content,
   },
   taskList: {
-    gap: spacing.sm,
+    gap: 0,
   },
-  taskRow: {
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  taskRowTop: {
-    gap: spacing.xxs,
+  taskRowPressable: {
+    borderRadius: radius.md,
   },
 });

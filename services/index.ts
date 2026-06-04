@@ -22,6 +22,7 @@ export {
     fetchAdminAiQualityStudioTasks, fetchAdminAiQualityStudioTestRun, fetchAdminOpenAiDebugStorageSettings, hasAdminAiQualityStudioAccess,
     importAdminAiQualityRuntimeBaseline,
     listAdminAiQualityStudioTestSources,
+    promoteAdminAiQualityStudioVersionLive,
     runAdminAiQualityStudioPromptAssistPreview,
     runAdminAiQualityStudioTest,
     saveAdminAiQualityStudioTestReview, updateAdminAiQualityStudioDraftVersion, updateAdminOpenAiDebugStorageSettings

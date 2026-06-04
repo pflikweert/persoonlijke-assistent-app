@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 5
 ---
+
 
 
 
@@ -213,3 +214,5 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 
 - 2026-06-02T07:40:44+02:00 — fix: harden local admin edge runtime
+
+- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness

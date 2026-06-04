@@ -6,7 +6,7 @@ import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildReflectionPromptSpec, REFLECTION_PROMPT_VERSION } from '../_shared/prompt-specs.ts';
+import { buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow } from '../_shared/openai-debug-storage.ts';
 
@@ -325,6 +325,11 @@ function computePeriodBounds(periodType: 'week' | 'month', anchorDate: string): 
 async function callOpenAiJson(args: {
   apiKey: string;
   model: string;
+  temperature: number;
+  responseFormat:
+    | { type: 'json_schema'; json_schema: { name: string; strict: true; schema: Record<string, unknown> } }
+    | { type: 'json_object' }
+    | null;
   requestId: string;
   flowId: string;
   step: string;
@@ -351,8 +356,7 @@ async function callOpenAiJson(args: {
     });
     const requestBody: Record<string, unknown> = {
       model: args.model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
+      temperature: args.temperature,
       messages: [
         {
           role: 'system',
@@ -364,6 +368,9 @@ async function callOpenAiJson(args: {
         },
       ],
     };
+    if (args.responseFormat) {
+      requestBody.response_format = args.responseFormat;
+    }
     if (args.debugStore !== undefined) {
       requestBody.store = args.debugStore.store;
       if (args.debugStore.store) {
@@ -475,13 +482,13 @@ function sanitizeDayJournalRows(rows: DayJournalRow[]): DayJournalRow[] {
 
 async function composeReflection(args: {
   apiKey: string;
-  model: string;
   requestId: string;
   flowId: string;
   periodType: 'week' | 'month';
   periodStart: string;
   periodEnd: string;
   dayJournals: DayJournalRow[];
+  binding: LiveAiRuntimeBinding;
   debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<ReflectionComposeResult> {
   if (args.dayJournals.length === 0) {
@@ -492,22 +499,31 @@ async function composeReflection(args: {
     };
   }
 
-  const reflectionPrompt = buildReflectionPromptSpec({
-    periodType: args.periodType,
-    periodStart: args.periodStart,
-    periodEnd: args.periodEnd,
-    dayJournals: args.dayJournals,
-  });
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
-    model: args.model,
+    model: args.binding.model,
+    temperature: args.binding.temperature,
+    responseFormat: args.binding.responseFormat,
     requestId: args.requestId,
     flowId: args.flowId,
     step: 'reflection_upserted',
     operation: 'openai_generate_reflection',
-    promptVersion: reflectionPrompt.promptVersion,
-    systemPrompt: reflectionPrompt.systemPrompt,
-    userPrompt: reflectionPrompt.userPrompt,
+    promptVersion: args.binding.promptVersion,
+    systemPrompt: args.binding.systemInstructions,
+    userPrompt: buildAiqsJsonUserPrompt({
+      binding: args.binding,
+      context: {
+        period_type: args.periodType,
+        period_start: args.periodStart,
+        period_end: args.periodEnd,
+        dayJournals: args.dayJournals.map((journal) => ({
+          journal_date: journal.journal_date,
+          summary: journal.summary,
+          narrative_text: journal.narrative_text,
+          sections: journal.sections,
+        })),
+      },
+    }),
     debugStore: args.debugStore,
   });
 
@@ -616,39 +632,40 @@ Deno.serve(async (request: Request) => {
     });
 
     const runtimeEnv = getFunctionRuntimeEnv();
+    const serviceRoleKey =
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
+      Deno.env.get('APP_SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
+      '';
+    if (!serviceRoleKey) {
+      throw new Error('Missing service role key for AIQS runtime binding resolution.');
+    }
+    const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
     // Load debug storage policy for this flow (best-effort; no-op on error)
     let debugStore: { store: boolean; metadata?: Record<string, string> } | undefined;
     try {
-      const serviceRoleKey =
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
-        Deno.env.get('APP_SUPABASE_SERVICE_ROLE_KEY')?.trim() ??
-        '';
-      if (serviceRoleKey) {
-        const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        });
-        const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
-        const resolution = resolveOpenAiDebugStorageForFlow({
-          settings: debugSettings,
-          flowKey: 'generate-reflection.generation',
-          endpointFamily: 'chat_completions',
-        });
-        const metadata = buildOpenAiDebugMetadata({
-          app: 'persoonlijke-assistent',
-          env: Deno.env.get('APP_ENV') ?? 'production',
-          flow: 'generate-reflection',
-          functionName: 'generate-reflection',
-          taskKey: 'reflection_generation',
-          runtimeFamily: 'reflection',
-          requestId,
-          flowId,
-          mode: 'generation',
-          version: '1',
-          actor: 'user',
-        });
-        debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
-      }
+      const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
+      const resolution = resolveOpenAiDebugStorageForFlow({
+        settings: debugSettings,
+        flowKey: 'generate-reflection.generation',
+        endpointFamily: 'chat_completions',
+      });
+      const metadata = buildOpenAiDebugMetadata({
+        app: 'persoonlijke-assistent',
+        env: Deno.env.get('APP_ENV') ?? 'production',
+        flow: 'generate-reflection',
+        functionName: 'generate-reflection',
+        taskKey: 'week_or_month_reflection',
+        runtimeFamily: 'aiqs_runtime',
+        requestId,
+        flowId,
+        mode: 'generation',
+        version: 'live',
+        actor: 'user',
+      });
+      debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
     } catch {
       // debug storage policy load is non-fatal; continue without
     }
@@ -866,17 +883,21 @@ Deno.serve(async (request: Request) => {
     }
 
     const safeDayJournals = sanitizeDayJournalRows((dayJournals ?? []) as DayJournalRow[]);
+    const reflectionBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: periodType === 'week' ? 'week_reflection.primary' : 'month_reflection.primary',
+    });
 
     step = 'reflection_upserted';
     const reflectionResult = await composeReflection({
       apiKey: runtimeEnv.openAiApiKey,
-      model: runtimeEnv.openAiModel,
       requestId,
       flowId,
       periodType,
       periodStart: bounds.periodStart,
       periodEnd: bounds.periodEnd,
       dayJournals: safeDayJournals,
+      binding: reflectionBinding,
       debugStore,
     });
 
@@ -886,7 +907,7 @@ Deno.serve(async (request: Request) => {
         requestId,
         flowId,
         step,
-        event: 'reflection_fallback_used',
+        event: 'reflection_quality_gate_failed',
         details: {
           reason: reflectionResult.reason,
           ...(reflectionResult.details ?? {}),
@@ -909,7 +930,7 @@ Deno.serve(async (request: Request) => {
     }
 
     const generatedAt = new Date().toISOString();
-    const modelVersion = `${runtimeEnv.openAiModel}:${REFLECTION_PROMPT_VERSION}`;
+    const modelVersion = `${reflectionBinding.model}:${reflectionBinding.promptVersion}`;
 
     const { data: upsertedReflection, error: upsertError } = await supabase
       .from('period_reflections')

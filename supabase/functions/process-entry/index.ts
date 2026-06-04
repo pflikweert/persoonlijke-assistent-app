@@ -6,15 +6,12 @@ import { createFlowError, type FlowErrorCode } from "../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from "../_shared/flow-logger.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildEntryNormalizationPromptSpec, buildEntryNormalizationRepairPromptSpec } from "../_shared/prompt-specs.ts";
+import { buildAiqsEntryCleanupUserPrompt, buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from "../_shared/aiqs-runtime.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow } from "../_shared/openai-debug-storage.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
 import {
-  buildDayJournalPromptSpec,
-  buildDayJournalRepairPromptSpec,
-  createFallbackDayJournal,
-  finalizeDayJournalDraft,
+  finalizeDayJournalDraftStrict,
   isLowContentDayEntry,
   orderDayJournalEntries,
 } from "../_shared/day-journal-contract.mjs";
@@ -94,8 +91,6 @@ const UUID_PATTERN =
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const NO_SPEECH_TRANSCRIPT = "Geen spraak herkend in audio-opname.";
 const LOW_CONTENT_TITLE = "Audio-opname zonder spraak";
-const LOW_CONTENT_BODY = "Geen bruikbare spraakinhoud gevonden in de opname.";
-const LOW_CONTENT_SUMMARY_SHORT = "Geen bruikbare spraakinhoud in deze opname.";
 const SHORT_ENTRY_DRIFT_MAX_SOURCE_LENGTH = 280;
 const GENERIC_TITLES = new Set([
   "notitie",
@@ -141,6 +136,81 @@ const ASSERTIVE_CUES = [
   "zeker",
   "vast",
 ];
+
+class AiRuntimeOutputError extends Error {
+  reason: string;
+  details: Record<string, unknown>;
+
+  constructor(message: string, reason: string, details: Record<string, unknown> = {}) {
+    super(message);
+    this.name = "AiRuntimeOutputError";
+    this.reason = reason;
+    this.details = details;
+  }
+}
+
+function isAiRuntimeOutputError(error: unknown): error is AiRuntimeOutputError {
+  return error instanceof AiRuntimeOutputError;
+}
+
+function failAiRuntimeOutput(message: string, reason: string, details: Record<string, unknown> = {}): never {
+  throw new AiRuntimeOutputError(message, reason, details);
+}
+
+function requireAiOutputString(
+  value: unknown,
+  field: string,
+  details: Record<string, unknown>,
+): string {
+  const parsed = parseString(value);
+  if (!parsed) {
+    failAiRuntimeOutput("OpenAI output mist een verplicht veld.", "required_field_missing", {
+      ...details,
+      field,
+    });
+  }
+  return parsed;
+}
+
+function requireAiOutputObjectString(
+  aiResult: OpenAiJson,
+  fieldNames: string[],
+  field: string,
+  details: Record<string, unknown>,
+  options: { allowEmpty?: boolean } = {},
+): string {
+  for (const fieldName of fieldNames) {
+    if (!Object.prototype.hasOwnProperty.call(aiResult, fieldName)) {
+      continue;
+    }
+    const value = aiResult[fieldName];
+    if (typeof value === "string") {
+      const parsed = value.trim();
+      if (parsed || options.allowEmpty === true) {
+        return parsed;
+      }
+      continue;
+    }
+    const parsed = parseString(value);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  return requireAiOutputString(null, field, {
+    ...details,
+    availableFields: Object.keys(aiResult).sort(),
+  });
+}
+
+function allowsEmptySummaryShort(binding: LiveAiRuntimeBinding): boolean {
+  const technicalContract = binding.configJson.technical_contract;
+  return (
+    technicalContract !== null &&
+    typeof technicalContract === "object" &&
+    !Array.isArray(technicalContract) &&
+    (technicalContract as Record<string, unknown>).allowEmptySummaryShort === true
+  );
+}
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get("origin") ?? "*";
@@ -342,18 +412,6 @@ function normalizeBodyParagraphs(value: string): string {
   return collapsed.join("\n");
 }
 
-function fallbackNormalization(rawText: string): NormalizedEntry {
-  const clean = normalizeBodyParagraphs(rawText);
-  const titleBase = clean.split(/[.!?\n]/)[0]?.trim() || clean;
-  const title = titleBase.slice(0, 80) || "Notitie";
-
-  return {
-    title,
-    body: clean,
-    summaryShort: createSummaryShortFromBody(clean),
-  };
-}
-
 function parseString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
@@ -502,7 +560,10 @@ function containsNoSpeechMarker(value: string): boolean {
 function cleanNormalizedTitle(value: string, fallback: string): string {
   const candidate = sanitizeShortLine(value, 80);
   if (!candidate || looksGenericTitle(candidate)) {
-    return sanitizeShortLine(fallback, 80) || "Notitie";
+    failAiRuntimeOutput("OpenAI output heeft geen bruikbare titel.", "quality_gate_failed", {
+      field: "title",
+      reason: "generic_or_empty_title",
+    });
   }
 
   return candidate;
@@ -511,7 +572,10 @@ function cleanNormalizedTitle(value: string, fallback: string): string {
 function cleanNormalizedBody(value: string, fallback: string): string {
   const candidate = normalizeBodyParagraphs(value);
   if (!candidate || candidate.length < 12) {
-    return normalizeBodyParagraphs(fallback);
+    failAiRuntimeOutput("OpenAI output heeft geen bruikbare body.", "quality_gate_failed", {
+      field: "body",
+      reason: "empty_or_too_short_body",
+    });
   }
 
   return candidate;
@@ -580,31 +644,32 @@ function looksGenericPreview(value: string): boolean {
   return GENERIC_PREVIEW_PHRASES.some((phrase) => normalized.includes(phrase));
 }
 
-function createSummaryShortFromBody(body: string): string {
-  const normalizedBody = normalizeWhitespace(body);
-  if (!normalizedBody) {
-    return "Korte preview niet beschikbaar.";
-  }
-
-  const firstSentence = normalizedBody.split(/[.!?]/)[0]?.trim() ?? "";
-  const source = firstSentence.length >= 24 ? firstSentence : normalizedBody;
-  const preview = trimPreviewForMobile(source);
-  return finalizePreviewTone(preview || trimPreviewForMobile(normalizedBody));
-}
-
 function cleanNormalizedSummaryShort(
   value: string | null,
   fallbackBody: string,
+  options: { allowEmpty?: boolean; details?: Record<string, unknown> } = {},
 ): string {
   const candidate = trimPreviewForMobile(value ?? "");
   if (!candidate) {
-    return createSummaryShortFromBody(fallbackBody);
+    if (options.allowEmpty === true) {
+      return "";
+    }
+    failAiRuntimeOutput("OpenAI output mist summary_short.", "required_field_missing", {
+      ...(options.details ?? {}),
+      field: "summary_short",
+    });
   }
   if (candidate.endsWith("?")) {
-    return createSummaryShortFromBody(fallbackBody);
+    failAiRuntimeOutput("OpenAI output summary_short is geen statement.", "quality_gate_failed", {
+      field: "summary_short",
+      reason: "question_summary",
+    });
   }
   if (looksMetaPreview(candidate) || looksGenericPreview(candidate)) {
-    return createSummaryShortFromBody(fallbackBody);
+    failAiRuntimeOutput("OpenAI output summary_short is te generiek.", "quality_gate_failed", {
+      field: "summary_short",
+      reason: "generic_summary",
+    });
   }
 
   return finalizePreviewTone(candidate);
@@ -971,6 +1036,11 @@ async function transcribeAudioWithSingleRetry(args: {
 async function callOpenAiJson(args: {
   apiKey: string;
   model: string;
+  temperature: number;
+  responseFormat:
+    | { type: "json_schema"; json_schema: { name: string; strict: true; schema: Record<string, unknown> } }
+    | { type: "json_object" }
+    | null;
   requestId: string;
   flowId: string;
   step: string;
@@ -997,8 +1067,7 @@ async function callOpenAiJson(args: {
     });
     const requestBody: Record<string, unknown> = {
       model: args.model,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
+      temperature: args.temperature,
       messages: [
         {
           role: "system",
@@ -1007,6 +1076,9 @@ async function callOpenAiJson(args: {
         { role: "user", content: args.userPrompt },
       ],
     };
+    if (args.responseFormat) {
+      requestBody.response_format = args.responseFormat;
+    }
     if (args.debugStore !== undefined) {
       requestBody.store = args.debugStore.store;
       if (args.debugStore.store) {
@@ -1109,6 +1181,11 @@ async function callOpenAiJson(args: {
 async function callOpenAiJsonWithSingleRetry(args: {
   apiKey: string;
   model: string;
+  temperature: number;
+  responseFormat:
+    | { type: "json_schema"; json_schema: { name: string; strict: true; schema: Record<string, unknown> } }
+    | { type: "json_object" }
+    | null;
   requestId: string;
   flowId: string;
   step: string;
@@ -1155,50 +1232,63 @@ async function callOpenAiJsonWithSingleRetry(args: {
 
 async function normalizeEntry(args: {
   apiKey: string;
-  model: string;
   requestId: string;
   flowId: string;
   softQualityGuards: boolean;
   rawText: string;
+  primaryBinding: LiveAiRuntimeBinding;
+  repairBinding: LiveAiRuntimeBinding;
   debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<NormalizedEntry> {
   if (containsNoSpeechMarker(args.rawText)) {
-    return {
-      title: LOW_CONTENT_TITLE,
-      body: LOW_CONTENT_BODY,
-      summaryShort: LOW_CONTENT_SUMMARY_SHORT,
-    };
+    failAiRuntimeOutput("Audio bevat geen bruikbare transcriptie.", "no_speech", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    });
   }
 
-  const normalizationPrompt = buildEntryNormalizationPromptSpec({
-    rawText: args.rawText,
-  });
   const aiResult = await callOpenAiJsonWithSingleRetry({
     apiKey: args.apiKey,
-    model: args.model,
+    model: args.primaryBinding.model,
+    temperature: args.primaryBinding.temperature,
+    responseFormat: args.primaryBinding.responseFormat,
     requestId: args.requestId,
     flowId: args.flowId,
     step: "normalized_persisted",
     operation: "openai_normalize_entry",
-    promptVersion: normalizationPrompt.promptVersion,
-    systemPrompt: normalizationPrompt.systemPrompt,
-    userPrompt: normalizationPrompt.userPrompt,
+    promptVersion: args.primaryBinding.promptVersion,
+    systemPrompt: args.primaryBinding.systemInstructions,
+    userPrompt: buildAiqsEntryCleanupUserPrompt({
+      binding: args.primaryBinding,
+      rawText: args.rawText,
+    }),
     debugStore: args.debugStore,
   });
 
-  const fallback = fallbackNormalization(args.rawText);
-
   if (!aiResult) {
-    return fallback;
+    failAiRuntimeOutput("OpenAI gaf geen bruikbare entry-normalisatie terug.", "openai_result_missing", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    });
   }
 
   const nextTitle = cleanNormalizedTitle(
-    parseString(aiResult.title) ?? fallback.title,
-    fallback.title,
+    requireAiOutputString(aiResult.title, "title", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    }),
+    "",
   );
   const nextBody = cleanNormalizedBody(
-    parseString(aiResult.body) ?? fallback.body,
-    fallback.body,
+    requireAiOutputString(aiResult.body, "body", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    }),
+    "",
   );
   const compressionGuardTriggered = isSuspiciouslyCompressedNormalization(
     args.rawText,
@@ -1206,11 +1296,28 @@ async function normalizeEntry(args: {
   );
   const body =
     compressionGuardTriggered && args.softQualityGuards
-      ? fallback.body
+      ? failAiRuntimeOutput("OpenAI entry body faalde de compressie-guard.", "quality_gate_failed", {
+          runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+          taskKey: args.primaryBinding.taskKey,
+          versionId: args.primaryBinding.versionId,
+          reason: "compressed_normalized_body",
+        })
       : nextBody;
   const summaryShort = cleanNormalizedSummaryShort(
-    parseString(aiResult.summary_short),
+    requireAiOutputObjectString(aiResult, ["summary_short", "summaryShort"], "summary_short", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    }, { allowEmpty: allowsEmptySummaryShort(args.primaryBinding) }),
     body,
+    {
+      allowEmpty: allowsEmptySummaryShort(args.primaryBinding),
+      details: {
+        runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+        taskKey: args.primaryBinding.taskKey,
+        versionId: args.primaryBinding.versionId,
+      },
+    },
   );
   const driftReasons = detectNormalizationDrift(args.rawText, body);
 
@@ -1285,36 +1392,51 @@ async function normalizeEntry(args: {
       },
     });
 
-    const repairPrompt = buildEntryNormalizationRepairPromptSpec({
-      rawText: args.rawText,
-      currentBody: body,
-    });
     const repairedAiResult = await callOpenAiJsonWithSingleRetry({
       apiKey: args.apiKey,
-      model: args.model,
+      model: args.repairBinding.model,
+      temperature: args.repairBinding.temperature,
+      responseFormat: args.repairBinding.responseFormat,
       requestId: args.requestId,
       flowId: args.flowId,
       step: "normalized_persisted",
       operation: "openai_normalize_entry_repair",
-      promptVersion: repairPrompt.promptVersion,
-      systemPrompt: repairPrompt.systemPrompt,
-      userPrompt: repairPrompt.userPrompt,
+      promptVersion: args.repairBinding.promptVersion,
+      systemPrompt: args.repairBinding.systemInstructions,
+      userPrompt: buildAiqsEntryCleanupUserPrompt({
+        binding: args.repairBinding,
+        rawText: args.rawText,
+        currentBody: body,
+      }),
     });
 
     if (repairedAiResult) {
       const repairedTitle = cleanNormalizedTitle(
-        parseString(repairedAiResult.title) ?? nextTitle,
-        fallback.title,
+        requireAiOutputString(repairedAiResult.title, "title", {
+          runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+          taskKey: args.repairBinding.taskKey,
+          versionId: args.repairBinding.versionId,
+        }),
+        "",
       );
       const repairedBodyRaw = cleanNormalizedBody(
-        parseString(repairedAiResult.body) ?? body,
-        fallback.body,
+        requireAiOutputString(repairedAiResult.body, "body", {
+          runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+          taskKey: args.repairBinding.taskKey,
+          versionId: args.repairBinding.versionId,
+        }),
+        "",
       );
       const repairedBody = isSuspiciouslyCompressedNormalization(
         args.rawText,
         repairedBodyRaw,
       )
-        ? fallback.body
+        ? failAiRuntimeOutput("OpenAI repair body faalde de compressie-guard.", "quality_gate_failed", {
+            runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+            taskKey: args.repairBinding.taskKey,
+            versionId: args.repairBinding.versionId,
+            reason: "compressed_repair_body",
+          })
         : repairedBodyRaw;
       const repairedDrift = detectNormalizationDrift(
         args.rawText,
@@ -1325,8 +1447,20 @@ async function normalizeEntry(args: {
           title: repairedTitle,
           body: repairedBody,
           summaryShort: cleanNormalizedSummaryShort(
-            parseString(repairedAiResult.summary_short),
+            requireAiOutputObjectString(repairedAiResult, ["summary_short", "summaryShort"], "summary_short", {
+              runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+              taskKey: args.repairBinding.taskKey,
+              versionId: args.repairBinding.versionId,
+            }, { allowEmpty: allowsEmptySummaryShort(args.repairBinding) }),
             repairedBody,
+            {
+              allowEmpty: allowsEmptySummaryShort(args.repairBinding),
+              details: {
+                runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+                taskKey: args.repairBinding.taskKey,
+                versionId: args.repairBinding.versionId,
+              },
+            },
           ),
         };
       }
@@ -1354,23 +1488,23 @@ async function normalizeEntry(args: {
       });
     }
 
-    const conservative = fallbackNormalization(args.rawText);
     logFlow("warn", {
       flow: FLOW,
       requestId: args.requestId,
       flowId: args.flowId,
       step: "normalized_persisted",
-      event: "normalized_fallback_used",
+      event: "normalized_quality_gate_failed",
       details: {
         reasons: driftReasons,
       },
     });
 
-    return {
-      title: conservative.title,
-      body: conservative.body,
-      summaryShort: createSummaryShortFromBody(conservative.body),
-    };
+    failAiRuntimeOutput("OpenAI entry-normalisatie faalde de quality gate.", "quality_gate_failed", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+      reasons: driftReasons,
+    });
   }
 
   return {
@@ -1382,13 +1516,14 @@ async function normalizeEntry(args: {
 
 async function composeDayJournal(args: {
   apiKey: string;
-  model: string;
   requestId: string;
   flowId: string;
   journalDate: string;
   strictValidation: boolean;
   softQualityGuards: boolean;
   normalizedEntries: NormalizedEntry[];
+  primaryBinding: LiveAiRuntimeBinding;
+  repairBinding: LiveAiRuntimeBinding;
   debugStore?: { store: boolean; metadata?: Record<string, string> };
 }): Promise<DayJournalDraft> {
   const orderedEntries = orderDayJournalEntries(args.normalizedEntries);
@@ -1401,37 +1536,39 @@ async function composeDayJournal(args: {
   );
 
   if (contentEntries.length === 0) {
-    return finalizeDayJournalDraft({
-      aiResult: null,
-      entries: contentEntries,
-      options: {
-        noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
-        lowContentTitle: LOW_CONTENT_TITLE,
-        strictValidation: args.strictValidation,
-        softQualityGuards: args.softQualityGuards,
-      },
+    failAiRuntimeOutput("Geen bruikbare content voor dagjournaal.", "no_speech", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+      journalDate: args.journalDate,
     });
   }
 
-  const promptSpec = buildDayJournalPromptSpec({
-    journalDate: args.journalDate,
-    entries: contentEntries,
-  });
-
   const aiResult = await callOpenAiJsonWithSingleRetry({
     apiKey: args.apiKey,
-    model: args.model,
+    model: args.primaryBinding.model,
+    temperature: args.primaryBinding.temperature,
+    responseFormat: args.primaryBinding.responseFormat,
     requestId: args.requestId,
     flowId: args.flowId,
     step: "day_journal_upserted",
     operation: "openai_compose_day_journal",
-    promptVersion: promptSpec.promptVersion,
-    systemPrompt: promptSpec.systemPrompt,
-    userPrompt: promptSpec.userPrompt,
+    promptVersion: args.primaryBinding.promptVersion,
+    systemPrompt: args.primaryBinding.systemInstructions,
+    userPrompt: buildAiqsJsonUserPrompt({
+      binding: args.primaryBinding,
+      context: {
+        journal_date: args.journalDate,
+        entries: contentEntries.map((entry) => ({
+          entry_title: entry.title,
+          entry_body: entry.body,
+        })),
+      },
+    }),
     debugStore: args.debugStore,
   });
 
-  const finalized = finalizeDayJournalDraft({
+  const finalizedResult = finalizeDayJournalDraftStrict({
     aiResult,
     entries: contentEntries,
     options: {
@@ -1441,6 +1578,27 @@ async function composeDayJournal(args: {
       softQualityGuards: args.softQualityGuards,
     },
   });
+  const finalized = finalizedResult.finalized;
+
+  if (!finalizedResult.ok) {
+    logFlow("warn", {
+      flow: FLOW,
+      requestId: args.requestId,
+      flowId: args.flowId,
+      step: "day_journal_upserted",
+      event: "day_journal_quality_gate_failed",
+      details: {
+        reasons: finalizedResult.reasons,
+      },
+    });
+    failAiRuntimeOutput("OpenAI dagjournaal faalde de quality gate.", "quality_gate_failed", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+      journalDate: args.journalDate,
+      reasons: finalizedResult.reasons,
+    });
+  }
 
   if (!args.softQualityGuards && finalized.softQualitySignals.length > 0) {
     logFlow("info", {
@@ -1466,7 +1624,6 @@ async function composeDayJournal(args: {
   );
   const narrativeNeedsRepair =
     args.softQualityGuards &&
-    !finalized.usedFallback &&
     narrativeRepairReasons.length > 0;
   if (narrativeNeedsRepair) {
     logFlow("info", {
@@ -1482,11 +1639,6 @@ async function composeDayJournal(args: {
       },
     });
 
-    const repairPrompt = buildDayJournalRepairPromptSpec({
-      journalDate: args.journalDate,
-      entries: contentEntries,
-    });
-
     logFlow("info", {
       flow: FLOW,
       requestId: args.requestId,
@@ -1500,17 +1652,28 @@ async function composeDayJournal(args: {
 
     const repairedAiResult = await callOpenAiJsonWithSingleRetry({
       apiKey: args.apiKey,
-      model: args.model,
+      model: args.repairBinding.model,
+      temperature: args.repairBinding.temperature,
+      responseFormat: args.repairBinding.responseFormat,
       requestId: args.requestId,
       flowId: args.flowId,
       step: "day_journal_upserted",
       operation: "openai_compose_day_journal_repair",
-      promptVersion: repairPrompt.promptVersion,
-      systemPrompt: repairPrompt.systemPrompt,
-      userPrompt: repairPrompt.userPrompt,
+      promptVersion: args.repairBinding.promptVersion,
+      systemPrompt: args.repairBinding.systemInstructions,
+      userPrompt: buildAiqsJsonUserPrompt({
+        binding: args.repairBinding,
+        context: {
+          journal_date: args.journalDate,
+          entries: contentEntries.map((entry) => ({
+            entry_title: entry.title,
+            entry_body: entry.body,
+          })),
+        },
+      }),
     });
 
-    const repairedFinalized = finalizeDayJournalDraft({
+    const repairedFinalizedResult = finalizeDayJournalDraftStrict({
       aiResult: repairedAiResult,
       entries: contentEntries,
       options: {
@@ -1520,6 +1683,7 @@ async function composeDayJournal(args: {
         softQualityGuards: args.softQualityGuards,
       },
     });
+    const repairedFinalized = repairedFinalizedResult.finalized;
 
     const remainingNarrativeRepairReasons =
       repairedFinalized.narrativeQualityReasons.filter((reason) =>
@@ -1530,7 +1694,7 @@ async function composeDayJournal(args: {
         ].includes(reason),
       );
     const retrySucceeded =
-      !repairedFinalized.usedFallback &&
+      repairedFinalizedResult.ok &&
       remainingNarrativeRepairReasons.length === 0;
 
     if (retrySucceeded) {
@@ -1549,9 +1713,8 @@ async function composeDayJournal(args: {
       };
     }
 
-    const fallback = createFallbackDayJournal(contentEntries);
-    const retryFailureReasons = repairedFinalized.usedFallback
-      ? repairedFinalized.rejectionReasons
+    const retryFailureReasons = !repairedFinalizedResult.ok
+      ? repairedFinalizedResult.reasons
       : remainingNarrativeRepairReasons;
 
     logFlow("warn", {
@@ -1569,56 +1732,20 @@ async function composeDayJournal(args: {
       requestId: args.requestId,
       flowId: args.flowId,
       step: "day_journal_upserted",
-      event: "day_journal_fallback_used",
+      event: "day_journal_repair_failed",
       details: {
         dominantReason: retryFailureReasons[0] ?? "narrative_quality",
         reasons: retryFailureReasons,
       },
     });
 
-    return fallback;
-  }
-
-  if (finalized.usedFallback) {
-    logFlow("warn", {
-      flow: FLOW,
-      requestId: args.requestId,
-      flowId: args.flowId,
-      step: "day_journal_upserted",
-      event: "day_journal_fallback_used",
-      details: {
-        dominantReason: finalized.rejectionReasons[0] ?? "unknown",
-        reasons: finalized.rejectionReasons,
-      },
+    failAiRuntimeOutput("OpenAI dagjournaal-repair faalde de quality gate.", "repair_failed", {
+      runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+      taskKey: args.repairBinding.taskKey,
+      versionId: args.repairBinding.versionId,
+      journalDate: args.journalDate,
+      reasons: retryFailureReasons,
     });
-  } else {
-    if (finalized.usedFallbackSummary) {
-      logFlow("info", {
-        flow: FLOW,
-        requestId: args.requestId,
-        flowId: args.flowId,
-        step: "day_journal_upserted",
-        event: "day_journal_summary_fallback_used",
-        details: {
-          dominantReason: finalized.summaryFallbackReasons[0] ?? "unknown",
-          reasons: finalized.summaryFallbackReasons,
-        },
-      });
-    }
-
-    if (finalized.usedFallbackSections) {
-      logFlow("info", {
-        flow: FLOW,
-        requestId: args.requestId,
-        flowId: args.flowId,
-        step: "day_journal_upserted",
-        event: "day_journal_sections_fallback_used",
-        details: {
-          dominantReason: finalized.sectionFallbackReasons[0] ?? "unknown",
-          reasons: finalized.sectionFallbackReasons,
-        },
-      });
-    }
   }
 
   return {
@@ -1669,39 +1796,56 @@ Deno.serve(async (request: Request) => {
     });
 
     const runtimeEnv = getFunctionRuntimeEnv();
+    const serviceRoleKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
+      Deno.env.get("APP_SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
+      "";
+    if (!serviceRoleKey) {
+      throw new Error("Missing service role key for AIQS runtime binding resolution.");
+    }
+    const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const entryPrimaryBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: "entry_normalization.primary",
+    });
+    const entryRepairBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: "entry_normalization.repair",
+    });
+    const dayPrimaryBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: "day_journal.primary",
+    });
+    const dayRepairBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: "day_journal.repair",
+    });
 
     // Load debug storage policy for this flow (best-effort; no-op on error)
     let debugStore: { store: boolean; metadata?: Record<string, string> } | undefined;
     try {
-      const serviceRoleKey =
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
-        Deno.env.get("APP_SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
-        "";
-      if (serviceRoleKey) {
-        const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        });
-        const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
-        const resolution = resolveOpenAiDebugStorageForFlow({
-          settings: debugSettings,
-          flowKey: "process-entry.generation",
-          endpointFamily: "chat_completions",
-        });
-        const metadata = buildOpenAiDebugMetadata({
-          app: "persoonlijke-assistent",
-          env: Deno.env.get("APP_ENV") ?? "production",
-          flow: "process-entry",
-          functionName: "process-entry",
-          taskKey: "entry_normalization+day_journal",
-          runtimeFamily: "entry",
-          requestId,
-          flowId,
-          mode: "generation",
-          version: "1",
-          actor: "user",
-        });
-        debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
-      }
+      const debugSettings = await loadOpenAiDebugStorageSettings(adminClient);
+      const resolution = resolveOpenAiDebugStorageForFlow({
+        settings: debugSettings,
+        flowKey: "process-entry.generation",
+        endpointFamily: "chat_completions",
+      });
+      const metadata = buildOpenAiDebugMetadata({
+        app: "persoonlijke-assistent",
+        env: Deno.env.get("APP_ENV") ?? "production",
+        flow: "process-entry",
+        functionName: "process-entry",
+        taskKey: `${entryPrimaryBinding.taskKey}+${dayPrimaryBinding.taskKey}`,
+        runtimeFamily: "aiqs_runtime",
+        requestId,
+        flowId,
+        mode: "generation",
+        version: `${entryPrimaryBinding.versionNumber}.${dayPrimaryBinding.versionNumber}`,
+        actor: "user",
+      });
+      debugStore = buildChatCompletionsDebugRequest({ resolution, metadata });
     } catch {
       // debug storage policy load is non-fatal; continue without
     }
@@ -2474,11 +2618,12 @@ Deno.serve(async (request: Request) => {
 
     const normalized = await normalizeEntry({
       apiKey: runtimeEnv.openAiApiKey,
-      model: runtimeEnv.openAiModel,
       requestId,
       flowId,
       softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
       rawText: sourceTextForNormalization,
+      primaryBinding: entryPrimaryBinding,
+      repairBinding: entryRepairBinding,
       debugStore,
     });
 
@@ -2569,7 +2714,7 @@ Deno.serve(async (request: Request) => {
     if (!parseString(normalized.body)) {
       integrityIssues.push("normalized_body_missing");
     }
-    if (!parseString(normalized.summaryShort)) {
+    if (!allowsEmptySummaryShort(entryPrimaryBinding) && !parseString(normalized.summaryShort)) {
       integrityIssues.push("normalized_summary_missing");
     }
     if (persistedRawRow.source_type === "text" && !parseString(persistedRawRow.raw_text)) {
@@ -2788,8 +2933,9 @@ Deno.serve(async (request: Request) => {
           title: row.title,
           body: row.body,
           summaryShort: cleanNormalizedSummaryShort(
-            parseString(row.summary_short),
+            typeof row.summary_short === "string" ? row.summary_short : null,
             row.body,
+            { allowEmpty: true },
           ),
         });
       }
@@ -2809,13 +2955,14 @@ Deno.serve(async (request: Request) => {
 
     const dayDraft = await composeDayJournal({
       apiKey: runtimeEnv.openAiApiKey,
-      model: runtimeEnv.openAiModel,
       requestId,
       flowId,
       journalDate,
       strictValidation: runtimeEnv.dayJournalStrictValidation,
       softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
       normalizedEntries: normalizedEntriesForDay,
+      primaryBinding: dayPrimaryBinding,
+      repairBinding: dayRepairBinding,
       debugStore,
     });
 
@@ -2893,6 +3040,36 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
+    if (isAiRuntimeOutputError(error)) {
+      logFlow("warn", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "ai_runtime_output_rejected",
+        details: {
+          reason: error.reason,
+          ...error.details,
+          ...(rawEntryId ? { rawEntryId } : {}),
+          hasClientProcessingId: Boolean(clientProcessingId),
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 502,
+        requestId,
+        flowId,
+        step,
+        code: "UPSTREAM_UNAVAILABLE",
+        message: error.message,
+        details: {
+          reason: error.reason,
+          ...error.details,
+          ...(rawEntryId ? { rawEntryId } : {}),
+        },
+      });
+    }
+
     logFlow("error", {
       flow: FLOW,
       requestId,

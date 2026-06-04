@@ -2,25 +2,26 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 
+import { ConfirmSheet } from '@/components/feedback/destructive-confirm-sheet';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
-  AdminMetaStrip,
-  AdminPageHero,
-  AdminSection,
-  AdminShell,
-  AdminStickyFooterActions,
-  SettingsTopNav,
-} from '@/components/ui/settings-screen-primitives';
+  AdminActionBar,
+  AdminConsoleHeader,
+  AdminConsolePanel,
+  AdminConsoleShell,
+  AdminStatusChip,
+} from '@/components/ui/admin-console-primitives';
 import { InlineWordDiffText } from '@/components/ui/inline-word-diff';
-import { InputField, MetaText, StateBlock, SurfaceSection, TextAreaField } from '@/components/ui/screen-primitives';
+import { InputField, MetaText, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
 import {
   classifyUnknownError,
   fetchAdminAiQualityStudioCompareView,
   fetchAdminAiQualityStudioTaskDetail,
   fetchAdminAiQualityStudioTestRun,
   listAdminAiQualityStudioTestSources,
+  promoteAdminAiQualityStudioVersionLive,
   runAdminAiQualityStudioTest,
   saveAdminAiQualityStudioTestReview,
 } from '@/services';
@@ -420,6 +421,8 @@ export default function AiQualityStudioValidateScreen() {
   const [loading, setLoading] = useState(true);
   const [runningTest, setRunningTest] = useState(false);
   const [savingDecision, setSavingDecision] = useState(false);
+  const [promotingVersion, setPromotingVersion] = useState(false);
+  const [promoteConfirmVisible, setPromoteConfirmVisible] = useState(false);
   const [loadingSources, setLoadingSources] = useState(false);
   const [detail, setDetail] = useState<AiTaskDetail | null>(null);
   const [testSources, setTestSources] = useState<AiTaskTestSource[]>([]);
@@ -489,6 +492,9 @@ export default function AiQualityStudioValidateScreen() {
   const hasSavedReviewState = Boolean(compareView?.reviewerLabel || saveMessage);
   const savedReviewLabel = compareView?.reviewerLabel ?? null;
   const savedReviewNotes = compareView?.reviewerNotes ?? null;
+  const canPromoteFromValidate =
+    Boolean(selectedVersion && selectedVersion.status === 'draft') &&
+    (savedReviewLabel === 'beter' || savedReviewLabel === 'gelijk');
   const draftRoute = detail && selectedVersion ? (`/settings-ai-quality-studio/${detail.key}/draft/${selectedVersion.id}` as never) : null;
 
   const contractSignals = useMemo(() => {
@@ -560,7 +566,7 @@ export default function AiQualityStudioValidateScreen() {
 
     try {
       const nextDetail = await fetchAdminAiQualityStudioTaskDetail(normalizedTaskKey);
-      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label);
+      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label, nextDetail);
       if (metadata.editorScope === 'read_only_part') {
         if (metadata.familyKey) {
           router.replace(`/settings-ai-quality-studio/group/${metadata.familyKey}` as never);
@@ -730,14 +736,46 @@ export default function AiQualityStudioValidateScreen() {
     }
   }
 
+  async function handlePromoteVersionLive() {
+    if (!detail || !selectedVersion || promotingVersion || !canPromoteFromValidate) return;
+
+    setPromotingVersion(true);
+    setError(null);
+    setSaveMessage(null);
+
+    try {
+      const result = await promoteAdminAiQualityStudioVersionLive({
+        taskKey: detail.key,
+        versionId: selectedVersion.id,
+      });
+      setPromoteConfirmVisible(false);
+      router.replace(`/settings-ai-quality-studio/${detail.key}` as never);
+      setSaveMessage(`v${result.promotedVersion.versionNumber} is live gezet.`);
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError(parsed.message);
+    } finally {
+      setPromotingVersion(false);
+    }
+  }
+
   return (
-    <AdminShell
-      fixedHeader={<SettingsTopNav onBack={() => router.back()} onMenu={() => setMenuVisible(true)} />}
+    <AdminConsoleShell
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       fixedFooter={
         !loading && detail && selectedVersion && supportsInlineTesting ? (
-          <AdminStickyFooterActions
-            primaryAction={
-              hasSavedReviewState
+          <AdminActionBar
+            floating
+            primary={
+              canPromoteFromValidate
+                ? {
+                    label: promotingVersion ? 'Live zetten…' : 'Zet live',
+                    onPress: () => setPromoteConfirmVisible(true),
+                    disabled: promotingVersion,
+                    icon: 'rocket-launch',
+                  }
+                : hasSavedReviewState
                 ? {
                     label: runningTest ? 'Runnen…' : 'Opnieuw testen',
                     onPress: () => void handleRunTest(),
@@ -756,9 +794,9 @@ export default function AiQualityStudioValidateScreen() {
                     onPress: () => void handleRunTest(),
                     disabled: !canRunTest,
                     icon: 'play-arrow',
-                  }
+                }
             }
-            secondaryAction={
+            secondary={
               hasSavedReviewState
                 ? {
                     label: 'Terug naar draft',
@@ -774,10 +812,10 @@ export default function AiQualityStudioValidateScreen() {
                     onPress: () => void handleRunTest(),
                     disabled: !canRunTest,
                     icon: 'refresh',
-                  }
+                }
                 : undefined
             }
-            tertiaryAction={{
+            tertiary={{
               label: hasSavedReviewState ? 'Andere case kiezen' : 'Terug',
               onPress: () => {
                 if (hasSavedReviewState) {
@@ -787,31 +825,38 @@ export default function AiQualityStudioValidateScreen() {
                 if (draftRoute) router.push(draftRoute);
               },
               icon: hasSavedReviewState ? 'filter-list' : 'arrow-back',
-              tone: 'quiet',
+              tone: 'secondary',
             }}
           />
         ) : null
       }
       contentContainerStyle={styles.scrollContent}
     >
-      <AdminPageHero title="Valideren" subtitle={detail?.label ?? 'AI Quality Studio'} />
-
-      {detail && selectedVersion ? (
-        <AdminMetaStrip
-          items={[
-            `Draft: v${selectedVersion.versionNumber}`,
-            detail.liveVersion ? `Runtime-basis: v${detail.liveVersion.versionNumber}` : 'Runtime-basis ontbreekt',
-            latestTestRun ? `Laatste run: ${latestTestRun.id.slice(0, 8)}` : 'Nog geen run',
-          ]}
-        />
-      ) : null}
+      <AdminConsoleHeader
+        eyebrow="Compare workbench"
+        title="Valideren"
+        subtitle={detail?.label ?? 'AI Quality Studio'}
+        chips={
+          detail && selectedVersion ? (
+            <>
+              <AdminStatusChip label={`Draft v${selectedVersion.versionNumber}`} tone="info" />
+              <AdminStatusChip
+                label={detail.liveVersion ? `Runtime v${detail.liveVersion.versionNumber}` : 'Runtime ontbreekt'}
+                tone={detail.liveVersion ? 'success' : 'warning'}
+              />
+              <AdminStatusChip label={latestTestRun ? `Run ${latestTestRun.id.slice(0, 8)}` : 'Nog geen run'} />
+              {decisionLabel ? <AdminStatusChip label={`Oordeel ${decisionLabel}`} tone="success" /> : null}
+            </>
+          ) : null
+        }
+      />
 
       {loading ? <StateBlock tone="loading" message="Validate mode laden" /> : null}
       {!loading && error ? <StateBlock tone="error" message="Kon validate mode niet laden." detail={error} /> : null}
 
       {!loading && detail && selectedVersion ? (
         <>
-          <SurfaceSection title="Case kiezen" subtitle="Kies één bron en run de draft tegen de baseline.">
+          <AdminConsolePanel title="Case kiezen" subtitle="Kies één bron en run de draft tegen de baseline.">
             {isEntryCleanup ? (
               <ThemedView style={styles.modeSwitchRow}>
                 <Pressable
@@ -927,10 +972,10 @@ export default function AiQualityStudioValidateScreen() {
                 ) : null}
               </>
             )}
-          </SurfaceSection>
+          </AdminConsolePanel>
 
           <ThemedView style={[styles.compareLayout, isDesktop && styles.compareLayoutDesktop]}>
-            <AdminSection title="Huidige versie" subtitle="Wat nu live staat (basis voor vergelijking)">
+            <AdminConsolePanel title="Huidige versie" subtitle="Wat nu live staat (basis voor vergelijking)">
               {!compareView ? (
                 <StateBlock tone="info" message="Nog geen run" detail="Run eerst een test om baseline te laden." />
               ) : compareView.baselineStatus !== 'available' ? (
@@ -986,9 +1031,9 @@ export default function AiQualityStudioValidateScreen() {
                   ) : null}
                 </ThemedView>
               )}
-            </AdminSection>
+            </AdminConsolePanel>
 
-            <AdminSection title="Nieuwe versie" subtitle="Wat de draft teruggeeft op deze case">
+            <AdminConsolePanel title="Nieuwe versie" subtitle="Wat de draft teruggeeft op deze case">
               {!compareView ? (
                 <StateBlock tone="info" message="Nog geen run" detail="Run een test om kandidaat-output te zien." />
               ) : (
@@ -1108,10 +1153,10 @@ export default function AiQualityStudioValidateScreen() {
                   ) : null}
                 </ThemedView>
               )}
-            </AdminSection>
+            </AdminConsolePanel>
           </ThemedView>
 
-          <SurfaceSection title="Snelle controle" subtitle="Objectieve signalen over de kwaliteit van deze versie.">
+          <AdminConsolePanel title="Snelle controle" subtitle="Objectieve signalen over de kwaliteit van deze versie.">
             {contractSignals.length === 0 ? (
               <MetaText>Run eerst een test om signals te tonen.</MetaText>
             ) : (
@@ -1126,9 +1171,9 @@ export default function AiQualityStudioValidateScreen() {
                 ))}
               </ThemedView>
             )}
-          </SurfaceSection>
+          </AdminConsolePanel>
 
-          <SurfaceSection title="Beslissing" subtitle="Kies één oordeel en sla deze run op als bewijs.">
+          <AdminConsolePanel title="Beslissing" subtitle="Kies één oordeel en sla deze run op als bewijs.">
             {!compareView ? (
               <MetaText>Run eerst een test.</MetaText>
             ) : compareView.baselineStatus !== 'available' ? (
@@ -1177,7 +1222,11 @@ export default function AiQualityStudioValidateScreen() {
                   <ThemedView style={[styles.savedReviewCard, { backgroundColor: palette.surfaceLow }]}>
                     <ThemedText type="defaultSemiBold">Oordeel opgeslagen: {savedReviewLabel ?? 'onbekend'}</ThemedText>
                     {savedReviewNotes ? <MetaText>{savedReviewNotes}</MetaText> : null}
-                    <MetaText>Bewijs vastgelegd op deze run en klaar voor vervolgstap.</MetaText>
+                    <MetaText>
+                      {canPromoteFromValidate
+                        ? 'Bewijs vastgelegd. Deze draft kan nu live.'
+                        : 'Bewijs vastgelegd, maar deze review blokkeert livegang.'}
+                    </MetaText>
 
                     <ThemedView style={styles.savedActionRow}>
                       <Pressable
@@ -1221,7 +1270,7 @@ export default function AiQualityStudioValidateScreen() {
                 ) : null}
               </>
             )}
-          </SurfaceSection>
+          </AdminConsolePanel>
         </>
       ) : null}
 
@@ -1238,7 +1287,38 @@ export default function AiQualityStudioValidateScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </AdminShell>
+      <ConfirmSheet
+        visible={promoteConfirmVisible}
+        title="Live zetten bevestigen"
+        message="Deze versie wordt direct runtime-live."
+        detail={
+          detail && selectedVersion
+            ? `${detail.label} · v${selectedVersion.versionNumber}`
+            : undefined
+        }
+        processing={promotingVersion}
+        actions={[
+          {
+            key: 'cancel',
+            label: 'Annuleren',
+            onPress: () => {
+              if (!promotingVersion) setPromoteConfirmVisible(false);
+            },
+          },
+          {
+            key: 'confirm',
+            label: promotingVersion ? 'Live zetten…' : 'Zet live',
+            onPress: () => void handlePromoteVersionLive(),
+            disabled: promotingVersion,
+            icon: 'rocket-launch',
+          },
+        ]}
+        onCancel={() => {
+          if (!promotingVersion) setPromoteConfirmVisible(false);
+        }}
+        onConfirm={() => void handlePromoteVersionLive()}
+      />
+    </AdminConsoleShell>
   );
 }
 

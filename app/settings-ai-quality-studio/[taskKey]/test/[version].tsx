@@ -6,19 +6,19 @@ import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-o
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
-  AdminMetaStrip,
-  AdminPageHero,
   AdminReadOnlyBlock,
-  AdminSection,
-  AdminShell,
-  AdminStickyFooterActions,
-  SettingsTopNav,
 } from '@/components/ui/settings-screen-primitives';
+import {
+  AdminActionBar,
+  AdminConsoleHeader,
+  AdminConsolePanel,
+  AdminConsoleShell,
+  AdminStatusChip,
+} from '@/components/ui/admin-console-primitives';
 import {
   InputField,
   MetaText,
   StateBlock,
-  SurfaceSection,
   TextAreaField,
 } from '@/components/ui/screen-primitives';
 import {
@@ -261,7 +261,7 @@ export default function AiQualityStudioTestScreen() {
 
     try {
       const nextDetail = await fetchAdminAiQualityStudioTaskDetail(normalizedTaskKey);
-      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label);
+      const metadata = getAiQualityTaskMetadata(nextDetail.key, nextDetail.label, nextDetail);
       if (metadata.editorScope === 'read_only_part') {
         if (metadata.familyKey) {
           router.replace(`/settings-ai-quality-studio/group/${metadata.familyKey}` as never);
@@ -360,18 +360,20 @@ export default function AiQualityStudioTestScreen() {
   }
 
   return (
-    <AdminShell
-      fixedHeader={<SettingsTopNav onBack={() => router.back()} onMenu={() => setMenuVisible(true)} />}
+    <AdminConsoleShell
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       fixedFooter={
         showFooterActions ? (
-          <AdminStickyFooterActions
-            primaryAction={{
+          <AdminActionBar
+            floating
+            primary={{
               label: runningTest ? 'Testen…' : 'Test',
               onPress: () => void handleRunTest(),
               disabled: !canRunTest || loadingSources,
               icon: 'play-arrow',
             }}
-            secondaryAction={
+            secondary={
               latestTestRun && taskCapabilities?.canCompare
                 ? {
                     label: loadingCompare ? 'Vergelijken…' : 'Vergelijk live',
@@ -381,34 +383,41 @@ export default function AiQualityStudioTestScreen() {
                   }
                 : undefined
             }
-            tertiaryAction={{
+            tertiary={{
               label: 'Terug',
               onPress: () => router.push(`/settings-ai-quality-studio/${detail.key}/draft/${selectedVersion.id}` as never),
               icon: 'arrow-back',
-              tone: 'quiet',
+              tone: 'secondary',
             }}
           />
         ) : null
       }
       contentContainerStyle={styles.scrollContent}
     >
-      <AdminPageHero title="Testen" subtitle={detail?.label ?? 'AI Quality Studio'} />
-
-      {detail && selectedVersion ? (
-        <AdminMetaStrip
-          items={[
-            `Draft: v${selectedVersion.versionNumber}`,
-            detail.liveVersion ? `Runtime: v${detail.liveVersion.versionNumber}` : 'Runtime nog niet ingesteld',
-          ]}
-        />
-      ) : null}
+      <AdminConsoleHeader
+        eyebrow="Runtime test"
+        title="Testen"
+        subtitle={detail?.label ?? 'AI Quality Studio'}
+        chips={
+          detail && selectedVersion ? (
+            <>
+              <AdminStatusChip label={`Draft v${selectedVersion.versionNumber}`} tone="info" />
+              <AdminStatusChip
+                label={detail.liveVersion ? `Runtime v${detail.liveVersion.versionNumber}` : 'Runtime ontbreekt'}
+                tone={detail.liveVersion ? 'success' : 'warning'}
+              />
+              <AdminStatusChip label={selectedVersion.model} />
+            </>
+          ) : null
+        }
+      />
 
       {loading ? <StateBlock tone="loading" message="Testomgeving laden" /> : null}
       {!loading && error ? <StateBlock tone="error" message="Kon testscherm niet laden." detail={error} /> : null}
 
       {!loading && detail && selectedVersion ? (
         <>
-          <AdminSection title={isEntryCleanup ? 'Runtime-basis' : 'Versiecontext'}>
+          <AdminConsolePanel title={isEntryCleanup ? 'Runtime-basis' : 'Versiecontext'}>
             <MetaText>Onderdeel: {detail.label}</MetaText>
             <MetaText>Draft versie: v{selectedVersion.versionNumber}</MetaText>
             <MetaText>Model: {selectedVersion.model}</MetaText>
@@ -427,10 +436,10 @@ export default function AiQualityStudioTestScreen() {
                 <MetaText>Outputlaag: entries_normalized</MetaText>
               </>
             ) : null}
-          </AdminSection>
+          </AdminConsolePanel>
 
           {isEntryCleanup ? (
-            <AdminSection title="Technisch contract (read-only)">
+            <AdminConsolePanel title="Technisch contract (read-only)">
               <ThemedView style={styles.resultGroup}>
                 <AdminReadOnlyBlock title="Input contract" lines={inputContractLines} />
                 <AdminReadOnlyBlock title="Technisch contract" lines={entryCleanupTechnicalContractLines} />
@@ -439,11 +448,11 @@ export default function AiQualityStudioTestScreen() {
                   lines={responseContractFields.map((field) => `${field.name}: ${field.type}`)}
                 />
               </ThemedView>
-            </AdminSection>
+            </AdminConsolePanel>
           ) : null}
 
             {isEntryCleanup && entryCleanupInstruction ? (
-              <SurfaceSection title="Instructies">
+              <AdminConsolePanel title="Instructies">
                 <ThemedView style={styles.resultGroup}>
                   <ThemedText type="defaultSemiBold">Algemene instructie</ThemedText>
                   <TextAreaField value={entryCleanupInstruction.generalInstruction} editable={false} style={styles.textAreaSmall} />
@@ -457,10 +466,10 @@ export default function AiQualityStudioTestScreen() {
                   <ThemedText type="defaultSemiBold">Summary_short</ThemedText>
                   <TextAreaField value={entryCleanupInstruction.summaryShortInstruction} editable={false} style={styles.textAreaSmall} />
                 </ThemedView>
-              </SurfaceSection>
+              </AdminConsolePanel>
             ) : null}
 
-          <SurfaceSection title="Bron kiezen">
+          <AdminConsolePanel title="Bron kiezen">
             {loadingSources ? <MetaText>Bronnen laden…</MetaText> : null}
             {!loadingSources && testSources.length > 0 ? (
               <InputField value={sourceQuery} onChangeText={setSourceQuery} placeholder="Zoek bron" />
@@ -511,10 +520,10 @@ export default function AiQualityStudioTestScreen() {
                 detail="Voor dit onderdeel is testen nog niet beschikbaar."
               />
             ) : null}
-          </SurfaceSection>
+          </AdminConsolePanel>
 
           {latestTestRun ? (
-            <SurfaceSection title={isEntryCleanup ? 'Testresultaat' : 'Testresultaat'}>
+            <AdminConsolePanel title={isEntryCleanup ? 'Testresultaat' : 'Testresultaat'}>
               <ThemedView style={styles.resultGroup}>
                 <MetaText>Status: {latestTestRun.status}</MetaText>
                 <MetaText>Versie: v{latestTestRun.taskVersionNumber}</MetaText>
@@ -640,15 +649,15 @@ export default function AiQualityStudioTestScreen() {
                   )}
                 </ThemedView>
               ) : null}
-            </SurfaceSection>
+            </AdminConsolePanel>
           ) : (
-            <SurfaceSection title="Testresultaat">
+            <AdminConsolePanel title="Testresultaat">
               <StateBlock
                 tone="info"
                 message="Nog geen testresultaat"
                 detail="Voer eerst een test uit om output en verschil met live te bekijken."
               />
-            </SurfaceSection>
+            </AdminConsolePanel>
           )}
         </>
       ) : null}
@@ -666,7 +675,7 @@ export default function AiQualityStudioTestScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </AdminShell>
+    </AdminConsoleShell>
   );
 }
 

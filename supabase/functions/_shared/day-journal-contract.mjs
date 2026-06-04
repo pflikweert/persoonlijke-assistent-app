@@ -922,3 +922,26 @@ export function finalizeDayJournalDraft(input) {
     sectionFallbackReasons: sectionsResult.reasons,
   };
 }
+
+export function finalizeDayJournalDraftStrict(input) {
+  const finalized = finalizeDayJournalDraft(input);
+  const fallbackReasons = dedupeByNormalizedValue([
+    ...finalized.rejectionReasons,
+    ...finalized.summaryFallbackReasons,
+    ...finalized.sectionFallbackReasons,
+  ]);
+
+  if (finalized.usedFallback || finalized.usedFallbackSummary || finalized.usedFallbackSections) {
+    return {
+      ok: false,
+      finalized,
+      reasons: fallbackReasons.length > 0 ? fallbackReasons : ['quality_gate_failed'],
+    };
+  }
+
+  return {
+    ok: true,
+    finalized,
+    reasons: [],
+  };
+}

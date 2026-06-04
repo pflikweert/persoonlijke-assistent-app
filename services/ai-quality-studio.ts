@@ -5,6 +5,7 @@ import type {
   AiTaskDraftCreationMeta,
   AiTaskDetail,
   AiTaskDraftPayload,
+  AiTaskVersionPromotionResult,
   RunPromptAssistPreviewPayload,
   AiRuntimeBaselineImportResult,
   SaveAiTaskTestReviewPayload,
@@ -57,6 +58,17 @@ type DraftVersionResponse = {
   requestId: string;
   flowId: string;
   version: AiTaskVersionDetail;
+};
+
+type PromoteVersionLiveResponse = {
+  status: 'ok';
+  flow: 'admin-ai-quality-studio';
+  requestId: string;
+  flowId: string;
+  promotedVersion: AiTaskVersionDetail;
+  archivedVersionId: string | null;
+  previousLiveVersionNumber: number | null;
+  mode: AiTaskVersionPromotionResult['mode'];
 };
 
 type DeleteDraftVersionResponse = {
@@ -346,6 +358,49 @@ export async function deleteAdminAiQualityStudioDraftVersion(
 
   return {
     deletedVersionId: data.deletedVersionId,
+  };
+}
+
+export async function promoteAdminAiQualityStudioVersionLive(payload: {
+  taskKey: string;
+  versionId: string;
+}): Promise<AiTaskVersionPromotionResult> {
+  const normalizedTaskKey = payload.taskKey.trim();
+  const normalizedVersionId = payload.versionId.trim();
+  if (!normalizedTaskKey) {
+    throw new Error('taskKey ontbreekt.');
+  }
+  if (!normalizedVersionId) {
+    throw new Error('versionId ontbreekt.');
+  }
+
+  const flowId = createClientFlowId('admin-ai-quality');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
+
+  const data = await invokeAction<PromoteVersionLiveResponse>({
+    flowId,
+    body: {
+      action: 'promote_version_live',
+      taskKey: normalizedTaskKey,
+      versionId: normalizedVersionId,
+    },
+  });
+
+  if (
+    data.status !== 'ok' ||
+    data.flow !== 'admin-ai-quality-studio' ||
+    !data.requestId ||
+    !data.promotedVersion ||
+    (data.mode !== 'promote_draft' && data.mode !== 'rollback_archived')
+  ) {
+    throw new Error('Ongeldige response van admin-ai-quality-studio promote_version_live.');
+  }
+
+  return {
+    promotedVersion: data.promotedVersion,
+    archivedVersionId: data.archivedVersionId ?? null,
+    previousLiveVersionNumber: data.previousLiveVersionNumber ?? null,
+    mode: data.mode,
   };
 }
 

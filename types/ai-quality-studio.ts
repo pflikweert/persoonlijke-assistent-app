@@ -239,6 +239,7 @@ export type AiTaskVersionDetail = {
   status: AiTaskVersionStatus;
   model: string;
   promptTemplate: string;
+  systemInstructions: string;
   outputSchemaJson: Record<string, unknown>;
   configJson: Record<string, unknown>;
   changelog: string | null;
@@ -246,11 +247,15 @@ export type AiTaskVersionDetail = {
   updatedAt: string;
   becameLiveAt: string | null;
   lockedAt: string | null;
+  completedTestRunCount: number;
+  positiveReviewCount: number;
+  latestReviewLabel: AiReviewLabel | null;
 };
 
 export type AiTaskDraftPayload = {
   model: string;
   promptTemplate: string;
+  systemInstructions?: string;
   outputSchemaJson: Record<string, unknown>;
   configJson: Record<string, unknown>;
   changelog: string | null;
@@ -264,6 +269,18 @@ export type AiTaskSummary = {
   outputType: AiTaskOutputType;
   description: string | null;
   isActive: boolean;
+  runtimeBindingKey: string | null;
+  runtimeFamily:
+    | 'entry_normalization'
+    | 'entry_renormalization'
+    | 'day_journal'
+    | 'week_reflection'
+    | 'month_reflection'
+    | 'unknown';
+  compositionRole: 'single' | 'compound_member' | 'runtime_variant' | 'legacy_hidden';
+  managedOutputField: string | null;
+  isRuntimeDriver: boolean;
+  variantRole: 'primary' | 'repair' | 'renormalization' | null;
   hasDraft: boolean;
   createdAt: string;
   updatedAt: string;
@@ -321,12 +338,40 @@ export type AiTaskDraftCreationMeta = {
   versionNumber: number | null;
 };
 
+export type AiTaskVersionPromotionMode = 'promote_draft' | 'rollback_archived';
+
+export type AiTaskVersionPromotionResult = {
+  promotedVersion: AiTaskVersionDetail;
+  archivedVersionId: string | null;
+  previousLiveVersionNumber: number | null;
+  mode: AiTaskVersionPromotionMode;
+};
+
+export type AiRuntimeBaselineImportTaskStatus = 'created' | 'updated' | 'already_ok' | 'error';
+
+export type AiRuntimeBaselineImportLiveStatus =
+  | 'live_created'
+  | 'updated'
+  | 'already_ok'
+  | 'error';
+
+export type AiRuntimeBaselineImportItem = {
+  taskKey: string;
+  runtimeBindingKey: string | null;
+  taskStatus: AiRuntimeBaselineImportTaskStatus;
+  liveStatus: AiRuntimeBaselineImportLiveStatus;
+  message: string | null;
+};
+
 export type AiRuntimeBaselineImportResult = {
-  inserted: string[];
-  skipped_equal: string[];
-  skipped_conflict: string[];
-  unsupported: string[];
-  conflicts: string[];
+  items: AiRuntimeBaselineImportItem[];
+  summary: {
+    created: number;
+    updated: number;
+    live_created: number;
+    already_ok: number;
+    error: number;
+  };
 };
 
 export type AiCompareBaselineStatus = 'available' | 'missing' | 'unsupported';
@@ -372,10 +417,19 @@ export type AiQualityTaskMetadata = {
   familyKey: AiQualityFamilyKey | null;
   familyTitle: string | null;
   familyDescription: string | null;
-  runtimeFamily: 'entry_normalization' | 'day_journal' | 'reflection' | 'unknown';
-  compositionRole: 'single' | 'compound_part' | 'legacy_hidden';
+  runtimeBindingKey: string | null;
+  runtimeFamily:
+    | 'entry_normalization'
+    | 'entry_renormalization'
+    | 'day_journal'
+    | 'week_reflection'
+    | 'month_reflection'
+    | 'unknown';
+  compositionRole: 'single' | 'compound_member' | 'runtime_variant' | 'legacy_hidden';
   managedOutputField: string | null;
   affectedOutputFields: string[];
+  isRuntimeDriver: boolean;
+  variantRole: 'primary' | 'repair' | 'renormalization' | null;
   sortOrder: number;
   visibleInFamily: boolean;
   sharedRuntimeCall: boolean;

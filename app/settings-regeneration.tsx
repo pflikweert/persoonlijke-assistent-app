@@ -3,16 +3,25 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { ScreenHeader } from '@/components/layout/screen-header';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
-import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
+  AdminActionBar,
+  AdminConsoleKeyValue,
+  AdminConsoleShell,
+  AdminDenseRow,
+  AdminInspectorPanel,
+  AdminList,
+  AdminMetricCard,
+  AdminMetricGrid,
+  AdminPageHeader,
+  AdminPanel,
+  AdminStatusBadge,
+  AdminTimeline,
+} from '@/components/ui/admin-console-primitives';
+import {
   MetaText,
-  PrimaryButton,
-  ScreenContainer,
   StateBlock,
-  SurfaceSection,
 } from '@/components/ui/screen-primitives';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
@@ -275,36 +284,34 @@ export default function SettingsRegenerationScreen() {
   const totals = job ? summarizeJob(job) : null;
 
   return (
-    <>
-      <ScreenContainer
-        scrollable
-        backgroundTone="flat"
-        fixedHeader={
-          <ScreenHeader
-            title="Data opnieuw verwerken"
-            titleType="screenTitle"
-            subtitle="Admin-only bulk regeneratie via OpenAI Batch API."
-            leftAction={
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Ga terug"
-                onPress={() => router.back()}
-                style={[styles.iconButton, { backgroundColor: palette.surfaceLow }]}>
-                <MaterialIcons name="arrow-back" size={20} color={palette.primary} />
-              </Pressable>
-            }
-            rightAction={
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Open menu"
-                onPress={() => setMenuVisible(true)}
-                style={[styles.iconButton, { backgroundColor: palette.surfaceLow }]}>
-                <MaterialIcons name="menu" size={20} color={palette.primary} />
-              </Pressable>
-            }
-          />
-        }
-        contentContainerStyle={styles.scrollContent}>
+    <AdminConsoleShell
+      title="Regeneration"
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
+      contentContainerStyle={styles.scrollContent}
+      inspector={
+        <AdminInspectorPanel title="Job context" subtitle="Bestaande Batch API flow">
+          <ThemedView style={styles.inspectorStack}>
+            <AdminConsoleKeyValue label="Access" value={adminAccess === true ? "Toegestaan" : adminAccess === false ? "Geen toegang" : "Controleren"} />
+            <AdminConsoleKeyValue label="Selectie" value={`${selectedTypes.length} datatype(s)`} />
+            <AdminConsoleKeyValue label="Laatste job" value={job ? job.id.slice(0, 8) : "Geen job"} />
+          </ThemedView>
+        </AdminInspectorPanel>
+      }
+    >
+        <AdminPageHeader
+          eyebrow="Admin job"
+          title="Data opnieuw verwerken"
+          subtitle="Admin-only bulk regeneratie via OpenAI Batch API."
+          chips={
+            <>
+              <AdminStatusBadge label="Admin-only" tone="info" />
+              {job ? <AdminStatusBadge label={statusLabel(job.status)} tone={job.status === 'failed' ? 'danger' : job.status === 'completed' ? 'success' : 'warning'} /> : null}
+              {isRunning ? <AdminStatusBadge label="Polling actief" tone="info" /> : null}
+            </>
+          }
+        />
+
         {adminAccess === false ? (
           <StateBlock
             tone="info"
@@ -314,10 +321,10 @@ export default function SettingsRegenerationScreen() {
         ) : null}
 
         {adminAccess !== false ? (
-          <SurfaceSection
+          <AdminPanel
             title="Selecteer datatypes"
             subtitle="Kies één of meer onderdelen die voor alle gebruikers opnieuw verwerkt worden.">
-            <ThemedView style={styles.selectionList}>
+            <AdminList>
               {STEP_OPTIONS.map((option) => {
                 const selected = selection[option.type];
                 return (
@@ -331,74 +338,77 @@ export default function SettingsRegenerationScreen() {
                         [option.type]: !current[option.type],
                       }));
                     }}
-                    style={[
-                      styles.selectionRow,
-                      selected
-                        ? {
-                            backgroundColor: palette.surfaceLow,
-                            borderWidth: StyleSheet.hairlineWidth,
-                            borderColor: palette.primary,
-                          }
-                        : null,
-                    ]}>
-                    <ThemedView style={styles.selectionLeft}>
-                      <ThemedText type="defaultSemiBold">{option.label}</ThemedText>
-                      <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                        {option.description}
-                      </ThemedText>
-                    </ThemedView>
-                    <MaterialIcons
-                      name={selected ? 'check-circle' : 'radio-button-unchecked'}
-                      size={20}
-                      color={selected ? palette.primary : palette.mutedSoft}
+                    style={styles.selectionPressable}>
+                    <AdminDenseRow
+                      title={option.label}
+                      subtitle={option.description}
+                      chips={<AdminStatusBadge label={selected ? "Geselecteerd" : "Uit"} tone={selected ? "success" : "neutral"} />}
+                      trailing={
+                        <MaterialIcons
+                          name={selected ? 'check-circle' : 'radio-button-unchecked'}
+                          size={20}
+                          color={selected ? palette.primary : palette.mutedSoft}
+                        />
+                      }
                     />
                   </Pressable>
                 );
               })}
-            </ThemedView>
+            </AdminList>
 
-            <ThemedView style={styles.actions}>
-              <PrimaryButton
-                label={busy ? 'Starten...' : 'Start opnieuw verwerken'}
-                onPress={() => void handleStart()}
-                disabled={adminAccess !== true || busy || isRunning || selectedTypes.length === 0}
-              />
-              {job ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Ververs status"
-                  onPress={() => void handleRefresh()}
-                  style={styles.refreshButton}>
-                  <MaterialIcons name="refresh" size={18} color={palette.primary} />
-                  <ThemedText type="bodySecondary" style={{ color: palette.primary }}>
-                    Ververs status
-                  </ThemedText>
-                </Pressable>
-              ) : null}
-            </ThemedView>
+            <AdminActionBar
+              primary={{
+                label: busy ? 'Starten...' : 'Start opnieuw verwerken',
+                onPress: () => void handleStart(),
+                disabled: adminAccess !== true || busy || isRunning || selectedTypes.length === 0,
+                icon: 'play-arrow',
+              }}
+              secondary={
+                job
+                  ? {
+                      label: busy ? 'Verversen...' : 'Ververs status',
+                      onPress: () => void handleRefresh(),
+                      disabled: busy,
+                      icon: 'refresh',
+                    }
+                  : undefined
+              }
+            />
 
             <MetaText>Minimaal één datatype selecteren. Alleen admins met herverwerkingsrechten hebben toegang.</MetaText>
-          </SurfaceSection>
+          </AdminPanel>
         ) : null}
 
         {error ? <StateBlock tone="error" message="Actie mislukt" detail={error} /> : null}
 
         {job && adminAccess === true ? (
-          <SurfaceSection
+          <AdminPanel
             title="Jobstatus"
             subtitle={`Job ${job.id.slice(0, 8)} · ${statusLabel(job.status)}`}>
             {totals ? (
-              <ThemedView style={styles.totalsCard}>
-                <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                  Totaal: {totals.total} · Queued: {totals.queued} · OpenAI klaar: {totals.openaiCompleted}
-                </ThemedText>
-                <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                  Applied: {totals.applied} · Failed: {totals.failed} · Remaining: {totals.remaining}
-                </ThemedText>
-              </ThemedView>
+              <AdminMetricGrid>
+                <AdminMetricCard label="Totaal" value={totals.total} meta="records" />
+                <AdminMetricCard label="Queued" value={totals.queued} tone={totals.queued > 0 ? "warning" : "neutral"} />
+                <AdminMetricCard label="OpenAI klaar" value={totals.openaiCompleted} tone="info" />
+                <AdminMetricCard label="Applied" value={totals.applied} tone="success" />
+                <AdminMetricCard label="Failed" value={totals.failed} tone={totals.failed > 0 ? "danger" : "neutral"} />
+                <AdminMetricCard label="Remaining" value={totals.remaining} tone={totals.remaining > 0 ? "warning" : "neutral"} />
+              </AdminMetricGrid>
             ) : null}
 
-            <ThemedView style={styles.stepList}>
+            <AdminTimeline
+              items={STEP_OPTIONS.map((option) => {
+                const step = stepByType.get(option.type);
+                const phase = step?.phase ?? 'niet geselecteerd';
+                return {
+                  label: stepLabel(option.type),
+                  meta: `${step?.status ?? 'n/a'} · fase ${phase}`,
+                  tone: step?.status === 'failed' ? 'danger' : step?.status === 'completed' ? 'success' : step ? 'info' : 'neutral',
+                };
+              })}
+            />
+
+            <AdminList>
               {STEP_OPTIONS.map((option) => {
                 const step = stepByType.get(option.type);
                 const total = step ? Number(step.total ?? 0) : 0;
@@ -410,26 +420,16 @@ export default function SettingsRegenerationScreen() {
                 const phase = step?.phase ?? 'niet geselecteerd';
 
                 return (
-                  <ThemedView key={option.type} style={styles.stepCard}>
-                    <ThemedView style={styles.stepHeader}>
-                      <ThemedText type="defaultSemiBold">{stepLabel(option.type)}</ThemedText>
-                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                        {step?.status ?? 'n/a'}
-                      </ThemedText>
-                    </ThemedView>
-                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                      fase: {phase}
-                    </ThemedText>
-                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                      total {total} · queued {queued} · openai {openAiCompleted}
-                    </ThemedText>
-                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                      applied {applied} · failed {failed} · remaining {remaining}
-                    </ThemedText>
-                  </ThemedView>
+                  <AdminDenseRow
+                    key={option.type}
+                    title={stepLabel(option.type)}
+                    subtitle={`fase: ${phase}`}
+                    meta={`total ${total} · queued ${queued} · openai ${openAiCompleted} · applied ${applied} · failed ${failed} · remaining ${remaining}`}
+                    chips={<AdminStatusBadge label={step?.status ?? 'n/a'} tone={failed > 0 ? "danger" : applied > 0 ? "success" : step ? "info" : "neutral"} />}
+                  />
                 );
               })}
-            </ThemedView>
+            </AdminList>
 
             {job.status === 'completed' ? (
               <StateBlock
@@ -442,7 +442,7 @@ export default function SettingsRegenerationScreen() {
                 }
               />
             ) : null}
-          </SurfaceSection>
+          </AdminPanel>
         ) : null}
 
         <FullscreenMenuOverlay
@@ -450,14 +450,19 @@ export default function SettingsRegenerationScreen() {
           currentRouteKey="settings"
           onRequestClose={() => setMenuVisible(false)}
         />
-      </ScreenContainer>
-    </>
+    </AdminConsoleShell>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxxl,
+  },
+  inspectorStack: {
+    gap: spacing.sm,
+  },
+  selectionPressable: {
+    borderRadius: radius.md,
   },
   iconButton: {
     width: 40,

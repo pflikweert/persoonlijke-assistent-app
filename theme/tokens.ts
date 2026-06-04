@@ -59,6 +59,51 @@ export const colorTokens = {
   },
 } as const;
 
+export const adminTokens = {
+  light: {
+    background: "#F4F6F8",
+    backgroundElevated: "#FFFFFF",
+    panel: "rgba(255,255,255,0.88)",
+    panelSoft: "rgba(20,24,28,0.045)",
+    border: "rgba(20,24,28,0.10)",
+    borderStrong: "rgba(20,24,28,0.16)",
+    text: "#171B21",
+    muted: "#4E5966",
+    subtle: "#6D7887",
+    accent: "#4967D6",
+    accentStrong: "#6F55D8",
+    success: "#1F7A4E",
+    warning: "#8A6016",
+    danger: "#9B3737",
+    info: "#315F9C",
+  },
+  dark: {
+    background: "#080A0F",
+    backgroundElevated: "#0D1017",
+    panel: "#11151F",
+    panelSoft: "#151A25",
+    border: "rgba(255,255,255,0.08)",
+    borderStrong: "rgba(255,255,255,0.14)",
+    text: "#F4F7FB",
+    muted: "#9AA4B2",
+    subtle: "#6F7A89",
+    accent: "#8FA7FF",
+    accentStrong: "#A78BFA",
+    success: "#48D597",
+    warning: "#F7C76B",
+    danger: "#FF6B7A",
+    info: "#6CCBFF",
+  },
+  layout: {
+    sidebarWidth: 248,
+    inspectorWidth: 336,
+    topbarHeight: 56,
+    mobileBreakpoint: 768,
+    tabletBreakpoint: 1100,
+    wideBreakpoint: 1440,
+  },
+} as const;
+
 export const pageBackgrounds = {
   ambient: {
     light: {

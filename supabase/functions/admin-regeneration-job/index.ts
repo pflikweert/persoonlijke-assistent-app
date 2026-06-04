@@ -8,11 +8,10 @@ import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { hasCapabilityAccess, loadAdminAccessContext } from '../_shared/admin-capabilities.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildEntryNormalizationPromptSpec, ENTRY_NORMALIZATION_PROMPT_VERSION, buildReflectionPromptSpec, REFLECTION_PROMPT_VERSION } from '../_shared/prompt-specs.ts';
+import { buildAiqsEntryCleanupUserPrompt, buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import {
-  buildDayJournalPromptSpec,
-  finalizeDayJournalDraft,
+  finalizeDayJournalDraftStrict,
   isLowContentDayEntry,
   orderDayJournalEntries,
 } from '../_shared/day-journal-contract.mjs';
@@ -123,8 +122,6 @@ const MAX_RETRIES = 6;
 const BACKOFF_MAX_MS = 60_000;
 const POLL_IN_PROGRESS_MS = 10_000;
 const POLL_FINALIZING_MS = 5_000;
-const MODEL_TEMPERATURE = 0.2;
-
 const NO_SPEECH_TRANSCRIPT = 'Geen spraak herkend in audio-opname.';
 const LOW_CONTENT_TITLE = 'Audio-opname zonder spraak';
 
@@ -179,6 +176,25 @@ function parseFlowId(request: Request, requestId: string): string {
 
 function parseString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function parseFirstString(values: unknown[]): string | null {
+  for (const value of values) {
+    const parsed = parseString(value);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function parseFirstPresentString(values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === 'string') {
+      return value.trim();
+    }
+  }
+  return null;
 }
 
 function parseDurationSeconds(raw: string | null): number | null {
@@ -612,7 +628,7 @@ async function triggerWorkerTick(args: {
 
 async function loadEntriesOutdatedCandidateIds(args: {
   adminClient: any;
-  model: string;
+  binding: LiveAiRuntimeBinding;
 }): Promise<string[]> {
   const { data, error } = await args.adminClient
     .from('entries_normalized')
@@ -629,7 +645,7 @@ async function loadEntriesOutdatedCandidateIds(args: {
       const meta = row.generation_meta ?? {};
       const promptVersion = parseString(meta.prompt_version);
       const modelVersion = parseString(meta.model);
-      return promptVersion !== ENTRY_NORMALIZATION_PROMPT_VERSION || modelVersion !== args.model;
+      return promptVersion !== args.binding.promptVersion || modelVersion !== args.binding.model;
     })
     .map((row) => row.id);
 }
@@ -686,17 +702,18 @@ function buildEntriesBatchRequest(args: {
     raw_entry_id: string;
   };
   sourceText: string;
-  model: string;
+  binding: LiveAiRuntimeBinding;
   stepType: StepType;
 }): StoredBatchRequest {
-  const prompt = buildEntryNormalizationPromptSpec({ rawText: args.sourceText });
-  const systemPrompt = `${prompt.systemPrompt}\nPromptVersion: ${prompt.promptVersion}\nRequestId: ${args.normalizedRow.id}`;
-  const userPrompt = prompt.userPrompt;
+  const systemPrompt = `${args.binding.systemInstructions}\nPromptVersion: ${args.binding.promptVersion}\nRequestId: ${args.normalizedRow.id}`;
+  const userPrompt = buildAiqsEntryCleanupUserPrompt({
+    binding: args.binding,
+    rawText: args.sourceText,
+  });
 
   const body: Record<string, unknown> = {
-    model: args.model,
-    temperature: MODEL_TEMPERATURE,
-    response_format: { type: 'json_object' },
+    model: args.binding.model,
+    temperature: args.binding.temperature,
     messages: [
       {
         role: 'system',
@@ -708,6 +725,9 @@ function buildEntriesBatchRequest(args: {
       },
     ],
   };
+  if (args.binding.responseFormat) {
+    body.response_format = args.binding.responseFormat;
+  }
 
   const estimate = estimatePromptTokens(systemPrompt) + estimatePromptTokens(userPrompt);
   const customId = `entry|${args.normalizedRow.id}`;
@@ -720,13 +740,10 @@ function buildEntriesBatchRequest(args: {
       user_id: args.normalizedRow.user_id,
     },
     estimated_prompt_tokens: estimate,
-    prompt_version: prompt.promptVersion,
-    model: args.model,
+    prompt_version: args.binding.promptVersion,
+    model: args.binding.model,
     body,
     context: {
-      fallback_title: args.normalizedRow.title,
-      fallback_body: args.normalizedRow.body,
-      fallback_summary_short: args.normalizedRow.summary_short,
       source_text: args.sourceText,
     },
   };
@@ -736,21 +753,24 @@ function buildDayBatchRequest(args: {
   userId: string;
   journalDate: string;
   entries: Array<{ rawEntryId?: string; capturedAt?: string; title: string; body: string; summaryShort?: string }>;
-  model: string;
+  binding: LiveAiRuntimeBinding;
   stepType: StepType;
 }): StoredBatchRequest {
-  const prompt = buildDayJournalPromptSpec({
-    journalDate: args.journalDate,
-    entries: args.entries,
-  });
-
-  const systemPrompt = prompt.systemPrompt;
-  const userPrompt = `${prompt.userPrompt}\nPromptVersion: ${prompt.promptVersion}\nRequestId: ${args.userId}:${args.journalDate}`;
+  const systemPrompt = args.binding.systemInstructions;
+  const userPrompt = `${buildAiqsJsonUserPrompt({
+    binding: args.binding,
+    context: {
+      journal_date: args.journalDate,
+      entries: args.entries.map((entry) => ({
+        entry_title: entry.title,
+        entry_body: entry.body,
+      })),
+    },
+  })}\nPromptVersion: ${args.binding.promptVersion}\nRequestId: ${args.userId}:${args.journalDate}`;
 
   const body: Record<string, unknown> = {
-    model: args.model,
-    temperature: MODEL_TEMPERATURE,
-    response_format: { type: 'json_object' },
+    model: args.binding.model,
+    temperature: args.binding.temperature,
     messages: [
       {
         role: 'system',
@@ -762,6 +782,9 @@ function buildDayBatchRequest(args: {
       },
     ],
   };
+  if (args.binding.responseFormat) {
+    body.response_format = args.binding.responseFormat;
+  }
 
   const estimate = estimatePromptTokens(systemPrompt) + estimatePromptTokens(userPrompt);
   const customId = `day|${args.userId}|${args.journalDate}`;
@@ -774,8 +797,8 @@ function buildDayBatchRequest(args: {
       journal_date: args.journalDate,
     },
     estimated_prompt_tokens: estimate,
-    prompt_version: prompt.promptVersion,
-    model: args.model,
+    prompt_version: args.binding.promptVersion,
+    model: args.binding.model,
     body,
     context: {
       entries: args.entries,
@@ -789,26 +812,31 @@ function buildReflectionBatchRequest(args: {
   periodStart: string;
   periodEnd: string;
   dayJournals: Array<{ journal_date: string; summary: string; narrative_text: string; sections: unknown }>;
-  model: string;
+  binding: LiveAiRuntimeBinding;
   stepType: StepType;
 }): StoredBatchRequest {
-  const prompt = buildReflectionPromptSpec({
-    periodType: args.periodType,
-    periodStart: args.periodStart,
-    periodEnd: args.periodEnd,
-    dayJournals: args.dayJournals,
-  });
-
-  const userPrompt = `${prompt.userPrompt}\nPromptVersion: ${prompt.promptVersion}\nRequestId: ${args.userId}:${args.periodType}:${args.periodStart}`;
+  const userPrompt = `${buildAiqsJsonUserPrompt({
+    binding: args.binding,
+    context: {
+      period_type: args.periodType,
+      period_start: args.periodStart,
+      period_end: args.periodEnd,
+      dayJournals: args.dayJournals.map((journal) => ({
+        journal_date: journal.journal_date,
+        summary: journal.summary,
+        narrative_text: journal.narrative_text,
+        sections: journal.sections,
+      })),
+    },
+  })}\nPromptVersion: ${args.binding.promptVersion}\nRequestId: ${args.userId}:${args.periodType}:${args.periodStart}`;
 
   const body: Record<string, unknown> = {
-    model: args.model,
-    temperature: MODEL_TEMPERATURE,
-    response_format: { type: 'json_object' },
+    model: args.binding.model,
+    temperature: args.binding.temperature,
     messages: [
       {
         role: 'system',
-        content: prompt.systemPrompt,
+        content: args.binding.systemInstructions,
       },
       {
         role: 'user',
@@ -816,8 +844,11 @@ function buildReflectionBatchRequest(args: {
       },
     ],
   };
+  if (args.binding.responseFormat) {
+    body.response_format = args.binding.responseFormat;
+  }
 
-  const estimate = estimatePromptTokens(prompt.systemPrompt) + estimatePromptTokens(userPrompt);
+  const estimate = estimatePromptTokens(args.binding.systemInstructions) + estimatePromptTokens(userPrompt);
   const customId = `reflection|${args.periodType}|${args.userId}|${args.periodStart}|${args.periodEnd}`;
 
   return {
@@ -830,8 +861,8 @@ function buildReflectionBatchRequest(args: {
       period_end: args.periodEnd,
     },
     estimated_prompt_tokens: estimate,
-    prompt_version: prompt.promptVersion,
-    model: args.model,
+    prompt_version: args.binding.promptVersion,
+    model: args.binding.model,
     body,
   };
 }
@@ -840,7 +871,7 @@ async function loadDayRequest(args: {
   adminClient: any;
   userId: string;
   journalDate: string;
-  model: string;
+  binding: LiveAiRuntimeBinding;
 }): Promise<StoredBatchRequest | null> {
   const { data: rawRows, error: rawError } = await args.adminClient
     .from('entries_raw')
@@ -863,7 +894,7 @@ async function loadDayRequest(args: {
       userId: args.userId,
       journalDate: args.journalDate,
       entries: [],
-      model: args.model,
+      binding: args.binding,
       stepType: 'day_journals',
     });
   }
@@ -917,7 +948,7 @@ async function loadDayRequest(args: {
     userId: args.userId,
     journalDate: args.journalDate,
     entries,
-    model: args.model,
+    binding: args.binding,
     stepType: 'day_journals',
   });
 }
@@ -929,7 +960,7 @@ async function loadReflectionRequest(args: {
   periodStart: string;
   periodEnd: string;
   stepType: StepType;
-  model: string;
+  binding: LiveAiRuntimeBinding;
 }): Promise<StoredBatchRequest> {
   const { data, error } = await args.adminClient
     .from('day_journals')
@@ -949,7 +980,7 @@ async function loadReflectionRequest(args: {
     periodStart: args.periodStart,
     periodEnd: args.periodEnd,
     dayJournals: (data ?? []) as Array<{ journal_date: string; summary: string; narrative_text: string; sections: unknown }>,
-    model: args.model,
+    binding: args.binding,
     stepType: args.stepType,
   });
 }
@@ -984,11 +1015,11 @@ async function applyEntriesResult(args: {
     return false;
   }
 
-  const title = parseString(args.aiJson.title) ?? parseString(args.request.context?.fallback_title) ?? 'Je entry';
-  const body = parseString(args.aiJson.body) ?? parseString(args.request.context?.fallback_body) ?? '';
-  const summaryShort = parseString(args.aiJson.summary_short) ?? parseString(args.request.context?.fallback_summary_short) ?? null;
+  const title = parseString(args.aiJson.title);
+  const body = parseString(args.aiJson.body);
+  const summaryShort = parseFirstPresentString([args.aiJson.summary_short, args.aiJson.summaryShort]);
 
-  if (!title || !body) {
+  if (!title || !body || summaryShort === null) {
     return false;
   }
 
@@ -1035,7 +1066,7 @@ async function applyDayResult(args: {
     ? (args.request.context?.entries as Array<{ rawEntryId?: string; capturedAt?: string; title: string; body: string; summaryShort?: string }>)
     : [];
 
-  const finalized = finalizeDayJournalDraft({
+  const finalizedResult = finalizeDayJournalDraftStrict({
     aiResult: args.aiJson,
     entries,
     options: {
@@ -1045,6 +1076,11 @@ async function applyDayResult(args: {
       softQualityGuards: args.softQualityGuards,
     },
   });
+  const finalized = finalizedResult.finalized;
+
+  if (!finalizedResult.ok) {
+    return false;
+  }
 
   const { error } = await args.adminClient
     .from('day_journals')
@@ -1095,7 +1131,7 @@ async function applyReflectionResult(args: {
   }
 
   const generatedAt = new Date().toISOString();
-  const modelVersion = `${args.request.model}:${REFLECTION_PROMPT_VERSION}`;
+  const modelVersion = `${args.request.model}:${args.request.prompt_version}`;
 
   const { error } = await args.adminClient
     .from('period_reflections')
@@ -1490,6 +1526,32 @@ async function buildStepRequests(args: {
 }): Promise<{ requests: StoredBatchRequest[]; consumed: number; immediateFailed: number }> {
   const cursor = Number(args.step.cursor ?? 0);
   const candidates = Array.isArray(args.step.candidate_keys) ? args.step.candidate_keys : [];
+  const entryBinding =
+    args.step.step_type === 'entries_normalized'
+      ? await loadLiveAiRuntimeBinding({
+          adminClient: args.adminClient,
+          bindingKey: 'entry_normalization.primary',
+        })
+      : null;
+  const dayBinding =
+    args.step.step_type === 'day_journals'
+      ? await loadLiveAiRuntimeBinding({
+          adminClient: args.adminClient,
+          bindingKey: 'day_journal.primary',
+        })
+      : null;
+  const reflectionBinding =
+    args.step.step_type === 'week_reflections'
+      ? await loadLiveAiRuntimeBinding({
+          adminClient: args.adminClient,
+          bindingKey: 'week_reflection.primary',
+        })
+      : args.step.step_type === 'month_reflections'
+        ? await loadLiveAiRuntimeBinding({
+            adminClient: args.adminClient,
+            bindingKey: 'month_reflection.primary',
+          })
+        : null;
 
   let consumed = 0;
   let immediateFailed = 0;
@@ -1565,7 +1627,7 @@ async function buildStepRequests(args: {
       const request = buildEntriesBatchRequest({
         normalizedRow: row,
         sourceText,
-        model: args.model,
+        binding: entryBinding!,
         stepType: 'entries_normalized',
       });
 
@@ -1604,7 +1666,7 @@ async function buildStepRequests(args: {
           adminClient: args.adminClient,
           userId,
           journalDate,
-          model: args.model,
+          binding: dayBinding!,
         });
       } else {
         const periodType = stepLabelToPeriodType(args.step.step_type as StepType);
@@ -1624,7 +1686,7 @@ async function buildStepRequests(args: {
           periodStart,
           periodEnd,
           stepType: args.step.step_type,
-          model: args.model,
+          binding: reflectionBinding!,
         });
       }
 
@@ -2089,13 +2151,19 @@ Deno.serve(async (request: Request) => {
           message: 'Select at least one step type.',
         });
       }
+      const entryBinding = selectedTypes.includes('entries_normalized')
+        ? await loadLiveAiRuntimeBinding({
+            adminClient,
+            bindingKey: 'entry_normalization.primary',
+          })
+        : null;
 
       const candidateMap = new Map<StepType, unknown[]>();
       for (const selectedType of selectedTypes) {
         if (selectedType === 'entries_normalized') {
           const candidateIds = await loadEntriesOutdatedCandidateIds({
             adminClient,
-            model: runtimeEnv.openAiModel,
+            binding: entryBinding!,
           });
           candidateMap.set(selectedType, candidateIds);
         } else if (selectedType === 'day_journals') {

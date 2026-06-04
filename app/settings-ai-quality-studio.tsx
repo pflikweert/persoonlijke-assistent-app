@@ -5,8 +5,19 @@ import { Pressable, StyleSheet } from 'react-native';
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { AdminMetaStrip, AdminPageHero, AdminShell, SettingsTopNav } from '@/components/ui/settings-screen-primitives';
-import { MetaText, PrimaryButton, SecondaryButton, StateBlock, SurfaceSection } from '@/components/ui/screen-primitives';
+import {
+  AdminConsoleButton,
+  AdminConsoleHeader,
+  AdminConsoleKeyValue,
+  AdminConsolePanel,
+  AdminConsoleShell,
+  AdminDenseRow,
+  AdminInspectorPanel,
+  AdminMetricCard,
+  AdminMetricGrid,
+  AdminStatusChip,
+} from '@/components/ui/admin-console-primitives';
+import { MetaText, StateBlock } from '@/components/ui/screen-primitives';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   classifyUnknownError,
@@ -63,6 +74,7 @@ export default function SettingsAiQualityStudioScreen() {
   const [debugStorageError, setDebugStorageError] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [updatingDebugStorage, setUpdatingDebugStorage] = useState(false);
+  const [debugUtilityOpen, setDebugUtilityOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -130,8 +142,9 @@ export default function SettingsAiQualityStudioScreen() {
 
     try {
       const result = await importAdminAiQualityRuntimeBaseline();
+      const { created, updated, live_created, already_ok, error } = result.summary;
       setImportMessage(
-        `Geïmporteerd: ${result.inserted.length} · gelijk overgeslagen: ${result.skipped_equal.length} · conflict: ${result.skipped_conflict.length}`
+        `Taken aangemaakt: ${created} · live gemaakt: ${live_created} · bijgewerkt: ${updated} · al goed: ${already_ok} · errors: ${error}`
       );
       await load();
     } catch (nextError) {
@@ -233,22 +246,53 @@ export default function SettingsAiQualityStudioScreen() {
   );
 
   return (
-    <AdminShell
-      fixedHeader={<SettingsTopNav onBack={() => router.back()} onMenu={() => setMenuVisible(true)} />}
+    <AdminConsoleShell
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
+      inspector={
+        <AdminInspectorPanel title="AIQS context" subtitle="Runtime governance">
+          <ThemedView style={styles.inspectorStack}>
+            <AdminConsoleKeyValue label="Live taken" value={String(totals.live)} />
+            <AdminConsoleKeyValue label="Drafts" value={String(totals.draftOnly)} />
+            <AdminConsoleKeyValue label="Debug logging" value={debugStorage?.masterEnabled ? "Aan" : "Uit"} />
+          </ThemedView>
+        </AdminInspectorPanel>
+      }
     >
-      <AdminPageHero
-        title="Kwaliteit verbeteren"
-        subtitle="Kies wat je wilt verfijnen: Momenten, Vandaag, Week of Maand."
-      />
-
-      <AdminMetaStrip
-        items={
-          totals.live === 0
-            ? ['Nog geen runtime-baselines aanwezig']
-            : [`${totals.live} onderdelen runtime actief`, `${totals.draftOnly} draft actief`]
+      <AdminConsoleHeader
+        eyebrow="AI governance"
+        title="AI Quality Studio"
+        subtitle="Beheer live prompts, varianten en runtimekwaliteit vanuit één compacte admin-console."
+        chips={
+          <>
+            <AdminStatusChip
+              label={totals.live === 0 ? 'Baseline ontbreekt' : `${totals.live} live`}
+              tone={totals.live === 0 ? 'warning' : 'success'}
+            />
+            <AdminStatusChip label={`${totals.draftOnly} drafts`} tone={totals.draftOnly > 0 ? 'info' : 'neutral'} />
+            <AdminStatusChip label={`${totals.total} taken`} />
+          </>
+        }
+        actions={
+          totals.live === 0 ? (
+            <AdminConsoleButton
+              label={importingBaseline ? 'Importeren…' : 'Importeer baseline'}
+              onPress={() => void handleImportBaseline()}
+              disabled={importingBaseline || loading}
+              icon="download"
+              tone="primary"
+            />
+          ) : null
         }
       />
+
+      <AdminMetricGrid>
+        <AdminMetricCard label="Live" value={totals.live} meta="runtime-versies" tone={totals.live > 0 ? "success" : "warning"} />
+        <AdminMetricCard label="Drafts" value={totals.draftOnly} meta="nog niet live" tone={totals.draftOnly > 0 ? "info" : "neutral"} />
+        <AdminMetricCard label="Totaal" value={totals.total} meta="AIQS taken" />
+        <AdminMetricCard label="Geen live" value={totals.noLive} meta="fail-closed risico" tone={totals.noLive > 0 ? "warning" : "success"} />
+      </AdminMetricGrid>
 
       {adminAccess === false ? (
         <StateBlock
@@ -260,23 +304,8 @@ export default function SettingsAiQualityStudioScreen() {
 
       {adminAccess !== false ? (
         <>
-          <SurfaceSection>
-            <MetaText>
-              {totals.live === 0
-                ? 'Nog geen runtime-baselines aanwezig.'
-                : `${totals.live} onderdelen hebben runtime actief.`}
-            </MetaText>
-
-            {totals.live === 0 ? (
-              <PrimaryButton
-                label={importingBaseline ? 'Runtime-basis importeren…' : 'Importeer runtime-basis'}
-                onPress={() => void handleImportBaseline()}
-                disabled={importingBaseline || loading}
-              />
-            ) : null}
-
+          <AdminConsolePanel title="Runtime status">
             {importMessage ? <MetaText>{importMessage}</MetaText> : null}
-
             {loading ? <MetaText>Laden…</MetaText> : null}
 
             {overviewError ? (
@@ -290,94 +319,110 @@ export default function SettingsAiQualityStudioScreen() {
                 detail="Importeer eerst de runtime-basis om groepen te openen."
               />
             ) : null}
-          </SurfaceSection>
+          </AdminConsolePanel>
 
           {loadingDebugStorage || debugStorage || debugStorageError ? (
-            <SurfaceSection title="OpenAI debug-opslag (admin)">
-              {loadingDebugStorage ? <MetaText>Debug-opslag laden…</MetaText> : null}
-
-              {debugStorageError ? (
-                <StateBlock
-                  tone="error"
-                  message="Debug-opslag niet beschikbaar"
-                  detail={debugStorageError}
-                />
-              ) : null}
-
-              {debugStorage?.backend.persistence === 'ephemeral_fallback' ? (
-                <StateBlock
-                  tone="info"
-                  message="Debug-opslag draait in tijdelijke fallback-modus"
-                  detail={
-                    debugStorage.backend.message ??
-                    'Persistente private-opslag is niet beschikbaar; wijzigingen kunnen tijdelijk zijn.'
-                  }
-                />
-              ) : null}
-
-              {debugStorage ? (
-                <>
-              <MetaText>
-                Alleen ondersteunde generatiecalls. Audio-transcriptie valt buiten scope.
-              </MetaText>
-              <MetaText>
-                Logging staat {debugStorage.masterEnabled ? 'aan' : 'uit'}
-                {debugStorage.masterExpiresAt
-                  ? ` · vervalt ${formatDebugExpiry(debugStorage.masterExpiresAt)}`
-                  : debugStorage.masterEnabled
-                    ? ' · zonder automatische eindtijd'
-                    : ''}
-              </MetaText>
-              <ThemedView style={styles.debugActionsRow}>
-                <PrimaryButton
-                  label={updatingDebugStorage ? 'Bijwerken…' : 'Logging 4 uur aanzetten'}
-                  onPress={() => void handleSetMasterDebugStorage(true)}
-                  disabled={updatingDebugStorage}
-                />
-                <SecondaryButton
-                  label="Logging uitzetten"
-                  onPress={() => void handleSetMasterDebugStorage(false)}
-                  disabled={updatingDebugStorage}
-                />
-              </ThemedView>
-
-              {debugStorage.flows.map((flow) => (
-                <ThemedView key={flow.flowKey} style={[styles.taskRow, { backgroundColor: palette.surfaceLow }]}>
-                  <ThemedText type="defaultSemiBold">{DEBUG_FLOW_LABELS[flow.flowKey] ?? flow.flowKey}</ThemedText>
+            <AdminConsolePanel>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setDebugUtilityOpen((value) => !value)}
+                style={styles.utilityHeader}
+              >
+                <ThemedView style={styles.utilityHeaderText}>
+                  <ThemedText type="defaultSemiBold">Debug logging</ThemedText>
                   <MetaText>
-                    Status: {flow.effectiveOn ? 'actief' : flow.desiredOn ? 'aangevraagd, nog niet effectief' : 'uit'}
-                    {flow.reason ? ` · reden: ${flow.reason}` : ''}
+                    {debugStorage?.masterEnabled
+                      ? `Runtime actief · vervalt ${formatDebugExpiry(debugStorage.masterExpiresAt)}`
+                      : 'Utility · standaard uit'}
                   </MetaText>
-                  <MetaText>
-                    Gewenst: {flow.desiredOn ? 'aan' : 'uit'} · effectief: {flow.effectiveOn ? 'aan' : 'uit'}
-                    {flow.expiresAt ? ` · vervalt ${formatDebugExpiry(flow.expiresAt)}` : ''}
-                  </MetaText>
-                  <ThemedView style={styles.debugActionsRow}>
-                    <PrimaryButton
-                      label="Flow 4 uur aanzetten"
-                      onPress={() => void handleSetFlowDebugStorage(flow.flowKey, true)}
-                      disabled={updatingDebugStorage}
-                    />
-                    <SecondaryButton
-                      label="Flow uit"
-                      onPress={() => void handleSetFlowDebugStorage(flow.flowKey, false)}
-                      disabled={updatingDebugStorage}
-                    />
-                  </ThemedView>
                 </ThemedView>
-              ))}
-                </>
+                <AdminStatusChip label={debugStorage?.masterEnabled ? 'Logging aan' : 'Logging uit'} tone={debugStorage?.masterEnabled ? 'info' : 'neutral'} />
+              </Pressable>
+
+              {debugUtilityOpen ? (
+                <ThemedView style={styles.utilityBody}>
+                  {loadingDebugStorage ? <MetaText>Debug-opslag laden…</MetaText> : null}
+
+                  {debugStorageError ? (
+                    <StateBlock
+                      tone="error"
+                      message="Debug-opslag niet beschikbaar"
+                      detail={debugStorageError}
+                    />
+                  ) : null}
+
+                  {debugStorage?.backend.persistence === 'ephemeral_fallback' ? (
+                    <StateBlock
+                      tone="info"
+                      message="Tijdelijke fallback"
+                      detail={
+                        debugStorage.backend.message ??
+                        'Persistente private-opslag is niet beschikbaar; wijzigingen kunnen tijdelijk zijn.'
+                      }
+                    />
+                  ) : null}
+
+                  {debugStorage ? (
+                    <>
+                      <MetaText>Alleen ondersteunde generatiecalls. Audio-transcriptie valt buiten scope.</MetaText>
+                      <ThemedView style={styles.debugActionsRow}>
+                        <AdminConsoleButton
+                          label={updatingDebugStorage ? 'Bijwerken…' : '4 uur aan'}
+                          onPress={() => void handleSetMasterDebugStorage(true)}
+                          disabled={updatingDebugStorage}
+                          icon="schedule"
+                          tone="secondary"
+                        />
+                        <AdminConsoleButton
+                          label="Uit"
+                          onPress={() => void handleSetMasterDebugStorage(false)}
+                          disabled={updatingDebugStorage}
+                        />
+                      </ThemedView>
+
+                      {debugStorage.flows.map((flow) => (
+                        <AdminDenseRow
+                          key={flow.flowKey}
+                          title={DEBUG_FLOW_LABELS[flow.flowKey] ?? flow.flowKey}
+                          subtitle={`Gewenst: ${flow.desiredOn ? 'aan' : 'uit'} · effectief: ${flow.effectiveOn ? 'aan' : 'uit'}`}
+                          meta={`${flow.reason ? `Reden: ${flow.reason} · ` : ''}${flow.expiresAt ? `Vervalt ${formatDebugExpiry(flow.expiresAt)}` : 'Geen vervaltijd'}`}
+                          chips={
+                            <AdminStatusChip
+                              label={flow.effectiveOn ? 'Actief' : flow.desiredOn ? 'Aangevraagd' : 'Uit'}
+                              tone={flow.effectiveOn ? 'info' : flow.desiredOn ? 'warning' : 'neutral'}
+                            />
+                          }
+                          trailing={
+                            <ThemedView style={styles.debugActionsRow}>
+                              <AdminConsoleButton
+                                label="4 uur aan"
+                                onPress={() => void handleSetFlowDebugStorage(flow.flowKey, true)}
+                                disabled={updatingDebugStorage}
+                              />
+                              <AdminConsoleButton
+                                label="Uit"
+                                onPress={() => void handleSetFlowDebugStorage(flow.flowKey, false)}
+                                disabled={updatingDebugStorage}
+                              />
+                            </ThemedView>
+                          }
+                        />
+                      ))}
+                    </>
+                  ) : null}
+                </ThemedView>
               ) : null}
-            </SurfaceSection>
+            </AdminConsolePanel>
           ) : null}
 
           {!loading && !overviewError ? (
-            <SurfaceSection title="Groepen">
+            <AdminConsolePanel title="Prompt families" subtitle="Open een familie of direct de centrale prompt.">
               <ThemedView style={styles.taskList}>
                 {groupRows.map((group) => {
                   const showGroupScreen = shouldShowAiQualityGroupScreen(tasks, group.key);
                   const primaryTaskKey = getAiQualityFamilyPrimaryTaskKey(tasks, group.key);
                   const openLabel = showGroupScreen ? 'Open onderdelen' : 'Open prompt';
+                  const groupIsLive = group.statusSummary.includes('live') && !group.statusSummary.startsWith('0/');
 
                   return (
                     <Pressable
@@ -393,27 +438,25 @@ export default function SettingsAiQualityStudioScreen() {
                           router.push(`/settings-ai-quality-studio/${primaryTaskKey}` as never);
                         }
                       }}
-                      style={[styles.taskRow, { backgroundColor: palette.surfaceLow }]}
+                      style={styles.taskRowPressable}
                     >
-                    <ThemedView style={styles.taskRowTop}>
-                      <ThemedText type="defaultSemiBold">{group.title}</ThemedText>
-                      <MetaText>{group.description}</MetaText>
-                    </ThemedView>
-
-                    <MetaText>
-                      {group.componentCountLabel} · {group.statusSummary}
-                    </MetaText>
-                    {group.sharedRuntimeCall ? (
-                      <MetaText>Gedeelde runtime-call · 1 centrale prompt</MetaText>
-                    ) : null}
-                    <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                      {openLabel}
-                    </ThemedText>
-                  </Pressable>
+                      <AdminDenseRow
+                        title={group.title}
+                        subtitle={group.description}
+                        meta={`${group.componentCountLabel} · ${group.statusSummary}`}
+                        chips={
+                          <>
+                            {group.sharedRuntimeCall ? <AdminStatusChip label="Gedeelde call" tone="info" /> : null}
+                            <AdminStatusChip label={groupIsLive ? 'Runtime actief' : 'Baseline ontbreekt'} tone={groupIsLive ? 'success' : 'warning'} />
+                          </>
+                        }
+                        trailing={<ThemedText type="caption" style={{ color: palette.mutedSoft }}>{openLabel}</ThemedText>}
+                      />
+                    </Pressable>
                   );
                 })}
               </ThemedView>
-            </SurfaceSection>
+            </AdminConsolePanel>
           ) : null}
         </>
       ) : null}
@@ -423,7 +466,7 @@ export default function SettingsAiQualityStudioScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </AdminShell>
+    </AdminConsoleShell>
   );
 }
 
@@ -433,19 +476,30 @@ const styles = StyleSheet.create({
     gap: spacing.content,
   },
   taskList: {
+    gap: 0,
+  },
+  taskRowPressable: {
+    borderRadius: radius.md,
+  },
+  utilityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: spacing.sm,
   },
-  taskRow: {
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  taskRowTop: {
+  utilityHeaderText: {
+    flex: 1,
     gap: spacing.xxs,
+  },
+  utilityBody: {
+    gap: spacing.sm,
+  },
+  inspectorStack: {
+    gap: spacing.sm,
   },
   debugActionsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
 });

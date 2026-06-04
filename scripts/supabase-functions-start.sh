@@ -4,7 +4,8 @@ set -eu
 ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 PID_FILE="/tmp/pers-assistent-functions.pid"
 LOG_FILE="/tmp/supabase-functions.log"
-FUNCTION_CMD="supabase functions serve --env-file .env.local"
+ENV_FILE="${SUPABASE_FUNCTIONS_ENV_FILE:-.env.local}"
+FUNCTION_CMD="supabase functions serve --env-file $ENV_FILE"
 
 if [ -f "$PID_FILE" ]; then
   OLD_PID="$(cat "$PID_FILE" 2>/dev/null || true)"

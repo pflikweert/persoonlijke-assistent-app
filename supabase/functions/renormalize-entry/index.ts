@@ -6,7 +6,7 @@ import { createFlowError, type FlowErrorCode } from "../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from "../_shared/flow-logger.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildEntryNormalizationRepairPromptSpec, buildEntryRenormalizationPromptSpec } from "../_shared/prompt-specs.ts";
+import { buildAiqsEntryCleanupUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from "../_shared/aiqs-runtime.ts";
 
 type RenormalizeEntryRequest = {
   rawText?: unknown;
@@ -39,9 +39,6 @@ const CORS_BASE_HEADERS = {
 
 const FLOW = "renormalize-entry" as const;
 const NO_SPEECH_TRANSCRIPT = "Geen spraak herkend in audio-opname.";
-const LOW_CONTENT_TITLE = "Audio-opname zonder spraak";
-const LOW_CONTENT_BODY = "Geen bruikbare spraakinhoud gevonden in de opname.";
-const LOW_CONTENT_SUMMARY_SHORT = "Geen bruikbare spraakinhoud in deze opname.";
 const GENERIC_TITLES = new Set([
   "notitie",
   "update",
@@ -61,6 +58,81 @@ const META_PREVIEW_STARTS = [
   "de notitie gaat over",
   "in deze notitie",
 ];
+
+class AiRuntimeOutputError extends Error {
+  reason: string;
+  details: Record<string, unknown>;
+
+  constructor(message: string, reason: string, details: Record<string, unknown> = {}) {
+    super(message);
+    this.name = "AiRuntimeOutputError";
+    this.reason = reason;
+    this.details = details;
+  }
+}
+
+function isAiRuntimeOutputError(error: unknown): error is AiRuntimeOutputError {
+  return error instanceof AiRuntimeOutputError;
+}
+
+function failAiRuntimeOutput(message: string, reason: string, details: Record<string, unknown> = {}): never {
+  throw new AiRuntimeOutputError(message, reason, details);
+}
+
+function requireAiOutputString(
+  value: unknown,
+  field: string,
+  details: Record<string, unknown>,
+): string {
+  const parsed = parseString(value);
+  if (!parsed) {
+    failAiRuntimeOutput("OpenAI output mist een verplicht veld.", "required_field_missing", {
+      ...details,
+      field,
+    });
+  }
+  return parsed;
+}
+
+function requireAiOutputObjectString(
+  aiResult: OpenAiJson,
+  fieldNames: string[],
+  field: string,
+  details: Record<string, unknown>,
+  options: { allowEmpty?: boolean } = {},
+): string {
+  for (const fieldName of fieldNames) {
+    if (!Object.prototype.hasOwnProperty.call(aiResult, fieldName)) {
+      continue;
+    }
+    const value = aiResult[fieldName];
+    if (typeof value === "string") {
+      const parsed = value.trim();
+      if (parsed || options.allowEmpty === true) {
+        return parsed;
+      }
+      continue;
+    }
+    const parsed = parseString(value);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  return requireAiOutputString(null, field, {
+    ...details,
+    availableFields: Object.keys(aiResult).sort(),
+  });
+}
+
+function allowsEmptySummaryShort(binding: LiveAiRuntimeBinding): boolean {
+  const technicalContract = binding.configJson.technical_contract;
+  return (
+    technicalContract !== null &&
+    typeof technicalContract === "object" &&
+    !Array.isArray(technicalContract) &&
+    (technicalContract as Record<string, unknown>).allowEmptySummaryShort === true
+  );
+}
 
 function buildCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get("origin") ?? "*";
@@ -177,7 +249,10 @@ function looksGenericTitle(value: string): boolean {
 function cleanNormalizedTitle(value: string, fallback: string): string {
   const candidate = sanitizeShortLine(value, 80);
   if (!candidate || looksGenericTitle(candidate)) {
-    return sanitizeShortLine(fallback, 80) || "Notitie";
+    failAiRuntimeOutput("OpenAI output heeft geen bruikbare titel.", "quality_gate_failed", {
+      field: "title",
+      reason: "generic_or_empty_title",
+    });
   }
 
   return candidate;
@@ -186,7 +261,10 @@ function cleanNormalizedTitle(value: string, fallback: string): string {
 function cleanNormalizedBody(value: string, fallback: string): string {
   const candidate = normalizeBodyParagraphs(value);
   if (!candidate || candidate.length < 12) {
-    return normalizeBodyParagraphs(fallback);
+    failAiRuntimeOutput("OpenAI output heeft geen bruikbare body.", "quality_gate_failed", {
+      field: "body",
+      reason: "empty_or_too_short_body",
+    });
   }
 
   return candidate;
@@ -255,51 +333,45 @@ function looksGenericPreview(value: string): boolean {
   return GENERIC_PREVIEW_PHRASES.some((phrase) => normalized.includes(phrase));
 }
 
-function createSummaryShortFromBody(body: string): string {
-  const normalizedBody = normalizeWhitespace(body);
-  if (!normalizedBody) {
-    return "Korte preview niet beschikbaar.";
-  }
-
-  const firstSentence = normalizedBody.split(/[.!?]/)[0]?.trim() ?? "";
-  const source = firstSentence.length >= 24 ? firstSentence : normalizedBody;
-  const preview = trimPreviewForMobile(source);
-  return finalizePreviewTone(preview || trimPreviewForMobile(normalizedBody));
-}
-
 function cleanNormalizedSummaryShort(
   value: string | null,
   fallbackBody: string,
+  options: { allowEmpty?: boolean; details?: Record<string, unknown> } = {},
 ): string {
   const candidate = trimPreviewForMobile(value ?? "");
   if (!candidate) {
-    return createSummaryShortFromBody(fallbackBody);
+    if (options.allowEmpty === true) {
+      return "";
+    }
+    failAiRuntimeOutput("OpenAI output mist summary_short.", "required_field_missing", {
+      ...(options.details ?? {}),
+      field: "summary_short",
+    });
   }
   if (candidate.endsWith("?")) {
-    return createSummaryShortFromBody(fallbackBody);
+    failAiRuntimeOutput("OpenAI output summary_short is geen statement.", "quality_gate_failed", {
+      field: "summary_short",
+      reason: "question_summary",
+    });
   }
   if (looksMetaPreview(candidate) || looksGenericPreview(candidate)) {
-    return createSummaryShortFromBody(fallbackBody);
+    failAiRuntimeOutput("OpenAI output summary_short is te generiek.", "quality_gate_failed", {
+      field: "summary_short",
+      reason: "generic_summary",
+    });
   }
 
   return finalizePreviewTone(candidate);
 }
 
-function fallbackNormalization(rawText: string): NormalizedEntry {
-  const clean = normalizeBodyParagraphs(rawText);
-  const titleBase = clean.split(/[.!?\n]/)[0]?.trim() || clean;
-  const title = titleBase.slice(0, 80) || "Notitie";
-
-  return {
-    title,
-    body: clean,
-    summaryShort: createSummaryShortFromBody(clean),
-  };
-}
-
 async function callOpenAiJson(args: {
   apiKey: string;
   model: string;
+  temperature: number;
+  responseFormat:
+    | { type: "json_schema"; json_schema: { name: string; strict: true; schema: Record<string, unknown> } }
+    | { type: "json_object" }
+    | null;
   requestId: string;
   flowId: string;
   step: string;
@@ -330,7 +402,8 @@ async function callOpenAiJson(args: {
       },
       body: JSON.stringify({
         model: args.model,
-        response_format: { type: "json_object" },
+        temperature: args.temperature,
+        ...(args.responseFormat ? { response_format: args.responseFormat } : {}),
         messages: [
           {
             role: "system",
@@ -431,55 +504,85 @@ async function callOpenAiJson(args: {
 
 async function normalizeEntry(args: {
   apiKey: string;
-  model: string;
   requestId: string;
   flowId: string;
   rawText: string;
+  primaryBinding: LiveAiRuntimeBinding;
+  repairBinding: LiveAiRuntimeBinding;
 }): Promise<NormalizedEntry> {
   if (containsNoSpeechMarker(args.rawText)) {
-    return {
-      title: LOW_CONTENT_TITLE,
-      body: LOW_CONTENT_BODY,
-      summaryShort: LOW_CONTENT_SUMMARY_SHORT,
-    };
+    failAiRuntimeOutput("Audio bevat geen bruikbare transcriptie.", "no_speech", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    });
   }
 
-  const renormalizationPrompt = buildEntryRenormalizationPromptSpec({
-    rawText: args.rawText,
-  });
   const aiResult = await callOpenAiJson({
     apiKey: args.apiKey,
-    model: args.model,
+    model: args.primaryBinding.model,
+    temperature: args.primaryBinding.temperature,
+    responseFormat: args.primaryBinding.responseFormat,
     requestId: args.requestId,
     flowId: args.flowId,
     step: "normalized_generated",
     operation: "openai_normalize_entry",
-    promptVersion: renormalizationPrompt.promptVersion,
-    systemPrompt: renormalizationPrompt.systemPrompt,
-    userPrompt: renormalizationPrompt.userPrompt,
+    promptVersion: args.primaryBinding.promptVersion,
+    systemPrompt: args.primaryBinding.systemInstructions,
+    userPrompt: buildAiqsEntryCleanupUserPrompt({
+      binding: args.primaryBinding,
+      rawText: args.rawText,
+    }),
   });
 
-  const fallback = fallbackNormalization(args.rawText);
-
   if (!aiResult) {
-    return fallback;
+    failAiRuntimeOutput("OpenAI gaf geen bruikbare entry-normalisatie terug.", "openai_result_missing", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    });
   }
 
   const nextTitle = cleanNormalizedTitle(
-    parseString(aiResult.title) ?? fallback.title,
-    fallback.title,
+    requireAiOutputString(aiResult.title, "title", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    }),
+    "",
   );
   const nextBody = cleanNormalizedBody(
-    parseString(aiResult.body) ?? fallback.body,
-    fallback.body,
+    requireAiOutputString(aiResult.body, "body", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    }),
+    "",
   );
   const sourceBody = normalizeBodyParagraphs(args.rawText);
   const body = isSuspiciouslyCompressedNormalization(args.rawText, nextBody)
-    ? fallback.body
+    ? failAiRuntimeOutput("OpenAI entry body faalde de compressie-guard.", "quality_gate_failed", {
+        runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+        taskKey: args.primaryBinding.taskKey,
+        versionId: args.primaryBinding.versionId,
+        reason: "compressed_normalized_body",
+      })
     : nextBody;
   let summaryShort = cleanNormalizedSummaryShort(
-    parseString(aiResult.summary_short),
+    requireAiOutputObjectString(aiResult, ["summary_short", "summaryShort"], "summary_short", {
+      runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+      taskKey: args.primaryBinding.taskKey,
+      versionId: args.primaryBinding.versionId,
+    }, { allowEmpty: allowsEmptySummaryShort(args.primaryBinding) }),
     body,
+    {
+      allowEmpty: allowsEmptySummaryShort(args.primaryBinding),
+      details: {
+        runtimeBindingKey: args.primaryBinding.runtimeBindingKey,
+        taskKey: args.primaryBinding.taskKey,
+        versionId: args.primaryBinding.versionId,
+      },
+    },
   );
 
   const primaryNoOp =
@@ -495,44 +598,71 @@ async function normalizeEntry(args: {
         reason: "primary_noop_body",
       },
     });
-    const repairPrompt = buildEntryNormalizationRepairPromptSpec({
-      rawText: args.rawText,
-      currentBody: body,
-    });
     const repairedAiResult = await callOpenAiJson({
       apiKey: args.apiKey,
-      model: args.model,
+      model: args.repairBinding.model,
+      temperature: args.repairBinding.temperature,
+      responseFormat: args.repairBinding.responseFormat,
       requestId: args.requestId,
       flowId: args.flowId,
       step: "normalized_generated",
       operation: "openai_normalize_entry_repair",
-      promptVersion: repairPrompt.promptVersion,
-      systemPrompt: repairPrompt.systemPrompt,
-      userPrompt: repairPrompt.userPrompt,
+      promptVersion: args.repairBinding.promptVersion,
+      systemPrompt: args.repairBinding.systemInstructions,
+      userPrompt: buildAiqsEntryCleanupUserPrompt({
+        binding: args.repairBinding,
+        rawText: args.rawText,
+        currentBody: body,
+      }),
     });
 
     if (repairedAiResult) {
       const repairedTitle = cleanNormalizedTitle(
-        parseString(repairedAiResult.title) ?? nextTitle,
-        fallback.title,
+        requireAiOutputString(repairedAiResult.title, "title", {
+          runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+          taskKey: args.repairBinding.taskKey,
+          versionId: args.repairBinding.versionId,
+        }),
+        "",
       );
       const repairedBodyRaw = cleanNormalizedBody(
-        parseString(repairedAiResult.body) ?? body,
-        fallback.body,
+        requireAiOutputString(repairedAiResult.body, "body", {
+          runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+          taskKey: args.repairBinding.taskKey,
+          versionId: args.repairBinding.versionId,
+        }),
+        "",
       );
       const repairedBody = isSuspiciouslyCompressedNormalization(
         args.rawText,
         repairedBodyRaw,
       )
-        ? fallback.body
+        ? failAiRuntimeOutput("OpenAI repair body faalde de compressie-guard.", "quality_gate_failed", {
+            runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+            taskKey: args.repairBinding.taskKey,
+            versionId: args.repairBinding.versionId,
+            reason: "compressed_repair_body",
+          })
         : repairedBodyRaw;
       if (normalizeForCompare(repairedBody) !== normalizeForCompare(sourceBody)) {
         return {
           title: repairedTitle,
           body: repairedBody,
           summaryShort: cleanNormalizedSummaryShort(
-            parseString(repairedAiResult.summary_short),
+            requireAiOutputObjectString(repairedAiResult, ["summary_short", "summaryShort"], "summary_short", {
+              runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+              taskKey: args.repairBinding.taskKey,
+              versionId: args.repairBinding.versionId,
+            }, { allowEmpty: allowsEmptySummaryShort(args.repairBinding) }),
             repairedBody,
+            {
+              allowEmpty: allowsEmptySummaryShort(args.repairBinding),
+              details: {
+                runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+                taskKey: args.repairBinding.taskKey,
+                versionId: args.repairBinding.versionId,
+              },
+            },
           ),
         };
       }
@@ -547,6 +677,15 @@ async function normalizeEntry(args: {
       details: {
         reason: "primary_noop_body",
       },
+    });
+  }
+
+  if (primaryNoOp) {
+    failAiRuntimeOutput("OpenAI entry-normalisatie wijzigde de body niet.", "repair_failed", {
+      runtimeBindingKey: args.repairBinding.runtimeBindingKey,
+      taskKey: args.repairBinding.taskKey,
+      versionId: args.repairBinding.versionId,
+      reason: "primary_noop_body",
     });
   }
 
@@ -593,6 +732,24 @@ Deno.serve(async (request: Request) => {
     });
 
     const runtimeEnv = getFunctionRuntimeEnv();
+    const serviceRoleKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
+      Deno.env.get("APP_SUPABASE_SERVICE_ROLE_KEY")?.trim() ??
+      "";
+    if (!serviceRoleKey) {
+      throw new Error("Missing service role key for AIQS runtime binding resolution.");
+    }
+    const adminClient = createClient(runtimeEnv.supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const primaryBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: "entry_renormalization.primary",
+    });
+    const repairBinding = await loadLiveAiRuntimeBinding({
+      adminClient,
+      bindingKey: "entry_normalization.repair",
+    });
     const authHeader = request.headers.get("Authorization");
 
     if (!authHeader) {
@@ -671,10 +828,11 @@ Deno.serve(async (request: Request) => {
     step = "normalized_generated";
     const normalized = await normalizeEntry({
       apiKey: runtimeEnv.openAiApiKey,
-      model: runtimeEnv.openAiModel,
       requestId,
       flowId,
       rawText,
+      primaryBinding,
+      repairBinding,
     });
 
     const response: RenormalizeEntryResponse = {
@@ -701,6 +859,33 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
+    if (isAiRuntimeOutputError(error)) {
+      logFlow("warn", {
+        flow: FLOW,
+        requestId,
+        flowId,
+        step,
+        event: "ai_runtime_output_rejected",
+        details: {
+          reason: error.reason,
+          ...error.details,
+        },
+      });
+      return errorResponse({
+        request,
+        httpStatus: 502,
+        requestId,
+        flowId,
+        step,
+        code: "UPSTREAM_UNAVAILABLE",
+        message: error.message,
+        details: {
+          reason: error.reason,
+          ...error.details,
+        },
+      });
+    }
+
     logFlow("error", {
       flow: FLOW,
       requestId,

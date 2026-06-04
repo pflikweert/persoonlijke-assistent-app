@@ -26,6 +26,7 @@ export const unstable_settings = {
 };
 
 const WEB_APP_SHELL_MAX_WIDTH = 460;
+const WEB_ADMIN_SHELL_MAX_WIDTH = 1240;
 
 type AuthCallbackErrorPayload = {
   error: string | null;
@@ -72,6 +73,11 @@ export default function RootLayout() {
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const palette = colorTokens[colorScheme];
+  const isAdminConsoleRoute =
+    segments[0] === "settings-ai-quality-studio" ||
+    segments[0] === "settings-admin-access" ||
+    segments[0] === "settings-regeneration" ||
+    segments[0] === "meeting-capture";
 
   const navigationTheme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
   const appTheme = {
@@ -218,7 +224,7 @@ a:focus-visible,
   if (!authReady) {
     return (
       <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
-        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
+        <View style={[styles.rootShell, styles.webAppShell, isAdminConsoleRoute ? styles.webAdminShell : null, { backgroundColor: palette.background }]}>
           <AppBackground tone="ambient" />
           <View style={styles.loadingContainer}>
             <ActivityIndicator color={palette.primary} />
@@ -231,7 +237,7 @@ a:focus-visible,
   return (
     <ThemeProvider value={appTheme}>
       <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
-        <View style={[styles.rootShell, styles.webAppShell, { backgroundColor: palette.background }]}>
+        <View style={[styles.rootShell, styles.webAppShell, isAdminConsoleRoute ? styles.webAdminShell : null, { backgroundColor: palette.background }]}>
           <AppBackground tone="flat" />
           <Stack
             // Use in-app headers consistently and avoid accidental native double top-nav
@@ -322,6 +328,13 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "web"
       ? {
           maxWidth: WEB_APP_SHELL_MAX_WIDTH,
+        }
+      : {}),
+  },
+  webAdminShell: {
+    ...(Platform.OS === "web"
+      ? {
+          maxWidth: WEB_ADMIN_SHELL_MAX_WIDTH,
         }
       : {}),
   },

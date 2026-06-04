@@ -52,3 +52,15 @@ export function finalizeDayJournalDraft(input: {
     softQualityGuards?: boolean;
   };
 }): FinalizedDayJournalDraft;
+export function finalizeDayJournalDraftStrict(input: {
+  aiResult: Record<string, unknown> | null;
+  entries: DayJournalEntryInput[];
+  options?: {
+    noSpeechTranscript?: string;
+    lowContentTitle?: string;
+    strictValidation?: boolean;
+    softQualityGuards?: boolean;
+  };
+}):
+  | { ok: true; finalized: FinalizedDayJournalDraft; reasons: [] }
+  | { ok: false; finalized: FinalizedDayJournalDraft; reasons: string[] };

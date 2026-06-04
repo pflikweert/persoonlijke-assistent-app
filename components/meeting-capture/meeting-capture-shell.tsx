@@ -4,11 +4,12 @@ import { StyleSheet } from "react-native";
 
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import {
-  AdminMetaStrip,
-  AdminPageHero,
-  AdminShell,
-  SettingsTopNav,
-} from "@/components/ui/settings-screen-primitives";
+  AdminConsoleKeyValue,
+  AdminConsoleShell,
+  AdminInspectorPanel,
+  AdminPageHeader,
+  AdminStatusBadge,
+} from "@/components/ui/admin-console-primitives";
 import { StateBlock } from "@/components/ui/screen-primitives";
 import { classifyUnknownError, hasAdminMeetingCaptureAccess } from "@/services";
 import { spacing } from "@/theme";
@@ -49,18 +50,30 @@ export function MeetingCaptureShell({
   }, [loadAccess]);
 
   return (
-    <AdminShell
-      fixedHeader={
-        <SettingsTopNav
-          title="Gespreksopnames"
-          onBack={onBack}
-          onMenu={() => setMenuVisible(true)}
-        />
-      }
+    <AdminConsoleShell
+      title="Gespreksopnames"
+      onBack={onBack}
+      onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.content}
+      inspector={
+        <AdminInspectorPanel title="Meeting capture" subtitle="Founder/admin tooling">
+          <AdminConsoleKeyValue label="Scope" value="Admin-only" />
+          <AdminConsoleKeyValue label="Flow" value="Audio-first" />
+          <AdminConsoleKeyValue label="Status" value={adminAccess ? "Toegang actief" : adminAccess === false ? "Geen toegang" : "Controleren"} />
+        </AdminInspectorPanel>
+      }
     >
-      <AdminPageHero title={title} subtitle={subtitle} />
-      <AdminMetaStrip items={meta} />
+      <AdminPageHeader
+        eyebrow="Meeting capture"
+        title={title}
+        subtitle={subtitle}
+        chips={
+          <>
+            {meta.map((item) => <AdminStatusBadge key={item} label={item} tone="neutral" />)}
+            {adminAccess ? <AdminStatusBadge label="Toegang" tone="success" /> : null}
+          </>
+        }
+      />
 
       {adminAccess === null && !accessError ? (
         <StateBlock tone="loading" message="Toegang controleren..." />
@@ -89,7 +102,7 @@ export function MeetingCaptureShell({
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </AdminShell>
+    </AdminConsoleShell>
   );
 }
 

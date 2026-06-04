@@ -3,12 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AdminAccessManager } from "@/components/admin/admin-access-manager";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { ThemedView } from "@/components/themed-view";
 import {
-  AdminMetaStrip,
-  AdminPageHero,
-  AdminShell,
-  SettingsTopNav,
-} from "@/components/ui/settings-screen-primitives";
+  AdminConsoleKeyValue,
+  AdminConsoleShell,
+  AdminMetricCard,
+  AdminMetricGrid,
+  AdminPageHeader,
+  AdminStatusBadge,
+} from "@/components/ui/admin-console-primitives";
 import { MetaText, StateBlock } from "@/components/ui/screen-primitives";
 import {
   classifyUnknownError,
@@ -85,6 +88,11 @@ export default function SettingsAdminAccessScreen() {
     return ["Founder-only", `${admins.length} admingebruikers`, `${users.length} accounts zichtbaar`];
   }, [access, users]);
 
+  const adminCount = useMemo(
+    () => users.filter((user) => user.isFounder || getEnabledAdminCapabilities(user.capabilities).length > 0).length,
+    [users]
+  );
+
   const handleToggleCapability = useCallback(
     async (input: {
       userId: string;
@@ -123,22 +131,38 @@ export default function SettingsAdminAccessScreen() {
   );
 
   return (
-    <AdminShell
-      fixedHeader={
-        <SettingsTopNav
-          title="Adminrechten"
-          onBack={() => router.back()}
-          onMenu={() => setMenuVisible(true)}
-        />
-      }
+    <AdminConsoleShell
+      title="Adminrechten"
+      onBack={() => router.back()}
+      onMenu={() => setMenuVisible(true)}
       contentContainerStyle={{ paddingBottom: spacing.xxxl, gap: spacing.content }}
+      inspector={
+        <ThemedView style={{ gap: spacing.sm }}>
+          <AdminConsoleKeyValue label="Scope" value="Founder-only" />
+          <AdminConsoleKeyValue label="Bron" value="Database grants" />
+          <AdminConsoleKeyValue label="Fallback" value={access?.usedLegacyBootstrap ? "Legacy bootstrap actief" : "Niet actief"} />
+        </ThemedView>
+      }
     >
-      <AdminPageHero
+      <AdminPageHeader
+        eyebrow="Access control"
         title="Adminrechten beheren"
         subtitle="Founder-only beheer van toegang per admingebied."
+        chips={
+          <>
+            <AdminStatusBadge label="Founder-only" tone="info" />
+            {access?.isFounder ? <AdminStatusBadge label="Toegang" tone="success" /> : null}
+          </>
+        }
       />
 
-      <AdminMetaStrip items={metaItems} />
+      {access?.isFounder ? (
+        <AdminMetricGrid>
+          <AdminMetricCard label="Admingebruikers" value={adminCount} meta="Founder of capability grant" tone="success" />
+          <AdminMetricCard label="Accounts zichtbaar" value={users.length} meta="Voor beheer" />
+          <AdminMetricCard label="Mode" value="DB" meta={metaItems.join(" · ")} tone="info" />
+        </AdminMetricGrid>
+      ) : null}
 
       {loading ? <StateBlock tone="loading" message="Adminrechten laden..." /> : null}
 
@@ -173,6 +197,6 @@ export default function SettingsAdminAccessScreen() {
         currentRouteKey="settings"
         onRequestClose={() => setMenuVisible(false)}
       />
-    </AdminShell>
+    </AdminConsoleShell>
   );
 }

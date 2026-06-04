@@ -87,12 +87,51 @@ const candidateDates = [
 ];
 
 const uniqueDates = [...new Set(candidateDates)];
+const fixtures = [
+  {
+    summary: 'Ik begon gehaast en probeerde werkblokken te redden tussen losse verzoeken door.',
+    narrative_text:
+      'Ik merkte dat mijn aandacht telkens verschoof naar brandjes en kleine verzoeken. Daardoor schoof rustig werken opnieuw op en bleef er spanning rond planning hangen.',
+    sections: ['Werkdruk trok de aandacht uit elkaar', 'Beweging schoof opnieuw op'],
+  },
+  {
+    summary: 'Een kort bericht van dichtbij maakte de dag warmer, maar de planning bleef onrustig.',
+    narrative_text:
+      'Een persoonlijk contactmoment gaf merkbaar lucht. Tegelijk bleef dezelfde onrust terugkomen: ik probeerde te veel tegelijk vast te houden en voelde weer frictie tussen aandacht en verplichtingen.',
+    sections: ['Persoonlijk contact gaf lucht', 'Onrust in planning bleef terugkomen'],
+  },
+  {
+    summary: 'Ik kreeg meer rust door een kleiner ritme, al bleef de werkspanning voelbaar.',
+    narrative_text:
+      'Door kleiner te plannen en taken te begrenzen kwam er iets meer ritme in de dag. De spanning verdween niet helemaal, maar ik merkte wel een eerste verschuiving van reactief naar iets gerichter werken.',
+    sections: ['Kleiner ritme gaf wat rust', 'Eerste verschuiving naar gerichter werken'],
+  },
+  {
+    summary: 'Beweging en buitenlucht haalden de druk iets omlaag.',
+    narrative_text:
+      'Na buiten zijn en bewegen zakte de druk merkbaar. Het patroon van volle aandacht en dichte planning bleef zichtbaar, maar ik kon er minder strak in vast blijven zitten.',
+    sections: ['Buitenlucht haalde druk omlaag', 'Zelfde patroon werd iets losser'],
+  },
+  {
+    summary: 'Ik voelde meer richting zodra ik minder open eindjes tegelijk probeerde te dragen.',
+    narrative_text:
+      'Doordat ik minder losse eindjes tegelijk openliet, ontstond meer overzicht. De eerdere spanning rond versnippering verschoof naar een rustiger tempo met duidelijkere keuzes.',
+    sections: ['Minder open eindjes gaf overzicht', 'Versnippering verschoof naar rustiger tempo'],
+  },
+  {
+    summary: 'De maand liet vooral een beweging zien van drukte naar meer begrenzing en herstel.',
+    narrative_text:
+      'Over meerdere dagen heen kwam hetzelfde thema terug: eerst drukte, versnippering en spanning, daarna langzaam meer begrenzing, ritme en herstel. Die verschuiving werd zichtbaar in zowel werk als persoonlijke momenten.',
+    sections: ['Drukte maakte plaats voor begrenzing', 'Herstel werd een terugkerende lijn'],
+  },
+];
+
 const payload = uniqueDates.map((journalDate, index) => ({
   user_id: userId,
   journal_date: journalDate,
-  summary: `Samenvatting voor ${journalDate}`,
-  narrative_text: `Verhalende dagtekst voor ${journalDate} met concreet dagverloop en brongebonden details.`,
-  sections: [`Highlight ${index + 1}`, `Actiepunt ${index + 1}`],
+  summary: fixtures[index % fixtures.length].summary,
+  narrative_text: fixtures[index % fixtures.length].narrative_text,
+  sections: fixtures[index % fixtures.length].sections,
   updated_at: new Date().toISOString(),
 }));
 

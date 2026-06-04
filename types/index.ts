@@ -44,6 +44,8 @@ export type {
   AiTaskTestSource,
   AiTaskTestCompareView,
   AiTaskVersionDetail,
+  AiTaskVersionPromotionMode,
+  AiTaskVersionPromotionResult,
   AiTaskVersionStatus,
   AiCompareBaselineStatus,
   AiPromptAssistTargetLayerKey,

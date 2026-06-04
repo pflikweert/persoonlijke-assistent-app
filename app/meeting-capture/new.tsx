@@ -1,10 +1,8 @@
 import { router } from "expo-router";
 
 import { MeetingCaptureShell } from "@/components/meeting-capture/meeting-capture-shell";
-import { AdminSection } from "@/components/ui/settings-screen-primitives";
+import { AdminActionBar, AdminPanel } from "@/components/ui/admin-console-primitives";
 import {
-  PrimaryButton,
-  SecondaryButton,
   StateBlock,
 } from "@/components/ui/screen-primitives";
 
@@ -16,25 +14,26 @@ export default function MeetingCaptureNewScreen() {
       meta={["Audio wordt veilig opgeslagen", "Geen dagboekmoment"]}
       onBack={() => router.push("/meeting-capture" as never)}
     >
-      <AdminSection title="Opname voorbereiden">
+      <AdminPanel title="Opname voorbereiden">
         <StateBlock
           tone="info"
           message="Zorg dat iedereen weet dat je dit gesprek opneemt."
           detail="Titel, type, notitie en start/stop komen in de volgende bouwslice."
         />
-        <PrimaryButton
-          label="Start opname"
-          icon="fiber-manual-record"
-          disabled
-          onPress={() => {}}
+        <AdminActionBar
+          primary={{
+            label: "Start opname",
+            icon: "fiber-manual-record",
+            disabled: true,
+            onPress: () => {},
+          }}
+          secondary={{
+            label: "Terug naar archief",
+            icon: "arrow-back",
+            onPress: () => router.push("/meeting-capture" as never),
+          }}
         />
-        <SecondaryButton
-          label="Terug naar archief"
-          icon="arrow-back"
-          size="cta"
-          onPress={() => router.push("/meeting-capture" as never)}
-        />
-      </AdminSection>
+      </AdminPanel>
     </MeetingCaptureShell>
   );
 }

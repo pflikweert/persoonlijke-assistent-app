@@ -10,8 +10,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 7
+sort_order: 8
 ---
+
 
 
 
@@ -408,3 +409,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 
 - 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
+
+- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness

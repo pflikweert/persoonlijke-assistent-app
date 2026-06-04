@@ -10,8 +10,8 @@ import { colorTokens, radius, spacing } from "@/theme";
 import { MetaText, ScreenContainer, SurfaceSection } from "./screen-primitives";
 
 const FOOTER_TOP_TONE = {
-  light: "rgba(116, 91, 0, 0.06)",
-  dark: "rgba(224, 180, 58, 0.10)",
+  light: "rgba(20, 24, 28, 0.04)",
+  dark: "rgba(255, 255, 255, 0.05)",
 } as const;
 
 export function AdminShell({
@@ -83,7 +83,7 @@ export function AdminStickyFooterActions({
     const disabled = action.disabled ?? false;
     const iconColor =
       tone === "primary"
-        ? palette.primaryOn
+        ? palette.background
         : tone === "destructive"
           ? palette.destructiveSoftText
           : palette.text;
@@ -96,7 +96,7 @@ export function AdminStickyFooterActions({
         style={[
           styles.footerActionButton,
           tone === "primary"
-            ? { backgroundColor: palette.primaryStrong }
+            ? { backgroundColor: palette.text, borderColor: palette.text }
             : tone === "destructive"
               ? {
                   backgroundColor: palette.destructiveSoftBackground,
@@ -540,14 +540,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footerActionButton: {
-    minHeight: 46,
-    borderRadius: radius.pill,
+    minHeight: 38,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   footerActionBorder: {
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   footerActionDisabled: {
     opacity: 0.55,
@@ -559,8 +560,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   footerActionLabel: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
   },
   hero: {
     gap: spacing.sm,

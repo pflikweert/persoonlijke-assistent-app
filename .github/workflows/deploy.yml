@@ -7,6 +7,8 @@ on:
     paths:
       - "supabase/migrations/**"
       - "supabase/functions/**"
+      - "scripts/ensure-aiqs-runtime-baseline.sh"
+      - "package.json"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
@@ -18,6 +20,8 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      ADMIN_AI_QUALITY_INTERNAL_TOKEN: ${{ secrets.ADMIN_AI_QUALITY_INTERNAL_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -38,6 +42,8 @@ jobs:
           [ -n "$SUPABASE_ACCESS_TOKEN" ] || (echo "Missing secret: SUPABASE_ACCESS_TOKEN" && exit 1)
           [ -n "$SUPABASE_PROJECT_REF" ] || (echo "Missing secret: SUPABASE_PROJECT_REF" && exit 1)
           [ -n "$SUPABASE_DB_PASSWORD" ] || (echo "Missing secret: SUPABASE_DB_PASSWORD" && exit 1)
+          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || (echo "Missing secret: SUPABASE_PUBLISHABLE_KEY" && exit 1)
+          [ -n "$ADMIN_AI_QUALITY_INTERNAL_TOKEN" ] || (echo "Missing secret: ADMIN_AI_QUALITY_INTERNAL_TOKEN" && exit 1)
 
       - name: Log Supabase CLI version
         run: npx supabase@latest --version
@@ -47,6 +53,9 @@ jobs:
 
       - name: Apply database migrations
         run: npx supabase@latest db push --linked --include-all
+
+      - name: Configure production AIQS internal token
+        run: npx supabase@latest secrets set ADMIN_AI_QUALITY_INTERNAL_TOKEN="$ADMIN_AI_QUALITY_INTERNAL_TOKEN" --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Log functions to deploy
         shell: bash
@@ -61,4 +70,10 @@ jobs:
           npx supabase@latest functions deploy regenerate-day-journal --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
           npx supabase@latest functions deploy import-chatgpt-markdown --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
           npx supabase@latest functions deploy renormalize-entry --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+          npx supabase@latest functions deploy admin-ai-quality-studio --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
           npx supabase@latest functions deploy admin-regeneration-job --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+
+      - name: Ensure production AIQS runtime baseline is live
+        env:
+          AIQS_BASELINE_TARGET: cloud
+        run: npm run aiqs:runtime-baseline:ensure
