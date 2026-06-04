@@ -41,13 +41,37 @@ jobs:
           [ -n "$SUPABASE_ACCESS_TOKEN" ] || (echo "Missing secret: SUPABASE_ACCESS_TOKEN" && exit 1)
           [ -n "$SUPABASE_PROJECT_REF" ] || (echo "Missing secret: SUPABASE_PROJECT_REF" && exit 1)
           [ -n "$SUPABASE_DB_PASSWORD" ] || (echo "Missing secret: SUPABASE_DB_PASSWORD" && exit 1)
-          [ -n "$SUPABASE_PUBLISHABLE_KEY" ] || (echo "Missing secret: SUPABASE_PUBLISHABLE_KEY or EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY" && exit 1)
 
       - name: Log Supabase CLI version
         run: npx supabase@latest --version
 
       - name: Link Supabase project
         run: npx supabase@latest link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Resolve Supabase publishable key
+        shell: bash
+        run: |
+          if [ -n "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "::add-mask::$SUPABASE_PUBLISHABLE_KEY"
+            exit 0
+          fi
+
+          keys_json="$(npx supabase@latest projects api-keys --project-ref "$SUPABASE_PROJECT_REF" --output json)"
+          publishable_key="$(printf '%s' "$keys_json" | jq -r '
+            [
+              .[]
+              | select(((.name // .key // "") | test("anon|publishable"; "i")))
+              | (.api_key // .key // .value // empty)
+            ][0] // empty
+          ')"
+
+          if [ -z "$publishable_key" ]; then
+            echo "Could not resolve Supabase publishable/anon key from project API keys." >&2
+            exit 1
+          fi
+
+          echo "::add-mask::$publishable_key"
+          echo "SUPABASE_PUBLISHABLE_KEY=$publishable_key" >> "$GITHUB_ENV"
 
       - name: Apply database migrations
         run: npx supabase@latest db push --linked --include-all

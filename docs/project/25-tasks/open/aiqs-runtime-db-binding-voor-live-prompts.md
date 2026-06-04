@@ -22,6 +22,7 @@ sort_order: 4
 
 
 
+
 # AIQS runtime DB-binding voor live prompts
 
 ## Probleem / context
@@ -163,6 +164,7 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - Nieuwe verify/deploy helper `npm run aiqs:runtime-baseline:ensure` toegevoegd voor lokaal en CI-gebruik; vereist in production `SUPABASE_PUBLISHABLE_KEY` en `ADMIN_AI_QUALITY_INTERNAL_TOKEN`.
 - GitHub secret alias-fix toegevoegd: production deploy accepteert ook bestaande `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` en `ADMIN_REGEN_INTERNAL_TOKEN`, zonder secretwaarden in git te zetten.
 - Production deploy hoeft geen GitHub AIQS internal-token secret meer te hebben: de workflow genereert per deploy een gemaskeerde tijdelijke token, zet die als Supabase function secret en gebruikt die direct voor de baseline gate.
+- Production deploy hoeft ook geen GitHub publishable-key secret meer te hebben: als `SUPABASE_PUBLISHABLE_KEY`/`EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` ontbreekt, haalt de workflow de anon/publishable key op via `supabase projects api-keys`.
 - Reviewbevindingen voor deze hardening:
   - `process-entry` en `renormalize-entry` gebruiken live AIQS bindings, maar bevatten nog zelfgemaakte entry title/body/summary fallbacks.
   - `process-entry` en `regenerate-day-journal` kunnen nog een zelfgemaakt dagjournal teruggeven via `createFallbackDayJournal`.
@@ -196,6 +198,7 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - [x] Production deploy workflow importeert en verifieert AIQS runtime-baselines na function deploy.
 - [x] Production deploy workflow accepteert bestaande GitHub secret aliases voor publishable key en internal token.
 - [x] Production deploy workflow genereert zelf een tijdelijke AIQS internal token als deploy-secret voor de baseline gate.
+- [x] Production deploy workflow kan de Supabase publishable key afleiden via Supabase CLI/API wanneer er geen GitHub secret alias bestaat.
 - [~] Docs sync en closeout uitvoeren.
 
 ## Acceptance criteria
@@ -252,6 +255,7 @@ Laatste hardeningbewijs:
 - `npm run taskflow:verify` — groen na production push gate.
 - GitHub secret alias-fix: lokaal statisch gevalideerd met `sh -n scripts/ensure-aiqs-runtime-baseline.sh`, `npm run lint`, `npm run typecheck` en `npm run taskflow:verify`.
 - GitHub deploy-token fix: AIQS internal token wordt in Actions gegenereerd met `openssl rand -hex 32`, gemaskeerd en via `supabase secrets set` naar production gezet.
+- GitHub publishable-key fix: publishable key wordt optioneel uit GitHub Secrets gelezen en anders via `npx supabase projects api-keys --output json` afgeleid en gemaskeerd.
 
 Live-readiness notes:
 
@@ -261,8 +265,9 @@ Live-readiness notes:
 - Structured Outputs worden alleen gebruikt voor object-schema's; legacy/non-object member-schema's blijven JSON-transport met runtimevalidatie.
 - Productie heeft dezelfde baselinefix nodig via AIQS baseline import of live-versie-update voordat productieclaims worden gemaakt.
 - GitHub production deploy voert die baselinefix automatisch uit via `scripts/ensure-aiqs-runtime-baseline.sh`.
-- Production secrets vereist via preferred naam of alias:
-  - `SUPABASE_PUBLISHABLE_KEY` of `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY`
+- Production secrets voor publishable key zijn optioneel:
+  - preferred: `SUPABASE_PUBLISHABLE_KEY` of `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY`
+  - fallback: workflow haalt anon/publishable key op via Supabase CLI met `SUPABASE_ACCESS_TOKEN`
 - Er is geen GitHub secret meer nodig voor `ADMIN_AI_QUALITY_INTERNAL_TOKEN`; de workflow genereert die per deploy en zet hem als Supabase function secret.
 - De gate overschrijft alleen baseline-managed live versies via de bestaande idempotente import; afwijkende custom live versies geven `error` en blokkeren de deploy in plaats van stil overschrijven.
 
@@ -293,3 +298,5 @@ Live-readiness notes:
 - 2026-06-04T20:47:24+02:00 — fix: support existing deploy secret aliases
 
 - 2026-06-04T20:49:20+02:00 — fix: generate AIQS deploy token
+
+- 2026-06-04T20:51:08+02:00 — fix: resolve deploy publishable key
