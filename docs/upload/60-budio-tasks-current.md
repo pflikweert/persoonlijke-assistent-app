@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-04T18:47:07.618Z
-Source Commit: cf1cd90
+Build Timestamp (UTC): 2026-06-04T18:49:14.784Z
+Source Commit: a7cc397
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3535,6 +3535,7 @@ sort_order: 4
 ---
 
 
+
 # AIQS runtime DB-binding voor live prompts
 
 ## Probleem / context
@@ -3675,6 +3676,7 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - Production push hardening toegevoegd: GitHub production deploy configureert `ADMIN_AI_QUALITY_INTERNAL_TOKEN`, deployt `admin-ai-quality-studio` mee en draait daarna een harde `import_runtime_baseline` gate zodat alle AIQS runtime-baselines production-ready en live staan of de deploy faalt.
 - Nieuwe verify/deploy helper `npm run aiqs:runtime-baseline:ensure` toegevoegd voor lokaal en CI-gebruik; vereist in production `SUPABASE_PUBLISHABLE_KEY` en `ADMIN_AI_QUALITY_INTERNAL_TOKEN`.
 - GitHub secret alias-fix toegevoegd: production deploy accepteert ook bestaande `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` en `ADMIN_REGEN_INTERNAL_TOKEN`, zonder secretwaarden in git te zetten.
+- Production deploy hoeft geen GitHub AIQS internal-token secret meer te hebben: de workflow genereert per deploy een gemaskeerde tijdelijke token, zet die als Supabase function secret en gebruikt die direct voor de baseline gate.
 - Reviewbevindingen voor deze hardening:
   - `process-entry` en `renormalize-entry` gebruiken live AIQS bindings, maar bevatten nog zelfgemaakte entry title/body/summary fallbacks.
   - `process-entry` en `regenerate-day-journal` kunnen nog een zelfgemaakt dagjournal teruggeven via `createFallbackDayJournal`.
@@ -3707,6 +3709,7 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - [x] Guard-test toevoegen tegen verboden runtime-output fallbacks.
 - [x] Production deploy workflow importeert en verifieert AIQS runtime-baselines na function deploy.
 - [x] Production deploy workflow accepteert bestaande GitHub secret aliases voor publishable key en internal token.
+- [x] Production deploy workflow genereert zelf een tijdelijke AIQS internal token als deploy-secret voor de baseline gate.
 - [~] Docs sync en closeout uitvoeren.
 
 ## Acceptance criteria
@@ -3762,6 +3765,7 @@ Laatste hardeningbewijs:
 - `npm run typecheck` — groen na production push gate.
 - `npm run taskflow:verify` — groen na production push gate.
 - GitHub secret alias-fix: lokaal statisch gevalideerd met `sh -n scripts/ensure-aiqs-runtime-baseline.sh`, `npm run lint`, `npm run typecheck` en `npm run taskflow:verify`.
+- GitHub deploy-token fix: AIQS internal token wordt in Actions gegenereerd met `openssl rand -hex 32`, gemaskeerd en via `supabase secrets set` naar production gezet.
 
 Live-readiness notes:
 
@@ -3773,7 +3777,7 @@ Live-readiness notes:
 - GitHub production deploy voert die baselinefix automatisch uit via `scripts/ensure-aiqs-runtime-baseline.sh`.
 - Production secrets vereist via preferred naam of alias:
   - `SUPABASE_PUBLISHABLE_KEY` of `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY`
-  - `ADMIN_AI_QUALITY_INTERNAL_TOKEN` of `ADMIN_REGEN_INTERNAL_TOKEN`
+- Er is geen GitHub secret meer nodig voor `ADMIN_AI_QUALITY_INTERNAL_TOKEN`; de workflow genereert die per deploy en zet hem als Supabase function secret.
 - De gate overschrijft alleen baseline-managed live versies via de bestaande idempotente import; afwijkende custom live versies geven `error` en blokkeren de deploy in plaats van stil overschrijven.
 
 ## Reconciliation voor afronding
@@ -3799,6 +3803,8 @@ Live-readiness notes:
 ## Commits
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-04T20:47:24+02:00 — fix: support existing deploy secret aliases
 ```
 
 ---
