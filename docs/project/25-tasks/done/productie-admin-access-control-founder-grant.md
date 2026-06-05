@@ -1,7 +1,7 @@
 ---
 id: productie-admin-access-control-founder-grant
 title: Productie admin access-control deploy en founder grant
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: null
 ---
+
 
 
 ## Probleem / context
@@ -115,9 +116,9 @@ Het goedgekeurde plan:
 
 - [x] `admin-access-control` production deploy toegevoegd — status: gebouwd
 - [x] Post-deploy reachability smoke toegevoegd — status: gebouwd
-- [ ] `pflikweert@gmail.com` founder + capabilities in productie — status: nog niet gebouwd
-- [ ] GitHub Actions deploy groen gecontroleerd — status: nog niet gebouwd
-- [ ] Function reachability en DB grant geverifieerd — status: nog niet gebouwd
+- [x] `pflikweert@gmail.com` founder + capabilities in productie — status: gebouwd
+- [x] GitHub Actions deploy groen gecontroleerd — status: gebouwd
+- [x] Function reachability en DB grant geverifieerd — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -128,8 +129,8 @@ Het goedgekeurde plan:
 - [x] Blok 1: preflight, relevante context en taskflow bevestigen.
 - [x] Blok 2: workflow-fix voor function deploy en reachability smoke.
 - [x] Blok 3: lokale static verify.
-- [ ] Blok 4: commit/push en GitHub deployment controleren.
-- [ ] Blok 5: productie founder/capability grant uitvoeren en verifiëren.
+- [x] Blok 4: commit/push en GitHub deployment controleren.
+- [x] Blok 5: productie founder/capability grant uitvoeren en verifiëren.
 
 ## Concrete checklist
 
@@ -138,39 +139,40 @@ Het goedgekeurde plan:
 - [x] `npm run lint` groen.
 - [x] `npm run typecheck` groen.
 - [x] `npm run taskflow:verify` groen.
-- [ ] Fix commit gepusht naar `main`.
-- [ ] GitHub deploy-run groen.
-- [ ] Production grant uitgevoerd.
-- [ ] Production grant verified.
+- [x] Fix commit gepusht naar `main`.
+- [x] GitHub deploy-run groen.
+- [x] Production grant uitgevoerd.
+- [x] Production grant verified.
 
 ## Acceptance criteria
 
-- [ ] Production deploy bevat `admin-access-control`.
-- [ ] Unauthenticated production smoke naar `admin-access-control` retourneert `401` met `flow: "admin-access-control"` en `code: "AUTH_MISSING"`.
-- [ ] `pflikweert@gmail.com` staat in `admin_founders`.
-- [ ] `pflikweert@gmail.com` heeft `ai_quality_studio`, `regeneration` en `meeting_capture`.
-- [ ] Admin instellingen kunnen door founder geopend worden zonder Edge Function transportfout.
+- [x] Production deploy bevat `admin-access-control`.
+- [x] Unauthenticated production smoke naar `admin-access-control` retourneert `401` met `flow: "admin-access-control"` en `code: "AUTH_MISSING"`.
+- [x] `pflikweert@gmail.com` staat in `admin_founders`.
+- [x] `pflikweert@gmail.com` heeft `ai_quality_studio`, `regeneration` en `meeting_capture`.
+- [x] Admin instellingen kunnen door founder geopend worden zonder Edge Function transportfout.
 
 ## Blockers / afhankelijkheden
 
-- Productie write vereist geldige Supabase productie credentials in lokale omgeving of via toegestane CLI/API route.
-- Als `pflikweert@gmail.com` nog niet in productie `auth.users` bestaat, is eerst inloggen/registreren nodig.
+- Geen.
 
 ## Verify / bewijs
 
 - `npm run lint` — groen.
 - `npm run typecheck` — groen.
 - `npm run taskflow:verify` — groen.
-- GitHub Actions deploy-run voor gepushte commit.
-- Production Edge Function reachability smoke.
-- Production DB verification query voor founder + capabilities.
+- GitHub Actions deploy-run `26998333708` — `completed/success` voor commit `f56309a11ffcf46c6f86047f86e438c09203ace6`.
+- GitHub job step `Smoke admin access-control function` — `success`.
+- Directe production smoke — `401`, `flow: "admin-access-control"`, `code: "AUTH_MISSING"`.
+- Production grant verification — `pflikweert@gmail.com` founder yes, capabilities `ai_quality_studio`, `meeting_capture`, `regeneration`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: productie deploy-fix voor `admin-access-control` en one-off founder grant.
-- Toegevoegde verbeteringen: nog geen.
-- Afgerond: nog niet.
-- Open / blocked: workflow-fix, verify, push, production grant en production smoke.
+- Expliciete user requirements: productie admin-instellingen moeten zonder Edge Function transportfout openen; `pflikweert@gmail.com` moet founder/admin zijn; geen secrets/accountdata in git.
+- Toegevoegde verbeteringen: post-deploy smoke in GitHub Actions en directe production smoke vanuit lokale omgeving.
+- Afgerond: workflow deployt `admin-access-control`, GitHub Actions is groen, production smoke is groen, founder/capability grant is uitgevoerd en geverifieerd.
+- Open / blocked: geen.
 
 ## Relevante links
 
@@ -182,3 +184,5 @@ Het goedgekeurde plan:
 ## Commits
 
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
+
+- 2026-06-05T08:03:27+02:00 — docs: close production admin access incident

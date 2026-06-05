@@ -10,8 +10,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 8
+sort_order: 7
 ---
+
 
 
 
@@ -115,3 +116,5 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
 
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
+
+- 2026-06-05T08:03:27+02:00 — docs: close production admin access incident

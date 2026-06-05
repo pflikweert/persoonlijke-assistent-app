@@ -2,8 +2,8 @@
 
 # Budio AI Governance and Operations
 
-Build Timestamp (UTC): 2026-06-05T05:59:13.943Z
-Source Commit: ac47a87
+Build Timestamp (UTC): 2026-06-05T06:03:16.695Z
+Source Commit: f56309a
 
 Doel: primaire bundle voor AI-governance, AIQS-uitvoering en operationele workflowregels.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
