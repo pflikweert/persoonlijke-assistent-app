@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
+
 
 
 
@@ -186,3 +187,5 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function

@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-06-04T18:51:08.725Z
-Source Commit: 20dcfa6
+Build Timestamp (UTC): 2026-06-05T05:59:13.943Z
+Source Commit: ac47a87
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-06-04T18:51:08.725Z
-Source Commit: 20dcfa6
+Build Timestamp (UTC): 2026-06-05T05:59:13.943Z
+Source Commit: ac47a87
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -938,6 +938,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [MVP admin + AIQS productie bundel](25-tasks/open/mvp-admin-aiqs-productie-bundel.md) | In Progress | p1 | transitiemaand-consumer-beta | De bestaande AIQS-flow is aantoonbaar traceerbaar en inzetbaar voor productiegebruik van de huidige OpenAI-calls, zonder featureverbredin... |
 | [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | In Progress | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
 | [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
+| [Productie admin access-control deploy en founder grant](25-tasks/open/productie-admin-access-control-founder-grant.md) | In Progress | p1 | transitiemaand-consumer-beta | Admin instellingen laden in productie weer via `admin-access-control`. Een unauthenticated reachability smoke krijgt een nette function-r... |
 | [Moments-overzicht primaire foto thumbnail en viewer](25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | Blocked | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
 | [Admin/founder meeting capture — admin processing controls](25-tasks/open/admin-founder-meeting-capture-admin-processing-controls.md) | Backlog | p2 | transitiemaand-consumer-beta | Admin kan upload/transcript/summary processing veilig retryen of rerunnen met duidelijke status en failure feedback. |
 | [Admin/founder meeting capture — audio upload/import flow](25-tasks/open/admin-founder-meeting-capture-audio-upload-import-flow.md) | Backlog | p2 | transitiemaand-consumer-beta | Een admin kan een bestaand audiobestand uploaden naar hetzelfde Meeting Capture archief, met dezelfde metadata, uploadstatus, detailweerg... |

@@ -99,8 +99,36 @@ jobs:
           npx supabase@latest functions deploy regenerate-day-journal --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
           npx supabase@latest functions deploy import-chatgpt-markdown --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
           npx supabase@latest functions deploy renormalize-entry --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+          npx supabase@latest functions deploy admin-access-control --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
           npx supabase@latest functions deploy admin-ai-quality-studio --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
           npx supabase@latest functions deploy admin-regeneration-job --project-ref "$SUPABASE_PROJECT_REF" --use-api --no-verify-jwt
+
+      - name: Smoke admin access-control function
+        shell: bash
+        run: |
+          response_file="$(mktemp)"
+          http_status="$(
+            curl -sS \
+              -o "$response_file" \
+              -w "%{http_code}" \
+              -X POST \
+              "https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/admin-access-control" \
+              -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+              -H "content-type: application/json" \
+              -H "x-flow-id: deploy-smoke-admin-access-control" \
+              --data '{"action":"my_access"}'
+          )"
+
+          flow="$(jq -r '.flow // empty' "$response_file")"
+          code="$(jq -r '.code // empty' "$response_file")"
+
+          if [ "$http_status" != "401" ] || [ "$flow" != "admin-access-control" ] || [ "$code" != "AUTH_MISSING" ]; then
+            echo "admin-access-control smoke failed: status=$http_status flow=$flow code=$code" >&2
+            cat "$response_file" >&2
+            exit 1
+          fi
+
+          echo "admin-access-control smoke ok: status=$http_status code=$code"
 
       - name: Ensure production AIQS runtime baseline is live
         env:

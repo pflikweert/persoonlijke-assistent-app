@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-04T18:51:08.725Z
-Source Commit: 20dcfa6
+Build Timestamp (UTC): 2026-06-05T05:59:13.943Z
+Source Commit: ac47a87
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

@@ -10,8 +10,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
+
 
 
 
@@ -101,3 +102,5 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function

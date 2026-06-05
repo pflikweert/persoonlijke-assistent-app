@@ -10,8 +10,9 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 9
+sort_order: 10
 ---
+
 
 
 
@@ -121,3 +122,5 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function

@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 
 ## Probleem / context
@@ -217,3 +218,5 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 ## Commits
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function

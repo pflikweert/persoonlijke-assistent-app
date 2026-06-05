@@ -16,8 +16,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
+
 
 
 ## Probleem / context
@@ -201,3 +202,5 @@ Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interfa
 ## Commits
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
