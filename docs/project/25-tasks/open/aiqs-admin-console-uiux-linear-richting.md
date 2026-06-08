@@ -16,8 +16,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
+
 
 
 
@@ -202,3 +203,5 @@ Reviewbevindingen:
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation

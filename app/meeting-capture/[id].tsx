@@ -13,7 +13,7 @@ export default function MeetingCaptureDetailScreen() {
       title="Gespreksopname"
       subtitle="Audio, status en download komen hier samen."
       meta={recordingId ? [`ID ${recordingId}`] : []}
-      onBack={() => router.push("/meeting-capture" as never)}
+      onBack={() => router.replace("/meeting-capture" as never)}
     >
       {!recordingId ? (
         <AdminPanel>
@@ -26,7 +26,7 @@ export default function MeetingCaptureDetailScreen() {
             secondary={{
               label: "Terug naar archief",
               icon: "arrow-back",
-              onPress: () => router.push("/meeting-capture" as never),
+              onPress: () => router.replace("/meeting-capture" as never),
             }}
           />
         </AdminPanel>

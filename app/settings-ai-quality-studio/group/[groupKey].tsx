@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
@@ -30,6 +30,7 @@ import {
   getAiQualityTaskLabel,
   getAiQualityTaskStatus,
 } from '@/services/ai-quality-studio/readmodel';
+import { getSettingsBackTarget } from '@/src/lib/navigation/settings-navigation';
 
 function taskRowStatus(task: AiTaskSummary): string {
   const status = getAiQualityTaskStatus(task);
@@ -50,6 +51,7 @@ function runtimeBadgeLabel(item: AiQualityFamilyTaskReadModel): string {
 export default function AiQualityStudioGroupScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
+  const pathname = usePathname();
   const { groupKey } = useLocalSearchParams<{ groupKey?: string }>();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -131,7 +133,7 @@ export default function AiQualityStudioGroupScreen() {
 
   return (
     <AdminConsoleShell
-      onBack={() => router.back()}
+      onBack={() => router.replace(getSettingsBackTarget(pathname) as never)}
       onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
     >

@@ -10,7 +10,7 @@ export default function MeetingCaptureOverviewScreen() {
       title="Gespreksopnames"
       subtitle="Lange gesprekken leg je hier vast, buiten je dagboekflow."
       meta={["Admin-only", "Audio-first"]}
-      onBack={() => router.push("/settings")}
+      onBack={() => router.replace("/settings")}
     >
       <AdminPanel title="Archief">
         <StateBlock

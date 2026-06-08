@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-05T06:03:16.695Z
-Source Commit: f56309a
+Build Timestamp (UTC): 2026-06-05T07:22:00.104Z
+Source Commit: 39cb59f
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -5494,6 +5494,7 @@ sort_order: null
 ---
 
 
+
 ## Probleem / context
 
 In productie geeft het openen van admin instellingen via het menu de melding `failed to send request to the edge function`. Brononderzoek wijst naar een deploy-gat: de client gebruikt `admin-access-control`, maar de production GitHub Actions workflow deployt deze Edge Function niet.
@@ -5657,6 +5658,8 @@ Het goedgekeurde plan:
 ## Commits
 
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
+
+- 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
 ```
 
 ---

@@ -10,8 +10,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 8
+sort_order: 9
 ---
+
 
 
 
@@ -417,3 +418,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation

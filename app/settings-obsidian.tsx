@@ -122,7 +122,7 @@ export default function SettingsObsidianScreen() {
     <SettingsScaffold
       title="Obsidian integratie"
       subtitle="Stel standaard vault en notitie in voor Obsidian."
-      onBack={() => router.back()}
+      onBack={() => router.replace("/settings")}
       onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
     >
@@ -213,7 +213,7 @@ export default function SettingsObsidianScreen() {
         />
         <SecondaryButton
           label="Terug naar instellingen"
-          onPress={() => router.back()}
+          onPress={() => router.replace("/settings")}
         />
       </ThemedView>
 

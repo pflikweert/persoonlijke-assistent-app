@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
@@ -29,6 +29,7 @@ import {
   listAdminAiQualityStudioTestSources,
   runAdminAiQualityStudioTest,
 } from '@/services';
+import { getSettingsBackTarget } from '@/src/lib/navigation/settings-navigation';
 import type {
   AiTaskDetail,
   AiTaskTestCompareView,
@@ -107,6 +108,7 @@ function sentenceCount(value: string): number {
 export default function AiQualityStudioTestScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
+  const pathname = usePathname();
   const { taskKey, version } = useLocalSearchParams<{ taskKey?: string; version?: string }>();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -361,7 +363,7 @@ export default function AiQualityStudioTestScreen() {
 
   return (
     <AdminConsoleShell
-      onBack={() => router.back()}
+      onBack={() => router.replace(getSettingsBackTarget(pathname) as never)}
       onMenu={() => setMenuVisible(true)}
       fixedFooter={
         showFooterActions ? (

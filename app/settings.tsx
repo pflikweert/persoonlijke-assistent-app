@@ -9,6 +9,7 @@ import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedView } from "@/components/themed-view";
 import { SettingsScaffold } from "@/components/ui/screen-scaffolds";
+import { StateBlock } from "@/components/ui/screen-primitives";
 import {
   SettingsNavRow,
   SettingsSectionLabel,
@@ -229,7 +230,7 @@ export default function SettingsScreen() {
       <SettingsScaffold
         title="Instellingen"
         subtitle="Beheer je archief en gegevens."
-        onBack={() => router.back()}
+        onBack={() => router.replace("/(tabs)")}
         onMenu={() => setMenuVisible(true)}
         contentContainerStyle={styles.scrollContent}
       >
@@ -278,7 +279,12 @@ export default function SettingsScreen() {
 
         {accessError ? (
           <ThemedView style={styles.sectionGroup}>
-            <SettingsSectionLabel label={accessError} />
+            <SettingsSectionLabel label="Beheer" />
+            <StateBlock
+              tone="error"
+              message="Kon adminrechten niet controleren."
+              detail={accessError}
+            />
           </ThemedView>
         ) : null}
 

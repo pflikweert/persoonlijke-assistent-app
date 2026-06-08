@@ -307,7 +307,7 @@ export default function SettingsImportScreen() {
         contentContainerStyle={styles.scrollContent}
         fixedHeader={
           <SettingsTopNav
-            onBack={() => router.back()}
+            onBack={() => router.replace("/settings")}
             onMenu={() => setMenuVisible(true)}
             title="Instellingen"
           />
@@ -524,7 +524,7 @@ export default function SettingsImportScreen() {
                 />
                 <SecondaryButton
                   label="Terug naar Instellingen"
-                  onPress={() => router.back()}
+                  onPress={() => router.replace("/settings")}
                 />
               </ThemedView>
             </SettingsStateBody>

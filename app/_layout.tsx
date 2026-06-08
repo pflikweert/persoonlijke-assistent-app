@@ -274,6 +274,10 @@ a:focus-visible,
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="settings-admin-access"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="settings-ai-quality-studio"
               options={{ headerShown: false }}
             />

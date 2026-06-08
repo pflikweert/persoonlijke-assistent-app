@@ -6,6 +6,7 @@ import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-o
 import { ThemedView } from "@/components/themed-view";
 import {
   AdminConsoleKeyValue,
+  AdminConsoleButton,
   AdminConsoleShell,
   AdminMetricCard,
   AdminMetricGrid,
@@ -133,7 +134,7 @@ export default function SettingsAdminAccessScreen() {
   return (
     <AdminConsoleShell
       title="Adminrechten"
-      onBack={() => router.back()}
+      onBack={() => router.replace("/settings")}
       onMenu={() => setMenuVisible(true)}
       contentContainerStyle={{ paddingBottom: spacing.xxxl, gap: spacing.content }}
       inspector={
@@ -164,10 +165,21 @@ export default function SettingsAdminAccessScreen() {
         </AdminMetricGrid>
       ) : null}
 
-      {loading ? <StateBlock tone="loading" message="Adminrechten laden..." /> : null}
+      {loading ? <StateBlock tone="loading" message="Adminrechten laden..." detail="Toegang en grants worden opgehaald." /> : null}
 
       {error ? (
-        <StateBlock tone="error" message="Kon adminrechten niet laden." detail={error} />
+        <ThemedView style={{ gap: spacing.sm }}>
+          <StateBlock
+            tone="error"
+            message="Kon adminrechten niet laden."
+            detail={error}
+          />
+          <AdminConsoleButton
+            label="Opnieuw proberen"
+            icon="refresh"
+            onPress={() => void load()}
+          />
+        </ThemedView>
       ) : null}
 
       {notice ? <StateBlock tone="info" message="Bijgewerkt" detail={notice} /> : null}

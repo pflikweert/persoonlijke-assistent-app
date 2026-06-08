@@ -12,7 +12,7 @@ export default function MeetingCaptureNewScreen() {
       title="Nieuwe gespreksopname"
       subtitle="Bereid een lange opname voor buiten je dagboekflow."
       meta={["Audio wordt veilig opgeslagen", "Geen dagboekmoment"]}
-      onBack={() => router.push("/meeting-capture" as never)}
+      onBack={() => router.replace("/meeting-capture" as never)}
     >
       <AdminPanel title="Opname voorbereiden">
         <StateBlock
@@ -30,7 +30,7 @@ export default function MeetingCaptureNewScreen() {
           secondary={{
             label: "Terug naar archief",
             icon: "arrow-back",
-            onPress: () => router.push("/meeting-capture" as never),
+            onPress: () => router.replace("/meeting-capture" as never),
           }}
         />
       </AdminPanel>

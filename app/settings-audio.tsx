@@ -446,7 +446,7 @@ export default function SettingsAudioScreen() {
     <SettingsScaffold
       title="Audio Instellingen"
       subtitle="Beheer opnames bewaren en je microfoonvoorkeuren."
-      onBack={() => router.back()}
+      onBack={() => router.replace("/settings")}
       onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
     >
@@ -772,7 +772,7 @@ export default function SettingsAudioScreen() {
         <PrimaryButton
           label={saving ? "Bezig..." : "Terug naar instellingen"}
           disabled={saving}
-          onPress={() => router.back()}
+          onPress={() => router.replace("/settings")}
         />
       </ThemedView>
 

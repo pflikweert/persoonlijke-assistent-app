@@ -286,7 +286,7 @@ export default function SettingsRegenerationScreen() {
   return (
     <AdminConsoleShell
       title="Regeneration"
-      onBack={() => router.back()}
+      onBack={() => router.replace("/settings")}
       onMenu={() => setMenuVisible(true)}
       contentContainerStyle={styles.scrollContent}
       inspector={

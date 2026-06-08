@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
@@ -38,6 +38,7 @@ import {
   getAiQualityVersionLifecycleState,
   type AiQualityVersionLifecycleState,
 } from '@/src/lib/ai-quality-lifecycle';
+import { getSettingsBackTarget } from '@/src/lib/navigation/settings-navigation';
 
 function isDraftVersion(version: AiTaskVersionDetail): boolean {
   return version.status === 'draft';
@@ -53,6 +54,7 @@ function variantRoleLabel(value: string): string {
 export default function AiQualityStudioTaskOverviewScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = colorTokens[scheme];
+  const pathname = usePathname();
   const { taskKey } = useLocalSearchParams<{ taskKey?: string }>();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -208,7 +210,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
 
   return (
     <AdminConsoleShell
-      onBack={() => router.back()}
+      onBack={() => router.replace(getSettingsBackTarget(pathname) as never)}
       onMenu={() => setMenuVisible(true)}
       fixedFooter={
         !loading && detail ? (

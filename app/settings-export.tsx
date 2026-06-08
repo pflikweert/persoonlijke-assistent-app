@@ -468,7 +468,7 @@ export default function SettingsExportScreen() {
         contentContainerStyle={styles.scrollContent}
         fixedHeader={
           <SettingsTopNav
-            onBack={() => router.back()}
+            onBack={() => router.replace("/settings")}
             onMenu={() => setMenuVisible(true)}
             title="Instellingen"
           />

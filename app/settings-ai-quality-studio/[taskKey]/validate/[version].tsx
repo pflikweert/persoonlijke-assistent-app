@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 
@@ -25,6 +25,7 @@ import {
   runAdminAiQualityStudioTest,
   saveAdminAiQualityStudioTestReview,
 } from '@/services';
+import { getSettingsBackTarget } from '@/src/lib/navigation/settings-navigation';
 import type {
   AiReviewLabel,
   AiTaskDetail,
@@ -415,6 +416,7 @@ export default function AiQualityStudioValidateScreen() {
   const palette = colorTokens[scheme];
   const { width } = useWindowDimensions();
   const isDesktop = width >= 980;
+  const pathname = usePathname();
   const { taskKey, version } = useLocalSearchParams<{ taskKey?: string; version?: string }>();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -761,7 +763,7 @@ export default function AiQualityStudioValidateScreen() {
 
   return (
     <AdminConsoleShell
-      onBack={() => router.back()}
+      onBack={() => router.replace(getSettingsBackTarget(pathname) as never)}
       onMenu={() => setMenuVisible(true)}
       fixedFooter={
         !loading && detail && selectedVersion && supportsInlineTesting ? (

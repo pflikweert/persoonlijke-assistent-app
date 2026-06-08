@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -35,6 +35,7 @@ import {
   runAdminAiQualityStudioPromptAssistPreview,
   updateAdminAiQualityStudioDraftVersion,
 } from '@/services';
+import { getSettingsBackTarget } from '@/src/lib/navigation/settings-navigation';
 import { colorTokens, spacing } from '@/theme';
 import type {
   AiPromptAssistActionDefinition,
@@ -82,6 +83,7 @@ export default function AiQualityStudioDraftScreen() {
   const isWideAssistLayout = width >= 1100;
   const isWideWorkspace = width >= 1040;
   const assistOverlayMaxHeight = useMemo(() => Math.max(340, height - spacing.page * 2), [height]);
+  const pathname = usePathname();
   const { taskKey, version } = useLocalSearchParams<{ taskKey?: string; version?: string }>();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -424,7 +426,7 @@ export default function AiQualityStudioDraftScreen() {
 
   return (
     <AdminConsoleShell
-      onBack={() => router.back()}
+      onBack={() => router.replace(getSettingsBackTarget(pathname) as never)}
       onMenu={() => setMenuVisible(true)}
       fixedFooter={
         !loading && detail && selectedDraft && form ? (

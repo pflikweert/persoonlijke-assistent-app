@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet } from "react-native";
 
@@ -11,6 +11,7 @@ import { HeaderIconButton } from "@/components/ui/header-icon-button";
 import { BrandHeaderLockup } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { signOutUser } from "@/services";
+import { getSettingsMenuTarget } from "@/src/lib/navigation/settings-navigation";
 import { colorTokens, radius, spacing, typography } from "@/theme";
 
 export type MainMenuRouteKey =
@@ -86,6 +87,7 @@ export function FullscreenMenuOverlay({
   onRequestClose: () => void;
 }) {
   const scheme = useColorScheme() ?? "light";
+  const pathname = usePathname();
   const palette = colorTokens[scheme];
   const [busy, setBusy] = useState(false);
 
@@ -119,6 +121,15 @@ export function FullscreenMenuOverlay({
         router.replace("/sign-in");
       } finally {
         setBusy(false);
+      }
+      return;
+    }
+
+    if (entry.key === "settings") {
+      onRequestClose();
+      const settingsTarget = getSettingsMenuTarget(pathname);
+      if (settingsTarget) {
+        router.replace(settingsTarget as never);
       }
       return;
     }
