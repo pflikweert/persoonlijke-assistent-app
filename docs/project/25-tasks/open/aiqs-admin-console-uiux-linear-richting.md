@@ -16,8 +16,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
+
 
 
 
@@ -118,6 +119,8 @@ Reviewbevindingen:
 - Interface moet simpel en duidelijk worden.
 - Geen functionaliteit verwijderen of wijzigen.
 - Review en test de nieuwe wijzigingen en verbeter waar nodig.
+- Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen.
+- Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System.
 
 ## Status per requirement
 
@@ -127,6 +130,8 @@ Reviewbevindingen:
 - [x] Interface wordt simpeler en duidelijker — status: gebouwd
 - [x] Geen functionaliteit verwijderen of wijzigen — status: in code aanwezig maar nog user-review nodig
 - [x] Nieuwe wijzigingen zijn gereviewd en getest — status: gebouwd
+- [x] Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen — status: gebouwd
+- [x] Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -141,6 +146,15 @@ Reviewbevindingen:
 - Gedeelde Playwright helper voor local magic-link browser-login toegevoegd en hergebruikt door zowel AIQS- als gallery-smokes.
 - AIQS local smoke kan nu zelf lokale dev starten, een ontbrekende AIQS internal token tijdelijk injecteren via functions env-restart, baseline importeren en daarna de geauthenticeerde browser-overview controleren.
 - Lokale docs en env-templates verduidelijken nu het verschil tussen token/login-proof en echte browser-sessie, plus het fallbackpad wanneer `localhost:8081` of een internal token ontbreekt.
+- AIQS startpagina verder opgeschoond naar een cleaner Linear-achtige admin workspace: header zonder governance-eyebrow, healthy status als inline chip, promptfamilies als rustige list/table en debug logging als single-action settings row.
+- Shared admin-primitives uitgebreid met plain sections, inline status, list/table rows en single-action togglegedrag zodat toekomstige admin-overviews dezelfde rustige compositie kunnen hergebruiken.
+- `docs/design/admin-ui-principles.md` toegevoegd als handmatige designrichtlijn voor Budio Admin UI Principles.
+- De cleaner list-first/workspace-stijl is doorgetrokken naar AIQS group, task detail, draft editor, test en validate: minder header-badges/eyebrows, geen detail-inspector op task detail, plain secties voor metadata/context en minder runtime-duplicatie in rows.
+- `AdminConsolePanel` heeft nu ook `variant="plain"` als gedeelde primitive voor onderliggende admin-workbenchschermen waar een functionele sectie nodig is zonder card-fill/border.
+- AIQS admin actions zijn gehard naar één button-contract: `AdminConsoleButton` ondersteunt nu primary/secondary/danger/ghost, selected/full-width states en subtiele pressed/hover/focus states zonder zwarte primary-fill.
+- Screen-local AIQS action-Pressables in draft en validate zijn vervangen door gedeelde admin button/text-action primitives; klikbare source/case rows blijven bewust rows.
+- De raw HTML token-remove button in de prompt editor heeft nu expliciete browser-appearance reset, size, radius en hover/focus styling zodat native/default button styling niet kan lekken.
+- `docs/design/admin-ui-principles.md` documenteert nu het gedeelde Admin Button System.
 
 ## Uitvoerblokken / fasering
 
@@ -159,6 +173,8 @@ Reviewbevindingen:
 - [x] Task detail compact maken met contextbar, version list en admin actions.
 - [x] Draft editor desktop split-layout geven.
 - [x] Test en validate workbench-density verbeteren.
+- [x] Goedgekeurde cleaner AIQS-startstijl doorvoeren naar onderliggende AIQS-schermen.
+- [x] AIQS action buttons migreren naar één consistent Admin Button System zonder zwarte/default buttons.
 - [x] Light/dark en desktop/mobile visueel controleren waar praktisch.
 - [x] Relevante verifies draaien.
 
@@ -170,6 +186,7 @@ Reviewbevindingen:
 - [x] Desktop gebruikt breedte beter via dense rows/split/workbench-layout; mobile blijft bruikbaar stacked.
 - [x] Debug logging en baseline import zijn visueel secundair/operationeel gepresenteerd.
 - [x] Gewone Budio gebruikersflow is niet aangepast.
+- [x] AIQS toont geen zwarte/default/native action buttons meer; button states komen uit gedeelde admin primitives.
 
 ## Blockers / afhankelijkheden
 
@@ -208,17 +225,46 @@ Reviewbevindingen:
   - `npm run taskflow:verify` — groen na taskfile- en docs-aanvulling.
   - `npm run docs:bundle` — groen; bundles en uploadcontext opnieuw opgebouwd.
   - `npm run docs:bundle:verify` — groen.
+- 2026-06-22 cleaner Linear-achtige AIQS workspace:
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run typecheck` — groen na shared primitive- en AIQS-startpaginawijzigingen.
+  - `npm run lint` — groen na shared primitive- en AIQS-startpaginawijzigingen.
+  - `npm run verify:local-aiqs-smoke` — groen; AIQS overview opent geauthenticeerd, toont `Alle runtimes actief`, promptfamilies en systeemsectie, en navigeert naar `group/today`.
+  - Playwright viewport-check desktop light/dark en mobile light/dark — groen; desktopkolommen `Naam`, `Omschrijving`, `Prompts`, `Draft`, `Actie` zichtbaar, mobile rows stacked, `Runtime actief` niet meer zichtbaar per healthy family.
+  - Mobiele debug-row single-action check — groen; `Schakel in` zichtbaar en geen exacte `Aan`/`Uit` actieknoppen tegelijk.
+  - Screenshotcheck `/tmp/aiqs-cleaner-desktop-light.png` en `/tmp/aiqs-cleaner-mobile-light.png` — gecontroleerd op rustige max-width, dividers, minder cardgevoel en leesbare mobile stacking.
+  - `npm run taskflow:verify` — groen na cleaner workspace taskfile-update.
+  - `npm run docs:bundle` — groen na admin UI principles doc en taskfile-update.
+  - `npm run docs:bundle:verify` — groen.
+- 2026-06-22 onderliggende AIQS-schermen cleaner doorgetrokken:
+  - `npm run typecheck` — groen na group/detail/draft/test/validate en `AdminConsolePanel variant="plain"`.
+  - `npm run lint` — groen na group/detail/draft/test/validate en shared primitive update.
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde overview-smoke blijft werken en navigeert naar `group/today`.
+  - One-shot Playwright subroute-smoke — groen; `group/today`, draft editor, test route, validate route en mobile group renderen; oude `Runtime metadata`, `Prompt editor`, `Runtime test` en `Compare workbench` labels zijn niet meer zichtbaar.
+  - One-shot Playwright loaded-state check — groen; draft wacht op `Runtime contract`/`Geavanceerd`, test wacht op `Bron kiezen`.
+  - One-shot Playwright dark-mode smoke — groen; `group/today` en validate renderen in dark mode.
+  - Screenshotcheck: `/tmp/aiqs-subroute-group-desktop.png`, `/tmp/aiqs-subroute-group-mobile.png`, `/tmp/aiqs-subroute-draft-desktop-loaded.png`, `/tmp/aiqs-subroute-test-desktop-loaded.png`, `/tmp/aiqs-subroute-validate-desktop.png`, `/tmp/aiqs-subroute-group-dark.png`, `/tmp/aiqs-subroute-validate-dark.png`.
+- 2026-06-22 AIQS Admin Button System cleanup:
+  - `npm run typecheck` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
+  - `npm run lint` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run verify:local-aiqs-smoke` — groen; overview-smoke blijft geauthenticeerd werken en navigeert naar `group/today`.
+  - Projectbrede audit op AIQS action-plekken — alleen toegestane source/case row-Pressables en prompt-editor token-remove `<button>` blijven over; token-remove heeft expliciete appearance reset.
+  - One-shot Playwright computed-style routecheck — groen; overview, group, detail, draft, test, validate, mobile group, dark group en dark validate hebben geen zichtbare zwarte/default button backgrounds.
+  - Screenshotcheck: `/tmp/aiqs-buttons-overview-light.png`, `/tmp/aiqs-buttons-group-light.png`, `/tmp/aiqs-buttons-detail-light.png`, `/tmp/aiqs-buttons-draft-light.png`, `/tmp/aiqs-buttons-test-light.png`, `/tmp/aiqs-buttons-validate-light.png`, `/tmp/aiqs-buttons-group-mobile.png`, `/tmp/aiqs-buttons-group-dark.png`, `/tmp/aiqs-buttons-validate-dark.png`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
-- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix en nu ook workspace-first overviewstructuur met gedeelde status/toggle/list primitives.
-- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. Static checks zijn opnieuw groen.
-- Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat taskflow/docs-closeout is gereconcilieerd en de gebruiker deze referentie-implementatie inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
+- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate en nu ook één consistent Admin Button System.
+- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. De startpagina is daarna verder versimpeld naar plain sections, inline status, list/table rows en single-action debug logging. Onderliggende AIQS-schermen gebruiken nu dezelfde rustige admin-workspace taal: minder header-badges/eyebrows, minder card-fill, metadata als plain secties en bestaande acties/functionele editors behouden. Alle AIQS action buttons lopen via gedeelde admin button/text-action primitives, primary gebruikt geen zwarte fill meer en de raw prompt-editor token button is browser-default-proof gemaakt.
+- Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat de gebruiker de cleaner AIQS referentie-implementatie inclusief onderliggende schermen inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
 
 ## Relevante links
 
 - `docs/project/ai-quality-studio.md`
+- `docs/design/admin-ui-principles.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 
 
@@ -235,3 +281,5 @@ Reviewbevindingen:
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-22T14:07:06+02:00 — fix: unify AIQS admin workspace controls

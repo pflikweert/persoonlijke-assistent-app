@@ -54,13 +54,26 @@ export function buildPromptEditorHtml(input: {
         vertical-align: baseline;
       }
       #editor .variable-chip-remove {
+        appearance: none;
+        -webkit-appearance: none;
         border: 0;
         background: transparent;
         color: #1d4ed8;
+        border-radius: 999px;
+        min-width: 18px;
+        min-height: 18px;
         font-weight: 700;
         margin-left: 4px;
         line-height: 1;
         padding: 0 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #editor .variable-chip-remove:hover,
+      #editor .variable-chip-remove:focus-visible {
+        background: rgba(29, 78, 216, 0.12);
+        outline: none;
       }
       #editor .ProseMirror-focused { outline: none; }
       #editor .is-empty::before {

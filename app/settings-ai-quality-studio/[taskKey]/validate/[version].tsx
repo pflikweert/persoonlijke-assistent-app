@@ -8,10 +8,12 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
   AdminActionBar,
+  AdminConsoleButton,
   AdminConsoleHeader,
   AdminConsolePanel,
   AdminConsoleShell,
-  AdminStatusChip,
+  AdminConsoleTextAction,
+  AdminStatusNotice,
 } from '@/components/ui/admin-console-primitives';
 import { InlineWordDiffText } from '@/components/ui/inline-word-diff';
 import { InputField, MetaText, StateBlock, TextAreaField } from '@/components/ui/screen-primitives';
@@ -246,9 +248,9 @@ function formatObjectFieldLabel(taskKey: string | undefined, fieldKey: string): 
 }
 
 function tonePrefix(tone: SignalTone): string {
-  if (tone === 'ok') return '✅';
-  if (tone === 'warn') return '⚠️';
-  return '❌';
+  if (tone === 'ok') return 'OK';
+  if (tone === 'warn') return 'Let op';
+  return 'Fout';
 }
 
 function sentenceCount(value: string): number {
@@ -835,22 +837,8 @@ export default function AiQualityStudioValidateScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       <AdminConsoleHeader
-        eyebrow="Compare workbench"
         title="Valideren"
         subtitle={detail?.label ?? 'AI Quality Studio'}
-        chips={
-          detail && selectedVersion ? (
-            <>
-              <AdminStatusChip label={`Draft v${selectedVersion.versionNumber}`} tone="info" />
-              <AdminStatusChip
-                label={detail.liveVersion ? `Runtime v${detail.liveVersion.versionNumber}` : 'Runtime ontbreekt'}
-                tone={detail.liveVersion ? 'success' : 'warning'}
-              />
-              <AdminStatusChip label={latestTestRun ? `Run ${latestTestRun.id.slice(0, 8)}` : 'Nog geen run'} />
-              {decisionLabel ? <AdminStatusChip label={`Oordeel ${decisionLabel}`} tone="success" /> : null}
-            </>
-          ) : null
-        }
       />
 
       {loading ? <StateBlock tone="loading" message="Validate mode laden" /> : null}
@@ -858,37 +846,34 @@ export default function AiQualityStudioValidateScreen() {
 
       {!loading && detail && selectedVersion ? (
         <>
-          <AdminConsolePanel title="Case kiezen" subtitle="Kies één bron en run de draft tegen de baseline.">
-            {isEntryCleanup ? (
-              <ThemedView style={styles.modeSwitchRow}>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setManualInputMode(false)}
-                  style={[
-                    styles.modeSwitchChip,
-                    {
-                      backgroundColor: !manualInputMode ? palette.surface : palette.surfaceLow,
-                      borderColor: !manualInputMode ? palette.primary : palette.separator,
-                    },
-                  ]}
-                >
-                  <ThemedText type="caption">Gebruik case</ThemedText>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setManualInputMode(true)}
-                  style={[
-                    styles.modeSwitchChip,
-                    {
-                      backgroundColor: manualInputMode ? palette.surface : palette.surfaceLow,
-                      borderColor: manualInputMode ? palette.primary : palette.separator,
-                    },
-                  ]}
-                >
-                  <ThemedText type="caption">Gebruik eigen tekst</ThemedText>
-                </Pressable>
-              </ThemedView>
-            ) : null}
+          <AdminStatusNotice
+            variant="inline"
+            tone={detail.liveVersion ? 'success' : 'warning'}
+            title={detail.liveVersion ? `Runtime v${detail.liveVersion.versionNumber}` : 'Runtime ontbreekt'}
+            detail={[
+              `Draft v${selectedVersion.versionNumber}`,
+              latestTestRun ? `run ${latestTestRun.id.slice(0, 8)}` : 'nog geen run',
+              decisionLabel ? `oordeel ${decisionLabel}` : null,
+            ].filter(Boolean).join(' · ')}
+          />
+
+          <AdminConsolePanel title="Case kiezen" variant="plain">
+	            {isEntryCleanup ? (
+	              <ThemedView style={styles.modeSwitchRow}>
+	                <AdminConsoleButton
+	                  label="Gebruik case"
+	                  onPress={() => setManualInputMode(false)}
+	                  tone="ghost"
+	                  selected={!manualInputMode}
+	                />
+	                <AdminConsoleButton
+	                  label="Gebruik eigen tekst"
+	                  onPress={() => setManualInputMode(true)}
+	                  tone="ghost"
+	                  selected={manualInputMode}
+	                />
+	              </ThemedView>
+	            ) : null}
 
             {manualInputMode && isEntryCleanup ? (
               <ThemedView style={styles.manualInputBlock}>
@@ -914,32 +899,22 @@ export default function AiQualityStudioValidateScreen() {
                     <ThemedText type="caption" numberOfLines={1} style={styles.sourcePreview}>
                       {selectedSource.preview}
                     </ThemedText>
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => setCaseSelectorExpanded((prev) => !prev)}
-                      style={styles.inlineActionButton}
-                    >
-                      <ThemedText type="caption" style={{ color: palette.primary }}>
-                        {caseSelectorExpanded ? 'Sluit case selector' : 'Change case'}
-                      </ThemedText>
-                    </Pressable>
-                  </ThemedView>
-                ) : null}
+	                    <AdminConsoleTextAction
+	                      label={caseSelectorExpanded ? 'Sluit case selector' : 'Change case'}
+	                      onPress={() => setCaseSelectorExpanded((prev) => !prev)}
+	                    />
+	                  </ThemedView>
+	                ) : null}
 
                 {!loadingSources && !selectedSource ? (
                   <ThemedView style={styles.emptyCaseBlock}>
                     <MetaText>Nog geen case geselecteerd.</MetaText>
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => setCaseSelectorExpanded(true)}
-                      style={styles.inlineActionButton}
-                    >
-                      <ThemedText type="caption" style={{ color: palette.primary }}>
-                        Kies case
-                      </ThemedText>
-                    </Pressable>
-                  </ThemedView>
-                ) : null}
+	                    <AdminConsoleTextAction
+	                      label="Kies case"
+	                      onPress={() => setCaseSelectorExpanded(true)}
+	                    />
+	                  </ThemedView>
+	                ) : null}
 
                 {!loadingSources && caseSelectorExpanded ? (
                   <ThemedView style={styles.caseSelectorExpandedBlock}>
@@ -977,7 +952,7 @@ export default function AiQualityStudioValidateScreen() {
           </AdminConsolePanel>
 
           <ThemedView style={[styles.compareLayout, isDesktop && styles.compareLayoutDesktop]}>
-            <AdminConsolePanel title="Huidige versie" subtitle="Wat nu live staat (basis voor vergelijking)">
+            <AdminConsolePanel title="Huidige versie" subtitle="Wat nu live staat" variant="plain">
               {!compareView ? (
                 <StateBlock tone="info" message="Nog geen run" detail="Run eerst een test om baseline te laden." />
               ) : compareView.baselineStatus !== 'available' ? (
@@ -1035,7 +1010,7 @@ export default function AiQualityStudioValidateScreen() {
               )}
             </AdminConsolePanel>
 
-            <AdminConsolePanel title="Nieuwe versie" subtitle="Wat de draft teruggeeft op deze case">
+            <AdminConsolePanel title="Nieuwe versie" subtitle="Wat de draft teruggeeft" variant="plain">
               {!compareView ? (
                 <StateBlock tone="info" message="Nog geen run" detail="Run een test om kandidaat-output te zien." />
               ) : (
@@ -1067,22 +1042,17 @@ export default function AiQualityStudioValidateScreen() {
 
                               {canShowDiff ? (
                                 <>
-                                  <Pressable
-                                    accessibilityRole="button"
-                                    onPress={() =>
-                                      setCandidateDiffTogglesByKey((prev) => ({
-                                        ...prev,
-                                        [diffKey]: !prev[diffKey],
-                                      }))
-                                    }
-                                    style={styles.diffToggleButton}
-                                  >
-                                    <ThemedText type="caption" style={{ color: palette.primary }}>
-                                      {diffOpen ? 'Verberg diff' : 'Toon diff'}
-                                    </ThemedText>
-                                  </Pressable>
-                                </>
-                              ) : null}
+	                                  <AdminConsoleTextAction
+	                                    label={diffOpen ? 'Verberg diff' : 'Toon diff'}
+	                                    onPress={() =>
+	                                      setCandidateDiffTogglesByKey((prev) => ({
+	                                        ...prev,
+	                                        [diffKey]: !prev[diffKey],
+	                                      }))
+	                                    }
+	                                  />
+	                                </>
+	                              ) : null}
                             </ThemedView>
                           );
                         })()
@@ -1132,22 +1102,17 @@ export default function AiQualityStudioValidateScreen() {
 
                         {canShowDiff ? (
                           <>
-                            <Pressable
-                              accessibilityRole="button"
-                              onPress={() =>
-                                setCandidateDiffTogglesByKey((prev) => ({
-                                  ...prev,
-                                  [diffKey]: !prev[diffKey],
-                                }))
-                              }
-                              style={styles.diffToggleButton}
-                            >
-                              <ThemedText type="caption" style={{ color: palette.primary }}>
-                                {diffOpen ? 'Verberg diff' : 'Toon diff'}
-                              </ThemedText>
-                            </Pressable>
-                          </>
-                        ) : null}
+	                            <AdminConsoleTextAction
+	                              label={diffOpen ? 'Verberg diff' : 'Toon diff'}
+	                              onPress={() =>
+	                                setCandidateDiffTogglesByKey((prev) => ({
+	                                  ...prev,
+	                                  [diffKey]: !prev[diffKey],
+	                                }))
+	                              }
+	                            />
+	                          </>
+	                        ) : null}
                       </ThemedView>
                     </>
                       );
@@ -1158,7 +1123,7 @@ export default function AiQualityStudioValidateScreen() {
             </AdminConsolePanel>
           </ThemedView>
 
-          <AdminConsolePanel title="Snelle controle" subtitle="Objectieve signalen over de kwaliteit van deze versie.">
+          <AdminConsolePanel title="Snelle controle" variant="plain">
             {contractSignals.length === 0 ? (
               <MetaText>Run eerst een test om signals te tonen.</MetaText>
             ) : (
@@ -1175,7 +1140,7 @@ export default function AiQualityStudioValidateScreen() {
             )}
           </AdminConsolePanel>
 
-          <AdminConsolePanel title="Beslissing" subtitle="Kies één oordeel en sla deze run op als bewijs.">
+          <AdminConsolePanel title="Beslissing" variant="plain">
             {!compareView ? (
               <MetaText>Run eerst een test.</MetaText>
             ) : compareView.baselineStatus !== 'available' ? (
@@ -1187,25 +1152,18 @@ export default function AiQualityStudioValidateScreen() {
             ) : (
               <>
                 <ThemedView style={[styles.labelGrid, isDesktop && styles.labelGridDesktop]}>
-                  {(['beter', 'gelijk', 'slechter', 'fout'] as AiReviewLabel[]).map((label) => {
-                    const active = decisionLabel === label;
-                    return (
-                      <Pressable
-                        key={label}
-                        accessibilityRole="button"
-                        onPress={() => setDecisionLabel(label)}
-                        style={[
-                          styles.labelOption,
-                          {
-                            backgroundColor: active ? palette.surface : palette.surfaceLow,
-                            borderColor: active ? palette.primary : palette.separator,
-                          },
-                        ]}
-                      >
-                        <ThemedText type="defaultSemiBold">{label}</ThemedText>
-                      </Pressable>
-                    );
-                  })}
+	                  {(['beter', 'gelijk', 'slechter', 'fout'] as AiReviewLabel[]).map((label) => {
+	                    const active = decisionLabel === label;
+	                    return (
+	                      <AdminConsoleButton
+	                        key={label}
+	                        label={label}
+	                        onPress={() => setDecisionLabel(label)}
+	                        tone={label === 'fout' ? 'danger' : 'secondary'}
+	                        selected={active}
+	                      />
+	                    );
+	                  })}
                 </ThemedView>
 
                 {noteRequired ? (
@@ -1230,38 +1188,23 @@ export default function AiQualityStudioValidateScreen() {
                         : 'Bewijs vastgelegd, maar deze review blokkeert livegang.'}
                     </MetaText>
 
-                    <ThemedView style={styles.savedActionRow}>
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={() => void handleRunTest()}
-                        style={styles.inlineActionButton}
-                        disabled={!canRunTest}
-                      >
-                        <ThemedText type="caption" style={{ color: palette.primary }}>
-                          Opnieuw testen
-                        </ThemedText>
-                      </Pressable>
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={() => {
-                          if (draftRoute) router.push(draftRoute);
-                        }}
-                        style={styles.inlineActionButton}
-                      >
-                        <ThemedText type="caption" style={{ color: palette.primary }}>
-                          Terug naar draft
-                        </ThemedText>
-                      </Pressable>
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={handleChooseOtherCase}
-                        style={styles.inlineActionButton}
-                      >
-                        <ThemedText type="caption" style={{ color: palette.primary }}>
-                          Andere case kiezen
-                        </ThemedText>
-                      </Pressable>
-                    </ThemedView>
+	                    <ThemedView style={styles.savedActionRow}>
+	                      <AdminConsoleTextAction
+	                        label="Opnieuw testen"
+	                        onPress={() => void handleRunTest()}
+	                        disabled={!canRunTest}
+	                      />
+	                      <AdminConsoleTextAction
+	                        label="Terug naar draft"
+	                        onPress={() => {
+	                          if (draftRoute) router.push(draftRoute);
+	                        }}
+	                      />
+	                      <AdminConsoleTextAction
+	                        label="Andere case kiezen"
+	                        onPress={handleChooseOtherCase}
+	                      />
+	                    </ThemedView>
                   </ThemedView>
                 ) : null}
                 {compareView.reviewerLabel ? (
@@ -1344,20 +1287,10 @@ const styles = StyleSheet.create({
   emptyCaseBlock: {
     gap: spacing.xs,
   },
-  inlineActionButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xxs,
-  },
   modeSwitchRow: {
     flexDirection: 'row',
     gap: spacing.xs,
     flexWrap: 'wrap',
-  },
-  modeSwitchChip: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
   },
   manualInputBlock: {
     gap: spacing.xs,
@@ -1390,10 +1323,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     gap: spacing.xxs,
   },
-  diffToggleButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xxs,
-  },
   inlineDiffWrap: {
     borderRadius: radius.md,
     paddingHorizontal: spacing.sm,
@@ -1417,12 +1346,6 @@ const styles = StyleSheet.create({
   labelGridDesktop: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  labelOption: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
   },
   noteBlock: {
     gap: spacing.xs,

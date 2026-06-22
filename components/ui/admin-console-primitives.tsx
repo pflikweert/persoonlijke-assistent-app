@@ -17,6 +17,7 @@ type ConsoleAction = {
 };
 
 type ChipTone = "neutral" | "success" | "warning" | "info" | "danger";
+type AdminButtonTone = "primary" | "secondary" | "danger" | "ghost";
 
 const ADMIN_BACKGROUND = {
   light: adminTokens.light.background,
@@ -31,6 +32,16 @@ const ADMIN_SURFACE = {
 const ADMIN_SURFACE_LOW = {
   light: adminTokens.light.panelSoft,
   dark: adminTokens.dark.panelSoft,
+} as const;
+
+const ADMIN_BUTTON_SURFACE = {
+  light: adminTokens.light.panelSoft,
+  dark: "rgba(255,255,255,0.06)",
+} as const;
+
+const ADMIN_BUTTON_SURFACE_ACTIVE = {
+  light: adminTokens.light.panel,
+  dark: "rgba(255,255,255,0.10)",
 } as const;
 
 const CHIP_COLORS: Record<ChipTone, Record<"light" | "dark", { bg: string; text: string; border: string }>> = {
@@ -192,29 +203,36 @@ export function AdminConsolePanel({
   action,
   children,
   style,
+  variant = "default",
 }: {
   title?: string;
   subtitle?: string;
   action?: ReactNode;
   children: ReactNode;
   style?: ViewStyle;
+  variant?: "default" | "section" | "subtle" | "plain";
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const isSubtle = variant === "subtle";
+  const isPlain = variant === "plain";
 
   return (
     <ThemedView
       style={[
         styles.panel,
         {
-          backgroundColor: ADMIN_SURFACE[scheme],
-          borderColor: palette.separator,
+          backgroundColor: isPlain ? "transparent" : isSubtle ? ADMIN_SURFACE_LOW[scheme] : ADMIN_SURFACE[scheme],
+          borderColor: isPlain || isSubtle ? "transparent" : palette.separator,
         },
+        variant === "section" ? styles.panelSection : null,
+        isSubtle ? styles.panelSubtle : null,
+        isPlain ? styles.panelPlain : null,
         style,
       ]}
     >
       {title || subtitle || action ? (
-        <ThemedView style={styles.panelHeader}>
+        <ThemedView style={[styles.panelHeader, variant === "section" || isPlain ? styles.panelHeaderSection : null]}>
           <ThemedView style={styles.panelTitleWrap}>
             {title ? <ThemedText type="defaultSemiBold">{title}</ThemedText> : null}
             {subtitle ? <MetaText>{subtitle}</MetaText> : null}
@@ -238,6 +256,7 @@ export function AdminDenseRow({
   trailing,
   onPress,
   disabled,
+  metaTone = "muted",
 }: {
   title: string;
   subtitle?: string | null;
@@ -246,6 +265,7 @@ export function AdminDenseRow({
   trailing?: ReactNode;
   onPress?: () => void;
   disabled?: boolean;
+  metaTone?: "muted" | "soft";
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
@@ -260,7 +280,7 @@ export function AdminDenseRow({
         </ThemedView>
         {subtitle ? <MetaText>{subtitle}</MetaText> : null}
         {meta ? (
-          <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+          <ThemedText type="caption" style={{ color: metaTone === "soft" ? palette.mutedSoft : palette.muted }}>
             {meta}
           </ThemedText>
         ) : null}
@@ -322,37 +342,88 @@ export function AdminConsoleButton({
   disabled,
   icon,
   tone = "secondary",
-}: ConsoleAction & { tone?: "primary" | "secondary" | "danger" }) {
+  selected = false,
+  fullWidth = false,
+}: ConsoleAction & {
+  tone?: AdminButtonTone;
+  selected?: boolean;
+  fullWidth?: boolean;
+}) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
   const isPrimary = tone === "primary";
   const isDanger = tone === "danger";
-  const color = isPrimary ? palette.primaryOn : isDanger ? CHIP_COLORS.danger[scheme].text : palette.text;
+  const isGhost = tone === "ghost";
+  const textColor = isPrimary
+    ? adminTokens[scheme].accent
+    : isDanger
+      ? CHIP_COLORS.danger[scheme].text
+      : selected
+        ? adminTokens[scheme].accent
+        : palette.text;
+  const baseBackground = isPrimary
+    ? CHIP_COLORS.info[scheme].bg
+    : isDanger
+      ? CHIP_COLORS.danger[scheme].bg
+      : isGhost
+        ? "transparent"
+        : selected
+          ? ADMIN_BUTTON_SURFACE_ACTIVE[scheme]
+          : ADMIN_BUTTON_SURFACE[scheme];
+  const activeBackground = isPrimary
+    ? CHIP_COLORS.info[scheme].border
+    : isDanger
+      ? CHIP_COLORS.danger[scheme].border
+      : isGhost
+        ? ADMIN_BUTTON_SURFACE[scheme]
+        : ADMIN_BUTTON_SURFACE_ACTIVE[scheme];
+  const borderColor = isPrimary
+    ? CHIP_COLORS.info[scheme].border
+    : isDanger
+      ? CHIP_COLORS.danger[scheme].border
+      : selected
+        ? adminTokens[scheme].accent
+        : isGhost
+          ? "transparent"
+          : palette.separator;
 
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       disabled={disabled}
-      style={[
+      style={(state) => {
+        const active =
+          state.pressed ||
+          ("hovered" in state && Boolean((state as { hovered?: boolean }).hovered)) ||
+          ("focused" in state && Boolean((state as { focused?: boolean }).focused));
+        return [
         styles.button,
+        fullWidth ? styles.buttonFullWidth : null,
+        isGhost ? styles.buttonGhost : null,
         {
-          backgroundColor: isPrimary
-            ? palette.text
-            : isDanger
-              ? CHIP_COLORS.danger[scheme].bg
-              : ADMIN_SURFACE_LOW[scheme],
-          borderColor: isPrimary ? palette.text : isDanger ? CHIP_COLORS.danger[scheme].border : palette.separator,
+          backgroundColor: active ? activeBackground : baseBackground,
+          borderColor: active || selected ? borderColor : isGhost ? "transparent" : borderColor,
           opacity: disabled ? 0.55 : 1,
         },
-      ]}
+      ];
+      }}
     >
-      {icon ? <MaterialIcons name={icon} size={15} color={color} /> : null}
-      <ThemedText type="caption" style={[styles.buttonLabel, { color }]}>
+      {icon ? <MaterialIcons name={icon} size={15} color={textColor} /> : null}
+      <ThemedText type="caption" style={[styles.buttonLabel, { color: textColor }]}>
         {label}
       </ThemedText>
     </Pressable>
   );
+}
+
+export function AdminConsoleTextAction({
+  label,
+  onPress,
+  disabled,
+  icon,
+}: ConsoleAction) {
+  return <AdminConsoleButton label={label} onPress={onPress} disabled={disabled} icon={icon} tone="ghost" />;
 }
 
 export function AdminMetricCard({
@@ -441,6 +512,269 @@ export function AdminList({ children }: { children: ReactNode }) {
 
 export const AdminTable = AdminList;
 
+export function AdminSectionList({
+  title,
+  subtitle,
+  children,
+  action,
+  variant = "section",
+}: {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+  action?: ReactNode;
+  variant?: "default" | "section" | "subtle" | "plain";
+}) {
+  if (variant === "plain") {
+    return (
+      <ThemedView style={styles.sectionPlain}>
+        <ThemedView style={styles.sectionPlainHeader}>
+          <ThemedView style={styles.panelTitleWrap}>
+            <ThemedText type="defaultSemiBold" style={styles.sectionPlainTitle}>
+              {title}
+            </ThemedText>
+            {subtitle ? <MetaText>{subtitle}</MetaText> : null}
+          </ThemedView>
+          {action}
+        </ThemedView>
+        <AdminList>{children}</AdminList>
+      </ThemedView>
+    );
+  }
+
+  return (
+    <AdminConsolePanel title={title} subtitle={subtitle} action={action} variant={variant}>
+      <AdminList>{children}</AdminList>
+    </AdminConsolePanel>
+  );
+}
+
+export function AdminStatusNotice({
+  tone = "neutral",
+  title,
+  detail,
+  action,
+  variant = "default",
+}: {
+  tone?: ChipTone;
+  title: string;
+  detail?: string;
+  action?: ReactNode;
+  variant?: "default" | "inline";
+}) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+  const colors = CHIP_COLORS[tone][scheme];
+
+  if (variant === "inline") {
+    return (
+      <ThemedView style={styles.statusInlineWrap}>
+        <ThemedView style={[styles.statusInline, { backgroundColor: colors.bg, borderColor: colors.border }]}>
+          <ThemedView style={[styles.statusInlineDot, { backgroundColor: colors.text }]} />
+          <ThemedText type="caption" style={[styles.statusInlineText, { color: colors.text }]}>
+            {title}
+          </ThemedText>
+        </ThemedView>
+        {detail ? (
+          <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+            {detail}
+          </ThemedText>
+        ) : null}
+        {action}
+      </ThemedView>
+    );
+  }
+
+  return (
+    <ThemedView
+      style={[
+        styles.statusNotice,
+        {
+          backgroundColor: tone === "neutral" ? ADMIN_SURFACE_LOW[scheme] : colors.bg,
+          borderColor: tone === "neutral" ? palette.separator : colors.border,
+        },
+      ]}
+    >
+      <ThemedView style={styles.statusNoticeMain}>
+        <ThemedText type="defaultSemiBold" style={{ color: tone === "neutral" ? palette.text : colors.text }}>
+          {title}
+        </ThemedText>
+        {detail ? (
+          <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+            {detail}
+          </ThemedText>
+        ) : null}
+      </ThemedView>
+      {action ? <ThemedView style={styles.statusNoticeAction}>{action}</ThemedView> : null}
+    </ThemedView>
+  );
+}
+
+export function AdminListTableRow({
+  title,
+  description,
+  metadata,
+  draftLabel,
+  actionLabel = "Open",
+  chips,
+  onPress,
+  disabled,
+}: {
+  title: string;
+  description?: string | null;
+  metadata?: string | null;
+  draftLabel?: string | null;
+  actionLabel?: string;
+  chips?: ReactNode;
+  onPress?: () => void;
+  disabled?: boolean;
+}) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= adminTokens.layout.mobileBreakpoint;
+  const content = isDesktop ? (
+    <>
+      <ThemedView style={[styles.tableCell, styles.tableNameCell]}>
+        <ThemedText type="defaultSemiBold" style={styles.tableTitle}>
+          {title}
+        </ThemedText>
+        {chips ? <ThemedView style={styles.tableInlineChips}>{chips}</ThemedView> : null}
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableDescriptionCell]}>
+        {description ? (
+          <ThemedText type="bodySecondary" style={styles.tableDescriptionText}>
+            {description}
+          </ThemedText>
+        ) : null}
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableMetaCell]}>
+        {metadata ? (
+          <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+            {metadata}
+          </ThemedText>
+        ) : null}
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableDraftCell]}>
+        <ThemedText type="caption" style={{ color: draftLabel ? palette.muted : palette.mutedSoft }}>
+          {draftLabel ?? "—"}
+        </ThemedText>
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableActionCell]}>
+        <ThemedText type="caption" style={[styles.tableActionText, { color: palette.mutedSoft }]}>
+          {actionLabel}
+        </ThemedText>
+      </ThemedView>
+    </>
+  ) : (
+    <>
+      <ThemedView style={styles.tableMobileMain}>
+        <ThemedView style={styles.tableMobileTitleLine}>
+          <ThemedText type="defaultSemiBold" style={styles.tableTitle}>
+            {title}
+          </ThemedText>
+          {chips ? <ThemedView style={styles.tableInlineChips}>{chips}</ThemedView> : null}
+        </ThemedView>
+        {description ? (
+          <ThemedText type="bodySecondary" style={styles.tableDescriptionText}>
+            {description}
+          </ThemedText>
+        ) : null}
+        <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+          {[metadata, draftLabel ? "Draft" : null].filter(Boolean).join(" · ")}
+        </ThemedText>
+      </ThemedView>
+      <ThemedText type="caption" style={[styles.tableActionText, { color: palette.mutedSoft }]}>
+        {actionLabel}
+      </ThemedText>
+    </>
+  );
+
+  if (!onPress) {
+    return (
+      <ThemedView
+        style={[
+          styles.tableRow,
+          isDesktop ? styles.tableRowDesktop : styles.tableRowMobile,
+          { borderTopColor: palette.separator },
+        ]}
+      >
+        {content}
+      </ThemedView>
+    );
+  }
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.tableRow,
+        isDesktop ? styles.tableRowDesktop : styles.tableRowMobile,
+        {
+          borderTopColor: palette.separator,
+          backgroundColor: pressed ? ADMIN_SURFACE_LOW[scheme] : "transparent",
+          opacity: disabled ? 0.55 : 1,
+        },
+      ]}
+    >
+      {content}
+    </Pressable>
+  );
+}
+
+export function AdminListTableHeader({
+  nameLabel = "Naam",
+  descriptionLabel = "Omschrijving",
+  metadataLabel = "Prompts",
+  draftLabel = "Draft",
+  actionLabel = "Actie",
+}: {
+  nameLabel?: string;
+  descriptionLabel?: string;
+  metadataLabel?: string;
+  draftLabel?: string;
+  actionLabel?: string;
+}) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+  const { width } = useWindowDimensions();
+  if (width < adminTokens.layout.mobileBreakpoint) {
+    return null;
+  }
+
+  return (
+    <ThemedView style={[styles.tableHeader, { borderTopColor: palette.separator }]}>
+      <ThemedView style={[styles.tableCell, styles.tableNameCell]}>
+        <ThemedText type="caption" style={[styles.tableHeaderLabel, { color: palette.mutedSoft }]}>
+          {nameLabel}
+        </ThemedText>
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableDescriptionCell]}>
+        <ThemedText type="caption" style={[styles.tableHeaderLabel, { color: palette.mutedSoft }]}>
+          {descriptionLabel}
+        </ThemedText>
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableMetaCell]}>
+        <ThemedText type="caption" style={[styles.tableHeaderLabel, { color: palette.mutedSoft }]}>
+          {metadataLabel}
+        </ThemedText>
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableDraftCell]}>
+        <ThemedText type="caption" style={[styles.tableHeaderLabel, { color: palette.mutedSoft }]}>
+          {draftLabel}
+        </ThemedText>
+      </ThemedView>
+      <ThemedView style={[styles.tableCell, styles.tableActionCell]}>
+        <ThemedText type="caption" style={[styles.tableHeaderLabel, { color: palette.mutedSoft }]}>
+          {actionLabel}
+        </ThemedText>
+      </ThemedView>
+    </ThemedView>
+  );
+}
+
 export function AdminSplitWorkspace({
   main,
   side,
@@ -468,7 +802,7 @@ export function AdminActionBar({
 }: {
   primary?: ConsoleAction;
   secondary?: ConsoleAction;
-  tertiary?: ConsoleAction & { tone?: "danger" | "secondary" };
+  tertiary?: ConsoleAction & { tone?: "danger" | "secondary" | "ghost" };
   floating?: boolean;
 }) {
   const scheme = useColorScheme() ?? "light";
@@ -535,7 +869,112 @@ export function AdminConsoleKeyValue({ label, value }: { label: string; value: s
   );
 }
 
-function AdminConsoleIconButton({
+export function AdminToggleRow({
+  title,
+  description,
+  value,
+  onChange,
+  meta,
+  expandedContent,
+  expanded = false,
+  onToggleExpanded,
+  disabled,
+  mode = "buttons",
+}: {
+  title: string;
+  description?: string;
+  value: boolean;
+  onChange: (next: boolean) => void;
+  meta?: string;
+  expandedContent?: ReactNode;
+  expanded?: boolean;
+  onToggleExpanded?: () => void;
+  disabled?: boolean;
+  mode?: "buttons" | "singleAction";
+}) {
+  const scheme = useColorScheme() ?? "light";
+  const palette = colorTokens[scheme];
+  const { width } = useWindowDimensions();
+  const isCompact = width < adminTokens.layout.mobileBreakpoint;
+  const hasDetails = Boolean(expandedContent && onToggleExpanded);
+  const trailing = mode === "singleAction" ? (
+    <ThemedView style={styles.toggleRowActions}>
+      <AdminConsoleButton
+        label={value ? "Schakel uit" : "Schakel in"}
+        onPress={() => onChange(!value)}
+        disabled={disabled}
+      />
+      {hasDetails ? (
+        <AdminConsoleButton
+          label={expanded ? "Verberg details" : "Toon details"}
+          onPress={() => onToggleExpanded?.()}
+          disabled={disabled}
+        />
+      ) : null}
+    </ThemedView>
+  ) : (
+    <ThemedView style={styles.toggleRowActions}>
+      <AdminConsoleButton label="Aan" onPress={() => onChange(true)} disabled={disabled || value} />
+      <AdminConsoleButton label="Uit" onPress={() => onChange(false)} disabled={disabled || !value} />
+      {hasDetails ? (
+        <AdminConsoleButton
+          label={expanded ? "Verberg details" : "Toon details"}
+          onPress={() => onToggleExpanded?.()}
+          disabled={disabled}
+        />
+      ) : null}
+    </ThemedView>
+  );
+
+  if (mode === "singleAction") {
+    return (
+      <ThemedView style={styles.toggleRow}>
+        <ThemedView
+          style={[
+            styles.settingsToggleRow,
+            isCompact ? styles.settingsToggleRowCompact : null,
+            { borderTopColor: palette.separator },
+          ]}
+        >
+          <ThemedView style={styles.settingsToggleMain}>
+            <ThemedView style={styles.settingsToggleTitleLine}>
+              <ThemedText type="defaultSemiBold">{title}</ThemedText>
+              <AdminStatusChip label={value ? "Aan" : "Uit"} tone={value ? "info" : "neutral"} />
+            </ThemedView>
+            {description ? (
+              <ThemedText type="bodySecondary" style={styles.settingsToggleDescription}>
+                {description}
+              </ThemedText>
+            ) : null}
+            {meta ? (
+              <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                {meta}
+              </ThemedText>
+            ) : null}
+          </ThemedView>
+          {trailing}
+        </ThemedView>
+        {expanded && expandedContent ? <ThemedView style={styles.toggleExpanded}>{expandedContent}</ThemedView> : null}
+      </ThemedView>
+    );
+  }
+
+  return (
+    <ThemedView style={styles.toggleRow}>
+      <AdminDenseRow
+        title={title}
+        subtitle={description}
+        meta={meta ?? null}
+        metaTone="soft"
+        chips={<AdminStatusChip label={value ? "Aan" : "Uit"} tone={value ? "info" : "neutral"} />}
+        trailing={trailing}
+      />
+      {expanded && expandedContent ? <ThemedView style={styles.toggleExpanded}>{expandedContent}</ThemedView> : null}
+    </ThemedView>
+  );
+}
+
+export function AdminConsoleIconButton({
   icon,
   accessibilityLabel,
   onPress,
@@ -552,7 +991,7 @@ function AdminConsoleIconButton({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      style={[styles.iconButton, { backgroundColor: ADMIN_SURFACE_LOW[scheme], borderColor: palette.separator }]}
+      style={[styles.iconButton, { backgroundColor: ADMIN_BUTTON_SURFACE[scheme], borderColor: palette.separator }]}
     >
       <MaterialIcons name={icon} size={18} color={palette.text} />
     </Pressable>
@@ -668,6 +1107,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     gap: spacing.sm,
   },
+  panelSection: {
+    paddingVertical: spacing.md,
+  },
+  panelSubtle: {
+    borderWidth: 0,
+    paddingVertical: spacing.md,
+  },
+  panelPlain: {
+    borderWidth: 0,
+    borderRadius: 0,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 0,
+    gap: spacing.md,
+  },
   inspectorPanel: {
     width: "100%",
   },
@@ -676,6 +1129,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.sm,
+  },
+  panelHeaderSection: {
+    paddingHorizontal: spacing.xs,
   },
   panelTitleWrap: {
     flex: 1,
@@ -736,6 +1192,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.xxs,
   },
+  buttonFullWidth: {
+    flex: 1,
+  },
+  buttonGhost: {
+    minHeight: 28,
+    paddingHorizontal: spacing.xs,
+  },
   buttonLabel: {
     fontWeight: "700",
   },
@@ -782,6 +1245,142 @@ const styles = StyleSheet.create({
   adminList: {
     gap: 0,
   },
+  sectionPlain: {
+    gap: spacing.md,
+  },
+  sectionPlainHeader: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingHorizontal: spacing.xs,
+  },
+  sectionPlainTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  statusNotice: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  statusNoticeMain: {
+    gap: spacing.xxs,
+  },
+  statusNoticeAction: {
+    alignItems: "flex-start",
+  },
+  statusInlineWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  statusInline: {
+    minHeight: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  statusInlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.pill,
+  },
+  statusInlineText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  tableRow: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  tableHeader: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+    paddingHorizontal: spacing.xs,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  tableHeaderLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "700",
+  },
+  tableRowDesktop: {
+    minHeight: 52,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  tableRowMobile: {
+    minHeight: 68,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xs,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  tableCell: {
+    minWidth: 0,
+  },
+  tableNameCell: {
+    flex: 1.05,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  tableDescriptionCell: {
+    flex: 1.55,
+  },
+  tableMetaCell: {
+    flex: 1,
+  },
+  tableDraftCell: {
+    width: 62,
+  },
+  tableActionCell: {
+    width: 44,
+    alignItems: "flex-end",
+  },
+  tableTitle: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  tableDescriptionText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  tableInlineChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xxs,
+  },
+  tableActionText: {
+    fontWeight: "700",
+  },
+  tableMobileMain: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.xxs,
+  },
+  tableMobileTitleLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
   splitWorkspace: {
     gap: spacing.md,
   },
@@ -809,6 +1408,48 @@ const styles = StyleSheet.create({
   keyValueText: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  toggleRow: {
+    gap: spacing.sm,
+  },
+  toggleRowActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: spacing.xs,
+  },
+  settingsToggleRow: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    minHeight: 66,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  settingsToggleRowCompact: {
+    alignItems: "flex-start",
+    flexDirection: "column",
+  },
+  settingsToggleMain: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.xxs,
+  },
+  settingsToggleTitleLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  settingsToggleDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  toggleExpanded: {
+    paddingLeft: spacing.sm,
+    gap: spacing.sm,
   },
   actionBar: {
     flexDirection: "row",

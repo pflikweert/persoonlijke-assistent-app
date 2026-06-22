@@ -10,12 +10,12 @@ import {
   AdminActionBar,
   AdminConsoleButton,
   AdminConsoleHeader,
-  AdminConsoleKeyValue,
   AdminConsolePanel,
   AdminConsoleShell,
   AdminDenseRow,
-  AdminInspectorPanel,
+  AdminSectionList,
   AdminStatusChip,
+  AdminStatusNotice,
 } from '@/components/ui/admin-console-primitives';
 import { MetaText, StateBlock } from '@/components/ui/screen-primitives';
 import {
@@ -25,8 +25,7 @@ import {
   promoteAdminAiQualityStudioVersionLive,
 } from '@/services';
 import type { AiTaskDetail, AiTaskVersionDetail } from '@/types';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colorTokens, spacing } from '@/theme';
+import { spacing } from '@/theme';
 import { formatDateTimeLabel, versionStatusLabel } from './_shared';
 import {
   getAiQualityTaskCapabilities,
@@ -44,16 +43,7 @@ function isDraftVersion(version: AiTaskVersionDetail): boolean {
   return version.status === 'draft';
 }
 
-function variantRoleLabel(value: string): string {
-  if (value === 'primary') return 'Primary';
-  if (value === 'repair') return 'Repair';
-  if (value === 'renormalization') return 'Renormalization';
-  return value;
-}
-
 export default function AiQualityStudioTaskOverviewScreen() {
-  const scheme = useColorScheme() ?? 'light';
-  const palette = colorTokens[scheme];
   const pathname = usePathname();
   const { taskKey } = useLocalSearchParams<{ taskKey?: string }>();
 
@@ -236,38 +226,10 @@ export default function AiQualityStudioTaskOverviewScreen() {
         ) : null
       }
       contentContainerStyle={styles.scrollContent}
-      inspector={
-        detail ? (
-          <AdminInspectorPanel title="Runtime metadata" subtitle={taskMetadata?.runtimeBindingKey ?? "Geen binding"}>
-            <ThemedView style={styles.inspectorStack}>
-              <AdminConsoleKeyValue label="Task key" value={detail.key} />
-              <AdminConsoleKeyValue label="Input" value={detail.inputType} />
-              <AdminConsoleKeyValue label="Output" value={detail.outputType} />
-              <AdminConsoleKeyValue label="Live versie" value={detail.liveVersion ? `v${detail.liveVersion.versionNumber}` : "Geen live"} />
-            </ThemedView>
-          </AdminInspectorPanel>
-        ) : null
-      }
     >
       <AdminConsoleHeader
-        eyebrow={taskMetadata?.familyTitle ?? 'Prompt task'}
         title={detail?.label ?? (typeof taskKey === 'string' ? taskKey : 'Onderdeel')}
         subtitle={detail?.description ?? 'AI Quality Studio'}
-        chips={
-          detail ? (
-            <>
-              <AdminStatusChip label={`Input ${detail.inputType}`} />
-              <AdminStatusChip label={`Output ${detail.outputType}`} />
-              <AdminStatusChip
-                label={detail.liveVersion ? `Live v${detail.liveVersion.versionNumber}` : 'Baseline ontbreekt'}
-                tone={detail.liveVersion ? 'success' : 'warning'}
-              />
-              {draftVersion ? <AdminStatusChip label="Draft aanwezig" tone="info" /> : null}
-              {taskMetadata?.isRuntimeDriver ? <AdminStatusChip label="Driver" tone="success" /> : null}
-              {taskMetadata?.variantRole ? <AdminStatusChip label={variantRoleLabel(taskMetadata.variantRole)} tone="info" /> : null}
-            </>
-          ) : null
-        }
       />
 
       {loading ? <StateBlock tone="loading" message="Onderdeel laden" /> : null}
@@ -276,6 +238,15 @@ export default function AiQualityStudioTaskOverviewScreen() {
 
       {!loading && detail ? (
         <>
+          <AdminStatusNotice
+            variant="inline"
+            tone={detail.liveVersion ? 'success' : 'warning'}
+            title={detail.liveVersion ? `Live v${detail.liveVersion.versionNumber}` : 'Baseline ontbreekt'}
+            detail={[taskMetadata?.familyTitle, draftVersion ? `Draft v${draftVersion.versionNumber}` : null]
+              .filter(Boolean)
+              .join(' · ')}
+          />
+
           {taskMetadata?.editorScope === 'family' ? (
             <StateBlock
               tone="info"
@@ -284,21 +255,17 @@ export default function AiQualityStudioTaskOverviewScreen() {
             />
           ) : null}
 
-          <AdminConsolePanel title="Contract">
+          <AdminConsolePanel title="Contract" variant="plain">
             <ThemedText type="defaultSemiBold">{detail.label}</ThemedText>
             {detail.description ? <ThemedText type="bodySecondary">{detail.description}</ThemedText> : null}
-            <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+            <ThemedText type="caption">
               key: {detail.key} · input: {detail.inputType} · output: {detail.outputType}
             </ThemedText>
           </AdminConsolePanel>
 
-          <AdminConsolePanel title="Live versie">
+          <AdminConsolePanel title="Live versie" variant="plain">
             {detail.liveVersion ? (
               <ThemedView style={styles.fieldGroup}>
-                <ThemedView style={styles.chipInline}>
-                  <AdminStatusChip label="Live" tone="success" />
-                  {taskMetadata?.runtimeBindingKey ? <AdminStatusChip label="Runtime actief" tone="info" /> : null}
-                </ThemedView>
                 <MetaText>
                   v{detail.liveVersion.versionNumber} · {detail.liveVersion.model}
                 </MetaText>
@@ -319,7 +286,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
             )}
           </AdminConsolePanel>
 
-          <AdminConsolePanel title="Lifecycle" subtitle="Van draftbewijs naar runtime-live.">
+          <AdminConsolePanel title="Lifecycle" variant="plain">
             {draftVersion && draftLifecycle ? (
               <ThemedView style={styles.fieldGroup}>
                 <ThemedView style={styles.chipInline}>
@@ -359,7 +326,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
             )}
           </AdminConsolePanel>
 
-          <AdminConsolePanel title="Versies" subtitle="Drafts zijn bewerkbaar; live versies blijven de runtime-basis.">
+          <AdminSectionList title="Versies" variant="plain">
             <ThemedView style={styles.versionList}>
               {detail.versions.map((version) => {
                 const isDraft = isDraftVersion(version);
@@ -373,7 +340,9 @@ export default function AiQualityStudioTaskOverviewScreen() {
                     meta={`${lifecycle.detail} · bijgewerkt ${formatDateTimeLabel(version.updatedAt)}`}
                     chips={
                       <ThemedView style={styles.chipInline}>
-                        <AdminStatusChip label={lifecycle.label} tone={lifecycle.canRunAction ? 'success' : version.status === 'live' ? 'success' : isDraft ? 'info' : 'neutral'} />
+                        {lifecycle.canRunAction || !detail.liveVersion ? (
+                          <AdminStatusChip label={lifecycle.label} tone={lifecycle.canRunAction ? 'success' : version.status === 'live' ? 'success' : isDraft ? 'info' : 'neutral'} />
+                        ) : null}
                         {version.latestReviewLabel ? <AdminStatusChip label={`Review ${version.latestReviewLabel}`} tone={version.positiveReviewCount > 0 ? 'success' : 'warning'} /> : null}
                       </ThemedView>
                     }
@@ -413,7 +382,7 @@ export default function AiQualityStudioTaskOverviewScreen() {
                 );
               })}
             </ThemedView>
-          </AdminConsolePanel>
+          </AdminSectionList>
         </>
       ) : null}
 
@@ -487,8 +456,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
     gap: spacing.xs,
-  },
-  inspectorStack: {
-    gap: spacing.sm,
   },
 });

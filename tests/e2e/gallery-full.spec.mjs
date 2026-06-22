@@ -1,11 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
-import {
-  assertLocalTarget,
-  requestMagicLink,
-  resolveLocalAuthSmokeContext,
-  waitForMagicLink,
-} from "../../scripts/_shared/local-auth-smoke-utils.mjs";
+import { loginWithLocalMagicLink } from "./_shared/local-auth-login.mjs";
 
 const entryUrl = process.env.GALLERY_E2E_ENTRY_URL;
 const orderedPhotoIds = (process.env.GALLERY_E2E_PHOTO_IDS ?? "")
@@ -13,26 +8,6 @@ const orderedPhotoIds = (process.env.GALLERY_E2E_PHOTO_IDS ?? "")
   .map((value) => value.trim())
   .filter(Boolean);
 const uploadFixture = path.resolve("assets/images/icon.png");
-
-async function loginWithLocalMagicLink(page) {
-  const context = resolveLocalAuthSmokeContext();
-  assertLocalTarget(context);
-  const email = process.env.SMOKE_TEST_EMAIL || "smoke.default.local@example.com";
-
-  await requestMagicLink({
-    apiUrl: context.apiUrl,
-    publishableKey: context.publishableKey,
-    email,
-    redirectTo: context.appUrl,
-  });
-  const { verifyLink } = await waitForMagicLink({
-    mailpitUrl: context.mailpitUrl,
-    email,
-  });
-
-  await page.goto(verifyLink);
-  await page.waitForLoadState("networkidle");
-}
 
 async function dragViewerPhotoLeft(page) {
   const layer = page.getByTestId("zoomable-photo-slide-web-layer").first();

@@ -225,6 +225,30 @@ Gebruik `npm run verify:local-auth-mail` om de product-authflow lokaal te verifi
 - poll Mailpit voor de nieuwe magic-link mail
 - fail met duidelijke diagnostiek als de OTP-call slaagt maar Mailpit leeg blijft
 
+Gebruik `npm run verify:local-auth-login` voor token/login-proof:
+- vraagt een echte magic link aan
+- leest Mailpit
+- haalt de verify-link op
+- bevestigt dat die flow eindigt in een geldige auth-session
+
+Belangrijk:
+- dit is nog geen browser-level bewijs dat een tab al echt ingelogd in de app landt
+- voor browser-level admin/AIQS validatie gebruik je `npm run verify:local-aiqs-smoke`
+
+Gebruik `npm run verify:local-aiqs-login` voor de dedicated admin/founder smoke-user:
+- gebruikt `smoke.aiqs.local@example.com`
+- zorgt voor founder + `ai_quality_studio` toegang
+- valideert dat de lokale AIQS runtime-baseline weer live gezet kan worden
+- genereert tijdelijk een local-only AIQS internal token en herstart de functions runtime als `.env.local` daar nog leeg op is
+
+Gebruik `npm run verify:local-aiqs-smoke` voor de volledige AIQS local browser-smoke:
+- start lokale dev automatisch als `http://localhost:8081` nog niet draait
+- bootstrapt de dedicated AIQS/admin smoke-user
+- logt een browser-tab in via Mailpit magic link
+- opent `AI Quality Studio`
+- valideert de workspace-first overview zonder oude KPI-grid of context-inspector
+- stopt een door het script zelf gestarte local dev runtime na afloop weer
+
 Gebruik `npm run verify:local-flow` om de text-only slice automatisch te verifiëren:
 - signup via directe auth bootstrap voor testdoeleinden
 - submit naar `process-entry`

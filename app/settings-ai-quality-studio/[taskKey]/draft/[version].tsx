@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams, usePathname } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { Modal, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { DestructiveConfirmSheet } from '@/components/feedback/destructive-confirm-sheet';
@@ -18,11 +18,12 @@ import {
 } from '@/components/ui/settings-screen-primitives';
 import {
   AdminActionBar,
+  AdminConsoleButton,
   AdminConsoleHeader,
   AdminConsolePanel,
   AdminConsoleShell,
   AdminSplitWorkspace,
-  AdminStatusChip,
+  AdminStatusNotice,
 } from '@/components/ui/admin-console-primitives';
 import { AiTokenChipPicker } from '@/components/ui/ai-token-chip-picker';
 import { AiTokenEditor, type PromptEditorState } from '@/components/ui/ai-token-editor';
@@ -463,22 +464,8 @@ export default function AiQualityStudioDraftScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       <AdminConsoleHeader
-        eyebrow="Prompt editor"
         title="Draft bewerken"
         subtitle={detail?.label ?? 'AI Quality Studio'}
-        chips={
-          detail && selectedDraft ? (
-            <>
-              <AdminStatusChip label={`Draft v${selectedDraft.versionNumber}`} tone="info" />
-              <AdminStatusChip
-                label={detail.liveVersion ? `Live v${detail.liveVersion.versionNumber}` : 'Geen live basis'}
-                tone={detail.liveVersion ? 'success' : 'warning'}
-              />
-              <AdminStatusChip label={selectedDraft.model} />
-              {formDirty ? <AdminStatusChip label="Wijzigingen" tone="warning" /> : null}
-            </>
-          ) : null
-        }
       />
 
       {loading ? <StateBlock tone="loading" message="Draft laden" /> : null}
@@ -486,12 +473,22 @@ export default function AiQualityStudioDraftScreen() {
 
       {!loading && detail && selectedDraft && form ? (
         <>
+          <AdminStatusNotice
+            variant="inline"
+            tone={formDirty ? 'warning' : 'info'}
+            title={formDirty ? 'Wijzigingen niet opgeslagen' : `Draft v${selectedDraft.versionNumber}`}
+            detail={[
+              detail.liveVersion ? `Live v${detail.liveVersion.versionNumber}` : 'geen live basis',
+              selectedDraft.model,
+            ].join(' · ')}
+          />
+
           {saveMessage ? <StateBlock tone="success" message={saveMessage} /> : null}
 
           <AdminSplitWorkspace
             wide={isWideWorkspace}
             main={
-              <AdminConsolePanel title={structuredEditor.title} subtitle={structuredEditor.subtitle}>
+              <AdminConsolePanel title={structuredEditor.title} subtitle={structuredEditor.subtitle} variant="plain">
             <ThemedView style={styles.editorColumn}>
               {structuredEditor.sections.map((section) => {
                 const assistOpen = activeAssistTarget?.key === section.key;
@@ -501,21 +498,12 @@ export default function AiQualityStudioDraftScreen() {
                     title={section.label}
                     helper={`${getLayerNoticeInfo(section.layerType, section.label).badgeLabel} · ${section.helper}`}
                     action={
-                      <Pressable
-                        accessibilityRole="button"
+                      <AdminConsoleButton
+                        label="Assist"
                         onPress={() => openAssistForSection(section.key, section.layerType)}
-                        style={[
-                          styles.assistTrigger,
-                          {
-                            backgroundColor: assistOpen ? palette.surfaceLowest : palette.surfaceLow,
-                            borderColor: assistOpen ? palette.primary : palette.separator,
-                          },
-                        ]}
-                      >
-                        <ThemedText type="caption" style={{ color: palette.primary }}>
-                          Assist
-                        </ThemedText>
-                      </Pressable>
+                        tone="ghost"
+                        selected={assistOpen}
+                      />
                     }
                     tokenRail={
                       <AdminTokenRail>
@@ -549,7 +537,7 @@ export default function AiQualityStudioDraftScreen() {
             }
             side={
               <>
-                <AdminConsolePanel title="Runtime contract">
+                <AdminConsolePanel title="Runtime contract" variant="plain">
                   <ThemedView style={styles.fieldGroup}>
                     <MetaText>Runtime-groep: {structuredEditor.runtimeFamilyLabel}</MetaText>
                     {taskConsistency ? <MetaText>Beïnvloedt: {taskConsistency.affectsLabel}</MetaText> : null}
@@ -560,7 +548,7 @@ export default function AiQualityStudioDraftScreen() {
                   </ThemedView>
                 </AdminConsolePanel>
 
-                <AdminConsolePanel title="Geavanceerd">
+                <AdminConsolePanel title="Geavanceerd" variant="plain">
             <AdminAccordion
               title={advancedOpen ? 'Verberg geavanceerd' : 'Toon geavanceerd'}
               summary={advancedOpen ? 'Minder technische details' : 'Technisch contract, model en herkomst'}
@@ -584,21 +572,18 @@ export default function AiQualityStudioDraftScreen() {
                 <ThemedView style={styles.fieldGroup}>
                   <MetaText>Model</MetaText>
                   <ThemedView style={styles.modelOptionsRow}>
-                    {AI_QUALITY_ALLOWED_MODELS.map((option) => {
-                      const active = form.model === option.value;
-                      return (
-                        <Pressable
-                          key={option.value}
-                          accessibilityRole="button"
-                          onPress={() => setForm((prev) => (prev ? { ...prev, model: option.value } : prev))}
-                          style={[styles.modelOption, { backgroundColor: active ? palette.surfaceLowest : palette.surfaceLow }]}
-                        >
-                          <ThemedText type="caption" style={{ color: active ? palette.primary : palette.mutedSoft }}>
-                            {option.label}
-                          </ThemedText>
-                        </Pressable>
-                      );
-                    })}
+	                    {AI_QUALITY_ALLOWED_MODELS.map((option) => {
+	                      const active = form.model === option.value;
+	                      return (
+	                        <AdminConsoleButton
+	                          key={option.value}
+	                          label={option.label}
+	                          onPress={() => setForm((prev) => (prev ? { ...prev, model: option.value } : prev))}
+	                          tone="ghost"
+	                          selected={active}
+	                        />
+	                      );
+	                    })}
                   </ThemedView>
                 </ThemedView>
 
@@ -683,36 +668,20 @@ export default function AiQualityStudioDraftScreen() {
             ) : null}
 
             <ScrollView style={styles.assistScrollBody} contentContainerStyle={styles.assistScrollBodyContent}>
-              <ThemedView style={styles.assistQuickIntentRow}>
-                {assistActions.map((action) => (
-                  <Pressable
-                    key={action.id}
-                    accessibilityRole="button"
-                    onPress={() => {
-                      setSelectedAssistActionId(action.id);
-                      setAssistIntent(action.helper);
-                    }}
-                    style={[
-                      styles.assistQuickIntentChip,
-                      {
-                        backgroundColor:
-                          selectedAssistActionId === action.id ? palette.surfaceLowest : palette.surfaceLow,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      type="caption"
-                      style={{
-                        color:
-                          selectedAssistActionId === action.id ? palette.primary : palette.mutedSoft,
-                        fontWeight: selectedAssistActionId === action.id ? '600' : '400',
-                      }}
-                    >
-                      {action.label}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </ThemedView>
+	              <ThemedView style={styles.assistQuickIntentRow}>
+	                {assistActions.map((action) => (
+	                  <AdminConsoleButton
+	                    key={action.id}
+	                    label={action.label}
+	                    onPress={() => {
+	                      setSelectedAssistActionId(action.id);
+	                      setAssistIntent(action.helper);
+	                    }}
+	                    tone="ghost"
+	                    selected={selectedAssistActionId === action.id}
+	                  />
+	                ))}
+	              </ThemedView>
 
               <TextAreaField
                 value={assistIntent}
@@ -772,27 +741,20 @@ export default function AiQualityStudioDraftScreen() {
             </ScrollView>
 
             <ThemedView style={styles.assistActionRow}>
-              <Pressable
-                accessibilityRole="button"
+              <AdminConsoleButton
+                label={assistPreview ? 'Voorstel vernieuwen' : 'Maak voorstel'}
                 onPress={() => void runAssistPreview()}
-                  disabled={assistLoading || !activeAssistTarget}
-                style={[styles.assistActionButton, { backgroundColor: palette.surfaceLow }]}
-              >
-                <ThemedText type="caption" style={{ color: palette.primary }}>
-                  {assistPreview ? 'Voorstel vernieuwen' : 'Maak voorstel'}
-                </ThemedText>
-              </Pressable>
+                disabled={assistLoading || !activeAssistTarget}
+                fullWidth
+              />
               {assistPreview ? (
-                <Pressable
-                  accessibilityRole="button"
+                <AdminConsoleButton
+                  label="Toepassen"
                   onPress={applyAssistSuggestion}
                   disabled={assistPreviewStale}
-                  style={[styles.assistActionButton, { backgroundColor: palette.surfaceLow }]}
-                >
-                  <ThemedText type="caption" style={{ color: palette.primary }}>
-                    Toepassen
-                  </ThemedText>
-                </Pressable>
+                  tone="primary"
+                  fullWidth
+                />
               ) : null}
             </ThemedView>
           </ThemedView>
@@ -813,12 +775,6 @@ const styles = StyleSheet.create({
   editorColumn: {
     gap: spacing.section,
   },
-  assistTrigger: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-  },
   advancedBody: {
     gap: spacing.sm,
   },
@@ -829,11 +785,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
-  },
-  modelOption: {
-    borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
   },
   textAreaMedium: {
     minHeight: 140,
@@ -874,13 +825,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.xs,
   },
-  assistQuickIntentChip: {
-    borderRadius: 999,
-    minHeight: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
-  },
   inlineDiffWrap: {
     borderRadius: 12,
     paddingHorizontal: spacing.sm,
@@ -889,13 +833,5 @@ const styles = StyleSheet.create({
   assistActionRow: {
     flexDirection: 'row',
     gap: spacing.xs,
-  },
-  assistActionButton: {
-    flex: 1,
-    borderRadius: 999,
-    minHeight: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
   },
 });

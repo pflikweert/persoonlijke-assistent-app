@@ -13,7 +13,7 @@ import {
   AdminConsoleHeader,
   AdminConsolePanel,
   AdminConsoleShell,
-  AdminStatusChip,
+  AdminStatusNotice,
 } from '@/components/ui/admin-console-primitives';
 import {
   InputField,
@@ -397,21 +397,8 @@ export default function AiQualityStudioTestScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       <AdminConsoleHeader
-        eyebrow="Runtime test"
         title="Testen"
         subtitle={detail?.label ?? 'AI Quality Studio'}
-        chips={
-          detail && selectedVersion ? (
-            <>
-              <AdminStatusChip label={`Draft v${selectedVersion.versionNumber}`} tone="info" />
-              <AdminStatusChip
-                label={detail.liveVersion ? `Runtime v${detail.liveVersion.versionNumber}` : 'Runtime ontbreekt'}
-                tone={detail.liveVersion ? 'success' : 'warning'}
-              />
-              <AdminStatusChip label={selectedVersion.model} />
-            </>
-          ) : null
-        }
       />
 
       {loading ? <StateBlock tone="loading" message="Testomgeving laden" /> : null}
@@ -419,7 +406,14 @@ export default function AiQualityStudioTestScreen() {
 
       {!loading && detail && selectedVersion ? (
         <>
-          <AdminConsolePanel title={isEntryCleanup ? 'Runtime-basis' : 'Versiecontext'}>
+          <AdminStatusNotice
+            variant="inline"
+            tone={detail.liveVersion ? 'success' : 'warning'}
+            title={detail.liveVersion ? `Runtime v${detail.liveVersion.versionNumber}` : 'Runtime ontbreekt'}
+            detail={`Draft v${selectedVersion.versionNumber} · ${selectedVersion.model}`}
+          />
+
+          <AdminConsolePanel title={isEntryCleanup ? 'Runtime-basis' : 'Versiecontext'} variant="plain">
             <MetaText>Onderdeel: {detail.label}</MetaText>
             <MetaText>Draft versie: v{selectedVersion.versionNumber}</MetaText>
             <MetaText>Model: {selectedVersion.model}</MetaText>
@@ -441,7 +435,7 @@ export default function AiQualityStudioTestScreen() {
           </AdminConsolePanel>
 
           {isEntryCleanup ? (
-            <AdminConsolePanel title="Technisch contract (read-only)">
+            <AdminConsolePanel title="Technisch contract" variant="plain">
               <ThemedView style={styles.resultGroup}>
                 <AdminReadOnlyBlock title="Input contract" lines={inputContractLines} />
                 <AdminReadOnlyBlock title="Technisch contract" lines={entryCleanupTechnicalContractLines} />
@@ -454,7 +448,7 @@ export default function AiQualityStudioTestScreen() {
           ) : null}
 
             {isEntryCleanup && entryCleanupInstruction ? (
-              <AdminConsolePanel title="Instructies">
+              <AdminConsolePanel title="Instructies" variant="plain">
                 <ThemedView style={styles.resultGroup}>
                   <ThemedText type="defaultSemiBold">Algemene instructie</ThemedText>
                   <TextAreaField value={entryCleanupInstruction.generalInstruction} editable={false} style={styles.textAreaSmall} />
@@ -471,7 +465,7 @@ export default function AiQualityStudioTestScreen() {
               </AdminConsolePanel>
             ) : null}
 
-          <AdminConsolePanel title="Bron kiezen">
+          <AdminConsolePanel title="Bron kiezen" variant="plain">
             {loadingSources ? <MetaText>Bronnen laden…</MetaText> : null}
             {!loadingSources && testSources.length > 0 ? (
               <InputField value={sourceQuery} onChangeText={setSourceQuery} placeholder="Zoek bron" />
@@ -525,7 +519,7 @@ export default function AiQualityStudioTestScreen() {
           </AdminConsolePanel>
 
           {latestTestRun ? (
-            <AdminConsolePanel title={isEntryCleanup ? 'Testresultaat' : 'Testresultaat'}>
+            <AdminConsolePanel title="Testresultaat" variant="plain">
               <ThemedView style={styles.resultGroup}>
                 <MetaText>Status: {latestTestRun.status}</MetaText>
                 <MetaText>Versie: v{latestTestRun.taskVersionNumber}</MetaText>
@@ -653,7 +647,7 @@ export default function AiQualityStudioTestScreen() {
               ) : null}
             </AdminConsolePanel>
           ) : (
-            <AdminConsolePanel title="Testresultaat">
+            <AdminConsolePanel title="Testresultaat" variant="plain">
               <StateBlock
                 tone="info"
                 message="Nog geen testresultaat"

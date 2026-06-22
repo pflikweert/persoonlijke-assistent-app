@@ -38,6 +38,10 @@ function parseEnvFile() {
   return out;
 }
 
+export function readLocalEnvFile() {
+  return parseEnvFile();
+}
+
 function parseSupabaseStatusEnv() {
   try {
     const output = execSync("npx supabase status -o env", {
@@ -67,6 +71,15 @@ function readValue({ key, envFile, status, fallback = "" }) {
     status[key]?.trim() ||
     fallback
   );
+}
+
+async function fetchJson(url, init = {}) {
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`${init.method ?? "GET"} ${url} failed (${response.status}): ${body}`);
+  }
+  return response.json();
 }
 
 export function resolveLocalAuthSmokeContext() {
@@ -137,10 +150,24 @@ export function resolveSmokeEmail(profile = "default") {
   if (normalized === "new") {
     return `smoke.new.${Date.now()}@example.com`;
   }
+  if (normalized === "aiqs" || normalized === "admin") {
+    return "smoke.aiqs.local@example.com";
+  }
   if (normalized === "clean") {
     return "smoke.clean.local@example.com";
   }
   return "smoke.default.local@example.com";
+}
+
+export function resolveInternalAdminToken() {
+  const envFile = parseEnvFile();
+  return (
+    process.env.ADMIN_AI_QUALITY_INTERNAL_TOKEN?.trim() ||
+    process.env.ADMIN_REGEN_INTERNAL_TOKEN?.trim() ||
+    envFile.ADMIN_AI_QUALITY_INTERNAL_TOKEN?.trim() ||
+    envFile.ADMIN_REGEN_INTERNAL_TOKEN?.trim() ||
+    ""
+  );
 }
 
 export async function requestMagicLink({ apiUrl, publishableKey, email, redirectTo }) {
@@ -161,6 +188,39 @@ export async function requestMagicLink({ apiUrl, publishableKey, email, redirect
     const body = await response.text();
     throw new Error(`Magic link request failed (${response.status}): ${body}`);
   }
+}
+
+export async function fetchSessionFromVerifyLink(verifyLink, publishableKey) {
+  const response = await fetch(verifyLink, {
+    method: "GET",
+    headers: {
+      apikey: publishableKey,
+    },
+    redirect: "manual",
+  });
+
+  const location = response.headers.get("location") || "";
+  const combined = `${location} ${verifyLink}`;
+  const accessTokenMatch = combined.match(/[?#&]access_token=([^&\s]+)/i);
+  const refreshTokenMatch = combined.match(/[?#&]refresh_token=([^&\s]+)/i);
+
+  const accessToken = accessTokenMatch ? decodeURIComponent(accessTokenMatch[1]) : "";
+  const refreshToken = refreshTokenMatch ? decodeURIComponent(refreshTokenMatch[1]) : "";
+
+  if (!accessToken || !refreshToken) {
+    throw new Error("Verify link did not yield access/refresh tokens.");
+  }
+
+  return { accessToken, refreshToken, location };
+}
+
+export async function fetchUserFromAccessToken({ apiUrl, publishableKey, accessToken }) {
+  return fetchJson(`${apiUrl}/auth/v1/user`, {
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 }
 
 function decodeHtmlEntities(value) {
@@ -218,6 +278,136 @@ export async function waitForMagicLink({ mailpitUrl, email, timeoutMs = 15000, p
   }
 
   throw new Error(`No Mailpit message found for ${email} within ${timeoutMs}ms.`);
+}
+
+export async function listAuthUsers(context) {
+  if (!context.serviceRoleKey) {
+    throw new Error("Missing APP_SUPABASE_SERVICE_ROLE_KEY required for local auth admin actions.");
+  }
+
+  const data = await fetchJson(`${context.apiUrl}/auth/v1/admin/users?page=1&per_page=1000`, {
+    headers: {
+      apikey: context.serviceRoleKey,
+      Authorization: `Bearer ${context.serviceRoleKey}`,
+    },
+  });
+
+  return Array.isArray(data?.users) ? data.users : [];
+}
+
+export async function findOrCreateLocalSmokeUser(context, email, userMetadata = {}) {
+  const users = await listAuthUsers(context);
+  const existing = users.find(
+    (user) => String(user?.email || "").toLowerCase() === String(email).toLowerCase()
+  );
+  if (existing?.id) {
+    return String(existing.id);
+  }
+
+  if (!context.serviceRoleKey) {
+    throw new Error("Missing APP_SUPABASE_SERVICE_ROLE_KEY required for local auth admin actions.");
+  }
+
+  const created = await fetchJson(`${context.apiUrl}/auth/v1/admin/users`, {
+    method: "POST",
+    headers: {
+      apikey: context.serviceRoleKey,
+      Authorization: `Bearer ${context.serviceRoleKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      email_confirm: true,
+      user_metadata: userMetadata,
+    }),
+  });
+
+  if (!created?.id) {
+    throw new Error(`Could not create local smoke user ${email}.`);
+  }
+
+  return String(created.id);
+}
+
+export async function createServiceRoleClient(context) {
+  const { createClient } = await import("@supabase/supabase-js");
+  if (!context.serviceRoleKey) {
+    throw new Error("Missing APP_SUPABASE_SERVICE_ROLE_KEY required for local service-role actions.");
+  }
+
+  return createClient(context.apiUrl, context.serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+export async function ensureLocalAdminSmokeUser(context, {
+  email,
+  founder = true,
+  capabilities = ["ai_quality_studio"],
+  userMetadata = {},
+} = {}) {
+  assertLocalTarget(context);
+  const targetEmail = email || resolveSmokeEmail("aiqs");
+  const userId = await findOrCreateLocalSmokeUser(context, targetEmail, {
+    smoke_fixture: "local-aiqs-smoke",
+    ...userMetadata,
+  });
+  const supabase = await createServiceRoleClient(context);
+
+  if (founder) {
+    const { error: founderError } = await supabase
+      .from("admin_founders")
+      .upsert({ user_id: userId, created_by: userId });
+    if (founderError) {
+      throw founderError;
+    }
+  }
+
+  for (const capability of capabilities) {
+    const { error: capabilityError } = await supabase
+      .from("admin_user_capabilities")
+      .upsert({
+        user_id: userId,
+        capability,
+        granted_by: userId,
+      });
+    if (capabilityError) {
+      throw capabilityError;
+    }
+  }
+
+  return { userId, email: targetEmail };
+}
+
+export async function isUrlReachable(url) {
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      redirect: "manual",
+    });
+    return response.status > 0;
+  } catch {
+    return false;
+  }
+}
+
+export async function waitForUrlReachable(url, {
+  timeoutMs = 60000,
+  pollMs = 1000,
+} = {}) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (await isUrlReachable(url)) {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+  }
+
+  throw new Error(`URL not reachable within ${timeoutMs}ms: ${url}`);
 }
 
 export function assertLocalTarget(context) {

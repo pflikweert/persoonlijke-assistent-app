@@ -251,14 +251,27 @@ export function PromptEditor({
             user-select: none;
           }
           .prompt-editor-prosemirror .variable-chip-remove {
+            appearance: none;
+            -webkit-appearance: none;
             border: 0;
             background: transparent;
             color: #1d4ed8;
+            border-radius: 999px;
+            min-width: 18px;
+            min-height: 18px;
             font-weight: 700;
             margin-left: 4px;
             cursor: pointer;
             line-height: 1;
             padding: 0 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .prompt-editor-prosemirror .variable-chip-remove:hover,
+          .prompt-editor-prosemirror .variable-chip-remove:focus-visible {
+            background: rgba(29, 78, 216, 0.12);
+            outline: none;
           }`}
       </style>
       <div
@@ -276,4 +289,3 @@ export function PromptEditor({
     </div>
   );
 }
-

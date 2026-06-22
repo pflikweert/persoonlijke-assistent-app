@@ -7,6 +7,7 @@ Navigatie voor design-authority, mapping en historische designrichting.
 ## Kernbestanden
 
 - [[mvp-design-spec-1.2.1|MVP design spec 1.2.1]]
+- [[admin-ui-principles|Budio Admin UI Principles]]
 - [[component-mapping|Component mapping]]
 - [[design-system-ai|Design system AI regels]]
 

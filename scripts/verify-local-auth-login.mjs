@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import {
   assertLocalTarget,
-  requestMagicLink,
+  fetchSessionFromVerifyLink,
+  fetchUserFromAccessToken,
   resolveLocalAuthSmokeContext,
   resolveSmokeEmail,
+  requestMagicLink,
   waitForMagicLink,
 } from "./_shared/local-auth-smoke-utils.mjs";
 
@@ -19,46 +21,6 @@ function readArg(name, fallback = "") {
   }
 
   return fallback;
-}
-
-async function fetchSessionFromVerifyLink(verifyLink, publishableKey) {
-  const response = await fetch(verifyLink, {
-    method: "GET",
-    headers: {
-      apikey: publishableKey,
-    },
-    redirect: "manual",
-  });
-
-  const location = response.headers.get("location") || "";
-  const combined = `${location} ${verifyLink}`;
-  const accessTokenMatch = combined.match(/[?#&]access_token=([^&\s]+)/i);
-  const refreshTokenMatch = combined.match(/[?#&]refresh_token=([^&\s]+)/i);
-
-  const accessToken = accessTokenMatch ? decodeURIComponent(accessTokenMatch[1]) : "";
-  const refreshToken = refreshTokenMatch ? decodeURIComponent(refreshTokenMatch[1]) : "";
-
-  if (!accessToken || !refreshToken) {
-    throw new Error("Verify link did not yield access/refresh tokens.");
-  }
-
-  return { accessToken, refreshToken, location };
-}
-
-async function fetchUser(apiUrl, publishableKey, accessToken) {
-  const response = await fetch(`${apiUrl}/auth/v1/user`, {
-    headers: {
-      apikey: publishableKey,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Unable to fetch user (${response.status}): ${body}`);
-  }
-
-  return response.json();
 }
 
 async function main() {
@@ -82,7 +44,11 @@ async function main() {
   });
 
   const session = await fetchSessionFromVerifyLink(message.verifyLink, context.publishableKey);
-  const user = await fetchUser(context.apiUrl, context.publishableKey, session.accessToken);
+  const user = await fetchUserFromAccessToken({
+    apiUrl: context.apiUrl,
+    publishableKey: context.publishableKey,
+    accessToken: session.accessToken,
+  });
 
   const userId = String(user?.id || "");
   if (!userId) {

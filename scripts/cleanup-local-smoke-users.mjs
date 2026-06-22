@@ -4,6 +4,7 @@ import { resolveLocalAuthSmokeContext } from "./_shared/local-auth-smoke-utils.m
 const SMOKE_EMAIL_PATTERNS = [
   "smoke.default.local@example.com",
   "smoke.clean.local@example.com",
+  "smoke.aiqs.local@example.com",
   "smoke.new.%@example.com",
   "verify.magic-link.%@example.com",
   "verify.%@example.com",
