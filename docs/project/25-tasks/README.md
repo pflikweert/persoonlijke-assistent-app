@@ -117,9 +117,7 @@ _Geen taken._
 
 ### Blocked
 
-| Taak | Prioriteit | Fase | Korte omschrijving |
-| --- | --- | --- | --- |
-| [Docs folderstructuur en visual language herbeoordelen na metadatafase](open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md) | p3 | transitiemaand-consumer-beta | Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling: - Is metadata + bundling... |
+_Geen taken._
 
 ### Done
 
@@ -192,4 +190,5 @@ _Geen taken._
 | [Upload bundles uitbreiden met volledige tasks en apart full archive](done/upload-bundles-volledige-tasks-en-archive.md) | p2 | transitiemaand-consumer-beta | `docs/upload/**` bevat twee nieuwe generated bestanden: - één volledige tasks bundle met zowel `open/` als `done/` taskfiles - één aparte... |
 | [VS Code MCP local workspace setup](done/vscode-mcp-local-workspace-setup.md) | p2 | transitiemaand-consumer-beta | VS Code is ingericht voor Expo, Markdown/taskfiles, NativeWind, Playwright en Budio Workspace. De repo blijft local-first werken met `npx... |
 | [Workstream backfill voor bestaande taskfiles](done/workstream-backfill-bestaande-taskfiles.md) | p2 | transitiemaand-consumer-beta | Alle bestaande taskfiles onder `docs/project/25-tasks/**` hebben een passende `workstream`-waarde (`idea`, `plugin`, `app` of `aiqs`). |
+| [Docs folderstructuur en visual language herbeoordelen na metadatafase](done/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md) | p3 | transitiemaand-consumer-beta | Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling: - Is metadata + bundling... |
 <!-- TASK_INDEX:END -->
