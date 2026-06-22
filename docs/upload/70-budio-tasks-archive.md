@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-22T09:39:39.057Z
-Source Commit: e5efe2a
+Build Timestamp (UTC): 2026-06-22T09:43:06.451Z
+Source Commit: 528bb2f
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -652,6 +652,7 @@ due_date: null
 sort_order: 1
 ---
 
+
 # Budio Codex-modelkeuze vrijmaken met 5.5 default
 
 ## Probleem / context
@@ -803,6 +804,11 @@ Tussenstand:
 - `~/.codex/config.toml`
 - `.codex/config.toml`
 - `docs/project/25-tasks/done/codex-config-veilig-aanscherpen-voor-budio-development.md`
+
+
+## Commits
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -4467,6 +4473,7 @@ due_date: null
 sort_order: 1
 ---
 
+
 # Codex-config veilig aanscherpen voor Budio development
 
 ## Probleem / context
@@ -4645,6 +4652,11 @@ Tussenstand:
 - `docs/dev/active-context.md`
 - `docs/dev/local-development-environment.md`
 - `.codex/config.toml`
+
+
+## Commits
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---

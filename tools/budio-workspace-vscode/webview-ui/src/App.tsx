@@ -799,7 +799,13 @@ export function App(): React.JSX.Element {
           className={`content-shell ${detailMode === 'overlay' ? 'content-shell-toggle' : 'content-shell-pinned'} ${
             detailOpen ? 'detail-open' : ''
           }`}
-          style={detailMode === 'split' && detailOpen && !isFullscreenDetail ? { gridTemplateColumns: `minmax(0, 1fr) minmax(${DETAIL_PANE_MIN_WIDTH}px, ${detailPaneWidth}px)` } : undefined}
+          style={
+            detailMode === 'split' && detailOpen && !isFullscreenDetail
+              ? {
+                  gridTemplateColumns: `minmax(0, 1fr) 8px minmax(${DETAIL_PANE_MIN_WIDTH}px, ${detailPaneWidth}px)`,
+                }
+              : undefined
+          }
         >
           <section className={`main-pane ${activeView === 'list' ? 'main-pane-list' : ''}`}>
             {activeView === 'board' ? (

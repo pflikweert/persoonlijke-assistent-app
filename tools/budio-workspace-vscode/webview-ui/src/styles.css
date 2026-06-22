@@ -75,6 +75,7 @@ button {
 }
 
 .app-shell {
+  position: relative;
   height: 100%;
   overflow: hidden;
 }
@@ -104,8 +105,9 @@ button {
 }
 
 .workspace-shell {
+  position: relative;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -2801,12 +2803,15 @@ button {
 
 .content-shell {
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .content-shell-pinned {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, var(--detail-width));
+  grid-template-columns: minmax(0, 1fr) 8px minmax(320px, var(--detail-width));
 }
 
 .content-shell-pinned:not(.detail-open) {
@@ -2819,6 +2824,7 @@ button {
 }
 
 .main-pane {
+  grid-column: 1;
   min-height: 0;
   overflow: auto;
 }
@@ -3347,11 +3353,13 @@ button {
 
 .detail-pane {
   min-height: 0;
+  height: 100%;
   overflow: auto;
   background: rgba(13, 16, 22, 0.96);
 }
 
 .detail-pane-pinned {
+  grid-column: 3;
   border-left: 1px solid var(--border);
   padding: var(--space-4);
   z-index: 4;
@@ -3410,8 +3418,11 @@ button {
 }
 
 .detail-resize-handle {
+  grid-column: 2;
+  align-self: stretch;
   width: 8px;
   min-width: 8px;
+  height: 100%;
   border: 0;
   background: transparent;
   cursor: col-resize;

@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-22T09:39:39.057Z
-Source Commit: e5efe2a
+Build Timestamp (UTC): 2026-06-22T09:43:06.451Z
+Source Commit: 528bb2f
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 39
+- Totaal tasks opgenomen: 40
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -148,8 +148,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 12
+sort_order: 11
 ---
+
 
 
 
@@ -251,6 +252,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -283,8 +286,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 5
+sort_order: 4
 ---
+
 
 
 
@@ -480,6 +484,8 @@ Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interfa
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -2412,8 +2418,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 10
+sort_order: 9
 ---
+
 
 
 
@@ -2594,6 +2601,8 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -2773,8 +2782,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 7
+sort_order: 6
 ---
+
 
 
 
@@ -2989,6 +2999,8 @@ Reviewbevindingen:
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -3122,8 +3134,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 3
 ---
+
 
 
 
@@ -3335,6 +3348,8 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -3361,8 +3376,9 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 15
+sort_order: 14
 ---
+
 
 
 
@@ -3484,6 +3500,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -3627,8 +3645,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 8
+sort_order: 7
 ---
+
 
 
 
@@ -3914,6 +3933,207 @@ Live-readiness notes:
 - 2026-06-04T20:51:08+02:00 — fix: resolve deploy publishable key
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+```
+
+---
+
+## Archief-import actieve voortgang zonder preview-duplicatie
+
+- Path: `docs/project/25-tasks/open/archief-import-actieve-voortgang-zonder-preview-duplicatie.md`
+- Bucket: open
+- Status: in_progress
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-archief-import-actieve-voortgang-zonder-preview-duplicatie
+title: Archief-import actieve voortgang zonder preview-duplicatie
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-22
+summary: Verberg de import-preview direct na start van een archief-import en toon alleen een voortgangsgerichte mobiele statusweergave.
+tags: [settings, import, ux, polish]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Archief-import actieve voortgang zonder preview-duplicatie
+
+## Probleem / context
+
+Na het starten van een archief-import blijft het preview-scherm zichtbaar terwijl tegelijk een voortgangsblok verschijnt. Daardoor toont het scherm twee primaire taken tegelijk: controle van de preview en actieve voortgang.
+
+## Gewenste uitkomst
+
+Zodra de gebruiker de import start, verdwijnt de preview direct volledig uit beeld. Tijdens actieve import ligt de focus volledig op voortgang, met alleen de bestandscontext, aantallen, voortgangsbalk, percentage, verwerkingsstap en de route terug naar `Vandaag`.
+
+Na afronding verdwijnt de voortgangsweergave en wordt een compacte voltooid-status getoond met de verwerkte aantallen en dezelfde route naar `Vandaag`.
+
+## User outcome
+
+De gebruiker ziet tijdens importeren nog maar één duidelijke taak: wachten op voortgang of doorgaan naar `Vandaag`.
+
+## Functional slice
+
+Een UI-only state-scheiding voor `idle`, `selected`, `importing`, `completed` en `error` in de bestaande archief-importflow.
+
+## Entry / exit
+
+- Entry: gebruiker opent `Instellingen` -> `Importeren` en kiest een geldig bestand.
+- Exit: gebruiker ziet ofwel alleen voortgang tijdens actieve import, of een voltooid-status met actie `Ga naar Vandaag`.
+
+## Happy flow
+
+1. Gebruiker kiest een bestand en ziet de preview.
+2. Gebruiker start de import en de preview verdwijnt direct.
+3. Scherm toont alleen importstatus, bestand, dagen, entries, voortgang en `Ga naar Vandaag`.
+4. Na afronding toont het scherm alleen `Import voltooid` met aantallen en `Ga naar Vandaag`.
+
+## Non-happy flows
+
+- Empty state: `idle` blijft ongewijzigd.
+- Permission denied / unavailable: bestaande disabled-state blijft ongewijzigd.
+- Validation / unsupported state: bestaande preview-parse fouten blijven error-state tonen.
+- Failure / retry / cancel: importfouten blijven een error-state tonen zonder preview en voortgang tegelijk zichtbaar te maken.
+
+## UX / copy
+
+- Tijdens actieve import verbergen:
+  - `Klaar voor import`
+  - `Controleer kort wat er wordt toegevoegd`
+  - bestand metadata preview
+  - voorbeeld content
+  - `Importeer bestanden`
+  - `Andere bestanden kiezen`
+- Tijdens actieve import tonen:
+  - `Importeren...`
+  - bestandsnaam
+  - aantal dagen
+  - aantal entries
+  - voortgangsbalk
+  - percentage
+  - `Dag X van Y`
+  - `Deze verwerking draait op de achtergrond. Je kunt de app blijven gebruiken.`
+  - `Ga naar Vandaag`
+- Voltooid tonen:
+  - `Import voltooid`
+  - aantal dagen verwerkt
+  - aantal entries verwerkt
+  - `Ga naar Vandaag`
+- Gebruik bestaande settings-scaffold en bestaande button/text primitives.
+
+## Data / IO
+
+- Input: bestaande import-preview en background task status.
+- Output: enkelvoudige zichtbare UI-state per importsituatie.
+- Opslag/API/service/file-impact: `app/settings-import.tsx`.
+- Statussen: `idle`, `selected`, `importing`, `completed`, `error`.
+
+## Waarom nu
+
+De huidige dubbellaagse importweergave veroorzaakt directe UX-verwarring in een bestaande flow.
+
+## In scope
+
+- Importscreen state-rendering opschonen.
+- Actieve voortgang compact en mobiel-first tonen.
+- Voltooide status laten aansluiten op actieve voortgangsflow.
+
+## Buiten scope
+
+- Achtergrond-importarchitectuur wijzigen.
+- Nieuwe retry-, cancel- of notificationsystemen bouwen.
+- Andere settings-flows herontwerpen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Verbeter UX van actieve archief-import.
+- Verberg preview volledig zodra import start.
+- Toon tijdens actieve import alleen de voortgangsweergave en `Ga naar Vandaag`.
+- Toon na afronding een compacte voltooid-status met aantallen en `Ga naar Vandaag`.
+
+## Expliciete user requirements / detailbehoud
+
+- `idle` toont het huidige preview-scherm.
+- `importing` verbergt alle preview-copy, metadata, voorbeeldcontent en niet-bruikbare acties.
+- `importing` toont alleen bestandsnaam, aantal dagen, aantal entries, voortgangsbalk, percentage, `Dag X van Y`, achtergrondnotice en `Ga naar Vandaag`.
+- `completed` vervangt voortgang door `Import voltooid`, aantallen verwerkt en `Ga naar Vandaag`.
+- UX-regels:
+  - geen dubbele informatie
+  - slechts één primaire taak tegelijk zichtbaar
+  - tijdens import ligt focus volledig op voortgang
+  - geen acties tonen die tijdens actieve import niet gebruikt kunnen worden
+  - mobiel eerst ontwerpen
+
+## Status per requirement
+
+- [x] Preview verdwijnt direct na importstart — status: gebouwd
+- [x] Alleen voortgang blijft zichtbaar tijdens actieve import — status: gebouwd
+- [x] `Ga naar Vandaag` blijft beschikbaar tijdens actieve import — status: gebouwd
+- [x] Voltooide status toont juiste compacte samenvatting — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Error-state versimpeld naar `Probeer opnieuw` en `Ga naar Vandaag`, zodat mislukte imports ook geen irrelevante settings-acties meer tonen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: kleinste bronwijziging of primair artefact uitvoeren.
+- [ ] Blok 3: gerichte verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Importscreen states scheiden zonder dubbele content.
+- [x] Actieve voortgang compact renderen.
+- [x] Voltooide status compact renderen.
+- [ ] Gerichte verify uitvoeren.
+
+## Acceptance criteria
+
+- [ ] Na `Importeer bestanden` verdwijnt de preview direct volledig.
+- [ ] Tijdens actieve import is alleen de voortgangsweergave zichtbaar met `Ga naar Vandaag`.
+- [ ] Na succesvolle afronding toont het scherm alleen `Import voltooid` met aantallen en `Ga naar Vandaag`.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- `npm run lint` — geslaagd.
+- `npm run typecheck` — geslaagd.
+- `curl -I --max-time 5 http://localhost:8081` — geslaagd; lokale webtarget reageert met `200 OK`.
+- `npm run verify:local-auth-login -- --profile=default` — geslaagd; local auth magic-link flow geeft geldige session/user terug.
+- Runtime browser-smoke op `/settings-import` is nog niet volledig bewezen:
+  - `http://host.docker.internal:8081/settings-import` opent, maar redirect naar `/sign-in`
+  - Docker-browser kan de Supabase verify-link op poort `54321` niet bereiken, waardoor echte ingelogde import-smoke in deze sessie blocked blijft
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: actieve import alleen voortgang laten tonen, zonder preview-duplicatie.
+- Toegevoegde verbeteringen: error-state compacter gemaakt zodat ook failures geen dubbele of irrelevante acties tonen.
+- Afgerond: scherm rendert nu preview, actieve import en voltooid als drie gescheiden toestanden met telkens één primaire taak zichtbaar.
+- Open / blocked: interactieve runtime-smoke achter ingelogde browser blijft nog open door Docker-toegang tot lokale Supabase verify-link.
+
+## Relevante links
+
+- `app/settings-import.tsx`
+- `design_refs/1.2.1/importeren_bezig/code.html`
+- `design_refs/1.2.1/importeren_gelukt/code.html`
 ```
 
 ---
@@ -4509,8 +4729,9 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 6
+sort_order: 5
 ---
+
 
 
 
@@ -4796,6 +5017,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -4947,8 +5170,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 11
+sort_order: 10
 ---
+
 
 
 
@@ -5159,6 +5383,8 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -5345,8 +5571,9 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 9
+sort_order: 8
 ---
+
 
 
 
@@ -5457,6 +5684,8 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -5483,8 +5712,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 13
+sort_order: 12
 ---
+
 
 
 
@@ -5597,6 +5827,8 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -5623,8 +5855,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 14
+sort_order: 13
 ---
+
 
 
 
@@ -6036,6 +6269,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
@@ -6351,8 +6586,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 2
 ---
+
 
 
 
@@ -6508,6 +6744,8 @@ De huidige navigatie blokkeert betrouwbaar admingebruik en voelt alsof menu/inst
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 ```
 
 ---
