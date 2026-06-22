@@ -70,6 +70,10 @@ BUDIO_DEV_BROWSER="ChatGPT Atlas"
 
 Als `BUDIO_DEV_BROWSER` ontbreekt, gebruikt Expo het bestaande standaardbrowsergedrag.
 
+Deze instelling stuurt alleen welke browser Expo voor lokale preview opent.
+Ze verandert de Playwright-testbrowser niet.
+Voor geautomatiseerde tests blijft Playwright Chromium/headless de standaard; gebruik Atlas alleen als handmatige reviewlaag.
+
 ## Dagelijkse local dev
 
 Start de volledige lokale ontwikkelflow:

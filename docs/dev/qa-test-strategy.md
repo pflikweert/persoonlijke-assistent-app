@@ -6,6 +6,21 @@ Maak runtime- en regressiebewijs herhaalbaar, zonder elke kleine wijziging zwaar
 
 ## Testlagen
 
+### Browserkeuze
+
+Gebruik Playwright Chromium/headless als standaard voor geautomatiseerde browser-smokes en E2E.
+Headed Chromium is alleen bedoeld voor expliciete visuele/debug-smokes, bijvoorbeeld met `--headed`, `--debug` of de Playwright VS Code extension.
+
+ChatGPT Atlas is geen standaard geautomatiseerde testtarget in deze repo.
+Atlas mag handmatig worden gebruikt voor AI-assisted review of lokale preview wanneer `BUDIO_DEV_BROWSER="ChatGPT Atlas"` machine-lokaal is gezet, maar mag geen vereiste zijn voor reproduceerbare tests.
+
+Regels:
+
+- automation: Playwright Chromium/headless
+- visual debug: expliciet headed Chromium
+- manual review: optioneel Atlas of gewone browser
+- productie-achtige smoke: expliciete URL/env + Playwright Chromium/headless
+
 ### Unit
 
 Gebruik voor complexe pure logica:
