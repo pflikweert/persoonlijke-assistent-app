@@ -4,9 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 
-import { BackgroundTaskStatusCard } from "@/components/feedback/background-task-status-card";
 import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
-import { ProcessingScreen } from "@/components/feedback/processing-screen";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -39,7 +37,7 @@ import type {
 } from "@/services/import";
 import { colorTokens, radius, spacing } from "@/theme";
 
-type FlowState = "idle" | "selected" | "loading" | "success" | "error";
+type FlowState = "idle" | "selected" | "importing" | "success" | "error";
 
 type ResultStatus = {
   tone: "success" | "info" | "error";
@@ -116,6 +114,36 @@ export default function SettingsImportScreen() {
       "Onbekende conversatie"
     );
   }, [preview]);
+  const importSummary = useMemo(() => {
+    if (!preview) {
+      return null;
+    }
+
+    return {
+      fileName: preview.fileName,
+      dayCount: preview.uniqueDayCount,
+      entryCount: preview.userEntryCount,
+    };
+  }, [preview]);
+  const isBackgroundImportActive =
+    backgroundTask?.status === "queued" || backgroundTask?.status === "running";
+  const isImporting = flowState === "importing" || isBackgroundImportActive;
+  const isCompleted =
+    flowState === "success" && backgroundTask?.status === "completed";
+  const progressTotal = Math.max(
+    1,
+    Math.round(backgroundTask?.progressTotal || 0),
+  );
+  const progressCurrent = Math.max(
+    0,
+    Math.min(progressTotal, Math.round(backgroundTask?.progressCurrent || 0)),
+  );
+  const progressPercentage = Math.round((progressCurrent / progressTotal) * 100);
+  const importDetailLabel =
+    backgroundTask?.detailLabel?.trim() ||
+    (importSummary
+      ? `Dag 0 van ${Math.max(importSummary.dayCount, 1)}`
+      : "Import voorbereiden");
 
   function resetToIdle() {
     setFlowState("idle");
@@ -137,6 +165,7 @@ export default function SettingsImportScreen() {
           setBackgroundTask(latest);
           if (latest?.status === "queued" || latest?.status === "running") {
             setCurrentTaskId(latest.id);
+            setFlowState("importing");
           }
         }
       } catch {
@@ -265,7 +294,7 @@ export default function SettingsImportScreen() {
       return;
     }
 
-    setFlowState("loading");
+    setFlowState("importing");
     setResultStatus(null);
     setReplaceConfirmVisible(false);
 
@@ -283,12 +312,6 @@ export default function SettingsImportScreen() {
 
       setBackgroundTask(result.backgroundTask);
       setCurrentTaskId(result.backgroundTask.id);
-      setFlowState("selected");
-      setResultStatus({
-        tone: "info",
-        message: "Import gestart. We werken je dagboek op de achtergrond bij.",
-        detail: "Je kunt dit scherm sluiten. De voortgang blijft zichtbaar op Vandaag.",
-      });
     } catch (error) {
       setResultStatus({
         tone: "error",
@@ -351,7 +374,7 @@ export default function SettingsImportScreen() {
           </SurfaceSection>
         ) : null}
 
-        {importEnabled && flowState === "selected" && preview ? (
+        {importEnabled && flowState === "selected" && preview && !isImporting ? (
           <SurfaceSection
             title="Klaar voor import"
             subtitle="Controleer kort wat er wordt toegevoegd."
@@ -443,29 +466,98 @@ export default function SettingsImportScreen() {
           </SurfaceSection>
         ) : null}
 
-        {importEnabled &&
-        backgroundTask &&
-        (backgroundTask.status === "queued" ||
-          backgroundTask.status === "running") ? (
+        {importEnabled && isImporting ? (
           <SurfaceSection
-            title="Import voortgang"
-            subtitle="Deze verwerking draait door op de achtergrond."
+            title="Importeren..."
           >
-            <BackgroundTaskStatusCard
-              title="Import loopt door"
-              body="Je dagboek wordt bijgewerkt. Je kunt naar Vandaag gaan terwijl dit doorgaat."
-              status={backgroundTask.status}
-              progressCurrent={backgroundTask.progressCurrent}
-              progressTotal={backgroundTask.progressTotal}
-              detailLabel={backgroundTask.detailLabel}
-              actionLabel="Ga naar Vandaag"
-              onPressAction={() => router.replace("/(tabs)")}
-            />
+            <ThemedView
+              lightColor={colorTokens.light.surfaceLow}
+              darkColor={colorTokens.dark.surfaceLow}
+              style={styles.statusCard}
+            >
+              <ThemedView style={styles.previewGroup}>
+                <MetaText>Bestand</MetaText>
+                <ThemedText type="defaultSemiBold">
+                  {importSummary?.fileName ?? preview?.fileName ?? "Actieve import"}
+                </ThemedText>
+              </ThemedView>
+
+              <ThemedView style={styles.metaGrid}>
+                <ThemedView style={styles.metaItem}>
+                  <MetaText>Dagen</MetaText>
+                  <ThemedText type="defaultSemiBold">
+                    {String(importSummary?.dayCount ?? preview?.uniqueDayCount ?? 0)}
+                  </ThemedText>
+                </ThemedView>
+                <ThemedView style={styles.metaItem}>
+                  <MetaText>Entries</MetaText>
+                  <ThemedText type="defaultSemiBold">
+                    {String(importSummary?.entryCount ?? preview?.userEntryCount ?? 0)}
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+
+              <ThemedView style={styles.progressHeader}>
+                <ThemedText type="defaultSemiBold">{String(progressPercentage)}%</ThemedText>
+                <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                  {importDetailLabel}
+                </ThemedText>
+              </ThemedView>
+
+              <ThemedView style={styles.progressTrack}>
+                <ThemedView
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${Math.max(progressPercentage, 6)}%`,
+                      backgroundColor: palette.primary,
+                    },
+                  ]}
+                />
+              </ThemedView>
+
+              <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                Deze verwerking draait op de achtergrond. Je kunt de app blijven gebruiken.
+              </ThemedText>
+
+              <PrimaryButton
+                label="Ga naar Vandaag"
+                onPress={() => router.replace("/(tabs)")}
+              />
+            </ThemedView>
           </SurfaceSection>
         ) : null}
 
         {importEnabled &&
-        (flowState === "success" || flowState === "error") &&
+        isCompleted ? (
+          <SurfaceSection title="Import voltooid">
+            <ThemedView
+              lightColor={colorTokens.light.surfaceLow}
+              darkColor={colorTokens.dark.surfaceLow}
+              style={styles.statusCard}
+            >
+              <ThemedView style={styles.metaGrid}>
+                <ThemedView style={styles.metaItem}>
+                  <MetaText>Dagen verwerkt</MetaText>
+                  <ThemedText type="defaultSemiBold">
+                    {String(importSummary?.dayCount ?? preview?.uniqueDayCount ?? 0)}
+                  </ThemedText>
+                </ThemedView>
+                <ThemedView style={styles.metaItem}>
+                  <MetaText>Entries verwerkt</MetaText>
+                  <ThemedText type="defaultSemiBold">
+                    {String(importSummary?.entryCount ?? preview?.userEntryCount ?? 0)}
+                  </ThemedText>
+                </ThemedView>
+              </ThemedView>
+
+              <PrimaryButton
+                label="Ga naar Vandaag"
+                onPress={() => router.replace("/(tabs)")}
+              />
+            </ThemedView>
+          </SurfaceSection>
+        ) : (flowState === "error") &&
         resultStatus ? (
           <SurfaceSection
             title="Importeren"
@@ -518,13 +610,10 @@ export default function SettingsImportScreen() {
               ) : null}
 
               <ThemedView style={styles.actions}>
-                <PrimaryButton
-                  label="Nog een bestand importeren"
-                  onPress={resetToIdle}
-                />
+                <PrimaryButton label="Probeer opnieuw" onPress={resetToIdle} />
                 <SecondaryButton
-                  label="Terug naar Instellingen"
-                  onPress={() => router.replace("/settings")}
+                  label="Ga naar Vandaag"
+                  onPress={() => router.replace("/(tabs)")}
                 />
               </ThemedView>
             </SettingsStateBody>
@@ -561,13 +650,11 @@ export default function SettingsImportScreen() {
               onPress: () => void runImport("replace_all"),
             },
           ]}
-          processing={flowState === "loading"}
+          processing={flowState === "importing" && !backgroundTask}
           onCancel={() => setReplaceConfirmVisible(false)}
           onConfirm={() => void runImport("replace_all")}
         />
       </ScreenContainer>
-
-      <ProcessingScreen visible={importEnabled && flowState === "loading"} variant="chatgpt-import" />
     </>
   );
 }
@@ -588,6 +675,12 @@ const styles = StyleSheet.create({
   previewGroup: {
     gap: spacing.xs,
   },
+  statusCard: {
+    width: "100%",
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
   metaGrid: {
     flexDirection: "row",
     gap: spacing.md,
@@ -596,11 +689,25 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xxs,
   },
+  progressHeader: {
+    gap: spacing.xs,
+  },
   examples: {
     gap: spacing.sm,
   },
   exampleCard: {
     borderRadius: radius.md,
     padding: spacing.md,
+  },
+  progressTrack: {
+    width: "100%",
+    height: 8,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(125,125,125,0.24)",
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: radius.pill,
   },
 });
