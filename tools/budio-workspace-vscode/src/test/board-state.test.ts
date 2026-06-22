@@ -63,6 +63,10 @@ test('buildBoardSnapshot groups by column and respects manual ordering', () => {
       epicsRoot: 'docs/project/24-epics',
       jarvisAssetsRoot: 'assets/jarvis/final-frame',
       jarvisSeedManifest: 'tools/jarvis-luma/final-frame.seed.json',
+      agentName: 'Codex',
+      agentModel: 'unknown',
+      agentRuntime: 'codex',
+      agentSettings: 'default',
       columns: ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'],
       showDoneColumn: true,
       defaultSort: 'manual',
@@ -107,6 +111,10 @@ test('buildBoardSnapshot derives subtasks, blockers and epic rollups', () => {
       epicsRoot: 'docs/project/24-epics',
       jarvisAssetsRoot: 'assets/jarvis/final-frame',
       jarvisSeedManifest: 'tools/jarvis-luma/final-frame.seed.json',
+      agentName: 'Codex',
+      agentModel: 'unknown',
+      agentRuntime: 'codex',
+      agentSettings: 'default',
       columns: ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'],
       showDoneColumn: true,
       defaultSort: 'manual',
@@ -124,4 +132,97 @@ test('buildBoardSnapshot derives subtasks, blockers and epic rollups', () => {
   assert.equal(blocked?.isBlocked, true);
   assert.equal(epic?.linkedTaskIds.length, 3);
   assert.equal(epic?.subtaskIds.includes('task-child'), true);
+});
+
+test('buildBoardSnapshot exposes focused detail preview sections from markdown body', () => {
+  const snapshot = buildBoardSnapshot({
+    tasks: [
+      buildTask({
+        id: 'detail-task',
+        body: [
+          '## Probleem / context',
+          '',
+          'De detail view toont nu te veel ruwe markdown.',
+          '',
+          '## Gewenste uitkomst',
+          '',
+          'Een rustige leesweergave met de belangrijkste taakcontext.',
+        ].join('\n'),
+        sections: new Map([
+          [
+            'probleem / context',
+            {
+              heading: 'Probleem / context',
+              startLine: 0,
+              contentStartLine: 2,
+              endLineExclusive: 3,
+              lines: ['De detail view toont nu te veel ruwe markdown.'],
+            },
+          ],
+          [
+            'gewenste uitkomst',
+            {
+              heading: 'Gewenste uitkomst',
+              startLine: 4,
+              contentStartLine: 6,
+              endLineExclusive: 7,
+              lines: ['Een rustige leesweergave met de belangrijkste taakcontext.'],
+            },
+          ],
+        ]),
+      }),
+    ],
+    epics: [],
+    settings: {
+      tasksRoot: 'docs/project/25-tasks',
+      epicsRoot: 'docs/project/24-epics',
+      jarvisAssetsRoot: 'assets/jarvis/final-frame',
+      jarvisSeedManifest: 'tools/jarvis-luma/final-frame.seed.json',
+      agentName: 'Codex',
+      agentModel: 'unknown',
+      agentRuntime: 'codex',
+      agentSettings: 'default',
+      columns: ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'],
+      showDoneColumn: true,
+      defaultSort: 'manual',
+    },
+    workspaceName: 'workspace',
+    workspacePath: '/workspace',
+  });
+
+  assert.deepEqual(snapshot.allCards[0]?.detailPreviewSections, [
+    {
+      heading: 'Probleem / context',
+      body: 'De detail view toont nu te veel ruwe markdown.',
+    },
+    {
+      heading: 'Gewenste uitkomst',
+      body: 'Een rustige leesweergave met de belangrijkste taakcontext.',
+    },
+  ]);
+});
+
+test('buildBoardSnapshot leaves detail preview sections empty for fallback rendering', () => {
+  const snapshot = buildBoardSnapshot({
+    tasks: [buildTask({ id: 'fallback-task', body: 'Losse body zonder gewenste detailsecties.' })],
+    epics: [],
+    settings: {
+      tasksRoot: 'docs/project/25-tasks',
+      epicsRoot: 'docs/project/24-epics',
+      jarvisAssetsRoot: 'assets/jarvis/final-frame',
+      jarvisSeedManifest: 'tools/jarvis-luma/final-frame.seed.json',
+      agentName: 'Codex',
+      agentModel: 'unknown',
+      agentRuntime: 'codex',
+      agentSettings: 'default',
+      columns: ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'],
+      showDoneColumn: true,
+      defaultSort: 'manual',
+    },
+    workspaceName: 'workspace',
+    workspacePath: '/workspace',
+  });
+
+  assert.deepEqual(snapshot.allCards[0]?.detailPreviewSections, []);
+  assert.equal(snapshot.allCards[0]?.bodyPreview, 'Losse body zonder gewenste detailsecties.');
 });

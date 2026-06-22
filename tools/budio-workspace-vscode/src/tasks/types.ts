@@ -34,6 +34,11 @@ export interface TaskSectionRange {
   lines: string[];
 }
 
+export interface TaskDetailPreviewSection {
+  heading: string;
+  body: string;
+}
+
 export interface ParsedTaskFile {
   id: string;
   title: string;
@@ -113,6 +118,7 @@ export interface TaskCardViewModel {
   lastModified: string;
   hasBody: boolean;
   bodyPreview: string;
+  detailPreviewSections: TaskDetailPreviewSection[];
   source: string;
   version: FileVersion;
   activeAgent: string | null;
@@ -174,6 +180,10 @@ export interface WorkspaceSettings {
   epicsRoot: string;
   jarvisAssetsRoot: string;
   jarvisSeedManifest: string;
+  agentName: string;
+  agentModel: string;
+  agentRuntime: string;
+  agentSettings: string;
   columns: TaskStatus[];
   showDoneColumn: boolean;
   defaultSort: TaskSort;

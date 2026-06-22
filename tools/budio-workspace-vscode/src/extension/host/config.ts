@@ -49,6 +49,10 @@ export function readWorkspaceSettings(workspaceFolder: vscode.WorkspaceFolder): 
     epicsRoot: sanitizeRelativePath(configuration.get<string>('epicsRoot', 'docs/project/24-epics')),
     jarvisAssetsRoot: sanitizeRelativePath(configuration.get<string>('jarvisAssetsRoot', 'assets/jarvis/final-frame')),
     jarvisSeedManifest: sanitizeRelativePath(configuration.get<string>('jarvisSeedManifest', 'tools/jarvis-luma/final-frame.seed.json')),
+    agentName: sanitizeSetting(configuration.get<string>('agentName', 'Codex'), 'Codex'),
+    agentModel: sanitizeSetting(configuration.get<string>('agentModel', 'unknown'), 'unknown'),
+    agentRuntime: sanitizeSetting(configuration.get<string>('agentRuntime', 'codex'), 'codex'),
+    agentSettings: sanitizeSetting(configuration.get<string>('agentSettings', 'default'), 'default'),
     columns: columns.length > 0 ? columns : [...DEFAULT_COLUMNS],
     showDoneColumn: configuration.get<boolean>('showDoneColumn', true),
     defaultSort,
@@ -71,4 +75,9 @@ function ensureRequiredColumns(columns: TaskStatus[]): TaskStatus[] {
 
 function sanitizeRelativePath(input: string): string {
   return input.replace(/^[./]+/, '').replace(/\/+$/, '');
+}
+
+function sanitizeSetting(input: string, fallback: string): string {
+  const trimmed = input.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
 }

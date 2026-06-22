@@ -43,6 +43,7 @@ function card(id: string): TaskCardViewModel {
     lastModified: '2026-04-20T00:00:00.000Z',
     hasBody: true,
     bodyPreview: 'Preview',
+    detailPreviewSections: [],
     source: 'docs/project/open-points.md',
     version: { mtimeMs: 1, hash: id },
     activeAgent: null,

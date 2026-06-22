@@ -60,6 +60,16 @@ export type WebviewToHostMessage =
       checked: boolean;
     }
   | {
+      type: 'claimTaskAgent';
+      taskId: string;
+      expectedVersion: FileVersion;
+    }
+  | {
+      type: 'clearTaskAgent';
+      taskId: string;
+      expectedVersion: FileVersion;
+    }
+  | {
       type: 'createTask';
       status: Exclude<TaskStatus, 'done'>;
       title?: string;

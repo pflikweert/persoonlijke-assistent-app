@@ -84,6 +84,26 @@
           "default": "tools/jarvis-luma/final-frame.seed.json",
           "description": "Relative path to the Jarvis seed manifest."
         },
+        "budioWorkspace.agentName": {
+          "type": "string",
+          "default": "Codex",
+          "description": "Default agent name written when a task is claimed as active."
+        },
+        "budioWorkspace.agentModel": {
+          "type": "string",
+          "default": "unknown",
+          "description": "Default agent model written when a task is claimed as active."
+        },
+        "budioWorkspace.agentRuntime": {
+          "type": "string",
+          "default": "codex",
+          "description": "Default agent runtime written when a task is claimed as active."
+        },
+        "budioWorkspace.agentSettings": {
+          "type": "string",
+          "default": "default",
+          "description": "Default agent settings label written when a task is claimed as active."
+        },
         "budioWorkspace.columns": {
           "type": "array",
           "default": [

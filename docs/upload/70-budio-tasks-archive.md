@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-22T09:50:29.729Z
-Source Commit: c74062f
+Build Timestamp (UTC): 2026-06-22T12:08:56.921Z
+Source Commit: 6eeaf75
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 65
+- Totaal tasks opgenomen: 70
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -3672,6 +3672,374 @@ Eerste end-to-end slice voor Jarvis in Workspace:
 
 ---
 
+## Budio Workspace task detail blank screen en screenshot proof fix
+
+- Path: `docs/project/25-tasks/done/budio-workspace-task-detail-blank-screen-en-screenshot-proof-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-budio-workspace-task-detail-blank-screen-en-screenshot-proof-fix
+title: Budio Workspace task detail blank screen en screenshot proof fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: "Fix de task-detail blank-screen regressie en maak VS Code plugin screenshots betrouwbaar bewijsbaar."
+tags: [plugin, vscode, task-detail, regression, screenshot]
+workstream: plugin
+epic_id: null
+parent_task_id: task-budio-workspace-task-detail-edit-polish-agent-claiming
+depends_on: [task-budio-workspace-task-detail-edit-polish-agent-claiming]
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+Na de task-detail edit polish kan klikken op een taak in het overzicht de plugin-webview volledig leeg maken. De waarschijnlijke oorzaak is een render-crash door nieuwe detailvelden die niet defensief gelezen worden wanneer VS Code retained webview-state of een oude hydrate-payload gebruikt.
+
+Daarnaast werkte de screenshot-helper technisch, maar accepteerde hij ook een PNG van de verkeerde voorgrond-app. Daardoor is een screenshot pas bewijs als de helper controleert dat VS Code en de Budio Workspace view daadwerkelijk vooraan staan.
+
+## Gewenste uitkomst
+
+Task detail opent weer betrouwbaar vanuit board en list zonder blank screen. Als er toch een renderfout optreedt, toont de webview een compacte recovery-state in plaats van leeg te worden.
+
+De screenshot-helper faalt hard wanneer niet VS Code/Budio Workspace wordt vastgelegd, zodat visueel bewijs niet meer per ongeluk een andere app kan zijn.
+
+## User outcome
+
+De gebruiker kan op taken klikken, detail rechts of fullscreen openen, en erop vertrouwen dat smoke-screenshots de plugin tonen.
+
+## Functional slice
+
+Een smalle runtime-stabiliteitsfix voor de bestaande Budio Workspace plugin: defensieve detailrendering, crash guard en betrouwbare screenshot-proof tooling.
+
+## Entry / exit
+
+- Entry: gebruiker opent board/list en klikt een taak.
+- Exit: detailpane opent of toont een herstelbare fout; screenshot-helper schrijft alleen bewijs als VS Code/Budio Workspace vooraan staat.
+
+## Happy flow
+
+1. Board opent en toont taken.
+2. Klik op een task opent detail zonder blank screen.
+3. Fullscreen detail werkt nog.
+4. Screenshot-helper capture met `--expect-title "Budio Workspace"` schrijft een PNG van VS Code of faalt duidelijk.
+
+## Non-happy flows
+
+- Empty state: ontbrekende nieuwe detailvelden renderen als lege arrays/fallback-preview.
+- Permission denied / unavailable: screenshot-helper behoudt macOS Screen Recording permissie-uitleg.
+- Validation / unsupported state: verkeerde foreground app of venstertitel veroorzaakt een duidelijke helper-fail.
+- Failure / retry / cancel: webview renderfout toont recovery-acties voor refresh/reload.
+
+## UX / copy
+
+- Recoverycopy compact en eerlijk: detail kon niet gerenderd worden; bied `Herlaad board`.
+- Geen extra permanente UI-copy in normale detailflow.
+- Screenshot-helper CLI behoudt bestaande stijl en voegt `--expect-title <text>` toe.
+
+## Data / IO
+
+- Input: bestaande `TaskCardViewModel` payloads, inclusief oudere retained payloads zonder nieuwe velden.
+- Output: robuuste webview-rendering en betrouwbare screenshot PNG of expliciete CLI-fout.
+- Opslag/API/service/file-impact: geen task schema-wijziging; alleen plugin/webview/tooling.
+- Statussen: taskstatussen blijven ongewijzigd.
+
+## Waarom nu
+
+Dit is een directe regressie in de primaire plugin-workflow. Klikken op een taak moet altijd veilig zijn.
+
+## In scope
+
+- Defensieve detail normalizers.
+- ErrorBoundary rond board/list/detail webview-shell.
+- Screenshot-helper focus/title-validatie en window capture waar mogelijk.
+- Tests en plugin apply.
+
+## Buiten scope
+
+- Nieuwe task-detail features.
+- Redesign van board/list/Jarvis.
+- Automatische click-smoke via UI automation als dat buiten de bestaande lokale tooling valt.
+
+## Oorspronkelijk plan / afgesproken scope
+
+Fix Plan: Task Detail Blank Screen + Reliable VS Code Plugin Screenshot Proof. Stabiliseer detail rendering, voeg crash guard toe, harden screenshot-helper zodat verkeerde app-captures niet als bewijs tellen, en verifieer met plugin checks + smoke.
+
+## Expliciete user requirements / detailbehoud
+
+- Task detail mag na klikken op een taak geen leeg scherm meer geven.
+- De vorige task-detail polish en agent claiming blijven behouden.
+- Screenshot-helper moet betrouwbaar bewijs leveren of duidelijk falen.
+- Plugin opnieuw toepassen en VS Code refreshen na wijziging.
+
+## Status per requirement
+
+- [x] Blank-screen regressie oplossen — status: gebouwd.
+- [x] Defensieve detailrendering toevoegen — status: gebouwd.
+- [x] Webview crash guard toevoegen — status: gebouwd.
+- [x] Screenshot-helper betrouwbaar maken — status: gebouwd.
+- [x] Plugin apply + bewijs draaien — status: gebouwd.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Safe normalizers zijn als geteste helper toegevoegd zodat retained webview-payloads zonder nieuwe velden niet meer kunnen crashen.
+- Screenshot-helper controleert nu ook zichtbare VS Code UI-namen wanneer `--expect-title` niet in de macOS venstertitel staat.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow en regressiehypothese bevestigen.
+- [x] Blok 2: webview runtime guard en safe normalizers implementeren.
+- [x] Blok 3: screenshot-helper hardening implementeren.
+- [x] Blok 4: gerichte tests, plugin apply en smokebewijs.
+- [x] Blok 5: task/docs reconciliation en verify afronden.
+
+## Concrete checklist
+
+- [x] Safe detail helper toevoegen en gebruiken.
+- [x] ErrorBoundary toevoegen rond plugin shell.
+- [x] Screenshot-helper `--expect-title` en frontmost-app check toevoegen.
+- [x] Tests toevoegen/aanpassen.
+- [x] Plugin typecheck/test/apply draaien.
+- [x] Runtime/screenshot smoke uitvoeren.
+- [x] Taskflow/docs verify draaien.
+
+## Acceptance criteria
+
+- [x] Board/list task click veroorzaakt geen blank webview.
+- [x] Ontbrekende `detailPreviewSections` crasht niet.
+- [x] Detail fullscreen blijft werken.
+- [x] Screenshot-helper accepteert geen capture van verkeerde app.
+- [x] Plugin is opnieuw toegepast op VS Code workspace.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd.
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 61 tests.
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd; plugin opnieuw gebouwd, geïnstalleerd en VS Code gerefresht.
+- `node scripts/capture-vscode-screenshot.mjs --unknown-option` — faalt correct op onbekende optie.
+- `node scripts/capture-vscode-screenshot.mjs --expect-title` — faalt correct op ontbrekende waarde.
+- `node scripts/capture-vscode-screenshot.mjs --expect-title definitely-not-present --out /tmp/budio-should-not-write.png` — faalt correct met `wrong_window`.
+- `node scripts/capture-vscode-screenshot.mjs --expect-title 'Budio Workspace' --out /tmp/budio-workspace-proof.png` — geslaagd; foreground `Code — Budio Workspace: Board — persoonlijke-assistent-app`.
+- Task-click smoke screenshot: `/tmp/budio-task-click-proof.png` — toont Budio Workspace board met geopende task-detail pane, geen blank screen.
+- `npm run taskflow:verify` — geslaagd.
+- `npm run lint` — geslaagd.
+- `npm run typecheck` — geslaagd.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: blank-screen regressie en screenshot-proof fix.
+- Toegevoegde verbeteringen: geteste safe detail helper en UI-name fallback voor `--expect-title`.
+- Afgerond: detailrendering is defensief, webview heeft een recovery boundary, screenshot-helper verifieert VS Code/context, plugin is toegepast en task-click smoke toont detail zonder blank screen.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-task-detail-edit-polish-agent-claiming.md`
+- `tools/budio-workspace-vscode/`
+- `scripts/capture-vscode-screenshot.mjs`
+```
+
+---
+
+## Budio Workspace task detail edit polish + agent claiming
+
+- Path: `docs/project/25-tasks/done/budio-workspace-task-detail-edit-polish-agent-claiming.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-budio-workspace-task-detail-edit-polish-agent-claiming
+title: Budio Workspace task detail edit polish + agent claiming
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: "Verbeter de Budio Workspace task-detail edit UI en voeg expliciete agent-claim metadata toe."
+tags: [plugin, vscode, task-detail, agent-metadata]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+De task-detail edit in de Budio Workspace plugin toont te veel onnodige of rommelige informatie. `Due date` is zichtbaar terwijl die niet gebruikt wordt, structuurinformatie staat visueel onvoldoende rustig, checklistregels stapelen checkbox en tekst onder elkaar, en de body preview is nu een compacte markdown-dump in plaats van een leesbare taakomschrijving.
+
+Daarnaast moet actieve agentmetadata niet impliciet ontstaan door selecteren of statuswijziging, maar expliciet geclaimd en gestopt kunnen worden vanuit task detail. Die metadata bestaat al in frontmatter en moet zichtbaar, schrijfbaar en onderhoudbaar worden vanuit de plugin.
+
+## Gewenste uitkomst
+
+Task detail is rustiger en praktischer: geen due-date UI, een nette structuurkaart, horizontale checklistregels, en een read-only taakbeschrijving met de belangrijkste markdownsecties.
+
+Agentstatus is zichtbaar in detail en kan expliciet worden geclaimd of gestopt. Board/list/Jarvis kunnen daarna op echte `active_agent*` metadata blijven vertrouwen.
+
+## User outcome
+
+De gebruiker kan een taak openen, snel de echte context lezen, checklistitems normaal afvinken/lezen, relaties begrijpen en expliciet aangeven dat Codex/de agent actief aan die taak werkt.
+
+## Functional slice
+
+Een werkende plugin-slice voor task-detail polish plus agent-claim/clear flow, zonder functionele wijziging aan bestaande board/list workflows buiten de detail UI en de nieuwe agentacties.
+
+## Entry / exit
+
+- Entry: gebruiker opent een task detail vanuit board of list.
+- Exit: detail toont een leesbare structuur en taakbeschrijving; agent kan expliciet geclaimd of gestopt worden en metadata wordt in de taskfile bijgewerkt.
+
+## Happy flow
+
+1. Gebruiker opent een taak in board/list en ziet de detail edit rechts/fullscreen zonder due-date UI.
+2. Gebruiker leest structuur, relaties, checklist en taakbeschrijving in rustige layout.
+3. Gebruiker klikt `Claim als actief`; plugin schrijft `active_agent*` metadata en hydrateert de nieuwe staat.
+4. Gebruiker klikt `Stop agent`; plugin wist de actieve agentvelden.
+
+## Non-happy flows
+
+- Empty state: ontbrekende relaties blijven als nette lege staat zichtbaar.
+- Permission denied / unavailable: niet van toepassing; dit is lokale taskfile-mutatie.
+- Validation / unsupported state: versieconflict blijft via bestaande expectedVersion-flow afgehandeld.
+- Failure / retry / cancel: repositoryfouten blijven via bestaande host/webview foutafhandeling zichtbaar.
+
+## UX / copy
+
+- Verberg `Due date` in task-detail edit.
+- Structuurlabels: `Epic`, `Parent task`, `Type`, `Blocked`.
+- Relatieblokken: `Subtasks`, `Blocked by`, `Blocks`, `Follows after`.
+- Taakomschrijving: heading `Taakbeschrijving`, primair `Probleem / context` en `Gewenste uitkomst`.
+- Agentacties: `Claim als actief` en `Stop agent`.
+
+## Data / IO
+
+- Input: geselecteerde taak, bestaande markdown sections, VS Code workspace settings voor agentdefaults.
+- Output: bijgewerkte `active_agent*` frontmattervelden bij claim/clear.
+- Opslag/API/service/file-impact: lokale task markdown files via bestaande repository-writer.
+- Statussen: bestaande taskstatussen blijven ongewijzigd; `done` cleanup van active-agent metadata blijft bestaan.
+
+## Waarom nu
+
+De task-detail edit is de primaire werkplek in de plugin. De huidige vorm remt dagelijkse taakuitvoering en actieve-agent awareness moet op echte metadata kunnen leunen.
+
+## In scope
+
+- Task-detail edit UI polish.
+- Due-date UI verbergen, technische data intact laten.
+- Read-only detail preview sections bouwen.
+- Agent settings, message bridge, claim en clear flow.
+- Gerichte tests en plugin apply.
+
+## Buiten scope
+
+- Nieuwe taskfile schema’s.
+- Automatisch claimen bij selecteren of statuswijziging.
+- Functionele wijzigingen aan board/list filtering, DnD, sorting of bestaande saveflow.
+- Jarvis redesign of nieuwe agent runtime.
+
+## Oorspronkelijk plan / afgesproken scope
+
+Implementeer het plan “Budio Workspace Task Detail Edit Polish + Agent Claiming”: task-detail edit rustiger maken, due-date UI verbergen, structuur en checklist verbeteren, body preview vervangen door taakbeschrijving, en expliciete agent claim/stop metadata toevoegen.
+
+## Expliciete user requirements / detailbehoud
+
+- Due date niet zichtbaar maken in task-detail edit.
+- Structuur visueel verbeteren met Epic, Parent task, Type, Blocked en relatieblokken.
+- Agent metadata vastleggen bij expliciet uitvoeren/claimen van een taak en zichtbaar houden.
+- Checklist checkbox en tekst naast elkaar tonen.
+- Body Preview vervangen door leesbare omschrijving met `## Probleem / context` en `## Gewenste uitkomst`.
+
+## Status per requirement
+
+- [x] Due date verbergen — status: gebouwd.
+- [x] Structuurkaart verbeteren — status: gebouwd.
+- [x] Agent metadata claim/stop flow — status: gebouwd.
+- [x] Checklist layout horizontaal maken — status: gebouwd.
+- [x] Taakbeschrijving read-only sections tonen — status: gebouwd.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Relatieblokken vallen op small-width detail terug naar één kolom zodat de detailpane bruikbaar blijft.
+- Repositorytest bewijst dat claim/clear metadata echt door de markdown-writer wordt geschreven en gewist.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: plugin types/config/host/data helpers aanpassen.
+- [x] Blok 3: webview detail UI en styling aanpassen.
+- [x] Blok 4: gerichte tests en plugin apply.
+- [x] Blok 5: taskstatus, docs bundle en reconciliation afronden.
+
+## Concrete checklist
+
+- [x] Detail preview sections uit markdown bouwen en testen.
+- [x] Agent claim/clear patch helper en host messages toevoegen.
+- [x] Due-date UI verwijderen uit detail edit.
+- [x] Structuur, checklist en taakbeschrijving visueel verbeteren.
+- [x] Workspace settings voor agentdefaults toevoegen.
+- [x] Plugin typecheck/test/apply draaien.
+- [x] Taskflow/docs verify draaien.
+
+## Acceptance criteria
+
+- [x] Board/list detail toont geen due-date input of due-date header chip.
+- [x] Structuur en relaties zijn leesbaar, compact en read-only.
+- [x] Checklist checkbox en tekst staan horizontaal naast elkaar.
+- [x] Taakbeschrijving toont `Probleem / context` en/of `Gewenste uitkomst`, met fallback.
+- [x] `Claim als actief` schrijft alle `active_agent*` velden.
+- [x] `Stop agent` wist alle `active_agent*` velden.
+- [x] Fullscreen detail blijft bruikbaar.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd.
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 58 tests.
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd; VS Code plugin opnieuw gebouwd, geïnstalleerd en gerefresht.
+- `npm run taskflow:verify` — geslaagd.
+- `npm run lint` — geslaagd.
+- `npm run typecheck` — geslaagd.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: task-detail edit UI polish en expliciete agent-claim flow.
+- Toegevoegde verbeteringen: responsive relatiegrid op smalle detailweergave en repositorybewijs voor claim/clear writerpad.
+- Afgerond: due-date UI verborgen, structuurkaart verbeterd, checklistlayout gefixt, taakbeschrijving read-only gemaakt, agentsettings/messages/hostflow toegevoegd, claim/clear metadata getest en plugin toegepast.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `tools/budio-workspace-vscode/`
+```
+
+---
+
 ## Budio Workspace task detail rechterpaneel en scroll fix
 
 - Path: `docs/project/25-tasks/done/budio-workspace-task-detail-rechterpaneel-scroll-fix.md`
@@ -3867,7 +4235,7 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-06-22
-summary: "Maak screenshotbewijs voor de VS Code workspace-plugin robuuster wanneer macOS `screencapture` door display/screen-recording permissies wordt geblokkeerd."
+summary: Maak screenshotbewijs voor de VS Code workspace-plugin robuuster wanneer macOS `screencapture` door display/screen-recording permissies wordt geblokkeerd.
 tags: [plugin, vscode, smoke, screenshots, dev-tooling]
 workstream: plugin
 epic_id: null
@@ -3879,6 +4247,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -4007,6 +4376,11 @@ De plugin-UI wordt actief aangepast en de vorige fix miste visueel bewijs door e
 
 - `tools/budio-workspace-vscode/README.md`
 - `scripts/`
+
+
+## Commits
+
+- 2026-06-22T12:38:07+02:00 — chore(plugin): add vscode screenshot capture helper
 ```
 
 ---
@@ -4606,6 +4980,179 @@ Eén uploadbestand met:
 ## Commits
 
 - 2026-05-16T06:54:00+02:00 — docs: add Caren zorgdossier structuring task
+```
+
+---
+
+## Codex browser-testworkflow expliciteren
+
+- Path: `docs/project/25-tasks/done/codex-browser-testworkflow-expliciteren.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-codex-browser-testworkflow-expliciteren
+title: Codex browser-testworkflow expliciteren
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-22
+summary: "Leg docs-only vast dat geautomatiseerde browserchecks standaard via Playwright Chromium/headless lopen, headed Chromium expliciet is voor visuele smoke/debug, en Atlas alleen optioneel handmatig wordt gebruikt."
+tags: [codex, browser, playwright, atlas, qa, local-dev]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+
+# Codex browser-testworkflow expliciteren
+
+## Probleem / context
+
+De repo heeft al Playwright Chromium-smokes, failure-artifacts en een optionele `BUDIO_DEV_BROWSER` voor Expo preview. Het verschil tussen geautomatiseerde tests, headed visual smoke en handmatige Atlas-review staat nog niet expliciet genoeg in de workflowdocs.
+
+## Gewenste uitkomst
+
+De docs maken duidelijk dat automatisering reproduceerbaar via Playwright Chromium/headless blijft. Headed Chromium is alleen expliciet voor visuele/debug-smokes. ChatGPT Atlas mag als handmatige reviewlaag of AI-assisted browsing worden gebruikt, maar wordt geen fragiele standaard testdependency.
+
+## User outcome
+
+Pieter en Codex weten wanneer Chrome/Chromium, headed mode of Atlas logisch is, zonder dat testgedrag of dependencies veranderen.
+
+## Functional slice
+
+Docs-only aanscherping van de lokale QA- en developmentworkflow.
+
+## Entry / exit
+
+- Entry: bestaande docs noemen Atlas als optionele Expo-browser en QA-smokes als browserbewijs.
+- Exit: browserkeuze per verificatielaag is expliciet vastgelegd.
+
+## Happy flow
+
+1. Agent controleert bestaande scripts, Playwright-config en docs.
+2. Agent past alleen relevante docs aan.
+3. Agent draait taskflow/docs verify.
+
+## Non-happy flows
+
+- Validation / unsupported state: als verify faalt door bestaande dirty docs, wordt dat expliciet gerapporteerd.
+- Failure / retry / cancel: geen code- of testgedrag wijzigen om docsverify te forceren.
+
+## UX / copy
+
+- Geen app-UI.
+- Copy blijft operationeel en kort.
+
+## Data / IO
+
+- Input: `playwright.config.ts`, `package.json`, `docs/dev/**`, `.codex/config.toml`.
+- Output: docs-only update.
+- Opslag/API/service/file-impact: geen runtime-impact, geen dependencies, geen `.env*`.
+
+## Waarom nu
+
+- De lokale Codex/Atlas-vraag is net onderzocht en verdient een herhaalbare workflowregel voordat er opnieuw browser-smokes of visuele checks worden uitgevoerd.
+
+## In scope
+
+- `docs/dev/qa-test-strategy.md`
+- `docs/dev/local-development-environment.md`
+- Task/docs-sync
+
+## Buiten scope
+
+- Applicatiecode.
+- Playwright-config of testscripts wijzigen.
+- Dependencies toevoegen.
+- `.env*`, productie-data, commit/push.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Findings uit het read-only onderzoek toepassen als kleine docs-only update.
+- Automated tests blijven Playwright Chromium/headless.
+- Headed Chromium alleen expliciet voor visuele smoke/debug.
+- Atlas alleen optioneel handmatig of AI-assisted review, niet als standaard testtarget.
+
+## Expliciete user requirements / detailbehoud
+
+- [x] Niet Atlas forceren als primaire geautomatiseerde testbrowser.
+- [x] Playwright Chromium/headless als automation-default behouden.
+- [x] Headed Chromium alleen expliciet gebruiken.
+- [x] Atlas als handmatige reviewlaag definiëren.
+- [x] Geen code, tests, dependencies, productie-data of `.env*` aanpassen.
+
+## Status per requirement
+
+- [x] Browserlagen expliciet in docs — status: gebouwd
+- [x] Geen runtime/testgedrag gewijzigd — status: gebouwd
+- [x] Verify uitgevoerd — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Docs verduidelijken nu expliciet dat `BUDIO_DEV_BROWSER` alleen Expo-preview stuurt en geen Playwright-testtarget wijzigt.
+- File-scoped Markdown-lint is apart uitgevoerd omdat `npm run docs:lint` repo-breed faalt op bestaande taskfile-lint buiten deze wijziging.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: huidige scripts/config/docs read-only bevestigen.
+- [x] Blok 2: docs-only update toepassen.
+- [x] Blok 3: taskflow/docs verify afronden.
+
+## Concrete checklist
+
+- [x] QA-docs uitbreiden met browserkeuze per laag.
+- [x] Local-dev docs verduidelijken dat `BUDIO_DEV_BROWSER` alleen Expo preview stuurt.
+- [x] Verify draaien.
+
+## Acceptance criteria
+
+- [x] Docs benoemen Playwright Chromium/headless als automation-default.
+- [x] Docs benoemen headed Chromium als expliciete visuele/debug-optie.
+- [x] Docs benoemen Atlas als optionele handmatige reviewlaag.
+- [x] Geen app- of testcode is aangepast.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- `npm run taskflow:verify` — passed.
+- `npm run docs:lint` — failed op bestaande repo-brede Markdown-lintschuld buiten deze wijziging.
+- `npx -y markdownlint-cli@0.45.0 --disable MD001 MD013 MD029 MD060 MD024 MD025 MD036 MD041 -- docs/dev/qa-test-strategy.md docs/dev/local-development-environment.md docs/project/25-tasks/open/codex-browser-testworkflow-expliciteren.md` — passed voor de aangeraakte bestanden vóór verplaatsing naar `done/`.
+- `npm run docs:bundle` — passed.
+- `npm run docs:bundle:verify` — passed.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: docs-only workflowregel toevoegen voor browser-testlagen.
+- Toegevoegde verbeteringen: `BUDIO_DEV_BROWSER` expliciet beperkt tot Expo-preview, niet Playwright.
+- Afgerond: QA-docs en local-dev docs bijgewerkt; geen app-/testgedrag gewijzigd.
+- Open / blocked: repo-brede `npm run docs:lint` heeft bestaande lintschuld in andere taskfiles.
+
+## Relevante links
+
+- `docs/dev/qa-test-strategy.md`
+- `docs/dev/local-development-environment.md`
+- `playwright.config.ts`
+- `.codex/config.toml`
+
+
+## Commits
+
+- 2026-06-22T13:22:50+02:00 — docs: clarify codex browser test workflow
 ```
 
 ---
@@ -5360,6 +5907,132 @@ Daarnaast staat in de workflow expliciet dat `docs:bundle` en `docs:bundle:verif
 - `scripts/docs/build-docs-bundles.mjs`
 - `docs/dev/task-lifecycle-workflow.md`
 - `docs/dev/cline-workflow.md`
+```
+
+---
+
+## Docs folderstructuur en visual language herbeoordelen na metadatafase
+
+- Path: `docs/project/25-tasks/done/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md`
+- Bucket: done
+- Status: done
+- Priority: p3
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-docs-folderstructuur-visual-language-herbeoordeling
+title: Docs folderstructuur en visual language herbeoordelen na metadatafase
+status: done
+phase: transitiemaand-consumer-beta
+priority: p3
+source: docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md
+updated_at: 2026-06-22
+summary: "Herbeoordeling afgerond: metadata, source-of-truth matrix en maximaal 10 uploadbundels lossen de huidige docs-routing voldoende op. Geen brede foldermigratie nodig; visual language blijft een lichte human-facing smaaklaag."
+tags: [docs, structure, metadata, visual-language]
+workstream: idea
+due_date: null
+sort_order: 2
+---
+
+
+# Docs folderstructuur en visual language herbeoordelen na metadatafase
+
+## Probleem / context
+
+De docs lopen deels door elkaar voor menselijke lezers, agents/AI en gedeeld gebruik. De goedkope eerste stap is metadata + betere bundling, niet meteen een brede foldermigratie.
+
+Deze task bewaakt bewust dat we pas na de eerste fase herbeoordelen of een grotere structuurwijziging nodig is.
+
+## Gewenste uitkomst
+
+Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling:
+
+- Is metadata + bundling voldoende om verwarring op te lossen?
+- Zijn er nog docs die echt naar een andere folder moeten?
+- Werkt de Budio Terminal-stijl als smaaklaag zonder gimmick te worden?
+- Moet er een vervolg komen voor templates, Obsidian graph views of docs-navigatie?
+
+## Waarom nu
+
+- Niet nu uitvoeren: deze task is afhankelijk van bewijs uit de metadata- en bundlingfase.
+- Wel nu vastleggen: voorkomt dat foldermigratie of visual polish ongemerkt meeloopt in de huidige cheap-first taak.
+
+## In scope
+
+- Review van docs-routing na metadatafase.
+- Beoordeling of folderstructuur nog moet wijzigen.
+- Beoordeling of visual language verder moet worden gestandaardiseerd.
+- Eventueel nieuw plan of idee als vervolg.
+
+## Buiten scope
+
+- Geen brede foldermigratie voordat de dependency klaar is.
+- Geen retro-terminal als nieuw design system.
+- Geen productcopy richting app-eindgebruikers.
+- Geen runtime app-wijzigingen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: dependency-resultaat lezen.
+- [x] Blok 2: docs-routing en metadata-effect beoordelen.
+- [x] Blok 3: advies vastleggen en eventuele vervolgtaak/idee maken.
+
+## Concrete checklist
+
+- [x] Dependency is afgerond en verplaatst naar `done/`.
+- [x] Beoordeling van folderstructuur is vastgelegd.
+- [x] Beoordeling van visual-language gebruik is vastgelegd.
+- [x] Eventuele vervolgactie is expliciet klein gehouden.
+
+## Blockers / afhankelijkheden
+
+- Geen actuele blocker meer. Dependency `docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md` staat op `done`.
+
+## Beoordeling
+
+- Dependency-check: `docs-ux-audience-taxonomie-en-uploadbundels.md` staat op `done` en heeft audience-metadata, docs-governance, visual-language afspraken, uploadmanifest en maximaal 10 uploadbundels afgerond.
+- Folderstructuur: geen brede migratie nodig. `docs/project/README.md` heeft nu een duidelijke source-of-truth matrix en scheidt strategie, planning, epics, tasks, research, ideas, generated en upload-only artefacten voldoende expliciet.
+- Metadata-effect: het frontmatter-contract in `docs/project/00-docs-governance/README.md` maakt per document duidelijk wie de lezer is, wat de bronrol is en in welke uploadbundel de file hoort. Dat is goedkoper en veiliger dan mappen verschuiven.
+- Uploadrouting: `docs/upload/00-budio-upload-manifest.md` beperkt de beheerde uploadset tot 10 bestanden en geeft per use-case een kleine subset. Daarmee is ChatGPT Project-context nu routeerbaar zonder brede handmatige selectie.
+- Visual language: de Budio Terminal-stijl werkt als smaaklaag voor human-facing docs zolang de plain Markdown baseline blijft gelden. Er is geen reden om dit als app-designsystem of verplichte docs-renderinglaag uit te bouwen.
+- Vervolgactie: geen nieuwe bouwtask nodig. Een later klein docs-navigatie/Obsidian-idee kan pas zinvol worden als echte gebruikspijn terugkomt, bijvoorbeeld slechte vindbaarheid ondanks hubs, uploadmanifest en metadata.
+
+## Advies / besluit
+
+- Houd de huidige mapstructuur aan.
+- Gebruik metadata + hubs + uploadmanifest als primaire navigatie- en routinglaag.
+- Verplaats alleen losse docs wanneer er een concrete bronconflict-, eigenaarschap- of vindbaarheidsreden is.
+- Houd Budio Terminal beperkt tot human-facing of shared docs; agent-only workflowdocs blijven sober.
+- Sluit deze task af zonder nieuwe vervolgtaak.
+
+## Verify / bewijs
+
+- ✅ `npm run docs:audience:verify`
+- ⚠️ `npm run docs:lint` faalt op bestaande lintschuld in oude taskfiles; deze taskfile is hersteld en komt niet meer terug in de lintfoutlijst.
+- ✅ `npm run docs:bundle`
+- ✅ `npm run docs:bundle:verify`
+- ✅ `npm run taskflow:verify`
+
+## Relevante links
+
+- `docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md`
+- `docs/project/README.md`
+- `docs/project/00-docs-governance/README.md`
+- `docs/upload/00-budio-upload-manifest.md`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: na afronding van de metadata- en bundlingfase beoordelen of folderstructuur of visual language verder moest worden aangepakt.
+- Expliciete requirements: brongebaseerd antwoord op metadata/bundling, foldermigratie, Budio Terminal-stijl en eventuele vervolgstap.
+- Later toegevoegd: geen extra scope; de beoordeling is bewust klein gehouden.
+- Afgerond: dependency is klaar, beoordeling en besluit zijn vastgelegd, geen vervolgtaak nodig.
+- Open of blocked: niets binnen deze task.
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ```
 
 ---
@@ -7591,6 +8264,201 @@ Een kleine QA/polish-slice: lokale historical photo fixture seeden -> historisch
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+```
+
+---
+
+## Moments-overzicht primaire foto thumbnail en viewer
+
+- Path: `docs/project/25-tasks/done/moments-overzicht-primaire-foto-thumbnail-en-viewer.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-moments-overzicht-primaire-foto-thumbnail-en-viewer
+title: Moments-overzicht primaire foto thumbnail en viewer
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: Het gedeelde moments-overzicht toont een primaire foto-thumb binnen de bestaande tijdkolom en gebruikt de gedeelde viewer. Desktop Chrome fullscreen navigatie via pijlen en mouse-drag is lokaal met Playwright bevestigd.
+tags: [moments-overzicht, photos, ui, viewer]
+workstream: app
+due_date: null
+sort_order: 2
+---
+
+
+
+## Probleem / context
+
+Het moments-overzicht toont nu alleen tijd, type-indicatie, titel en previewtekst. Als een moment foto's heeft, is er geen visuele hint of snelle route naar die foto's vanuit het overzicht zelf.
+
+De gebruiker wil een kleine, vaste thumbnail onder de tijdindicator zonder dat de linkerkolom breder wordt. Vanuit die thumb moet een popup openen waarin alle foto's van dat moment bekeken kunnen worden.
+
+## Gewenste uitkomst
+
+In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom. Die thumb heeft een vaste maat en verandert de linkerkolombreedte niet.
+
+Bij tikken/klikken opent een read-only fotoviewer met:
+
+- de momenttitel bovenin naast de sluitknop
+- swipe door alle foto's van dat moment
+- een duidelijke visuele links/rechts indicatie wanneer swipen mogelijk is
+
+De viewerbasis is gedeeld met de bestaande moment-detail galerij, zodat swipegedrag en presentatielogica niet uiteenlopen.
+
+## Waarom nu
+
+- De moments-overview mist nu een snelle route naar fotocontent.
+- Er is al een bestaande fotoviewerbasis in moment detail die we nu netjes kunnen hergebruiken.
+- Dit voegt zichtbare waarde toe zonder nieuwe productscope buiten de bestaande fotoflow.
+
+## User outcome
+
+Gebruiker ziet in het momentenoverzicht direct wanneer een moment foto's heeft en kan vanuit die compacte thumbnail de foto's fullscreen bekijken.
+
+## Functional slice
+
+Eén slice: overview-fotodata batch laden, primaire thumbnail tonen in de bestaande tijdkolom, shared viewer openen en readonly navigeren door alle foto's van dat moment.
+
+## Entry / exit
+
+- Entry: gebruiker opent Today of dagdetail met een moments-overzicht waarin minimaal één moment foto's heeft.
+- Exit: gebruiker opent de thumbnail, navigeert in de viewer met pijlen of desktop mouse-drag en sluit zonder data te wijzigen.
+
+## Happy flow
+
+1. Moments-overzicht laadt de bijbehorende foto-previewdata.
+2. Moment met foto's toont een compacte primaire thumbnail onder de tijdindicator.
+3. Gebruiker opent de thumbnail.
+4. Shared viewer toont de eerste foto met momenttitel, teller en navigatie.
+5. Gebruiker navigeert naar een volgende foto via pijlicoon of desktop mouse-drag.
+6. Gebruiker sluit de viewer en blijft in dezelfde overzichtscontext.
+
+## Non-happy flows
+
+- Geen foto's: er verschijnt geen thumbnail en de bestaande timeline blijft ongewijzigd.
+- Foto-preview laden faalt: het overzicht blijft bruikbaar zonder thumbnail-route.
+- Een foto is ingezoomd: desktop drag-swipe wordt niet als viewer-navigatie behandeld, zodat zoom/pan-interactie niet conflicteert.
+
+## UX / copy
+
+- Thumbnail blijft een lichte timeline-hint binnen de bestaande tijdkolom.
+- Viewer gebruikt bestaande compacte labels: momenttitel, `Foto sluiten`, `Vorige foto`, `Volgende foto` en teller `x / y`.
+- Geen extra uitlegcopy of nieuwe viewer-chrome.
+
+## Data / IO
+
+- Input: bestaande `raw_entry_id` waarden uit het moments-overzicht en bestaande `entry_photos` service-data.
+- Output: read-only UI state voor thumbnails en viewer-index.
+- Geen opslagmutaties, upload, delete, reorder, captions of nieuwe fotometadata.
+
+## Acceptance criteria
+
+- [x] Moment met foto's toont één primaire thumbnail binnen de bestaande tijdkolom zonder kolombreedte te vergroten.
+- [x] Thumbnail opent de gedeelde readonly viewer.
+- [x] Viewer blijft gedeeld met momentdetail-gallery.
+- [x] Pijlnavigatie werkt in de fullscreen viewer.
+- [x] Desktop Chrome mouse-drag navigeert in de fullscreen viewer en is met Playwright bewezen.
+- [x] Geen upload/delete/reorder-scope vanuit het moments-overzicht toegevoegd.
+
+## In scope
+
+- Nieuwe task aanmaken en bovenaan `in_progress` zetten.
+- Gedeelde moments-overzicht-component uitbreiden met primaire thumbnail binnen de bestaande tijdkolom.
+- Batch-fotodata voor overview-preview laden zonder losse fetch per rij.
+- Gedeelde read-only viewer toevoegen met titel in header en swipe-affordance.
+- Bestaande moment-detail galerijviewer laten hergebruiken via dezelfde shared component.
+
+## Buiten scope
+
+- Foto upload, verwijderen of reorder vanuit het moments-overzicht.
+- Nieuwe fotometadata zoals captions of favorieten.
+- Volledige E2E-dekking voor deze flow als aparte QA-uitbouw.
+
+## Concrete checklist
+
+- [x] Taskfile aangemaakt en lane-sortering bijgewerkt.
+- [x] Batch-photo service voor overview-preview toegevoegd.
+- [x] `MomentsTimelineSection` uitgebreid met vaste primaire thumb in de tijdkolom.
+- [x] Gedeelde fotoviewer toegevoegd met titelheader en swipe-affordance.
+- [x] Moment detail galerij overgezet op dezelfde gedeelde viewer.
+- [x] Thumbnail visueel teruggeschaald naar een lichtere timeline-hint.
+- [x] Thumbnail opnieuw verbreed tot maximale breedte binnen de bestaande tijdkolom, zonder de kolom zelf te vergroten.
+- [x] Viewer vereenvoudigd naar media-first presentatie met minder chrome.
+- [x] Swipe-ownership hersteld tussen carousel en zoom-slide, inclusief web touch-action nuance.
+- [x] Werkende vorige/volgende knopnavigatie toegevoegd in de viewer.
+- [x] Web drag-swipe toegevoegd als structurele fallback naast touch paging.
+- [x] Web drag-swipe verplaatst naar de gedeelde fotoslide zelf, zodat mouse-down en horizontaal slepen op de foto daadwerkelijk navigeert.
+- [x] Web pinch-zoom onderdrukt nu browser/page zoom en routeert de interactie naar de foto-overlay.
+- [x] Laatste timeline-item met thumb toont ook de doorlopende lijn onder het icoon.
+- [x] Verify uitgevoerd en task/docs-bundles bijgewerkt.
+- [x] Gerichte desktop Chrome mouse-drag viewer-smoke toegevoegd en uitgevoerd.
+- [x] Task gereconcilieerd en status afgerond na bewijs.
+
+## Uitvoerblokken / fasering
+
+1. Preflight: actuele viewer-, slide- en gallery-smoke state bevestigen zonder brede dirty worktree te wijzigen.
+2. Kleinste bronwijziging: Playwright-smoke toevoegen voor fullscreen viewer mouse-drag navigatie; alleen een stabiele web-layer `testID` toegevoegd, omdat de bestaande drag-wiring werkt.
+3. Verify: unit-test voor viewer helper, lokale gallery fixture seed, gerichte Playwright-smoke, lint/typecheck/taskflow.
+4. Closeout: fixture cleanup, taskfile reconciliation, docs bundle + verify, status naar `done` en verplaatsing naar `done/`.
+
+## Blockers / afhankelijkheden
+
+- Geen blockers meer. De eerdere desktop Chrome mouse-drag onzekerheid is lokaal bevestigd met een gerichte Playwright-smoke.
+
+## Review-notitie
+
+- Lokale desktop-Chrome navigatie met de muis in de fullscreen foto-popup is op 2026-06-22 bevestigd via Playwright; navigatie via de pijliconen is in dezelfde smoke bevestigd.
+- Gewenste vervolgrichting na review:
+  - slimmer zoomen
+  - foto kunnen slepen/pannen wanneer ingezoomd
+  - inzoomen rond finger/cursor focuspunt in plaats van standaard naar het midden
+
+## Verify / bewijs
+
+- ✅ `npm run test:unit`
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ Extra unit-tests voor viewer swipe-state en web touch-action helper
+- ✅ `npm run test:unit -- --run tests/unit/moment-photo-viewer-presentation.test.ts`
+- ✅ `npm run test:e2e:gallery:seed`
+- ✅ `GALLERY_E2E_FULL=1 SMOKE_TEST_EMAIL=smoke.default.local@example.com GALLERY_E2E_ENTRY_URL=http://localhost:8081/entry/c97394bb-8d84-4d6f-9c8d-6eb8407f5941 GALLERY_E2E_PHOTO_IDS=1c2cb3c9-adab-440e-bee6-41613fa17f9d,42a3fc57-b3ae-454e-a2bf-390ef4f35b86,70ce0a89-122c-484c-a4f5-a3392bd08310 npx playwright test tests/e2e/gallery-full.spec.mjs --grep "navigates the fullscreen viewer"`
+- ✅ Nieuwe smoke bevestigt: fullscreen viewer opent, pijliconen navigeren heen/terug, desktop mouse-drag navigeert van foto 1 naar foto 2.
+- ✅ `npm run test:e2e:gallery:cleanup`
+- ✅ `npm run taskflow:verify`
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Gedeelde `ZoomablePhotoSlide` web-interactielaag heeft een stabiele `testID` gekregen voor browser-smokes.
+- `tests/e2e/gallery-full.spec.mjs` bevat nu een gerichte smoke voor fullscreen viewer navigatie via pijlen en desktop mouse-drag.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: primaire thumbnail in het moments-overzicht, gedeelde viewer, arrows en web drag-swipe werkend krijgen zonder nieuwe upload/delete/reorder-scope.
+- Expliciete user requirements: de task deblokkeren met een smalle pass; desktop Chrome mouse-drag in de fullscreen viewer moet bewezen zijn met Playwright.
+- Later toegevoegde verbeteringen: alleen een stabiele test-hook en gerichte Playwright-smoke; geen viewer-redesign of zoom-polish toegevoegd.
+- Afgerond: thumbnail/viewer-scope was al gebouwd; de resterende blocker is met lokale Chromium-smoke bewezen. Unit, lint, typecheck, taskflow en fixture cleanup zijn geslaagd.
+- Open of blocked: geen blocker binnen deze task. Slimmer zoomen, ingezoomd pannen en zoom-focus rond cursor/finger blijven follow-up polish buiten deze afgeronde task.
+
+## Relevante links
+
+- `components/journal/moments-timeline-section.tsx`
+- `components/journal/entry-photo-gallery.tsx`
+- `services/entry-photos.ts`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-22T13:42:57+02:00 — test: verify moments photo viewer drag
 ```
 
 ---

@@ -13,6 +13,7 @@ import type {
   JarvisWorkspaceState,
 } from '../../jarvis/types';
 import { buildBoardSnapshot } from '../../tasks/board-state';
+import { buildClaimTaskAgentPatch, buildClearTaskAgentPatch } from '../../tasks/agent-metadata';
 import { TaskRepository } from '../../tasks/repository';
 import { createTaskWatcher } from '../../tasks/watch';
 import type {
@@ -488,6 +489,46 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
           message.checked,
         );
       });
+      return;
+    }
+
+    if (message.type === 'claimTaskAgent') {
+      const workspaceContext = getBudioWorkspaceContext();
+      if (!workspaceContext) {
+        this.postMessage({ type: 'saveFailed', message: 'Open eerst een workspace om een agent te claimen.' });
+        return;
+      }
+
+      await this.runMutation(
+        message.taskId,
+        async (repository) => {
+          await repository.updateTaskFields(
+            message.taskId,
+            message.expectedVersion,
+            buildClaimTaskAgentPatch(workspaceContext.settings),
+          );
+        },
+        {
+          successMessage: 'Agent actief gekoppeld aan taak.',
+        },
+      );
+      return;
+    }
+
+    if (message.type === 'clearTaskAgent') {
+      await this.runMutation(
+        message.taskId,
+        async (repository) => {
+          await repository.updateTaskFields(
+            message.taskId,
+            message.expectedVersion,
+            buildClearTaskAgentPatch(),
+          );
+        },
+        {
+          successMessage: 'Agentstatus gestopt voor taak.',
+        },
+      );
       return;
     }
 

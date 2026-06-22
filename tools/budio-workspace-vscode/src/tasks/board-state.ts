@@ -7,11 +7,14 @@ import type {
   ParsedEpicFile,
   ParsedTaskFile,
   TaskCardViewModel,
+  TaskDetailPreviewSection,
   TaskPriority,
   TaskSort,
   TaskStatus,
   WorkspaceSettings,
 } from './types';
+
+const DETAIL_PREVIEW_HEADINGS = ['Probleem / context', 'Gewenste uitkomst'] as const;
 
 export function buildBoardSnapshot(input: {
   tasks: ParsedTaskFile[];
@@ -173,6 +176,7 @@ function toTaskCardViewModelBase(task: ParsedTaskFile): TaskCardViewModel {
     lastModified: task.lastModified,
     hasBody: task.hasBody,
     bodyPreview: task.body.trim().slice(0, 600),
+    detailPreviewSections: buildDetailPreviewSections(task),
     source: task.source,
     version: task.version,
     activeAgent: task.activeAgent,
@@ -214,4 +218,25 @@ export function sortCards(cards: TaskCardViewModel[], sort: TaskSort): TaskCardV
 
 export function describePriority(priority: TaskPriority): string {
   return PRIORITY_LABELS[priority];
+}
+
+function buildDetailPreviewSections(task: ParsedTaskFile): TaskDetailPreviewSection[] {
+  const previewSections: TaskDetailPreviewSection[] = [];
+
+  for (const heading of DETAIL_PREVIEW_HEADINGS) {
+    const section = task.sections.get(heading.toLowerCase());
+    const body = section ? normalizeSectionText(section.lines) : '';
+    if (body) {
+      previewSections.push({ heading, body });
+    }
+  }
+
+  return previewSections;
+}
+
+function normalizeSectionText(lines: string[]): string {
+  return lines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

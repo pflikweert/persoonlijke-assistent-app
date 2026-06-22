@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { buildClaimTaskAgentPatch, buildClearTaskAgentPatch } from '../tasks/agent-metadata';
 import { TaskRepository } from '../tasks/repository';
 
 test('repository blocks stale writes after external file change', async () => {
@@ -101,6 +102,71 @@ updated_at: 2026-04-20
   const references = await fs.readFile(referencesPath, 'utf8');
   assert.equal(references.includes('task-example'), false);
   assert.equal(references.includes('25-tasks/open/example.md'), false);
+});
+
+test('repository updateTaskFields writes and clears explicit active-agent metadata', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const tasksRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(tasksRoot, { recursive: true });
+  const filePath = path.join(tasksRoot, 'claim-me.md');
+  await fs.writeFile(
+    filePath,
+    `---
+id: task-claim-me
+title: Claim me
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+---
+
+# Claim me
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const [task] = await repository.scan();
+  assert.ok(task);
+
+  await repository.updateTaskFields(
+    task.id,
+    task.version,
+    buildClaimTaskAgentPatch(
+      {
+        agentName: 'Codex',
+        agentModel: 'gpt-5',
+        agentRuntime: 'codex',
+        agentSettings: 'local',
+      },
+      new Date('2026-06-22T09:30:00.000Z'),
+    ),
+  );
+
+  const claimedContent = await fs.readFile(filePath, 'utf8');
+  assert.match(claimedContent, /active_agent: Codex/);
+  assert.match(claimedContent, /active_agent_model: gpt-5/);
+  assert.match(claimedContent, /active_agent_runtime: codex/);
+  assert.match(claimedContent, /active_agent_since: "2026-06-22T09:30:00.000Z"/);
+  assert.match(claimedContent, /active_agent_status: running/);
+  assert.match(claimedContent, /active_agent_settings: local/);
+
+  const [claimedTask] = await repository.scan();
+  assert.ok(claimedTask);
+  await repository.updateTaskFields(
+    claimedTask.id,
+    claimedTask.version,
+    buildClearTaskAgentPatch(new Date('2026-06-22T10:00:00.000Z')),
+  );
+
+  const clearedContent = await fs.readFile(filePath, 'utf8');
+  assert.match(clearedContent, /active_agent: null/);
+  assert.match(clearedContent, /active_agent_model: null/);
+  assert.match(clearedContent, /active_agent_runtime: null/);
+  assert.match(clearedContent, /active_agent_since: null/);
+  assert.match(clearedContent, /active_agent_status: null/);
+  assert.match(clearedContent, /active_agent_settings: null/);
 });
 
 test('repository moveTask rewrites sort_order for in-lane reordering', async () => {

@@ -17,6 +17,7 @@
     "src/tasks/dnd-policy.ts",
     "src/tasks/list-sort-controls.ts",
     "src/tasks/sort-policy.ts",
+    "src/tasks/task-detail-view.ts",
     "src/tasks/types.ts",
     "src/webview-bridge/messages.ts"
   ]

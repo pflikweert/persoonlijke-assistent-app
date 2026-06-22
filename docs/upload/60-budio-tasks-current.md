@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-22T09:43:06.451Z
-Source Commit: 528bb2f
+Build Timestamp (UTC): 2026-06-22T12:08:56.921Z
+Source Commit: 6eeaf75
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 40
+- Totaal tasks opgenomen: 38
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -148,7 +148,7 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 11
+sort_order: 12
 ---
 
 
@@ -286,7 +286,7 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
 
 
@@ -2418,7 +2418,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 9
+sort_order: 10
 ---
 
 
@@ -2782,8 +2782,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 6
+sort_order: 7
 ---
+
 
 
 
@@ -2884,6 +2885,8 @@ Reviewbevindingen:
 - Interface moet simpel en duidelijk worden.
 - Geen functionaliteit verwijderen of wijzigen.
 - Review en test de nieuwe wijzigingen en verbeter waar nodig.
+- Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen.
+- Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System.
 
 ## Status per requirement
 
@@ -2893,6 +2896,8 @@ Reviewbevindingen:
 - [x] Interface wordt simpeler en duidelijker — status: gebouwd
 - [x] Geen functionaliteit verwijderen of wijzigen — status: in code aanwezig maar nog user-review nodig
 - [x] Nieuwe wijzigingen zijn gereviewd en getest — status: gebouwd
+- [x] Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen — status: gebouwd
+- [x] Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -2907,6 +2912,15 @@ Reviewbevindingen:
 - Gedeelde Playwright helper voor local magic-link browser-login toegevoegd en hergebruikt door zowel AIQS- als gallery-smokes.
 - AIQS local smoke kan nu zelf lokale dev starten, een ontbrekende AIQS internal token tijdelijk injecteren via functions env-restart, baseline importeren en daarna de geauthenticeerde browser-overview controleren.
 - Lokale docs en env-templates verduidelijken nu het verschil tussen token/login-proof en echte browser-sessie, plus het fallbackpad wanneer `localhost:8081` of een internal token ontbreekt.
+- AIQS startpagina verder opgeschoond naar een cleaner Linear-achtige admin workspace: header zonder governance-eyebrow, healthy status als inline chip, promptfamilies als rustige list/table en debug logging als single-action settings row.
+- Shared admin-primitives uitgebreid met plain sections, inline status, list/table rows en single-action togglegedrag zodat toekomstige admin-overviews dezelfde rustige compositie kunnen hergebruiken.
+- `docs/design/admin-ui-principles.md` toegevoegd als handmatige designrichtlijn voor Budio Admin UI Principles.
+- De cleaner list-first/workspace-stijl is doorgetrokken naar AIQS group, task detail, draft editor, test en validate: minder header-badges/eyebrows, geen detail-inspector op task detail, plain secties voor metadata/context en minder runtime-duplicatie in rows.
+- `AdminConsolePanel` heeft nu ook `variant="plain"` als gedeelde primitive voor onderliggende admin-workbenchschermen waar een functionele sectie nodig is zonder card-fill/border.
+- AIQS admin actions zijn gehard naar één button-contract: `AdminConsoleButton` ondersteunt nu primary/secondary/danger/ghost, selected/full-width states en subtiele pressed/hover/focus states zonder zwarte primary-fill.
+- Screen-local AIQS action-Pressables in draft en validate zijn vervangen door gedeelde admin button/text-action primitives; klikbare source/case rows blijven bewust rows.
+- De raw HTML token-remove button in de prompt editor heeft nu expliciete browser-appearance reset, size, radius en hover/focus styling zodat native/default button styling niet kan lekken.
+- `docs/design/admin-ui-principles.md` documenteert nu het gedeelde Admin Button System.
 
 ## Uitvoerblokken / fasering
 
@@ -2925,6 +2939,8 @@ Reviewbevindingen:
 - [x] Task detail compact maken met contextbar, version list en admin actions.
 - [x] Draft editor desktop split-layout geven.
 - [x] Test en validate workbench-density verbeteren.
+- [x] Goedgekeurde cleaner AIQS-startstijl doorvoeren naar onderliggende AIQS-schermen.
+- [x] AIQS action buttons migreren naar één consistent Admin Button System zonder zwarte/default buttons.
 - [x] Light/dark en desktop/mobile visueel controleren waar praktisch.
 - [x] Relevante verifies draaien.
 
@@ -2936,6 +2952,7 @@ Reviewbevindingen:
 - [x] Desktop gebruikt breedte beter via dense rows/split/workbench-layout; mobile blijft bruikbaar stacked.
 - [x] Debug logging en baseline import zijn visueel secundair/operationeel gepresenteerd.
 - [x] Gewone Budio gebruikersflow is niet aangepast.
+- [x] AIQS toont geen zwarte/default/native action buttons meer; button states komen uit gedeelde admin primitives.
 
 ## Blockers / afhankelijkheden
 
@@ -2974,17 +2991,46 @@ Reviewbevindingen:
   - `npm run taskflow:verify` — groen na taskfile- en docs-aanvulling.
   - `npm run docs:bundle` — groen; bundles en uploadcontext opnieuw opgebouwd.
   - `npm run docs:bundle:verify` — groen.
+- 2026-06-22 cleaner Linear-achtige AIQS workspace:
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run typecheck` — groen na shared primitive- en AIQS-startpaginawijzigingen.
+  - `npm run lint` — groen na shared primitive- en AIQS-startpaginawijzigingen.
+  - `npm run verify:local-aiqs-smoke` — groen; AIQS overview opent geauthenticeerd, toont `Alle runtimes actief`, promptfamilies en systeemsectie, en navigeert naar `group/today`.
+  - Playwright viewport-check desktop light/dark en mobile light/dark — groen; desktopkolommen `Naam`, `Omschrijving`, `Prompts`, `Draft`, `Actie` zichtbaar, mobile rows stacked, `Runtime actief` niet meer zichtbaar per healthy family.
+  - Mobiele debug-row single-action check — groen; `Schakel in` zichtbaar en geen exacte `Aan`/`Uit` actieknoppen tegelijk.
+  - Screenshotcheck `/tmp/aiqs-cleaner-desktop-light.png` en `/tmp/aiqs-cleaner-mobile-light.png` — gecontroleerd op rustige max-width, dividers, minder cardgevoel en leesbare mobile stacking.
+  - `npm run taskflow:verify` — groen na cleaner workspace taskfile-update.
+  - `npm run docs:bundle` — groen na admin UI principles doc en taskfile-update.
+  - `npm run docs:bundle:verify` — groen.
+- 2026-06-22 onderliggende AIQS-schermen cleaner doorgetrokken:
+  - `npm run typecheck` — groen na group/detail/draft/test/validate en `AdminConsolePanel variant="plain"`.
+  - `npm run lint` — groen na group/detail/draft/test/validate en shared primitive update.
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde overview-smoke blijft werken en navigeert naar `group/today`.
+  - One-shot Playwright subroute-smoke — groen; `group/today`, draft editor, test route, validate route en mobile group renderen; oude `Runtime metadata`, `Prompt editor`, `Runtime test` en `Compare workbench` labels zijn niet meer zichtbaar.
+  - One-shot Playwright loaded-state check — groen; draft wacht op `Runtime contract`/`Geavanceerd`, test wacht op `Bron kiezen`.
+  - One-shot Playwright dark-mode smoke — groen; `group/today` en validate renderen in dark mode.
+  - Screenshotcheck: `/tmp/aiqs-subroute-group-desktop.png`, `/tmp/aiqs-subroute-group-mobile.png`, `/tmp/aiqs-subroute-draft-desktop-loaded.png`, `/tmp/aiqs-subroute-test-desktop-loaded.png`, `/tmp/aiqs-subroute-validate-desktop.png`, `/tmp/aiqs-subroute-group-dark.png`, `/tmp/aiqs-subroute-validate-dark.png`.
+- 2026-06-22 AIQS Admin Button System cleanup:
+  - `npm run typecheck` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
+  - `npm run lint` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run verify:local-aiqs-smoke` — groen; overview-smoke blijft geauthenticeerd werken en navigeert naar `group/today`.
+  - Projectbrede audit op AIQS action-plekken — alleen toegestane source/case row-Pressables en prompt-editor token-remove `<button>` blijven over; token-remove heeft expliciete appearance reset.
+  - One-shot Playwright computed-style routecheck — groen; overview, group, detail, draft, test, validate, mobile group, dark group en dark validate hebben geen zichtbare zwarte/default button backgrounds.
+  - Screenshotcheck: `/tmp/aiqs-buttons-overview-light.png`, `/tmp/aiqs-buttons-group-light.png`, `/tmp/aiqs-buttons-detail-light.png`, `/tmp/aiqs-buttons-draft-light.png`, `/tmp/aiqs-buttons-test-light.png`, `/tmp/aiqs-buttons-validate-light.png`, `/tmp/aiqs-buttons-group-mobile.png`, `/tmp/aiqs-buttons-group-dark.png`, `/tmp/aiqs-buttons-validate-dark.png`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
-- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix en nu ook workspace-first overviewstructuur met gedeelde status/toggle/list primitives.
-- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. Static checks zijn opnieuw groen.
-- Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat taskflow/docs-closeout is gereconcilieerd en de gebruiker deze referentie-implementatie inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
+- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate en nu ook één consistent Admin Button System.
+- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. De startpagina is daarna verder versimpeld naar plain sections, inline status, list/table rows en single-action debug logging. Onderliggende AIQS-schermen gebruiken nu dezelfde rustige admin-workspace taal: minder header-badges/eyebrows, minder card-fill, metadata als plain secties en bestaande acties/functionele editors behouden. Alle AIQS action buttons lopen via gedeelde admin button/text-action primitives, primary gebruikt geen zwarte fill meer en de raw prompt-editor token button is browser-default-proof gemaakt.
+- Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat de gebruiker de cleaner AIQS referentie-implementatie inclusief onderliggende schermen inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
 
 ## Relevante links
 
 - `docs/project/ai-quality-studio.md`
+- `docs/design/admin-ui-principles.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 
 
@@ -3001,6 +3047,8 @@ Reviewbevindingen:
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-22T14:07:06+02:00 — fix: unify AIQS admin workspace controls
 ```
 
 ---
@@ -3134,7 +3182,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
 
 
@@ -3376,7 +3424,7 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 14
+sort_order: 15
 ---
 
 
@@ -3645,7 +3693,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 7
+sort_order: 8
 ---
 
 
@@ -3967,8 +4015,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 # Archief-import actieve voortgang zonder preview-duplicatie
 
@@ -4134,6 +4183,11 @@ De huidige dubbellaagse importweergave veroorzaakt directe UX-verwarring in een 
 - `app/settings-import.tsx`
 - `design_refs/1.2.1/importeren_bezig/code.html`
 - `design_refs/1.2.1/importeren_gelukt/code.html`
+
+
+## Commits
+
+- 2026-06-22T11:49:19+02:00 — fix: simplify active archive import ux
 ```
 
 ---
@@ -4374,103 +4428,6 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
-
-- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
-```
-
----
-
-## Docs folderstructuur en visual language herbeoordelen na metadatafase
-
-- Path: `docs/project/25-tasks/open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md`
-- Bucket: open
-- Status: blocked
-- Priority: p3
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-25
-
-```md
----
-id: task-docs-folderstructuur-visual-language-herbeoordeling
-title: Docs folderstructuur en visual language herbeoordelen na metadatafase
-status: blocked
-phase: transitiemaand-consumer-beta
-priority: p3
-source: docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md
-updated_at: 2026-04-25
-summary: Beoordeel pas na de metadata- en bundlingfase of een bredere docs-foldermigratie of verdere visual-language uitbouw echt nodig is.
-tags: [docs, structure, metadata, visual-language]
-workstream: idea
-due_date: null
-sort_order: 2
----
-
-
-# Docs folderstructuur en visual language herbeoordelen na metadatafase
-
-## Probleem / context
-
-De docs lopen deels door elkaar voor menselijke lezers, agents/AI en gedeeld gebruik. De goedkope eerste stap is metadata + betere bundling, niet meteen een brede foldermigratie.
-
-Deze task bewaakt bewust dat we pas na de eerste fase herbeoordelen of een grotere structuurwijziging nodig is.
-
-## Gewenste uitkomst
-
-Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling:
-
-- Is metadata + bundling voldoende om verwarring op te lossen?
-- Zijn er nog docs die echt naar een andere folder moeten?
-- Werkt de Budio Terminal-stijl als smaaklaag zonder gimmick te worden?
-- Moet er een vervolg komen voor templates, Obsidian graph views of docs-navigatie?
-
-## Waarom nu
-
-- Niet nu uitvoeren: deze task is afhankelijk van bewijs uit de metadata- en bundlingfase.
-- Wel nu vastleggen: voorkomt dat foldermigratie of visual polish ongemerkt meeloopt in de huidige cheap-first taak.
-
-## In scope
-
-- Review van docs-routing na metadatafase.
-- Beoordeling of folderstructuur nog moet wijzigen.
-- Beoordeling of visual language verder moet worden gestandaardiseerd.
-- Eventueel nieuw plan of idee als vervolg.
-
-## Buiten scope
-
-- Geen brede foldermigratie voordat de dependency klaar is.
-- Geen retro-terminal als nieuw design system.
-- Geen productcopy richting app-eindgebruikers.
-- Geen runtime app-wijzigingen.
-
-## Uitvoerblokken / fasering
-
-- [ ] Blok 1: dependency-resultaat lezen.
-- [ ] Blok 2: docs-routing en metadata-effect beoordelen.
-- [ ] Blok 3: advies vastleggen en eventuele vervolgtaak/idee maken.
-
-## Concrete checklist
-
-- [ ] Dependency is afgerond en verplaatst naar `done/`.
-- [ ] Beoordeling van folderstructuur is vastgelegd.
-- [ ] Beoordeling van visual-language gebruik is vastgelegd.
-- [ ] Eventuele vervolgactie is expliciet klein gehouden.
-
-## Blockers / afhankelijkheden
-
-- Geblokkeerd op: `docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md`
-
-## Verify / bewijs
-
-- `npm run taskflow:verify`
-- Indien docs gewijzigd worden: `npm run docs:lint`, `npm run docs:bundle`, `npm run docs:bundle:verify`
-
-## Relevante links
-
-- `docs/project/25-tasks/done/docs-ux-audience-taxonomie-en-uploadbundels.md`
-- `docs/project/README.md`
-
-
-## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 ```
@@ -4729,7 +4686,7 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 5
+sort_order: 6
 ---
 
 
@@ -5023,125 +4980,6 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 
 ---
 
-## Moments-overzicht primaire foto thumbnail en viewer
-
-- Path: `docs/project/25-tasks/open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md`
-- Bucket: open
-- Status: blocked
-- Priority: p1
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-25
-
-```md
----
-id: task-moments-overzicht-primaire-foto-thumbnail-en-viewer
-title: Moments-overzicht primaire foto thumbnail en viewer
-status: blocked
-phase: transitiemaand-consumer-beta
-priority: p1
-source: user-request
-updated_at: 2026-04-25
-summary: "Toon in het gedeelde moments-overzicht een primaire foto-thumb op maximale breedte binnen de bestaande tijdkolom, verfijn de viewer naar een media-first lightbox en herstel werkende navigatie via web drag-swipe, pijlen en gedeelde gesture-ownership."
-tags: [moments-overzicht, photos, ui, viewer]
-workstream: app
-due_date: null
-sort_order: 2
----
-
-
-## Probleem / context
-
-Het moments-overzicht toont nu alleen tijd, type-indicatie, titel en previewtekst. Als een moment foto's heeft, is er geen visuele hint of snelle route naar die foto's vanuit het overzicht zelf.
-
-De gebruiker wil een kleine, vaste thumbnail onder de tijdindicator zonder dat de linkerkolom breder wordt. Vanuit die thumb moet een popup openen waarin alle foto's van dat moment bekeken kunnen worden.
-
-## Gewenste uitkomst
-
-In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom. Die thumb heeft een vaste maat en verandert de linkerkolombreedte niet.
-
-Bij tikken/klikken opent een read-only fotoviewer met:
-
-- de momenttitel bovenin naast de sluitknop
-- swipe door alle foto's van dat moment
-- een duidelijke visuele links/rechts indicatie wanneer swipen mogelijk is
-
-De viewerbasis is gedeeld met de bestaande moment-detail galerij, zodat swipegedrag en presentatielogica niet uiteenlopen.
-
-## Waarom nu
-
-- De moments-overview mist nu een snelle route naar fotocontent.
-- Er is al een bestaande fotoviewerbasis in moment detail die we nu netjes kunnen hergebruiken.
-- Dit voegt zichtbare waarde toe zonder nieuwe productscope buiten de bestaande fotoflow.
-
-## In scope
-
-- Nieuwe task aanmaken en bovenaan `in_progress` zetten.
-- Gedeelde moments-overzicht-component uitbreiden met primaire thumbnail binnen de bestaande tijdkolom.
-- Batch-fotodata voor overview-preview laden zonder losse fetch per rij.
-- Gedeelde read-only viewer toevoegen met titel in header en swipe-affordance.
-- Bestaande moment-detail galerijviewer laten hergebruiken via dezelfde shared component.
-
-## Buiten scope
-
-- Foto upload, verwijderen of reorder vanuit het moments-overzicht.
-- Nieuwe fotometadata zoals captions of favorieten.
-- Volledige E2E-dekking voor deze flow als aparte QA-uitbouw.
-
-## Concrete checklist
-
-- [x] Taskfile aangemaakt en lane-sortering bijgewerkt.
-- [x] Batch-photo service voor overview-preview toegevoegd.
-- [x] `MomentsTimelineSection` uitgebreid met vaste primaire thumb in de tijdkolom.
-- [x] Gedeelde fotoviewer toegevoegd met titelheader en swipe-affordance.
-- [x] Moment detail galerij overgezet op dezelfde gedeelde viewer.
-- [x] Thumbnail visueel teruggeschaald naar een lichtere timeline-hint.
-- [x] Thumbnail opnieuw verbreed tot maximale breedte binnen de bestaande tijdkolom, zonder de kolom zelf te vergroten.
-- [x] Viewer vereenvoudigd naar media-first presentatie met minder chrome.
-- [x] Swipe-ownership hersteld tussen carousel en zoom-slide, inclusief web touch-action nuance.
-- [x] Werkende vorige/volgende knopnavigatie toegevoegd in de viewer.
-- [x] Web drag-swipe toegevoegd als structurele fallback naast touch paging.
-- [x] Web drag-swipe verplaatst naar de gedeelde fotoslide zelf, zodat mouse-down en horizontaal slepen op de foto daadwerkelijk navigeert.
-- [x] Web pinch-zoom onderdrukt nu browser/page zoom en routeert de interactie naar de foto-overlay.
-- [x] Laatste timeline-item met thumb toont ook de doorlopende lijn onder het icoon.
-- [x] Verify uitgevoerd en task/docs-bundles bijgewerkt.
-
-## Blockers / afhankelijkheden
-
-- Geen externe blockers; vereist alleen bestaande auth- en fotoservices.
-
-## Review-notitie
-
-- Lokale desktop-Chrome swipe met de muis in de fullscreen foto-popup werkt nog niet betrouwbaar; navigatie via de pijliconen werkt wel.
-- Deze task staat daarom bewust op `blocked` voor latere productiecheck i.p.v. als opgelost/done.
-- Gewenste vervolgrichting na review:
-  - slimmer zoomen
-  - foto kunnen slepen/pannen wanneer ingezoomd
-  - inzoomen rond finger/cursor focuspunt in plaats van standaard naar het midden
-
-## Verify / bewijs
-
-- ✅ `npm run test:unit`
-- ✅ `npm run lint`
-- ✅ `npm run typecheck`
-- ✅ Extra unit-tests voor viewer swipe-state en web touch-action helper
-- ⚠️ Lokale mouse-swipe in desktop Chrome nog niet bevestigd als werkend; arrows werken wel
-- ⚠️ Nog geen gerichte overview-smoke/spec voor deze nieuwe interactieve flow; daarom nu vastgelegd als open QA-gap i.p.v. stilzwijgend bewezen
-- ✅ `npm run taskflow:verify`
-
-## Relevante links
-
-- `components/journal/moments-timeline-section.tsx`
-- `components/journal/entry-photo-gallery.tsx`
-- `services/entry-photos.ts`
-
-
-## Commits
-
-- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
-```
-
----
-
 ## MVP admin + AIQS productie bundel
 
 - Path: `docs/project/25-tasks/open/mvp-admin-aiqs-productie-bundel.md`
@@ -5170,7 +5008,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 10
+sort_order: 11
 ---
 
 
@@ -5571,7 +5409,7 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 8
+sort_order: 9
 ---
 
 
@@ -5712,7 +5550,7 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 12
+sort_order: 13
 ---
 
 
@@ -5855,7 +5693,7 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 13
+sort_order: 14
 ---
 
 
@@ -6586,7 +6424,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
 
 

@@ -7,6 +7,7 @@ const MACOS_SCREEN_CAPTURE_SETTINGS_URL =
   'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture';
 
 const args = parseArgs(process.argv.slice(2));
+const VS_CODE_PROCESS_NAMES = new Set(['Code', 'Visual Studio Code', 'Code - Insiders', 'VSCodium']);
 
 if (process.platform !== 'darwin') {
   fail('unsupported', 'VS Code screenshot capture is momenteel alleen voor macOS ingericht.');
@@ -36,7 +37,29 @@ if (!args.noActivate) {
   }
 }
 
-const captured = run('screencapture', ['-x', outputPath]);
+const windowInfo = readFrontmostWindowInfo();
+if (!VS_CODE_PROCESS_NAMES.has(windowInfo.appName)) {
+  fail(
+    'wrong_app',
+    `VS Code is niet de voorgrond-app. Voorgrond-app: ${windowInfo.appName || 'onbekend'}.`,
+  );
+}
+
+if (args.expectTitle && !frontmostWindowMatchesExpectation(windowInfo, args.expectTitle)) {
+  fail(
+    'wrong_window',
+    [
+      `Voorste VS Code venster lijkt niet de verwachte context te tonen.`,
+      `Verwacht in titel: ${args.expectTitle}`,
+      `Werkelijke titel: ${windowInfo.windowTitle || 'onbekend'}`,
+    ].join('\n'),
+  );
+}
+
+const captureArgs = windowInfo.region
+  ? ['-x', '-R', windowInfo.region, outputPath]
+  : ['-x', outputPath];
+const captured = run('screencapture', captureArgs);
 if (captured.status !== 0 || !isUsablePng(outputPath)) {
   const detail = formatResult(captured);
   if (isLikelyScreenRecordingBlocked(detail)) {
@@ -56,7 +79,10 @@ if (captured.status !== 0 || !isUsablePng(outputPath)) {
 }
 
 const size = statSync(outputPath).size;
-console.log(`VS Code screenshot geschreven: ${outputPath} (${formatBytes(size)})`);
+console.log(
+  `VS Code screenshot geschreven: ${outputPath} (${formatBytes(size)})` +
+    `\nVoorgrond: ${windowInfo.appName} — ${windowInfo.windowTitle || 'zonder venstertitel'}`,
+);
 
 function parseArgs(argv) {
   const parsed = {
@@ -64,6 +90,7 @@ function parseArgs(argv) {
     openSettings: false,
     captureAfterSettings: false,
     noActivate: false,
+    expectTitle: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -86,6 +113,14 @@ function parseArgs(argv) {
       parsed.noActivate = true;
       continue;
     }
+    if (arg === '--expect-title') {
+      parsed.expectTitle = argv[index + 1] ?? null;
+      if (!parsed.expectTitle) {
+        fail('failed', '--expect-title vereist een tekstwaarde.');
+      }
+      index += 1;
+      continue;
+    }
     if (arg === '--help' || arg === '-h') {
       printHelp();
       process.exit(0);
@@ -94,6 +129,92 @@ function parseArgs(argv) {
   }
 
   return parsed;
+}
+
+function readFrontmostWindowInfo() {
+  const result = run('osascript', [
+    '-e',
+    [
+      'tell application "System Events"',
+      '  set frontAppProcess to first application process whose frontmost is true',
+      '  set frontAppName to name of frontAppProcess',
+      '  set windowTitle to ""',
+      '  set regionText to ""',
+      '  tell frontAppProcess',
+      '    if exists front window then',
+      '      set windowTitle to name of front window',
+      '      set windowPosition to position of front window',
+      '      set windowSize to size of front window',
+      '      set regionText to (item 1 of windowPosition as integer) & "," & (item 2 of windowPosition as integer) & "," & (item 1 of windowSize as integer) & "," & (item 2 of windowSize as integer)',
+      '    end if',
+      '  end tell',
+      '  return frontAppName & linefeed & windowTitle & linefeed & regionText',
+      'end tell',
+    ].join('\n'),
+  ]);
+
+  if (result.status !== 0) {
+    fail('failed', `Kon voorste venster niet bepalen: ${formatResult(result)}`);
+  }
+
+  const [appName = '', windowTitle = '', region = ''] = result.stdout.split(/\r?\n/);
+  return {
+    appName: appName.trim(),
+    windowTitle: windowTitle.trim(),
+    region: normalizeRegion(region.trim()),
+  };
+}
+
+function frontmostWindowMatchesExpectation(windowInfo, expectedTitle) {
+  const expected = expectedTitle.toLowerCase();
+  if (windowInfo.windowTitle.toLowerCase().includes(expected)) {
+    return true;
+  }
+
+  const visibleText = readFrontmostWindowVisibleText();
+  return visibleText.toLowerCase().includes(expected);
+}
+
+function readFrontmostWindowVisibleText() {
+  const result = run('osascript', [
+    '-e',
+    [
+      'tell application "System Events"',
+      '  set frontAppProcess to first application process whose frontmost is true',
+      '  set visibleText to ""',
+      '  tell frontAppProcess',
+      '    if exists front window then',
+      '      repeat with uiElement in entire contents of front window',
+      '        try',
+      '          set uiName to name of uiElement',
+      '          if uiName is not missing value and uiName is not "" then set visibleText to visibleText & linefeed & uiName',
+      '        end try',
+      '      end repeat',
+      '    end if',
+      '  end tell',
+      '  return visibleText',
+      'end tell',
+    ].join('\n'),
+  ]);
+
+  if (result.status !== 0) {
+    return '';
+  }
+
+  return result.stdout;
+}
+
+function normalizeRegion(region) {
+  if (!/^-?\d+,-?\d+,\d+,\d+$/.test(region)) {
+    return null;
+  }
+
+  const [x, y, width, height] = region.split(',').map(Number);
+  if (width <= 0 || height <= 0) {
+    return null;
+  }
+
+  return `${Math.max(0, x)},${Math.max(0, y)},${width},${height}`;
 }
 
 function defaultOutputPath() {
@@ -166,6 +287,7 @@ function printHelp() {
   console.log(`Usage:
   npm run plugin:vscode:screenshot
   npm run plugin:vscode:screenshot -- --out /tmp/budio-vscode.png
+  npm run plugin:vscode:screenshot -- --expect-title "Budio Workspace" --out /tmp/budio-vscode.png
   npm run plugin:vscode:screenshot -- --open-settings
 
 Options:
@@ -173,5 +295,6 @@ Options:
   --open-settings           Open macOS Screen Recording privacy-instellingen.
   --capture-after-settings  Open instellingen en probeer daarna alsnog capture.
   --no-activate             Activeer VS Code niet vooraf.
+  --expect-title <text>     Vereis dat de voorste VS Code venstertitel deze tekst bevat.
 `);
 }

@@ -32,6 +32,11 @@ import {
   compactChecklistProgressLabel,
   formatLastChangeDate,
 } from '../../src/tasks/task-ux';
+import {
+  getDetailPreviewSections,
+  getSafeChecklistItems,
+  getSafeStringArray,
+} from '../../src/tasks/task-detail-view';
 import type { HostToWebviewMessage } from '../../src/webview-bridge/messages';
 import {
   DETAIL_PANE_MIN_WIDTH,
@@ -1232,6 +1237,13 @@ export function App(): React.JSX.Element {
   function renderDetailPane(mode: Extract<DetailRenderMode, 'split' | 'overlay' | 'fullscreen'>): React.JSX.Element {
     const detailSnapshot = snapshot;
     const detailAgentLabel = selectedTask ? activeAgentLabel(selectedTask) : null;
+    const selectedTags = selectedTask ? getSafeStringArray(selectedTask.tags) : [];
+    const selectedChecklist = selectedTask ? getSafeChecklistItems(selectedTask.checklist) : [];
+    const detailPreviewSections = selectedTask ? getDetailPreviewSections(selectedTask) : [];
+    const subtaskIds = selectedTask ? getSafeStringArray(selectedTask.subtaskIds) : [];
+    const blockedByIds = selectedTask ? getSafeStringArray(selectedTask.blockedByIds) : [];
+    const blockingIds = selectedTask ? getSafeStringArray(selectedTask.blockingIds) : [];
+    const followsAfterIds = selectedTask ? getSafeStringArray(selectedTask.followsAfter) : [];
     return (
       <aside
         className={`detail-pane ${
@@ -1282,7 +1294,6 @@ export function App(): React.JSX.Element {
                         {formatTaskRef(selectedTask.id)}
                       </span>
                       <StatusBadge status={selectedTask.status} />
-                      {selectedTask.dueDate ? <span className={dueClassName(selectedTask.dueDate)}>{selectedTask.dueDate}</span> : null}
                     </div>
                   </div>
                   {detailMenuOpen ? (
@@ -1382,11 +1393,6 @@ export function App(): React.JSX.Element {
                   </label>
 
                   <label>
-                    <span>Due date</span>
-                    <input type="date" value={formState.dueDate} onChange={(event) => patchForm({ dueDate: event.target.value })} />
-                  </label>
-
-                  <label>
                     <span>Korte samenvatting</span>
                     <textarea rows={4} value={formState.summary} onChange={(event) => patchForm({ summary: event.target.value })} />
                   </label>
@@ -1438,52 +1444,56 @@ export function App(): React.JSX.Element {
                       </div>
                     </div>
 
-                    <div className="detail-meta-grid">
-                      <span className="muted-copy">Epic</span>
-                      <span>{selectedTask.epicId ?? '—'}</span>
-                      <span className="muted-copy">Parent task</span>
-                      <span>{selectedTask.parentTaskId ?? '—'}</span>
-                      <span className="muted-copy">Type</span>
-                      <span>{selectedTask.taskKind}</span>
-                      <span className="muted-copy">Blocked</span>
-                      <span>{selectedTask.isBlocked ? 'Ja' : 'Nee'}</span>
+                    <div className="detail-structure-card">
+                      <div className="detail-structure-grid">
+                        <span className="muted-copy">Epic</span>
+                        <span>{selectedTask.epicId ?? '—'}</span>
+                        <span className="muted-copy">Parent task</span>
+                        <span>{selectedTask.parentTaskId ?? '—'}</span>
+                        <span className="muted-copy">Type</span>
+                        <span>{selectedTask.taskKind}</span>
+                        <span className="muted-copy">Blocked</span>
+                        <span>{selectedTask.isBlocked ? 'Ja' : 'Nee'}</span>
+                      </div>
                     </div>
 
-                    <TaskRelationList
-                      title="Subtasks"
-                      ids={selectedTask.subtaskIds}
-                      cardsById={cardMap}
-                      onOpenTask={selectTask}
-                      emptyLabel="Geen subtasks."
-                    />
-                    <TaskRelationList
-                      title="Blocked by"
-                      ids={selectedTask.blockedByIds}
-                      cardsById={cardMap}
-                      onOpenTask={selectTask}
-                      emptyLabel="Geen blockers."
-                    />
-                    <TaskRelationList
-                      title="Blocks"
-                      ids={selectedTask.blockingIds}
-                      cardsById={cardMap}
-                      onOpenTask={selectTask}
-                      emptyLabel="Blokkeert niets."
-                    />
-                    <TaskRelationList
-                      title="Follows after"
-                      ids={selectedTask.followsAfter}
-                      cardsById={cardMap}
-                      onOpenTask={selectTask}
-                      emptyLabel="Geen vervolgvolgorde vastgelegd."
-                    />
+                    <div className="detail-relation-grid">
+                      <TaskRelationList
+                        title="Subtasks"
+                        ids={subtaskIds}
+                        cardsById={cardMap}
+                        onOpenTask={selectTask}
+                        emptyLabel="Geen subtasks."
+                      />
+                      <TaskRelationList
+                        title="Blocked by"
+                        ids={blockedByIds}
+                        cardsById={cardMap}
+                        onOpenTask={selectTask}
+                        emptyLabel="Geen blockers."
+                      />
+                      <TaskRelationList
+                        title="Blocks"
+                        ids={blockingIds}
+                        cardsById={cardMap}
+                        onOpenTask={selectTask}
+                        emptyLabel="Blokkeert niets."
+                      />
+                      <TaskRelationList
+                        title="Follows after"
+                        ids={followsAfterIds}
+                        cardsById={cardMap}
+                        onOpenTask={selectTask}
+                        emptyLabel="Geen vervolgvolgorde vastgelegd."
+                      />
+                    </div>
                   </div>
 
                   <div className="detail-section">
                     <strong>Alle tags</strong>
                     <div className="meta-row detail-tag-grid">
-                      {selectedTask.tags.length > 0 ? (
-                        selectedTask.tags.map((tag) => (
+                      {selectedTags.length > 0 ? (
+                        selectedTags.map((tag) => (
                           <span key={tag} className="tag-pill">
                             {tag}
                           </span>
@@ -1494,9 +1504,38 @@ export function App(): React.JSX.Element {
                     </div>
                   </div>
 
-                  <div className="detail-section">
-                    <strong>Agent metadata</strong>
-                    <div className="detail-meta-grid">
+                  <div className="detail-section agent-detail-section">
+                    <div className="detail-section-header">
+                      <strong>Agent</strong>
+                      <div className="detail-section-actions">
+                        <button
+                          className="mini-button"
+                          onClick={() =>
+                            vscode.postMessage({
+                              type: 'claimTaskAgent',
+                              taskId: selectedTask.id,
+                              expectedVersion: selectedTask.version,
+                            })
+                          }
+                        >
+                          Claim als actief
+                        </button>
+                        <button
+                          className="mini-button"
+                          disabled={!selectedTask.activeAgent}
+                          onClick={() =>
+                            vscode.postMessage({
+                              type: 'clearTaskAgent',
+                              taskId: selectedTask.id,
+                              expectedVersion: selectedTask.version,
+                            })
+                          }
+                        >
+                          Stop agent
+                        </button>
+                      </div>
+                    </div>
+                    <div className="detail-meta-grid agent-meta-grid">
                       <span className="muted-copy">Agent</span>
                       <span>{selectedTask.activeAgent ?? '—'}</span>
                       <span className="muted-copy">Model</span>
@@ -1514,8 +1553,8 @@ export function App(): React.JSX.Element {
 
                   <div className="checklist-block">
                     <h3>Checklist</h3>
-                    {selectedTask.checklist.length > 0 ? (
-                      selectedTask.checklist.map((item) => (
+                    {selectedChecklist.length > 0 ? (
+                      selectedChecklist.map((item) => (
                         <label key={`${selectedTask.id}-${item.index}`} className="checklist-row">
                           <input
                             type="checkbox"
@@ -1538,9 +1577,20 @@ export function App(): React.JSX.Element {
                     )}
                   </div>
 
-                  <div className="preview-block">
-                    <h3>Body preview</h3>
-                    <pre>{selectedTask.bodyPreview || 'Geen preview beschikbaar.'}</pre>
+                  <div className="preview-block detail-description-block">
+                    <h3>Taakbeschrijving</h3>
+                    {detailPreviewSections.length > 0 ? (
+                      <div className="detail-description-sections">
+                        {detailPreviewSections.map((section) => (
+                          <section key={section.heading} className="detail-description-section">
+                            <h4>{section.heading}</h4>
+                            <p>{section.body}</p>
+                          </section>
+                        ))}
+                      </div>
+                    ) : (
+                      <pre>{selectedTask.bodyPreview || 'Geen preview beschikbaar.'}</pre>
+                    )}
                   </div>
 
                   <button className="primary-button save-button" onClick={saveMetadata}>
