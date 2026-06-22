@@ -34,6 +34,22 @@ async function loginWithLocalMagicLink(page) {
   await page.waitForLoadState("networkidle");
 }
 
+async function dragViewerPhotoLeft(page) {
+  const layer = page.getByTestId("zoomable-photo-slide-web-layer").first();
+  await expect(layer).toBeVisible({ timeout: 15000 });
+  const box = await layer.boundingBox();
+  expect(box).not.toBeNull();
+
+  const y = box.y + box.height / 2;
+  const startX = box.x + box.width * 0.72;
+  const endX = box.x + box.width * 0.24;
+
+  await page.mouse.move(startX, y);
+  await page.mouse.down();
+  await page.mouse.move(endX, y, { steps: 12 });
+  await page.mouse.up();
+}
+
 test.describe("entry photo gallery full end-user flow", () => {
   test.skip(process.env.GALLERY_E2E_FULL !== "1", "Set GALLERY_E2E_FULL=1 to run the full gallery suite.");
   test.skip(!entryUrl, "Set GALLERY_E2E_ENTRY_URL to a local entry detail URL.");
@@ -57,6 +73,23 @@ test.describe("entry photo gallery full end-user flow", () => {
     await page.getByText("Annuleren").click();
     await expect(page.getByText("Foto verwijderen?")).toHaveCount(0);
     await expect(page.getByTestId(`entry-photo-thumb-${orderedPhotoIds[0]}`)).toBeVisible();
+  });
+
+  test("navigates the fullscreen viewer with arrows and desktop mouse drag", async ({ page }) => {
+    const first = page.getByTestId(`entry-photo-thumb-${orderedPhotoIds[0]}`);
+    await expect(first).toBeVisible();
+
+    await first.click();
+    await expect(page.getByText(`1 / ${orderedPhotoIds.length}`)).toBeVisible();
+
+    await page.getByLabel("Volgende foto").click();
+    await expect(page.getByText(`2 / ${orderedPhotoIds.length}`)).toBeVisible();
+
+    await page.getByLabel("Vorige foto").click();
+    await expect(page.getByText(`1 / ${orderedPhotoIds.length}`)).toBeVisible();
+
+    await dragViewerPhotoLeft(page);
+    await expect(page.getByText(`2 / ${orderedPhotoIds.length}`)).toBeVisible();
   });
 
   test("shows a live drag placeholder before persisting reorder", async ({ page }) => {

@@ -119,7 +119,6 @@ _Geen taken._
 
 | Taak | Prioriteit | Fase | Korte omschrijving |
 | --- | --- | --- | --- |
-| [Moments-overzicht primaire foto thumbnail en viewer](open/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
 | [Docs folderstructuur en visual language herbeoordelen na metadatafase](open/docs-folderstructuur-en-visual-language-herbeoordeling-na-metadatafase.md) | p3 | transitiemaand-consumer-beta | Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een korte, brongebaseerde beoordeling: - Is metadata + bundling... |
 
 ### Done
@@ -148,6 +147,7 @@ _Geen taken._
 | [Moment detail foto's toevoegen met beveiligde galerij (max 5)](done/moment-entry-fotos-galerij-beveiligde-upload.md) | p1 | transitiemaand-consumer-beta | Een compacte fotoflow op moment detail met maximaal 5 foto's per moment. Als er nog geen foto's zijn toont de UI een rustige empty state... |
 | [Moment fotoviewer swipe/zoom verbeteren en markdownstructuur tonen](done/moment-fotoviewer-swipe-zoom-en-markdown-weergave.md) | p1 | transitiemaand-consumer-beta | De fotoviewer voelt op mobiel beheerst en direct aan: per swipe land je op de bedoelde vorige of volgende foto, en ingezoomde foto's kun... |
 | [Momentdetail with-photos runtime-validatie](done/momentdetail-with-photos-runtime-validatie.md) | p1 | transitiemaand-consumer-beta | Er is een reproduceerbare lokale smoke-fixture voor één historische momentdetail-entry met 2-3 foto's. Daarmee kunnen we de with-photos s... |
+| [Moments-overzicht primaire foto thumbnail en viewer](done/moments-overzicht-primaire-foto-thumbnail-en-viewer.md) | p1 | transitiemaand-consumer-beta | In het gedeelde `MomentsTimelineSection` wordt bij aanwezige foto's een compacte primaire thumbnail getoond binnen de bestaande tijdkolom... |
 | [Open taken reviewen en opschonen na recente moment/capture fixes](done/open-taken-reviewen-en-opschonen-na-recente-moment-capture-fixes.md) | p1 | transitiemaand-consumer-beta | De open tasklaag is opgeschoond: taken die volledig door recent werk zijn opgelost worden gesloten of verplaatst naar `done/`, taken die... |
 | [Oude dag moment toevoegen via bestaande captureflow](done/oude-dag-moment-toevoegen-via-bestaande-captureflow.md) | p1 | transitiemaand-consumer-beta | Op een dagdetail kan de gebruiker via een secundaire actie `Moment toevoegen` een nieuw moment starten voor precies die dag. Op lege dage... |
 | [Plan/spec quality guardrails voor ideas, epics en tasks](done/plan-spec-quality-guardrails-voor-ideas-epics-en-tasks.md) | p1 | transitiemaand-consumer-beta | Toekomstige agents maken standaard ideas, researchdocs, epics, tasks en subtasks aan die zelfstandig bruikbaar zijn. Nieuwe uitvoerbare t... |

@@ -405,6 +405,7 @@ export function ZoomablePhotoSlide({
       {Platform.OS === "web" ? (
         <View
           ref={webSurfaceRef}
+          testID="zoomable-photo-slide-web-layer"
           collapsable={false}
           style={[
             styles.webInteractionLayer,
