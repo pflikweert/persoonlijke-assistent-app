@@ -18,6 +18,7 @@ Lokale VS Code board-plugin voor `docs/project/25-tasks/**/*.md`, met een lichte
 - `npm run typecheck`
 - `npm run test`
 - `npm run apply:workspace` (build + package + install + VS Code refresh)
+- `npm run plugin:vscode:screenshot` vanuit de repo-root om lokaal een VS Code screenshot naar `/tmp` te schrijven.
 
 ## Starten in VS Code
 1. Open deze repo in VS Code.
@@ -26,6 +27,11 @@ Lokale VS Code board-plugin voor `docs/project/25-tasks/**/*.md`, met een lichte
 
 ## Workflowregel
 - Bij elke wijziging in `tools/budio-workspace-vscode/**` altijd `npm run apply:workspace` uitvoeren in deze map, zodat de normale workspace direct de nieuwste extensionversie heeft.
+
+## Screenshotbewijs
+- Gebruik vanuit de repo-root `npm run plugin:vscode:screenshot` na `apply:workspace` om VS Code te activeren en een PNG naar `/tmp` te schrijven.
+- Als macOS `screencapture` blokkeert met `could not create image from display`, geef de host-app die Codex/terminal draait toegang bij System Settings -> Privacy & Security -> Screen & System Audio Recording.
+- Gebruik `npm run plugin:vscode:screenshot -- --open-settings` om die macOS-instellingen direct te openen. Herstart daarna de terminal/Codex-host en probeer opnieuw.
 
 ## Jarvis lokale env
 - Jarvis chat leest lokaal eerst `OPENAI_API_BUDIO_WORKSPACE_SERVICE_KEY`, daarna `OPENAI_API_BUDIO_WORKSPACE_KEY`, en pas daarna `OPENAI_API_KEY`.

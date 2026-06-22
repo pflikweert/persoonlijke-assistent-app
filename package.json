@@ -45,6 +45,7 @@
     "verify:local-aiqs-bootstrap": "sh ./scripts/verify-local-aiqs-runtime-bootstrap.sh",
     "aiqs:runtime-baseline:ensure": "sh ./scripts/ensure-aiqs-runtime-baseline.sh",
     "verify:local-output-quality": "./scripts/verify-local-output-quality.sh",
+    "plugin:vscode:screenshot": "node scripts/capture-vscode-screenshot.mjs",
     "jarvis:luma:dry-run": "node tools/jarvis-luma/download-final-frame.mjs --dry-run",
     "jarvis:luma:sync": "node tools/jarvis-luma/download-final-frame.mjs --dest assets/jarvis/final-frame",
     "docs:lint": "npx markdownlint-cli2 \"docs/**/*.md\"",
