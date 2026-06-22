@@ -16,8 +16,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 5
+sort_order: 6
 ---
+
 
 
 
@@ -136,6 +137,10 @@ Reviewbevindingen:
 - AIQS overview volgt nu expliciet de admin-workspace standaard: exact één globale statusbron, promptfamilies als primaire lijst en `Systeem` als secundaire utility-sectie.
 - Gedeelde admin-primitives zijn uitgebreid met `AdminStatusNotice`, `AdminSectionList`, `AdminToggleRow` en rustigere panel/meta-varianten, zodat toekomstige admin-overviews minder dashboard-achtig hoeven op te bouwen.
 - Debug logging is teruggebracht van groot utilityblok naar een compacte toggle-rij met optionele detailuitklap; flow-level toggles en TTL-beheer blijven intact.
+- Dedicated AIQS/admin smoke-user `smoke.aiqs.local@example.com` toegevoegd aan de lokale auth smoke-flow, zodat admin-validatie los blijft van gallery/consumer smoke-users.
+- Gedeelde Playwright helper voor local magic-link browser-login toegevoegd en hergebruikt door zowel AIQS- als gallery-smokes.
+- AIQS local smoke kan nu zelf lokale dev starten, een ontbrekende AIQS internal token tijdelijk injecteren via functions env-restart, baseline importeren en daarna de geauthenticeerde browser-overview controleren.
+- Lokale docs en env-templates verduidelijken nu het verschil tussen token/login-proof en echte browser-sessie, plus het fallbackpad wanneer `localhost:8081` of een internal token ontbreekt.
 
 ## Uitvoerblokken / fasering
 
@@ -143,7 +148,7 @@ Reviewbevindingen:
 - [x] Blok 2: gedeelde admin-console primitive-laag toevoegen zonder gewone settings-primitives te breken.
 - [x] Blok 3: AIQS overview en group flow omzetten naar compacte console IA.
 - [x] Blok 4: task detail, draft, test en validate omzetten naar console/workbench-layout.
-- [ ] Blok 5: static verify, runtime UI-smoke, taskflow en docs-bundel afronden.
+- [x] Blok 5: static verify, runtime UI-smoke, taskflow en docs-bundel afronden.
 
 ## Concrete checklist
 
@@ -193,13 +198,23 @@ Reviewbevindingen:
   - desktop light/dark en mobile light/dark screenshots gecontroleerd op overlap, tekstfit en scanbaarheid.
 - `npm run verify:local-flow` — groen, text-flow PASS.
 - `npm run verify:local-reflection-flow` — groen, week/month reflection-flow PASS.
+- 2026-06-22 local smoke hardening:
+  - `npm run verify:local-aiqs-login` — groen; dedicated `smoke.aiqs.local@example.com`, founder + `ai_quality_studio` access bevestigd, runtime-baseline import groen en tijdelijke local-only AIQS internal token injectie/herstart bewezen.
+  - `npm run verify:local-aiqs-smoke` — groen; script startte zelf `npm run dev`, logde browser echt in via Mailpit magic link, opende `/settings-ai-quality-studio`, valideerde de nieuwe workspace-first overview en navigeerde door naar `group/today`.
+  - `npm run test:e2e:gallery:seed` — groen; lokale gallery fixture opnieuw gezaaid voor regressiecheck van gedeelde login-helper.
+  - `npm run test:e2e:gallery:smoke` met verse `GALLERY_E2E_ENTRY_URL` en `GALLERY_E2E_PHOTO_IDS` uit de seed-run — groen; gedeelde local magic-link browser-login helper blijft compatibel met bestaande gallery smoke.
+  - `npm run typecheck` — groen na AIQS smoke-hardening.
+  - `npm run lint` — groen na AIQS smoke-hardening.
+  - `npm run taskflow:verify` — groen na taskfile- en docs-aanvulling.
+  - `npm run docs:bundle` — groen; bundles en uploadcontext opnieuw opgebouwd.
+  - `npm run docs:bundle:verify` — groen.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
 - Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix en nu ook workspace-first overviewstructuur met gedeelde status/toggle/list primitives.
 - Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. Static checks zijn opnieuw groen.
-- Open / blocked: taak blijft `in_progress` voor visuele user-review en voor een laatste geauthenticeerde runtime-smoke van de overview; huidige blocker is lokaal verify-bewijs dat nog auth/bootstrapcontext vraagt.
+- Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat taskflow/docs-closeout is gereconcilieerd en de gebruiker deze referentie-implementatie inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
 
 ## Relevante links
 
@@ -218,3 +233,5 @@ Reviewbevindingen:
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio

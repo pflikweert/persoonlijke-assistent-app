@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-22T09:00:53.889Z
-Source Commit: 6fd772e
+Build Timestamp (UTC): 2026-06-22T09:39:39.057Z
+Source Commit: e5efe2a
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 61
+- Totaal tasks opgenomen: 64
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -621,6 +621,192 @@ De advieszone heeft een vaste hoogte zodat onderliggende UI niet verspringt. Sli
 
 ---
 
+## Budio Codex-modelkeuze vrijmaken met 5.5 default
+
+- Path: `docs/project/25-tasks/done/budio-codex-modelkeuze-vrijmaken-met-5-5-default.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-budio-codex-modelkeuze-vrijmaken-met-5-5-default
+title: Budio Codex-modelkeuze vrijmaken met 5.5 default
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-22
+summary: "Verwijder de Budio project-level modelpin zodat de gebruiker in Codex zelf een model kan kiezen, terwijl de globale default op `gpt-5.5` actief blijft."
+tags: [plugin, codex, config, model, local-dev]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Codex-modelkeuze vrijmaken met 5.5 default
+
+## Probleem / context
+
+De globale Codex-config staat nu correct op `gpt-5.5`, maar de Budio repo-config pinnt nog `model = "gpt-5.4"` in `.codex/config.toml`.
+
+Daardoor erft Budio de globale default niet en blijft het project effectief op `gpt-5.4` laden. Dat botst met de expliciete userwens om in de Codex chat prompt zelf een model te kunnen kiezen, terwijl de default voor Budio ook naar `gpt-5.5` moet.
+
+## Gewenste uitkomst
+
+Budio pinnt geen eigen model meer op projectniveau. De repo erft de globale default `gpt-5.5`, terwijl handmatige modelkeuze in Codex niet onnodig door een repo-level `model` setting wordt overschreven.
+
+## User outcome
+
+Pieter opent Codex in de Budio repo en start standaard vanaf `gpt-5.5`, maar kan in de chat prompt zelf een ander model kiezen zonder dat Budio hard terugduwt naar een project-pinned model.
+
+## Functional slice
+
+Een minimale repo-config wijziging: de project-level `model` pin verdwijnt, overige Budio MCP- en Supabase-instellingen blijven intact.
+
+## Entry / exit
+
+- Entry: globale userconfig met `model = "gpt-5.5"` en Budio `.codex/config.toml` met `model = "gpt-5.4"`.
+- Exit: Budio `.codex/config.toml` pinnt geen model meer; globale default `gpt-5.5` geldt weer in het project.
+
+## Happy flow
+
+1. Agent bevestigt globale en repo-level modelinstellingen.
+2. Agent verwijdert alleen de repo-level `model` pin uit `.codex/config.toml`.
+3. Agent valideert dat globale default buiten repo `gpt-5.5` is en dat Budio geen project-level modeloverride meer bevat.
+
+## Non-happy flows
+
+- Empty state: als `.codex/config.toml` onverwacht ontbreekt, wordt geen nieuwe brede config opgebouwd.
+- Validation / unsupported state: als Codex een verborgen andere precedence zou toepassen, blijft dat expliciet gerapporteerd als onzekerheid.
+- Failure / retry / cancel: bij verify-falen blijft de wijziging beperkt tot de kleinste config-edit en wordt het falende bewijs benoemd.
+
+## UX / copy
+
+- Geen app-UI-wijzigingen.
+- Eindrapport benoemt expliciet dat Budio nu de globale `gpt-5.5` default erft en dat modelkeuze niet langer project-pinned is.
+
+## Data / IO
+
+- Input:
+  - `~/.codex/config.toml`
+  - `.codex/config.toml`
+  - lokale Codex verify-output
+- Output:
+  - minimale patch in `.codex/config.toml`
+  - task/docs-sync
+- Opslag/API/service/file-impact:
+  - alleen repo-local Codex-config en task/docs-laag
+- Statussen:
+  - review
+  - applied
+  - validated
+
+## Waarom nu
+
+- De globale default is al goed gezet; zonder deze repo-fix blijft Budio daarvan afwijken en blijft modelkeuze onnodig vastgepind.
+
+## In scope
+
+- Alleen de Budio repo-level modelpin verwijderen.
+- Verifiëren dat de globale default `gpt-5.5` blijft.
+- Verifiëren dat Budio local Supabase-config intact blijft.
+
+## Buiten scope
+
+- Globale plugin/config-herziening.
+- Andere repo’s.
+- Verdere Codex state/UI-instellingen buiten deze directe modelpin.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Houd `~/.codex/config.toml` op `gpt-5.5`.
+- Verwijder alleen `model = "gpt-5.4"` uit Budio `.codex/config.toml`.
+- Laat `model_reasoning_effort = "medium"` en Budio MCP/Supabase-config verder intact.
+- Valideer daarna het effectieve gedrag met gerichte Codex checks.
+
+## Expliciete user requirements / detailbehoud
+
+- [x] In Budio altijd zelf model kunnen kiezen in de Codex chat prompt.
+- [x] Budio default ook naar `gpt-5.5` zetten.
+- [x] Geen onnodige repo-level modelhardcoding houden als die handmatige keuze in de weg zit.
+
+## Status per requirement
+
+- [x] Handmatige modelkeuze niet meer repo-pinned — status: gebouwd
+- [x] Budio erft default `gpt-5.5` — status: gebouwd
+- [x] Overige repo-config blijft intact — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Repo-level modelpin verwijderd; globale `gpt-5.5` default blijft de enige expliciete modeldefault.
+- Verifiëring bevestigt nu ook binnen de Budio repo effectief `model: gpt-5.5`.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: huidige globale en repo-level modelconfig bevestigen.
+- [x] Blok 2: minimale repo-config patch uitvoeren.
+- [x] Blok 3: verify, taskflow en docs-bundel afronden.
+
+## Concrete checklist
+
+- [x] Project-level modelpin verwijderen uit `.codex/config.toml`
+- [x] Verifiëren dat `gpt-5.5` globaal actief blijft
+- [x] Verifiëren dat Budio local target intact blijft
+
+## Acceptance criteria
+
+- [x] `.codex/config.toml` bevat geen project-level `model = ...` meer.
+- [x] `~/.codex/config.toml` blijft `model = "gpt-5.5"` bevatten.
+- [x] Budio-specifieke MCP-config, inclusief `supabase_local`, blijft ongewijzigd.
+
+## Blockers / afhankelijkheden
+
+- Geen open blockers.
+
+## Verify / bewijs
+
+- `sed -n '1,80p' ~/.codex/config.toml`
+- `sed -n '1,80p' .codex/config.toml`
+- `codex doctor --json` in repo en/of buiten repo
+- `node scripts/codex-mcp-target.mjs local`
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+Tussenstand:
+
+- `~/.codex/config.toml` bevat `model = "gpt-5.5"` en `model_reasoning_effort = "medium"`.
+- `.codex/config.toml` bevat geen project-level `model = ...` meer.
+- `codex doctor --json` in de Budio repo toont nu `model: gpt-5.5`.
+- `node scripts/codex-mcp-target.mjs local` bevestigt dat `supabase_local` actief blijft.
+- `npm run taskflow:verify` geslaagd.
+- `npm run docs:bundle` geslaagd.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: Budio modelpin verwijderen zodat globale `gpt-5.5` default geldt.
+- Toegevoegde verbeteringen: expliciete verify toegevoegd dat de repo nu effectief `gpt-5.5` laadt, niet alleen dat de pin verwijderd is.
+- Afgerond: repo-level modelpin verwijderd, globale `gpt-5.5` default intact, Budio local target intact en verify/scripts gedraaid.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `~/.codex/config.toml`
+- `.codex/config.toml`
+- `docs/project/25-tasks/done/codex-config-veilig-aanscherpen-voor-budio-development.md`
+```
+
+---
+
 ## Budio Workspace hierarchy met epics, subtasks en dependencies
 
 - Path: `docs/project/25-tasks/done/budio-workspace-hierarchy-epics-subtasks-dependencies.md`
@@ -793,19 +979,19 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-06-13
-summary: "Los de valse Jarvis assetmelding op waarbij 17/20 klaar en handmatige mapping nodig wordt gemeld terwijl het lokale manifest ready is."
+summary: Los de valse Jarvis assetmelding op waarbij 17/20 klaar en handmatige mapping nodig wordt gemeld terwijl het lokale manifest ready is.
 tags: [plugin, vscode, jarvis, assets, luma]
 workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-hardening-echte-command-room
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis assets mapping melding oplossen
 
@@ -944,6 +1130,11 @@ De gebruiker ziet nog een valse Jarvis assets-waarschuwing terwijl de assets lok
 - `assets/jarvis/final-frame/jarvis-assets-manifest.json`
 - `tools/budio-workspace-vscode/src/extension/host/jarvis.ts`
 - `tools/budio-workspace-vscode/src/jarvis/chat.ts`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -972,14 +1163,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-height-borderless-core-polish
-  - task-budio-workspace-jarvis-founder-overview-command-room-redesign
+follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis chat-first reset met ZIP assets
 
@@ -1164,6 +1354,11 @@ De gebruiker heeft de huidige Jarvis-review afgekeurd als te druk, te veel infor
 
 - `/Users/pieterflikweert/Downloads/VS_Code_Workspace.zip`
 - `docs/project/25-tasks/done/budio-workspace-jarvis-height-borderless-core-polish.md`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -1192,13 +1387,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-praatbare-eigen-view
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis echte chat en push-to-talk
 
@@ -1389,6 +1584,11 @@ Eén afgeronde plugin-slice:
 - `docs/project/25-tasks/done/budio-workspace-jarvis-praatbare-eigen-view.md`
 - `tools/budio-workspace-vscode/README.md`
 - `assets/jarvis/final-frame/unified-design-brief.txt`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -1417,13 +1617,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-responsive-cinematic-polish
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis env en live agent awareness fix
 
@@ -1591,6 +1791,11 @@ De user ziet een valse key-melding en wil Jarvis als echte command room gebruike
 - `tools/budio-workspace-vscode/src/jarvis/env.ts`
 - `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
 - `tools/budio-workspace-vscode/src/tasks/types.ts`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -1619,14 +1824,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-hardening-echte-command-room
-  - task-budio-workspace-jarvis-mic-settings-en-runtime-test-fix
+follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis founder-overview command room redesign
 
@@ -1809,6 +2013,11 @@ De gebruiker heeft expliciet aangegeven dat Jarvis er nog niet uitziet als `foun
 
 - `assets/jarvis/final-frame/founder-overview.png`
 - `docs/project/25-tasks/done/budio-workspace-jarvis-hardening-echte-command-room.md`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -1837,15 +2046,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-env-live-agent-awareness-fix
-  - task-budio-workspace-jarvis-responsive-cinematic-polish
-  - task-budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis hardening echte command room
 
@@ -2044,6 +2251,11 @@ De gebruiker wil Jarvis als echt werkende interne command room gebruiken. Een va
 - `docs/project/25-tasks/done/budio-workspace-jarvis-responsive-cinematic-polish.md`
 - `docs/project/25-tasks/done/budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end.md`
 - `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -2072,13 +2284,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-founder-overview-command-room-redesign
+follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis height en borderless core polish
 
@@ -2225,6 +2437,11 @@ De gebruiker heeft direct na de redesign-review aangegeven dat de schaal en visu
 
 - `assets/jarvis/final-frame/founder-overview.png`
 - `docs/project/25-tasks/done/budio-workspace-jarvis-founder-overview-command-room-redesign.md`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -2247,19 +2464,19 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-06-13
-summary: "Fix dat de Jarvis knop microfooninstellingen niets doet en maak mic-runtime diagnose/feedback testbaar zichtbaar in de plugin."
+summary: Fix dat de Jarvis knop microfooninstellingen niets doet en maak mic-runtime diagnose/feedback testbaar zichtbaar in de plugin.
 tags: [plugin, vscode, jarvis, voice, microphone, macos]
 workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-microfoon-permission-flow-fix
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis mic settings en runtime test fix
 
@@ -2405,6 +2622,11 @@ De vorige permission-flow is nog niet praktisch werkend: de settingsknop doet ni
 - `tools/budio-workspace-vscode/src/webview-bridge/messages.ts`
 - `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
 - `tools/budio-workspace-vscode/webview-ui/src/useJarvisVoiceInput.ts`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -2433,13 +2655,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-hardening-echte-command-room
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis microfoon permission flow fix
 
@@ -2582,6 +2804,11 @@ De huidige mic-permission uitleg lost het probleem voor de gebruiker niet op. Ja
 - `tools/budio-workspace-vscode/webview-ui/src/useJarvisVoiceInput.ts`
 - `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
 - `tools/budio-workspace-vscode/src/extension/host/BoardPanelController.ts`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -2616,6 +2843,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis praatbare eigen view
 
@@ -2803,6 +3031,11 @@ Eén afgeronde plugin-slice:
 - `docs/project/25-tasks/done/budio-workspace-jarvis-v1-luma-asset-ingest-en-command-room.md`
 - `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
 - `assets/jarvis/final-frame/unified-design-brief.txt`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -2831,13 +3064,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end
+follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis responsive cinematic polish
 
@@ -2981,6 +3214,11 @@ De gebruiker heeft runtime werkend gekregen en vraagt nu expliciet om passende s
 - `docs/project/25-tasks/done/budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end.md`
 - `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
 - `tools/budio-workspace-vscode/webview-ui/src/styles.css`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -3009,13 +3247,13 @@ workstream: plugin
 epic_id: null
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-jarvis-echte-chat-push-to-talk
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 # Budio Workspace Jarvis runtime fix chat en mic end-to-end
 
@@ -3195,6 +3433,11 @@ De Jarvis-view is pas bruikbaar als de eerste interactie betrouwbaar zichtbaar e
 
 - `docs/project/25-tasks/done/budio-workspace-jarvis-echte-chat-en-push-to-talk.md`
 - `tools/budio-workspace-vscode/README.md`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 ```
 
 ---
@@ -3223,13 +3466,13 @@ workstream: plugin
 epic_id: epic-budio-workspace-hierarchy-linear-lite
 parent_task_id: null
 depends_on: []
-follows_after:
-  - task-budio-workspace-command-room-research-startpunt
+follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -3414,6 +3657,182 @@ Eerste end-to-end slice voor Jarvis in Workspace:
 - `docs/project/20-planning/50-budio-workspace-plugin-focus.md`
 - `docs/project/25-tasks/open/budio-workspace-command-room-research-en-startpunt-vastleggen.md`
 - `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+
+
+## Commits
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+```
+
+---
+
+## Budio Workspace task detail rechterpaneel en scroll fix
+
+- Path: `docs/project/25-tasks/done/budio-workspace-task-detail-rechterpaneel-scroll-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-budio-workspace-task-detail-rechterpaneel-scroll-fix
+title: Budio Workspace task detail rechterpaneel en scroll fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: "Fix de Budio Workspace plugin zodat task detail in board en list rechts als scrollbaar pane opent, zonder fullscreen detail te breken."
+tags: [plugin, vscode, board, list, detail-pane]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+In de VS Code workspace-plugin opent task detail momenteel visueel niet goed: het pane verschijnt onder/over de boardcontent in plaats van als rechter detailpane. Daardoor is de detailvorm slecht bruikbaar en wordt content op hoogte afgekapt.
+
+## Gewenste uitkomst
+
+Board- en list-view tonen task detail rechts naast de hoofdlijst/board wanneer er voldoende breedte is. Het detailpane is zelfstandig scrollbaar, zodat de volledige taskmetadata, checklist en body preview bereikbaar blijven. De bestaande fullscreen-knop blijft hetzelfde gedrag houden.
+
+## User outcome
+
+De gebruiker kan vanuit board en list een taak selecteren en direct rechts het volledige detail lezen/bewerken, zonder dat het pane de onderkant van het scherm blokkeert of content onbereikbaar maakt.
+
+## Functional slice
+
+Een gerichte layout-regressiefix voor de bestaande task-detail surface in de VS Code plugin.
+
+## Entry / exit
+
+- Entry: gebruiker opent Budio Workspace Board of List en selecteert een taak.
+- Exit: detail staat rechts, is scrollbaar en kan fullscreen geopend/gesloten worden.
+
+## Happy flow
+
+1. Gebruiker opent Board en klikt een task card.
+2. Task detail opent rechts als split-pane en de boardcontent blijft links bruikbaar.
+3. Gebruiker scrollt door het detailpane en gebruikt fullscreen; fullscreen opent en sluit zonder layoutbreuk.
+4. Gebruiker opent List en selecteert een taak met hetzelfde rechterpaneelgedrag.
+
+## Non-happy flows
+
+- Empty state: zonder geselecteerde task blijft detail verborgen of toont bestaande lege detailtekst.
+- Permission denied / unavailable: niet van toepassing.
+- Validation / unsupported state: op small viewport mag het bestaande overlaygedrag blijven gelden.
+- Failure / retry / cancel: sluiten en fullscreen togglen blijven bestaande controls gebruiken.
+
+## UX / copy
+
+- Geen nieuwe copy nodig behalve bestaande detail-controls.
+- Bestaande board/list workflows blijven functioneel onveranderd.
+- Geen redesign; alleen layout/scrollbaarheid herstellen.
+
+## Data / IO
+
+- Input: bestaande board snapshot en selectedTask state.
+- Output: gecorrigeerde webview-layout.
+- Opslag/API/service/file-impact: geen datamodel- of host-wijziging verwacht.
+- Statussen: bestaande selected/detail/fullscreen state blijft leidend.
+
+## Waarom nu
+
+De task detail is een kerninteractie van de workspace-plugin; als die niet rechts en scrollbaar opent, zijn board en list praktisch niet goed bruikbaar.
+
+## In scope
+
+- Board task detail rechts als split-pane op desktop.
+- List task detail rechts als split-pane op desktop.
+- Detailpane zelfstandig scrollbaar maken.
+- Fullscreen detailknop behouden en regressiechecken.
+- Gerichte plugin verify en apply uitvoeren.
+
+## Buiten scope
+
+- Nieuwe task-detail functionaliteit.
+- Board/list workflowwijzigingen.
+- Jarvis of andere plugin views aanpassen.
+- Brede visual redesign.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Fix task detail zodat deze rechts getoond wordt en scrollbaar is in board en list view.
+- Fullscreen button moet blijven werken.
+
+## Expliciete user requirements / detailbehoud
+
+- "Zoals je ziet wordt de task detail nog niet goed geopend"
+- "deze moet dus rechts getoond worden"
+- "en scrollbaar zijn"
+- "fix dit in board en list view"
+- "Fullscreen button moet ook blijven werken"
+
+## Status per requirement
+
+- [x] Detail opent rechts in board — status: gebouwd
+- [x] Detail opent rechts in list — status: gebouwd
+- [x] Detailpane is scrollbaar — status: gebouwd
+- [x] Fullscreen button blijft werken — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Grid-layout expliciet gemaakt als `main | resize handle | detail`, zodat de resize-handle niet langer de detailkolom verdringt.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: detail-layout en CSS gericht repareren.
+- [ ] Blok 3: gerichte verify, plugin toepassen en task afronden.
+
+## Concrete checklist
+
+- [x] Huidige detail-layout in `App.tsx`, `use-task-detail-layout.ts` en CSS controleren.
+- [x] Split-pane rendering corrigeren voor board/list.
+- [x] Scrollcontainers corrigeren zodat detail en main-pane onafhankelijk scrollen.
+- [x] Fullscreen detailmodus controleren.
+- [x] Plugin typecheck/test/apply uitvoeren.
+
+## Acceptance criteria
+
+- [x] Board toont detail rechts naast het board op desktopbreedte.
+- [x] List toont detail rechts naast de lijst op desktopbreedte.
+- [x] Detailpane kan verticaal scrollen tot de body preview/danger zone.
+- [x] Fullscreen toggle opent detail fullscreen en keert terug naar het rechterpaneel.
+- [x] Board/list data- en interactieworkflows blijven ongewijzigd.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd.
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 52 tests.
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd; build, VSIX package, install en VS Code refresh uitgevoerd.
+- `npm run taskflow:verify` — geslaagd.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: detail rechts en scrollbaar in board/list, fullscreen blijft werken.
+- Toegevoegde verbeteringen: gridkolommen expliciet gemaakt zodat de resize-handle geen detailkolom meer verdringt.
+- Afgerond: board/list split-pane layout, onafhankelijke pane-scroll, fullscreen-layer en plugin apply zijn uitgevoerd.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
+- `tools/budio-workspace-vscode/webview-ui/src/use-task-detail-layout.ts`
+- `tools/budio-workspace-vscode/webview-ui/src/styles.css`
 ```
 
 ---
@@ -4013,6 +4432,219 @@ Eén uploadbestand met:
 ## Commits
 
 - 2026-05-16T06:54:00+02:00 — docs: add Caren zorgdossier structuring task
+```
+
+---
+
+## Codex-config veilig aanscherpen voor Budio development
+
+- Path: `docs/project/25-tasks/done/codex-config-veilig-aanscherpen-voor-budio-development.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-codex-config-veilig-aanscherpen-voor-budio-development
+title: Codex-config veilig aanscherpen voor Budio development
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-22
+summary: "Review en verbeter de globale Codex-config minimaal zodat die sober, coding-first en veilig is, terwijl de Budio repo-config leidend blijft voor lokale Supabase- en projectspecifieke MCP-keuzes."
+tags: [plugin, codex, config, mcp, local-dev]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Codex-config veilig aanscherpen voor Budio development
+
+## Probleem / context
+
+De huidige globale Codex-config is te breed voor coding-first gebruik: meerdere persoonlijke/data-plugins staan globaal aan, het redeneerniveau staat hoger dan nodig, en het globale model staat hardcoded op `gpt-5.4` terwijl de gebruiker `gpt-5.5` als voorkeursdefault wil als deze build dat ondersteunt.
+
+Tegelijk moet Budio-specifiek gedrag niet naar de globale hostconfig lekken. Voor deze repo hoort de lokale `.codex/config.toml` leidend te blijven voor MCP-keuzes zoals `supabase_local` als standaardtarget.
+
+## Gewenste uitkomst
+
+Er ligt een brongebaseerde review van de huidige Codex-config, inclusief expliciete beoordeling van modelgedrag, pluginoppervlak en de scheiding tussen globale hostdefaults en repo-lokale Budio-config.
+
+Na user-approval is de globale `~/.codex/config.toml` minimaal aangepast: coding-first plugins blijven aan, brede persoonlijke/data-plugins staan uit, trusted project entries blijven behouden, en `model_reasoning_effort` staat op `medium` tenzij hard bewijs iets anders vereist.
+
+## User outcome
+
+Pieter kan Codex lokaal gebruiken met een sobere veilige defaultconfig, zonder dat Budio-specifieke Supabase- of MCP-keuzes globaal worden afgedwongen.
+
+## Functional slice
+
+Een kleine config-review + minimale hostconfig-hardening voor Codex, met veilige validatie en bevestiging dat Budio lokaal op `supabase_local` blijft staan.
+
+## Entry / exit
+
+- Entry: huidige lokale Codex-installatie met `~/.codex/config.toml` en Budio repo `.codex/config.toml`.
+- Exit: beoordeelde en waar nodig minimaal bijgewerkte globale config, plus gevalideerde Budio repo-config op lokale Supabase-default.
+
+## Happy flow
+
+1. Agent leest de huidige globale en repo-lokale Codex-config en relevante Budio docs.
+2. Agent bevestigt model-/plugingedrag, stelt een minimaal diff voor en vraagt approval voor globale hostconfig-edit.
+3. Na approval past agent alleen de benodigde globale config aan en valideert de TOML plus Budio MCP-target.
+
+## Non-happy flows
+
+- Empty state: ontbrekende globale config wordt alleen minimaal aangemaakt als dat nodig blijkt.
+- Permission denied / unavailable: als modelcatalogus of lokale Codex-debug geen uitsluitsel geeft over `gpt-5.5`, blijft dat expliciet als onzekerheid gelabeld.
+- Validation / unsupported state: als `gpt-5.5` niet in de lokale modelcatalogus zit of niet bruikbaar blijkt, wordt geen stille fallback naar `gpt-5.4` vastgezet.
+- Failure / retry / cancel: zonder user-approval wordt `~/.codex/config.toml` niet aangepast.
+
+## UX / copy
+
+- Geen app-UI-wijzigingen.
+- Rapportage benoemt exact: huidige modelsetting, aanbevolen modelsetup, welke plugins aan/uit blijven en welke repo-config leidend blijft.
+
+## Data / IO
+
+- Input:
+  - `~/.codex/config.toml`
+  - `.codex/config.toml`
+  - relevante Budio docs
+  - lokale Codex CLI/debug output
+- Output:
+  - eventueel minimale patch in `~/.codex/config.toml`
+  - bijgewerkte taskfile-status en verify-notities
+- Opslag/API/service/file-impact:
+  - alleen lokale hostconfig en task/docs-laag
+  - geen app-source, geen `.env*`, geen productie-data
+- Statussen:
+  - review
+  - approval pending
+  - applied
+  - validated
+
+## Waarom nu
+
+- Deze setup beïnvloedt elke lokale Codex-sessie en moet veilig en sober zijn voordat verdere repo-uitvoering daarop leunt.
+
+## In scope
+
+- Huidige globale en repo-lokale Codex-config reviewen.
+- Modelgedrag rond `gpt-5.5` en config-overrides expliciet beoordelen.
+- Minimale globale configdiff voorstellen.
+- Na approval de globale config aanpassen en lokaal valideren.
+- Budio MCP-target expliciet op `supabase_local` bevestigen.
+
+## Buiten scope
+
+- Applicatiecode, dependencies, `.env*`, productie-data of deploys.
+- Brede cleanup van overige Codex-statebestanden.
+- Nieuwe plugins, nieuwe architectuur of redesigns.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Toon eerst een samenvatting van de huidige relevante config.
+- Rapporteer expliciet: huidige modelsetting, of `gpt-5.5` ondersteund lijkt, of TOML-hardcoding handmatige modelswitch blokkeert, en de aanbevolen modelsetup.
+- Stel eerst de exacte diff voor en vraag approval vóór edit van `~/.codex/config.toml`.
+- Pas daarna pas de minimale globale wijzigingen toe.
+- Valideer veilig: TOML/config-check en bevestiging dat Budio op local target staat.
+- Rapporteer na afloop gewijzigde files, exacte settings, bewust uitgeschakelde items, finale modelgedrag en eventuele onzekerheid.
+
+## Expliciete user requirements / detailbehoud
+
+- [x] `gpt-5.5` als voorkeursdefault gebruiken als deze Codex-installatie het ondersteunt.
+- [x] Geen model hardcoden op een manier die handmatige modelswitch in Codex onnodig blokkeert.
+- [x] `model_reasoning_effort` globaal van `high` naar `medium` zetten tenzij sterk tegenbewijs bestaat.
+- [x] Trusted project entries voor Budio en `space-idle-game` behouden.
+- [x] Alleen core coding plugins globaal aan laten: `github`, `codex-security`, `openai-developers`.
+- [x] Globaal uit tenzij expliciet nodig: `google-calendar`, `gmail`, `google-drive`, `browser-use`, `documents`, `spreadsheets`, `presentations`, `build-web-data-visualization`, `supabase`.
+- [x] Budio-specifieke Supabase-default in repo-config laten, niet globaal.
+- [x] Bij target-switching bestaande helper `node scripts/codex-mcp-target.mjs local` prefereren.
+
+## Status per requirement
+
+- [x] `gpt-5.5` support en veilige defaultroute beoordeeld — status: gebouwd
+- [x] Model hardcoding versus handmatige switch beoordeeld — status: gebouwd
+- [x] Globale reasoning effort naar `medium` voorbereid of toegepast — status: gebouwd
+- [x] Trusted projects behouden — status: gebouwd
+- [x] Coding plugins behouden en brede plugins uitschakelen — status: gebouwd
+- [x] Budio local Supabase-default bevestigd — status: gebouwd
+- [x] Veilige validatie uitgevoerd — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Lokale Codex-bronnen en officiële OpenAI Codex-docs gecombineerd om modelsupport en configprecedentie expliciet te bevestigen.
+- Na expliciete user-approval is alleen `~/.codex/config.toml` minimaal aangescherpt; repo-lokale Budio-config bleef ongewijzigd.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante docs/context, huidige config en taskflow bevestigen.
+- [x] Blok 2: model-/plugingedrag bewijzen en minimale diff voorbereiden.
+- [x] Blok 3: na approval globale config aanpassen.
+- [x] Blok 4: veilige validatie draaien en task/docs sync afronden.
+
+## Concrete checklist
+
+- [x] Huidige globale en repo-lokale config samenvatten.
+- [x] `gpt-5.5` support controleren via lokale Codex-bronnen.
+- [x] Beoordelen of model in TOML de handmatige modelswitch overschrijft.
+- [x] Exacte diff voorstellen.
+- [x] Na approval config toepassen.
+- [x] Veilige validatie en task/docs verify afronden.
+
+## Acceptance criteria
+
+- [x] De review noemt expliciet het huidige globale model, reasoning effort, plugin-state en trusted projects.
+- [x] Het voorstel houdt Budio repo-config leidend voor `supabase_local` en zet geen Budio-specifieke MCP-keuze globaal vast.
+- [x] Zonder approval wordt `~/.codex/config.toml` niet aangepast; met approval wordt alleen de minimale hostconfig gewijzigd en veilig gevalideerd.
+
+## Blockers / afhankelijkheden
+
+- Geen open blockers.
+
+## Verify / bewijs
+
+- `codex debug models`
+- `codex doctor --json` of andere veilige config-check
+- `node scripts/codex-mcp-target.mjs local`
+- `npm run taskflow:verify`
+- indien task/docs-laag wijzigt: `npm run docs:bundle` en `npm run docs:bundle:verify`
+
+Tussenstand:
+
+- `codex debug models` bevestigt lokale support voor `gpt-5.5`; de catalogus noemt ook `default_reasoning_level: medium`.
+- `codex doctor --json` toont huidige globale load op `model: gpt-5.4`.
+- `codex doctor --json -c 'model="gpt-5.5"'` bevestigt dat een hogere-precedence override direct het effectieve model naar `gpt-5.5` zet.
+- `node scripts/codex-mcp-target.mjs local` bevestigt dat de Budio repo-target op `local` staat.
+- Officiële Codex docs bevestigen dat `~/.codex/config.toml` de defaultlaag is, `.codex/config.toml` project-overrides levert, en dat de IDE extension een model selector heeft voor tijdelijke modelkeuze.
+- Globale config aangepast naar `model = "gpt-5.5"`, `model_reasoning_effort = "medium"` en alleen core coding plugins enabled.
+- `codex doctor --json` in de Budio repo toont nog `model: gpt-5.4`, consistent met project-configprecedentie.
+- `codex doctor --json` buiten een trusted project (`/tmp`) toont `model: gpt-5.5`, wat bevestigt dat de globale default actief is.
+- `npm run taskflow:verify` geslaagd.
+- `npm run docs:bundle` geslaagd.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: globale config sober en coding-first maken zonder repo-lokale Budio-config te verdringen.
+- Toegevoegde verbeteringen: officiële Codex docs gebruikt om model/configprecedentie te bevestigen naast lokale CLI-bronnen.
+- Afgerond: review, modelsupport-check, precedentie-check, diffvoorstel, explicit approval, minimale hostconfig-patch en validate van global-vs-project modelgedrag.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `docs/project/README.md`
+- `docs/project/open-points.md`
+- `docs/dev/active-context.md`
+- `docs/dev/local-development-environment.md`
+- `.codex/config.toml`
 ```
 
 ---

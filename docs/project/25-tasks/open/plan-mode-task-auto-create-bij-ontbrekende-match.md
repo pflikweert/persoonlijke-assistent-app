@@ -10,8 +10,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 11
+sort_order: 12
 ---
+
 
 
 
@@ -124,3 +125,5 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio

@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-06-22T09:00:53.889Z
-Source Commit: 6fd772e
+Build Timestamp (UTC): 2026-06-22T09:39:39.057Z
+Source Commit: e5efe2a
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-06-22T09:00:53.889Z
-Source Commit: 6fd772e
+Build Timestamp (UTC): 2026-06-22T09:39:39.057Z
+Source Commit: e5efe2a
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

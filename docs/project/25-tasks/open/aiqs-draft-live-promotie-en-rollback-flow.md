@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 3
 ---
+
 
 
 
@@ -229,3 +230,5 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio

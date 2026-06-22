@@ -10,8 +10,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 10
+sort_order: 11
 ---
+
 
 
 
@@ -113,3 +114,5 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio

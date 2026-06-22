@@ -10,8 +10,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 12
+sort_order: 13
 ---
+
 
 
 
@@ -423,3 +424,5 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
