@@ -10,8 +10,9 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 10
+sort_order: 13
 ---
+
 
 
 
@@ -130,3 +131,5 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room

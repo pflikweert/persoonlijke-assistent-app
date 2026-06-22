@@ -27,6 +27,14 @@ Lokale VS Code board-plugin voor `docs/project/25-tasks/**/*.md`, met een lichte
 ## Workflowregel
 - Bij elke wijziging in `tools/budio-workspace-vscode/**` altijd `npm run apply:workspace` uitvoeren in deze map, zodat de normale workspace direct de nieuwste extensionversie heeft.
 
+## Jarvis lokale env
+- Jarvis chat leest lokaal eerst `OPENAI_API_BUDIO_WORKSPACE_SERVICE_KEY`, daarna `OPENAI_API_BUDIO_WORKSPACE_KEY`, en pas daarna `OPENAI_API_KEY`.
+- Jarvis transcriptie gebruikt dezelfde host-side keyroute en leest `OPENAI_TRANSCRIPTION_MODEL` als transcriptiemodel.
+- `BUDIO_WORKSPACE_JARVIS_MODEL` overschrijft het standaard Jarvis chatmodel.
+- De extensie leest deze waarden uit repo-root `.env.local` of uit de huidige shellomgeving; secrets gaan nooit naar de webview.
+- Gebruik `Budio Workspace: Reload Jarvis` wanneer VS Code een oude retained Jarvis-webview lijkt vast te houden na een lokale install.
+- Jarvis runtime-diagnose staat in het VS Code outputkanaal `Budio Jarvis` en logt alleen request-stages, model/env-varnamen en foutcodes, nooit secretwaarden.
+
 ## Security
 - Secrets mogen nooit hardcoded in de extensie of webview-code staan.
 - Repo-brede secret scanning draait via GitHub Actions (`.github/workflows/secret-scan.yml`).

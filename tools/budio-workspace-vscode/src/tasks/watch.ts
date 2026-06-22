@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 
 export function createTaskWatcher(
-  workspaceFolder: vscode.WorkspaceFolder,
+  root: vscode.WorkspaceFolder | vscode.Uri | string,
   rootsRelative: string[],
   onChange: () => void,
 ): vscode.Disposable {
   const watchers = rootsRelative.map((rootRelative) =>
     vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(workspaceFolder, `${rootRelative}/**/*.md`),
+      new vscode.RelativePattern(root, `${rootRelative}/**/*.md`),
     ),
   );
   let timer: NodeJS.Timeout | undefined;

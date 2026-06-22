@@ -2,8 +2,8 @@
 
 # Budio Agent Workflow and Docs Tooling
 
-Build Timestamp (UTC): 2026-06-05T07:22:00.104Z
-Source Commit: 39cb59f
+Build Timestamp (UTC): 2026-06-22T09:00:53.889Z
+Source Commit: 6fd772e
 
 Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

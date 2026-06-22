@@ -61,6 +61,8 @@ test('buildBoardSnapshot groups by column and respects manual ordering', () => {
     settings: {
       tasksRoot: 'docs/project/25-tasks',
       epicsRoot: 'docs/project/24-epics',
+      jarvisAssetsRoot: 'assets/jarvis/final-frame',
+      jarvisSeedManifest: 'tools/jarvis-luma/final-frame.seed.json',
       columns: ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'],
       showDoneColumn: true,
       defaultSort: 'manual',
@@ -103,6 +105,8 @@ test('buildBoardSnapshot derives subtasks, blockers and epic rollups', () => {
     settings: {
       tasksRoot: 'docs/project/25-tasks',
       epicsRoot: 'docs/project/24-epics',
+      jarvisAssetsRoot: 'assets/jarvis/final-frame',
+      jarvisSeedManifest: 'tools/jarvis-luma/final-frame.seed.json',
       columns: ['backlog', 'ready', 'in_progress', 'review', 'blocked', 'done'],
       showDoneColumn: true,
       defaultSort: 'manual',

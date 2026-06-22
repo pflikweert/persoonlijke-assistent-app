@@ -1,17 +1,43 @@
+import { spawn } from 'node:child_process';
 import path from 'node:path';
 import * as vscode from 'vscode';
+import type { BoardSnapshot, ParsedTaskFile, TaskSort } from '../../tasks/types';
+import type {
+  JarvisAudioPayload,
+  JarvisConversationState,
+  JarvisErrorCode,
+  JarvisInputMode,
+  JarvisMessageSourceScope,
+  JarvisRuntimeStage,
+  JarvisSyncStatus,
+  JarvisWorkspaceState,
+} from '../../jarvis/types';
 import { buildBoardSnapshot } from '../../tasks/board-state';
 import { TaskRepository } from '../../tasks/repository';
 import { createTaskWatcher } from '../../tasks/watch';
-import type { ParsedTaskFile, TaskSort } from '../../tasks/types';
 import type {
   HostToWebviewMessage,
   WebviewToHostMessage,
 } from '../../webview-bridge/messages';
 import { getBoardWebviewHtml } from '../../webview-bridge/getWebviewHtml';
 import { WORKSPACE_VIEW_TITLES, type WorkspaceView } from '../../navigation';
-import { getPrimaryWorkspaceFolder, readWorkspaceSettings } from './config';
+import { getBudioWorkspaceContext } from './config';
 import { getActivityMenuHtml } from './getActivityMenuHtml';
+import { loadJarvisWorkspaceState } from './jarvis';
+import { getMicrophoneSettingsTarget, openMicrophoneSettingsWithSystemOpen } from './microphone-settings';
+import {
+  appendJarvisAssistantMessage,
+  appendJarvisUserMessage,
+  createJarvisConversationState,
+  failJarvisConversation,
+  resetJarvisConversation,
+  recoverJarvisAvailability,
+  setJarvisRuntimeStage,
+  setJarvisVoiceState,
+  syncJarvisConversationCapabilities,
+} from '../../jarvis/conversation-state';
+import { getJarvisChatAvailability, requestJarvisReply } from '../../jarvis/chat';
+import { transcribeJarvisAudio } from '../../jarvis/transcription';
 
 type PanelView = WorkspaceView;
 type ActivityMenuMessage =
@@ -19,7 +45,7 @@ type ActivityMenuMessage =
   | { type: 'refresh' };
 
 export class BoardPanelController implements vscode.Disposable, vscode.WebviewViewProvider {
-  private static readonly BACKGROUND_REFRESH_MS = 30000;
+  private static readonly BACKGROUND_REFRESH_MS = 5000;
   private static readonly WATCHER_REFRESH_DEBOUNCE_MS = 350;
   private static readonly ACTIVITY_REFRESH_RESET_MS = 1200;
 
@@ -31,9 +57,19 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
   private activityRefreshResetTimer: NodeJS.Timeout | null = null;
   private readonly disposables: vscode.Disposable[] = [];
   private lastTasks = new Map<string, ParsedTaskFile>();
+  private lastBoardSnapshot: BoardSnapshot | null = null;
+  private lastJarvisWorkspaceState: JarvisWorkspaceState | null = null;
   private lastFocusedTaskId: string | null = null;
   private currentView: PanelView = 'list';
   private activityRefreshState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  private jarvisStatusOverride: JarvisSyncStatus | null = null;
+  private jarvisSyncPromise: Promise<void> | null = null;
+  private jarvisConversationState: JarvisConversationState = createJarvisConversationState({
+    chatAvailable: false,
+    voiceAvailable: false,
+  });
+  private jarvisConversationPromise: Promise<void> | null = null;
+  private readonly jarvisOutputChannel = vscode.window.createOutputChannel('Budio Jarvis');
 
   constructor(private readonly extensionUri: vscode.Uri) {
     this.resetWatcher();
@@ -55,6 +91,7 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
     this.stopActivityRefreshReset();
     this.panel?.dispose();
     this.watcher?.dispose();
+    this.jarvisOutputChannel.dispose();
     vscode.Disposable.from(...this.disposables).dispose();
   }
 
@@ -75,11 +112,12 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
   }
 
   async open(view: PanelView): Promise<void> {
-    const workspaceFolder = getPrimaryWorkspaceFolder();
-    if (!workspaceFolder) {
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
       await vscode.window.showErrorMessage('Open eerst een workspace om Budio Workspace te gebruiken.');
       return;
     }
+    const { workspaceFolder, repoRoot } = workspaceContext;
 
     this.currentView = view;
 
@@ -94,6 +132,8 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
           localResourceRoots: [
             vscode.Uri.joinPath(this.extensionUri, 'dist'),
             vscode.Uri.joinPath(this.extensionUri, 'media'),
+            workspaceFolder.uri,
+            vscode.Uri.file(repoRoot),
           ],
         },
       );
@@ -124,6 +164,60 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
 
   async refresh(): Promise<void> {
     await this.runRefresh();
+  }
+
+  async syncJarvisAssets(): Promise<void> {
+    if (this.jarvisSyncPromise) {
+      return;
+    }
+
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
+      await vscode.window.showErrorMessage('Open eerst een workspace om Jarvis assets te synchroniseren.');
+      return;
+    }
+
+    const { repoRoot, settings } = workspaceContext;
+    const scriptPath = path.resolve(repoRoot, 'tools/jarvis-luma/download-final-frame.mjs');
+    const args = [scriptPath, '--dest', settings.jarvisAssetsRoot];
+
+    this.jarvisStatusOverride = 'syncing';
+    await this.publishSnapshot({ view: 'jarvis' });
+
+    this.jarvisSyncPromise = new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, args, {
+        cwd: repoRoot,
+        env: process.env,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let stderr = '';
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk.toString();
+      });
+
+      child.on('error', reject);
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+          return;
+        }
+        reject(new Error(stderr.trim() || `Jarvis sync faalde met exit code ${code ?? 'unknown'}.`));
+      });
+    });
+
+    try {
+      await this.jarvisSyncPromise;
+      this.jarvisStatusOverride = null;
+      await this.publishSnapshot({ view: 'jarvis' });
+      await vscode.window.showInformationMessage('Jarvis assets gesynchroniseerd.');
+    } catch (error) {
+      this.jarvisStatusOverride = 'error';
+      await this.publishSnapshot({ view: 'jarvis' });
+      await vscode.window.showErrorMessage(error instanceof Error ? error.message : 'Jarvis sync mislukt.');
+    } finally {
+      this.jarvisSyncPromise = null;
+    }
   }
 
   async createTask(defaultStatus: 'backlog' | 'ready' | 'in_progress' | 'review' | 'blocked' = 'ready'): Promise<void> {
@@ -281,6 +375,60 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
       }
       this.renderActivityView();
       this.postMessage({ type: 'switchView', view: message.view });
+      return;
+    }
+
+    if (message.type === 'syncJarvisAssets') {
+      await this.syncJarvisAssets();
+      return;
+    }
+
+    if (message.type === 'jarvisSendMessage') {
+      await this.sendJarvisMessage(message.prompt, 'typed', message.clientRequestId);
+      return;
+    }
+
+    if (message.type === 'jarvisSubmitAudio') {
+      await this.handleJarvisAudioSubmission(message.audio, message.clientRequestId);
+      return;
+    }
+
+    if (message.type === 'jarvisReload') {
+      await this.reloadJarvis();
+      return;
+    }
+
+    if (message.type === 'jarvisOpenMicrophoneSettings') {
+      await this.openMicrophoneSettings();
+      return;
+    }
+
+    if (message.type === 'jarvisVoiceStateChanged') {
+      this.jarvisConversationState = syncJarvisConversationCapabilities(
+        setJarvisVoiceState(this.jarvisConversationState, message.voiceState, message.reason ?? null),
+        {
+          voiceAvailable:
+            message.available === undefined
+              ? this.jarvisConversationState.capabilities.voiceAvailable
+              : message.available,
+          voiceAvailabilityReason:
+            message.reason === undefined
+              ? this.jarvisConversationState.capabilities.voiceAvailabilityReason
+              : message.reason,
+        },
+      );
+      this.postMessage({
+        type: 'jarvisVoicePermissionState',
+        voiceState: message.voiceState,
+        reason: message.reason ?? null,
+      });
+      this.publishJarvisConversationState();
+      return;
+    }
+
+    if (message.type === 'jarvisResetConversation') {
+      this.jarvisConversationState = resetJarvisConversation(this.jarvisConversationState);
+      this.publishJarvisConversationState();
       return;
     }
 
@@ -452,15 +600,15 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
     options?: { focusTaskId?: string; view?: PanelView },
     throwOnError = false,
   ): Promise<void> {
-    const workspaceFolder = getPrimaryWorkspaceFolder();
-    if (!workspaceFolder || !this.panel) {
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext || !this.panel) {
       return;
     }
 
     try {
-      const settings = readWorkspaceSettings(workspaceFolder);
+      const { repoRoot, repoName, settings } = workspaceContext;
       const repository = new TaskRepository(
-        workspaceFolder.uri.fsPath,
+        repoRoot,
         settings.tasksRoot,
         settings.epicsRoot,
       );
@@ -472,15 +620,26 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
         tasks,
         epics,
         settings,
-        workspaceName: workspaceFolder.name,
-        workspacePath: workspaceFolder.uri.fsPath,
+        workspaceName: repoName,
+        workspacePath: repoRoot,
       });
+      this.lastBoardSnapshot = snapshot;
       this.postMessage({
         type: 'hydrateBoard',
         snapshot,
         focusTaskId: resolvedFocusTaskId,
         view: options?.view,
       });
+      const jarvisState = await loadJarvisWorkspaceState({
+        workspaceRoot: repoRoot,
+        settings,
+        webview: this.panel.webview,
+        overrideStatus: this.jarvisStatusOverride,
+      });
+      this.lastJarvisWorkspaceState = jarvisState;
+      this.postMessage({ type: 'hydrateJarvisState', state: jarvisState });
+      this.syncJarvisConversationAvailability();
+      this.publishJarvisConversationState();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Kon board niet laden.';
       void vscode.window.showErrorMessage(message);
@@ -493,6 +652,316 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
 
   private postMessage(message: HostToWebviewMessage): void {
     void this.panel?.webview.postMessage(message);
+  }
+
+  private publishJarvisConversationState(): void {
+    this.postMessage({ type: 'hydrateJarvisConversationState', state: this.jarvisConversationState });
+  }
+
+  async reloadJarvis(): Promise<void> {
+    this.logJarvisRuntime('reload_requested');
+    const existingPanel = this.panel;
+    this.currentView = 'jarvis';
+    if (existingPanel) {
+      existingPanel.dispose();
+      this.panel = null;
+    }
+    await this.open('jarvis');
+  }
+
+  private syncJarvisConversationAvailability(): void {
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
+      return;
+    }
+    const availability = getJarvisChatAvailability(workspaceContext.repoRoot);
+    this.jarvisConversationState = recoverJarvisAvailability(this.jarvisConversationState, {
+      chatAvailable: availability.available,
+      chatAvailabilityReason: availability.reason,
+      chatKeySource: availability.env.chatApiKeySource,
+      chatModel: availability.env.chatModel,
+      chatEnvFilePath: availability.env.envFilePath,
+      lastError: this.jarvisConversationState.capabilities.lastError,
+    });
+    this.logJarvisRuntime('env_resolved', {
+      repoRoot: workspaceContext.repoRoot,
+      envFilePath: availability.env.envFilePath,
+      providerSource: availability.env.chatApiKeySource,
+      model: availability.env.chatModel,
+      available: availability.available ? 'true' : 'false',
+    });
+  }
+
+  private async sendJarvisMessage(
+    prompt: string,
+    inputMode: JarvisInputMode,
+    clientRequestId: string = `host-${Date.now()}`,
+  ): Promise<void> {
+    const trimmedPrompt = prompt.trim();
+    if (!trimmedPrompt) {
+      return;
+    }
+
+    if (this.jarvisConversationPromise) {
+      const message = 'Jarvis verwerkt nog een eerdere opdracht.';
+      this.postMessage({ type: 'jarvisConversationFailed', clientRequestId, message, errorCode: 'busy', stage: 'failed' });
+      this.postJarvisRuntimeStage(clientRequestId, 'failed', message, 'busy');
+      return;
+    }
+
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
+      const message = 'Open eerst een workspace om Jarvis te gebruiken.';
+      this.postMessage({ type: 'jarvisConversationFailed', clientRequestId, message, errorCode: 'missing_workspace', stage: 'failed' });
+      this.postJarvisRuntimeStage(clientRequestId, 'failed', message, 'missing_workspace');
+      return;
+    }
+    const { repoRoot } = workspaceContext;
+
+    this.postMessage({ type: 'jarvisRequestAccepted', clientRequestId, inputMode });
+    this.postJarvisRuntimeStage(clientRequestId, 'host_received', null);
+    this.logJarvisRuntime('message_received', { clientRequestId, inputMode });
+    this.syncJarvisConversationAvailability();
+    const availability = getJarvisChatAvailability(repoRoot);
+    this.postJarvisRuntimeStage(
+      clientRequestId,
+      'env_resolved',
+      availability.available ? null : availability.reason,
+      availability.available ? null : 'missing_key',
+      availability.env.chatApiKeySource,
+    );
+    this.jarvisConversationState = appendJarvisUserMessage(this.jarvisConversationState, {
+      content: trimmedPrompt,
+      inputMode,
+      clientRequestId,
+    });
+    this.publishJarvisConversationState();
+
+    if (!availability.available) {
+      this.jarvisConversationState = failJarvisConversation(
+        syncJarvisConversationCapabilities(this.jarvisConversationState, {
+          chatAvailable: false,
+        }),
+        availability.reason ?? 'Jarvis chat is niet beschikbaar.',
+        'chat',
+        { clientRequestId, errorCode: 'missing_key', stage: 'failed' },
+      );
+      this.publishJarvisConversationState();
+      this.postMessage({
+        type: 'jarvisConversationFailed',
+        clientRequestId,
+        message: availability.reason ?? 'Jarvis chat is niet beschikbaar.',
+        errorCode: 'missing_key',
+        stage: 'failed',
+      });
+      return;
+    }
+
+    const messageId = `assistant-${clientRequestId}`;
+
+    this.jarvisConversationPromise = (async () => {
+      try {
+        this.postJarvisRuntimeStage(clientRequestId, 'grounding_ready', null, null, availability.env.chatApiKeySource);
+        this.postJarvisRuntimeStage(clientRequestId, 'provider_call_started', null, null, availability.env.chatApiKeySource);
+        this.logJarvisRuntime('chat_started', {
+          clientRequestId,
+          model: availability.env.chatModel,
+          providerSource: availability.env.chatApiKeySource,
+        });
+        const reply = await requestJarvisReply({
+          workspaceRoot: repoRoot,
+          prompt: trimmedPrompt,
+          snapshot: this.lastBoardSnapshot,
+          selectedTaskId: this.lastFocusedTaskId,
+          workspaceState: this.lastJarvisWorkspaceState,
+          conversationState: this.jarvisConversationState,
+        });
+        this.jarvisConversationState = appendJarvisAssistantMessage(this.jarvisConversationState, {
+          messageId,
+          content: reply.text,
+          sourceScope: reply.sourceScope,
+          clientRequestId,
+          providerSource: reply.providerSource,
+        });
+        this.postJarvisRuntimeStage(clientRequestId, 'provider_response_received', null, null, reply.providerSource);
+        this.postMessage({
+          type: 'jarvisConversationCompleted',
+          clientRequestId,
+          messageId,
+          content: reply.text,
+          sourceScope: reply.sourceScope,
+          providerSource: reply.providerSource,
+        });
+        this.postJarvisRuntimeStage(clientRequestId, 'completed', null, null, reply.providerSource);
+        this.logJarvisRuntime('chat_completed', {
+          clientRequestId,
+          model: reply.model,
+          providerSource: reply.providerSource,
+        });
+        this.publishJarvisConversationState();
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Jarvis kon geen antwoord genereren.';
+        const errorCode = classifyJarvisError(message, 'chat');
+        this.jarvisConversationState = failJarvisConversation(this.jarvisConversationState, message, 'chat', {
+          clientRequestId,
+          errorCode,
+          stage: 'failed',
+        });
+        this.postMessage({ type: 'jarvisConversationFailed', clientRequestId, message, errorCode, stage: 'failed' });
+        this.postJarvisRuntimeStage(clientRequestId, 'failed', message, errorCode, availability.env.chatApiKeySource);
+        this.logJarvisRuntime('chat_failed', {
+          clientRequestId,
+          errorCode,
+          providerSource: availability.env.chatApiKeySource,
+        });
+        this.publishJarvisConversationState();
+      } finally {
+        this.jarvisConversationPromise = null;
+      }
+    })();
+
+    await this.jarvisConversationPromise;
+  }
+
+  private async handleJarvisAudioSubmission(
+    audio: JarvisAudioPayload,
+    clientRequestId: string = `audio-${Date.now()}`,
+  ): Promise<void> {
+    if (this.jarvisConversationPromise) {
+      const message = 'Jarvis verwerkt nog een eerdere opdracht.';
+      this.postMessage({ type: 'jarvisConversationFailed', clientRequestId, message, errorCode: 'busy', stage: 'failed' });
+      this.postJarvisRuntimeStage(clientRequestId, 'failed', message, 'busy');
+      return;
+    }
+
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
+      const message = 'Open eerst een workspace om Jarvis te gebruiken.';
+      this.postMessage({ type: 'jarvisConversationFailed', clientRequestId, message, errorCode: 'missing_workspace', stage: 'failed' });
+      this.postJarvisRuntimeStage(clientRequestId, 'failed', message, 'missing_workspace');
+      return;
+    }
+    const { repoRoot } = workspaceContext;
+
+    this.postMessage({ type: 'jarvisRequestAccepted', clientRequestId, inputMode: 'voice' });
+    this.jarvisConversationState = setJarvisVoiceState(this.jarvisConversationState, 'transcribing', null);
+    this.jarvisConversationState = setJarvisRuntimeStage(this.jarvisConversationState, {
+      clientRequestId,
+      stage: 'transcribing',
+    });
+    this.publishJarvisConversationState();
+    this.postJarvisRuntimeStage(clientRequestId, 'transcribing', null);
+    this.logJarvisRuntime('transcription_started', {
+      clientRequestId,
+      mimeType: audio.mimeType,
+      durationMs: audio.durationMs,
+    });
+
+    try {
+      const transcript = await transcribeJarvisAudio({
+        workspaceRoot: repoRoot,
+        audio,
+      });
+      this.jarvisConversationState = setJarvisVoiceState(this.jarvisConversationState, 'idle', null);
+      this.jarvisConversationState = setJarvisRuntimeStage(this.jarvisConversationState, {
+        clientRequestId,
+        stage: 'transcribed',
+        providerSource: transcript.providerSource,
+      });
+      this.publishJarvisConversationState();
+      this.postJarvisRuntimeStage(clientRequestId, 'transcribed', null, null, transcript.providerSource);
+      this.logJarvisRuntime('transcription_completed', {
+        clientRequestId,
+        model: transcript.model,
+        providerSource: transcript.providerSource,
+      });
+      await this.sendJarvisMessage(transcript.text, 'voice', clientRequestId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Jarvis kon audio niet verwerken.';
+      const errorCode = classifyJarvisError(message, 'voice');
+      this.jarvisConversationState = failJarvisConversation(
+        setJarvisVoiceState(this.jarvisConversationState, 'permission_needed', message),
+        message,
+        'voice',
+        { clientRequestId, errorCode, stage: 'failed' },
+      );
+      this.postMessage({ type: 'jarvisConversationFailed', clientRequestId, message, errorCode, stage: 'failed' });
+      this.postMessage({ type: 'jarvisVoicePermissionState', voiceState: 'permission_needed', reason: message });
+      this.postJarvisRuntimeStage(clientRequestId, 'failed', message, errorCode);
+      this.logJarvisRuntime('transcription_failed', { clientRequestId, errorCode });
+      this.publishJarvisConversationState();
+    }
+  }
+
+  private postJarvisRuntimeStage(
+    clientRequestId: string,
+    stage: JarvisRuntimeStage,
+    message?: string | null,
+    errorCode?: JarvisErrorCode | null,
+    providerSource?: string | null,
+  ): void {
+    this.jarvisConversationState = setJarvisRuntimeStage(this.jarvisConversationState, {
+      clientRequestId,
+      stage,
+      message,
+      errorCode,
+      providerSource,
+    });
+    this.postMessage({
+      type: 'jarvisRuntimeStage',
+      clientRequestId,
+      stage,
+      message: message ?? undefined,
+      errorCode: errorCode ?? undefined,
+      providerSource: providerSource ?? undefined,
+    });
+  }
+
+  private logJarvisRuntime(event: string, details: Record<string, string | number | null | undefined> = {}): void {
+    const safeDetails = Object.fromEntries(
+      Object.entries(details).filter(([, value]) => value !== undefined),
+    );
+    this.jarvisOutputChannel.appendLine(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        event,
+        ...safeDetails,
+      }),
+    );
+  }
+
+  private async openMicrophoneSettings(): Promise<void> {
+    const target = getMicrophoneSettingsTarget();
+    if (!target.uri) {
+      this.postMessage({ type: 'jarvisMicrophoneSettingsResult', opened: false, message: target.fallbackMessage });
+      await vscode.window.showInformationMessage(target.fallbackMessage);
+      return;
+    }
+
+    const openedViaVscode = await vscode.env.openExternal(vscode.Uri.parse(target.uri));
+    try {
+      await openMicrophoneSettingsWithSystemOpen(target.uri);
+      this.postMessage({
+        type: 'jarvisMicrophoneSettingsResult',
+        opened: true,
+        message: 'Microfooninstellingen geopend. Controleer Visual Studio Code en probeer daarna de mic opnieuw.',
+      });
+      this.logJarvisRuntime('microphone_settings_opened', {
+        viaVscode: openedViaVscode ? 'true' : 'false',
+        platform: process.platform,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : target.fallbackMessage;
+      this.postMessage({
+        type: 'jarvisMicrophoneSettingsResult',
+        opened: openedViaVscode,
+        message: openedViaVscode ? 'Microfooninstellingen geopend via VS Code.' : `${target.fallbackMessage} (${message})`,
+      });
+      if (!openedViaVscode) {
+        await vscode.window.showInformationMessage(target.fallbackMessage);
+      }
+    }
   }
 
   private renderActivityView(): void {
@@ -563,36 +1032,36 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
   }
 
   private async updateSetting(key: 'showDoneColumn' | 'defaultSort', value: boolean | TaskSort): Promise<void> {
-    const workspaceFolder = getPrimaryWorkspaceFolder();
-    if (!workspaceFolder) {
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
       return;
     }
-    const configuration = vscode.workspace.getConfiguration('budioWorkspace', workspaceFolder.uri);
+    const configuration = vscode.workspace.getConfiguration('budioWorkspace', workspaceContext.workspaceFolder.uri);
     await configuration.update(key, value, vscode.ConfigurationTarget.Workspace);
     await this.publishSnapshot();
   }
 
   private async withRepository(action: (repository: TaskRepository) => Promise<void>): Promise<void> {
-    const workspaceFolder = getPrimaryWorkspaceFolder();
-    if (!workspaceFolder) {
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
       throw new Error('Geen workspace geopend.');
     }
-    const settings = readWorkspaceSettings(workspaceFolder);
-    const repository = new TaskRepository(workspaceFolder.uri.fsPath, settings.tasksRoot, settings.epicsRoot);
+    const { repoRoot, settings } = workspaceContext;
+    const repository = new TaskRepository(repoRoot, settings.tasksRoot, settings.epicsRoot);
     await action(repository);
   }
 
   private resetWatcher(): void {
     this.watcher?.dispose();
     this.stopWatcherRefresh();
-    const workspaceFolder = getPrimaryWorkspaceFolder();
-    if (!workspaceFolder) {
+    const workspaceContext = getBudioWorkspaceContext();
+    if (!workspaceContext) {
       this.watcher = null;
       return;
     }
 
-    const settings = readWorkspaceSettings(workspaceFolder);
-    this.watcher = createTaskWatcher(workspaceFolder, [settings.tasksRoot, settings.epicsRoot], () => {
+    const { repoRoot, settings } = workspaceContext;
+    this.watcher = createTaskWatcher(vscode.Uri.file(repoRoot), [settings.tasksRoot, settings.epicsRoot], () => {
       this.scheduleWatcherRefresh();
     });
   }
@@ -648,4 +1117,24 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
     clearInterval(this.backgroundRefreshTimer);
     this.backgroundRefreshTimer = null;
   }
+}
+
+function classifyJarvisError(message: string, target: 'chat' | 'voice'): JarvisErrorCode {
+  const normalized = message.toLowerCase();
+  if (normalized.includes('timeout')) {
+    return target === 'voice' ? 'transcription_timeout' : 'provider_timeout';
+  }
+  if (normalized.includes('geen jarvis chat key')) {
+    return 'missing_key';
+  }
+  if (normalized.includes('te kort') || normalized.includes('leeg')) {
+    return 'invalid_audio';
+  }
+  if (target === 'voice') {
+    return 'transcription_error';
+  }
+  if (normalized.includes('providerfout')) {
+    return 'provider_error';
+  }
+  return 'unknown';
 }

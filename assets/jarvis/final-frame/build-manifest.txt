@@ -1,0 +1,172 @@
+# Budio Jarvis Cockpit — Build Manifest voor Codex
+
+## Final Build Package — alle assets en specificaties
+
+Dit document bevat alle finale elementen voor het bouwen van de Budio Jarvis Cockpit interface in VS Code (webview extension). Alle assets zijn gelabeld als "Approved" op canvas voor makkelijke selectie en download.
+
+---
+
+## 1. FINALE VISUELE CONCEPTEN
+
+### Primair concept (build-target)
+| Asset ID | Type | Rol |
+|---|---|---|
+| `Fo7yVw1W` | image/png | **MAIN BUILD TARGET** — finale synthese concept still. Dit is de visuele waarheid waar Codex naartoe bouwt. |
+| `kqrlgMiP` | image/png | Eerste sterke synthese — alternatief referentiebeeld, vergelijkbare richting |
+| `SsavSJdE` | video/mp4 | Ambient loop video met audio — laat zien hoe het moet voelen/bewegen |
+
+---
+
+## 2. COMPONENT DESIGN STUDIES (build-referenties)
+
+| Asset ID | Type | Component | Voor Codex |
+|---|---|---|---|
+| `rhpShyaK` | image/png | Center Core Study — 4 variaties | V4 Hybrid Intelligence (rechtsonder) is de gekozen vorm |
+| `xr3VGzad` | image/png | HUD Micro-Elements Library | Connector lines, callouts, radiale indicatoren — vocabulaire voor details |
+| `KqonuBjC` | image/png | Side Rail Panel Study | A (Task-Focused) links + D (Signal Indicators) rechts |
+| `kXbN0rmi` | image/png | Command Bar Study — 5 variaties | V5 "Grounded Module" is de gekozen richting |
+
+---
+
+## 3. SPECIFIEKE COMPONENT REFERENTIES
+
+| Asset ID | Type | Component |
+|---|---|---|
+| `ISbrKHrS` | image/png | **Jarvis Speaking Surface banner** — directe build-referentie voor het speech-output component |
+
+---
+
+## 4. PRODUCT CONTEXT REFERENTIES
+
+Bestaande Budio Workspace UI om compatibiliteit te garanderen:
+
+| Asset ID | Type | Rol |
+|---|---|---|
+| `BAh0Jit1` | image/png | Huidige Budio task list — left rail evolueert hieruit |
+| `ZE0OWkeV` | image/png | Huidige Budio kanban — card patterns en priority chips |
+| `J6NfT9Gy` | image/png | Volledige VS Code + Budio integratie — context van de webview |
+
+---
+
+## 5. FOUNDER CONCEPT REFERENTIES
+
+| Asset ID | Type | Rol |
+|---|---|---|
+| `sJthA_KD` | image/png | Founder's overview concept — informatie-architectuur richtlijn |
+| `re0xr8DL` | image/png | Founder's concept met Jarvis response — speaking surface context |
+
+---
+
+## 6. ONTWERP DOCUMENTATIE
+
+| Asset ID | Type | Inhoud |
+|---|---|---|
+| `am8OA_Ea` | text/plain | **Unified Design Brief** — volledige kleur-, typografie-, compositie- en stijlspecificatie. Single source of truth. |
+
+---
+
+## 7. BUILD SPECIFICATIES VOOR CODEX
+
+### Platform
+- **VS Code webview extension** (HTML/CSS/JS)
+- Resizable, full screen, mobile/tablet ondersteund
+- Dark mode foundation
+
+### Color Tokens (CSS variables aanbevolen)
+```css
+--bg-primary: #0E0F10;
+--bg-secondary: #14161A;
+--bg-tertiary: #171A1E;
+--surface-panel: #1A1D22;
+--surface-elevated: #1D2126;
+--surface-card: #22272D;
+--surface-inset: #262C33;
+--border-soft: #313640;
+--border-secondary: #3B4048;
+--border-divider: rgba(255,255,255,0.06);
+--text-primary: #F4EDE1;
+--text-secondary: #D3CABD;
+--text-supporting: #B8B0A4;
+--text-muted: #948D83;
+--accent-gold: #D6B35A;
+--accent-gold-bright: #E2C774;
+--accent-gold-deep: #C89B3C;
+--glow-gold: rgba(214,179,90,0.28);
+--glow-ivory: rgba(244,237,225,0.10);
+```
+
+### Typography
+- Font family: Inter (primary), SF Pro Display/Text, Helvetica Neue fallback
+- Headings: weight 600
+- Section titles: weight 500-600
+- Body: weight 400
+- Labels/chips: weight 500
+
+### Layout Zones (16:9 desktop, responsief)
+1. **Top-left**: Budio logotype (ivory, minimal)
+2. **Left rail (~20% width)**: Werk panel — Sprint, taken, priorities
+3. **Center**: Jarvis intelligence core (radiale gouden ring-compositie)
+4. **Right rail (~18% width)**: Awareness panel — signalen, status
+5. **Above command bar**: Speaking surface (translucent floating banner)
+6. **Bottom**: Command bar — input + context chip
+
+### Surface Treatment
+- Dark glass effect — translucente surfaces (80-85% opacity)
+- GEEN harde rechthoekige borders
+- Definitie door tonal separation + warm gold edge glow + thin gold accent lines
+- Moderate rounded corners (16-24px)
+
+### Animation Hints (uit de loop video)
+- Core ringen: langzame rotatie op verschillende snelheden
+- Gouden glow: subtiel pulserend
+- Connector lijnen: zachte shimmer
+- Warm lichtdeeltjes: traag driftend door de ruimte
+- Speaking surface waveform: pulserend wanneer Jarvis "spreekt"
+- Alle motion: extreem subtiel, ambient, "ademend"
+
+---
+
+## 8. CONTENT (Nederlands, ingebouwd)
+
+### Left Rail — Sprint 4
+- Header: "Sprint 4" + progress "65%"
+- Taak 1: "API endpoints refactoring" — In Progress — P1
+- Taak 2: "Auth flow testing" — Blocked — P2
+- Taak 3: "Deploy staging pipeline" — Ready — 2/4
+
+### Right Rail — Awareness
+- "Staging Deploy Ready · 14:32"
+- "2 PRs wachten op review"
+- "Agent: code review voltooid"
+- "Jarvis · actief · 3 suggesties"
+
+### Speaking Surface (voorbeeldtekst)
+"Ik heb je deployment logs bekeken — staging is klaar. Wil je dat ik de checklist voor productie voorbereid?"
+
+### Command Bar
+- Placeholder: "Vraag Jarvis iets..."
+- Context chip rechts: "Sprint 4 · Dag 3"
+
+---
+
+## 9. DOWNLOAD INSTRUCTIES
+
+Om alles te downloaden als ZIP:
+1. Filter op label "Approved" in de canvas
+2. Selecteer alle gefilterde assets
+3. Gebruik de Luma download/export functie
+
+Alle final assets zijn gelabeld zodat ze visueel onderscheidbaar zijn van werk-in-uitvoering en discarded varianten.
+
+---
+
+## 10. WAT NIET MEE TE NEMEN
+
+De volgende categorieën zijn werk-in-uitvoering of afgewezen — NIET in de build package:
+- Varianten 1, 2, 3, 4, 5, 6 uit eerdere generatie-rondes
+- Eerste synthese (`wMt2_SNP`) — afgewezen als te braaf
+- Visual reset eerste versie (`kqB3Mqcb`) — vervangen door verfijning
+- Tussentijdse correctie-versies (`ntIpDx95`, `IYzFWFwn`, `tR_tZXoU`)
+- Extracted video frames (proces, geen final assets)
+- HUD inspiratie videos (referentiemateriaal, niet final)
+- Variant prompt documenten (proces-documentatie)

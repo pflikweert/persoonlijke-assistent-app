@@ -1,0 +1,28 @@
+BUDIO JARVIS — Unified Design Brief (fallback seed)
+
+This local fallback exists because the original Luma text asset with source id `am8OA_Ea`
+is not available inside this repo and the public generation APIs do not expose a direct
+canvas-export route for short asset IDs.
+
+Use this file as a placeholder reference until the real document is resolved through:
+- a documented generation mapping
+- a manual Luma export
+- or a later manifest update with direct download URLs
+
+Current build intent:
+- Internal-only Budio Workspace Jarvis prototype
+- Local-first VS Code workspace command room
+- Shared asset home under `assets/jarvis/final-frame/`
+- API-first plus fallback ingest policy
+- Manifest-driven rendering and partial-success sync behavior
+
+Primary visual anchors:
+- Budio logotype top-left
+- Jarvis intelligence core centered
+- calm side rails for sprint and awareness
+- speaking surface with waveform accent
+- grounded command bar at bottom
+
+The authoritative source summary for this prototype still lives in:
+- `tools/jarvis-luma/source/final-frame.txt`
+- `tools/jarvis-luma/final-frame.seed.json`

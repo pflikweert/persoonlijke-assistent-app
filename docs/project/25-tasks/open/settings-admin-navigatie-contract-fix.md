@@ -20,6 +20,7 @@ sort_order: 1
 ---
 
 
+
 ## Probleem / context
 
 De hoofdmenu-link `Instellingen` voelt alsof hij naar de laatst geopende settings/admin pagina gaat. Bronoorzaak: settings- en adminsubroutes geven `currentRouteKey="settings"` aan `FullscreenMenuOverlay`, waarna de menu-handler klikken op dezelfde key negeert. Daardoor sluit het menu zonder navigatie.
@@ -170,3 +171,5 @@ De huidige navigatie blokkeert betrouwbaar admingebruik en voelt alsof menu/inst
 ## Commits
 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room

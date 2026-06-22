@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-05T07:22:00.104Z
-Source Commit: 39cb59f
+Build Timestamp (UTC): 2026-06-22T09:00:53.889Z
+Source Commit: 6fd772e
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -148,8 +148,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 7
+sort_order: 10
 ---
+
 
 
 
@@ -245,6 +246,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -279,6 +282,7 @@ spec_ready: true
 due_date: null
 sort_order: 3
 ---
+
 
 
 
@@ -468,6 +472,8 @@ Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interfa
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -2400,8 +2406,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 5
+sort_order: 8
 ---
+
 
 
 
@@ -2576,6 +2583,8 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -2734,7 +2743,7 @@ Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
 - Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-02
+- Updated_at: 2026-06-22
 
 ```md
 ---
@@ -2744,7 +2753,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-02
+updated_at: 2026-06-22
 summary: "AIQS en admin-interface krijgen een eigen compacte tooling-look in Linear-richting, zonder runtime-, route- of functionaliteitswijzigingen."
 tags: [aiqs, admin, ui, ux, polish]
 workstream: aiqs
@@ -2755,8 +2764,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
+
 
 
 
@@ -2870,6 +2880,9 @@ Reviewbevindingen:
 - AIQS sticky footer compacter en neutraler gemaakt; deze primitive wordt momenteel alleen door AIQS-schermen gebruikt.
 - Web app-shell route-specifiek verbreed voor `settings-ai-quality-studio*`, zodat AIQS desktopbreedte benut terwijl gewone Budio routes mobile-first blijven.
 - Tijdens runtime-smoke een foutieve `Baseline`-chip op live families gevonden en gecorrigeerd naar `Runtime actief`.
+- AIQS overview volgt nu expliciet de admin-workspace standaard: exact één globale statusbron, promptfamilies als primaire lijst en `Systeem` als secundaire utility-sectie.
+- Gedeelde admin-primitives zijn uitgebreid met `AdminStatusNotice`, `AdminSectionList`, `AdminToggleRow` en rustigere panel/meta-varianten, zodat toekomstige admin-overviews minder dashboard-achtig hoeven op te bouwen.
+- Debug logging is teruggebracht van groot utilityblok naar een compacte toggle-rij met optionele detailuitklap; flow-level toggles en TTL-beheer blijven intact.
 
 ## Uitvoerblokken / fasering
 
@@ -2910,6 +2923,13 @@ Reviewbevindingen:
 - `npm run typecheck` — groen.
 - `npm run lint` — groen.
 - `npm run taskflow:verify` — groen.
+- 2026-06-22 redesign verify:
+  - `npm run typecheck` — groen na AIQS overview-herstructurering.
+  - `npm run lint` — groen na AIQS overview-herstructurering.
+  - `npm run taskflow:verify` — groen na taskfile-update.
+  - Browser-smoke op `http://localhost:8081/settings-ai-quality-studio` blokkeerde eerst op `ERR_CONNECTION_REFUSED`; daarna is `npm run dev` gestart en laadde de webtarget weer op `http://localhost:8081`.
+  - Playwright-navigatie naar AIQS redirectte daarna anoniem naar `/sign-in`, waardoor de nieuwe overviewstructuur niet volledig visueel bevestigd kon worden zonder extra lokale auth/bootstrap.
+  - `npm run verify:local-aiqs-bootstrap` — faalde verwacht op ontbrekende shell-env `ADMIN_AI_QUALITY_INTERNAL_TOKEN` of `ADMIN_REGEN_INTERNAL_TOKEN`; bestaande verify-script zelf bevestigt daarmee de resterende lokale bootstrapvoorwaarde.
 - Runtime UI-smoke op `http://localhost:8081`:
   - overview laad als admin/founder met `14 live`, `Prompt families`, `Runtime actief`.
   - group routes `today`, `week`, `month` laden met `Driver`, `Read-only` en `Live` badges.
@@ -2924,9 +2944,9 @@ Reviewbevindingen:
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
-- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix.
-- Afgerond: overview, group, task detail, draft, test en validate hebben een compactere console-laag; static checks, runtime UI-smoke en runtime smokes zijn groen.
-- Open / blocked: taak blijft `in_progress` voor visuele user-review; geen technische blocker bekend.
+- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix en nu ook workspace-first overviewstructuur met gedeelde status/toggle/list primitives.
+- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. Static checks zijn opnieuw groen.
+- Open / blocked: taak blijft `in_progress` voor visuele user-review en voor een laatste geauthenticeerde runtime-smoke van de overview; huidige blocker is lokaal verify-bewijs dat nog auth/bootstrapcontext vraagt.
 
 ## Relevante links
 
@@ -2941,6 +2961,8 @@ Reviewbevindingen:
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -3076,6 +3098,7 @@ spec_ready: true
 due_date: null
 sort_order: 2
 ---
+
 
 
 
@@ -3281,6 +3304,8 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -3307,8 +3332,9 @@ summary: "Valideer dat AIQS logging voor bestaande OpenAI-calls leesbaar binnenk
 tags: [aiqs, logging, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 10
+sort_order: 13
 ---
+
 
 
 
@@ -3424,6 +3450,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -3567,7 +3595,7 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 6
 ---
 
 
@@ -4446,7 +4474,7 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
 
 
@@ -4881,8 +4909,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 6
+sort_order: 9
 ---
+
 
 
 
@@ -5087,6 +5116,8 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -5273,7 +5304,7 @@ summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
-sort_order: 5
+sort_order: 7
 ---
 
 
@@ -5408,8 +5439,9 @@ summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een du
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
-sort_order: 8
+sort_order: 11
 ---
+
 
 
 
@@ -5516,6 +5548,8 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -5542,8 +5576,9 @@ summary: "Het Budio Workspace activity-bar icoon opent direct de bestaande plugi
 tags: [plugin, vscode, list-view, activity-bar]
 workstream: plugin
 due_date: null
-sort_order: 9
+sort_order: 12
 ---
+
 
 
 
@@ -5949,6 +5984,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---
@@ -6254,12 +6291,8 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-06-05
-summary: "Maak menu/instellingen/admin navigatie deterministisch zodat Instellingen altijd het instellingenoverzicht opent."
-tags:
-  - navigation
-  - settings
-  - admin
-  - ux
+summary: Maak menu/instellingen/admin navigatie deterministisch zodat Instellingen altijd het instellingenoverzicht opent.
+tags: ""
 workstream: app
 epic_id: null
 parent_task_id: null
@@ -6270,6 +6303,7 @@ spec_ready: true
 due_date: null
 sort_order: 1
 ---
+
 
 ## Probleem / context
 
@@ -6416,6 +6450,11 @@ De huidige navigatie blokkeert betrouwbaar admingebruik en voelt alsof menu/inst
 - `components/navigation/fullscreen-menu-overlay.tsx`
 - `app/settings.tsx`
 - `components/ui/admin-console-primitives.tsx`
+
+
+## Commits
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
 ```
 
 ---

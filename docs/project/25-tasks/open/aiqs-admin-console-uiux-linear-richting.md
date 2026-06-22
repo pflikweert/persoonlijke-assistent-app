@@ -5,7 +5,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-02
+updated_at: 2026-06-22
 summary: "AIQS en admin-interface krijgen een eigen compacte tooling-look in Linear-richting, zonder runtime-, route- of functionaliteitswijzigingen."
 tags: [aiqs, admin, ui, ux, polish]
 workstream: aiqs
@@ -16,8 +16,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 5
 ---
+
 
 
 
@@ -132,6 +133,9 @@ Reviewbevindingen:
 - AIQS sticky footer compacter en neutraler gemaakt; deze primitive wordt momenteel alleen door AIQS-schermen gebruikt.
 - Web app-shell route-specifiek verbreed voor `settings-ai-quality-studio*`, zodat AIQS desktopbreedte benut terwijl gewone Budio routes mobile-first blijven.
 - Tijdens runtime-smoke een foutieve `Baseline`-chip op live families gevonden en gecorrigeerd naar `Runtime actief`.
+- AIQS overview volgt nu expliciet de admin-workspace standaard: exact één globale statusbron, promptfamilies als primaire lijst en `Systeem` als secundaire utility-sectie.
+- Gedeelde admin-primitives zijn uitgebreid met `AdminStatusNotice`, `AdminSectionList`, `AdminToggleRow` en rustigere panel/meta-varianten, zodat toekomstige admin-overviews minder dashboard-achtig hoeven op te bouwen.
+- Debug logging is teruggebracht van groot utilityblok naar een compacte toggle-rij met optionele detailuitklap; flow-level toggles en TTL-beheer blijven intact.
 
 ## Uitvoerblokken / fasering
 
@@ -172,6 +176,13 @@ Reviewbevindingen:
 - `npm run typecheck` — groen.
 - `npm run lint` — groen.
 - `npm run taskflow:verify` — groen.
+- 2026-06-22 redesign verify:
+  - `npm run typecheck` — groen na AIQS overview-herstructurering.
+  - `npm run lint` — groen na AIQS overview-herstructurering.
+  - `npm run taskflow:verify` — groen na taskfile-update.
+  - Browser-smoke op `http://localhost:8081/settings-ai-quality-studio` blokkeerde eerst op `ERR_CONNECTION_REFUSED`; daarna is `npm run dev` gestart en laadde de webtarget weer op `http://localhost:8081`.
+  - Playwright-navigatie naar AIQS redirectte daarna anoniem naar `/sign-in`, waardoor de nieuwe overviewstructuur niet volledig visueel bevestigd kon worden zonder extra lokale auth/bootstrap.
+  - `npm run verify:local-aiqs-bootstrap` — faalde verwacht op ontbrekende shell-env `ADMIN_AI_QUALITY_INTERNAL_TOKEN` of `ADMIN_REGEN_INTERNAL_TOKEN`; bestaande verify-script zelf bevestigt daarmee de resterende lokale bootstrapvoorwaarde.
 - Runtime UI-smoke op `http://localhost:8081`:
   - overview laad als admin/founder met `14 live`, `Prompt families`, `Runtime actief`.
   - group routes `today`, `week`, `month` laden met `Driver`, `Read-only` en `Live` badges.
@@ -186,9 +197,9 @@ Reviewbevindingen:
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
-- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix.
-- Afgerond: overview, group, task detail, draft, test en validate hebben een compactere console-laag; static checks, runtime UI-smoke en runtime smokes zijn groen.
-- Open / blocked: taak blijft `in_progress` voor visuele user-review; geen technische blocker bekend.
+- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix en nu ook workspace-first overviewstructuur met gedeelde status/toggle/list primitives.
+- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. Static checks zijn opnieuw groen.
+- Open / blocked: taak blijft `in_progress` voor visuele user-review en voor een laatste geauthenticeerde runtime-smoke van de overview; huidige blocker is lokaal verify-bewijs dat nog auth/bootstrapcontext vraagt.
 
 ## Relevante links
 
@@ -205,3 +216,5 @@ Reviewbevindingen:
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room

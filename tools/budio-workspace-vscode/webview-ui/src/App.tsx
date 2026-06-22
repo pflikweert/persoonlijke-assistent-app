@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { JarvisConversationState, JarvisWorkspaceState } from '../../src/jarvis/types';
 import { STATUS_LABELS, WORKSTREAM_LABELS } from '../../src/tasks/constants';
 import type {
   BoardSnapshot,
@@ -38,8 +39,19 @@ import {
   type DetailRenderMode,
   useTaskDetailLayout,
 } from './use-task-detail-layout';
+import { JarvisView } from './JarvisView';
 import { vscode } from './vscode';
 import { WORKSPACE_VIEW_TITLES, type WorkspaceView } from '../../src/navigation';
+import {
+  appendJarvisAssistantMessage,
+  appendJarvisUserMessage,
+  completeJarvisAssistantMessage,
+  createJarvisConversationState,
+  failJarvisConversation,
+  mergeHydratedJarvisConversationState,
+  setJarvisRuntimeStage,
+  setJarvisVoiceState,
+} from '../../src/jarvis/conversation-state';
 
 type DueFilter = 'all' | 'today' | 'overdue' | 'no_date';
 type HierarchyFilter = 'all' | 'has_epic' | 'no_epic' | 'has_subtasks' | 'blocked' | 'ready_to_start';
@@ -106,6 +118,9 @@ export function App(): React.JSX.Element {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [jarvisState, setJarvisState] = useState<JarvisWorkspaceState | null>(null);
+  const [jarvisConversationState, setJarvisConversationState] = useState<JarvisConversationState | null>(null);
+  const [jarvisDraft, setJarvisDraft] = useState('');
   const [savingTaskId, setSavingTaskId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dropIndicator, setDropIndicator] = useState<DropIndicatorState | null>(null);
@@ -200,6 +215,87 @@ export function App(): React.JSX.Element {
       if (message.type === 'refreshStarted') {
         setRefreshState('loading');
         setError(null);
+        return;
+      }
+
+      if (message.type === 'hydrateJarvisState') {
+        setJarvisState(message.state);
+        return;
+      }
+
+      if (message.type === 'hydrateJarvisConversationState') {
+        setJarvisConversationState((previous) => mergeHydratedJarvisConversationState(previous, message.state));
+        return;
+      }
+
+      if (message.type === 'jarvisRequestAccepted') {
+        setJarvisConversationState((current) =>
+          setJarvisRuntimeStage(current ?? createJarvisConversationState(), {
+            clientRequestId: message.clientRequestId,
+            stage: 'host_received',
+          }),
+        );
+        return;
+      }
+
+      if (message.type === 'jarvisRuntimeStage') {
+        setJarvisConversationState((current) =>
+          setJarvisRuntimeStage(current ?? createJarvisConversationState(), {
+            clientRequestId: message.clientRequestId,
+            stage: message.stage,
+            message: message.message ?? null,
+            providerSource: message.providerSource ?? null,
+            errorCode: message.errorCode ?? null,
+          }),
+        );
+        return;
+      }
+
+      if (message.type === 'jarvisConversationCompleted') {
+        setJarvisConversationState((current) =>
+          completeJarvisAssistantMessage(
+            appendJarvisAssistantMessage(current ?? createJarvisConversationState(), {
+              messageId: message.messageId,
+              content: message.content,
+              sourceScope: message.sourceScope,
+              clientRequestId: message.clientRequestId,
+              providerSource: message.providerSource ?? null,
+            }),
+            message.messageId,
+            message.sourceScope,
+          ),
+        );
+        return;
+      }
+
+      if (message.type === 'jarvisConversationFailed') {
+        setJarvisConversationState((current) =>
+          failJarvisConversation(current ?? createJarvisConversationState(), message.message, 'chat', {
+            clientRequestId: message.clientRequestId ?? null,
+            errorCode: message.errorCode ?? 'unknown',
+            stage: message.stage ?? 'failed',
+          }),
+        );
+        setError(message.message);
+        return;
+      }
+
+      if (message.type === 'jarvisVoicePermissionState') {
+        setJarvisConversationState((current) =>
+          setJarvisVoiceState(current ?? createJarvisConversationState(), message.voiceState, message.reason),
+        );
+        return;
+      }
+
+      if (message.type === 'jarvisMicrophoneSettingsResult') {
+        setJarvisConversationState((current) =>
+          setJarvisVoiceState(
+            current ?? createJarvisConversationState(),
+            message.opened ? 'permission_needed' : 'unavailable',
+            message.message,
+          ),
+        );
+        setNotice(message.message);
         return;
       }
 
@@ -431,92 +527,112 @@ export function App(): React.JSX.Element {
   const listDragEnabled = activeView === 'list' && !dragBlockedByFiltering;
   const formDirty = isFormDirty(selectedTask, formState);
 
+  const sendJarvisPrompt = () => {
+    const prompt = jarvisDraft.trim();
+    if (!prompt) {
+      return;
+    }
+
+    const clientRequestId = createClientRequestId('typed');
+    setJarvisConversationState((current) =>
+      appendJarvisUserMessage(current ?? createJarvisConversationState(), {
+        content: prompt,
+        inputMode: 'typed',
+        clientRequestId,
+      }),
+    );
+    vscode.postMessage({ type: 'jarvisSendMessage', clientRequestId, prompt });
+    setJarvisDraft('');
+    setError(null);
+  };
+
   if (!snapshot) {
     return <div className="state-shell">Taken laden...</div>;
   }
 
   return (
     <div className={`app-shell viewport-${viewport} detail-${detailMode} ${isFullscreenDetail ? 'detail-fullscreen' : ''}`}>
-      <main className="workspace-shell">
-        <header className="topbar">
-          <div className="topbar-main">
-            <div className="topbar-title-wrap">
-              <div className="topbar-title">{WORKSPACE_VIEW_TITLES[activeView]}</div>
-              <div className="eyebrow">Budio Workspace</div>
-            </div>
+      <main className={`workspace-shell ${activeView === 'jarvis' ? 'workspace-shell-jarvis' : ''}`}>
+        {activeView !== 'jarvis' ? (
+          <header className="topbar">
+            <div className="topbar-main">
+              <div className="topbar-title-wrap">
+                <div className="topbar-title">{WORKSPACE_VIEW_TITLES[activeView]}</div>
+                <div className="eyebrow">Budio Workspace</div>
+              </div>
 
-            <div className="topbar-status-center">
-              {activeView === 'board' && !dragEnabled ? (
-                <StatusChip>Board drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
-              ) : null}
-              {activeView === 'list' && !listDragEnabled ? (
-                <StatusChip>List drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
-              ) : null}
-              {refreshState === 'loading' ? <StatusChip>Verversen...</StatusChip> : null}
-              {savingTaskId ? <StatusChip>Opslaan...</StatusChip> : null}
-              {pendingDiskChanges ? <StatusChip>Nieuwe disk-wijzigingen beschikbaar (je edits blijven behouden)</StatusChip> : null}
-              {notice ? <StatusChip>{notice}</StatusChip> : null}
-              {error ? <StatusChip danger>{error}</StatusChip> : null}
-            </div>
-
-            <div className="topbar-main-actions">
-              <button
-                className="primary-button"
-                onClick={() => vscode.postMessage({ type: 'createTask', status: 'ready' })}
-              >
-                Nieuwe taak
-              </button>
-              <div className="topbar-filter-sort">
-                <button className={`ghost-button ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((open) => !open)}>
-                  Filter
-                </button>
-                {activeView === 'list' ? (
-                  <select
-                    aria-label="Sortering"
-                    value={sort}
-                    onChange={(event) => applySortChange(event.target.value as TaskSort)}
-                    className="topbar-sort-select"
-                    title="Sortering"
-                  >
-                    <option value="manual">Manual</option>
-                    <option value="lane_order">Lane-volgorde</option>
-                    <option value="status">Status</option>
-                    <option value="due_date">Due date</option>
-                    <option value="priority">Priority</option>
-                    <option value="progress">Percentage</option>
-                    <option value="updated_at">Recent gewijzigd</option>
-                    <option value="alphabetical">Alfabetisch</option>
-                  </select>
+              <div className="topbar-status-center">
+                {activeView === 'board' && !dragEnabled ? (
+                  <StatusChip>Board drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
                 ) : null}
+                {activeView === 'list' && !listDragEnabled ? (
+                  <StatusChip>List drag/drop tijdelijk uit bij actieve search/filters</StatusChip>
+                ) : null}
+                {refreshState === 'loading' ? <StatusChip>Verversen...</StatusChip> : null}
+                {savingTaskId ? <StatusChip>Opslaan...</StatusChip> : null}
+                {pendingDiskChanges ? <StatusChip>Nieuwe disk-wijzigingen beschikbaar (je edits blijven behouden)</StatusChip> : null}
+                {notice ? <StatusChip>{notice}</StatusChip> : null}
+                {error ? <StatusChip danger>{error}</StatusChip> : null}
+              </div>
+
+              <div className="topbar-main-actions">
+                <button
+                  className="primary-button"
+                  onClick={() => vscode.postMessage({ type: 'createTask', status: 'ready' })}
+                >
+                  Nieuwe taak
+                </button>
+                <div className="topbar-filter-sort">
+                  <button className={`ghost-button ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((open) => !open)}>
+                    Filter
+                  </button>
+                  {activeView === 'list' ? (
+                    <select
+                      aria-label="Sortering"
+                      value={sort}
+                      onChange={(event) => applySortChange(event.target.value as TaskSort)}
+                      className="topbar-sort-select"
+                      title="Sortering"
+                    >
+                      <option value="manual">Manual</option>
+                      <option value="lane_order">Lane-volgorde</option>
+                      <option value="status">Status</option>
+                      <option value="due_date">Due date</option>
+                      <option value="priority">Priority</option>
+                      <option value="progress">Percentage</option>
+                      <option value="updated_at">Recent gewijzigd</option>
+                      <option value="alphabetical">Alfabetisch</option>
+                    </select>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="topbar-search-row">
-            <input
-              ref={searchRef}
-              className="search-input"
-              placeholder="Zoek op titel, tag of body..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <div className="header-stats">
-              <span className="header-stat header-stat-total">
-                <span className="header-stat-dot" aria-hidden="true" />
-                {snapshot.totalTasks} taken
-              </span>
-              <span className="header-stat header-stat-open">
-                <span className="header-stat-dot" aria-hidden="true" />
-                {snapshot.openTaskCount} open
-              </span>
-              <span className="header-stat header-stat-done">
-                <span className="header-stat-dot" aria-hidden="true" />
-                {snapshot.doneTaskCount} done
-              </span>
+            <div className="topbar-search-row">
+              <input
+                ref={searchRef}
+                className="search-input"
+                placeholder="Zoek op titel, tag of body..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <div className="header-stats">
+                <span className="header-stat header-stat-total">
+                  <span className="header-stat-dot" aria-hidden="true" />
+                  {snapshot.totalTasks} taken
+                </span>
+                <span className="header-stat header-stat-open">
+                  <span className="header-stat-dot" aria-hidden="true" />
+                  {snapshot.openTaskCount} open
+                </span>
+                <span className="header-stat header-stat-done">
+                  <span className="header-stat-dot" aria-hidden="true" />
+                  {snapshot.doneTaskCount} done
+                </span>
+              </div>
             </div>
-          </div>
 
-          {filtersOpen ? (
+            {filtersOpen ? (
             <div className="filter-panel">
               <div className="filter-grid">
                 <label>
@@ -642,9 +758,43 @@ export function App(): React.JSX.Element {
                 </button>
               </div>
             </div>
-          ) : null}
-        </header>
+            ) : null}
+          </header>
+        ) : null}
 
+        {activeView === 'jarvis' ? (
+          <section className="jarvis-view-pane">
+            <JarvisView
+              state={jarvisState}
+              snapshot={snapshot}
+              conversationState={jarvisConversationState}
+              draft={jarvisDraft}
+              onDraftChange={setJarvisDraft}
+              onSendPrompt={sendJarvisPrompt}
+              onResetConversation={() => vscode.postMessage({ type: 'jarvisResetConversation' })}
+              onReloadJarvis={() => vscode.postMessage({ type: 'jarvisReload' })}
+              onSyncAssets={() => vscode.postMessage({ type: 'syncJarvisAssets' })}
+              onOpenMicrophoneSettings={() => vscode.postMessage({ type: 'jarvisOpenMicrophoneSettings' })}
+              onSubmitAudio={(audio) => {
+                const clientRequestId = createClientRequestId('voice');
+                setJarvisConversationState((current) =>
+                  setJarvisRuntimeStage(current ?? createJarvisConversationState(), {
+                    clientRequestId,
+                    stage: 'transcribing',
+                  }),
+                );
+                vscode.postMessage({ type: 'jarvisSubmitAudio', clientRequestId, audio });
+              }}
+              onVoiceStateChange={(nextState) => {
+                setJarvisConversationState((current) =>
+                  setJarvisVoiceState(current ?? createJarvisConversationState(), nextState.voiceState, nextState.reason ?? null),
+                );
+                vscode.postMessage({ type: 'jarvisVoiceStateChanged', ...nextState });
+              }}
+            />
+          </section>
+        ) : (
+        <>
         <div
           className={`content-shell ${detailMode === 'overlay' ? 'content-shell-toggle' : 'content-shell-pinned'} ${
             detailOpen ? 'detail-open' : ''
@@ -1067,6 +1217,8 @@ export function App(): React.JSX.Element {
             {renderDetailPane('fullscreen')}
           </div>
         ) : null}
+        </>
+        )}
       </main>
     </div>
   );
@@ -2192,6 +2344,14 @@ function formatTaskRef(taskId: string): string {
   }
 
   return `${base.slice(0, 16).toUpperCase()}…`;
+}
+
+function createClientRequestId(prefix: 'typed' | 'voice'): string {
+  const randomPart =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+  return `${prefix}-${Date.now()}-${randomPart}`;
 }
 
 function toMetadataFormState(task: TaskCardViewModel): MetadataFormState {

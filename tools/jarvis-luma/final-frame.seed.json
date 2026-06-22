@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "title": "BUDIO JARVIS FINAL FRAME",
+  "sourceDocument": "tools/jarvis-luma/source/final-frame.txt",
+  "designTokens": {
+    "bgPrimary": "#0E0F10",
+    "bgSecondary": "#14161A",
+    "bgTertiary": "#171A1E",
+    "surfacePanel": "#1A1D22",
+    "surfaceElevated": "#1D2126",
+    "surfaceCard": "#22272D",
+    "surfaceInset": "#262C33",
+    "borderSoft": "#313640",
+    "borderSecondary": "#3B4048",
+    "dividerSubtle": "rgba(255, 255, 255, 0.06)",
+    "textPrimary": "#F4EDE1",
+    "textBright": "#EEE7DB",
+    "textSecondary": "#D3CABD",
+    "textSupporting": "#B8B0A4",
+    "textMuted": "#948D83",
+    "gold": "#D6B35A",
+    "goldBright": "#E2C774",
+    "goldDeep": "#C89B3C",
+    "glowGold": "rgba(214, 179, 90, 0.28)",
+    "glowGoldSoft": "rgba(214, 179, 90, 0.12)",
+    "glowIvory": "rgba(244, 237, 225, 0.10)",
+    "radiusPanel": "20px",
+    "radiusChip": "8px",
+    "radiusBar": "24px",
+    "fontSans": "'Inter', 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif"
+  },
+  "commandRoom": {
+    "leftRail": {
+      "eyebrow": "Sprint 4",
+      "progressLabel": "65%",
+      "items": [
+        {
+          "title": "API endpoints refactoring",
+          "status": "In Progress",
+          "priority": "P1"
+        },
+        {
+          "title": "Auth flow testing",
+          "status": "Blocked",
+          "priority": "P2"
+        },
+        {
+          "title": "Deploy staging pipeline",
+          "status": "Ready",
+          "priority": "2/4"
+        }
+      ]
+    },
+    "rightRail": {
+      "eyebrow": "Awareness",
+      "items": [
+        "Staging Deploy Ready · 14:32",
+        "2 PRs wachten op review",
+        "Agent: code review voltooid",
+        "Jarvis · actief · 3 suggesties"
+      ]
+    },
+    "speakingSurface": "Ik heb je deployment logs bekeken — staging is klaar. Wil je dat ik de checklist voor productie voorbereid?",
+    "commandBar": {
+      "placeholder": "Vraag Jarvis iets...",
+      "contextChip": "Sprint 4 · Dag 3"
+    }
+  },
+  "assets": [
+    {
+      "logicalId": "jarvis-core",
+      "seedAssetId": "tITjE1Lq",
+      "kind": "image",
+      "role": "center-core",
+      "expectedFilename": "jarvis-core.png",
+      "preferredMime": "image/png",
+      "notes": "Jarvis Intelligence Core"
+    },
+    {
+      "logicalId": "waveform-icon",
+      "seedAssetId": "WU2CfDCw",
+      "kind": "image",
+      "role": "waveform-icon",
+      "expectedFilename": "waveform-icon.png",
+      "preferredMime": "image/png",
+      "notes": "Speaking surface icon"
+    },
+    {
+      "logicalId": "budio-logotype",
+      "seedAssetId": "--OTYSI5",
+      "kind": "image",
+      "role": "wordmark",
+      "expectedFilename": "budio-logotype.png",
+      "preferredMime": "image/png",
+      "notes": "Top-left wordmark"
+    },
+    {
+      "logicalId": "hud-sprite-sheet",
+      "seedAssetId": "LjJuGpeu",
+      "kind": "image",
+      "role": "hud-sprite-sheet",
+      "expectedFilename": "hud-sprite-sheet.png",
+      "preferredMime": "image/png",
+      "notes": "Connectors, brackets and status dots"
+    },
+    {
+      "logicalId": "main-build-target",
+      "seedAssetId": "Fo7yVw1W",
+      "kind": "image",
+      "role": "main-still",
+      "expectedFilename": "main-build-target.png",
+      "preferredMime": "image/png",
+      "notes": "Final synthesis still"
+    },
+    {
+      "logicalId": "alternate-build-target",
+      "seedAssetId": "kqrlgMiP",
+      "kind": "image",
+      "role": "alternate-still",
+      "expectedFilename": "alternate-build-target.png",
+      "preferredMime": "image/png",
+      "notes": "Alternate synthesis still"
+    },
+    {
+      "logicalId": "ambient-loop",
+      "seedAssetId": "SsavSJdE",
+      "kind": "video",
+      "role": "ambient-loop",
+      "expectedFilename": "ambient-loop.mp4",
+      "preferredMime": "video/mp4",
+      "notes": "Ambient motion reference"
+    },
+    {
+      "logicalId": "center-core-variations",
+      "seedAssetId": "rhpShyaK",
+      "kind": "image",
+      "role": "study-core",
+      "expectedFilename": "center-core-variations.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "hud-micro-elements-library",
+      "seedAssetId": "xr3VGzad",
+      "kind": "image",
+      "role": "study-hud",
+      "expectedFilename": "hud-micro-elements-library.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "side-rail-panels",
+      "seedAssetId": "KqonuBjC",
+      "kind": "image",
+      "role": "study-side-rails",
+      "expectedFilename": "side-rail-panels.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "command-bar-variations",
+      "seedAssetId": "kXbN0rmi",
+      "kind": "image",
+      "role": "study-command-bar",
+      "expectedFilename": "command-bar-variations.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "speaking-surface-banner",
+      "seedAssetId": "ISbrKHrS",
+      "kind": "image",
+      "role": "study-speaking-surface",
+      "expectedFilename": "speaking-surface-banner.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "budio-task-list-context",
+      "seedAssetId": "BAh0Jit1",
+      "kind": "image",
+      "role": "product-context-task-list",
+      "expectedFilename": "budio-task-list-context.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "budio-kanban-context",
+      "seedAssetId": "ZE0OWkeV",
+      "kind": "image",
+      "role": "product-context-kanban",
+      "expectedFilename": "budio-kanban-context.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "vscode-integration-context",
+      "seedAssetId": "J6NfT9Gy",
+      "kind": "image",
+      "role": "product-context-vscode",
+      "expectedFilename": "vscode-integration-context.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "founder-overview",
+      "seedAssetId": "sJthA_KD",
+      "kind": "image",
+      "role": "founder-overview",
+      "expectedFilename": "founder-overview.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "founder-jarvis-response-sketch",
+      "seedAssetId": "re0xr8DL",
+      "kind": "image",
+      "role": "founder-response-sketch",
+      "expectedFilename": "founder-jarvis-response-sketch.png",
+      "preferredMime": "image/png"
+    },
+    {
+      "logicalId": "unified-design-brief",
+      "seedAssetId": "am8OA_Ea",
+      "kind": "text",
+      "role": "design-brief",
+      "expectedFilename": "unified-design-brief.txt",
+      "fallbackSourcePath": "tools/jarvis-luma/source/unified-design-brief-fallback.txt",
+      "preferredMime": "text/plain"
+    },
+    {
+      "logicalId": "build-manifest",
+      "seedAssetId": "Mag8qsPI",
+      "kind": "text",
+      "role": "build-manifest",
+      "expectedFilename": "build-manifest.txt",
+      "fallbackSourcePath": "tools/jarvis-luma/source/build-manifest-fallback.txt",
+      "preferredMime": "text/plain"
+    },
+    {
+      "logicalId": "final-frame",
+      "seedAssetId": "local-final-frame-source",
+      "kind": "text",
+      "role": "final-frame",
+      "expectedFilename": "final-frame.txt",
+      "fallbackSourcePath": "tools/jarvis-luma/source/final-frame.txt",
+      "preferredMime": "text/plain"
+    }
+  ]
+}

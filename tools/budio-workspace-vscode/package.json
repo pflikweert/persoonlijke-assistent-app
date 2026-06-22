@@ -19,7 +19,10 @@
   "activationEvents": [
     "onCommand:budioWorkspace.openBoard",
     "onCommand:budioWorkspace.openListView",
+    "onCommand:budioWorkspace.openJarvis",
+    "onCommand:budioWorkspace.reloadJarvis",
     "onCommand:budioWorkspace.openSettings",
+    "onCommand:budioWorkspace.syncJarvisAssets",
     "onView:budioWorkspace.activityEntry"
   ],
   "main": "./dist/extension.js",
@@ -34,6 +37,14 @@
         "title": "Budio Workspace: Open List View"
       },
       {
+        "command": "budioWorkspace.openJarvis",
+        "title": "Budio Workspace: Open Jarvis"
+      },
+      {
+        "command": "budioWorkspace.reloadJarvis",
+        "title": "Budio Workspace: Reload Jarvis"
+      },
+      {
         "command": "budioWorkspace.openSettings",
         "title": "Budio Workspace: Open Settings"
       },
@@ -44,6 +55,10 @@
       {
         "command": "budioWorkspace.newTask",
         "title": "Budio Workspace: New Task"
+      },
+      {
+        "command": "budioWorkspace.syncJarvisAssets",
+        "title": "Budio Workspace: Sync Jarvis Assets"
       }
     ],
     "configuration": {
@@ -58,6 +73,16 @@
           "type": "string",
           "default": "docs/project/24-epics",
           "description": "Relative path to the epic root folder."
+        },
+        "budioWorkspace.jarvisAssetsRoot": {
+          "type": "string",
+          "default": "assets/jarvis/final-frame",
+          "description": "Relative path to the Jarvis asset output root."
+        },
+        "budioWorkspace.jarvisSeedManifest": {
+          "type": "string",
+          "default": "tools/jarvis-luma/final-frame.seed.json",
+          "description": "Relative path to the Jarvis seed manifest."
         },
         "budioWorkspace.columns": {
           "type": "array",

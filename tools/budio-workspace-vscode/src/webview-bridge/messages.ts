@@ -5,9 +5,27 @@ import type {
   TaskSort,
   TaskStatus,
 } from '../tasks/types';
+import type {
+  JarvisAudioPayload,
+  JarvisConversationState,
+  JarvisErrorCode,
+  JarvisInputMode,
+  JarvisMessageSourceScope,
+  JarvisRuntimeStage,
+  JarvisVoiceState,
+  JarvisWorkspaceState,
+} from '../jarvis/types';
 
 export type HostToWebviewMessage =
-  | { type: 'hydrateBoard'; snapshot: BoardSnapshot; focusTaskId?: string; view?: 'board' | 'list' | 'epics' | 'settings' }
+  | { type: 'hydrateBoard'; snapshot: BoardSnapshot; focusTaskId?: string; view?: 'board' | 'list' | 'epics' | 'settings' | 'jarvis' }
+  | { type: 'hydrateJarvisState'; state: JarvisWorkspaceState }
+  | { type: 'hydrateJarvisConversationState'; state: JarvisConversationState }
+  | { type: 'jarvisRequestAccepted'; clientRequestId: string; inputMode: JarvisInputMode }
+  | { type: 'jarvisRuntimeStage'; clientRequestId: string; stage: JarvisRuntimeStage; message?: string; providerSource?: string | null; errorCode?: JarvisErrorCode | null }
+  | { type: 'jarvisConversationCompleted'; clientRequestId?: string; messageId: string; content: string; sourceScope: JarvisMessageSourceScope; providerSource?: string | null }
+  | { type: 'jarvisConversationFailed'; clientRequestId?: string; message: string; errorCode?: JarvisErrorCode; stage?: JarvisRuntimeStage }
+  | { type: 'jarvisVoicePermissionState'; voiceState: JarvisVoiceState; reason: string | null }
+  | { type: 'jarvisMicrophoneSettingsResult'; opened: boolean; message: string }
   | { type: 'refreshStarted' }
   | { type: 'refreshCompleted' }
   | { type: 'refreshFailed'; message: string }
@@ -15,7 +33,7 @@ export type HostToWebviewMessage =
   | { type: 'saveCompleted'; message: string }
   | { type: 'saveFailed'; message: string }
   | { type: 'conflictDetected'; message: string }
-  | { type: 'switchView'; view: 'board' | 'list' | 'epics' | 'settings' };
+  | { type: 'switchView'; view: 'board' | 'list' | 'epics' | 'settings' | 'jarvis' };
 
 export type WebviewToHostMessage =
   | { type: 'ready' }
@@ -84,7 +102,35 @@ export type WebviewToHostMessage =
     }
   | {
       type: 'switchView';
-      view: 'board' | 'list' | 'epics' | 'settings';
+      view: 'board' | 'list' | 'epics' | 'settings' | 'jarvis';
+    }
+  | {
+      type: 'syncJarvisAssets';
+    }
+  | {
+      type: 'jarvisSendMessage';
+      clientRequestId: string;
+      prompt: string;
+    }
+  | {
+      type: 'jarvisSubmitAudio';
+      clientRequestId: string;
+      audio: JarvisAudioPayload;
+    }
+  | {
+      type: 'jarvisReload';
+    }
+  | {
+      type: 'jarvisOpenMicrophoneSettings';
+    }
+  | {
+      type: 'jarvisVoiceStateChanged';
+      voiceState: JarvisVoiceState;
+      reason?: string | null;
+      available?: boolean;
+    }
+  | {
+      type: 'jarvisResetConversation';
     }
   | {
       type: 'updateSetting';

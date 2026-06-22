@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 4
+sort_order: 6
 ---
+
 
 
 
@@ -300,3 +301,5 @@ Live-readiness notes:
 - 2026-06-04T20:49:20+02:00 — fix: generate AIQS deploy token
 
 - 2026-06-04T20:51:08+02:00 — fix: resolve deploy publishable key
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room

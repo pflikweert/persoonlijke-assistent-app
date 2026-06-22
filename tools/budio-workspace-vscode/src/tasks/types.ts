@@ -172,6 +172,8 @@ export interface EpicViewModel {
 export interface WorkspaceSettings {
   tasksRoot: string;
   epicsRoot: string;
+  jarvisAssetsRoot: string;
+  jarvisSeedManifest: string;
   columns: TaskStatus[];
   showDoneColumn: boolean;
   defaultSort: TaskSort;

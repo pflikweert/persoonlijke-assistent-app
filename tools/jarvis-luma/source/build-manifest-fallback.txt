@@ -1,0 +1,31 @@
+BUDIO JARVIS — Build Manifest (fallback seed)
+
+This local fallback exists because the original Luma text asset with source id `Mag8qsPI`
+is not directly retrievable from the documented public generation APIs using the short canvas id.
+
+Build contract for v1:
+- Download target: `assets/jarvis/final-frame/`
+- Seed source: `tools/jarvis-luma/final-frame.seed.json`
+- Downloader: `tools/jarvis-luma/download-final-frame.mjs`
+- Shared plugin view: `jarvis`
+
+Expected output families:
+- PNG transparent assets
+- PNG reference stills/studies
+- MP4 ambient loop
+- text/plain fallback docs
+
+Sync behavior:
+- partial success is allowed
+- one unresolved asset does not block the rest
+- text docs may be seeded locally
+- missing binary assets remain visible in manifest with `manual_source_required`
+
+Plugin states:
+- idle
+- syncing
+- partial
+- ready
+- error
+- missing_key
+- missing_manifest

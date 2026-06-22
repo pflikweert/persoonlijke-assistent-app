@@ -1,0 +1,241 @@
+# 📦 BUDIO JARVIS — FINAL FRAME
+## Complete build-ready package voor Codex
+
+Dit document brengt alle FINALE assets samen op één plek. Alles wat hier staat is gefilterd, goedgekeurd en klaar om gebouwd te worden. Alle assets in dit pakket zijn gelabeld als "Approved" op canvas.
+
+---
+
+## 🎨 CODE-READY ASSETS (transparent backgrounds)
+
+Deze nieuwe assets zijn speciaal gegenereerd voor directe code-implementatie. Allemaal PNG met alpha channel, klaar om als `<img>`, CSS `background-image` of CSS `mask` te gebruiken.
+
+| Asset ID | Type | Component | Resolutie | Gebruik in code |
+|---|---|---|---|---|
+| `tITjE1Lq` | PNG transparent | **Jarvis Intelligence Core** | 1024×1024 (1:1) | Centerpiece — animeer met CSS rotate/pulse |
+| `WU2CfDCw` | PNG transparent | **Waveform Icon** | 1:1 square | Speaking surface left icon (32-40px) |
+| `--OTYSI5` | PNG transparent | **Budio Logotype** | 1536×1024 (3:2) | Top-left wordmark |
+| `LjJuGpeu` | PNG transparent | **HUD Sprite Sheet** | 1536×1024 (3:2) | Connectors, brackets, dots — crop per element |
+
+**HUD Sprite Sheet bevat:**
+- Row 1: Connector lines (straight, right-angle, tapered)
+- Row 2: Callout brackets, dividers, gradient rules
+- Row 3: Status dots (In Progress, Blocked, Ready), ring, glow dot
+
+---
+
+## 🖼️ FINALE VISUELE CONCEPTEN
+
+| Asset ID | Type | Rol |
+|---|---|---|
+| `Fo7yVw1W` | image/png | **MAIN BUILD TARGET** — finale synthese, visuele waarheid |
+| `kqrlgMiP` | image/png | Alternatief synthese-still, vergelijkbare richting |
+| `SsavSJdE` | video/mp4 | **Ambient loop met audio** — motion reference (5s, 540p) |
+
+---
+
+## 🔬 COMPONENT DESIGN STUDIES
+
+| Asset ID | Type | Component | Build-keuze |
+|---|---|---|---|
+| `rhpShyaK` | image/png | Center Core (4 varianten) | V4 Hybrid Intelligence (rechtsonder) |
+| `xr3VGzad` | image/png | HUD Micro-Elements Library | Volledige set bruikbaar |
+| `KqonuBjC` | image/png | Side Rail Panels (6 varianten) | A Task-Focused + D Signal Indicators |
+| `kXbN0rmi` | image/png | Command Bar (5 varianten) | V5 Grounded Module |
+| `ISbrKHrS` | image/png | Speaking Surface Banner | Directe build-referentie |
+
+---
+
+## 📐 PRODUCT CONTEXT (huidige Budio)
+
+| Asset ID | Type | Rol |
+|---|---|---|
+| `BAh0Jit1` | image/png | Bestaande Budio task list — left rail evolueert hieruit |
+| `ZE0OWkeV` | image/png | Bestaande Budio kanban — card patterns |
+| `J6NfT9Gy` | image/png | VS Code + Budio integratie context |
+
+---
+
+## 💡 FOUNDER CONCEPTEN
+
+| Asset ID | Type | Rol |
+|---|---|---|
+| `sJthA_KD` | image/png | Founder's overview — IA richtlijn |
+| `re0xr8DL` | image/png | Founder's Jarvis-response sketch |
+
+---
+
+## 📄 DOCUMENTATIE
+
+| Asset ID | Type | Inhoud |
+|---|---|---|
+| `am8OA_Ea` | text/plain | **Unified Design Brief** — single source of truth |
+| `Mag8qsPI` | text/plain | Build Manifest met CSS tokens en content |
+| (dit document) | text/plain | **Final Frame** — overzicht voor Codex |
+
+---
+
+## 🎨 CSS DESIGN TOKENS (kopieer naar code)
+
+```css
+:root {
+  /* Backgrounds */
+  --bg-primary: #0E0F10;
+  --bg-secondary: #14161A;
+  --bg-tertiary: #171A1E;
+
+  /* Surfaces */
+  --surface-panel: #1A1D22;
+  --surface-elevated: #1D2126;
+  --surface-card: #22272D;
+  --surface-inset: #262C33;
+
+  /* Borders & dividers */
+  --border-soft: #313640;
+  --border-secondary: #3B4048;
+  --divider-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --text-primary: #F4EDE1;
+  --text-bright: #EEE7DB;
+  --text-secondary: #D3CABD;
+  --text-supporting: #B8B0A4;
+  --text-muted: #948D83;
+
+  /* Gold accents */
+  --gold: #D6B35A;
+  --gold-bright: #E2C774;
+  --gold-deep: #C89B3C;
+
+  /* Glows */
+  --glow-gold: rgba(214, 179, 90, 0.28);
+  --glow-gold-soft: rgba(214, 179, 90, 0.12);
+  --glow-ivory: rgba(244, 237, 225, 0.10);
+
+  /* Radii */
+  --radius-panel: 20px;
+  --radius-chip: 8px;
+  --radius-bar: 24px;
+
+  /* Type */
+  --font-sans: 'Inter', 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+}
+```
+
+---
+
+## 📐 LAYOUT SPECIFICATIE
+
+**16:9 desktop ideaalweergave** (responsive naar VS Code panel formaten):
+
+```
+Grid columns: 1fr [left-rail 220-280px] 1fr [center auto] 1fr [right-rail 200-260px] 1fr
+Row 1: Top bar (Budio logotype, 48-56px height)
+Row 2: Main area (left rail | center core space | right rail)
+Row 3: Speaking surface (overlaps Row 2 bottom, floating)
+Row 4: Command bar (full width, 56-64px height)
+```
+
+**Z-index orde (van achter naar voor):**
+1. Background atmosphere (faint radial grid, warm beams)
+2. Jarvis core (animated)
+3. Side rails (translucent dark glass)
+4. Speaking surface (floating banner)
+5. Command bar (grounded)
+6. HUD micro-details (atmospheric)
+
+---
+
+## 🎯 CONTENT (Nederlands, in code)
+
+**Left Rail — Sprint 4:**
+- Sprint header met progress "65%"
+- "API endpoints refactoring" · In Progress · P1
+- "Auth flow testing" · Blocked · P2
+- "Deploy staging pipeline" · Ready · 2/4
+
+**Right Rail — Awareness:**
+- "Staging Deploy Ready · 14:32"
+- "2 PRs wachten op review"
+- "Agent: code review voltooid"
+- "Jarvis · actief · 3 suggesties"
+
+**Speaking Surface:**
+> "Ik heb je deployment logs bekeken — staging is klaar. Wil je dat ik de checklist voor productie voorbereid?"
+
+**Command Bar:**
+- Placeholder: "Vraag Jarvis iets..."
+- Context chip: "Sprint 4 · Dag 3"
+
+---
+
+## 🎬 ANIMATION HINTS
+
+Uit de loop video (`SsavSJdE`):
+- **Core rings:** langzame rotatie op verschillende snelheden (counter-rotating)
+- **Gouden glow:** subtiel pulserend, 3-4s cyclus
+- **Connector lines:** zachte shimmer, willekeurige flicker
+- **Light particles:** traag driftend door de ruimte
+- **Waveform icon:** pulseert wanneer Jarvis spreekt
+- **Algemene motion:** ambient, ademend, nooit storend
+
+**CSS suggesties:**
+- `@keyframes pulse` voor core glow
+- `@keyframes rotate` per ring (verschillende durations)
+- `@keyframes drift` voor particles
+- `transform: rotate()` met `animation-duration` 20-60s voor rings
+- `box-shadow` met var(--glow-gold) voor warm glow
+
+---
+
+## 📥 DOWNLOAD INSTRUCTIES
+
+**Voor zip-download:**
+1. Filter canvas op label **"Approved"**
+2. Selecteer alle gefilterde assets (nu ook de 4 transparante assets)
+3. Gebruik Luma export/download → krijgt alles als één pakket
+
+**Voor Codex:**
+- Plaats alle PNG/MP4 assets in `assets/jarvis/`
+- Gebruik dit document als build-specificatie
+- Unified Design Brief (`am8OA_Ea`) is het uitgebreide ontwerpdocument
+- Build Manifest (`Mag8qsPI`) bevat extra technische details
+
+---
+
+## ✅ APPROVED ASSETS — VOLLEDIGE LIJST
+
+**Code-ready (transparent PNG):**
+- `tITjE1Lq` — Jarvis Core
+- `WU2CfDCw` — Waveform Icon
+- `--OTYSI5` — Budio Logotype
+- `LjJuGpeu` — HUD Sprite Sheet
+
+**Visuele concepten:**
+- `Fo7yVw1W` — Main concept still
+- `kqrlgMiP` — Alternatief still
+- `SsavSJdE` — Ambient loop video
+
+**Design studies:**
+- `rhpShyaK` — Core variations
+- `xr3VGzad` — HUD elements
+- `KqonuBjC` — Side rail variations
+- `kXbN0rmi` — Command bar variations
+
+**Specifieke referenties:**
+- `ISbrKHrS` — Speaking surface banner
+
+**Product context:**
+- `BAh0Jit1` — Budio task list
+- `ZE0OWkeV` — Budio kanban
+- `J6NfT9Gy` — VS Code integratie
+
+**Founder concepts:**
+- `sJthA_KD` — Overview concept
+- `re0xr8DL` — Jarvis response concept
+
+**Documentatie:**
+- `am8OA_Ea` — Unified Design Brief
+- `Mag8qsPI` — Build Manifest
+- (dit document) — Final Frame
+
+**Totaal: 20 assets klaar voor build.**

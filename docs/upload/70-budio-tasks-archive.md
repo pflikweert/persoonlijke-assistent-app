@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-05T07:22:00.104Z
-Source Commit: 39cb59f
+Build Timestamp (UTC): 2026-06-22T09:00:53.889Z
+Source Commit: 6fd772e
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 48
+- Totaal tasks opgenomen: 61
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -771,6 +771,2649 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+```
+
+---
+
+## Budio Workspace Jarvis assets mapping melding oplossen
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-assets-mapping-melding-oplossen.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-assets-mapping-melding-oplossen
+title: Budio Workspace Jarvis assets mapping melding oplossen
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Los de valse Jarvis assetmelding op waarbij 17/20 klaar en handmatige mapping nodig wordt gemeld terwijl het lokale manifest ready is."
+tags: [plugin, vscode, jarvis, assets, luma]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-hardening-echte-command-room
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis assets mapping melding oplossen
+
+## Probleem / context
+
+Jarvis meldt: `17/20 klaar, 8 assets vereisen nog handmatige mapping of Luma export`. Het actuele lokale manifest in `assets/jarvis/final-frame/jarvis-assets-manifest.json` staat echter op `overallStatus: ready`, met 17 media-assets `ready` en 3 tekst-assets `seeded_text`. De melding is daardoor misleidend: tekst-assets zijn voor v1 bewust lokaal beschikbaar als seeded text en mogen niet als ontbrekende assets klinken.
+
+## Gewenste uitkomst
+
+Jarvis toont en gebruikt een assetstatus die de werkelijke beschikbaarheid weergeeft: 20/20 lokaal bruikbaar wanneer media ready is en tekst seeded is. Alleen echte `manual_source_required`, `error` of ontbrekende lokale bestanden worden als aandachtspunt gemeld.
+
+## User outcome
+
+De gebruiker ziet geen valse mapping/export waarschuwing meer wanneer de lokale Jarvis assets klaar zijn.
+
+## Functional slice
+
+- Asset availability normaliseren voor Jarvis state en chat-grounding.
+- Valse `17/20` en mapping-copy voorkomen bij ready manifest.
+- Plugin opnieuw toepassen zodat de Jarvis-view de gecorrigeerde status gebruikt.
+
+## Entry / exit
+
+- Entry: gebruiker opent Jarvis of vraagt Jarvis naar de workspace/assets.
+- Exit: Jarvis rapporteert 20/20 beschikbaar of noemt alleen echte ontbrekende assets.
+
+## Happy flow
+
+1. Jarvis laadt het lokale manifest.
+2. `ready + downloaded + seeded_text` telt als beschikbaar.
+3. Chat-grounding en UI-status noemen geen handmatige mapping wanneer `manual_source_required` nul is.
+
+## Non-happy flows
+
+- Missing manifest: echte missing-manifest melding blijft bestaan.
+- Manual required: alleen assets met status `manual_source_required` krijgen mapping/export melding.
+- Error: assets met status `error` blijven als issues zichtbaar.
+- Missing local file: status wordt niet als beschikbaar geteld als het lokale bestand ontbreekt.
+
+## UX / copy
+
+- Gebruik compacte, echte copy: `Jarvis assets beschikbaar: 20/20`.
+- Geen waarschuwing over handmatige mapping/export als `manual_source_required: 0`.
+- Geen fake of stale assetissues in hoofdview of chatcontext.
+
+## Data / IO
+
+- Input: `jarvis-assets-manifest.json`, seed manifest en lokale assetbestanden.
+- Output: genormaliseerde Jarvis workspace state en chat-grounding.
+- Opslag/API/service/file-impact: geen nieuwe Luma download vereist als lokale files aanwezig zijn.
+- Statussen: `ready`, `downloaded`, `seeded_text` tellen als beschikbaar; `manual_source_required` en `error` tellen als aandachtspunt.
+
+## Waarom nu
+
+De gebruiker ziet nog een valse Jarvis assets-waarschuwing terwijl de assets lokaal klaarstaan. Dat ondermijnt de betrouwbaarheid van de command room.
+
+## In scope
+
+- Loader/chatcopy fixen.
+- Tests toevoegen voor availabilitytelling en geen valse mappingissues.
+- Plugin typecheck/test/apply.
+
+## Buiten scope
+
+- Nieuwe Luma assets genereren.
+- Jarvis layout opnieuw redesignen.
+- Board/list/epics/settings wijzigen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Los de melding op: `Jarvis assets: 17/20 klaar, 8 assets vereisen nog handmatige mapping of Luma export`.
+- Gebruik echte lokale assetstatus, geen nep of stale placeholderstatus.
+
+## Expliciete user requirements / detailbehoud
+
+- De melding moet weg als assets echt klaar zijn.
+- Geen fake UI-states of misleidende statuscopy.
+
+## Status per requirement
+
+- [x] Asset availability telt seeded text als lokaal beschikbaar — status: gebouwd
+- [x] Mapping/export waarschuwing alleen bij echte manual assets — status: gebouwd
+- [x] Tests en plugin apply — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Er is een pure Jarvis asset availability helper toegevoegd zodat chat-grounding en tests dezelfde waarheid gebruiken.
+- De loader berekent summary nu uit de actuele merged assets en detecteert ontbrekende lokale bestanden als echte errors.
+- De echte manifest-grounding is gecontroleerd: `Jarvis assets beschikbaar: 20/20`, `handmatige mapping nodig: 0`, `asset errors: 0`.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, manifest/report en taskflow bevestigen.
+- [x] Blok 2: availability/copy helper aanpassen en tests toevoegen.
+- [x] Blok 3: verify, plugin apply en task afronden.
+
+## Concrete checklist
+
+- [x] Bron van 17/20 assetcopy corrigeren.
+- [x] Echte issuefilter toevoegen voor manual/error only.
+- [x] Tests toevoegen.
+- [x] Plugin typecheck/test/apply draaien.
+- [x] Taskflow/docs afronden.
+
+## Acceptance criteria
+
+- [x] Ready manifest met 17 ready + 3 seeded_text wordt als 20/20 beschikbaar gerapporteerd.
+- [x] Geen mapping/export issue verschijnt wanneer `manual_source_required` nul is.
+- [x] Echte manual/error assets blijven zichtbaar als aandachtspunt.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 49 tests
+- Echte manifest-grounding smoke — geslaagd: `Jarvis assets beschikbaar: 20/20`, `handmatige mapping nodig: 0`, `asset errors: 0`
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension opnieuw geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run taskflow:verify` — geslaagd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run docs:bundle` — geslaagd na verplaatsing naar `done/`
+- `npm run docs:bundle:verify` — geslaagd
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: valse Jarvis assetmelding oplossen.
+- Toegevoegde verbeteringen: pure availability helper, echte issuefilter en lokale bestandscontrole toegevoegd.
+- Afgerond: Jarvis chat-grounding telt seeded text-assets als beschikbaar, meldt 20/20 bij het huidige ready manifest en toont mapping/export alleen nog bij echte manual/error assets.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `assets/jarvis/final-frame/jarvis-assets-manifest.json`
+- `tools/budio-workspace-vscode/src/extension/host/jarvis.ts`
+- `tools/budio-workspace-vscode/src/jarvis/chat.ts`
+```
+
+---
+
+## Budio Workspace Jarvis chat-first reset met ZIP assets
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-chat-first-reset-met-zip-assets.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-chat-first-reset-met-zip-assets
+title: Budio Workspace Jarvis chat-first reset met ZIP assets
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Herbouw Jarvis naar een rustige premium chat-first interface met gecureerde ZIP-assets, echte chat/audio als hoofdinteractie en zonder drukke dashboardrails."
+tags: [plugin, vscode, jarvis, ui, assets, voice, chat]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-height-borderless-core-polish
+  - task-budio-workspace-jarvis-founder-overview-command-room-redesign
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis chat-first reset met ZIP assets
+
+## Probleem / context
+
+De huidige Jarvis-view is functioneel dichterbij gekomen, maar visueel nog te druk en voelt te veel als een dashboard. De gebruiker wil expliciet een chat-first Jarvis-ervaring: premium, rustig, visueel overtuigend, met echte chat en audio als hoofdinteractie. De nieuwe ZIP `/Users/pieterflikweert/Downloads/VS_Code_Workspace.zip` bevat finale/code-ready Jarvis-assets en motionreferenties die gecureerd gebruikt moeten worden.
+
+## Gewenste uitkomst
+
+Jarvis opent als een rustige, premium, chat-first command room. De levende Jarvis-core en ambient video vormen de visuele wereld; chat en push-to-talk audio staan centraal. Workspace-, asset- en agentinformatie blijft echt, maar wordt alleen compact als context/status getoond in plaats van als drukke dashboardpanelen.
+
+## User outcome
+
+De gebruiker kan Jarvis openen, typen, push-to-talk gebruiken wanneer microfoonrechten beschikbaar zijn, en in één rustige interface zien of chat/mic/assets/agents beschikbaar zijn. Het scherm voelt niet cheap of overvol, maar als een hoogwaardige Jarvis-ruimte met echte functionaliteit.
+
+## Functional slice
+
+- Gecureerde ZIP-assets importeren naar `assets/jarvis/final-frame/`.
+- Jarvis manifest updaten zodat de webview manifestgedreven blijft.
+- Jarvis-view vereenvoudigen naar chat-first compositie.
+- Mic/chat UI-states duidelijker maken zonder runtimefake.
+- Bestaande chat/audio/reload/sync/reset handlers behouden.
+- Board/list/epics/settings functioneel onaangeraakt laten.
+
+## Entry / exit
+
+- Entry: gebruiker opent de top-level `jarvis` view in de Budio Workspace VS Code plugin.
+- Exit: gebruiker ziet een rustige chat-first Jarvis-view met gecureerde ZIP-assets, prominent gesprek en mic-control, plus compacte echte status/context.
+
+## Happy flow
+
+1. Jarvis hydrateert lokale assets, board snapshot en conversation capabilities.
+2. De ambient loop en transparent Jarvis core renderen als levende achtergrond.
+3. De gebruiker typt een prompt of gebruikt mic push-to-talk.
+4. Jarvis toont pending/thinking/transcribing/answer states in de chat-first surface.
+5. Statuschips tonen compact de echte chat-, mic-, asset- en agentstatus.
+
+## Non-happy flows
+
+- Empty state: geen gesprek toont één rustige uitnodiging om Jarvis iets te vragen.
+- Permission denied / unavailable: mic toont één duidelijke permission- of unavailable-notice met CTA.
+- Validation / unsupported state: te korte of lege opname toont een korte echte melding.
+- Failure / retry / cancel: providerfout, missing key of transcription failure blijft zichtbaar in chat/status zonder dashboarddrukte.
+
+## UX / copy
+
+- Richting: `Chat-first`.
+- Geen grote linker/rechter dashboardrails in de hoofdview.
+- Geen grote `Werkcontext`, `Bronnen`, `Activity`, `Suggesties`, `Controls` panelstapel.
+- Compacte labels: `Chat live`, `Mic klaar/opnemen/rechten nodig`, `Assets klaar`, `Agents actief`.
+- Eén primaire input placeholder: `Vraag Jarvis iets...`.
+- Geen prominente debug/key/modelcopy behalve compact en veilig in status.
+
+## Data / IO
+
+- Input:
+  - `/Users/pieterflikweert/Downloads/VS_Code_Workspace.zip`
+  - bestaande Jarvis manifest/state/conversation/workspace snapshot
+- Output:
+  - gecureerde assets in `assets/jarvis/final-frame/`
+  - bijgewerkt `jarvis-assets-manifest.json`
+  - aangepaste Jarvis React/CSS
+  - task/docs updates
+- Opslag/API/service/file-impact:
+  - geen secrets
+  - geen nieuwe OpenAI/Luma calls
+  - geen taskmutaties vanuit Jarvis
+- Statussen:
+  - bestaande chat/voice/runtime/asset states blijven leidend
+
+## Waarom nu
+
+De gebruiker heeft de huidige Jarvis-review afgekeurd als te druk, te veel informatie en niet premium genoeg. Chat en audio moeten nu echt centraal komen te staan.
+
+## In scope
+
+- Alleen gecureerde ZIP-assets importeren.
+- Jarvis assetmanifest bijwerken.
+- `JarvisView.tsx` en Jarvis CSS herstructureren.
+- Mic/chat visible states verbeteren.
+- Plugin apply en verify.
+
+## Buiten scope
+
+- Nieuwe Luma-generatie.
+- Nieuwe OpenAI providerlaag.
+- Autonome agentruns of taskmutaties.
+- Functionele wijziging aan board/list/epics/settings.
+- Hele ZIP importeren.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Herbouw Jarvis naar een rustige, premium chat-first interface.
+- Curateer alleen relevante ZIP-assets: `SsavSJdE`, `tITjE1Lq`, `WU2CfDCw`, `--OTYSI5`, `LjJuGpeu` en optionele referenties.
+- Update de lokale Jarvis assetlaag en het manifest.
+- Verwijder de dashboarddrukte uit de hoofdview.
+- Houd echte chat en audio leidend.
+- Houd bestaande handlers en bestaande pluginviews intact.
+
+## Expliciete user requirements / detailbehoud
+
+- "Review... gaat niet lekker"
+- "schoon het op"
+- "veel te druk en te veel informatie"
+- "Jij bent de jarvis expert"
+- "chat is belangrijk"
+- "ik wil dat de audio ook werkt"
+- "visueel echt heel goed maken nu"
+- "niet zo cheap"
+- "Hierbij ook nog eens alle designs en assets... maak er gebruik van"
+- "er zitten ook filmpjes tussen voor jarvis om te gebruiken"
+
+## Status per requirement
+
+- [x] ZIP-assets gecureerd geïmporteerd — status: gebouwd
+- [x] Jarvis manifest bijgewerkt — status: gebouwd
+- [x] Chat-first hoofdview gebouwd — status: gebouwd
+- [x] Dashboarddrukte verwijderd — status: gebouwd
+- [x] Audio/mic states duidelijk en echt — status: gebouwd
+- [x] Bestaande chat/audio handlers behouden — status: gebouwd
+- [x] Plugin opnieuw toegepast — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De geselecteerde ZIP-assets zijn opnieuw uitgepakt naar stabiele runtimebestanden en het manifest is bijgewerkt met `local-zip` checksums.
+- De oude cockpit-rails zijn uit de Jarvis-hoofdview verwijderd; details staan nu alleen compact onder een ingeklapt `Context` blok.
+- De mic-state is teruggebracht naar één prominente knop en één duidelijke permission/unavailable notice.
+- Prominente key/model/debugcopy is uit de hoofdview gehaald; chat/mic/assets/agents staan compact als statuschips.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow, docs en huidige Jarvis-context bevestigen.
+- [x] Blok 2: gecureerde ZIP-assets importeren en manifest bijwerken.
+- [x] Blok 3: Jarvis-view/CSS naar chat-first reset ombouwen.
+- [x] Blok 4: plugin verify/apply, repo verify en docs afronden.
+
+## Concrete checklist
+
+- [x] ZIP assetnamen en doelbestanden bevestigen.
+- [x] Alleen geselecteerde assets uit ZIP importeren.
+- [x] Manifest roles en checksums updaten.
+- [x] `JarvisView.tsx` vereenvoudigen naar chat-first compositie.
+- [x] CSS opschonen naar rustige premium layout.
+- [x] Mic permission/transcribing/recording states in hoofdflow tonen.
+- [x] Plugin typecheck/test/apply draaien.
+- [x] Repo taskflow/lint/typecheck/docs verify afronden.
+
+## Acceptance criteria
+
+- [x] Jarvis hoofdview toont geen grote linker/rechter dashboardrails meer.
+- [x] Chat en audio zijn de primaire interacties in beeld.
+- [x] Gecureerde ZIP-video/core/waveform/logotype/HUD-assets worden manifestgedreven gebruikt.
+- [x] Mic permission-needed toont één duidelijke CTA.
+- [x] Typed chat blijft functioneel aangesloten.
+- [x] Layout werkt breed en smal zonder overlap/afkapping.
+- [x] Plugin is opnieuw toegepast op VS Code workspace.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers. Fysieke microfoonrechten blijven afhankelijk van macOS/VS Code, maar de UI moet die state eerlijk tonen.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 52 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension gebouwd/gepackaged/geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run taskflow:verify` — geslaagd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run docs:bundle` — geslaagd na verplaatsing naar `done/`
+- `npm run docs:bundle:verify` — geslaagd
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: chat-first reset met gecureerde ZIP-assets, echte chat/audio centraal en dashboarddrukte weg.
+- Expliciete user requirements: ZIP-assets zijn gebruikt, dashboarddrukte is verwijderd, chat/audio staan centraal en fake states zijn vermeden.
+- Toegevoegde verbeteringen: compacte contextdetails en veiliger non-prominente diagnostics.
+- Afgerond: assetimport, manifestupdate, Jarvis-view/CSS reset, plugin typecheck/test/apply, repo-checks en docs bundle/verify.
+- Open / blocked: geen bekende blockers; fysieke microfoonopname blijft afhankelijk van VS Code/macOS permissie in de live webview.
+
+## Relevante links
+
+- `/Users/pieterflikweert/Downloads/VS_Code_Workspace.zip`
+- `docs/project/25-tasks/done/budio-workspace-jarvis-height-borderless-core-polish.md`
+```
+
+---
+
+## Budio Workspace Jarvis echte chat en push-to-talk
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-echte-chat-en-push-to-talk.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-08
+
+```md
+---
+id: task-budio-workspace-jarvis-echte-chat-push-to-talk
+title: Budio Workspace Jarvis echte chat en push-to-talk
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-08
+summary: "Vervang de huidige Jarvis proto-interactie in de VS Code plugin door echte host-side OpenAI chat, echte env-resolutie uit .env.local en een push-to-talk audioflow met transcriptie, zonder functionele regressie in board/list/epics/settings."
+tags: [plugin, vscode, jarvis, openai, audio, chat]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-praatbare-eigen-view
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis echte chat en push-to-talk
+
+## Probleem / context
+
+De huidige Jarvis-view heeft al een eerste praatlaag, maar vertrouwt nog op een fragiele combinatie van `process.env`-availability, browser speech-recognition en proto/meta UI-copy. Daardoor ontstaan precies de verkeerde signalen: chat lijkt niet echt gekoppeld aan de lokale keyroute, microfoonstates voelen nep of te fragiel voor een VS Code-webview, en labels zoals `Praat met Jarvis`, `Live gesprekssessie`, `Jij` en `workspace` breken de cinematic command-room ervaring.
+
+## Gewenste uitkomst
+
+De Jarvis-view in de bestaande plugin werkt volledig echt: host-side OpenAI chat gebruikt een expliciete en veilige lokale env-resolutie, typed prompts geven echte modelresponses, en voice gebruikt push-to-talk met echte audio-opname en transcriptie.
+
+De UI voelt minder prototype-achtig en toont alleen echte, functionele states. Wanneer chat of voice niet beschikbaar is, ziet de gebruiker een eerlijke oorzaak met een duidelijke vervolgstap in plaats van een nep fallback-copy.
+
+## User outcome
+
+De gebruiker kan in de Jarvis-view echt met Jarvis praten via typen of push-to-talk, zolang er lokaal een geldige key en microfoonrechten beschikbaar zijn. Als iets ontbreekt, ziet de gebruiker een echte availability- of permission-state die klopt met de runtime.
+
+## Functional slice
+
+Eén afgeronde plugin-slice:
+- veilige `.env.local` + env-resolutie voor Jarvis keys/modellen,
+- echte host-side OpenAI chatflow,
+- echte push-to-talk audio-opname + transcriptie,
+- opgeschoonde cinematic Jarvis UI zonder proto/meta labels,
+- geen functionele wijzigingen aan board/list/epics/settings.
+
+## Entry / exit
+
+- Entry: gebruiker opent de Budio Workspace plugin en kiest `Jarvis`.
+- Exit: gebruiker stuurt een typed of voice prompt, Jarvis antwoordt echt, of de UI toont een echte reasoned unavailable/permission-state.
+
+## Happy flow
+
+1. Gebruiker opent `Jarvis`; de host resolveert lokaal de juiste chat- en transcriptiekeys uit `.env.local` of shell env.
+2. Gebruiker typt een prompt of neemt audio op via push-to-talk; audio wordt echt opgenomen, getranscribeerd en ingestuurd.
+3. Jarvis antwoordt met een echte OpenAI-response, grounded in lokale workspacecontext.
+
+## Non-happy flows
+
+- Empty state: zonder lopende conversatie toont de speaking surface een rustige starter-state zonder proto-labels.
+- Permission denied / unavailable: microfoonrechten geweigerd of media APIs ontbreken; de UI toont een echte permission/unavailable state met retry of tekstfallback.
+- Validation / unsupported state: lege prompt of lege audio-opname wordt niet ingestuurd.
+- Failure / retry / cancel: ontbrekende key, transcriptiefout of providerfout geeft een echte foutmelding met mogelijkheid tot opnieuw proberen.
+
+## UX / copy
+
+- Jarvis copy blijft Nederlands en minimal cinematic.
+- Verwijder of vervang proto/meta labels zoals:
+  - `Praat met Jarvis`
+  - `Live gesprekssessie`
+  - `Jij`
+  - `workspace`
+- Reset/new session mag blijven maar subtieler.
+- Command deck toont alleen echte states zoals:
+  - `Klaar`
+  - `Opnemen`
+  - `Verwerken`
+  - `Antwoord klaar`
+  - `Microfoonrechten nodig`
+  - `Chat niet beschikbaar`
+  - `Providerfout`
+
+## Data / IO
+
+- Input:
+  - `.env.local` plus process env
+  - board snapshot
+  - geselecteerde taskcontext
+  - Jarvis manifest/command-room content
+  - lokale text asset previews
+  - typed prompt of opgenomen audio
+- Output:
+  - echte chatresponse
+  - transcriptie van audio naar tekst
+  - conversation state
+  - capability/permission/error state
+- Opslag/API/service/file-impact:
+  - host-side OpenAI calls naar chat completions en audio transcriptions
+  - geen secrets naar webview
+  - geen persistente opslag van audio of chat naar repo-bestanden
+- Statussen:
+  - chat: `idle`, `thinking`, `answering`, `error`
+  - voice: `idle`, `recording`, `transcribing`, `permission_needed`, `unavailable`
+
+## Waarom nu
+
+- De huidige Jarvis-view oogt al sterker, maar de user wil expliciet dat niets meer nep voelt.
+- De technische gaten zijn concreet: env-resolutie en speech-aanpak moeten nu echt gemaakt worden om de command room bruikbaar te maken.
+- Dit is de kleinste volgende slice die direct de grootste geloofwaardigheids- en bruikbaarheidswinst geeft.
+
+## In scope
+
+- Nieuwe plugin-taak voor deze V1.2-slice.
+- `.env.local`-aware env-resolutie voor Jarvis chat/transcriptie.
+- Push-to-talk met `getUserMedia` + `MediaRecorder`.
+- Host-side audio transcription + gedeelde chatpipeline.
+- Opschonen van Jarvis UI-copy en echte availability states.
+- Gerichte tests en plugin apply/verify.
+
+## Buiten scope
+
+- Tool-calling, taskmutaties of repo-acties vanuit Jarvis.
+- TTS / audio output.
+- Persistente conversatiehistorie op disk.
+- Nieuwe functies in board/list/epics/settings.
+- Nieuwe Luma-ingest-architectuur.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Echte key- en env-resolutie vanuit `.env.local`.
+- Browser speech-recognition vervangen door push-to-talk + transcriptie.
+- Eén echte typed + voice Jarvis pipeline.
+- Minimal cinematic UI zonder nep/meta labels.
+- Geen functionele regressie in bestaande pluginviews.
+
+## Expliciete user requirements / detailbehoud
+
+- Alles moet echt werken; niets nep in de interface.
+- Los de melding op dat de chat key ontbreekt.
+- Los de melding op dat microfoontoegang is geweigerd.
+- Verwijder of vervang zichtbare proto/meta UI-labels zoals `Praat met Jarvis`, `Live gesprekssessie`, `Nieuwe sessie`, `Jij`, `workspace`.
+- Board/list/epics/settings moeten functioneel intact blijven.
+
+## Status per requirement
+
+- [x] Echte keyroute voor Jarvis chat — status: gebouwd
+- [x] Echte push-to-talk met transcriptie — status: gebouwd
+- [x] Proto/meta labels uit Jarvis UI verwijderd of vervangen — status: gebouwd
+- [x] Echte permission/error states voor mic en chat — status: gebouwd
+- [x] Geen functionele regressie in andere views — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Workspace-aware `.env.local` resolutie toegevoegd met expliciete key-precedence voor Jarvis.
+- Browser speech-recognition volledig vervangen door `getUserMedia` + `MediaRecorder` + host-side transcriptie.
+- Jarvis UI opgeschoond naar compactere cinematic states zonder prototypekopjes of nep fallback-copy.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, context en taskflow vastleggen.
+- [x] Blok 2: env/chat/transcription helpers bouwen.
+- [x] Blok 3: host/webview/audioflow en UI-copy aanscherpen.
+- [x] Blok 4: tests, plugin apply, verify en task/docs closeout.
+
+## Concrete checklist
+
+- [x] Nieuwe taskfile aangemaakt en op `in_progress` gezet.
+- [x] Jarvis env-resolutie helper toegevoegd.
+- [x] Audio transcription helper toegevoegd.
+- [x] Conversation state uitgebreid voor echte chat- en voice-statussen.
+- [x] Webview push-to-talk flow gebouwd.
+- [x] Jarvis UI-copy opgeschoond.
+- [x] Tests en verify gedraaid.
+
+## Acceptance criteria
+
+- [x] Jarvis chat werkt met een echte lokaal geresolveerde keyroute zonder valse missing-key state.
+- [x] Push-to-talk neemt echt audio op en gebruikt transcriptie voor Jarvis chat.
+- [x] Bij ontbrekende micrechten of ontbrekende media support toont Jarvis een echte, compacte reden.
+- [x] De zichtbare Jarvis UI bevat geen prototype/meta labels meer die nep aanvoelen.
+- [x] Board/list/epics/settings blijven functioneel gelijk.
+
+## Blockers / afhankelijkheden
+
+- Geen actieve blockers.
+- Live voice happy path blijft afhankelijk van beschikbare OS/VS Code microfoonrechten.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck`
+- `npm --prefix tools/budio-workspace-vscode run test`
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: echte chat + push-to-talk maken en nep UI-states verwijderen.
+- Toegevoegde verbeteringen: workspace-aware env helper, echte transcriptieroute en compactere cinematic Jarvis copy.
+- Afgerond: Jarvis gebruikt nu echte key-resolutie, echte host-side OpenAI chat, echte push-to-talk transcriptie, en toont alleen nog echte availability/permissiestates.
+- Open / blocked: geen blocker in deze slice; TTS, tool-calling of persistente chatgeschiedenis blijven bewust buiten scope voor vervolgwerk.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-jarvis-praatbare-eigen-view.md`
+- `tools/budio-workspace-vscode/README.md`
+- `assets/jarvis/final-frame/unified-design-brief.txt`
+```
+
+---
+
+## Budio Workspace Jarvis env en live agent awareness fix
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-env-en-live-agent-awareness-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-env-live-agent-awareness-fix
+title: Budio Workspace Jarvis env en live agent awareness fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Fix de valse OPENAI_API_KEY ontbreekt-melding in Jarvis, toon echte env/availability-data zonder secrets en voeg near-realtime workspace/agent awareness toe in de Jarvis-view."
+tags: [plugin, vscode, jarvis, openai, agents, realtime, ui]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-responsive-cinematic-polish
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis env en live agent awareness fix
+
+## Probleem / context
+
+Jarvis toont in de UI dat `OPENAI_API_KEY` ontbreekt, terwijl `.env.local` wel de relevante OpenAI keys bevat. De availability-copy en env-resolutie moeten dus eerlijker en robuuster worden. Daarnaast wil de gebruiker geen nep/placeholders meer, maar echte workspace- en agentdata: near-realtime updates en subtiel zichtbaar wat actieve agents/Codex doen.
+
+## Gewenste uitkomst
+
+Jarvis gebruikt de bestaande `.env.local` keyroute correct en toont geen valse missing-key melding meer. De Jarvis-view toont echte workspace/agent awareness uit de huidige board snapshot en taskmetadata, met near-realtime updates via de bestaande watcher/refreshlaag.
+
+## User outcome
+
+De gebruiker opent Jarvis en ziet of chat echt beschikbaar is, welke veilige keybron gebruikt wordt, welke taken/agents actief zijn en wat Codex/agents subtiel aan het doen zijn, zonder secrets of nepdata.
+
+## Functional slice
+
+- Env/availability hardening voor Jarvis chat.
+- Echte Jarvis workspace/agent awareness in de view.
+- Near-realtime refresh korter en zichtbaarer voor Jarvis.
+- Geen wijzigingen aan board/list/epics/settings workflows.
+
+## Entry / exit
+
+- Entry: gebruiker opent `Jarvis` in de Budio Workspace plugin.
+- Exit: Jarvis toont echte chat availability en actuele workspace/agent activiteit, of een echte reden waarom iets ontbreekt.
+
+## Happy flow
+
+1. Jarvis opent en resolveert `.env.local`.
+2. Chat availability is beschikbaar via workspace-specific of fallback OpenAI key.
+3. Jarvis toont echte actieve agent/tasks uit de board snapshot.
+4. File changes of active-agent metadata updates verschijnen near-realtime.
+
+## Non-happy flows
+
+- Empty state: als er geen actieve agents zijn, staat er compact dat er nu geen agentactiviteit is.
+- Missing key: alleen tonen als alle ondersteunde env-vars echt ontbreken.
+- Provider unavailable: toon echte providerfout zonder secrets.
+- No snapshot: toon dat workspace data nog laadt in plaats van nepdata.
+
+## UX / copy
+
+- Geen placeholder of fake statuscopy.
+- Geen secretwaarden tonen.
+- Wel veilig tonen: env-varnaam, update-tijd, actieve agentnaam/model/status en tasktitel.
+- Codex/agentactiviteit subtiel als signal/awareness laag, niet als dominante debugconsole.
+
+## Data / IO
+
+- Input:
+  - `.env.local` en process env
+  - board snapshot met `activeAgent*` taskmetadata
+  - Jarvis conversation capabilities
+- Output:
+  - echte availability copy
+  - actieve agent/task lijst
+  - update-tijd en live indicator
+- Opslag/API/service/file-impact:
+  - geen secrets naar webview
+  - geen nieuwe provider calls nodig voor awareness
+  - watcher/refresh timing alleen voor plugin runtime
+- Statussen:
+  - bestaande chat/voice states blijven leidend
+
+## Waarom nu
+
+De user ziet een valse key-melding en wil Jarvis als echte command room gebruiken. Dat vraagt om betrouwbare env-signalen en echte live workspace/agent awareness.
+
+## In scope
+
+- Jarvis env diagnostics veiliger en duidelijker maken.
+- Jarvis view voeden met board snapshot awareness.
+- Actieve agents/Codex subtiel tonen.
+- Near-realtime refresh voor Jarvis/task changes aanscherpen.
+- Tests en plugin apply.
+
+## Buiten scope
+
+- Nieuwe agentrunner bouwen.
+- Autonome taskmutaties vanuit Jarvis.
+- Nieuwe OpenAI key aanmaken.
+- Board/list/epics/settings functioneel wijzigen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Fix de valse `OPENAI_API_KEY ontbreekt voor Jarvis chat` melding.
+- Alles moet werken met bestaande `.env.local`.
+- Geen nep UI/placeholders, alleen echte data.
+- Review Jarvis en toon near-realtime updates.
+- Toon actieve agents/Codex subtiel in Jarvis.
+
+## Expliciete user requirements / detailbehoud
+
+- Alles staat al in `.env.local`.
+- Zorg dat alles werkt.
+- Niks nep in het scherm.
+- Geen placeholders maar echte data.
+- Near realtime updates.
+- Als agents actief zijn wil de gebruiker dat realtime zien.
+- Subtiel tonen wat Codex/agents doen.
+
+## Status per requirement
+
+- [x] Valse missing-key melding opgelost — status: gebouwd
+- [x] Echte env/availability data zonder secrets — status: gebouwd
+- [x] Jarvis toont echte workspace/agent data — status: gebouwd
+- [x] Near-realtime updates aangescherpt — status: gebouwd
+- [x] Geen board/list/epics/settings regressie — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De concrete false-negative oorzaak is opgelost: lege `process.env` waarden overschrijven `.env.local` waarden niet meer.
+- Jarvis toont nu veilig keybron/model en laatste workspace update in de command footer.
+- Jarvis links toont echte workspace focus-taken uit de board snapshot; rechts toont echte actieve agents uit `active_agent*` metadata.
+- Achtergrondrefresh is aangescherpt naar 5 seconden als vangnet naast de bestaande file watcher.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, safe env-check en taskflow.
+- [x] Blok 2: env diagnostics en Jarvis awareness helpers/types bouwen.
+- [x] Blok 3: Jarvis UI echte data + near-realtime refresh aansluiten.
+- [x] Blok 4: tests, plugin apply, verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Exacte bron van missing-key copy vinden en vervangen door ondersteunde keyroute.
+- [x] Safe env diagnostics uitbreiden met env-varnaam en checked path zonder secretwaarde.
+- [x] Board snapshot doorgeven aan Jarvis-view.
+- [x] Actieve agent/tasks uit snapshot renderen.
+- [x] Refresh/watch timing voor near-realtime Jarvis updates aanscherpen.
+- [x] Typecheck/test/apply draaien.
+
+## Acceptance criteria
+
+- [x] Jarvis toont geen missing-key als één van de ondersteunde keys aanwezig is.
+- [x] Jarvis toont veilige keybron/availability zonder secrets.
+- [x] Jarvis toont echte actieve agent/task data of een echte empty state.
+- [x] Updates uit taskfiles worden near-realtime zichtbaar.
+- [x] Bestaande views blijven functioneel gelijk.
+
+## Blockers / afhankelijkheden
+
+- Geen actieve blockers.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 45 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension opnieuw geïnstalleerd en VS Code refresh uitgevoerd
+- Live Jarvis chat-smoke — geslaagd, availability true via `OPENAI_API_BUDIO_WORKSPACE_SERVICE_KEY`, model `gpt-4.1-mini`
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run taskflow:verify` — geslaagd vóór afronding
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: fix env false-negative, echte data in Jarvis, near-realtime agent awareness.
+- Toegevoegde verbeteringen: false-negative root cause expliciet getest, safe keysource/model UI toegevoegd, live provider-smoke uitgevoerd.
+- Afgerond: env-resolutie is gehard, Jarvis gebruikt echte board snapshot data, actieve agents worden subtiel getoond, near-realtime refresh is aangescherpt en plugin is toegepast op VS Code.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `tools/budio-workspace-vscode/src/jarvis/env.ts`
+- `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
+- `tools/budio-workspace-vscode/src/tasks/types.ts`
+```
+
+---
+
+## Budio Workspace Jarvis founder-overview command room redesign
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-founder-overview-command-room-redesign.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-founder-overview-command-room-redesign
+title: Budio Workspace Jarvis founder-overview command room redesign
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Breng de Jarvis-view visueel en interactief veel dichter bij founder-overview.png met echte workspace-data, bestaande Luma-assets, bewegende core en behoud van echte chat/mic-functies."
+tags: [plugin, vscode, jarvis, ui, luma, command-room, polish]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-hardening-echte-command-room
+  - task-budio-workspace-jarvis-mic-settings-en-runtime-test-fix
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis founder-overview command room redesign
+
+## Probleem / context
+
+De huidige Jarvis-view werkt technisch verder door op de hardening-slices, maar voelt visueel nog niet genoeg als de aangeleverde command-room referentie. `assets/jarvis/final-frame/founder-overview.png` toont een warm, premium, founder-first Jarvis dashboard met linker contextkolom, levend middenstuk, command bar en rechter awareness-rail. De huidige view gebruikt wel assets, maar mist nog de compositie, diepte, beweging en compacte interactieve command-room ervaring van die referentie.
+
+## Gewenste uitkomst
+
+Jarvis opent als een zelfstandige command room binnen de bestaande plugin, visueel duidelijk geïnspireerd op `founder-overview.png`: warme charcoal/ivory/gold hiërarchie, een levende centrale intelligence core, echte workspacecontext links, systeem/agent-awareness rechts, subtiele command controls en een chat/mic command deck dat de bestaande echte runtime blijft gebruiken.
+
+## User outcome
+
+De gebruiker opent de Jarvis-view en ziet een geloofwaardige founder command room die past bij het aangeleverde frame. De gebruiker kan nog steeds typen, push-to-talk gebruiken wanneer toegestaan, resetten, herladen, assets syncen en prompts vanuit echte task/workspacecontext voorbereiden. De interface toont geen nepdata, maar echte status, echte taskdata, echte assetstatus en eerlijke empty states.
+
+## Functional slice
+
+Een Jarvis-only UI/UX-redesign van de bestaande view met:
+- founder-overview-gebaseerde layout;
+- bestaande Luma-assets als visuele basis;
+- state-reactieve, bewegende Jarvis core;
+- echte workspace/task/agent/asset-status in rails;
+- interactieve prompt-suggesties die de echte chatinput vullen;
+- behoud van de bestaande chat-, mic-, reload-, reset- en sync-acties.
+
+## Entry / exit
+
+- Entry: gebruiker opent de top-level `jarvis` view in de Budio Workspace plugin.
+- Exit: gebruiker ziet de nieuwe command-room layout, kan direct prompten of push-to-talk starten, en ziet echte status/agent/workspace/assetinformatie zonder functionele wijzigingen aan andere views.
+
+## Happy flow
+
+1. Jarvis hydrateert de bestaande lokale state, assets, board snapshot en conversation capabilities.
+2. De view toont een founder-overview-achtige command room met links workspacecontext, midden core + command deck en rechts systeem/agents/suggesties.
+3. De gebruiker klikt een suggestie of typt zelf een prompt; de bestaande echte `onSendPrompt` flow start.
+4. De Jarvis core beweegt/reageert op idle, thinking, transcribing, recording en active-agent states.
+5. De gebruiker kan herladen, syncen, resetten en microfooninstellingen openen via compacte echte controls.
+
+## Non-happy flows
+
+- Empty state: geen focus-items, assets of agents toont een rustige echte leegstatus, geen verzonnen data.
+- Permission denied / unavailable: mic blijft de bestaande echte permission/unavailable-state tonen.
+- Validation / unsupported state: unsupported voice of ontbrekende assets worden compact en eerlijk weergegeven.
+- Failure / retry / cancel: provider-, sync- of runtimefouten blijven zichtbaar via bestaande echte Jarvis-state.
+
+## UX / copy
+
+- `founder-overview.png` is de leidende visuele referentie voor compositie, sfeer en hiërarchie.
+- Copy is minimal cinematic en functioneel: korte labels als `Werkcontext`, `Systeemstatus`, `Activity`, `Suggesties`, `Command`.
+- Geen prototypekopjes zoals `Praat met Jarvis`, `Live gesprekssessie`, `Jij`, `workspace`.
+- Geen fake seeddata zoals verzonnen sprint-, staging- of PR-status.
+- Prompt-suggesties mogen bestaan, maar moeten alleen de input vullen en niet doen alsof er al actie is uitgevoerd.
+
+## Data / IO
+
+- Input:
+  - bestaande Jarvis assetmanifesten en lokale assets;
+  - `founder-overview.png` als referentie;
+  - board snapshot, taskstatussen, active-agent metadata en conversation state;
+  - bestaande chat/mic capability state.
+- Output:
+  - alleen webview/UI-wijzigingen en taskfile-status;
+  - geen nieuwe secrets;
+  - geen taskmutaties vanuit Jarvis;
+  - geen functionele wijzigingen aan board/list/epics/settings.
+- Opslag/API/service/file-impact:
+  - `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`;
+  - `tools/budio-workspace-vscode/webview-ui/src/styles.css`;
+  - taskfile en gegenereerde docs bij afronding.
+- Statussen:
+  - bestaand chat/voice/runtime/asset/agent model blijft leidend.
+
+## Waarom nu
+
+De gebruiker heeft expliciet aangegeven dat Jarvis er nog niet uitziet als `founder-overview.png` en dat de omgeving goed, uitgebreid, interactief en bewegend moet aanvoelen. De runtime is eerder gehard; nu moet de visuele ervaring het niveau van de aangeleverde command-room richting halen.
+
+## In scope
+
+- Jarvis-view herstructureren richting founder-overview-layout.
+- CSS/animatie/responsive polish voor Jarvis-only.
+- Bestaande Luma-assets beter benutten.
+- Echte data in left/right rails tonen.
+- Suggesties/quick actions interactief maken zonder fake uitvoering.
+- Plugin typecheck/test/apply.
+
+## Buiten scope
+
+- Board/list/epics/settings functioneel aanpassen.
+- Nieuwe autonome agentruns of taskmutaties.
+- Nieuwe providerabstractie of modelkeuzescherm.
+- Nieuwe Luma-generatie als blocker; alleen bestaande assets zijn verplicht.
+- Publieke Budio app wijzigen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Jarvis moet veel meer lijken op `founder-overview.png`.
+- Maak het uitgebreid en interactief.
+- Laat de Jarvis/core bewegen en reageren.
+- Gebruik bestaande assets uit de eerder aangeleverde ZIP/Luma ingest.
+- Houd echte functies werkend en laat niets nep lijken.
+- Bestaande pluginviews blijven intact.
+
+## Expliciete user requirements / detailbehoud
+
+- `founder-overview.png` moet leidend zijn voor de visuele richting.
+- Jarvis moet er duidelijk beter en rijker uitzien dan de huidige variant.
+- Er moeten interactieve functies in zitten, niet alleen decoratie.
+- De Jarvis core moet bewegen/reageren.
+- Gebruik bestaande assets uit de ZIP/Luma download.
+- Geen placeholders of fake data in het scherm.
+
+## Status per requirement
+
+- [x] Founder-overview compositie toegepast — status: gebouwd
+- [x] Bewegende, state-reactieve Jarvis core — status: gebouwd
+- [x] Echte workspace/agent/assetdata in rails — status: gebouwd
+- [x] Interactieve prompt/quick actions zonder fake uitvoer — status: gebouwd
+- [x] Bestaande chat/mic/reload/sync/reset functies behouden — status: gebouwd
+- [x] Responsive polish voor small/large pluginformaten — status: gebouwd
+- [x] Plugin opnieuw toegepast op VS Code workspace — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De Jarvis-view is omgebouwd naar een ingelijste founder-command-room met topbar, status-iconrail, werkcontext links, levend core-middenstuk en systeem/activity/suggesties rechts.
+- Prompt-suggesties en task/source cards vullen alleen de echte command input; ze simuleren geen uitvoering.
+- Bestaande Luma-assets worden manifestgedreven gebruikt voor ambient video, core, waveform, HUD-texture, speaking banner en side-rail sfeer.
+- De core reageert visueel op echte chat-, voice- en active-agent states.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: Jarvis-view herstructureren naar founder-overview command-room compositie.
+- [x] Blok 3: CSS/animatie/responsive polish toevoegen en bestaande assets beter benutten.
+- [x] Blok 4: typecheck/test/apply en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Current Jarvis code en assetmanifest lezen.
+- [x] Layout ombouwen naar top frame, icon rail, left rail, center core, command deck en right rail.
+- [x] Echte status/system/activity/suggestie-data vanuit bestaande state afleiden.
+- [x] Core animaties koppelen aan chat/voice/agent states.
+- [x] Prompt-suggesties en quick actions op echte handlers aansluiten.
+- [x] CSS responsive maken voor smal/breed.
+- [x] Plugin typecheck/test/apply draaien.
+- [x] Taskflow verify en docs bundle/verify afronden.
+
+## Acceptance criteria
+
+- [x] Jarvis is visueel herkenbaar gebaseerd op `founder-overview.png`.
+- [x] Jarvis toont geen fake hoofddata of prototypecopy.
+- [x] Jarvis core beweegt en reageert zichtbaar op echte states.
+- [x] Typed chat, push-to-talk, reset, reload en sync blijven aangesloten op bestaande handlers.
+- [x] Left/right rails gebruiken echte workspace-, agent- en assetinformatie of eerlijke empty states.
+- [x] Layout blijft bruikbaar op smalle en brede webviewbreedtes.
+- [x] `npm --prefix tools/budio-workspace-vscode run apply:workspace` is uitgevoerd.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers. Fysieke VS Code-webview-mic permissie blijft afhankelijk van macOS/VS Code runtime, maar de UI mag die state eerlijk tonen.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 52 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension gebouwd/gepackaged/geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run taskflow:verify` — geslaagd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run docs:bundle` — geslaagd na verplaatsing naar `done/`
+- `npm run docs:bundle:verify` — geslaagd
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: Jarvis visueel/interactief veel dichter naar `founder-overview.png` brengen met bestaande assets, echte data, bewegende core en behoud van echte functies.
+- Toegevoegde verbeteringen: founder-command-room frame, echte prompt cards, manifestgedreven assetlagen en state-reactieve HUD-motion.
+- Afgerond: Jarvis-view redesign, state-reactieve core, echte rails/control interactions, responsive CSS, plugin typecheck/test/apply, repo-checks en docs bundle/verify zijn afgerond.
+- Open / blocked: geen bekende blockers; visuele eindreview gebeurt in de live VS Code webview.
+
+## Relevante links
+
+- `assets/jarvis/final-frame/founder-overview.png`
+- `docs/project/25-tasks/done/budio-workspace-jarvis-hardening-echte-command-room.md`
+```
+
+---
+
+## Budio Workspace Jarvis hardening echte command room
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-hardening-echte-command-room.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-hardening-echte-command-room
+title: Budio Workspace Jarvis hardening echte command room
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Maak Jarvis betrouwbaar werkend met robuuste workspace-root/env-resolutie, echte chat/mic states, echte agent-awareness en een strakkere cinematic command-room zonder fake placeholders."
+tags: [plugin, vscode, jarvis, openai, voice, realtime, ui, hardening]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-env-live-agent-awareness-fix
+  - task-budio-workspace-jarvis-responsive-cinematic-polish
+  - task-budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis hardening echte command room
+
+## Probleem / context
+
+Jarvis toont nog steeds `Chat niet beschikbaar`, `Aandacht nodig` en update-copy terwijl `.env.local` wel OpenAI keys bevat. De waarschijnlijke oorzaak is dat de VS Code extension de eerste workspacefolder als repo-root gebruikt, terwijl de echte Budio repo in een child-folder kan staan. Daarnaast moet de Jarvis-view geen fake seeddata of placeholder-states tonen, maar echte chat/mic/agent/workspace-status en visueel sterker aanvoelen.
+
+## Gewenste uitkomst
+
+Jarvis opent als betrouwbare interne command room: chat gebruikt de echte lokale keyroute, mic werkt via de echte push-to-talk/transcriptieflow of toont een eerlijke permission/unavailable-state, actieve agents worden alleen getoond wanneer taskmetadata dat echt bevestigt, en de interface gebruikt echte Luma-assets/workspacedata zonder nepcontent.
+
+## User outcome
+
+De gebruiker opent de Jarvis-view in de bestaande Budio Workspace plugin en kan direct typen tegen Jarvis. Als voice beschikbaar is, kan de gebruiker push-to-talk gebruiken. De command room toont echte actuele workspace- en agentinformatie, met een cinematic responsive UI die geen misleidende placeholdercopy bevat.
+
+## Functional slice
+
+- Robuuste repo-root/env-resolutie voor de extension host.
+- Echte Jarvis availability/recovery state zonder stale errors.
+- End-to-end zichtbare typed chat en mic/transcription states.
+- Real-time-ish agent awareness uit echte `active_agent*` taskmetadata.
+- Jarvis-only UI cleanup en visual hardening met bestaande Luma-assets.
+- Geen functionele wijzigingen aan board/list/epics/settings.
+
+## Entry / exit
+
+- Entry: gebruiker opent `Jarvis` in de Budio Workspace plugin vanuit een directe repo-workspace of bovenliggende VS Code workspace.
+- Exit: Jarvis toont `Chat live` met veilige keybron/model of een echte diagnose, chat/mic requests blijven zichtbaar tot success/failure, en de view toont alleen echte data of eerlijke empty states.
+
+## Happy flow
+
+1. Extension resolveert de echte Budio repo-root, ook als VS Code op de parentfolder staat.
+2. `.env.local` wordt gevonden en de OpenAI keyroute wordt host-side beschikbaar.
+3. Jarvis toont chat als live en accepteert typed input direct zichtbaar in de conversation.
+4. Providerresponse komt terug als echte Jarvis-response of providerfout met hersteltekst.
+5. Push-to-talk neemt audio op, transcribeert via OpenAI en gebruikt dezelfde chatpipeline.
+6. Active-agent metadata-updates verschijnen near-realtime in de Jarvis-awareness laag.
+
+## Non-happy flows
+
+- Empty state: geen actieve agents betekent een compacte echte empty state, geen verzonnen activiteit.
+- Permission denied / unavailable: mic toont een echte OS/VS Code permission- of unsupported-state.
+- Validation / unsupported state: lege audio of te korte opname geeft direct een echte melding.
+- Failure / retry / cancel: providerfout, timeout of missing key blijft zichtbaar en verdwijnt niet door hydration-races.
+
+## UX / copy
+
+- Geen fake labels of seedcontent zoals `Sprint 4`, fake staging/PR meldingen of placeholder command-room tekst in de hoofdview.
+- Chatstatus is compact en waarheidsgetrouw: `Chat live · <KEY_SOURCE> · <model>` bij beschikbaarheid.
+- Alleen echte foutcopy tonen: ontbrekende key, providerfout, timeout, permission nodig of voice unavailable.
+- Jarvis core reageert cinematic op idle/thinking/transcribing/active-agent states en respecteert reduced motion.
+
+## Data / IO
+
+- Input:
+  - VS Code workspacefolders
+  - `.env.local` en process env
+  - Jarvis assetmanifest en lokale Luma-assets
+  - board snapshot en taskmetadata
+  - typed prompt of audio payload
+- Output:
+  - veilige Jarvis diagnostics zonder secrets
+  - chat/transcription requests host-side naar OpenAI
+  - webview state-events met `clientRequestId`
+  - echte awareness-data uit taskfiles
+- Opslag/API/service/file-impact:
+  - geen secrets naar webview
+  - geen taskmutaties vanuit Jarvis
+  - geen autonome agentrunner in deze slice
+- Statussen:
+  - chat: idle/thinking/answering/error
+  - voice: idle/recording/transcribing/permission_needed/unavailable
+  - runtime: accepted/stage/completed/failed
+
+## Waarom nu
+
+De gebruiker wil Jarvis als echt werkende interne command room gebruiken. Een valse missing-key state en fake interfacecopy breken vertrouwen en blokkeren gebruik.
+
+## In scope
+
+- Workspace-root resolver hardening.
+- Env availability/recovery hardening.
+- Jarvis bridge/runtime visibility verbeteren.
+- Mic validation en transcription-state aanscherpen.
+- Echte active-agent awareness en update-tijd.
+- Jarvis-view copy en responsive cinematic polish.
+- Plugin apply en gerichte live smoke.
+
+## Buiten scope
+
+- Board/list/epics/settings functioneel wijzigen.
+- Autonome agentruns of taskmutaties vanuit Jarvis.
+- Nieuwe publieke Budio productfeature maken.
+- Nieuwe OpenAI key aanmaken.
+- Grote Luma-regeneratie als blocker voor werkende runtime.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak workspace-root resolving robuust zodat `.env.local` in `persoonlijke-assistent-app` wordt gevonden, ook vanuit een parent VS Code workspace.
+- Gebruik de resolved repo-root voor env, taskdata, assets, manifesten en active-agent metadata.
+- Herstel chat availability en wis stale error-state zodra een echte key beschikbaar is.
+- Vervang `Chat niet beschikbaar` / `Aandacht nodig` door echte diagnose of `Chat live`.
+- Maak typed chat en mic end-to-end zichtbaar met request accepted, stage, completed en failed events.
+- Toon near-realtime agentactiviteit alleen uit echte `active_agent*` metadata.
+- Verwijder fake UI-copy/placeholders uit de Jarvis-hoofdview.
+- Upgrade Jarvis visueel met bestaande Luma-assets.
+- Gebruik Luma API alleen aanvullend als bestaande assets aantoonbaar tekortschieten.
+
+## Expliciete user requirements / detailbehoud
+
+- `.env.local` bevat de keys; Jarvis mag dus niet vals missing-key tonen.
+- Ga door tot het echt werkt en test/review.
+- Geen half werkende UI en geen nepstates.
+- Jarvis moet functioneel chatten en mic-flow moet echt werken.
+- Jarvis moet er beter uitzien dan de huidige variant.
+- Gebruik strategie-docs als richting: Jarvis is internal-only/founder workspace tooling.
+- Gebruik bestaande assets en eventueel Luma API als visuele assets nodig zijn.
+- Bestaande views behouden en functioneel niet aanpassen.
+
+## Status per requirement
+
+- [x] Robuuste repo-root/env-resolutie — status: gebouwd
+- [x] Echte chat availability zonder stale false-negative — status: gebouwd
+- [x] Typed chat zichtbaar end-to-end — status: gebouwd
+- [x] Mic push-to-talk/transcription zichtbaar end-to-end — status: gebouwd
+- [x] Echte active-agent awareness — status: gebouwd
+- [x] Geen fake placeholders in Jarvis hoofdview — status: gebouwd
+- [x] Cinematic responsive Jarvis polish — status: gebouwd
+- [x] Bestaande views functioneel onaangeraakt — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De root-resolver kiest nu de echte Budio repo-root op basis van task/plugin/asset markers, ook als VS Code op de parentfolder staat.
+- De Jarvis hoofdview gebruikt de Luma ambient loop als achtergrondlaag en toont geen asset/debugpanelen meer in de hoofdflow.
+- De algemene Budio Workspace topbar is voor de Jarvis-view verwijderd; reset/herlaad/sync staan subtiel in de Jarvis-kamer zelf.
+- De voice providerroute is live getest met een lokaal gegenereerde audiofile via dezelfde transcription helper.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow, huidige code/root/env/runtimebron bevestigen.
+- [x] Blok 2: workspace-root resolver en env availability recovery bouwen.
+- [x] Blok 3: Jarvis runtime bridge/chat/mic visibility en diagnostics harden.
+- [x] Blok 4: Jarvis UI fake-copy verwijderen en cinematic real-data layout polishen.
+- [x] Blok 5: gerichte tests, live smoke, plugin apply en docs/task afronden.
+
+## Concrete checklist
+
+- [x] Root resolver toevoegen en host code aansluiten.
+- [x] Tests toevoegen voor direct repo, parent workspace en missing markers.
+- [x] Availability-state en stale error recovery fixen.
+- [x] Chat/mic request lifecycle met `clientRequestId` verifiëren en waar nodig harden.
+- [x] Jarvis fake seedcontent uit hoofdview verwijderen.
+- [x] Active-agent awareness alleen uit echte metadata renderen.
+- [x] CSS/Jarvis core visueel aanscherpen met bestaande assets.
+- [x] Plugin typecheck/test/apply draaien.
+- [x] Live chat smoke uitvoeren met echte keyroute.
+- [x] Taskflow/docs verify draaien en task reconciliation bijwerken.
+
+## Acceptance criteria
+
+- [x] Jarvis toont geen `Chat niet beschikbaar` wanneer een ondersteunde key in de echte repo `.env.local` staat.
+- [x] Parent VS Code workspace resolveert alsnog naar `persoonlijke-assistent-app` als Budio repo-root.
+- [x] Typed prompt levert een echte providerresponse of zichtbare echte providerfout/timeout op.
+- [x] Mic-flow toont echte opname/transcriptie/failure-state zonder browser SpeechRecognition-placeholders.
+- [x] Jarvis toont geen fake seeddata in de hoofdview.
+- [x] Actieve agents worden alleen getoond bij echte `active_agent*` metadata.
+- [x] Jarvis past responsief en gebruikt cinematic Luma assetlagen zonder bestaande views functioneel te veranderen.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers. OS/VS Code microfoonrechten kunnen buiten code alsnog transcriptie-smoke beperken; typed chat moet dan volledig blijven werken.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 47 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension gebouwd/gepackaged/geïnstalleerd en VS Code refresh uitgevoerd
+- Live typed Jarvis smoke — geslaagd via parent workspace route, keysource `OPENAI_API_BUDIO_WORKSPACE_SERVICE_KEY`, model `gpt-4.1-mini`
+- Live transcription provider smoke — geslaagd via dezelfde keyroute, model `gpt-4o-mini-transcribe`, transcript ontvangen
+- `npm run taskflow:verify` — geslaagd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run docs:bundle` — geslaagd na verplaatsing naar `done/`
+- `npm run docs:bundle:verify` — geslaagd
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: robuuste root/env fix, echte chat/mic runtime, echte data/agent awareness, geen fake UI, cinematic Jarvis polish.
+- Toegevoegde verbeteringen: parent-workspace resolver als pure testbare helper, stale-error recovery als pure helper, ambient video als echte achtergrondlaag, Jarvis topbar verwijderd en live transcription smoke toegevoegd.
+- Afgerond: root/env false-negative opgelost, chat availability herstelt zonder stale `Aandacht nodig`, typed chat live bewezen, transcription providerroute live bewezen, Jarvis hoofdview toont echte workspace/agentdata en geen fake seedcopy, plugin opnieuw toegepast op VS Code.
+- Open / blocked: fysieke push-to-talk via jouw VS Code/macOS microfoonrechten kan alleen interactief in de plugin zelf worden bevestigd; de host-side transcriptieproviderroute is wel live bewezen.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-jarvis-env-en-live-agent-awareness-fix.md`
+- `docs/project/25-tasks/done/budio-workspace-jarvis-responsive-cinematic-polish.md`
+- `docs/project/25-tasks/done/budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end.md`
+- `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+```
+
+---
+
+## Budio Workspace Jarvis height en borderless core polish
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-height-borderless-core-polish.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-height-borderless-core-polish
+title: Budio Workspace Jarvis height en borderless core polish
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-review
+updated_at: 2026-06-13
+summary: "Fix de Jarvis-view na screenshotreview: betere hoogte-schaal, minder borders en de centrale Jarvis-core als brede achtergrondlaag in plaats van opgesloten kaart."
+tags: [plugin, vscode, jarvis, ui, polish, responsive]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-founder-overview-command-room-redesign
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis height en borderless core polish
+
+## Probleem / context
+
+De screenshotreview laat zien dat de Jarvis-view in de hoogte niet goed schaalt binnen het VS Code-paneel. Onderin valt content weg en de centrale Jarvis-core zit nog te veel opgesloten in een bordered kaart. De aangeleverde founder-overview-richting vraagt juist om minder zichtbare borders en een core die meer als volledige achtergrond/atmosfeer door het midden van de command room loopt.
+
+## Gewenste uitkomst
+
+Jarvis past beter binnen de beschikbare paneelhoogte, met scroll alleen binnen compacte rails waar nodig. De centrale Jarvis-core voelt groter en meer achtergrondvullend, met minder harde borders en minder nested card-massa, terwijl chat/mic/reload/sync/reset functioneel blijven.
+
+## User outcome
+
+De gebruiker opent Jarvis in VS Code en ziet een rustiger, ruimer command-room scherm dat niet onderin wordt afgesneden. De Jarvis-core domineert de achtergrond zoals in het design en de panels voelen minder boxed-in.
+
+## Functional slice
+
+CSS/layout polish voor de bestaande Jarvis-view:
+- viewport-height correct schalen;
+- frame en panel borders verzachten;
+- core-stage borderless/achtergrondvullend maken;
+- rails intern scrollbaar maken;
+- command deck zichtbaar houden.
+
+## Entry / exit
+
+- Entry: gebruiker opent de bestaande Jarvis-view in het VS Code-paneel.
+- Exit: de command room past in hoogte, gebruikt minder borders en de centrale core loopt visueel over de achtergrond.
+
+## Happy flow
+
+1. Jarvis opent binnen het huidige VS Code webview-paneel.
+2. De centrale core schaalt als brede achtergrondlaag.
+3. Linker- en rechterrails blijven bruikbaar en scrollen intern als de viewport te laag is.
+4. Command deck blijft bereikbaar zonder dat de hele view onhandig onderin afkapt.
+
+## Non-happy flows
+
+- Kleine hoogte: panelcontent comprimeert en scrollt intern.
+- Kleine breedte: bestaande responsive stack blijft werken.
+- Motion reduced: bestaande reduced-motion regels blijven gelden.
+
+## UX / copy
+
+- Geen nieuwe copy.
+- Minder borders/surfaces; meer atmosferische achtergrond, spacing en typografische hiërarchie.
+
+## Data / IO
+
+- Input: bestaande Jarvis CSS en screenshotreview.
+- Output: CSS/layout wijziging in de plugin-webview.
+- Opslag/API/service/file-impact: geen API- of datamodelwijziging.
+- Statussen: bestaande Jarvis states blijven leidend.
+
+## Waarom nu
+
+De gebruiker heeft direct na de redesign-review aangegeven dat de schaal en visuele behandeling nog niet goed genoeg zijn.
+
+## In scope
+
+- `tools/budio-workspace-vscode/webview-ui/src/styles.css`
+- Plugin verify en apply.
+- Task/docs afronding.
+
+## Buiten scope
+
+- Nieuwe Jarvis functies.
+- Board/list/epics/settings wijzigen.
+- Nieuwe assets genereren.
+- Runtime chat/mic bridge wijzigen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Hoogteschaal fixen.
+- Jarvis in het midden meer over de hele achtergrond laten lopen.
+- Minder borders gebruiken zoals in het design.
+
+## Expliciete user requirements / detailbehoud
+
+- "schaalt nog niet lekker in de hoogte"
+- "jarvis in het midden moet over de hele achtergrond"
+- "minder de borders gebruiken zoals in het design"
+
+## Status per requirement
+
+- [x] Hoogteschaal verbeterd — status: gebouwd
+- [x] Centrale core meer achtergrondvullend — status: gebouwd
+- [x] Borders visueel verminderd — status: gebouwd
+- [x] Plugin opnieuw toegepast — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Jarvis krijgt nu een Jarvis-only `workspace-shell-jarvis`, zodat de view de volledige beschikbare gridhoogte gebruikt zonder board/list topbar-rijen.
+- De centrale core-stage is borderless gemaakt en loopt visueel als brede achtergrondscene door het midden.
+- Rails scrollen intern en worden compacter bij lagere viewporthoogtes.
+- Bij lage VS Code-paneelhoogte worden promptchips verborgen en dialogue/controls compacter gehouden zodat het command deck bereikbaar blijft.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: screenshotreview, taskflow en CSS-context.
+- [x] Blok 2: CSS layout polish uitvoeren.
+- [x] Blok 3: typecheck/test/apply en docs afronden.
+
+## Concrete checklist
+
+- [x] Jarvis shell/frame hoogte aanpassen.
+- [x] Midden-core borderless/achtergrondvullend maken.
+- [x] Rails intern scrollbaar en compacter maken.
+- [x] Borders/panelmassa verminderen.
+- [x] Plugin typecheck/test/apply draaien.
+- [x] Taskflow/docs bundle afronden.
+
+## Acceptance criteria
+
+- [x] Jarvis-view gebruikt beschikbare hoogte beter en kapt command deck niet onnodig af.
+- [x] Centrale Jarvis-core voelt als achtergrondlaag in plaats van bordered card.
+- [x] Borders zijn zichtbaar rustiger en dichter bij het design.
+- [x] Bestaande Jarvis-functies blijven aangesloten.
+- [x] Plugin is opnieuw toegepast op VS Code workspace.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 52 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension gebouwd/gepackaged/geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run taskflow:verify` — geslaagd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run docs:bundle` — geslaagd na verplaatsing naar `done/`
+- `npm run docs:bundle:verify` — geslaagd
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: hoogteschaal verbeteren, core achtergrondvullend maken en borders verminderen.
+- Toegevoegde verbeteringen: Jarvis-only parent grid class en lage-viewport compactieregels.
+- Afgerond: codewijzigingen, plugin typecheck/test/apply, repo-checks en docs bundle/verify zijn afgerond.
+- Open / blocked: geen bekende blockers; visuele eindreview gebeurt in de live VS Code webview.
+
+## Relevante links
+
+- `assets/jarvis/final-frame/founder-overview.png`
+- `docs/project/25-tasks/done/budio-workspace-jarvis-founder-overview-command-room-redesign.md`
+```
+
+---
+
+## Budio Workspace Jarvis mic settings en runtime test fix
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-mic-settings-en-runtime-test-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-mic-settings-runtime-test-fix
+title: Budio Workspace Jarvis mic settings en runtime test fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Fix dat de Jarvis knop microfooninstellingen niets doet en maak mic-runtime diagnose/feedback testbaar zichtbaar in de plugin."
+tags: [plugin, vscode, jarvis, voice, microphone, macos]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-microfoon-permission-flow-fix
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis mic settings en runtime test fix
+
+## Probleem / context
+
+De Jarvis knop `Open microfooninstellingen` doet zichtbaar niets. De gebruiker geeft aan dat VS Code al microfoonrechten heeft op macOS, dus de flow moet niet blijven hangen op generieke rechtenuitleg. Jarvis moet zelf duidelijk maken of de webview audio-capabilities beschikbaar zijn, of de settings actie echt is gestart, en wat er misgaat als opname alsnog faalt.
+
+## Gewenste uitkomst
+
+De knop opent betrouwbaar macOS microfooninstellingen of toont een expliciete foutmelding. Jarvis toont daarnaast concrete runtime-diagnose rond `getUserMedia`, `MediaRecorder`, permission-state en opname/transcriptie, zodat we niet blind blijven bij “werkt niet”.
+
+## User outcome
+
+De gebruiker kan de mic-flow in Jarvis testen en krijgt direct zichtbaar bewijs: settings geopend, mic ready/opnemen/transcriberen, of een exacte webview/recorder fout.
+
+## Functional slice
+
+- Betrouwbare hostactie voor macOS microfooninstellingen met fallback naar `open`.
+- Webview-feedbackevent voor settingsactie success/failure.
+- Meer concrete mic runtime diagnose in Jarvis UI.
+- Plugin opnieuw toepassen en gericht testen.
+
+## Entry / exit
+
+- Entry: gebruiker klikt in Jarvis op mic of `Open microfooninstellingen`.
+- Exit: settingsactie geeft zichtbare feedback en mic-flow toont echte runtime-state.
+
+## Happy flow
+
+1. Klik op `Open microfooninstellingen`.
+2. Host opent macOS privacy/microfooninstellingen via betrouwbare route.
+3. Webview toont dat de actie is gestart.
+4. Klik op `Mic` start `getUserMedia` en opname wanneer webview dit toestaat.
+
+## Non-happy flows
+
+- Settings route faalt: Jarvis toont fout met fallback-instructie.
+- Webview mist `getUserMedia`: Jarvis toont capability ontbreekt.
+- Webview mist `MediaRecorder`: Jarvis toont opname niet ondersteund.
+- Recorder/getUserMedia faalt ondanks OS-rechten: Jarvis toont exacte foutcategorie.
+
+## UX / copy
+
+- Geen vage “VS Code vraagt soms” copy als primaire oplossing.
+- Compacte notices: `Microfooninstellingen geopend`, `Mic ready`, `Opnemen`, `Recorder niet beschikbaar`, `Webview blokkeert microfoon`.
+
+## Data / IO
+
+- Input: webview mic capabilities/errors, host OS platform.
+- Output: host→webview mic-settings result event, voice reason copy.
+- Opslag/API/service/file-impact: geen providerwijziging.
+
+## Waarom nu
+
+De vorige permission-flow is nog niet praktisch werkend: de settingsknop doet niets zichtbaar en de gebruiker heeft VS Code al rechten gegeven.
+
+## In scope
+
+- Host settings open fallback fix.
+- Webview message/result feedback.
+- Mic diagnostic copy/state verbeteren.
+- Tests/typecheck/apply.
+
+## Buiten scope
+
+- Native audio recorder buiten VS Code webview.
+- Nieuwe transcriptieprovider.
+- Board/list/epics/settings functioneel wijzigen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Los op dat `microfooninstellingen` niets doet.
+- Review en test de mic-flow zelf tot de route aantoonbaar werkt of exact meldt waarom de VS Code webview audio blokkeert.
+
+## Expliciete user requirements / detailbehoud
+
+- De knop `microfooninstellingen` doet nu niets.
+- VS Code heeft al mic-toegangsrechten op de Mac.
+- Review en test zelf totdat het werkt.
+
+## Status per requirement
+
+- [x] Settingsknop heeft betrouwbare macOS fallback — status: gebouwd
+- [x] Settingsactie geeft zichtbare feedback — status: gebouwd
+- [x] Mic runtime diagnose is concreet — status: gebouwd
+- [x] Plugin apply en verify — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De macOS deep link is lokaal getest met `open` en opent System Settings.
+- De extension host gebruikt nu naast `vscode.env.openExternal` ook een systeemfallback via `open`.
+- De webview krijgt nu een `jarvisMicrophoneSettingsResult` event terug, zodat de knop niet meer stil kan falen.
+- Jarvis toont nu een aparte mic-statuschip zoals `Mic klaar`, `Mic rechten nodig`, `Mic neemt op` of `Mic niet ondersteund`.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow en huidige mic/settings flow lezen.
+- [x] Blok 2: host fallback + feedbackevent + UI diagnose bouwen.
+- [x] Blok 3: testen, plugin apply en task afronden.
+
+## Concrete checklist
+
+- [x] macOS settings URI/`open` route testen.
+- [x] Hostactie fallback implementeren.
+- [x] Host→webview result event toevoegen.
+- [x] Jarvis UI feedback tonen.
+- [x] Plugin typecheck/test/apply draaien.
+
+## Acceptance criteria
+
+- [x] Klik op settingsknop leidt tot zichtbare hostactie-feedback.
+- [x] macOS settings worden via fallback geopend als VS Code `openExternal` niets doet.
+- [x] Mic-flow toont concrete capability/error-state.
+- [x] Typed chat blijft onaangeraakt.
+
+## Blockers / afhankelijkheden
+
+- Fysieke VS Code webview mic-permission blijft alleen volledig interactief in VS Code te bevestigen; deze task moet wel alle diagnose en herstelpaden zichtbaar maken.
+
+## Verify / bewijs
+
+- Shell smoke: `open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone'` — opent `System Settings`
+- Built helper smoke: `openMicrophoneSettingsWithSystemOpen(..., 'darwin')` — opent `System Settings`
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 52 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension opnieuw geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run taskflow:verify` — geslaagd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run docs:bundle` — geslaagd na verplaatsing naar `done/`
+- `npm run docs:bundle:verify` — geslaagd
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: settingsknop en mic runtime echt werkend/diagnostisch maken.
+- Toegevoegde verbeteringen: host fallback helper, webview result event en mic-statuschip toegevoegd.
+- Afgerond: de settingsknop heeft een bewezen werkende macOS route en stuurt resultaat terug naar Jarvis; mic runtime toont concrete states.
+- Open / blocked: de daadwerkelijke `getUserMedia` prompt/opname blijft interactief in VS Code zelf, maar de herstelknop en settingsroute zijn lokaal bewezen en de plugin is opnieuw geïnstalleerd.
+
+## Relevante links
+
+- `tools/budio-workspace-vscode/src/extension/host/BoardPanelController.ts`
+- `tools/budio-workspace-vscode/src/webview-bridge/messages.ts`
+- `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
+- `tools/budio-workspace-vscode/webview-ui/src/useJarvisVoiceInput.ts`
+```
+
+---
+
+## Budio Workspace Jarvis microfoon permission flow fix
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-microfoon-permission-flow-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-microfoon-permission-flow-fix
+title: Budio Workspace Jarvis microfoon permission flow fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Maak Jarvis mic-permission praktisch werkend met echte webview diagnostics, permission request/test en een actie om macOS microfooninstellingen te openen."
+tags: [plugin, vscode, jarvis, voice, microphone, permissions]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-hardening-echte-command-room
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis microfoon permission flow fix
+
+## Probleem / context
+
+Jarvis voice zegt dat VS Code/macOS microfoonrechten nodig zijn, maar de plugin helpt de gebruiker nog onvoldoende om te zien wat er echt misgaat of om het recht praktisch te herstellen. De mic-flow moet niet alleen uitleg geven, maar ook daadwerkelijk een permission request/test starten en een directe actie bieden om systeeminstellingen te openen.
+
+## Gewenste uitkomst
+
+Jarvis toont een echte mic-status op basis van webview capabilities en permission state. De mic-knop vraagt daadwerkelijk `getUserMedia` aan bij user-actie. Bij denied/unavailable krijgt de gebruiker een concrete reden en een actie om macOS microfooninstellingen te openen.
+
+## User outcome
+
+De gebruiker kan in Jarvis duidelijk zien of microfoonopname ondersteund is, of permission geweigerd is, en wat de volgende stap is. Als rechten goed staan, start push-to-talk opname echt.
+
+## Functional slice
+
+- Webview-side mic diagnostics.
+- Permission request/test via user gesture.
+- Host bridge om OS microfooninstellingen te openen.
+- Betere copy en UI-actions voor voice unavailable/permission needed.
+
+## Entry / exit
+
+- Entry: gebruiker opent Jarvis en gebruikt de mic-knop.
+- Exit: opname start echt, of Jarvis toont een concrete diagnose en herstelactie.
+
+## Happy flow
+
+1. Jarvis detecteert `navigator.mediaDevices.getUserMedia` en `MediaRecorder`.
+2. Gebruiker klikt `Mic`.
+3. VS Code/macOS vraagt toestemming of bestaande toestemming wordt gebruikt.
+4. Jarvis toont `Opnemen`, daarna `Transcriberen`.
+
+## Non-happy flows
+
+- Permission denied: toon `Microfoonrechten geweigerd` en knop om microfooninstellingen te openen.
+- Unsupported webview: toon welke capability ontbreekt.
+- Geen microfoon: toon `Geen microfoon gevonden`.
+- Lege/te korte opname: toon echte retry-copy.
+
+## UX / copy
+
+- Geen vage “VS Code vraagt soms” uitleg meer als primaire oplossing.
+- Toon compacte echte states: `Mic klaar`, `Opnemen`, `Transcriptie`, `Rechten nodig`, `Niet ondersteund`.
+- Herstelactie: `Open microfooninstellingen`.
+
+## Data / IO
+
+- Input: browser/webview capabilities, Permissions API indien beschikbaar, getUserMedia errors.
+- Output: `jarvisVoiceStateChanged`, voice reason, optional host action om OS settings te openen.
+- Opslag/API/service/file-impact: geen secret of providerwijziging.
+- Statussen: bestaande `voiceState` blijft leidend.
+
+## Waarom nu
+
+De huidige mic-permission uitleg lost het probleem voor de gebruiker niet op. Jarvis moet zelf diagnose en herstelpad aanbieden.
+
+## In scope
+
+- `useJarvisVoiceInput` diagnostics en permission request verbeteren.
+- `JarvisView` voice-state UI/action toevoegen.
+- Webview/host message toevoegen voor openen microfooninstellingen.
+- Tests/typecheck/apply.
+
+## Buiten scope
+
+- TTS.
+- Alternatieve native audio recorder buiten VS Code webview.
+- Nieuwe OpenAI transcription pipeline.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Los op dat VS Code/microfooninstellingen niet praktisch werken voor Jarvis.
+- Zorg dat de plugin correct microfoontoegang vraagt en geen vage instructietekst blijft tonen.
+
+## Expliciete user requirements / detailbehoud
+
+- “Dit werkt nog niet” rond VS Code instellingen en microfoontoegang.
+- Jarvis moet echt mic-toegang vragen wanneer audio-opnames gebruikt worden.
+
+## Status per requirement
+
+- [x] Echte mic diagnostics — status: gebouwd
+- [x] Permission request/test via Jarvis micactie — status: gebouwd
+- [x] Herstelactie voor OS microfooninstellingen — status: gebouwd
+- [x] Plugin apply en verify — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De voice hook gebruikt nu stabiele refs voor callbacks zodat support/permission-state niet onnodig opnieuw hydrateert.
+- Jarvis krijgt een concrete `Open microfooninstellingen` actie bij permission-problemen.
+- Unsupported states krijgen een concrete capability reason in plaats van generieke VS Code-uitleg.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, huidige mic-flow en taskflow bevestigen.
+- [x] Blok 2: mic diagnostics/action bridge bouwen.
+- [x] Blok 3: verify, plugin apply en task afronden.
+
+## Concrete checklist
+
+- [x] Mic supportdiagnose expliciet maken.
+- [x] Permission-state/reason verbeteren.
+- [x] Host message voor microfooninstellingen toevoegen.
+- [x] Jarvis UI herstelactie toevoegen.
+- [x] Plugin typecheck/test/apply draaien.
+
+## Acceptance criteria
+
+- [x] Klik op mic vraagt echt microfoontoegang via `getUserMedia` wanneer supported.
+- [x] Permission denied toont concrete diagnose en herstelactie.
+- [x] Unsupported toont concrete ontbrekende capability.
+- [x] Typed chat blijft onaangeraakt.
+
+## Blockers / afhankelijkheden
+
+- Fysieke macOS/VS Code toestemming blijft buiten code, maar Jarvis moet die eerlijk detecteren en herstelactie bieden.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 49 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension opnieuw geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run taskflow:verify` — geslaagd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run docs:bundle` — geslaagd na verplaatsing naar `done/`
+- `npm run docs:bundle:verify` — geslaagd
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: mic permission-flow praktisch werkend maken.
+- Toegevoegde verbeteringen: stabiele voice hook callbacks, concrete supportdiagnose en OS-settings action.
+- Afgerond: Jarvis mic-knop vraagt bij support echt `getUserMedia`, denied/unavailable states tonen concrete reden, en de host kan macOS/Windows microfooninstellingen openen.
+- Open / blocked: fysieke toestemming blijft afhankelijk van jouw lokale VS Code/macOS permissie; de plugin biedt nu het herstelpad en retry.
+
+## Relevante links
+
+- `tools/budio-workspace-vscode/webview-ui/src/useJarvisVoiceInput.ts`
+- `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
+- `tools/budio-workspace-vscode/src/extension/host/BoardPanelController.ts`
+```
+
+---
+
+## Budio Workspace Jarvis praatbare eigen view
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-praatbare-eigen-view.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-08
+
+```md
+---
+id: task-budio-workspace-jarvis-praatbare-eigen-view
+title: Budio Workspace Jarvis praatbare eigen view
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-08
+summary: "De bestaande Budio Workspace-plugin krijgt een aparte Jarvis-view die visueel sterker aansluit op het supplied command-room frame en een eerste werkende praatlaag toevoegt via typed chat plus lichte voice input, zonder de functionaliteit van board/list/epics/settings te veranderen."
+tags: [plugin, vscode, jarvis, voice, chat]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis praatbare eigen view
+
+## Probleem / context
+
+De plugin heeft al een eerste Jarvis command-room view met lokale Luma-assets en manifestgedreven rendering, maar die view is nog vooral een statisch visualisatieframe. De user wil nu een minimale maar echt bruikbare vervolgvariant: een eigen Jarvis-kamer waarin je kunt praten met Jarvis en die visueel sterker overeenkomt met het aangeleverde frame, zonder dat bestaande pluginviews functioneel worden verbouwd.
+
+## Gewenste uitkomst
+
+Binnen de bestaande VS Code workspace-plugin staat een zelfstandige `jarvis`-view die als eigen command room voelt. De view gebruikt de reeds aanwezige lokale assets en manifesten, toont een sterkere visuele compositie en bevat een werkende conversation flow.
+
+De gebruiker kan in deze eerste versie tekst typen naar Jarvis en, waar de webview/runtime het toelaat, voice input gebruiken als lichte enhancement. Jarvis antwoordt host-side met lokale workspacecontext als primaire bron en kan daarna uitwijken naar algemenere assistentie.
+
+## User outcome
+
+De gebruiker kan de plugin openen, naar de `jarvis`-view gaan en daar in een aparte command room vragen stellen aan Jarvis, met duidelijke antwoordstates en een UI die dichter bij het supplied conceptframe ligt. Board, list, epics en settings blijven werken zoals ze nu werken.
+
+## Functional slice
+
+Eén afgeronde plugin-slice:
+- een aparte Jarvis top-level view met eigen visual polish,
+- typed chat en lichte voice input,
+- host-side assistant bridge met workspace-grounding,
+- nette availability/error/fallback states,
+- zonder functionele aanpassingen aan de andere pluginviews.
+
+## Entry / exit
+
+- Entry: gebruiker opent de Budio Workspace plugin en kiest de `Jarvis`-view.
+- Exit: gebruiker heeft een werkende Jarvis command room waarin een vraag gesteld en beantwoord kan worden, of ziet een duidelijke fallback-state wanneer key/voice/provider ontbreekt.
+
+## Happy flow
+
+1. Gebruiker opent `Jarvis` in de plugin en ziet de command room met lokale assets en polished layout.
+2. Gebruiker typt een vraag of start voice input; de vraag verschijnt in de conversatie.
+3. Jarvis antwoordt vanuit lokale workspacecontext en vult waar nodig aan met een algemene assistentreactie.
+
+## Non-happy flows
+
+- Empty state: als nog geen conversatie is gestart, toont de speaking surface een nette starter-state met seed-copy.
+- Permission denied / unavailable: als voice niet beschikbaar is of mic-permissie ontbreekt, blijft typed chat bruikbaar en toont de UI een compacte notice.
+- Validation / unsupported state: lege input wordt niet verstuurd en toon geen fouttoast; de send-actie blijft disabled.
+- Failure / retry / cancel: ontbrekende OpenAI-key of providerfout levert een nette conversational errorstate op met mogelijkheid om opnieuw te proberen.
+
+## UX / copy
+
+- Bestaande views behouden hun huidige copy en gedrag.
+- Jarvis gebruikt Nederlandse copy.
+- Belangrijke labels:
+  - `Sync assets`
+  - `Praat met Jarvis`
+  - `Typ je vraag...`
+  - `Luisteren...`
+  - `Denkt na...`
+  - `Opnieuw`
+  - `Nieuwe sessie`
+- Jarvis visual direction volgt de bestaande `assets/jarvis/final-frame/unified-design-brief.txt` en de lokale manifest-assets.
+
+## Data / IO
+
+- Input:
+  - board snapshot
+  - geselecteerde taskcontext
+  - Jarvis manifest/command-room content
+  - lokale text-asset previews
+  - user prompt of voice transcript
+- Output:
+  - conversation state naar webview
+  - assistant response
+  - capability/error/fallback state
+- Opslag/API/service/file-impact:
+  - host-side OpenAI API-call
+  - geen repo-persistente chatopslag
+  - bestaande lokale Jarvis-assets blijven bron voor visuals
+- Statussen:
+  - `idle`
+  - `listening`
+  - `thinking`
+  - `answering`
+  - `error`
+
+## Waarom nu
+
+- De huidige Jarvis-baseline is visueel bruikbaar maar nog niet interactief.
+- Dit is de kleinste volgende slice die direct founderwaarde geeft zonder bredere pluginarchitectuur om te gooien.
+- De user wil juist een eerste variant die werkt en visueel geloofwaardig aanvoelt zoals aangeleverd.
+
+## In scope
+
+- Nieuwe uitvoertaak voor deze vervolgscope.
+- Behoud van bestaande views zonder functionele wijziging.
+- Jarvis-view uitbreiden met conversation UI en lichte voice input.
+- Host-side OpenAI bridge met workspace-grounding en nette fallback states.
+- Visuele polish vooral in de Jarvis-view, plus alleen minimale shell-polish elders indien nodig.
+- Gerichte tests voor message mapping, grounding en fallback states.
+
+## Buiten scope
+
+- Nieuwe task- of boardfunctionaliteit buiten Jarvis.
+- Tool-calling, codeacties, taskmutaties of autonome agentruns vanuit chat.
+- Persistente conversatie-opslag op disk.
+- TTS of uitgebreide audio-device workflows.
+- Nieuwe asset-ingestarchitectuur of bredere Luma-canvas-sync.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Bestaande plugin-views behouden, alleen polish waar nodig.
+- Alle nieuwe Jarvis-functionaliteit in een eigen top-level `jarvis`-view.
+- Typed chat + lichte voice input.
+- Host-side assistant bridge met workspace-first, hybrid answers.
+- Visuele upgrade primair in de Jarvis-view.
+
+## Expliciete user requirements / detailbehoud
+
+- Bestaande views moeten behouden blijven.
+- Board/list/epics/settings mogen geen functionele regressie of verbouwing krijgen.
+- Jarvis moet een eigen view zijn met alle nieuwe functies daarbinnen.
+- De eerste versie moet echt bruikbaar zijn om mee te praten.
+- Het visuele resultaat moet goed werken en zo dicht mogelijk bij het supplied command-room frame blijven binnen de bestaande plugin.
+
+## Status per requirement
+
+- [x] Bestaande views behouden zonder functionele wijziging — status: gebouwd
+- [x] Eigen Jarvis-view met praatlaag — status: gebouwd
+- [x] Typed chat + lichte voice input — status: gebouwd
+- [x] Host-side hybrid assistent — status: gebouwd
+- [x] Visuele polish primair in Jarvis-view — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Conversation-state en groundinglogica als gedeelde Jarvis helpers opgebouwd zodat host en webview dezelfde statevorm delen.
+- Voice input als progressive enhancement toegevoegd via webview speech recognition met nette fallback wanneer de runtime dit niet ondersteunt.
+- Streaming-achtige assistant rendering toegevoegd via gechunkte hostresponses voor een levendiger Jarvis-gevoel zonder zware realtime providerlaag.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: Jarvis host/message/types/helpers bouwen.
+- [x] Blok 3: Jarvis webview en visuele polish bouwen.
+- [x] Blok 4: tests, plugin-apply en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Nieuwe taskfile aangemaakt en op `in_progress` gezet.
+- [x] Jarvis conversation types en message-contract toegevoegd.
+- [x] Host-side grounding en assistant-call toegevoegd.
+- [x] Jarvis UI omgebouwd naar werkende conversation view.
+- [x] Voice fallback toegevoegd.
+- [x] Tests toegevoegd of bijgewerkt.
+- [x] Verify en plugin apply gedraaid.
+
+## Acceptance criteria
+
+- [x] `jarvis` opent als aparte plugin-view zonder functionele regressie in andere views.
+- [x] Gebruiker kan minimaal een typed prompt sturen en een Jarvis-antwoord ontvangen.
+- [x] Als voice niet beschikbaar is, blijft typed chat netjes bruikbaar met duidelijke notice.
+- [x] Als OpenAI-key of provider ontbreekt, toont Jarvis een nette conversational fallback-state.
+- [x] De Jarvis-view voelt visueel duidelijk rijker en dichter bij het supplied frame dan de huidige statische baseline.
+
+## Blockers / afhankelijkheden
+
+- Geen actieve blockers.
+- Voor live OpenAI-antwoorden buiten fallback-state moet lokaal `OPENAI_API_KEY` aanwezig zijn.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck`
+- `npm --prefix tools/budio-workspace-vscode run test`
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: aparte praatbare Jarvis-view maken zonder andere views functioneel te veranderen.
+- Toegevoegde verbeteringen: gedeelde conversation helpers, gechunkte assistant rendering en voice progressive enhancement met graceful fallback.
+- Afgerond: eigen Jarvis-view praatbaar gemaakt met typed chat, host-side hybrid antwoorden, voice fallback en sterkere visual polish, terwijl board/list/epics/settings functioneel intact bleven.
+- Open / blocked: geen blocker binnen deze slice; verdere uitbreidingen zoals TTS, tool-calling of persistente chats krijgen een aparte vervolgtaak.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-jarvis-v1-luma-asset-ingest-en-command-room.md`
+- `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
+- `assets/jarvis/final-frame/unified-design-brief.txt`
+```
+
+---
+
+## Budio Workspace Jarvis responsive cinematic polish
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-responsive-cinematic-polish.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-13
+
+```md
+---
+id: task-budio-workspace-jarvis-responsive-cinematic-polish
+title: Budio Workspace Jarvis responsive cinematic polish
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-13
+summary: "Maak de Jarvis-view responsief op verschillende pluginbreedtes, verwijder de bovenste Budio/status-overhead en geef de center core cinematic, state-reactieve beweging."
+tags: [plugin, vscode, jarvis, ui, responsive, polish]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis responsive cinematic polish
+
+## Probleem / context
+
+De Jarvis-view werkt als eigen command room, maar de huidige bovenste Budio/statusrij voelt als overhead en kost verticale ruimte. Op smallere pluginformaten moet de kamer compacter en beter passend worden. Het middenstuk mag bovendien sterker als levende cinematic core reageren op opnemen, transcriberen en beantwoorden.
+
+## Gewenste uitkomst
+
+Jarvis past beter op smalle, middelgrote en brede VS Code webview-formaten. De bovenste Budio/status-overhead is weg uit de Jarvis-kamer zelf. De center core blijft centraal en beweegt filmisch en state-reactief zonder de chatflow te verstoren.
+
+## User outcome
+
+De gebruiker opent Jarvis en ziet direct de command room zonder overbodige topcopy. De view voelt ruimtelijk, passend en actief op verschillende schermgroottes.
+
+## Functional slice
+
+- Jarvis-only layout polish.
+- Topbar-overhead verwijderen.
+- Responsive grid/rails/command deck aanscherpen.
+- Cinematic state-reactieve center core animatie toevoegen.
+
+## Entry / exit
+
+- Entry: gebruiker opent `Jarvis` in de Budio Workspace plugin.
+- Exit: Jarvis toont een compacte responsive command room met bewegende/reactieve core.
+
+## Happy flow
+
+1. Jarvis opent zonder extra Budio/statuskop.
+2. Op breed scherm staan rails, core en gesprek gebalanceerd.
+3. Op smaller scherm stapelen rails en gesprek zonder horizontale overflow.
+4. Bij opnemen/transcriberen/beantwoorden reageert de core visueel.
+
+## Non-happy flows
+
+- Empty state: command room blijft compact zonder lege bovenbalk.
+- Permission denied / unavailable: bestaande mic/chat notices blijven zichtbaar in command deck.
+- Validation / unsupported state: bestaande inputstates blijven intact.
+- Failure / retry / cancel: reload/reset blijven subtiel beschikbaar.
+
+## UX / copy
+
+- Verwijder zichtbare Jarvis-topbar met Budio wordmark, status pill en ready/status-copy.
+- Behoud noodzakelijke acties `Reset` en `Herlaad`, maar subtiel in de speaking surface.
+- Gebruik bestaande minimal cinematic copy; voeg geen nieuwe debugcopy toe.
+
+## Data / IO
+
+- Input: bestaande Jarvis workspace state en conversation state.
+- Output: alleen render/CSS gedrag.
+- Opslag/API/service/file-impact: geen provider- of taskmutatieflow.
+- Statussen: bestaande `jarvis-chat-*` en `jarvis-voice-*` classes sturen core motion.
+
+## Waarom nu
+
+De gebruiker heeft runtime werkend gekregen en vraagt nu expliciet om passende schermweergave, minder overhead en een levendiger cinematic middenstuk.
+
+## In scope
+
+- `JarvisView` JSX aanpassen voor minder top-overhead.
+- `styles.css` Jarvis responsive layout en animaties aanscherpen.
+- Gerichte plugin verify en `apply:workspace`.
+
+## Buiten scope
+
+- Nieuwe Jarvis features, tools of taskacties.
+- Chat/provider/mic pipeline wijzigen.
+- Board/list/epics/settings functioneel aanpassen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak Jarvis responsive en passend op alle schermgroottes.
+- Haal bovenstuk met Budio/ready/status-overhead weg.
+- Review de schermopbouw en verbeter de Jarvis midden-core.
+- Laat het middenstuk cinematic bewegen en reageren.
+
+## Expliciete user requirements / detailbehoud
+
+- Jarvis moet responsive zijn.
+- Jarvis moet passen op alle schermgroottes.
+- Bovenstuk met Budio/ready/status is overhead en mag weg.
+- Middenstuk moet cinematic bewegen en reageren.
+
+## Status per requirement
+
+- [x] Responsive Jarvis layout — status: gebouwd
+- [x] Topbar-overhead verwijderd — status: gebouwd
+- [x] Cinematic/reactieve center core — status: gebouwd
+- [x] Bestaande chat/mic functionaliteit intact — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Reset en Herlaad zijn verplaatst naar compacte speaking-surface actions zodat de bovenste Jarvis-overhead kan verdwijnen zonder functionaliteit kwijt te raken.
+- Core motion respecteert `prefers-reduced-motion`.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow en actuele Jarvis UI/CSS lezen.
+- [x] Blok 2: Jarvis JSX en responsive/motion CSS aanpassen.
+- [x] Blok 3: plugin verify, apply en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Topbar JSX verwijderen of verplaatsen naar subtiele controls.
+- [x] Responsive grid en rail stacking verbeteren.
+- [x] Center core motion state-reactief maken.
+- [x] Typecheck/test/apply draaien.
+- [x] Taskflow/docs afronden.
+
+## Acceptance criteria
+
+- [x] Jarvis heeft geen losse Budio/ready/status topbar meer.
+- [x] Jarvis blijft bruikbaar op smalle en brede pluginbreedtes zonder horizontale overflow.
+- [x] Core beweegt ambient en reageert zichtbaar op chat/voice states.
+- [x] Chat, mic, reset en reload blijven bereikbaar.
+
+## Blockers / afhankelijkheden
+
+- Geen actieve blockers.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 43 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension opnieuw geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run taskflow:verify` — geslaagd vóór afronding
+- Docs bundle/verify bij taskstatus afronding — uitgevoerd na verplaatsing naar `done/`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: responsive Jarvis polish, topbar-overhead weg, cinematic/reactieve core.
+- Toegevoegde verbeteringen: reset/herlaad verplaatst naar speaking surface en motion respecteert reduced-motion.
+- Afgerond: Jarvis-topbar verwijderd, responsive grid/breakpoints aangescherpt, core dials/scanline/orbits/float toegevoegd en state-reactief gemaakt voor chat/voice.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end.md`
+- `tools/budio-workspace-vscode/webview-ui/src/JarvisView.tsx`
+- `tools/budio-workspace-vscode/webview-ui/src/styles.css`
+```
+
+---
+
+## Budio Workspace Jarvis runtime fix chat en mic end-to-end
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-08
+
+```md
+---
+id: task-budio-workspace-jarvis-runtime-fix-chat-mic-end-to-end
+title: Budio Workspace Jarvis runtime fix chat en mic end-to-end
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-08
+summary: "Maak de bestaande Jarvis typed chat en push-to-talk runtime zichtbaar en betrouwbaar end-to-end met request-acks, request-id reconciliation, provider-timeouts, non-secret diagnostics en een echte reloadroute."
+tags: [plugin, vscode, jarvis, openai, audio, chat, runtime]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-jarvis-echte-chat-push-to-talk
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+# Budio Workspace Jarvis runtime fix chat en mic end-to-end
+
+## Probleem / context
+
+De Jarvis V1.2-slice heeft echte host-side chat en push-to-talk toegevoegd, maar in runtime ziet de gebruiker na typen nog geen betrouwbare reactie. Omdat `.env.local` de verwachte OpenAI-key varianten bevat, ligt de primaire fix niet bij een lege keyroute maar bij de webview-host bridge, zichtbare pending/error states, provider-diagnose, timeouts en reload van retained plugin/webview-state.
+
+## Gewenste uitkomst
+
+Typed chat en mic voelen direct echt: een ingestuurde prompt verschijnt meteen, Jarvis toont een duidelijke verwerkingsstate, providerrespons of fout komt zichtbaar terug, en mic-opnames tonen opname, transcriptie en antwoord in dezelfde gesprekspijplijn.
+
+De fix blijft beperkt tot Jarvis runtime/bridge/UI-state en host helpers. Board/list/epics/settings blijven functioneel onaangeraakt.
+
+## User outcome
+
+De gebruiker kan in de Jarvis-view typen of push-to-talk gebruiken en ziet altijd wat er gebeurt: ontvangen, verwerken, antwoord klaar of een echte fout met vervolgstap.
+
+## Functional slice
+
+Een gerichte Jarvis-runtimefix:
+- request-id gebaseerde submit/ack/completion/failure flow,
+- optimistic visible state in de Jarvis webview,
+- timeout-aware chat en transcriptie,
+- non-secret diagnostics in de host,
+- reloadroute om oude retained webview-state te vernieuwen.
+
+## Entry / exit
+
+- Entry: gebruiker opent de Budio Workspace plugin en kiest `Jarvis`.
+- Exit: typed of mic input levert zichtbaar een echte respons op, of toont een echte permission/provider/timeout/unavailable-state.
+
+## Happy flow
+
+1. Gebruiker typt een prompt; de prompt verschijnt direct in de conversation surface.
+2. De host bevestigt ontvangst en roept OpenAI aan met lokale grounding.
+3. Jarvis toont het echte antwoord en keert terug naar idle.
+
+## Non-happy flows
+
+- Empty state: geen input versturen zonder zichtbare no-op.
+- Permission denied / unavailable: mic toont echte permission/unavailable reden en typed fallback blijft bruikbaar.
+- Validation / unsupported state: lege of te korte audio wordt niet ingestuurd en geeft een compacte melding.
+- Failure / retry / cancel: provider-, transcriptie- en timeoutfouten worden zichtbaar en blijven niet stil hangen.
+
+## UX / copy
+
+- Jarvis behoudt de minimal cinematic richting.
+- Alleen functionele states tonen: klaar, opnemen, verwerken, antwoord klaar, permissie nodig, providerfout of timeout.
+- Geen debug/secrets in UI; hoogstens compacte diagnose met env-varnaam of stage.
+- Voeg een subtiele reloadactie toe voor Jarvis wanneer retained state verdacht is.
+
+## Data / IO
+
+- Input:
+  - typed prompt met `clientRequestId`
+  - audio payload met `clientRequestId`
+  - `.env.local` en process env
+  - lokale workspace/Jarvis grounding context
+- Output:
+  - request accepted/runtime-stage events
+  - echte assistant response
+  - transcriptie als user prompt
+  - zichtbare foutstates
+- Opslag/API/service/file-impact:
+  - geen secrets naar webview
+  - geen persistente audio/chatopslag
+  - host-side OpenAI chat/transcription calls met timeout
+- Statussen:
+  - chat: `idle`, `thinking`, `answering`, `error`
+  - voice: `idle`, `recording`, `transcribing`, `permission_needed`, `unavailable`
+
+## Waarom nu
+
+De Jarvis-view is pas bruikbaar als de eerste interactie betrouwbaar zichtbaar en echt werkt. De user heeft bevestigd dat typed chat nu geen reacties toont en wil dat mic en chat daadwerkelijk functioneren.
+
+## In scope
+
+- Jarvis webview-host message contract uitbreiden met request-id, ack en runtime-stage events.
+- Webview optimistic/reconciliation state voor typed en mic.
+- Timeout-aware chat en transcription helpers.
+- Non-secret Jarvis runtime/output logging in de host.
+- Compacte reloadroute voor Jarvis state/webview.
+- Gerichte tests en plugin apply.
+
+## Buiten scope
+
+- Streaming responses.
+- TTS.
+- Tool-calling, taskmutaties of repo-acties vanuit Jarvis.
+- Functionele wijzigingen aan board/list/epics/settings.
+- Nieuwe Luma-ingest of assetarchitectuur.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak typed chat direct zichtbaar met lokale user bubble en `thinking` state via `clientRequestId`.
+- Voeg request-acks toe tussen webview en host.
+- Laat responses/fouten niet verdwijnen bij hydration races.
+- Voeg provider-timeouts toe voor chat en transcriptie.
+- Verbeter foutdiagnose zonder secrets.
+- Maak mic-flow even expliciet als typed chat.
+- Voeg min-duration/lege-audio validatie toe.
+- Voeg non-secret Jarvis runtime/output log toe.
+- Voeg een compacte reloadroute toe.
+- Houd bestaande views functioneel onaangeraakt.
+
+## Expliciete user requirements / detailbehoud
+
+- Typed chat moet echt antwoorden tonen.
+- Mic functie moet echt werken.
+- Geen nep UI-states.
+- `.env.local` keyroute is aanwezig en moet gebruikt worden.
+- Board/list/epics/settings blijven intact.
+
+## Status per requirement
+
+- [x] Typed chat toont direct submit + echte respons — status: gebouwd
+- [x] Mic toont opname/transcriptie/antwoord end-to-end — status: gebouwd
+- [x] Hydration races verliezen geen responses/fouten — status: gebouwd
+- [x] Provider-timeouts en non-secret diagnostics — status: gebouwd
+- [x] Reloadroute voor Jarvis retained state — status: gebouwd
+- [x] Bestaande views functioneel onaangeraakt — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Live provider-smoke toegevoegd voor chat via dezelfde Jarvis helper en `.env.local` keyroute.
+- Live provider-smoke toegevoegd voor transcriptie via tijdelijk lokaal audiobestand buiten de repo.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: bridge/state/types en host diagnostics/timeouts bouwen.
+- [x] Blok 3: webview optimistic typed/mic flow en reloadactie bouwen.
+- [x] Blok 4: tests, plugin apply, smoke/verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Message contract uitbreiden met request-id, accepted en runtime-stage events.
+- [x] Host Jarvis pipeline request-aware, timeout-aware en diagnostic-aware maken.
+- [x] Webview Jarvis state reconciliation harden.
+- [x] Mic payload-validatie en transcriptie-state zichtbaar maken.
+- [x] Reload command/actie toevoegen.
+- [x] Gerichte tests toevoegen of uitbreiden.
+- [x] Plugin opnieuw toepassen met `npm --prefix tools/budio-workspace-vscode run apply:workspace`.
+
+## Acceptance criteria
+
+- [x] Een typed prompt verschijnt direct en levert zichtbaar een echte assistant response of fout op.
+- [x] Een mic-opname toont opnemen, transcriberen, transcript en daarna dezelfde chatflow.
+- [x] Provider- of timeoutfouten blijven zichtbaar en verdwijnen niet door hydration timing.
+- [x] Geen secretwaarde komt in webview-state, UI-copy of logs.
+- [x] Board/list/epics/settings blijven functioneel gelijk.
+
+## Blockers / afhankelijkheden
+
+- Live mic happy path blijft afhankelijk van OS/VS Code microfoonrechten.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck` — geslaagd
+- `npm --prefix tools/budio-workspace-vscode run test` — geslaagd, 43 tests
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace` — geslaagd, extension opnieuw geïnstalleerd en VS Code refresh uitgevoerd
+- `npm run lint` — geslaagd
+- `npm run typecheck` — geslaagd
+- `npm run taskflow:verify` — geslaagd vóór afronding
+- Live chat provider-smoke — geslaagd: `Jarvis live`, providerSource `OPENAI_API_BUDIO_WORKSPACE_SERVICE_KEY`, model `gpt-4.1-mini`
+- Live transcriptie provider-smoke — geslaagd: `Jarvis live.`, providerSource `OPENAI_API_BUDIO_WORKSPACE_SERVICE_KEY`, model `gpt-4o-mini-transcribe`
+- OS/VS Code mic permission-smoke — niet geautomatiseerd; blijft lokale runtime-permissie.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: typed chat + mic end-to-end zichtbaar en echt werkend maken met bridge hardening, timeouts, diagnostics en reload.
+- Toegevoegde verbeteringen: live provider-smokes voor chat en transcriptie zijn uitgevoerd naast unit/type/lint/apply-verify.
+- Afgerond: request-id bridge, host acks/runtime-stages, optimistic webview state, hydration race hardening, provider-timeouts, mic audio-validatie, non-secret output logging, reload command en README zijn klaar.
+- Open / blocked: geen codeblocker; echte OS/VS Code microfoonpermissie blijft alleen lokaal in de webview runtime te bevestigen.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-jarvis-echte-chat-en-push-to-talk.md`
+- `tools/budio-workspace-vscode/README.md`
+```
+
+---
+
+## Budio Workspace Jarvis V1 — Luma asset ingest + first command room
+
+- Path: `docs/project/25-tasks/done/budio-workspace-jarvis-v1-luma-asset-ingest-en-command-room.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-08
+
+```md
+---
+id: task-budio-workspace-jarvis-v1-luma-asset-ingest-command-room
+title: Budio Workspace Jarvis V1 — Luma asset ingest + first command room
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-08
+summary: "Bouw een eerste internal-only Jarvis command room in de Budio Workspace plugin, gevoed door een gedeelde lokale Luma-downloadlaag met seed-manifest, CLI-prefetch, plugin-syncactie en manifestgedreven rendering van de Final Frame-assets."
+tags: [plugin, vscode, jarvis, luma, workspace, assets, command-room]
+workstream: plugin
+epic_id: epic-budio-workspace-hierarchy-linear-lite
+parent_task_id: null
+depends_on: []
+follows_after:
+  - task-budio-workspace-command-room-research-startpunt
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+---
+
+## Probleem / context
+
+Er is nu wel een richting voor een Budio Workspace Command Room en er ligt een concreet Final Frame-document met goedgekeurde Jarvis-assets, maar er bestaat nog geen uitvoerbare ingestlaag of pluginview die die set lokaal kan binnenhalen en tonen.
+
+Daardoor blijft Jarvis hangen als research en losse designcontext, terwijl er juist behoefte is aan een eerste tastbare internal-only workspacevariant in de bestaande VS Code-plugin.
+
+## Gewenste uitkomst
+
+De repo bevat een gedeelde lokale Luma-toolset onder `tools/jarvis-luma/` die Final Frame seed-assets kan resolven, downloaden of markeren als handmatige fallback, en die lokale output opslaat onder `assets/jarvis/final-frame/` met manifest en rapportage.
+
+Daarnaast bevat de bestaande Budio Workspace plugin een nieuwe top-level `jarvis`-view met syncactie en nette fallbackstates, zodat de eerste command room direct in de plugin zichtbaar is op basis van lokale manifestdata en bestanden.
+
+## User outcome
+
+De founder/developer kan vanuit de repo of plugin een Jarvis asset-sync starten en daarna in de bestaande Budio Workspace-plugin een eerste command room openen met de juiste visuals, contentblokken en syncstatus.
+
+## Functional slice
+
+Eerste end-to-end slice voor Jarvis in Workspace:
+- seed-manifest uit Final Frame
+- lokale Luma downloader met API-first + fallback
+- gedeelde asset-output onder `assets/jarvis/final-frame/`
+- plugincommand + pluginview `jarvis`
+- manifestgedreven command-room render en fallbackstates
+
+## Entry / exit
+
+- Entry: lokale repo met bestaande Budio Workspace plugin en Final Frame-document als bron.
+- Exit: `budioWorkspace.openJarvis` toont een werkende Jarvis-view; `budioWorkspace.syncJarvisAssets` of de CLI kan de assetset lokaal verversen.
+
+## Happy flow
+
+1. Developer draait de CLI of start sync vanuit de plugin met een geldige `LUMA_AGENTS_API_KEY`.
+2. Downloader verwerkt seed-assets, downloadt resolvebare PNG/MP4-bestanden, schrijft manifest + report, en markeert niet-resolvebare items als fallbackstatus.
+3. Jarvis-view leest het lokale manifest en rendert de command room met visuals, content en correcte ready/partial-status.
+
+## Non-happy flows
+
+- Empty state: nog geen manifest of nog geen download; Jarvis-view toont duidelijke setup/sync-state.
+- Permission denied / unavailable: ontbrekende of ongeldige key geeft `missing_key` of foutstatus zonder secret leakage.
+- Validation / unsupported state: short seed ID is niet via publieke Luma API te resolven; item krijgt `manual_source_required`.
+- Failure / retry / cancel: individuele downloadfouten blokkeren de rest van de sync niet; manifest blijft partieel bruikbaar en sync kan opnieuw gestart worden.
+
+## UX / copy
+
+- Gebruik Final Frame-copy voor left rail, right rail, speaking surface en command bar.
+- Jarvis-view gebruikt bestaande plugin-shell en navigatiepatronen; geen aparte extension of los shellproject.
+- Fallback copy benoemt concreet: geen manifest, sync bezig, key ontbreekt, gedeeltelijke assets, sync mislukt.
+
+## Data / IO
+
+- Input:
+  - `tools/jarvis-luma/final-frame.seed.json`
+  - `LUMA_AGENTS_API_KEY`
+  - lokaal Final Frame-bronbestand voor text fallback
+- Output:
+  - `assets/jarvis/final-frame/jarvis-assets-manifest.json`
+  - `assets/jarvis/final-frame/download-report.json`
+  - lokale PNG/MP4/text outputs
+- Opslag/API/service/file-impact:
+  - lokale files onder `assets/jarvis/`
+  - externe calls naar gedocumenteerde Luma endpoints
+  - plugin leest alleen lokale manifest- en assetpaden
+- Statussen:
+  - `idle`, `syncing`, `partial`, `ready`, `error`, `missing_key`, `missing_manifest`
+
+## Waarom nu
+
+- Dit is de kleinste bouwbare Jarvis-slice die research omzet in een tastbare workspacevariant.
+- Het houdt Jarvis internal-only en binnen de pluginworkstream, zonder Budio app-runtime of publieke feature-scope te verbreden.
+- Het sluit direct aan op de bestaande workspace-plugin en de eerder vastgelegde command-room richting.
+
+## In scope
+
+- `tools/jarvis-luma/` toolset toevoegen met seed-manifest, Luma client, downloader en README.
+- Shared asset-output onder `assets/jarvis/final-frame/`.
+- Plugin uitbreiden met `jarvis`-view, sync-command, settings en manifestgedreven rendering.
+- Gerichte tests voor downloader, manifeststatussen en pluginrouting/state.
+- Taskflow-, plugin- en repo-verify draaien.
+
+## Buiten scope
+
+- Nieuwe Jarvis prompt/generatieflow of beeldbewerking.
+- Publieke productfeature of koppeling met Budio app runtime.
+- Browser shell buiten de bestaande VS Code-plugin.
+- Volledige canvas-sync als publiek of officieel ondersteund Luma API-contract.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Bouw een eerste internal-only Jarvis command room binnen de bestaande VS Code workspace-plugin.
+- Gebruik een gedeelde lokale Luma-downloadlaag met seed-manifest, CLI-prefetch en plugin-syncactie.
+- Render de Final Frame-assets en content manifestgedreven in een nieuwe `jarvis`-view.
+- Hanteer API-first + fallback voor short asset IDs die waarschijnlijk canvas/object IDs zijn in plaats van generation UUIDs.
+
+## Expliciete user requirements / detailbehoud
+
+- Gebruik een **nieuwe taskfile**; de bestaande research-task blijft alleen context.
+- Scopekeuzes liggen vast:
+  - volledige command room
+  - API-first + fallback
+  - shared root assets
+  - CLI + plugin UI trigger
+  - PNG + MP4 + text docs
+- Nieuwe commands:
+  - `budioWorkspace.openJarvis`
+  - `budioWorkspace.syncJarvisAssets`
+- Nieuwe settings:
+  - `budioWorkspace.jarvisAssetsRoot`
+  - `budioWorkspace.jarvisSeedManifest`
+- Seed bevat alle asset IDs, logische namen, rollen, outputfilenames, command-room content en design tokens uit Final Frame.
+- Text docs mogen via lokale file-import of handmatige contentseed landen wanneer de API ze niet levert.
+- Eén asset die niet resolvebaar is mag de rest van de sync niet blokkeren.
+- Hergebruik bewezen Luma-patronen uit `space-idle-game/tools/luma/`, maar geen gamespecifieke prompt/generatielaag.
+
+## Status per requirement
+
+- [x] Nieuwe spec-ready taskfile en in-progress taskflow — status: gebouwd
+- [x] Gedeelde lokale Luma-ingestlaag onder `tools/jarvis-luma/` — status: gebouwd
+- [x] Shared output + manifest/report onder `assets/jarvis/final-frame/` — status: gebouwd
+- [x] Plugin uitbreiden met `jarvis`-view, sync-command en settings — status: gebouwd
+- [x] Manifestgedreven command-room render + fallbackstates — status: gebouwd
+- [x] Gerichte tests en verify — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Bootstrap de lokale Jarvis-output direct met de nieuwe syncscript, zodat manifest/report en seeded docs meteen beschikbaar zijn zonder extra handmatige setup.
+- Voeg plugin-only shared Jarvis-types en host-loader toe zodat de UI manifestgedreven blijft en niet op losse screen-local aannames draait.
+- Importeer de volledige door de gebruiker aangeleverde Luma zip-download en map de Final Frame-assets direct naar de verwachte lokale Jarvis-bestandsnamen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: gedeelde Luma-ingestlaag en seed/outputstructuur bouwen.
+- [x] Blok 3: plugin host/webview uitbreiden met Jarvis-view en syncactie.
+- [x] Blok 4: gerichte tests, verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] `tools/jarvis-luma/final-frame.seed.json` toevoegen met Final Frame brondata.
+- [x] `tools/jarvis-luma/luma-client.mjs` en `download-final-frame.mjs` bouwen.
+- [x] README voor lokale usage en fallbackpolicy toevoegen.
+- [x] `assets/jarvis/final-frame/` bootstrapbestanden toevoegen.
+- [x] Plugincommands, settings, host state en webview messages uitbreiden.
+- [x] Jarvis-view en command-room UI renderen.
+- [x] Tests en verify draaien.
+
+## Acceptance criteria
+
+- [x] `node tools/jarvis-luma/download-final-frame.mjs --dry-run` geeft een valide dry-run zonder secrets of writes.
+- [x] Downloader schrijft manifest/report en laat partial succes toe wanneer enkele assets niet resolvebaar zijn.
+- [x] `budioWorkspace.openJarvis` opent een nieuwe Jarvis-view in de bestaande plugin.
+- [x] `budioWorkspace.syncJarvisAssets` start dezelfde ingestflow via de pluginhost.
+- [x] Jarvis-view toont correcte ready/partial/error/fallbackstates op basis van het lokale manifest.
+
+## Blockers / afhankelijkheden
+
+- Geen actieve blockers meer binnen deze scope.
+
+## Verify / bewijs
+
+- `npm --prefix tools/budio-workspace-vscode run typecheck`
+- `npm --prefix tools/budio-workspace-vscode run test`
+- `npm --prefix tools/budio-workspace-vscode run apply:workspace`
+- `node tools/jarvis-luma/download-final-frame.mjs --dest assets/jarvis/final-frame`
+- `npm run taskflow:verify`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: eerste Jarvis command room bouwen met gedeelde ingestlaag + pluginview.
+- Toegevoegde verbeteringen: lokale bootstrap van manifest/report + seeded docs, een gedeelde plugin-host loader voor Jarvis-state en directe zip-import van de volledige Luma-download.
+- Afgerond: seed-manifest, downloader, tests, shared asset-output, plugincommands/settings/messages, Jarvis-view, workspace apply, repo/docs verify en lokale Final Frame-assetimport naar een `ready` Jarvis-manifest.
+- Open / blocked: geen blockers meer binnen deze scope; alleen optionele latere uitbreidingen zoals automatische zip-import of directe canvas-mapping krijgen een eigen vervolgtaak.
+
+## Relevante links
+
+- `docs/project/open-points.md`
+- `docs/project/20-planning/50-budio-workspace-plugin-focus.md`
+- `docs/project/25-tasks/open/budio-workspace-command-room-research-en-startpunt-vastleggen.md`
+- `docs/project/40-ideas/40-platform-and-architecture/110-budio-workspace-command-room-linear-codex-local-first.md`
 ```
 
 ---

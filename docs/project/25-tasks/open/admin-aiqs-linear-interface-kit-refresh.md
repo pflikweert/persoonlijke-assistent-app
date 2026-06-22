@@ -23,6 +23,7 @@ sort_order: 3
 
 
 
+
 ## Probleem / context
 
 AIQS heeft al een eerste admin-console laag, maar de bredere adminroutes zoals adminrechten, regeneration en meeting capture gebruiken nog oude settings/surface-primitives en voelen daardoor niet als dezelfde tooling-omgeving. De geuploade Linear-geinspireerde interface kit beschrijft een compacte, mode-aware admin workspace met statuschips, metrics, inspectorpanelen, timelines en dense lists.
@@ -210,3 +211,5 @@ Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interfa
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room

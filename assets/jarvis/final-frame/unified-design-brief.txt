@@ -1,0 +1,693 @@
+# Budio Jarvis Cockpit — Unified Design Brief
+
+## Doel & Scope
+
+Dit document is de **werkbrief voor Luma Labs** voor de interne **Budio Jarvis / Workspace** visual direction.
+
+Belangrijk:
+
+- Dit is **geen canonieke productwaarheid** voor Budio Vandaag
+- Dit is een **interne concept- en visualisatiebrief**
+- Gebruik dit als referentie voor beeldgeneratie, motion-concepts en style consistency
+- Dit beschrijft niet de consumentenproduct-UI, geen redesign van de capture-first app, geen nieuwe publieke productbelofte
+
+## Context
+
+**Product:** Budio Workspace (VS Code plugin)
+**Screen:** Jarvis Cockpit — main start/home screen
+**Type:** Internal founder-only concept still (inspiration frame, not production UI)
+**Purpose:** Cinematic but product-credible visual direction for a hybrid AI workspace interface
+
+Luma Labs heeft **geen context** van Budio of de repo.
+Daarom moet iedere prompt expliciet genoeg zijn over kleurcodes, typografie-richting, sfeer, surface-behandeling, hiërarchie, wat absoluut niet mag, en welke referentiebeelden al zijn geüpload.
+
+Gebruik in Luma altijd ook de geüploade referentiebeelden voor kleurtoon, compositiegevoel, lighting, interface-dichtheid en materialiteit.
+
+---
+
+## Bestaande Applicatie — Budio Workspace
+
+De Jarvis Cockpit wordt gebouwd bovenop een **bestaande, werkende applicatie**. Dit is de productcontext die de Jarvis-interface moet respecteren en uiteindelijk orkestreren.
+
+### Technische Omgeving
+- **Platform:** VS Code webview extension (niet een losse app)
+- **Deployment:** Draait als geïntegreerd paneel binnen VS Code, naast code editor, terminal, en andere panels
+- **Formaten:** Resizable window, full screen, geïntegreerd in VS Code layout — mobile en tablet formaten worden ondersteund
+- **Rendering:** Webview (HTML/CSS/JS) — alles wat in een browser kan, kan hier
+
+### Huidige Functionaliteit (in ontwikkeling)
+
+**Kanban Board** (primaire weergave)
+- Kolommen: Backlog → Ready → In Progress → Blocked → Done
+- Task cards met: titel, beschrijving, priority level (P1, P2), checklist progress
+- Drag-and-drop workflow
+- Dark mode met minimalistisch design
+
+**Lijst Weergave** (alternatieve weergave)
+- Tabulaire weergave van alle taken
+- Kolommen: status, priority, checklist progress
+- Sorteerbaar en filterbaar
+
+**Navigatie**
+- Left-hand navigatiepaneel (sidebar)
+- Meerdere weergaven (kanban, lijst) via navigatie
+- Compacte, gestructureerde informatiearchitectuur
+
+### Bestaande Visuele Taal
+- Dark mode foundation (vergelijkbaar met de Budio Jarvis kleurrichting)
+- Clean, professionele interface-dichtheid
+- Minimalistisch — geen decoratieve elementen
+- Task-georiënteerd — alles draait om werk en voortgang
+
+### Relatie Jarvis Cockpit ↔ Bestaande App
+
+De Jarvis interface zal **minimaal** met deze functionaliteiten werken binnen het test project:
+
+- **Jarvis orkestreert** — het kanban board, taken, en status worden de data die Jarvis visualiseert en bestuurt
+- **Jarvis is geen vervanging** — het is een laag erboven die context, intelligence, en orchestratie toevoegt
+- **Dezelfde webview** — Jarvis leeft in dezelfde technische omgeving (VS Code webview)
+- **Dezelfde formaten** — moet werken als resizable panel, full screen, en op mobile/tablet
+- **Visuele continuïteit** — de Jarvis-interface moet aanvoelen als een evolutie van de bestaande dark-mode producttaal, niet als een andere wereld
+
+### Screenshots op Canvas
+- `J6NfT9Gy` (2560×1399) — **Volledige VS Code omgeving** met Budio Workspace kanban board, code editor, en terminal zichtbaar. Toont hoe het plugin leeft binnen de VS Code shell.
+- `ZE0OWkeV` (2015×1135) — **Standalone kanban board** zonder VS Code chrome. Toont kolommen (Backlog, Ready, In Progress, Blocked, Done), task cards met P1/P2 priority, checklist progress. Resizable window formaat.
+- `BAh0Jit1` (2039×1137) — **Standalone lijst weergave** zonder VS Code chrome. Toont tabulaire takenlijst met status, priority, checklist progress, en left-hand navigatiepaneel. Resizable window formaat.
+
+---
+
+## Conceptpositie
+
+Budio Jarvis is:
+
+- Een **interne intelligentie-workspace**
+- Een **private control room**
+- Een **premium dark-mode productomgeving**
+- Een "Jarvis mode" die naast de bestaande kanban-stijl taakbord leeft
+- Uiteindelijk de bestaande task workflow (kanban, taken, status, prioriteiten) orkestreert en visualiseert
+- De intelligence core kan taken tonen, status aggregeren, en de workspace aansturen
+- Uitbreidbaar voor toekomstige panelen (agent activity, deployment status, workspace signals, assistant actions)
+- Toekomstige systemen worden gesuggereerd, niet in detail getoond
+- Leeft in dezelfde VS Code webview als de bestaande Budio Workspace — technisch dezelfde omgeving
+
+Budio Jarvis is **niet**:
+
+- Een publiek consumentenproductscherm
+- Een ruwe sci-fi fantasie
+- Een hacker terminal
+- Een game UI
+- Een letterlijk gecodeerd scherm
+- Een generiek dashboard
+
+**One-line vision:** "Geloofwaardig alsof film-Jarvis echt product is geworden — een levend command center waar product-UI, intelligence-core, HUD-detail, licht, diepte en presence samen een wereld vormen."
+
+**De visuele waarheid is niet:**
+"maak het geloofwaardig als product"
+
+**De visuele waarheid is:**
+"maak het geloofwaardig alsof film-Jarvis echt product is geworden."
+
+Dat verschil is cruciaal. We optimaliseren niet richting brave mockup — we bouwen een ervaarbare intelligence-space die toevallig ook functioneel klopt.
+
+---
+
+## Kerngevoel
+
+De interface moet voelen als:
+
+- Kalm, premium, warm, minimal, editoriaal, intelligent, ruimtelijk
+- Geloofwaardig, product-grade, future-facing maar beheerst
+- Human-centered
+- Nooit koud, corporate, flashy, noisy, of overdesigned
+
+Niet als:
+
+- Flashy sci-fi of cyberpunk
+- Koud enterprise SaaS
+- Gaming cockpit of militaire HUD
+- Overvolle dashboardmuur
+
+---
+
+## Visuele Koerscorrectie — Visual Reset
+
+### Diagnose
+De informatie-architectuur (links werk, rechts awareness, speaking surface, command bar) is nu goed. Maar de visuele uitvoering is te ver doorgeslagen richting "nette mockup." De structuur is beter geworden, maar de ziel is eruit gegaan.
+
+**Oorzaak:** Te hard gestuurd op geloofwaardigheid, rust, product-realiteit — en daarbij te veel weggehaald van drama, gelaagdheid, technische rijkdom, experience, filmische presence.
+
+**De fout:** We hebben het systeem behandeld als een dashboard-interface, terwijl het een ervaarbare intelligence-space moet zijn.
+
+### Wat behouden blijft
+- ✅ Layoutlogica (links/midden/rechts/onder)
+- ✅ Functionele hiërarchie (core > speaking > werk > awareness > command)
+- ✅ Speaking surface als apart element
+- ✅ Werk links / awareness rechts
+- ✅ Nederlandse content met echte taaktitels
+- ✅ Warm gold/ivory/charcoal kleurpalet
+
+### Wat herbouwd moet worden
+- 🔄 **Center core** — niet een simpele ring, maar een echte intelligence presence met gelaagdheid, meerdere ringen, HUD-radials, lichtdiepte, het gevoel dat het systeem leeft
+- 🔄 **Visual depth** — de achtergrond is nu dood; moet subtiel cinematische diepte krijgen (soft beams, faint grids, spatial glow, volume)
+- 🔄 **HUD-detailtaal** — de connector language, micro callouts, radiale markers uit de HUD-studie moeten terug
+- 🔄 **Surface layering** — de rails moeten niet vlakke kaarten op een zwarte achtergrond zijn, maar geïntegreerde delen van hetzelfde systeem, verbonden met de core
+- 🔄 **Cinematic lighting** — de compositie moet filmisch aanvoelen, niet als een wireframe met kleurtjes
+- 🔄 **Spatial composition** — het geheel moet ruimtelijkheid suggereren, niet platgedrukt zijn
+- 🔄 **Futuristische presence** — indrukwekkend, niet brave
+
+### Per component — nieuwe visuele eisen
+
+**1. Midden — Intelligence Core**
+Niet een simpele gouden ring maar:
+- Gelaagde holografische diepte
+- Nested concentric rings op verschillende z-vlakken
+- Reactive lines en radiale markers
+- HUD-radials en technische tick-marks (uit de core study en HUD study)
+- Intelligent energy — het gevoel van een werkend systeem
+- Meerdere subtiele ringen, fields, light depth
+- Referentie: de rechtsonder-variant uit de center core study was het sterkst
+
+**2. Rails — Geïntegreerde systeemonderdelen**
+Niet vlakke panelen op een zwarte achtergrond maar:
+- Visueel verbonden aan de core via subtiele linework/callouts
+- Meer gelaagd en spatial
+- De connector-taal uit de HUD-studie (`xr3VGzad`) moet zichtbaar terugkomen
+- De inhoud (taken, signalen) blijft, maar de presentatie wordt rijker
+- Tonal depth in de surfaces — niet één vlak, maar lagen
+
+**3. Speaking Surface — Zwevende intelligentie-laag**
+Inhoudelijk goed, visueel nog "te grote nette balk":
+- Moet voelen als een premium AI-utterance layer
+- Translucent, live, verbonden met het systeem
+- Alsof het in de ruimte zweeft binnen de interface
+- Subtiele connectie met de core (faint glow, connector hint)
+
+**4. Command Bar — Command Deck**
+Niet een eenvoudige input bar maar:
+- Een premium control strip
+- Intent surface met meer gewicht en aanwezigheid
+- Visueel een onderdeel van het systeem, niet een plakker onderaan
+
+**5. Achtergrond — Levende ruimte**
+Niet dood zwart maar:
+- Subtiele atmosphere, cinematic depth, volume
+- Soft beams, faint grid structures, spatial glow
+- Donkere premium ruimte die voelbaar is
+- Niet druk, wel aanwezig
+
+### Wat terug moet uit eerdere rondes
+Deze visuele kwaliteiten uit de sterkste experimenten moeten terug:
+- Center-core kwaliteit uit de core study (rechtsonder variant)
+- HUD vocabulary uit `xr3VGzad` (connector lines, callout brackets, radiale indicatoren)
+- Cinematische diepte uit de betere Variant 1 (`AJhd3LzY`) en Variant 4 (`tfX50Ru4`)
+- De futuristische layering uit Variant 3 (depth-layered)
+- Spatial presence die in de eerste generaties sterker was
+
+### Scopebewaking
+De oplossing is NIET méér content, méér kaartjes, méér features.
+De oplossing is betere visuele systeemtaal.
+- ❌ Geen extra dashboard-data
+- ❌ Geen functionele drukte toevoegen
+- ❌ Geen nieuwe modules bedenken
+- ✅ Dezelfde content, betere visuele wereld eromheen
+
+---
+
+## Expliciete Kleurtaal
+
+Gebruik deze kleuren expliciet in prompts.
+
+### Base Backgrounds
+| Token | Hex | Gebruik |
+|---|---|---|
+| Primary background | `#0E0F10` | Main canvas |
+| Secondary background | `#121417` | Depth layer |
+| Tertiary dark surface | `#171A1E` | Recessed areas |
+
+### Surfaces
+| Token | Hex | Gebruik |
+|---|---|---|
+| Main panel surface | `#181B1F` | Side rails, panelen |
+| Elevated panel surface | `#1D2126` | Raised cards |
+| Subtle card/sheet surface | `#22272D` | Content blocks |
+| Soft inset/layered surface | `#262C33` | Layered insets |
+
+### Borders & Dividers
+| Token | Hex |
+|---|---|
+| Soft border | `#2B3138` |
+| Secondary border | `#343B44` |
+| Very subtle divider | `rgba(255,255,255,0.06)` |
+
+### Primary Text
+| Token | Hex | Gebruik |
+|---|---|---|
+| Main text | `#F4EDE1` | Primary headings, labels |
+| Bright text alternative | `#EEE7DB` | Emphasis text |
+
+### Secondary Text
+| Token | Hex | Gebruik |
+|---|---|---|
+| Secondary text | `#D3CABD` | Descriptions |
+| Supporting text | `#B8B0A4` | Metadata |
+| Muted text | `#948D83` | Tertiary info |
+
+### Accent Colors
+| Token | Hex | Gebruik |
+|---|---|---|
+| Primary accent gold | `#D6B35A` | Main accent, intelligence glow |
+| Soft gold highlight | `#E2C774` | Hover states, emphasis |
+| Warm amber accent | `#C89B3C` | Deeper accent momenten |
+| Accent glow | `rgba(214,179,90,0.28)` | Radial glows, halos |
+| Soft ivory glow | `rgba(244,237,225,0.10)` | Ambient atmosphere |
+
+### Kleurregels
+
+**Wel:**
+- Near-black charcoal foundation
+- Warm ivory tekst
+- Muted gold accenten
+- Subtiele tonal separation
+- Zachte gecontroleerde glow
+
+**Absoluut niet:**
+- Fel SaaS-blauw als hoofdaccent
+- Neon cyan, neon paars, electric green
+- Rainbow gradients
+- Harde rode dominantie
+- Cyberpunk palette
+- Verzadigde gaming-kleuren
+- Elke extra kleur moet desaturated, donker, elegant zijn — secundair aan gold/ivory
+
+---
+
+## Gradients
+
+Gradients zijn toegestaan, maar alleen subtiel en premium.
+
+**Gebruik bij voorkeur:**
+- Dark charcoal naar iets warmer charcoal (`#0E0F10` → `#14181C`)
+- Heel zachte gold-tinted atmospheric glows (`rgba(214,179,90,0.06)`)
+- Subtiele radial ivory/gold bloom rond het centrale intelligence object
+- Ambient depth zonder kleurshow
+
+**Vermijd:**
+- Multicolor gradients
+- Blauw-paarse sci-fi filmglow
+- Zware lens flare
+- Fel verzadigde lichtbronnen
+
+---
+
+## Compositie & Layout
+
+### Core Structure
+```
+┌──────────────────────────────────────────────────────┐
+│  [Budio]                                   [minimal] │
+│                                                       │
+│  ┌────────┐    ┌───────────────────┐    ┌────────┐  │
+│  │        │    │                   │    │        │  │
+│  │  WERK  │    │     CENTRAL       │    │SIGNALS │  │
+│  │ Taken  │    │   INTELLIGENCE    │    │ Status │  │
+│  │ Sprint │    │      CORE         │    │Activity│  │
+│  │Context │    │                   │    │  Agent │  │
+│  │        │    │                   │    │        │  │
+│  └────────┘    └───────────────────┘    └────────┘  │
+│                                                       │
+│         ┌─────────────────────────────┐              │
+│         │  🔊 Jarvis Speaking Surface  │              │
+│         └─────────────────────────────┘              │
+│                                                       │
+│  ┌──────────────────────────────────────────────┐   │
+│  │         Command / Input Area                   │   │
+│  └──────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────┘
+```
+
+### Zones
+1. **Center** — Intelligence core (primary focus, emotioneel anker)
+2. **Left rail** — Werk: taken, sprint, planning, werkcontext, bestanden (secondary)
+3. **Right rail** — Awareness: signalen, status, activiteit, intelligence (secondary)
+4. **Jarvis Speaking Surface** — Zwevende response-banner voor live Jarvis-uitspraken (secondary, overlays center/bottom)
+5. **Bottom** — Command / input / run surface (tertiary)
+6. **Top** — Minimal branding ("Budio"), sparse metadata
+
+### Verschil links vs rechts
+De twee rails zijn bewust asymmetrisch in karakter:
+
+**Links = "Wat je doet"** — operationeel, taak-georiënteerd, product-reëel
+- Voelt als een directe evolutie van de Budio Workspace takenlijst en kanban
+- Toont echte ontwikkeltaken, sprint-voortgang, werkbestanden, checklists
+- Moet herkenbaar zijn voor iemand die de bestaande Budio plugin kent
+- Concrete content, geen abstracte kaarten
+
+**Rechts = "Wat er speelt"** — informatief, signalerend, assisterend
+- Voelt als een kalme awareness-laag, niet als een analytics dashboard
+- Toont signalen (deploy status, PR reviews), agent-activiteit, suggesties
+- Lichter en rustiger dan de linker rail
+- Meer status-indicatoren, minder dense content
+
+### Spacing & Density
+
+De layout moet aanvoelen als: spacious, intentional, focused, serene, modular, expandable.
+
+**Gebruik:**
+- Duidelijke negative space
+- Heldere zones met ademruimte
+- Visueel ritme tussen center, side rails en bottom command area
+- Rust tussen panelen
+- Modulaire zones met heldere hiërarchie
+
+**Niet:**
+- Widget wall of overvolle dashboards
+- Kleine onleesbare vakjes
+- Teveel tegelijk op scherm
+- Cramped UI
+
+### Formaat & Responsiviteit
+
+De Jarvis Cockpit moet werken in dezelfde omgevingen als de bestaande Budio Workspace:
+- **VS Code geïntegreerd panel** — naast code editor en terminal, smaller viewport
+- **Full screen** — volledige schermruimte beschikbaar
+- **Resizable window** — vloeiend schaalbaar tussen klein en groot
+- **Mobile en tablet** — touch-formaten worden ondersteund
+
+Dit betekent voor het concept:
+- De compositie moet **schaalbaar** aanvoelen — het center object en de rails moeten logisch kunnen krimpen of groeien
+- De concept still toont de **full screen ideaalweergave** (16:9), maar het ontwerp moet visueel suggereren dat het kan ademen in kleinere formaten
+- Vermijd layouts die alleen werken op één exact formaat
+
+---
+
+## Jarvis Speaking Surface — "Jarvis Spreekt"
+
+Een nieuw vast UI-component dat verschijnt wanneer Jarvis actief communiceert.
+
+### Referentie-asset
+- `ISbrKHrS` (1079×167) — **Directe referentie voor het speaking component.** Toont een breed, minimaal, donker vlak met gouden waveform-icon links en ivoor tekst rechts. Dit is het visuele vertrekpunt.
+
+### Vorm
+- Breed afgerond rechthoekig vlak (spanning ~60-80% van de breedte tussen de rails)
+- Donkere translucente achtergrond (`#1A1D22` op ~90% opacity)
+- Zeer subtiele warme goud atmospheric glow erachter (`rgba(214,179,90,0.12)`)
+- Afgeronde hoeken (20-24px)
+
+### Inhoud
+- **Links:** Circulair icon-gebied (32-40px) met gouden waveform/audio-visualisatie — indiceert dat Jarvis spreekt
+- **Midden/rechts:** Grote heldere ivoor tekst (#F4EDE1) in clean sans-serif, iets groter dan body (18-20px feel)
+- **Optioneel rechts:** Subtiel dismiss/minimize icon in muted tekst
+
+### Voorbeeldtekst (Nederlands)
+"Ik heb je deployment logs bekeken — staging is klaar. Wil je dat ik de checklist voor productie voorbereid?"
+
+### Plaatsing
+- Primaire positie: tussen het center core object en de bottom command bar
+- Alternatief: als strip direct boven de command bar
+- Moet geïntegreerd aanvoelen, niet "erboven geplakt"
+
+### Karakter
+- Kalme assistant-aanwezigheid
+- High-trust product UI
+- Warm intern hulpmiddel
+- Intelligent maar beheerst systeemfeedback
+- **Geen** chat bubble, geen comic styling, geen typing-indicator clichés
+- **Geen** excessieve glow, geen chatbot-paneel, geen messaging-UI
+
+### Verschil met command bar
+- De **command bar** is waar de gebruiker typt/spreekt → intent
+- De **speaking surface** is waar Jarvis antwoordt → response
+- Ze zijn visueel verwant maar functioneel gescheiden
+
+---
+
+## Centrale Intelligence Object
+
+Het centrale object is het belangrijkste visuele anker van het hele scherm.
+
+**Het moet:**
+- Het meeste opvallen
+- Intelligent, elegant en levendig aanvoelen zonder chaos
+- Zachte motion energy suggereren, zelfs in een still image
+- Warm goud/ivory licht gebruiken (`#D6B35A`), niet blauw neon
+- Aanvoelen als een refined intelligence core
+
+**Mogelijke vormen:**
+- Layered orb
+- Concentric ring system
+- Suspended intelligence field
+- Holographic core met glass layers
+- Refined radial construct
+
+**Visueel gedrag:**
+- Soft radial amber-gold light
+- Controlled glow, layered geometry
+- Subtiele glass/holographic treatment
+- Fine line work
+- Soft ivory-gold atmospheric bloom
+
+**Mag absoluut niet:**
+- Fantasy magic orb
+- Robot face of AI avatar
+- Particle-chaos of vuurwerk
+- Blue neon sci-fi core
+
+---
+
+## Surface Treatment
+
+**Gebruik:**
+- Clean dark panels met subtiele tonal separation
+- Refined translucency waar nuttig (leesbaarheid behouden)
+- Zachte glass/holographic hints
+- Moderate rounded corners (16–24px feel)
+- Subtiele shadowing, soft edge lighting, restrained inner glow
+
+**Niet gebruiken:**
+- Glossy gamer panels of zwaar chrome sci-fi
+- Plastic look of harde industriële hoeken
+- Bubbly consumer-app softness
+- Veel ruistexturen of overmatige reflectie
+
+---
+
+## Typografie
+
+Typografie moet voelen als een premium productinterface.
+
+**Voorkeursrichting:** `Inter` — of visueel in de richting van `SF Pro`, `Circular`, `Helvetica Neue`, moderne system sans.
+Als het model geen exact font volgt: vraag om **clean modern sans-serif, editorial, calm, highly legible**.
+
+**Karakter:** Elegant, rustig, editorial, menselijk, professioneel, product-grade, quiet confidence.
+
+### Hiërarchie
+| Niveau | Gewicht | Tracking | Gebruik |
+|---|---|---|---|
+| Grote headings | 600 | Normal/tight | Screen titles |
+| Section titles | 500–600 | Normal | Panel headers |
+| Body text | 400 | Normal | Descriptions |
+| Labels/chips | 500 | Slightly open | UI metadata |
+
+**Uppercase:** Alleen voor tiny metadata of system labels — nooit voor alle tekst.
+
+**Verboden fonts:** Techno, square futuristic, smalle sci-fi display, speelse ronde consumer fonts, agressieve AI-branding fonts, extreme display fonts.
+
+---
+
+## Visuele Hiërarchie (Priority Order)
+
+1. **Centrale intelligence object** — Primary focus, grootste visueel gewicht
+2. **Jarvis Speaking Surface** — Wanneer actief, tweede sterkste element (het is wat Jarvis zegt)
+3. **Linker rail (Werk)** — Operationele taken en context, product-reëel
+4. **Rechter rail (Awareness)** — Signalen en status, lichter dan links
+5. **Command bar** — Input surface, grounded onderaan
+6. **Fine metadata en status details** — Laagste nadruk
+
+De interface mag nooit met zichzelf concurreren.
+De speaking surface trekt tijdelijk aandacht wanneer Jarvis spreekt, maar verstoort de compositie niet.
+
+---
+
+## Side Rail Content — Concretisering
+
+### Linker Rail — "Werk" (taak-georiënteerd)
+
+**Aanbevolen structuur:** Sprint Focus (beste uit study) of Hybrid Context (tweede keuze)
+
+**Sprint Focus variant (aanbevolen):**
+- Header: "Sprint 4" in muted label (#948D83)
+- Gold sprint progress bar: "65%" in #D6B35A
+- 3-4 echte ontwikkeltaken:
+  - "API endpoints refactoring" — In Progress — P1 — gold indicator
+  - "Auth flow testing" — Blocked — P2 — amber indicator
+  - "Deploy staging pipeline" — Ready — checklist "2/4"
+  - "Update docs voor v2.1" — Backlog — muted
+- Elke taak: titel in ivory (#F4EDE1), status pill, priority chip
+- Surface: #1A1D22, border #313640, 16-20px corners
+
+**Belangrijk:** De content moet aanvoelen als de bestaande Budio task list, geëvolueerd. Niet als abstracte "workspace cards." Echte taak-titels, echte statussen, echte prioriteiten.
+
+### Rechter Rail — "Awareness" (signaal-georiënteerd)
+
+**Aanbevolen structuur:** Signal Cards (beste uit study) of Lightweight Status
+
+**Signal Cards variant (aanbevolen):**
+- 3 compacte signaal-cards gestapeld:
+  - "Staging Deploy" — Ready · 14:32 — gold ready dot
+  - "2 PRs wachten op review" — amber indicator
+  - "Agent: code review voltooid" — muted status
+- Elke card: #20242A surface, #313640 border, compact
+- Onderaan: "Jarvis · actief · 3 suggesties" in muted tekst
+
+**Belangrijk:** Lichter en rustiger dan links. Meer signalerend, minder dense. Geen grafieken, geen meters, geen analytics widgets. Alleen compacte status-informatie die helpt bij het overzicht houden.
+
+### Anti-patronen voor de rails
+- ❌ Generiek analytics dashboard
+- ❌ Finance-achtige metrics
+- ❌ Abstracte kaarten zonder echte content
+- ❌ Overvolle widget wall
+- ❌ Koude enterprise SaaS panels
+- ❌ Dezelfde dichtheid links en rechts (rechts moet lichter zijn)
+
+---
+
+## UI Detail Niveau
+
+**Gebruik:** Fine-line iconography, subtiele status indicators, compacte chips, rustige scheidingslijnen, geloofwaardige productdetails.
+
+**Niet:** Spaceship targeting overlays, hacker scanlines, overload van microtekst, pseudo-technical noise, dense battlefield HUD, exaggerated charts.
+
+---
+
+## Anti-Patterns (Expliciete Uitsluitingen)
+
+| ❌ Niet doen | Reden |
+|---|---|
+| Cold enterprise SaaS | Verkeerd emotioneel register |
+| Cyberpunk neon overload | Te noisy, verkeerd palet |
+| Game UI | Verkeerd publiek |
+| Hacker terminal / green text | Verkeerde esthetische klasse |
+| Spaceship cockpit clutter | Te dense, te letterlijk |
+| Analytics dashboard wall | Generiek, geen ziel |
+| Glossy chrome fantasy | Niet product-geloofwaardig |
+| Childish AI avatar / robot face | Verkeerde persoonlijkheid |
+| Mobile app screen | Verkeerd formaat |
+| Landing page | Verkeerde context |
+| IDE screenshot replica | Verkeerd abstractieniveau |
+| Military HUD | Te agressief |
+| Dense tiny text everywhere | Onleesbaar, rommelig |
+| Rainbow glows / exaggerated chrome | Verkeerde materialiteit |
+
+---
+
+## Brand Adaptation
+
+Vertaal Jarvis/Iron Man-inspiratie naar Budio visuele taal:
+
+- Warm neutral foundation (niet koud blauw)
+- Restrained gold accent (niet neon glow)
+- Soft ivory/charcoal contrast (niet high-contrast sci-fi)
+- Calm premium editorial feel (niet flashy fantasy)
+- Minimal bright accent colors (niet rainbow)
+
+---
+
+## Referentie-assets op Canvas
+
+### Jarvis Inspiratie (structureel / emotioneel DNA)
+- `yUr54lVR` — Jarvis circuit orb → radial compositie-referentie
+- `zQKDs2sJ` — JARVIS interface screen → layout/sfeer-referentie
+- `abu2rx4k` — "Jarvis Favorit" video → favoriete sfeer-referentie van de founder
+- `IBc90paC` — AI assistant mobile screens → **anti-referentie** (te consumer, te groen/neon)
+
+### Budio Workspace (product-taal grounding)
+- `J6NfT9Gy` — Huidig kanban board in VS Code → panel structuur, dark mode taal
+- `BAh0Jit1` — Task list view → typografie, dichtheid, sidebar → **primaire referentie voor linker rail**
+- `ZE0OWkeV` — Kanban met lanes → card stijl, professioneel UI
+
+### Verfijnde Concept Referenties (geüpload door founder)
+- `sJthA_KD` (1672×941) — **Concept overview met modules** "Werkkontekst", "Taken", "Systeemstatus". Toont een meer product-geloofwaardige lay-out met duidelijke functionele zones. Gebruik als compositie- en content-referentie voor de rails.
+- `re0xr8DL` (1672×941) — **Concept met geïntegreerde Jarvis-response.** Toont conversationele AI-update met taakbeheer-modules. Gebruik voor hoe Jarvis-response en werkpanelen samen leven.
+- `ISbrKHrS` (1079×167) — **Jarvis Speaking Surface referentie.** Breed donker vlak met gouden waveform-icon en ivoor tekst. **Directe referentie voor het "Jarvis Spreekt" component.** Dit design is al sterk en moet vertaald worden naar de Budio visuele taal.
+
+### Gegenereerde Design Studies
+- `xr3VGzad` — HUD micro-elementen study → connector- en callout-vocabulaire (bijna klaar, herbruikbaar als library)
+- `KqonuBjC` — Side rail panel study v1 → basis maar te generiek (wordt vervangen)
+- `kXbN0rmi` — Command bar study → 5 variaties, V5 "Grounded Module" is de aanbevolen richting
+
+### Gegenereerde Concept Stills (benchmarks)
+- `AJhd3LzY` — Variant 1 Focus → cinematische sfeer en gold-on-dark licht (visueel sterk, inhoudelijk te leeg)
+- `tfX50Ru4` — Variant 4 Data Signals → rijkste bewezen variant met Jarvis caption (visueel sterker dan synthese)
+- `wMt2_SNP` — Synthese-still → **inhoudelijk benchmark** (structuur, hiërarchie, content), maar **niet visueel benchmark** (te braaf, te vlak, te weinig filmische presence)
+
+### Benchmarkstatus
+| Aspect | Benchmark | Asset |
+|---|---|---|
+| Informatie-architectuur | ✅ wMt2_SNP synthese | Layoutlogica, functionele hiërarchie, speaking surface |
+| Visuele sfeer/licht | ✅ AJhd3LzY Variant 1 | Cinematische gold-on-dark presence |
+| Visuele rijkheid | ✅ tfX50Ru4 Variant 4 | Data-integratie met sfeer |
+| Center core | ✅ Core study rechtsonder | Precisie + glow + intelligence |
+| HUD-detailtaal | ✅ xr3VGzad HUD study | Connector vocabulary, callouts |
+| Command bar | ✅ kXbN0rmi V5 Grounded | Premium control strip |
+| Speaking surface | ✅ ISbrKHrS | Directe referentie |
+
+De volgende generatie moet al deze benchmarks samenbrengen — de inhoud van de synthese, de sfeer van V1/V4, de core uit de studies, en de HUD-taal.
+
+### Referentie-gebruik
+- Gebruik de **founder concept-uploads** (`sJthA_KD`, `re0xr8DL`) als de meest actuele richtingwijzers voor layout en content
+- Gebruik `ISbrKHrS` als **directe referentie** voor het Jarvis Speaking Surface component
+- Gebruik Jarvis-referenties voor **compositie en emotionele architectuur** alleen
+- Gebruik Budio screenshots voor **product-geloofwaardigheid, panel structuur en UI-realisme**
+- Neem **niet** de blauwe sci-fi kleurtaal van klassieke Jarvis-referenties over
+- Vervang die volledig met de warme Budio charcoal / ivory / gold richting
+
+---
+
+## Prompt Helpers
+
+### Compact Style Identity Block
+Gebruik dit bovenaan elke Luma-prompt:
+
+> Style identity: Warm premium dark mode, near-black charcoal surfaces, ivory typography, muted gold accents, editorial sans-serif typography, restrained holographic depth, calm Jarvis-like atmosphere, believable product UI.
+
+### Ambiguity Rule
+Voeg waar mogelijk toe:
+
+> If there is any ambiguity, prefer calm premium product design over flashy sci-fi spectacle.
+
+### Negatieve Regels voor Prompts
+Gebruik deze expliciet:
+
+- Do not make it cold enterprise SaaS
+- Do not use blue neon as the dominant light language
+- Do not make it cyberpunk
+- Do not make it a gaming HUD
+- Do not make it a hacker terminal
+- Do not make it a spaceship cockpit
+- Do not make it a generic analytics dashboard
+- Do not overload the interface with tiny unreadable widgets
+- Do not invent a mobile app screen
+- Do not make it look like a landing page
+- Do not use cartoon AI faces
+- Do not use rainbow glows
+- Do not use exaggerated chrome sci-fi effects
+
+---
+
+## Output Specificatie
+
+- **Format:** Single high-fidelity concept still
+- **Aspect ratio:** 16:9
+- **Resolution:** 2K
+- **Tool:** Nano Banana Pro (best quality for precise UI-concept work)
+- **References:** Jarvis circuit orb + JARVIS interface (compositie) + Budio kanban + task list (product-taal)
+- **Gevoel:** Het eerste moment dat je het systeem binnenkomt — visueel rijk genoeg om toekomstige uitbreiding te inspireren, gedisciplineerd genoeg om later een echte interface te worden
+
+---
+
+## Gebruik van dit document
+
+- Referentiebrief in de workspace
+- Basis voor nieuwe Luma prompts
+- Correctiebron voor refinement rounds
+- Stijlanker zodat volgende generaties niet afdrijven naar generieke sci-fi

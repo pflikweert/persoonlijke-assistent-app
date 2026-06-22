@@ -23,6 +23,7 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
 AIQS kan drafts maken, bewerken, testen, vergelijken en reviews opslaan, maar de lifecycle stopt nog vóór productiebeheer: er is geen gecontroleerde promotie van draft naar live en geen rollback naar een oudere live-versie. Runtime DB-binding gebruikt precies één live versie per task, dus deze statuswissel moet veilig en transactioneel zijn.
@@ -226,3 +227,5 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room

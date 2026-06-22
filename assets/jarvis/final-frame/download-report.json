@@ -1,0 +1,181 @@
+{
+  "generatedAt": "2026-06-13T13:12:19.842Z",
+  "dryRun": false,
+  "apiMode": "agents",
+  "keyFamily": "agents",
+  "keySource": "LUMA_AGENTS_API_UNI_KEY",
+  "keyValid": true,
+  "keyReason": null,
+  "overallStatus": "ready",
+  "summary": {
+    "total": 20,
+    "ready": 17,
+    "downloaded": 0,
+    "manual_source_required": 0,
+    "seeded_text": 3,
+    "error": 0,
+    "cached": 0
+  },
+  "assets": [
+    {
+      "logicalId": "jarvis-core",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/jarvis-core.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "waveform-icon",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/waveform-icon.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "budio-logotype",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/budio-logotype.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "hud-sprite-sheet",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/hud-sprite-sheet.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "main-build-target",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/main-build-target.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "alternate-build-target",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/alternate-build-target.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "ambient-loop",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/ambient-loop.mp4",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "center-core-variations",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/center-core-variations.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "hud-micro-elements-library",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/hud-micro-elements-library.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "side-rail-panels",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/side-rail-panels.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "command-bar-variations",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/command-bar-variations.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "speaking-surface-banner",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/speaking-surface-banner.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "budio-task-list-context",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/budio-task-list-context.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "budio-kanban-context",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/budio-kanban-context.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "vscode-integration-context",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/vscode-integration-context.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "founder-overview",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/founder-overview.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "founder-jarvis-response-sketch",
+      "status": "ready",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/founder-jarvis-response-sketch.png",
+      "resolvedApi": "local",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "unified-design-brief",
+      "status": "seeded_text",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/unified-design-brief.txt",
+      "resolvedApi": "seed",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "build-manifest",
+      "status": "seeded_text",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/build-manifest.txt",
+      "resolvedApi": "seed",
+      "resolvedUrl": null
+    },
+    {
+      "logicalId": "final-frame",
+      "status": "seeded_text",
+      "failureReason": null,
+      "localPath": "assets/jarvis/final-frame/final-frame.txt",
+      "resolvedApi": "seed",
+      "resolvedUrl": null
+    }
+  ]
+}

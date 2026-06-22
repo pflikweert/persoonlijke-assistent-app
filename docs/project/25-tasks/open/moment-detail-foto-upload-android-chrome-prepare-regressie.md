@@ -16,8 +16,9 @@ follows_after: [task-moment-detail-foto-upload-productieflakiness-onderzoek]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
+
 
 
 
@@ -300,3 +301,5 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
