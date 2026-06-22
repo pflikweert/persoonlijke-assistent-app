@@ -1,5 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  buildClaimTaskAgentPatch,
+  buildClearTaskAgentPatch,
+  DEFAULT_AGENT_SETTINGS,
+  type AgentSettingsInput,
+} from './agent-metadata';
 import { scanEpicDocuments, scanTaskDocuments } from './scanner';
 import { applyChecklistToggle, applyTaskFieldPatch, buildNewTaskContent, buildTargetPathForStatus } from './writer';
 import type {
@@ -11,6 +17,17 @@ import type {
   TaskFieldPatch,
   TaskMutationResult,
 } from './types';
+
+type AgentMetadataPatch = Pick<
+  TaskFieldPatch,
+  | 'activeAgent'
+  | 'activeAgentModel'
+  | 'activeAgentRuntime'
+  | 'activeAgentSince'
+  | 'activeAgentStatus'
+  | 'activeAgentSettings'
+  | 'updatedAt'
+>;
 
 function doneStatusCleanupPatch(): Pick<
   TaskFieldPatch,
@@ -36,6 +53,7 @@ export class TaskRepository {
     private readonly workspaceRoot: string,
     private readonly tasksRootRelative: string,
     private readonly epicsRootRelative = 'docs/project/24-epics',
+    private readonly agentSettings: AgentSettingsInput = DEFAULT_AGENT_SETTINGS,
   ) {}
 
   async scan(): Promise<ParsedTaskFile[]> {
@@ -54,13 +72,7 @@ export class TaskRepository {
     const tasks = await this.scan();
     const task = requireTask(tasks, taskId);
     assertVersion(task, expectedVersion);
-    const normalizedPatch =
-      patch.status === 'done'
-        ? {
-            ...patch,
-            ...doneStatusCleanupPatch(),
-          }
-        : patch;
+    const normalizedPatch = this.withAutomaticAgentTransition(task.status, patch);
 
     const statusChanged = normalizedPatch.status !== undefined && normalizedPatch.status !== task.status;
     if (statusChanged && normalizedPatch.status) {
@@ -196,9 +208,6 @@ export class TaskRepository {
       if (id === task.id) {
         patch.status = input.targetStatus;
         patch.updatedAt = new Date().toISOString().slice(0, 10);
-        if (input.targetStatus === 'done') {
-          Object.assign(patch, doneStatusCleanupPatch());
-        }
       }
 
       const nextPath =
@@ -214,7 +223,7 @@ export class TaskRepository {
             )
           : destinationTask.sourcePath;
 
-      const content = applyTaskFieldPatch(destinationTask, patch);
+      const content = applyTaskFieldPatch(destinationTask, this.withAutomaticAgentTransition(destinationTask.status, patch));
       writes.set(id, {
         sourcePath: destinationTask.sourcePath,
         targetPath: nextPath,
@@ -235,7 +244,8 @@ export class TaskRepository {
 
   async createTask(input: CreateTaskInput): Promise<TaskMutationResult> {
     const tasks = await this.scan();
-    const now = new Date().toISOString().slice(0, 10);
+    const nowDate = new Date();
+    const now = nowDate.toISOString().slice(0, 10);
     const slug = slugify(input.title);
     const openFolder = path.resolve(this.workspaceRoot, this.tasksRootRelative, 'open');
     await fs.mkdir(openFolder, { recursive: true });
@@ -261,12 +271,15 @@ export class TaskRepository {
       await writeTaskFile(laneTask.sourcePath, laneTask.sourcePath, content);
     }
 
+    const agentPatch: Partial<AgentMetadataPatch> =
+      input.status === 'in_progress' ? buildClaimTaskAgentPatch(this.agentSettings, nowDate) : {};
     const content = buildNewTaskContent({
       ...input,
       id,
       phase,
       updatedAt: now,
       sortOrder: 1,
+      ...agentPatch,
     });
     await fs.writeFile(candidate, content, 'utf8');
     return {
@@ -318,6 +331,35 @@ export class TaskRepository {
       taskId,
       path: path.relative(this.workspaceRoot, archivePath),
     };
+  }
+
+  private withAutomaticAgentTransition(currentStatus: ParsedTaskFile['status'], patch: TaskFieldPatch): TaskFieldPatch {
+    if (!patch.status) {
+      return patch;
+    }
+
+    if (patch.status === 'in_progress' && currentStatus !== 'in_progress') {
+      return {
+        ...patch,
+        ...buildClaimTaskAgentPatch(this.agentSettings),
+      };
+    }
+
+    if (currentStatus === 'in_progress' && patch.status !== 'in_progress') {
+      return {
+        ...patch,
+        ...buildClearTaskAgentPatch(),
+      };
+    }
+
+    if (patch.status === 'done') {
+      return {
+        ...patch,
+        ...doneStatusCleanupPatch(),
+      };
+    }
+
+    return patch;
   }
 }
 

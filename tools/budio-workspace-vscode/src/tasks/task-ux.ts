@@ -1,6 +1,21 @@
 import type { TaskCardViewModel } from './types';
 
 export type ChecklistProgressTone = 'none' | 'band-0' | 'band-1' | 'band-2' | 'band-3' | 'band-4';
+export type ActiveAgentTone = 'active' | 'inactive';
+
+type ActiveAgentTask = Pick<
+  TaskCardViewModel,
+  'activeAgent' | 'activeAgentModel' | 'activeAgentRuntime' | 'activeAgentSince' | 'activeAgentStatus'
+>;
+
+export interface ActiveAgentUiState {
+  isActive: boolean;
+  label: string | null;
+  chipLabel: string | null;
+  runtimeLabel: string | null;
+  sinceLabel: string | null;
+  statusTone: ActiveAgentTone;
+}
 
 export function checklistProgressTone(completed: number, total: number): ChecklistProgressTone {
   if (total <= 0) {
@@ -44,6 +59,23 @@ export function formatLastChangeDate(updatedAt: string): string {
   }).format(parsed);
 }
 
+export function formatActiveAgentSince(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return `sinds ${new Intl.DateTimeFormat('nl-NL', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(parsed)}`;
+}
+
 export function isTaskAgentActive(task: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus'>): boolean {
   if (!task.activeAgent) {
     return false;
@@ -63,6 +95,33 @@ export function activeAgentLabel(task: Pick<TaskCardViewModel, 'activeAgent' | '
   }
 
   return task.activeAgent;
+}
+
+export function activeAgentUiState(task: ActiveAgentTask): ActiveAgentUiState {
+  const label = activeAgentLabel(task);
+  if (!label) {
+    return {
+      isActive: false,
+      label: null,
+      chipLabel: null,
+      runtimeLabel: null,
+      sinceLabel: null,
+      statusTone: 'inactive',
+    };
+  }
+
+  const runtimeParts = [task.activeAgentRuntime, task.activeAgentModel]
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part));
+
+  return {
+    isActive: true,
+    label,
+    chipLabel: `${label} actief`,
+    runtimeLabel: runtimeParts.length > 0 ? runtimeParts.join(' · ') : null,
+    sinceLabel: formatActiveAgentSince(task.activeAgentSince),
+    statusTone: 'active',
+  };
 }
 
 export function compareActiveAgentsFirst(

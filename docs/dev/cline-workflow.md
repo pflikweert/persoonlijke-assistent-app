@@ -194,6 +194,9 @@ Gebruik Act mode voor:
   - taskstatus = workflowstatus van de taskfile
   - geselecteerde task = alleen UI-selectie in de plugin
   - actieve agent = runtime/WIP-metadata in `active_agent*`
+- Bij actieve Codex-uitvoering hoort `active_agent*` automatisch gevuld te zijn. Buiten de plugin gebruik je:
+  - `node scripts/taskflow-agent-state.mjs claim <taskfile>` bij start/hervatting.
+  - `node scripts/taskflow-agent-state.mjs clear <taskfile>` bij done, blocked of overdracht.
 - `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
 - Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
 

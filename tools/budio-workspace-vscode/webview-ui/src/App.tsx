@@ -28,6 +28,7 @@ import {
 import { sortTaskCards } from '../../src/tasks/sort-policy';
 import {
   activeAgentLabel,
+  activeAgentUiState,
   checklistProgressTone,
   compactChecklistProgressLabel,
   formatLastChangeDate,
@@ -405,6 +406,13 @@ export function App(): React.JSX.Element {
   );
   const cardMap = useMemo(
     () => new Map(snapshot?.allCards.map((card) => [card.id, card]) ?? []),
+    [snapshot?.allCards],
+  );
+  const activeAgentItems = useMemo(
+    () =>
+      (snapshot?.allCards ?? [])
+        .map((card) => ({ card, agentState: activeAgentUiState(card) }))
+        .filter((item) => item.agentState.isActive),
     [snapshot?.allCards],
   );
   const epics = useMemo(() => snapshot?.epics ?? [], [snapshot]);
@@ -813,6 +821,33 @@ export function App(): React.JSX.Element {
           }
         >
           <section className={`main-pane ${activeView === 'list' ? 'main-pane-list' : ''}`}>
+            {(activeView === 'board' || activeView === 'list') && activeAgentItems.length > 0 ? (
+              <div className="live-agent-strip" aria-label="Actieve agents">
+                <div className="live-agent-strip-label">
+                  <span className="live-agent-dot" aria-hidden="true" />
+                  <span>{activeAgentItems.length === 1 ? 'Agent actief' : `${activeAgentItems.length} agents actief`}</span>
+                </div>
+                <div className="live-agent-strip-items">
+                  {activeAgentItems.slice(0, 3).map(({ card, agentState }) => (
+                    <button
+                      key={card.id}
+                      type="button"
+                      className="live-agent-item"
+                      onClick={() => selectTask(card.id)}
+                      title={`${agentState.label ?? 'Agent'} werkt aan ${card.title}`}
+                    >
+                      <strong>{agentState.label ?? 'Agent'} werkt aan</strong>
+                      <span>{card.title}</span>
+                      {agentState.sinceLabel ? <em>{agentState.sinceLabel}</em> : null}
+                    </button>
+                  ))}
+                  {activeAgentItems.length > 3 ? (
+                    <span className="live-agent-overflow">+{activeAgentItems.length - 3}</span>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
             {activeView === 'board' ? (
               <div className="board-canvas">
                 {visibleColumns.map((column) => {
@@ -836,7 +871,7 @@ export function App(): React.JSX.Element {
                     <div className="column-cards">
                       {column.cards.map((card) => {
                         const isSelected = selectedTask?.id === card.id;
-                        const agentLabel = activeAgentLabel(card);
+                        const agentState = activeAgentUiState(card);
                         const visibleTags = card.tags.slice(0, 2);
                         const hiddenTagCount = Math.max(card.tags.length - visibleTags.length, 0);
                         const hasMeta = Boolean(card.dueDate) || card.checklistProgress.total > 0;
@@ -850,10 +885,10 @@ export function App(): React.JSX.Element {
                           dropIndicator.placement === 'after';
 
                         return (
-                          <div key={card.id} className="task-card-shell">
+                          <div key={card.id} className={`task-card-shell ${agentState.isActive ? 'agent-active-shell' : ''}`}>
                             {isDropBefore ? <div className="drop-indicator drop-indicator-before" /> : null}
                             <article
-                              className={`task-card ${isSelected ? 'selected' : ''}`}
+                              className={`task-card ${isSelected ? 'selected' : ''} ${agentState.isActive ? 'agent-active-card' : ''}`}
                               draggable={dragEnabled}
                               onDragStart={() => handleTaskDragStart(card.id, card.status)}
                               onDragEnd={() => {
@@ -906,7 +941,12 @@ export function App(): React.JSX.Element {
                                 <span className={`priority-badge ${card.priority}`}>{card.priority.toUpperCase()}</span>
                                 <div className="card-header-badges">
                                   {isSelected ? <span className="active-task-chip">Geselecteerd</span> : null}
-                                  {agentLabel ? <span className="agent-task-chip">{agentLabel}</span> : null}
+                                  {agentState.chipLabel ? (
+                                    <span className="agent-task-chip agent-task-chip-pulsing">
+                                      <span className="live-agent-dot" aria-hidden="true" />
+                                      {agentState.chipLabel}
+                                    </span>
+                                  ) : null}
                                   <span className="task-ref" title={card.id}>
                                     {formatTaskRef(card.id)}
                                   </span>
@@ -1034,13 +1074,15 @@ export function App(): React.JSX.Element {
                   <div className="list-rows-desktop" role="rowgroup">
                     {listCards.map((card) => {
                       const isSelected = selectedTask?.id === card.id;
-                      const agentLabel = activeAgentLabel(card);
+                      const agentState = activeAgentUiState(card);
                       const surfaceProps = getListSurfaceProps(card, isSelected);
                       return (
                         <div
                           key={card.id}
                           {...surfaceProps}
-                          className={`${surfaceProps.className ?? ''} list-task-row list-grid-row`.trim()}
+                          className={`${surfaceProps.className ?? ''} list-task-row list-grid-row ${
+                            agentState.isActive ? 'list-agent-active' : ''
+                          }`.trim()}
                           role="row"
                         >
                           <div className="list-cell list-cell-title" role="gridcell">
@@ -1050,7 +1092,12 @@ export function App(): React.JSX.Element {
                                 <div className="list-title-copy">
                                   <strong>
                                     {card.title}
-                                    {agentLabel ? <span className="inline-agent-chip">{agentLabel}</span> : null}
+                                    {agentState.chipLabel ? (
+                                      <span className="inline-agent-chip">
+                                        <span className="live-agent-dot" aria-hidden="true" />
+                                        {agentState.chipLabel}
+                                      </span>
+                                    ) : null}
                                   </strong>
                                   <span>{card.excerpt}</span>
                                 </div>
@@ -1090,13 +1137,15 @@ export function App(): React.JSX.Element {
                   <div className="list-cards-mobile">
                     {listCards.map((card) => {
                       const isSelected = selectedTask?.id === card.id;
-                      const agentLabel = activeAgentLabel(card);
+                      const agentState = activeAgentUiState(card);
                       const surfaceProps = getListSurfaceProps(card, isSelected);
                       return (
                         <div
                           key={card.id}
                           {...surfaceProps}
-                          className={`${surfaceProps.className ?? ''} list-task-card`.trim()}
+                          className={`${surfaceProps.className ?? ''} list-task-card ${
+                            agentState.isActive ? 'list-agent-active' : ''
+                          }`.trim()}
                         >
                           <div className="list-card-top">
                             <div className="list-title-cell">
@@ -1104,7 +1153,12 @@ export function App(): React.JSX.Element {
                               <div className="list-title-copy">
                                 <strong>
                                   {card.title}
-                                  {agentLabel ? <span className="inline-agent-chip">{agentLabel}</span> : null}
+                                  {agentState.chipLabel ? (
+                                    <span className="inline-agent-chip">
+                                      <span className="live-agent-dot" aria-hidden="true" />
+                                      {agentState.chipLabel}
+                                    </span>
+                                  ) : null}
                                 </strong>
                                 <span>{card.excerpt}</span>
                               </div>
@@ -1507,33 +1561,7 @@ export function App(): React.JSX.Element {
                   <div className="detail-section agent-detail-section">
                     <div className="detail-section-header">
                       <strong>Agent</strong>
-                      <div className="detail-section-actions">
-                        <button
-                          className="mini-button"
-                          onClick={() =>
-                            vscode.postMessage({
-                              type: 'claimTaskAgent',
-                              taskId: selectedTask.id,
-                              expectedVersion: selectedTask.version,
-                            })
-                          }
-                        >
-                          Claim als actief
-                        </button>
-                        <button
-                          className="mini-button"
-                          disabled={!selectedTask.activeAgent}
-                          onClick={() =>
-                            vscode.postMessage({
-                              type: 'clearTaskAgent',
-                              taskId: selectedTask.id,
-                              expectedVersion: selectedTask.version,
-                            })
-                          }
-                        >
-                          Stop agent
-                        </button>
-                      </div>
+                      <span className="muted-copy">Automatisch via in_progress</span>
                     </div>
                     <div className="detail-meta-grid agent-meta-grid">
                       <span className="muted-copy">Agent</span>

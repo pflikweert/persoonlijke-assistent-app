@@ -119,6 +119,7 @@ Voor AI-gedrag, prompting en evaluatie:
   - wanneer een taak automatisch wordt aangemaakt: plaats die direct bovenaan de doel-lane door `sort_order` van die lane te herschrijven en de nieuwe taak op positie `1` te zetten
   - wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: plaats die direct bovenaan de `in_progress` lane door `sort_order` van bron- en doellane opnieuw doorlopend op te slaan
   - zet status direct op `in_progress` zodra uitvoering start
+  - zorg bij start/hervatting van Codex-uitvoering dat `active_agent*` metadata is gevuld; buiten de plugin gebruik je `node scripts/taskflow-agent-state.mjs claim <taskfile>`
   - kies en benoem bij inhoudelijke uitvoering de compacte uitvoerblokken/fases; leg die bij voorkeur vast in de taskfile-sectie `Uitvoerblokken / fasering`
   - eerste inhoudelijke update bevat altijd:
     - `Task: <taaktitel>`
@@ -180,6 +181,7 @@ Voor AI-gedrag, prompting en evaluatie:
     - status `done`
     - verplaatsing naar `docs/project/25-tasks/done/`
     - geen `active_agent*` frontmattervelden meer gevuld
+    - gebruik buiten de plugin `node scripts/taskflow-agent-state.mjs clear <taskfile>` vóór of tegelijk met afronding, blocked of overdracht
     - expliciete reconciliation aanwezig
     - `npm run docs:bundle`
     - `npm run docs:bundle:verify`

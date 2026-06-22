@@ -124,7 +124,19 @@ export function applyChecklistToggle(
   return `${serializeFrontmatter(task.frontmatterValues, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
 }
 
-export function buildNewTaskContent(input: CreateTaskInput & { id: string; updatedAt: string }): string {
+type NewTaskContentInput = CreateTaskInput &
+  { id: string; updatedAt: string } &
+  Pick<
+    TaskFieldPatch,
+    | 'activeAgent'
+    | 'activeAgentModel'
+    | 'activeAgentRuntime'
+    | 'activeAgentSince'
+    | 'activeAgentStatus'
+    | 'activeAgentSettings'
+  >;
+
+export function buildNewTaskContent(input: NewTaskContentInput): string {
   const frontmatterOrder = [...TASK_REQUIRED_FIELDS, ...TASK_OPTIONAL_FIELDS];
   const frontmatter = {
     id: input.id,
@@ -144,12 +156,12 @@ export function buildNewTaskContent(input: CreateTaskInput & { id: string; updat
     task_kind: input.taskKind ?? 'task',
     due_date: input.dueDate ?? null,
     sort_order: input.sortOrder ?? null,
-    active_agent: null,
-    active_agent_model: null,
-    active_agent_runtime: null,
-    active_agent_since: null,
-    active_agent_status: null,
-    active_agent_settings: null,
+    active_agent: input.activeAgent ?? null,
+    active_agent_model: input.activeAgentModel ?? null,
+    active_agent_runtime: input.activeAgentRuntime ?? null,
+    active_agent_since: input.activeAgentSince ?? null,
+    active_agent_status: input.activeAgentStatus ?? null,
+    active_agent_settings: input.activeAgentSettings ?? null,
   };
 
   return `${serializeFrontmatter(frontmatter, frontmatterOrder)}# ${input.title.trim()}

@@ -169,6 +169,86 @@ updated_at: 2026-04-20
   assert.match(clearedContent, /active_agent_settings: null/);
 });
 
+test('repository updateTaskFields automatically claims agent when moving task to in_progress', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const tasksRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(tasksRoot, { recursive: true });
+  const filePath = path.join(tasksRoot, 'start-me.md');
+  await fs.writeFile(
+    filePath,
+    `---
+id: task-start-me
+title: Start me
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# Start me
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const [task] = await repository.scan();
+  assert.ok(task);
+
+  await repository.updateTaskFields(task.id, task.version, {
+    status: 'in_progress',
+  });
+
+  const content = await fs.readFile(filePath, 'utf8');
+  assert.match(content, /status: in_progress/);
+  assert.match(content, /active_agent: Codex/);
+  assert.match(content, /active_agent_model: unknown/);
+  assert.match(content, /active_agent_runtime: codex/);
+  assert.match(content, /active_agent_since: "[^"]+"/);
+  assert.match(content, /active_agent_status: running/);
+  assert.match(content, /active_agent_settings: default/);
+});
+
+test('repository updateTaskFields automatically clears agent when leaving in_progress', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const tasksRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(tasksRoot, { recursive: true });
+  const filePath = path.join(tasksRoot, 'review-me.md');
+  await fs.writeFile(
+    filePath,
+    `---
+id: task-review-me
+title: Review me
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+active_agent: Codex
+active_agent_status: running
+---
+
+# Review me
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const [task] = await repository.scan();
+  assert.ok(task);
+
+  await repository.updateTaskFields(task.id, task.version, {
+    status: 'review',
+  });
+
+  const content = await fs.readFile(filePath, 'utf8');
+  assert.match(content, /status: review/);
+  assert.match(content, /active_agent: null/);
+  assert.match(content, /active_agent_status: null/);
+});
+
 test('repository moveTask rewrites sort_order for in-lane reordering', async () => {
   const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
   const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
@@ -328,6 +408,47 @@ sort_order: 1
   assert.match(blockedX, /sort_order: 2/);
 });
 
+test('repository moveTask automatically claims agent when dropping task into in_progress lane', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
+  await fs.mkdir(openRoot, { recursive: true });
+
+  await fs.writeFile(
+    path.join(openRoot, 'ready-a.md'),
+    `---
+id: task-ready-a
+title: Ready A
+status: ready
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-04-20
+sort_order: 1
+---
+
+# Ready A
+`,
+    'utf8',
+  );
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const [task] = await repository.scan();
+  assert.ok(task);
+
+  await repository.moveTask({
+    taskId: task.id,
+    expectedVersion: task.version,
+    targetStatus: 'in_progress',
+    destinationIds: ['task-ready-a'],
+    sourceIds: [],
+  });
+
+  const content = await fs.readFile(path.join(openRoot, 'ready-a.md'), 'utf8');
+  assert.match(content, /status: in_progress/);
+  assert.match(content, /active_agent: Codex/);
+  assert.match(content, /active_agent_status: running/);
+});
+
 test('repository createTask inserts new task at top of selected status lane', async () => {
   const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
   const openRoot = path.join(workspaceRoot, 'docs/project/25-tasks/open');
@@ -382,6 +503,24 @@ sort_order: 2
   assert.match(created, /sort_order: 1/);
   assert.match(readyA, /sort_order: 2/);
   assert.match(readyB, /sort_order: 3/);
+});
+
+test('repository createTask automatically claims agent for in_progress tasks', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'budio-workspace-'));
+  await fs.mkdir(path.join(workspaceRoot, 'docs/project/25-tasks/open'), { recursive: true });
+
+  const repository = new TaskRepository(workspaceRoot, 'docs/project/25-tasks');
+  const result = await repository.createTask({
+    title: 'Nieuwe actieve taak',
+    status: 'in_progress',
+  });
+
+  const created = await fs.readFile(path.resolve(workspaceRoot, result.path), 'utf8');
+  assert.match(created, /status: in_progress/);
+  assert.match(created, /active_agent: Codex/);
+  assert.match(created, /active_agent_runtime: codex/);
+  assert.match(created, /active_agent_since: "[^"]+"/);
+  assert.match(created, /active_agent_status: running/);
 });
 
 test('repository updateTaskFields places moved task on top of destination lane', async () => {

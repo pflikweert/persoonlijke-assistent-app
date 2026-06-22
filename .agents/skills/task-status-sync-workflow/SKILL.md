@@ -20,6 +20,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
    - Wanneer je automatisch een nieuwe taak aanmaakt: zet die direct bovenaan de doel-lane met `sort_order: 1` en herschrijf de overige taakfiles in die lane doorlopend.
    - Wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: zet die direct bovenaan de `in_progress` lane en herschrijf `sort_order` voor bron- en doellane zodat de sortering opgeslagen blijft.
    - Zet status op `in_progress` zodra inhoudelijke uitvoering start (tenzij al correct).
+   - Zorg bij uitvoering dat `active_agent*` metadata automatisch of via `node scripts/taskflow-agent-state.mjs claim <taskfile>` gevuld is; Board/List/Jarvis gebruiken dit als enige echte agentactiviteit.
    - Kies en benoem compacte uitvoerblokken/fases voor de taak; leg die bij voorkeur vast in de taskfile-sectie `Uitvoerblokken / fasering`.
    - Communiceer in de eerste inhoudelijke update en daarna in elke volgende update:
      - `Task: ...`
@@ -51,6 +52,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
    - Zet status op `done` zodra code + verify klaar zijn en commit/push gereed is.
    - Verplaats taak naar `docs/project/25-tasks/done/` als nog in `open/`.
    - Maak `active_agent*` metadata leeg; `done` draagt geen actieve agentcontext.
+   - Gebruik voor handmatige closeout buiten de plugin `node scripts/taskflow-agent-state.mjs clear <taskfile>` vóór of tegelijk met status `done`/`blocked`/overdracht.
    - Repo-managed hooks horen convergent te zijn: na een commit die taskfiles raakt blijft de repo schoon zonder extra handmatige cleanup.
    - `## Commits` is auto-managed met een stabiele entry zonder commit-hash (`author date + subject`).
    - `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet de normale closeout-route.

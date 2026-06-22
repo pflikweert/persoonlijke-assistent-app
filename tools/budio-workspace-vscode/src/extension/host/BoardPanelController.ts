@@ -652,6 +652,7 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
         repoRoot,
         settings.tasksRoot,
         settings.epicsRoot,
+        settings,
       );
       const [tasks, epics] = await Promise.all([repository.scan(), repository.scanEpics()]);
       this.lastTasks = new Map(tasks.map((task) => [task.id, task]));
@@ -1088,7 +1089,7 @@ export class BoardPanelController implements vscode.Disposable, vscode.WebviewVi
       throw new Error('Geen workspace geopend.');
     }
     const { repoRoot, settings } = workspaceContext;
-    const repository = new TaskRepository(repoRoot, settings.tasksRoot, settings.epicsRoot);
+    const repository = new TaskRepository(repoRoot, settings.tasksRoot, settings.epicsRoot, settings);
     await action(repository);
   }
 

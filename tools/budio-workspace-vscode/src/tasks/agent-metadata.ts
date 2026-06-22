@@ -1,9 +1,16 @@
 import type { TaskFieldPatch, WorkspaceSettings } from './types';
 
-type AgentSettingsInput = Pick<
+export type AgentSettingsInput = Pick<
   WorkspaceSettings,
   'agentName' | 'agentModel' | 'agentRuntime' | 'agentSettings'
 >;
+
+export const DEFAULT_AGENT_SETTINGS: AgentSettingsInput = {
+  agentName: 'Codex',
+  agentModel: 'unknown',
+  agentRuntime: 'codex',
+  agentSettings: 'default',
+};
 
 export function buildClaimTaskAgentPatch(
   settings: AgentSettingsInput,
