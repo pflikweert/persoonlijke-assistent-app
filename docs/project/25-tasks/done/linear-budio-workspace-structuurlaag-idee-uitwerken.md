@@ -10,8 +10,10 @@ summary: "Werk een nieuw standalone idee uit voor Budio Workspace op basis van a
 tags: [idea, plugin, workspace, linear, workflow]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 41
 ---
+
+
 
 ## Probleem / context
 
@@ -71,3 +73,8 @@ Dat idee maakt expliciet:
 - `docs/project/40-ideas/40-platform-and-architecture/`
 - `docs/project/20-planning/50-budio-workspace-plugin-focus.md`
 - `https://linear.app/next`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

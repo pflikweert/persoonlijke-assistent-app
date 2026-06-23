@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 30
 ---
+
+
 
 
 # Codex browser-testworkflow expliciteren
@@ -157,3 +159,5 @@ Docs-only aanscherping van de lokale QA- en developmentworkflow.
 ## Commits
 
 - 2026-06-22T13:22:50+02:00 — docs: clarify codex browser test workflow
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

@@ -10,8 +10,10 @@ summary: "Nieuwe OpenAI-bronnen over codex automations en use-case scaling verta
 tags: [idea, strategy, agents, openai]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 47
 ---
+
+
 
 # OpenAI Codex Automations en AI use-case scaling vertalen naar ideeën
 
@@ -60,3 +62,8 @@ Minstens één bestaand idee in `docs/project/40-ideas/**` is bijgewerkt (of een
 
 - `https://openai.com/academy/codex-automations/`
 - `https://openai.com/business/guides-and-resources/identifying-and-scaling-ai-use-cases/`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

@@ -1,6 +1,6 @@
 ---
 id: task-docs-bundle-en-verify-race-condition-voorkomen
-title: docs:bundle en docs:bundle:verify race condition structureel voorkomen
+title: "docs:bundle en docs:bundle:verify race condition structureel voorkomen"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p2
@@ -10,8 +10,10 @@ summary: "Voorkom structureel dat docs:bundle en docs:bundle:verify tegelijk kun
 tags: [workflow, docs, verify, locking]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 34
 ---
+
+
 
 # docs:bundle en docs:bundle:verify race condition structureel voorkomen
 
@@ -67,3 +69,8 @@ Daarnaast staat in de workflow expliciet dat `docs:bundle` en `docs:bundle:verif
 - `scripts/docs/build-docs-bundles.mjs`
 - `docs/dev/task-lifecycle-workflow.md`
 - `docs/dev/cline-workflow.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

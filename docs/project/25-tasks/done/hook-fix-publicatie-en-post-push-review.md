@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 40
 ---
+
+
 
 
 
@@ -213,3 +215,5 @@ Een publicatie- en review-slice voor bestaand lokaal werk:
 - 2026-04-28T23:26:59+02:00 — docs: close hook fix publication review task
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

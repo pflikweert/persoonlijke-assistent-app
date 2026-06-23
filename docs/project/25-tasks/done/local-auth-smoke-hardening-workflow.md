@@ -10,8 +10,10 @@ summary: "Lokale magic-link loginflow reproduceerbaar gemaakt met smoke-user pro
 tags: [auth, smoke-test, local, mailpit]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 65
 ---
+
+
 
 # Lokale auth smoke workflow hardenen (magic-link + Mailpit)
 
@@ -71,3 +73,8 @@ Een vaste local-only auth smoke workflow waarmee een agent of developer veilig k
 - `scripts/verify-local-auth-login.mjs`
 - `scripts/cleanup-local-smoke-users.mjs`
 - `docs/dev/local-auth-smoke-workflow.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

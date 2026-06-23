@@ -16,7 +16,7 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 9
 active_agent: null
 active_agent_model: null
 active_agent_runtime: null
@@ -24,6 +24,8 @@ active_agent_since: null
 active_agent_status: null
 active_agent_settings: null
 ---
+
+
 
 
 ## Probleem / context
@@ -194,3 +196,5 @@ De active-agent zichtbaarheid is gebouwd, maar valt om als agents de metadata ni
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

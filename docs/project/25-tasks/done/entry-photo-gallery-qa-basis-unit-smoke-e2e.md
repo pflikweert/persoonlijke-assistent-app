@@ -1,6 +1,6 @@
 ---
 id: task-entry-photo-gallery-qa-basis
-title: Entry photo gallery QA-basis: unit, smoke en end-user tests
+title: "Entry photo gallery QA-basis: unit, smoke en end-user tests"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -10,8 +10,10 @@ summary: "Zet een reproduceerbare QA-basis neer voor entry photo gallery: unit-t
 tags: [qa, tests, gallery, photos, smoke]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 36
 ---
+
+
 
 ## Probleem / context
 
@@ -78,3 +80,8 @@ snelle unit-tests voor complexe sorteerlogica, scripts voor gallery smoke/full t
 - `components/journal/entry-photo-gallery.tsx`
 - `docs/dev/local-auth-smoke-workflow.md`
 - `AGENTS.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

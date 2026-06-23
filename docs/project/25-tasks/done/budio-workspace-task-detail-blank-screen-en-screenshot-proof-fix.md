@@ -16,8 +16,10 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 24
 ---
+
+
 
 
 ## Probleem / context
@@ -174,3 +176,5 @@ Fix Plan: Task Detail Blank Screen + Reliable VS Code Plugin Screenshot Proof. S
 ## Commits
 
 - 2026-06-22T14:17:39+02:00 — Fix Budio workspace task detail stability
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

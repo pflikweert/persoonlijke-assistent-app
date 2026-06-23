@@ -16,8 +16,10 @@ follows_after: [task-hook-fix-publicatie-en-post-push-review]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 57
 ---
+
+
 
 
 # Task commit hook rename-case fixen
@@ -157,3 +159,5 @@ De post-push review van de hook-fix vond direct een live rename-regressie. Dit b
 ## Commits
 
 - 2026-04-29T00:05:17+02:00 — fix: handle task commit log renames
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

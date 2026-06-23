@@ -173,9 +173,7 @@ export default function AiQualityStudioTestScreen() {
     Boolean(supportsInlineTesting) &&
     Boolean(selectedVersion) &&
     Boolean(selectedSource) &&
-    Boolean(
-      selectedSource && taskCapabilities?.allowedSourceTypes.includes(selectedSource.sourceType as 'entry' | 'day')
-    ) &&
+    Boolean(selectedSource && taskCapabilities?.allowedSourceTypes.includes(selectedSource.sourceType)) &&
     !runningTest;
   const showFooterActions = !loading && detail && selectedVersion && supportsInlineTesting;
 
@@ -308,12 +306,8 @@ export default function AiQualityStudioTestScreen() {
   async function handleRunTest() {
     if (!detail || !selectedVersion || !selectedSource || runningTest) return;
     const sourceType = selectedSource.sourceType;
-    if (sourceType !== 'entry' && sourceType !== 'day') {
-      setError('Alleen entry/day test-bronnen worden nu ondersteund.');
-      return;
-    }
     if (!taskCapabilities?.allowedSourceTypes.includes(sourceType)) {
-      setError('Alleen entry/day test-bronnen worden nu ondersteund.');
+      setError('Deze testbron past niet bij deze AIQS-taak.');
       return;
     }
 

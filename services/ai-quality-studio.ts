@@ -5,6 +5,7 @@ import type {
   AiTaskDraftCreationMeta,
   AiTaskDetail,
   AiTaskDraftPayload,
+  AiTaskVersionCleanupResult,
   AiTaskVersionPromotionResult,
   RunPromptAssistPreviewPayload,
   AiRuntimeBaselineImportResult,
@@ -77,6 +78,16 @@ type DeleteDraftVersionResponse = {
   requestId: string;
   flowId: string;
   deletedVersionId: string;
+};
+
+type VersionCleanupResponse = {
+  status: 'ok';
+  flow: 'admin-ai-quality-studio';
+  requestId: string;
+  flowId: string;
+  deletedVersionIds: string[];
+  skippedVersionIds: string[];
+  keptLatestCount: number;
 };
 
 type TestSourcesResponse = {
@@ -359,6 +370,81 @@ export async function deleteAdminAiQualityStudioDraftVersion(
   return {
     deletedVersionId: data.deletedVersionId,
   };
+}
+
+function parseVersionCleanupResponse(data: VersionCleanupResponse, action: string): AiTaskVersionCleanupResult {
+  if (
+    data.status !== 'ok' ||
+    data.flow !== 'admin-ai-quality-studio' ||
+    !data.requestId ||
+    !Array.isArray(data.deletedVersionIds) ||
+    !Array.isArray(data.skippedVersionIds) ||
+    typeof data.keptLatestCount !== 'number'
+  ) {
+    throw new Error(`Ongeldige response van admin-ai-quality-studio ${action}.`);
+  }
+
+  return {
+    deletedVersionIds: data.deletedVersionIds,
+    skippedVersionIds: data.skippedVersionIds,
+    keptLatestCount: data.keptLatestCount,
+  };
+}
+
+export async function deleteAdminAiQualityStudioArchivedVersion(payload: {
+  taskKey: string;
+  versionId: string;
+}): Promise<AiTaskVersionCleanupResult> {
+  const normalizedTaskKey = payload.taskKey.trim();
+  const normalizedVersionId = payload.versionId.trim();
+  if (!normalizedTaskKey) {
+    throw new Error('taskKey ontbreekt.');
+  }
+  if (!normalizedVersionId) {
+    throw new Error('versionId ontbreekt.');
+  }
+
+  const flowId = createClientFlowId('admin-ai-quality');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
+
+  const data = await invokeAction<VersionCleanupResponse>({
+    flowId,
+    body: {
+      action: 'delete_archived_version',
+      taskKey: normalizedTaskKey,
+      versionId: normalizedVersionId,
+    },
+  });
+
+  return parseVersionCleanupResponse(data, 'delete_archived_version');
+}
+
+export async function cleanupAdminAiQualityStudioArchivedVersions(payload: {
+  taskKey: string;
+  keepLatest?: number;
+}): Promise<AiTaskVersionCleanupResult> {
+  const normalizedTaskKey = payload.taskKey.trim();
+  const keepLatest = payload.keepLatest ?? 3;
+  if (!normalizedTaskKey) {
+    throw new Error('taskKey ontbreekt.');
+  }
+  if (!Number.isInteger(keepLatest) || keepLatest < 0) {
+    throw new Error('keepLatest moet 0 of hoger zijn.');
+  }
+
+  const flowId = createClientFlowId('admin-ai-quality');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-ai-quality-studio' });
+
+  const data = await invokeAction<VersionCleanupResponse>({
+    flowId,
+    body: {
+      action: 'cleanup_archived_versions',
+      taskKey: normalizedTaskKey,
+      keepLatest,
+    },
+  });
+
+  return parseVersionCleanupResponse(data, 'cleanup_archived_versions');
 }
 
 export async function promoteAdminAiQualityStudioVersionLive(payload: {

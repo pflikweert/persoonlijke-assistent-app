@@ -10,8 +10,10 @@ summary: "Alle inhoudelijke agentsessies volgen verplicht de taskflow in docs/pr
 tags: [workflow, tasks, governance]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 5
 ---
+
+
 
 ## Probleem / context
 
@@ -64,3 +66,8 @@ Elke inhoudelijke agentsessie (plan/research/bug/implementatie) loopt automatisc
 - `docs/project/25-tasks/README.md`
 - `docs/dev/task-lifecycle-workflow.md`
 - `.agents/skills/task-status-sync-workflow/SKILL.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

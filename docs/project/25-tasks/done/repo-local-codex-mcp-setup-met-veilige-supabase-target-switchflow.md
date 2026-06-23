@@ -10,8 +10,10 @@ summary: "Maak een repo-lokale Codex MCP-config met vaste servers voor context7/
 tags: [codex, mcp, supabase, tooling, workflow]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 55
 ---
+
+
 
 ## Probleem / context
 
@@ -66,3 +68,8 @@ De standaardstand is veilig voor dagelijks gebruik. Eventuele switching blijft k
 - `docs/dev/task-lifecycle-workflow.md`
 - `AGENTS.md`
 - `../../.codex/config.toml`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

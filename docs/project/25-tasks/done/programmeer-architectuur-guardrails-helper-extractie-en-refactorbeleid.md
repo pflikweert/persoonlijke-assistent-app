@@ -1,6 +1,6 @@
 ---
 id: task-programmeer-architectuur-guardrails-helper-extractie
-title: Programmeer-architectuur guardrails, helper-extractie en refactorbeleid
+title: "Programmeer-architectuur guardrails, helper-extractie en refactorbeleid"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p2
@@ -10,8 +10,10 @@ summary: "Leg een compacte programmeer-architectuur skill en workflow vast zodat
 tags: [architecture, skills, refactor, qa, gallery]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 53
 ---
+
+
 
 ## Probleem / context
 
@@ -76,3 +78,8 @@ De entry photo gallery dient als eerste voorbeeld: sorteerberekeningen en reorde
 - `.agents/skills/ui-implementation-guardrails/SKILL.md`
 - `components/journal/entry-photo-gallery.tsx`
 - `src/lib/entry-photo-gallery/**`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

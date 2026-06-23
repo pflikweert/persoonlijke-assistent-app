@@ -1,6 +1,6 @@
 ---
 id: task-moment-entry-fotos-galerij
-title: Moment detail foto's toevoegen met beveiligde galerij (max 5)
+title: "Moment detail foto's toevoegen met beveiligde galerij (max 5)"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -10,8 +10,10 @@ summary: "Op de moment detailpagina een rustige fotoflow toevoegen: camera/uploa
 tags: [moment-detail, photos, security, ui]
 workstream: app
 due_date: null
-sort_order: 2
+sort_order: 63
 ---
+
+
 
 # Moment detail foto's toevoegen met beveiligde galerij (max 5)
 
@@ -72,3 +74,8 @@ Foto's openen fullscreen met swipe en sluit-actie; verwijderen gaat via bestaand
 - `app/entry/[id].tsx`
 - `services/day-journals.ts`
 - `supabase/migrations/20260422153000_entry_photos_gallery.sql`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

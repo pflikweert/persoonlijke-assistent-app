@@ -26,6 +26,8 @@ sort_order: 7
 
 
 
+
+
 ## Probleem / context
 
 AI Quality Studio werkt functioneel, maar voelt nog te veel als een mobiele settings-flow met gestapelde warme Budio-cards. Voor productie-admins moet AIQS aanvoelen als een compacte tooling-console: sneller scanbaar, neutraler, dichter, duidelijker en los van de gewone Budio gebruikersflow.
@@ -121,6 +123,7 @@ Reviewbevindingen:
 - Review en test de nieuwe wijzigingen en verbeter waar nodig.
 - Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen.
 - Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System.
+- AIQS validatiepagina herontwerpen naar diff-first vergelijken en beoordelen: default `Diff`, tabs `Diff/Huidig/Nieuw`, AI-observaties, oordeel onderaan en shortcuts `1/2/3/4`.
 
 ## Status per requirement
 
@@ -132,6 +135,7 @@ Reviewbevindingen:
 - [x] Nieuwe wijzigingen zijn gereviewd en getest — status: gebouwd
 - [x] Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen — status: gebouwd
 - [x] Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System — status: gebouwd
+- [x] AIQS validatiepagina diff-first maken voor lange outputvergelijkingen — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -155,6 +159,9 @@ Reviewbevindingen:
 - Screen-local AIQS action-Pressables in draft en validate zijn vervangen door gedeelde admin button/text-action primitives; klikbare source/case rows blijven bewust rows.
 - De raw HTML token-remove button in de prompt editor heeft nu expliciete browser-appearance reset, size, radius en hover/focus styling zodat native/default button styling niet kan lekken.
 - `docs/design/admin-ui-principles.md` documenteert nu het gedeelde Admin Button System.
+- AIQS validate is diff-first gemaakt: `Diff` is default, `Huidig` en `Nieuw` zijn tabs, per-veld `Toon diff` is verwijderd, lange output wordt per sectie vergeleken en mobile toont een stacked diffblok in plaats van twee volledige tekstkolommen onder elkaar.
+- Validate toont nu lokale niet-normatieve AI-observaties zoals `uitgebreider`, `concreter` en `meer/minder brondekking`; deze zetten nooit automatisch een oordeel.
+- Validate ondersteunt shortcuts `1/2/3/4` voor `beter/gelijk/slechter/fout`, met input/textarea/contenteditable guard.
 
 ## Uitvoerblokken / fasering
 
@@ -175,6 +182,7 @@ Reviewbevindingen:
 - [x] Test en validate workbench-density verbeteren.
 - [x] Goedgekeurde cleaner AIQS-startstijl doorvoeren naar onderliggende AIQS-schermen.
 - [x] AIQS action buttons migreren naar één consistent Admin Button System zonder zwarte/default buttons.
+- [x] Validate diff-first vergelijking, observaties en shortcuts toevoegen.
 - [x] Light/dark en desktop/mobile visueel controleren waar praktisch.
 - [x] Relevante verifies draaien.
 
@@ -187,6 +195,7 @@ Reviewbevindingen:
 - [x] Debug logging en baseline import zijn visueel secundair/operationeel gepresenteerd.
 - [x] Gewone Budio gebruikersflow is niet aangepast.
 - [x] AIQS toont geen zwarte/default/native action buttons meer; button states komen uit gedeelde admin primitives.
+- [x] AIQS validate toont standaard diff, heeft tabs `Diff/Huidig/Nieuw`, toont observaties zonder automatische beslissing en plaatst oordeel na vergelijking.
 
 ## Blockers / afhankelijkheden
 
@@ -253,11 +262,19 @@ Reviewbevindingen:
   - Projectbrede audit op AIQS action-plekken — alleen toegestane source/case row-Pressables en prompt-editor token-remove `<button>` blijven over; token-remove heeft expliciete appearance reset.
   - One-shot Playwright computed-style routecheck — groen; overview, group, detail, draft, test, validate, mobile group, dark group en dark validate hebben geen zichtbare zwarte/default button backgrounds.
   - Screenshotcheck: `/tmp/aiqs-buttons-overview-light.png`, `/tmp/aiqs-buttons-group-light.png`, `/tmp/aiqs-buttons-detail-light.png`, `/tmp/aiqs-buttons-draft-light.png`, `/tmp/aiqs-buttons-test-light.png`, `/tmp/aiqs-buttons-validate-light.png`, `/tmp/aiqs-buttons-group-mobile.png`, `/tmp/aiqs-buttons-group-dark.png`, `/tmp/aiqs-buttons-validate-dark.png`.
+- 2026-06-22 AIQS validate diff-first redesign:
+  - `npx vitest run tests/unit/ai-quality-validate-compare.test.ts` — groen, 1 testfile / 5 tests.
+  - `npm run test:unit -- ai-quality` — groen, 4 testfiles / 21 tests.
+  - `npm run typecheck` — groen na validate compare-helper en routewijziging.
+  - `npm run lint` — groen na validate compare-helper en routewijziging.
+  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde AIQS overview-smoke blijft werken.
+  - One-shot Playwright validate-route diff-smoke — groen; `day_narrative` draft v16 test run gestart, `Diff` standaard zichtbaar, tabs `Diff/Huidig/Nieuw` zichtbaar, `AI observaties` en `Beslissing` zichtbaar, `Toon diff` afwezig, shortcut `1` selecteerbaar en mobile viewport blijft diff-first.
+  - Screenshotcheck: `/tmp/aiqs-validate-diff-light.png`, `/tmp/aiqs-validate-diff-dark.png`, `/tmp/aiqs-validate-diff-mobile-dark.png`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
-- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate en nu ook één consistent Admin Button System.
+- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate, één consistent Admin Button System en een diff-first validatepagina voor lange outputvergelijkingen.
 - Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. De startpagina is daarna verder versimpeld naar plain sections, inline status, list/table rows en single-action debug logging. Onderliggende AIQS-schermen gebruiken nu dezelfde rustige admin-workspace taal: minder header-badges/eyebrows, minder card-fill, metadata als plain secties en bestaande acties/functionele editors behouden. Alle AIQS action buttons lopen via gedeelde admin button/text-action primitives, primary gebruikt geen zwarte fill meer en de raw prompt-editor token button is browser-default-proof gemaakt.
 - Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat de gebruiker de cleaner AIQS referentie-implementatie inclusief onderliggende schermen inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
 
@@ -283,3 +300,5 @@ Reviewbevindingen:
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-22T14:07:06+02:00 — fix: unify AIQS admin workspace controls
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

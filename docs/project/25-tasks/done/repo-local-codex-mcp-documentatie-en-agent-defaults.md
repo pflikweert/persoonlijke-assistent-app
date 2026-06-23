@@ -10,8 +10,10 @@ summary: "Leg de repo-local Codex MCP local/remote-ro workflow expliciet vast in
 tags: [codex, mcp, local-development, workflow, docs]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 54
 ---
+
+
 
 ## Probleem / context
 
@@ -65,3 +67,8 @@ Docs en AGENTS beschrijven compact en eenduidig:
 - `scripts/codex-mcp-target.mjs`
 - `docs/dev/cline-workflow.md`
 - `AGENTS.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

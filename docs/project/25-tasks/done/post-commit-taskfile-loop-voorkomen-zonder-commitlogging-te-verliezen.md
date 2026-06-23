@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 52
 ---
+
+
 
 
 # Post-commit taskfile-loop voorkomen zonder commitlogging te verliezen
@@ -205,3 +207,5 @@ Een repo-brede workflow-hardening-slice:
 ## Commits
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

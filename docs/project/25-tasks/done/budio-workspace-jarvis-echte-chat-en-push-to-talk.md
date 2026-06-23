@@ -16,8 +16,10 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 13
 ---
+
+
 
 
 # Budio Workspace Jarvis echte chat en push-to-talk
@@ -214,3 +216,5 @@ Eén afgeronde plugin-slice:
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

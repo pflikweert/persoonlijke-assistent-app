@@ -28,6 +28,16 @@ import {
   saveAdminAiQualityStudioTestReview,
 } from '@/services';
 import { getSettingsBackTarget } from '@/src/lib/navigation/settings-navigation';
+import {
+  buildValidateCompareSections,
+  buildValidateObservations,
+  formatObjectFieldLabel,
+  mapValidateShortcutToReviewLabel,
+  normalizeOutput,
+  parseObjectLikeText,
+  sentenceCount,
+  type OutputRenderKind,
+} from '@/src/lib/ai-quality-validate-compare';
 import type {
   AiReviewLabel,
   AiTaskDetail,
@@ -47,12 +57,7 @@ type ContractSignal = {
   detail?: string;
 };
 
-type OutputRenderKind = 'text' | 'object' | 'list';
-
-type NormalizedOutput =
-  | { kind: 'text'; text: string; parseFallback: boolean }
-  | { kind: 'object'; fields: { key: string; value: unknown }[] }
-  | { kind: 'list'; items: unknown[] };
+type CompareViewMode = 'diff' | 'current' | 'new';
 
 const validateCaseMemoryStore = new Map<string, string>();
 
@@ -91,175 +96,10 @@ async function persistValidateCaseId(storageKey: string, caseId: string): Promis
   }
 }
 
-function parseJsonSafe(value: string): { ok: true; value: unknown } | { ok: false } {
-  try {
-    return { ok: true, value: JSON.parse(value) };
-  } catch {
-    return { ok: false };
-  }
-}
-
-function unwrapJsonCodeFence(value: string): string {
-  const trimmed = value.trim();
-  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-  if (!fenced) return trimmed;
-  return fenced[1].trim();
-}
-
-function parseObjectLikeText(value: string): Record<string, unknown> | null {
-  const cleaned = unwrapJsonCodeFence(value);
-  const parsed = parseJsonSafe(cleaned);
-  if (parsed.ok && parsed.value && typeof parsed.value === 'object' && !Array.isArray(parsed.value)) {
-    return parsed.value as Record<string, unknown>;
-  }
-  return null;
-}
-
-function normalizeOutput(input: {
-  rawText: string | null;
-  rawJson?: unknown;
-  preferredType: OutputRenderKind;
-  forceObjectParse?: boolean;
-}): NormalizedOutput {
-  if (Array.isArray(input.rawJson)) {
-    return { kind: 'list', items: input.rawJson };
-  }
-
-  if (input.rawJson && typeof input.rawJson === 'object') {
-    const objectValue = input.rawJson as Record<string, unknown>;
-    const fields = Object.keys(objectValue)
-      .sort((a, b) => a.localeCompare(b))
-      .map((key) => ({ key, value: objectValue[key] }));
-    return { kind: 'object', fields };
-  }
-
-  const text = (input.rawText ?? '').trim();
-  if (!text) {
-    return { kind: 'text', text: '', parseFallback: false };
-  }
-
-  // Always try object parse first — even for text/list tasks — so JSON output is never shown as raw string
-  if (input.preferredType === 'text' && !input.forceObjectParse) {
-    const tryObj = parseObjectLikeText(text);
-    if (tryObj) {
-      const fields = Object.keys(tryObj)
-        .sort((a, b) => a.localeCompare(b))
-        .map((key) => ({ key, value: tryObj[key] }));
-      return { kind: 'object', fields };
-    }
-    return { kind: 'text', text, parseFallback: false };
-  }
-
-  if (input.preferredType === 'object' || input.forceObjectParse) {
-    const objectValue = parseObjectLikeText(text);
-    if (objectValue) {
-      const fields = Object.keys(objectValue)
-        .sort((a, b) => a.localeCompare(b))
-        .map((key) => ({ key, value: objectValue[key] }));
-      return { kind: 'object', fields };
-    }
-    return { kind: 'text', text, parseFallback: true };
-  }
-
-  const parsed = parseJsonSafe(unwrapJsonCodeFence(text));
-  if (parsed.ok && Array.isArray(parsed.value)) {
-    return { kind: 'list', items: parsed.value };
-  }
-
-  const lineItems = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map((line) => line.replace(/^[-•*]\s+/, ''));
-  if (lineItems.length > 1) {
-    return { kind: 'list', items: lineItems };
-  }
-
-  return { kind: 'text', text, parseFallback: true };
-}
-
-function renderUnknownValue(value: unknown): string {
-  if (value === null || value === undefined) return '—';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (Array.isArray(value)) {
-    return value
-      .map((item, i) => `${i + 1}. ${typeof item === 'string' ? item : JSON.stringify(item)}`)
-      .join('\n');
-  }
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
-
-const FIELD_LABELS: Record<string, Record<string, string>> = {
-  entry_cleanup: {
-    title: 'Titel',
-    body: 'Volledige tekst',
-    summary_short: 'Korte samenvatting',
-  },
-  day_journal: {
-    summary: 'Samenvatting',
-    narrativeText: 'Verhaaltekst',
-    sections: 'Kernblokken',
-  },
-  day_summary: {
-    summary: 'Samenvatting',
-    narrativeText: 'Verhaaltekst',
-    narrative_text: 'Verhaaltekst',
-    sections: 'Kernblokken',
-  },
-  day_narrative: {
-    summary: 'Samenvatting',
-    narrativeText: 'Verhaaltekst',
-    narrative_text: 'Verhaaltekst',
-    sections: 'Kernblokken',
-  },
-  week_summary: {
-    summaryText: 'Samenvatting',
-    summary_text: 'Samenvatting',
-    narrativeText: 'Verhaaltekst',
-    narrative_text: 'Verhaaltekst',
-    highlights: 'Highlights',
-    highlights_json: 'Highlights',
-    reflectionPoints: 'Reflectiepunten',
-    reflection_points_json: 'Reflectiepunten',
-  },
-  month_summary: {
-    summaryText: 'Samenvatting',
-    summary_text: 'Samenvatting',
-    narrativeText: 'Verhaaltekst',
-    narrative_text: 'Verhaaltekst',
-    highlights: 'Highlights',
-    highlights_json: 'Highlights',
-    reflectionPoints: 'Reflectiepunten',
-    reflection_points_json: 'Reflectiepunten',
-  },
-};
-
-function formatObjectFieldLabel(taskKey: string | undefined, fieldKey: string): string {
-  if (taskKey) {
-    const map = FIELD_LABELS[taskKey];
-    if (map?.[fieldKey]) return map[fieldKey];
-  }
-  return fieldKey;
-}
-
 function tonePrefix(tone: SignalTone): string {
   if (tone === 'ok') return 'OK';
   if (tone === 'warn') return 'Let op';
   return 'Fout';
-}
-
-function sentenceCount(value: string): number {
-  const normalized = value.trim();
-  if (!normalized) return 0;
-  return normalized
-    .split(/(?<=[.!?])\s+/)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0).length;
 }
 
 function parseStringFieldLengths(value: string): Record<string, number> | null {
@@ -441,7 +281,7 @@ export default function AiQualityStudioValidateScreen() {
   const [decisionNotes, setDecisionNotes] = useState('');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [candidateDiffTogglesByKey, setCandidateDiffTogglesByKey] = useState<Record<string, boolean>>({});
+  const [compareViewMode, setCompareViewMode] = useState<CompareViewMode>('diff');
 
   const selectedVersion = useMemo(() => {
     if (!detail) return null;
@@ -541,20 +381,56 @@ export default function AiQualityStudioValidateScreen() {
     [compareView, preferredOutputType, detail?.key]
   );
 
-  const baselineObjectFieldMap = useMemo(() => {
-    if (normalizedBaselineOutput.kind !== 'object') return {} as Record<string, unknown>;
-    return Object.fromEntries(normalizedBaselineOutput.fields.map((field) => [field.key, field.value]));
-  }, [normalizedBaselineOutput]);
-
   const compareShapeMismatchNotice = useMemo(() => {
     if (!compareView || compareView.baselineStatus !== 'available') return null;
     if (normalizedBaselineOutput.kind === normalizedCandidateOutput.kind) return null;
     return 'Baseline en kandidaat hebben een verschillende output-structuur. Vergelijking wordt als best-effort getoond.';
   }, [compareView, normalizedBaselineOutput.kind, normalizedCandidateOutput.kind]);
 
+  const compareSections = useMemo(() => {
+    if (!compareView || compareView.baselineStatus !== 'available') return [];
+    return buildValidateCompareSections({
+      taskKey: detail?.key,
+      baseline: normalizedBaselineOutput,
+      candidate: normalizedCandidateOutput,
+    });
+  }, [compareView, detail?.key, normalizedBaselineOutput, normalizedCandidateOutput]);
+
+  const validateObservations = useMemo(
+    () =>
+      buildValidateObservations({
+        sections: compareSections,
+        inputSnapshotJson: latestTestRun?.inputSnapshotJson ?? null,
+      }),
+    [compareSections, latestTestRun?.inputSnapshotJson]
+  );
+
   useEffect(() => {
-    setCandidateDiffTogglesByKey({});
+    setCompareViewMode('diff');
   }, [compareView?.testRunId]);
+
+  useEffect(() => {
+    const eventTarget = globalThis as typeof globalThis & {
+      addEventListener?: (type: string, listener: (event: { key?: string; target?: unknown; defaultPrevented?: boolean; metaKey?: boolean; ctrlKey?: boolean; altKey?: boolean; preventDefault?: () => void }) => void) => void;
+      removeEventListener?: (type: string, listener: (event: { key?: string; target?: unknown; defaultPrevented?: boolean; metaKey?: boolean; ctrlKey?: boolean; altKey?: boolean; preventDefault?: () => void }) => void) => void;
+    };
+    if (!compareView || !baselineAvailable || !eventTarget.addEventListener || !eventTarget.removeEventListener) return;
+
+    const handleKeyDown = (event: { key?: string; target?: unknown; defaultPrevented?: boolean; metaKey?: boolean; ctrlKey?: boolean; altKey?: boolean; preventDefault?: () => void }) => {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as { tagName?: string; isContentEditable?: boolean; getAttribute?: (name: string) => string | null } | null;
+      const tagName = target?.tagName?.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea' || tagName === 'select' || target?.isContentEditable || target?.getAttribute?.('role') === 'textbox') return;
+
+      const nextLabel = mapValidateShortcutToReviewLabel(event.key ?? '');
+      if (!nextLabel) return;
+      event.preventDefault?.();
+      setDecisionLabel(nextLabel);
+    };
+
+    eventTarget.addEventListener('keydown', handleKeyDown);
+    return () => eventTarget.removeEventListener?.('keydown', handleKeyDown);
+  }, [baselineAvailable, compareView]);
 
   const load = useCallback(async () => {
     const normalizedTaskKey = typeof taskKey === 'string' ? taskKey.trim() : '';
@@ -671,12 +547,8 @@ export default function AiQualityStudioValidateScreen() {
   async function handleRunTest() {
     if (!detail || !selectedVersion || !selectedSource || runningTest) return;
     const sourceType = selectedSource.sourceType;
-    if (sourceType !== 'entry' && sourceType !== 'day') {
-      setError('Alleen entry/day test-bronnen worden nu ondersteund.');
-      return;
-    }
     if (!taskCapabilities?.allowedSourceTypes.includes(sourceType)) {
-      setError('Alleen entry/day test-bronnen worden nu ondersteund.');
+      setError('Deze testbron past niet bij deze AIQS-taak.');
       return;
     }
 
@@ -951,177 +823,115 @@ export default function AiQualityStudioValidateScreen() {
             )}
           </AdminConsolePanel>
 
-          <ThemedView style={[styles.compareLayout, isDesktop && styles.compareLayoutDesktop]}>
-            <AdminConsolePanel title="Huidige versie" subtitle="Wat nu live staat" variant="plain">
-              {!compareView ? (
-                <StateBlock tone="info" message="Nog geen run" detail="Run eerst een test om baseline te laden." />
-              ) : compareView.baselineStatus !== 'available' ? (
-                <StateBlock
-                  tone="error"
-                  message="Geen baseline beschikbaar"
-                  detail={compareView.baselineReason ?? 'Zonder baseline is valideren geblokkeerd.'}
-                />
-              ) : (
-                <ThemedView style={styles.outputBlock}>
-                  {compareShapeMismatchNotice ? <MetaText>{compareShapeMismatchNotice}</MetaText> : null}
-                  {normalizedBaselineOutput.kind === 'object' ? (
-                    <ThemedView style={styles.outputStack}>
-                      {normalizedBaselineOutput.fields.map((field) => (
-                        <ThemedView
-                          key={`baseline-${field.key}`}
-                          style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}
-                        >
-                          <ThemedText type="defaultSemiBold">{formatObjectFieldLabel(detail?.key, field.key)}</ThemedText>
-                          <ThemedText type="bodySecondary">{renderUnknownValue(field.value)}</ThemedText>
-                        </ThemedView>
-                      ))}
-                    </ThemedView>
-                  ) : null}
+          <AdminConsolePanel title="Vergelijking" subtitle="Diff is standaard zichtbaar." variant="plain">
+            {!compareView ? (
+              <StateBlock tone="info" message="Nog geen run" detail="Run een test om huidige en nieuwe output te vergelijken." />
+            ) : compareView.baselineStatus !== 'available' ? (
+              <StateBlock
+                tone="error"
+                message="Geen baseline beschikbaar"
+                detail={compareView.baselineReason ?? 'Zonder baseline is valideren geblokkeerd.'}
+              />
+            ) : (
+              <ThemedView style={styles.compareWorkbench}>
+                {compareShapeMismatchNotice ? <MetaText>{compareShapeMismatchNotice}</MetaText> : null}
+                {normalizedBaselineOutput.kind === 'text' && normalizedBaselineOutput.parseFallback ? (
+                  <MetaText>Kon baseline niet veilig als gestructureerde output parsen; toont leesbare tekstfallback.</MetaText>
+                ) : null}
+                {normalizedCandidateOutput.kind === 'text' && normalizedCandidateOutput.parseFallback ? (
+                  <MetaText>Kon kandidaat-output niet veilig als gestructureerde output parsen; toont leesbare tekstfallback.</MetaText>
+                ) : null}
 
-                  {normalizedBaselineOutput.kind === 'list' ? (
-                    normalizedBaselineOutput.items.length > 0 ? (
-                      <ThemedView style={styles.outputStack}>
-                        {normalizedBaselineOutput.items.map((item, index) => (
-                          <ThemedView
-                            key={`baseline-item-${index}`}
-                            style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}
-                          >
-                            <ThemedText type="defaultSemiBold">Item {index + 1}</ThemedText>
-                            <ThemedText type="bodySecondary">{renderUnknownValue(item)}</ThemedText>
-                          </ThemedView>
-                        ))}
-                      </ThemedView>
-                    ) : (
-                      <MetaText>Lege lijst.</MetaText>
-                    )
-                  ) : null}
-
-                  {normalizedBaselineOutput.kind === 'text' ? (
-                    <>
-                      {normalizedBaselineOutput.parseFallback ? (
-                        <MetaText>Kon baseline niet veilig als gestructureerde output parsen; toont leesbare tekstfallback.</MetaText>
-                      ) : null}
-                      <ThemedView style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}> 
-                        <ThemedText type="bodySecondary">{normalizedBaselineOutput.text || 'Geen output.'}</ThemedText>
-                      </ThemedView>
-                    </>
-                  ) : null}
+                <ThemedView style={styles.compareModeRow}>
+                  {(['diff', 'current', 'new'] as CompareViewMode[]).map((mode) => (
+                    <AdminConsoleButton
+                      key={mode}
+                      label={mode === 'diff' ? 'Diff' : mode === 'current' ? 'Huidig' : 'Nieuw'}
+                      onPress={() => setCompareViewMode(mode)}
+                      tone="ghost"
+                      selected={compareViewMode === mode}
+                    />
+                  ))}
                 </ThemedView>
-              )}
-            </AdminConsolePanel>
 
-            <AdminConsolePanel title="Nieuwe versie" subtitle="Wat de draft teruggeeft" variant="plain">
-              {!compareView ? (
-                <StateBlock tone="info" message="Nog geen run" detail="Run een test om kandidaat-output te zien." />
-              ) : (
-                <ThemedView style={styles.outputBlock}>
-                  {normalizedCandidateOutput.kind === 'object' ? (
-                    <ThemedView style={styles.outputStack}>
-                      {normalizedCandidateOutput.fields.map((field) => (
-                        (() => {
-                          const diffKey = `field:${field.key}`;
-                          const candidateText = typeof field.value === 'string' ? field.value : null;
-                          const baselineValue = baselineObjectFieldMap[field.key];
-                          const baselineText = typeof baselineValue === 'string' ? baselineValue : null;
-                          const canShowDiff = Boolean(candidateText !== null && baselineText !== null);
-                          const diffOpen = Boolean(candidateDiffTogglesByKey[diffKey]);
+                <ThemedView style={styles.diffSectionList}>
+                  {compareSections.map((section) => (
+                    <ThemedView
+                      key={section.key}
+                      style={[styles.diffSection, { borderBottomColor: palette.separator }]}
+                    >
+                      <ThemedView style={styles.diffSectionHeader}>
+                        <ThemedText type="defaultSemiBold">{section.label}</ThemedText>
+                        <MetaText>{section.changed ? 'Gewijzigd' : 'Ongewijzigd'}</MetaText>
+                      </ThemedView>
 
-                          return (
-                            <ThemedView
-                              key={`candidate-${field.key}`}
-                              style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}
-                            >
-                              <ThemedText type="defaultSemiBold">{formatObjectFieldLabel(detail?.key, field.key)}</ThemedText>
-                              {diffOpen && canShowDiff ? (
-                                <ThemedView style={[styles.inlineDiffWrap, { backgroundColor: palette.surfaceLowest }]}> 
-                                  <InlineWordDiffText beforeText={baselineText ?? ''} afterText={candidateText ?? ''} />
-                                </ThemedView>
-                              ) : (
-                                <ThemedText type="bodySecondary">{renderUnknownValue(field.value)}</ThemedText>
-                              )}
-
-                              {canShowDiff ? (
-                                <>
-	                                  <AdminConsoleTextAction
-	                                    label={diffOpen ? 'Verberg diff' : 'Toon diff'}
-	                                    onPress={() =>
-	                                      setCandidateDiffTogglesByKey((prev) => ({
-	                                        ...prev,
-	                                        [diffKey]: !prev[diffKey],
-	                                      }))
-	                                    }
-	                                  />
-	                                </>
-	                              ) : null}
+                      {compareViewMode === 'diff' && isDesktop ? (
+                        <ThemedView style={styles.diffColumns}>
+                          <ThemedView style={styles.diffColumn}>
+                            <MetaText>Huidig</MetaText>
+                            <ThemedView style={[styles.outputTextBlock, { backgroundColor: palette.surfaceLow }]}>
+                              <ThemedText type="bodySecondary">{section.currentText}</ThemedText>
                             </ThemedView>
-                          );
-                        })()
-                      ))}
-                    </ThemedView>
-                  ) : null}
-
-                  {normalizedCandidateOutput.kind === 'list' ? (
-                    normalizedCandidateOutput.items.length > 0 ? (
-                      <ThemedView style={styles.outputStack}>
-                        {normalizedCandidateOutput.items.map((item, index) => (
-                          <ThemedView
-                            key={`candidate-item-${index}`}
-                            style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}
-                          >
-                            <ThemedText type="defaultSemiBold">Item {index + 1}</ThemedText>
-                            <ThemedText type="bodySecondary">{renderUnknownValue(item)}</ThemedText>
                           </ThemedView>
-                        ))}
-                      </ThemedView>
-                    ) : (
-                      <MetaText>Lege lijst.</MetaText>
-                    )
-                  ) : null}
-
-                  {normalizedCandidateOutput.kind === 'text' ? (
-                    (() => {
-                      const diffKey = 'text:root';
-                      const baselineText = normalizedBaselineOutput.kind === 'text' ? normalizedBaselineOutput.text : null;
-                      const candidateText = normalizedCandidateOutput.text;
-                      const canShowDiff = Boolean(baselineText !== null && candidateText.length > 0);
-                      const diffOpen = Boolean(candidateDiffTogglesByKey[diffKey]);
-
-                      return (
-                    <>
-                      {normalizedCandidateOutput.parseFallback ? (
-                        <MetaText>Kon kandidaat-output niet veilig als gestructureerde output parsen; toont leesbare tekstfallback.</MetaText>
+                          <ThemedView style={styles.diffColumn}>
+                            <MetaText>Nieuw</MetaText>
+                            <ThemedView style={[styles.outputTextBlock, { backgroundColor: palette.surfaceLow }]}>
+                              <InlineWordDiffText beforeText={section.currentText} afterText={section.newText} />
+                            </ThemedView>
+                          </ThemedView>
+                        </ThemedView>
                       ) : null}
-                      <ThemedView style={[styles.outputFieldCard, { backgroundColor: palette.surfaceLow }]}> 
-                        {diffOpen && canShowDiff ? (
-                          <ThemedView style={[styles.inlineDiffWrap, { backgroundColor: palette.surfaceLowest }]}> 
-                            <InlineWordDiffText beforeText={baselineText ?? ''} afterText={candidateText} />
-                          </ThemedView>
-                        ) : (
-                          <ThemedText type="bodySecondary">{normalizedCandidateOutput.text || 'Geen output.'}</ThemedText>
-                        )}
 
-                        {canShowDiff ? (
-                          <>
-	                            <AdminConsoleTextAction
-	                              label={diffOpen ? 'Verberg diff' : 'Toon diff'}
-	                              onPress={() =>
-	                                setCandidateDiffTogglesByKey((prev) => ({
-	                                  ...prev,
-	                                  [diffKey]: !prev[diffKey],
-	                                }))
-	                              }
-	                            />
-	                          </>
-	                        ) : null}
-                      </ThemedView>
-                    </>
-                      );
-                    })()
-                  ) : null}
+                      {compareViewMode === 'diff' && !isDesktop ? (
+                        <ThemedView style={[styles.outputTextBlock, { backgroundColor: palette.surfaceLow }]}>
+                          <MetaText>Diff</MetaText>
+                          <InlineWordDiffText beforeText={section.currentText} afterText={section.newText} />
+                        </ThemedView>
+                      ) : null}
+
+                      {compareViewMode === 'current' ? (
+                        <ThemedView style={[styles.outputTextBlock, { backgroundColor: palette.surfaceLow }]}>
+                          <MetaText>Huidig</MetaText>
+                          <ThemedText type="bodySecondary">{section.currentText}</ThemedText>
+                        </ThemedView>
+                      ) : null}
+
+                      {compareViewMode === 'new' ? (
+                        <ThemedView style={[styles.outputTextBlock, { backgroundColor: palette.surfaceLow }]}>
+                          <MetaText>Nieuw</MetaText>
+                          <ThemedText type="bodySecondary">{section.newText}</ThemedText>
+                        </ThemedView>
+                      ) : null}
+                    </ThemedView>
+                  ))}
                 </ThemedView>
-              )}
-            </AdminConsolePanel>
-          </ThemedView>
+              </ThemedView>
+            )}
+          </AdminConsolePanel>
+
+          <AdminConsolePanel title="AI observaties" subtitle="Automatisch afgeleid, zonder oordeel." variant="plain">
+            {!compareView ? (
+              <MetaText>Run eerst een test om observaties te tonen.</MetaText>
+            ) : compareView.baselineStatus !== 'available' ? (
+              <MetaText>Observaties zijn beschikbaar zodra er een baseline is.</MetaText>
+            ) : validateObservations.length === 0 ? (
+              <MetaText>Geen duidelijke observaties gevonden.</MetaText>
+            ) : (
+              <ThemedView style={styles.observationList}>
+                {validateObservations.map((observation) => (
+                  <ThemedView
+                    key={`${observation.label}-${observation.detail ?? ''}`}
+                    style={[styles.observationPill, { backgroundColor: palette.surfaceLow }]}
+                  >
+                    <ThemedText type="caption" style={{ color: palette.text }}>
+                      + {observation.label}
+                    </ThemedText>
+                    {observation.detail ? <MetaText>{observation.detail}</MetaText> : null}
+                  </ThemedView>
+                ))}
+              </ThemedView>
+            )}
+          </AdminConsolePanel>
 
           <AdminConsolePanel title="Snelle controle" variant="plain">
             {contractSignals.length === 0 ? (
@@ -1304,29 +1114,53 @@ const styles = StyleSheet.create({
   sourcePreview: {
     color: colorTokens.dark.mutedSoft,
   },
-  compareLayout: {
-    gap: spacing.content,
+  compareWorkbench: {
+    gap: spacing.lg,
   },
-  compareLayoutDesktop: {
+  compareModeRow: {
     flexDirection: 'row',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  diffSectionList: {
+    gap: spacing.lg,
+  },
+  diffSection: {
+    gap: spacing.sm,
+    paddingBottom: spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  diffSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    gap: spacing.md,
+  },
+  diffColumns: {
+    flexDirection: 'row',
+    gap: spacing.lg,
     alignItems: 'flex-start',
   },
-  outputBlock: {
+  diffColumn: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  outputTextBlock: {
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  observationList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  outputStack: {
-    gap: spacing.sm,
-  },
-  outputFieldCard: {
+  observationPill: {
     borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: spacing.xxs,
-  },
-  inlineDiffWrap: {
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
   },
   textAreaLarge: {
     minHeight: 220,

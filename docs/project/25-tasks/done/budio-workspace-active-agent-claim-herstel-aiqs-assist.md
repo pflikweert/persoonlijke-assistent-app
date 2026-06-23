@@ -16,8 +16,10 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 8
 ---
+
+
 
 
 ## Probleem / context
@@ -149,3 +151,5 @@ De net gebouwde active-agent awareness lijkt kapot zolang actieve agentruns hun 
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

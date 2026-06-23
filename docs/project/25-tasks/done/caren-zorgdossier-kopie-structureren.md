@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: null
+sort_order: 72
 ---
+
+
 
 
 ## Probleem / context
@@ -166,3 +168,5 @@ Eén uploadbestand met:
 ## Commits
 
 - 2026-05-16T06:54:00+02:00 — docs: add Caren zorgdossier structuring task
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

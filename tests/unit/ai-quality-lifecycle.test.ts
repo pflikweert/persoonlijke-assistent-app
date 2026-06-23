@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { getAiQualityVersionLifecycleState } from "@/src/lib/ai-quality-lifecycle";
+import {
+  getAiQualityArchivedCleanupPlan,
+  getAiQualityVersionLifecycleState,
+  getAiQualityVersionManagementState,
+} from "@/src/lib/ai-quality-lifecycle";
 import type { AiTaskDetail, AiTaskVersionDetail } from "@/types";
 
 function version(input: Partial<AiTaskVersionDetail> & Pick<AiTaskVersionDetail, "id" | "versionNumber" | "status">): AiTaskVersionDetail {
@@ -132,6 +136,68 @@ describe("ai-quality lifecycle helper", () => {
     expect(getAiQualityVersionLifecycleState(detail([archivedDraft], ""), archivedDraft)).toMatchObject({
       id: "archived_not_rollbackable",
       action: null,
+    });
+  });
+
+  it("keeps live deletion impossible and handles draft/archive delete eligibility", () => {
+    const live = version({ id: "live", versionNumber: 5, status: "live" });
+    const draft = version({ id: "draft", versionNumber: 6, status: "draft" });
+    const archived = version({ id: "archived", versionNumber: 4, status: "archived" });
+    const subject = detail([live, draft, archived]);
+
+    expect(getAiQualityVersionManagementState(subject, live)).toMatchObject({
+      canDeleteDraft: false,
+      canDeleteArchived: false,
+      deleteBlockedReason: "Live versies kunnen niet worden verwijderd.",
+    });
+    expect(getAiQualityVersionManagementState(subject, draft)).toMatchObject({
+      canDeleteDraft: true,
+      canDeleteArchived: false,
+    });
+    expect(getAiQualityVersionManagementState(subject, archived)).toMatchObject({
+      canDeleteDraft: false,
+      canDeleteArchived: true,
+      deleteBlockedReason: null,
+    });
+  });
+
+  it("blocks archived delete state when a version is linked to runtime logs", () => {
+    const archived = version({ id: "archived", versionNumber: 4, status: "archived" });
+    const subject = detail([archived], "");
+
+    expect(
+      getAiQualityVersionManagementState(subject, archived, {
+        runtimeLinkedVersionIds: new Set(["archived"]),
+      })
+    ).toMatchObject({
+      canDeleteArchived: false,
+      deleteBlockedReason: "Deze versie is gekoppeld aan runtime logs en blijft bewaard.",
+    });
+  });
+
+  it("plans cleanup by preserving the latest archived versions and runtime-linked archives", () => {
+    const subject = detail(
+      [
+        version({ id: "archive-6", versionNumber: 6, status: "archived" }),
+        version({ id: "archive-5", versionNumber: 5, status: "archived" }),
+        version({ id: "archive-4", versionNumber: 4, status: "archived" }),
+        version({ id: "archive-3", versionNumber: 3, status: "archived" }),
+        version({ id: "archive-2", versionNumber: 2, status: "archived" }),
+        version({ id: "archive-1", versionNumber: 1, status: "archived" }),
+      ],
+      ""
+    );
+
+    expect(
+      getAiQualityArchivedCleanupPlan(subject, {
+        keepLatest: 3,
+        runtimeLinkedVersionIds: new Set(["archive-2"]),
+      })
+    ).toEqual({
+      keepLatest: 3,
+      archivedCount: 6,
+      deletableVersionIds: ["archive-3", "archive-1"],
+      skippedVersionIds: ["archive-2"],
     });
   });
 });

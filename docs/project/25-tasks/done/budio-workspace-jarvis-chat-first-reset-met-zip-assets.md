@@ -16,8 +16,10 @@ follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 12
 ---
+
+
 
 
 # Budio Workspace Jarvis chat-first reset met ZIP assets
@@ -208,3 +210,5 @@ De gebruiker heeft de huidige Jarvis-review afgekeurd als te druk, te veel infor
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

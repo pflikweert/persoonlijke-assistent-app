@@ -20,6 +20,20 @@ export type AiQualityVersionLifecycleState = {
   canRunAction: boolean;
 };
 
+export type AiQualityVersionManagementState = {
+  canView: boolean;
+  canDeleteDraft: boolean;
+  canDeleteArchived: boolean;
+  deleteBlockedReason: string | null;
+};
+
+export type AiQualityArchivedCleanupPlan = {
+  keepLatest: number;
+  archivedCount: number;
+  deletableVersionIds: string[];
+  skippedVersionIds: string[];
+};
+
 export function getAiQualityVersionLifecycleState(
   detail: AiTaskDetail,
   version: AiTaskVersionDetail
@@ -108,4 +122,74 @@ export function isAiQualityVersionPromotable(detail: AiTaskDetail, version: AiTa
 
 export function isAiQualityVersionRollbackable(detail: AiTaskDetail, version: AiTaskVersionDetail): boolean {
   return getAiQualityVersionLifecycleState(detail, version).action === "rollback";
+}
+
+export function getAiQualityVersionManagementState(
+  detail: AiTaskDetail,
+  version: AiTaskVersionDetail,
+  options: { runtimeLinkedVersionIds?: ReadonlySet<string> } = {}
+): AiQualityVersionManagementState {
+  const isCurrentLive = detail.liveVersion?.id === version.id || version.status === "live";
+  const hasRuntimeLinks = options.runtimeLinkedVersionIds?.has(version.id) === true;
+
+  if (isCurrentLive) {
+    return {
+      canView: true,
+      canDeleteDraft: false,
+      canDeleteArchived: false,
+      deleteBlockedReason: "Live versies kunnen niet worden verwijderd.",
+    };
+  }
+
+  if (version.status === "draft") {
+    return {
+      canView: true,
+      canDeleteDraft: true,
+      canDeleteArchived: false,
+      deleteBlockedReason: null,
+    };
+  }
+
+  if (version.status === "archived") {
+    return {
+      canView: true,
+      canDeleteDraft: false,
+      canDeleteArchived: !hasRuntimeLinks,
+      deleteBlockedReason: hasRuntimeLinks
+        ? "Deze versie is gekoppeld aan runtime logs en blijft bewaard."
+        : null,
+    };
+  }
+
+  return {
+    canView: true,
+    canDeleteDraft: false,
+    canDeleteArchived: false,
+    deleteBlockedReason: "Deze versie kan niet worden verwijderd.",
+  };
+}
+
+export function getAiQualityArchivedCleanupPlan(
+  detail: AiTaskDetail,
+  options: {
+    keepLatest?: number;
+    runtimeLinkedVersionIds?: ReadonlySet<string>;
+  } = {}
+): AiQualityArchivedCleanupPlan {
+  const keepLatest = Math.max(0, Math.floor(options.keepLatest ?? 3));
+  const archivedVersions = detail.versions
+    .filter((version) => version.status === "archived")
+    .sort((left, right) => right.versionNumber - left.versionNumber);
+  const candidates = archivedVersions.slice(keepLatest);
+  const runtimeLinkedVersionIds = options.runtimeLinkedVersionIds ?? new Set<string>();
+  return {
+    keepLatest,
+    archivedCount: archivedVersions.length,
+    deletableVersionIds: candidates
+      .filter((version) => !runtimeLinkedVersionIds.has(version.id))
+      .map((version) => version.id),
+    skippedVersionIds: candidates
+      .filter((version) => runtimeLinkedVersionIds.has(version.id))
+      .map((version) => version.id),
+  };
 }

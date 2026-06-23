@@ -10,8 +10,10 @@ summary: "Alle bestaande taskfiles krijgen een expliciete workstream-classificat
 tags: [tasks, docs, workflow]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 60
 ---
+
+
 
 ## Probleem / context
 
@@ -42,3 +44,8 @@ Alle bestaande taskfiles onder `docs/project/25-tasks/**` hebben een passende `w
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle:verify`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run taskflow:verify`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

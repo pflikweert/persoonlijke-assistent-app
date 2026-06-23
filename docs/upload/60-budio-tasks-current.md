@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-22T12:08:56.921Z
-Source Commit: 6eeaf75
+Build Timestamp (UTC): 2026-06-22T16:10:27.541Z
+Source Commit: 320c3c0
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -176,6 +176,7 @@ sort_order: 12
 
 
 
+
 # 1.2E beta-readiness expliciteren en afronden
 
 ## Probleem / context
@@ -288,6 +289,7 @@ spec_ready: true
 due_date: null
 sort_order: 5
 ---
+
 
 
 
@@ -2436,6 +2438,7 @@ sort_order: 10
 
 
 
+
 # Admin/founder meeting capture — web route en IA
 
 ## Probleem / context
@@ -2792,6 +2795,7 @@ sort_order: 7
 
 
 
+
 ## Probleem / context
 
 AI Quality Studio werkt functioneel, maar voelt nog te veel als een mobiele settings-flow met gestapelde warme Budio-cards. Voor productie-admins moet AIQS aanvoelen als een compacte tooling-console: sneller scanbaar, neutraler, dichter, duidelijker en los van de gewone Budio gebruikersflow.
@@ -2887,6 +2891,7 @@ Reviewbevindingen:
 - Review en test de nieuwe wijzigingen en verbeter waar nodig.
 - Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen.
 - Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System.
+- AIQS validatiepagina herontwerpen naar diff-first vergelijken en beoordelen: default `Diff`, tabs `Diff/Huidig/Nieuw`, AI-observaties, oordeel onderaan en shortcuts `1/2/3/4`.
 
 ## Status per requirement
 
@@ -2898,6 +2903,7 @@ Reviewbevindingen:
 - [x] Nieuwe wijzigingen zijn gereviewd en getest — status: gebouwd
 - [x] Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen — status: gebouwd
 - [x] Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System — status: gebouwd
+- [x] AIQS validatiepagina diff-first maken voor lange outputvergelijkingen — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -2921,6 +2927,9 @@ Reviewbevindingen:
 - Screen-local AIQS action-Pressables in draft en validate zijn vervangen door gedeelde admin button/text-action primitives; klikbare source/case rows blijven bewust rows.
 - De raw HTML token-remove button in de prompt editor heeft nu expliciete browser-appearance reset, size, radius en hover/focus styling zodat native/default button styling niet kan lekken.
 - `docs/design/admin-ui-principles.md` documenteert nu het gedeelde Admin Button System.
+- AIQS validate is diff-first gemaakt: `Diff` is default, `Huidig` en `Nieuw` zijn tabs, per-veld `Toon diff` is verwijderd, lange output wordt per sectie vergeleken en mobile toont een stacked diffblok in plaats van twee volledige tekstkolommen onder elkaar.
+- Validate toont nu lokale niet-normatieve AI-observaties zoals `uitgebreider`, `concreter` en `meer/minder brondekking`; deze zetten nooit automatisch een oordeel.
+- Validate ondersteunt shortcuts `1/2/3/4` voor `beter/gelijk/slechter/fout`, met input/textarea/contenteditable guard.
 
 ## Uitvoerblokken / fasering
 
@@ -2941,6 +2950,7 @@ Reviewbevindingen:
 - [x] Test en validate workbench-density verbeteren.
 - [x] Goedgekeurde cleaner AIQS-startstijl doorvoeren naar onderliggende AIQS-schermen.
 - [x] AIQS action buttons migreren naar één consistent Admin Button System zonder zwarte/default buttons.
+- [x] Validate diff-first vergelijking, observaties en shortcuts toevoegen.
 - [x] Light/dark en desktop/mobile visueel controleren waar praktisch.
 - [x] Relevante verifies draaien.
 
@@ -2953,6 +2963,7 @@ Reviewbevindingen:
 - [x] Debug logging en baseline import zijn visueel secundair/operationeel gepresenteerd.
 - [x] Gewone Budio gebruikersflow is niet aangepast.
 - [x] AIQS toont geen zwarte/default/native action buttons meer; button states komen uit gedeelde admin primitives.
+- [x] AIQS validate toont standaard diff, heeft tabs `Diff/Huidig/Nieuw`, toont observaties zonder automatische beslissing en plaatst oordeel na vergelijking.
 
 ## Blockers / afhankelijkheden
 
@@ -3019,11 +3030,19 @@ Reviewbevindingen:
   - Projectbrede audit op AIQS action-plekken — alleen toegestane source/case row-Pressables en prompt-editor token-remove `<button>` blijven over; token-remove heeft expliciete appearance reset.
   - One-shot Playwright computed-style routecheck — groen; overview, group, detail, draft, test, validate, mobile group, dark group en dark validate hebben geen zichtbare zwarte/default button backgrounds.
   - Screenshotcheck: `/tmp/aiqs-buttons-overview-light.png`, `/tmp/aiqs-buttons-group-light.png`, `/tmp/aiqs-buttons-detail-light.png`, `/tmp/aiqs-buttons-draft-light.png`, `/tmp/aiqs-buttons-test-light.png`, `/tmp/aiqs-buttons-validate-light.png`, `/tmp/aiqs-buttons-group-mobile.png`, `/tmp/aiqs-buttons-group-dark.png`, `/tmp/aiqs-buttons-validate-dark.png`.
+- 2026-06-22 AIQS validate diff-first redesign:
+  - `npx vitest run tests/unit/ai-quality-validate-compare.test.ts` — groen, 1 testfile / 5 tests.
+  - `npm run test:unit -- ai-quality` — groen, 4 testfiles / 21 tests.
+  - `npm run typecheck` — groen na validate compare-helper en routewijziging.
+  - `npm run lint` — groen na validate compare-helper en routewijziging.
+  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde AIQS overview-smoke blijft werken.
+  - One-shot Playwright validate-route diff-smoke — groen; `day_narrative` draft v16 test run gestart, `Diff` standaard zichtbaar, tabs `Diff/Huidig/Nieuw` zichtbaar, `AI observaties` en `Beslissing` zichtbaar, `Toon diff` afwezig, shortcut `1` selecteerbaar en mobile viewport blijft diff-first.
+  - Screenshotcheck: `/tmp/aiqs-validate-diff-light.png`, `/tmp/aiqs-validate-diff-dark.png`, `/tmp/aiqs-validate-diff-mobile-dark.png`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
-- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate en nu ook één consistent Admin Button System.
+- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate, één consistent Admin Button System en een diff-first validatepagina voor lange outputvergelijkingen.
 - Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. De startpagina is daarna verder versimpeld naar plain sections, inline status, list/table rows en single-action debug logging. Onderliggende AIQS-schermen gebruiken nu dezelfde rustige admin-workspace taal: minder header-badges/eyebrows, minder card-fill, metadata als plain secties en bestaande acties/functionele editors behouden. Alle AIQS action buttons lopen via gedeelde admin button/text-action primitives, primary gebruikt geen zwarte fill meer en de raw prompt-editor token button is browser-default-proof gemaakt.
 - Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat de gebruiker de cleaner AIQS referentie-implementatie inclusief onderliggende schermen inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
 
@@ -3154,6 +3173,273 @@ De interface ondersteunt prettig gebruik op telefoon én desktop/fullscreen, zon
 
 ---
 
+## AIQS Assist laagbewuste prompt review
+
+- Path: `docs/project/25-tasks/open/aiqs-assist-laagbewuste-prompt-review.md`
+- Bucket: open
+- Status: in_progress
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: aiqs-assist-laagbewuste-prompt-review
+title: AIQS Assist laagbewuste prompt review
+status: in_progress
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: "AIQS Assist wordt een laagbewuste Prompt Reviewer + Prompt Architect voor draft promptvelden, met diagnose, laagdiscipline, veilige single-layer acties en een expliciete all-fields correctieactie."
+tags: [aiqs, prompt-assist, prompt-governance, admin, openai]
+workstream: aiqs
+epic_id: null
+parent_task_id: null
+depends_on: [aiqs-runtime-db-binding-voor-live-prompts, aiqs-admin-console-uiux-linear-richting]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: Codex
+active_agent_model: GPT-5
+active_agent_runtime: codex
+active_agent_since: "2026-06-22T15:26:26Z"
+active_agent_status: running
+active_agent_settings: default
+---
+
+
+
+## Probleem / context
+
+AIQS Assist bestaat al in de draft editor, maar voelt nog te veel als algemene herschrijfhulp. Per promptveld moet Assist begrijpen welke laag wordt bewerkt, wat die laag wel/niet mag bevatten, welke sibling-lagen al regels bevatten en of de huidige tekst eigenlijk in een andere laag thuishoort.
+
+Voorbeeld: een Algemene instructie met vooral promptarchitectuur en laagdiscipline beschrijft niet het taakdoel voor het model. Assist moet dit herkennen en een concrete taakdoel-instructie kunnen voorstellen.
+
+## Gewenste uitkomst
+
+AIQS Assist functioneert als Prompt Reviewer + Prompt Architect. Elke Assist-click geeft een laagbewuste diagnose, problemen, voorstel, uitleg en risico-inschatting.
+
+Default apply blijft veilig: gewone acties vervangen alleen het huidige veld. De expliciete actie `verdeel_over_velden` / `Controleer alle lagen` mag meerdere bewerkbare velden voorstellen en na expliciete `Alle lagen toepassen` bijwerken, met per veld reden en risico.
+
+## User outcome
+
+Een AIQS-admin kan promptlagen sneller en veiliger verbeteren: systemregels blijven harde grenzen, general bevat het taakdoel en field-lagen blijven veldspecifiek. Prompt drift en dubbele/tegenstrijdige instructies worden eerder zichtbaar.
+
+## Functional slice
+
+Eén afgeronde hardening-slice voor AIQS draft Assist:
+
+1. nieuwe laagbewuste Assist-acties
+2. rijkere editorcontext naar `prompt_assist_preview`
+3. reviewer-gerichte outputvorm
+4. lokale waarschuwingen voor laagdiscipline
+5. UI-panel dat diagnose/problemen/voorstel/waarom/risico toont
+
+## Entry / exit
+
+- Entry: admin opent een AIQS draft editor en klikt `Assist` bij een system-, general- of field-laag.
+- Exit: admin ziet laagbewuste diagnose en kan het voorstel toepassen op alleen die laag, kopiëren of sluiten.
+
+## Happy flow
+
+1. Admin opent `day_narrative` draft en klikt Assist bij `Algemene instructie`.
+2. Assist ziet sibling-lagen, tokens, outputcontract, taskmetadata en current layer.
+3. Assist herkent architectuurtaal en ontbrekend taakdoel.
+4. Assist toont diagnose, issues, voorstel, waarom en laagfit.
+5. Admin klikt `Toepassen`; alleen `generalInstruction` wordt vervangen.
+6. Bij `Controleer alle lagen` ziet admin voorstellen per laag en klikt expliciet `Alle lagen toepassen`.
+
+## Non-happy flows
+
+- Empty state: lege laag krijgt uitleg wat hier hoort en een voorstel voor deze laag.
+- Permission denied / unavailable: bestaande AIQS capability/server-side denial blijft leidend.
+- Validation / unsupported state: stale/ongeldige Assist-action valt terug op alias of duidelijke inputfout.
+- Failure / retry / cancel: Assist-fout blijft in het panel zichtbaar; bestaande drafttekst wijzigt niet.
+
+## UX / copy
+
+- Assist-knop blijft compact.
+- Tooltip/label per laag:
+  - System: `Review harde grenzen`
+  - General: `Review taakdoel`
+  - Field: `Review veldregels`
+- Panel toont:
+  - `Diagnose`
+  - `Problemen`
+  - `Voorstel`
+  - `Waarom`
+  - `Laagfit / risico`
+  - acties `Toepassen`, `Kopiëren`, `Sluiten`
+- Inline waarschuwingen blijven kort en operationeel.
+
+## Data / IO
+
+- Input:
+  - `taskKey`, `versionId`, prompt family/type/runtime group
+  - current layer key/type/label/content
+  - sibling layer contents
+  - token catalog met input/output tokens
+  - output schema/config
+  - live baseline metadata indien beschikbaar
+- Output:
+  - `diagnosis`
+  - `issues`
+  - `suggested_text`
+  - `why`
+  - `layer_fit`
+  - `risk_level`
+  - bestaande diff/apply-compatible velden
+- Opslag/API/service/file-impact:
+  - types/service payload/result uitbreiden
+  - `admin-ai-quality-studio` action `prompt_assist_preview` aanscherpen
+  - draft editor Assist-panel aanpassen
+  - pure helper + unit-tests toevoegen
+- Statussen:
+  - loading/error/stale preview blijven bestaand
+  - risk level `low | medium | high`
+
+## Waarom nu
+
+AIQS is runtime-bron en versiebeheer voor prompts geworden. De editor moet admins helpen promptwijzigingen inhoudelijk veilig te maken, niet alleen tekst mooier herschrijven.
+
+## In scope
+
+- AIQS draft editor Assist.
+- Existing server-side `prompt_assist_preview` flow.
+- Promptfamilies Momenten, Vandaag, Week, Maand en shared/driver prompts die via de structured draft editor lopen.
+- Read-only compound members alleen als review/read-only context; geen apply-flow.
+
+## Buiten scope
+
+- Runtime prompt execution wijzigen.
+- Modelwijziging.
+- Nieuwe OpenAI-flow naast bestaande Assist.
+- Consumer UI.
+- Nieuwe dependencies.
+- Stilzwijgend automatisch verplaatsen tussen lagen buiten de expliciete all-fields actie.
+- Prompt editor redesign buiten Assist-panel en laaghints.
+
+## Oorspronkelijk plan / afgesproken scope
+
+# AIQS Assist Laagbewuste Prompt Architect
+
+AIQS Assist in de draft editor wordt omgebouwd van herschrijfhulp naar laagbewuste Prompt Reviewer + Prompt Architect. Scope blijft beperkt tot AIQS draft Assist; geen runtime prompt-execution, modelkeuze, consumer UI, schema of nieuwe dependencies.
+
+Belangrijkste punten:
+
+- nieuwe acties: `Review dit veld`, `Verbeter taakdoel`, `Ontdubbel met andere lagen`, `Maak compacter`, `Maak concreter`, `Check laagdiscipline`, `Schrijf voorstel voor deze laag`, `Leg uit wat hier hoort`
+- rijkere context naar `prompt_assist_preview`
+- reviewer-gerichte output: `diagnosis`, `issues`, `suggested_text`, `why`, `layer_fit`, `risk_level`
+- single-layer apply als default
+- `verdeel_over_velden` blijft behouden als generieke all-fields controleactie die meerdere velden mag voorstellen en toepassen na expliciete gebruikersactie
+- lokale heuristische waarschuwingen voor laagdiscipline
+- server-side Prompt Architect prompt met JSON-only output
+
+## Expliciete user requirements / detailbehoud
+
+- Assist moet laagbewust, prompttype-bewust en doelgericht worden.
+- Context per Assist-click bevat prompt key, family, type, runtime group, current layer, current field, field content, sibling layers, tokens, schema/config, live baseline en draft id waar beschikbaar.
+- Assist beoordeelt laagdiscipline, overlap, ontbrekend taakdoel, architectuurtaal, verkeerd geplaatste contractregels, veldspecifieke regels op general/system, prompt drift, vaagheid, redundantie en tegenstrijdigheid.
+- UI toont Diagnose, Problemen, Voorstel, Waarom en acties Toepassen, Kopiëren, Sluiten.
+- System layer is voor harde grenzen, contractregels, brongebruik, output-format, safety/runtime instructies.
+- General layer is voor taakdoel, globale manier van werken en prioriteiten.
+- Field layer is voor één outputveld: lengte, toon, structuur, inhoud en veldspecifieke kwaliteitscriteria.
+- `Toepassen` vervangt alleen huidig veld voor gewone acties.
+- `verdeel_over_velden` blijft behouden en wordt generieker: alle velden controleren, goedzetten en na expliciete apply schrijven in meerdere velden.
+- Als tekst beter in andere laag hoort: gewone acties adviseren alleen; de expliciete all-fields actie mag een multi-field voorstel doen.
+- Geen nieuwe prompt runtime, modelwijziging, dependencies, consumer UI of generated files direct aanpassen.
+
+## Status per requirement
+
+- [x] Assist is laagbewust/prompttype-bewust/doelgericht — status: gebouwd, runtime user-review nog nodig
+- [x] Rijkere Assist-context wordt meegegeven — status: gebouwd
+- [x] Reviewer-output met diagnose/issues/suggested_text/why/layer_fit/risk_level — status: gebouwd
+- [x] Nieuwe Assist-acties en aliasing — status: gebouwd
+- [x] Inline laagdisciplinewaarschuwingen — status: gebouwd
+- [x] Safe single-layer apply — status: gebouwd als default voor gewone acties
+- [x] Generieke all-fields actie `verdeel_over_velden` mag meerdere velden voorstellen/toepassen — status: gebouwd
+- [x] UI-panel toont Diagnose/Problemen/Voorstel/Waarom/Laagfit — status: gebouwd
+- [x] Server-side OpenAI prompt is Prompt Architect en JSON-only — status: gebouwd
+- [x] Entry_cleanup en day_narrative runtime-smoke — status: UI-smoke groen; entry_cleanup all-fields runtime-preview groen
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Gebruikerscorrectie 2026-06-22: oude `verdeel_over_velden`-code niet verwijderen, maar generieker maken als all-fields controle/correctie. Deze actie mag alle bewerkbare promptlagen goedzetten en na expliciete apply schrijven in meerdere velden.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow en bestaande Assist-contracten bevestigen.
+- [x] Blok 2: pure helper/types/actions/context uitbreiden met unit-tests.
+- [x] Blok 3: Edge Function Assist prompt en response-normalisatie aanscherpen.
+- [x] Blok 4: draft editor Assist UI, laaghints en warnings aansluiten.
+- [x] Blok 5: static, runtime smoke, docs/taskflow afronden.
+
+## Concrete checklist
+
+- [x] Taskfile aanmaken en bovenaan `in_progress` lane zetten.
+- [x] `src/lib/aiqs-prompt-assist-review.ts` toevoegen.
+- [x] Unit-tests voor action mapping, warnings en response normalizer toevoegen.
+- [x] Types uitbreiden voor Assist context/result.
+- [x] `_shared.ts` action list, layer hints en warnings aansluiten.
+- [x] Draft editor payload en Assist-panel aanpassen.
+- [x] Edge Function `prompt_assist_preview` prompt en parsing aanpassen.
+- [x] Verifies en task/docs-sync uitvoeren.
+
+## Acceptance criteria
+
+- [x] Assist op Systeemregels geeft system-specifieke review.
+- [x] Assist op Algemene instructie herkent ontbrekend taakdoel/architectuurtaal.
+- [x] Assist op Dagverhaal geeft veldspecifieke review.
+- [x] Assist op Samenvatting bewaakt lengte en concreetheid.
+- [x] Assist op Secties bewaakt format/limiet.
+- [x] Assist wijzigt alleen huidig veld bij gewone acties.
+- [x] `Controleer alle lagen` toont multi-field voorstel en past meerdere velden alleen expliciet toe.
+- [x] Assist werkt voor `entry_cleanup` en `day_narrative`.
+- [x] Oude Assist-action ids breken stale local clients niet hard.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+- Dirty worktree bevat bestaande AIQS/version/docs/plugin WIP; deze task stage't later alleen relevante Assist/task/docs-paden.
+
+## Verify / bewijs
+
+- `npm run test:unit -- aiqs-prompt-assist` — groen, 2026-06-22
+- `npm run typecheck` — groen, 2026-06-22
+- `npm run lint` — groen, 2026-06-22
+- `npm run verify:local-aiqs-smoke`
+- Gerichte browser-smoke op draft Assist voor `entry_cleanup` en `day_narrative` — groen, 2026-06-22
+- Gerichte runtime-smoke: `entry_cleanup` `Controleer alle lagen` maakt server-side preview met `Diagnose`, `Voorstel per laag` en `Alle lagen toepassen` — groen, 2026-06-22
+- `npm run verify:local-aiqs-smoke` — groen, 2026-06-22
+- `npm run taskflow:verify` — groen, 2026-06-22
+- `npm run docs:bundle` — groen, 2026-06-22
+- `npm run docs:bundle:verify` — groen, 2026-06-22
+- `npm run docs:lint` — rood door bestaande markdownlint-schuld buiten deze taskfile-set; niet opgelost binnen deze scope.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: laagbewuste Prompt Reviewer + Prompt Architect binnen AIQS draft Assist.
+- Toegevoegde verbeteringen: all-fields `verdeel_over_velden` behouden en generieker gemaakt.
+- Afgerond: helper/types, draft editor UI/apply, Edge Function prompt/parsing, unit/type/lint, local functions restart, AIQS smoke, gerichte draft UI-smoke, all-fields runtime-preview, taskflow/docs bundle.
+- Open / blocked: task blijft `in_progress` voor user-review/commitbesluit; brede `docs:lint` faalt door bestaande docs-schuld buiten deze scope.
+
+## Relevante links
+
+- `docs/project/ai-quality-studio.md`
+- `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
+- `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
+
+
+## Commits
+
+- 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+```
+
+---
+
 ## AIQS draft-live promotie en rollback flow
 
 - Path: `docs/project/25-tasks/open/aiqs-draft-live-promotie-en-rollback-flow.md`
@@ -3161,7 +3447,7 @@ De interface ondersteunt prettig gebruik op telefoon én desktop/fullscreen, zon
 - Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-03
+- Updated_at: 2026-06-22
 
 ```md
 ---
@@ -3171,7 +3457,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-03
+updated_at: 2026-06-22
 summary: "AI Quality Studio krijgt een complete lifecycle-flow: draft testen, reviewen, promoten naar live en oudere live-versies terugzetten."
 tags: [aiqs, admin, prompt-governance, lifecycle, supabase]
 workstream: aiqs
@@ -3184,6 +3470,7 @@ spec_ready: true
 due_date: null
 sort_order: 4
 ---
+
 
 
 
@@ -3292,6 +3579,12 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - Confirmaties gebruiken bestaande shared primitives.
 - Nieuwe servicefunctie `promoteAdminAiQualityStudioVersionLive({ taskKey, versionId })`.
 - Nieuwe derived UI helper `getAiQualityVersionLifecycleState(detail, version)`.
+- Prompt-detail wordt een rustige Prompt Detail + Version Management pagina.
+- Live versies kunnen read-only bekeken worden met alle promptlagen/velden.
+- Drafts kunnen vanaf prompt-detail veilig verwijderd worden; live blijft actief.
+- Archived versies kunnen read-only bekeken, rollback-live gezet en veilig verwijderd worden.
+- Cleanup bewaart live, drafts, nieuwste 3 archived versies en runtime-log gekoppelde archived versies.
+- Delete/cleanup guardrails leven server-side in RPCs en Edge Function actions.
 
 ## Status per requirement
 
@@ -3305,12 +3598,25 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Validate `Zet live` actie — status: gebouwd
 - [x] Confirmatie en denial/error states — status: gebouwd; no-auth Edge Function-call lokaal geweigerd
 - [x] Verify en browser smoke — status: grotendeels bewezen; volledige klik-E2E blijft user-review omdat de beschikbare browserfallback geen interactie-API bood
+- [x] Prompt-detail als rustige version-management pagina — status: gebouwd
+- [x] Live/archived read-only version viewer — status: gebouwd
+- [x] Draft verwijderen vanaf detail — status: gebouwd en UI-smoke bewezen
+- [x] Archived versie verwijderen — status: gebouwd en RPC/UI-smoke bewezen
+- [x] Archived cleanup met keepLatest=3 — status: gebouwd en RPC/UI-smoke bewezen
+- [x] Server-side bescherming live/draft/current/runtime-log gekoppelde versies — status: gebouwd en RPC-smoke bewezen
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
 - RPC-response parsing in de Edge Function robuuster gemaakt voor array- en objectvormige Supabase RPC responses.
 - Versielijst-acties expliciet gemaakt als `Open draft`, `Valideren`, `Zet live` en `Rollback naar deze versie`.
 - Web-hydration regressie opgelost door nested `<button>` in de versielijst te vermijden.
+- Prompt-detail opgeschoond naar `Prompt`, `Live versie`, `Draft` en `Versies`, met compacte metadata en minder card-heavy historie.
+- In-page read-only versieviewer toegevoegd voor live, draft en archived versies, gebaseerd op bestaande structured prompt helpers.
+- Nieuwe RPCs `aiqs_delete_archived_version` en `aiqs_cleanup_archived_versions` toegevoegd met service-role-only execute.
+- Edge Function actions `delete_archived_version` en `cleanup_archived_versions` toegevoegd.
+- Client wrappers `deleteAdminAiQualityStudioArchivedVersion` en `cleanupAdminAiQualityStudioArchivedVersions` toegevoegd.
+- Lifecycle helper uitgebreid met version-management en cleanup-planning state, inclusief unit coverage.
+- Destructive confirms toegevoegd met expliciete copy voor draft delete, archived delete en cleanup.
 
 ## Uitvoerblokken / fasering
 
@@ -3320,6 +3626,8 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Blok 4: lifecycle helper + unit-tests toevoegen.
 - [x] Blok 5: AIQS detail/validate UI aansluiten.
 - [x] Blok 6: verify, local function restart, browser-smoke en task reconciliation.
+- [x] Blok 7: prompt-detail version-management cleanup + read-only viewer.
+- [x] Blok 8: archived delete/cleanup RPCs, Edge actions en UI-smokes.
 
 ## Concrete checklist
 
@@ -3332,6 +3640,11 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Task detail UI uitbreiden.
 - [x] Validate UI uitbreiden.
 - [x] Static/unit/local/browser verifies draaien.
+- [x] Prompt-detail herstructureren naar compacte version management layout.
+- [x] Read-only viewer voor live/draft/archived versies toevoegen.
+- [x] Draft verwijderen vanaf detail toevoegen met confirm.
+- [x] Archived delete en cleanup toevoegen met backend guardrails.
+- [x] Desktop/mobile version list en action menu controleren.
 
 ## Acceptance criteria
 
@@ -3343,6 +3656,11 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Directe function call zonder AIQS access blijft denied.
 - [x] Runtime heeft na promotie/rollback exact één live versie per task.
 - [x] UI toont duidelijke next action en blokkerende reden.
+- [x] Live versie is read-only te bekijken.
+- [x] Draft delete laat live actief en ververst detail.
+- [x] Archived delete verwijdert alleen onbeschermde archived versies.
+- [x] Cleanup bewaart live, drafts, nieuwste 3 archived versies en runtime-log gekoppelde archived versies.
+- [x] Version history is list/table-first en niet card-heavy.
 
 ## Blockers / afhankelijkheden
 
@@ -3369,14 +3687,30 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
   - vóór polish: nested `<button>` hydration error gevonden in versielijst;
   - na fix: route opent zonder console-errors; alleen bestaande React Native Web dev-warning over `shadow*` blijft zichtbaar;
   - volledige klik-E2E kon niet worden afgerond omdat de beschikbare browserfallback alleen tab/resize exposeerde en de route in deze context op loading bleef.
+- 2026-06-22 version-management cleanup:
+  - `npx supabase db push --local` — groen; migration `20260622143000_aiqs_version_delete_cleanup_rpc.sql` lokaal toegepast.
+  - Lokale Postgres/RPC-smoke met rollback-transactie — groen:
+    - live delete via archived path faalt;
+    - draft delete via archived path faalt;
+    - runtime-log gekoppelde archived versie wordt geblokkeerd;
+    - archived zonder runtime-log wordt verwijderd inclusief test-runs;
+    - cleanup bewaart live, draft en nieuwste 3 archived versies en skipt runtime-log gekoppelde archived versies.
+  - `npm run test:unit -- ai-quality` — groen, 3 testfiles / 16 tests.
+  - `npm run typecheck` — groen.
+  - `npm run lint` — groen.
+  - `npm run supabase:functions:restart` — groen; functions runtime opnieuw gestart.
+  - `npm run verify:local-aiqs-smoke` — groen; bestaande AIQS admin login/overview-smoke blijft werken.
+  - One-shot UI-smoke met tijdelijke lokale AIQS task — draft delete, archived delete en cleanup via echte UI/actions bewezen; smoke-data cleanup bevestigd met `remaining_ui_smoke_tasks=0`.
+  - One-shot shared-call/mobile smoke — groen op `day_narrative`; live read-only viewer opent en mobile toont trailing `Acties`.
+  - Screenshots: `/tmp/aiqs-version-management-detail.png`, `/tmp/aiqs-version-management-mobile.png`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: draft -> review -> live + rollback lifecycle compleet maken.
 - Expliciete user requirements: alle gevraagde lifecycle-, RPC-, service-, UI- en confirmatiepunten zijn gebouwd.
-- Toegevoegde verbeteringen: robuustere RPC-response parsing en web-hydration fix voor de versielijst.
-- Afgerond: implementatie, lokale migration, RPC-smoke, no-auth denial-smoke, unit/type/lint/taskflow en lokale function restart.
-- Open / blocked: volledige handmatige UI-klikreview van draft maken -> testen -> review opslaan -> live zetten -> rollback blijft nog user-review/runtime-smoke omdat de browserfallback in deze sessie onvoldoende interactie-API bood.
+- Toegevoegde verbeteringen: robuustere RPC-response parsing, web-hydration fix voor de versielijst, prompt-detail version-management cleanup, read-only viewer, draft delete, archived delete en archived cleanup.
+- Afgerond: implementatie, lokale migrations, RPC-smokes, no-auth denial-smoke, unit/type/lint/taskflow, lokale function restart, AIQS local smoke en gerichte UI-smokes voor destructive detailacties en shared-call/mobile viewer.
+- Open / blocked: geen technische blocker voor deze uitbreiding. Brede user-review van de nieuwe detail-ervaring blijft gewenst voordat de totale lifecycle-taak naar `done` gaat.
 
 ## Relevante links
 
@@ -3426,6 +3760,7 @@ workstream: aiqs
 due_date: null
 sort_order: 15
 ---
+
 
 
 
@@ -3695,6 +4030,7 @@ spec_ready: true
 due_date: null
 sort_order: 8
 ---
+
 
 
 
@@ -3983,211 +4319,6 @@ Live-readiness notes:
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
-```
-
----
-
-## Archief-import actieve voortgang zonder preview-duplicatie
-
-- Path: `docs/project/25-tasks/open/archief-import-actieve-voortgang-zonder-preview-duplicatie.md`
-- Bucket: open
-- Status: in_progress
-- Priority: p2
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-22
-
-```md
----
-id: task-archief-import-actieve-voortgang-zonder-preview-duplicatie
-title: Archief-import actieve voortgang zonder preview-duplicatie
-status: in_progress
-phase: transitiemaand-consumer-beta
-priority: p2
-source: user-request
-updated_at: 2026-06-22
-summary: Verberg de import-preview direct na start van een archief-import en toon alleen een voortgangsgerichte mobiele statusweergave.
-tags: [settings, import, ux, polish]
-workstream: app
-epic_id: null
-parent_task_id: null
-depends_on: []
-follows_after: []
-task_kind: polish
-spec_ready: true
-due_date: null
-sort_order: 2
----
-
-
-# Archief-import actieve voortgang zonder preview-duplicatie
-
-## Probleem / context
-
-Na het starten van een archief-import blijft het preview-scherm zichtbaar terwijl tegelijk een voortgangsblok verschijnt. Daardoor toont het scherm twee primaire taken tegelijk: controle van de preview en actieve voortgang.
-
-## Gewenste uitkomst
-
-Zodra de gebruiker de import start, verdwijnt de preview direct volledig uit beeld. Tijdens actieve import ligt de focus volledig op voortgang, met alleen de bestandscontext, aantallen, voortgangsbalk, percentage, verwerkingsstap en de route terug naar `Vandaag`.
-
-Na afronding verdwijnt de voortgangsweergave en wordt een compacte voltooid-status getoond met de verwerkte aantallen en dezelfde route naar `Vandaag`.
-
-## User outcome
-
-De gebruiker ziet tijdens importeren nog maar één duidelijke taak: wachten op voortgang of doorgaan naar `Vandaag`.
-
-## Functional slice
-
-Een UI-only state-scheiding voor `idle`, `selected`, `importing`, `completed` en `error` in de bestaande archief-importflow.
-
-## Entry / exit
-
-- Entry: gebruiker opent `Instellingen` -> `Importeren` en kiest een geldig bestand.
-- Exit: gebruiker ziet ofwel alleen voortgang tijdens actieve import, of een voltooid-status met actie `Ga naar Vandaag`.
-
-## Happy flow
-
-1. Gebruiker kiest een bestand en ziet de preview.
-2. Gebruiker start de import en de preview verdwijnt direct.
-3. Scherm toont alleen importstatus, bestand, dagen, entries, voortgang en `Ga naar Vandaag`.
-4. Na afronding toont het scherm alleen `Import voltooid` met aantallen en `Ga naar Vandaag`.
-
-## Non-happy flows
-
-- Empty state: `idle` blijft ongewijzigd.
-- Permission denied / unavailable: bestaande disabled-state blijft ongewijzigd.
-- Validation / unsupported state: bestaande preview-parse fouten blijven error-state tonen.
-- Failure / retry / cancel: importfouten blijven een error-state tonen zonder preview en voortgang tegelijk zichtbaar te maken.
-
-## UX / copy
-
-- Tijdens actieve import verbergen:
-  - `Klaar voor import`
-  - `Controleer kort wat er wordt toegevoegd`
-  - bestand metadata preview
-  - voorbeeld content
-  - `Importeer bestanden`
-  - `Andere bestanden kiezen`
-- Tijdens actieve import tonen:
-  - `Importeren...`
-  - bestandsnaam
-  - aantal dagen
-  - aantal entries
-  - voortgangsbalk
-  - percentage
-  - `Dag X van Y`
-  - `Deze verwerking draait op de achtergrond. Je kunt de app blijven gebruiken.`
-  - `Ga naar Vandaag`
-- Voltooid tonen:
-  - `Import voltooid`
-  - aantal dagen verwerkt
-  - aantal entries verwerkt
-  - `Ga naar Vandaag`
-- Gebruik bestaande settings-scaffold en bestaande button/text primitives.
-
-## Data / IO
-
-- Input: bestaande import-preview en background task status.
-- Output: enkelvoudige zichtbare UI-state per importsituatie.
-- Opslag/API/service/file-impact: `app/settings-import.tsx`.
-- Statussen: `idle`, `selected`, `importing`, `completed`, `error`.
-
-## Waarom nu
-
-De huidige dubbellaagse importweergave veroorzaakt directe UX-verwarring in een bestaande flow.
-
-## In scope
-
-- Importscreen state-rendering opschonen.
-- Actieve voortgang compact en mobiel-first tonen.
-- Voltooide status laten aansluiten op actieve voortgangsflow.
-
-## Buiten scope
-
-- Achtergrond-importarchitectuur wijzigen.
-- Nieuwe retry-, cancel- of notificationsystemen bouwen.
-- Andere settings-flows herontwerpen.
-
-## Oorspronkelijk plan / afgesproken scope
-
-- Verbeter UX van actieve archief-import.
-- Verberg preview volledig zodra import start.
-- Toon tijdens actieve import alleen de voortgangsweergave en `Ga naar Vandaag`.
-- Toon na afronding een compacte voltooid-status met aantallen en `Ga naar Vandaag`.
-
-## Expliciete user requirements / detailbehoud
-
-- `idle` toont het huidige preview-scherm.
-- `importing` verbergt alle preview-copy, metadata, voorbeeldcontent en niet-bruikbare acties.
-- `importing` toont alleen bestandsnaam, aantal dagen, aantal entries, voortgangsbalk, percentage, `Dag X van Y`, achtergrondnotice en `Ga naar Vandaag`.
-- `completed` vervangt voortgang door `Import voltooid`, aantallen verwerkt en `Ga naar Vandaag`.
-- UX-regels:
-  - geen dubbele informatie
-  - slechts één primaire taak tegelijk zichtbaar
-  - tijdens import ligt focus volledig op voortgang
-  - geen acties tonen die tijdens actieve import niet gebruikt kunnen worden
-  - mobiel eerst ontwerpen
-
-## Status per requirement
-
-- [x] Preview verdwijnt direct na importstart — status: gebouwd
-- [x] Alleen voortgang blijft zichtbaar tijdens actieve import — status: gebouwd
-- [x] `Ga naar Vandaag` blijft beschikbaar tijdens actieve import — status: gebouwd
-- [x] Voltooide status toont juiste compacte samenvatting — status: gebouwd
-
-## Toegevoegde verbeteringen tijdens uitvoering
-
-- Error-state versimpeld naar `Probeer opnieuw` en `Ga naar Vandaag`, zodat mislukte imports ook geen irrelevante settings-acties meer tonen.
-
-## Uitvoerblokken / fasering
-
-- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
-- [x] Blok 2: kleinste bronwijziging of primair artefact uitvoeren.
-- [ ] Blok 3: gerichte verify en task/docs afronden.
-
-## Concrete checklist
-
-- [x] Importscreen states scheiden zonder dubbele content.
-- [x] Actieve voortgang compact renderen.
-- [x] Voltooide status compact renderen.
-- [ ] Gerichte verify uitvoeren.
-
-## Acceptance criteria
-
-- [ ] Na `Importeer bestanden` verdwijnt de preview direct volledig.
-- [ ] Tijdens actieve import is alleen de voortgangsweergave zichtbaar met `Ga naar Vandaag`.
-- [ ] Na succesvolle afronding toont het scherm alleen `Import voltooid` met aantallen en `Ga naar Vandaag`.
-
-## Blockers / afhankelijkheden
-
-- Geen.
-
-## Verify / bewijs
-
-- `npm run lint` — geslaagd.
-- `npm run typecheck` — geslaagd.
-- `curl -I --max-time 5 http://localhost:8081` — geslaagd; lokale webtarget reageert met `200 OK`.
-- `npm run verify:local-auth-login -- --profile=default` — geslaagd; local auth magic-link flow geeft geldige session/user terug.
-- Runtime browser-smoke op `/settings-import` is nog niet volledig bewezen:
-  - `http://host.docker.internal:8081/settings-import` opent, maar redirect naar `/sign-in`
-  - Docker-browser kan de Supabase verify-link op poort `54321` niet bereiken, waardoor echte ingelogde import-smoke in deze sessie blocked blijft
-
-## Reconciliation voor afronding
-
-- Oorspronkelijk plan: actieve import alleen voortgang laten tonen, zonder preview-duplicatie.
-- Toegevoegde verbeteringen: error-state compacter gemaakt zodat ook failures geen dubbele of irrelevante acties tonen.
-- Afgerond: scherm rendert nu preview, actieve import en voltooid als drie gescheiden toestanden met telkens één primaire taak zichtbaar.
-- Open / blocked: interactieve runtime-smoke achter ingelogde browser blijft nog open door Docker-toegang tot lokale Supabase verify-link.
-
-## Relevante links
-
-- `app/settings-import.tsx`
-- `design_refs/1.2.1/importeren_bezig/code.html`
-- `design_refs/1.2.1/importeren_gelukt/code.html`
-
-
-## Commits
-
-- 2026-06-22T11:49:19+02:00 — fix: simplify active archive import ux
 ```
 
 ---
@@ -4698,6 +4829,7 @@ sort_order: 6
 
 
 
+
 ## Probleem / context
 
 Op `2026-04-28` trad opnieuw een productiebug op bij foto toevoegen aan een bestaand moment via Android Chrome en de Google Photos / Android photo picker. Desktop Chrome werkt in dezelfde flow wel.
@@ -5010,6 +5142,7 @@ spec_ready: true
 due_date: null
 sort_order: 11
 ---
+
 
 
 
@@ -5424,6 +5557,7 @@ sort_order: 9
 
 
 
+
 ## Probleem / context
 
 Tijdens agent-uitvoering ontstaat soms drift tussen het oorspronkelijke goedgekeurde plan en de actuele uitvoerfocus. Zodra er tijdens bouwen correcties, regressies of polish-rondes bijkomen, verschuift de aandacht naar het laatste subprobleem. Daardoor kan een agent ten onrechte denken dat het werk "klaar" is, terwijl onderdelen uit het oorspronkelijke plan nog open staan.
@@ -5568,6 +5702,7 @@ sort_order: 13
 
 
 
+
 ## Probleem / context
 
 De huidige repo-regel blokkeert inhoudelijk werk in Plan Mode wanneer er geen passende bestaande taskfile is. Daardoor moet de gebruiker alsnog expliciet buiten Plan Mode een task laten aanmaken, ook als de nieuwe scope al duidelijk is.
@@ -5695,6 +5830,7 @@ workstream: plugin
 due_date: null
 sort_order: 14
 ---
+
 
 
 
@@ -6426,6 +6562,7 @@ spec_ready: true
 due_date: null
 sort_order: 3
 ---
+
 
 
 

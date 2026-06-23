@@ -16,8 +16,10 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 61
 ---
+
+
 
 
 
@@ -171,6 +173,8 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-15T09:40:13+02:00 — fix: make web theme switching reactive
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ## Relevante links
 
 - `theme/tokens.ts`

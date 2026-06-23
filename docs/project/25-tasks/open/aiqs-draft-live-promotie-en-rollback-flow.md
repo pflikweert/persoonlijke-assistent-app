@@ -5,7 +5,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-03
+updated_at: 2026-06-22
 summary: "AI Quality Studio krijgt een complete lifecycle-flow: draft testen, reviewen, promoten naar live en oudere live-versies terugzetten."
 tags: [aiqs, admin, prompt-governance, lifecycle, supabase]
 workstream: aiqs
@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
+
+
 
 
 
@@ -126,6 +128,12 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - Confirmaties gebruiken bestaande shared primitives.
 - Nieuwe servicefunctie `promoteAdminAiQualityStudioVersionLive({ taskKey, versionId })`.
 - Nieuwe derived UI helper `getAiQualityVersionLifecycleState(detail, version)`.
+- Prompt-detail wordt een rustige Prompt Detail + Version Management pagina.
+- Live versies kunnen read-only bekeken worden met alle promptlagen/velden.
+- Drafts kunnen vanaf prompt-detail veilig verwijderd worden; live blijft actief.
+- Archived versies kunnen read-only bekeken, rollback-live gezet en veilig verwijderd worden.
+- Cleanup bewaart live, drafts, nieuwste 3 archived versies en runtime-log gekoppelde archived versies.
+- Delete/cleanup guardrails leven server-side in RPCs en Edge Function actions.
 
 ## Status per requirement
 
@@ -139,12 +147,25 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Validate `Zet live` actie — status: gebouwd
 - [x] Confirmatie en denial/error states — status: gebouwd; no-auth Edge Function-call lokaal geweigerd
 - [x] Verify en browser smoke — status: grotendeels bewezen; volledige klik-E2E blijft user-review omdat de beschikbare browserfallback geen interactie-API bood
+- [x] Prompt-detail als rustige version-management pagina — status: gebouwd
+- [x] Live/archived read-only version viewer — status: gebouwd
+- [x] Draft verwijderen vanaf detail — status: gebouwd en UI-smoke bewezen
+- [x] Archived versie verwijderen — status: gebouwd en RPC/UI-smoke bewezen
+- [x] Archived cleanup met keepLatest=3 — status: gebouwd en RPC/UI-smoke bewezen
+- [x] Server-side bescherming live/draft/current/runtime-log gekoppelde versies — status: gebouwd en RPC-smoke bewezen
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
 - RPC-response parsing in de Edge Function robuuster gemaakt voor array- en objectvormige Supabase RPC responses.
 - Versielijst-acties expliciet gemaakt als `Open draft`, `Valideren`, `Zet live` en `Rollback naar deze versie`.
 - Web-hydration regressie opgelost door nested `<button>` in de versielijst te vermijden.
+- Prompt-detail opgeschoond naar `Prompt`, `Live versie`, `Draft` en `Versies`, met compacte metadata en minder card-heavy historie.
+- In-page read-only versieviewer toegevoegd voor live, draft en archived versies, gebaseerd op bestaande structured prompt helpers.
+- Nieuwe RPCs `aiqs_delete_archived_version` en `aiqs_cleanup_archived_versions` toegevoegd met service-role-only execute.
+- Edge Function actions `delete_archived_version` en `cleanup_archived_versions` toegevoegd.
+- Client wrappers `deleteAdminAiQualityStudioArchivedVersion` en `cleanupAdminAiQualityStudioArchivedVersions` toegevoegd.
+- Lifecycle helper uitgebreid met version-management en cleanup-planning state, inclusief unit coverage.
+- Destructive confirms toegevoegd met expliciete copy voor draft delete, archived delete en cleanup.
 
 ## Uitvoerblokken / fasering
 
@@ -154,6 +175,8 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Blok 4: lifecycle helper + unit-tests toevoegen.
 - [x] Blok 5: AIQS detail/validate UI aansluiten.
 - [x] Blok 6: verify, local function restart, browser-smoke en task reconciliation.
+- [x] Blok 7: prompt-detail version-management cleanup + read-only viewer.
+- [x] Blok 8: archived delete/cleanup RPCs, Edge actions en UI-smokes.
 
 ## Concrete checklist
 
@@ -166,6 +189,11 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Task detail UI uitbreiden.
 - [x] Validate UI uitbreiden.
 - [x] Static/unit/local/browser verifies draaien.
+- [x] Prompt-detail herstructureren naar compacte version management layout.
+- [x] Read-only viewer voor live/draft/archived versies toevoegen.
+- [x] Draft verwijderen vanaf detail toevoegen met confirm.
+- [x] Archived delete en cleanup toevoegen met backend guardrails.
+- [x] Desktop/mobile version list en action menu controleren.
 
 ## Acceptance criteria
 
@@ -177,6 +205,11 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - [x] Directe function call zonder AIQS access blijft denied.
 - [x] Runtime heeft na promotie/rollback exact één live versie per task.
 - [x] UI toont duidelijke next action en blokkerende reden.
+- [x] Live versie is read-only te bekijken.
+- [x] Draft delete laat live actief en ververst detail.
+- [x] Archived delete verwijdert alleen onbeschermde archived versies.
+- [x] Cleanup bewaart live, drafts, nieuwste 3 archived versies en runtime-log gekoppelde archived versies.
+- [x] Version history is list/table-first en niet card-heavy.
 
 ## Blockers / afhankelijkheden
 
@@ -203,14 +236,30 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
   - vóór polish: nested `<button>` hydration error gevonden in versielijst;
   - na fix: route opent zonder console-errors; alleen bestaande React Native Web dev-warning over `shadow*` blijft zichtbaar;
   - volledige klik-E2E kon niet worden afgerond omdat de beschikbare browserfallback alleen tab/resize exposeerde en de route in deze context op loading bleef.
+- 2026-06-22 version-management cleanup:
+  - `npx supabase db push --local` — groen; migration `20260622143000_aiqs_version_delete_cleanup_rpc.sql` lokaal toegepast.
+  - Lokale Postgres/RPC-smoke met rollback-transactie — groen:
+    - live delete via archived path faalt;
+    - draft delete via archived path faalt;
+    - runtime-log gekoppelde archived versie wordt geblokkeerd;
+    - archived zonder runtime-log wordt verwijderd inclusief test-runs;
+    - cleanup bewaart live, draft en nieuwste 3 archived versies en skipt runtime-log gekoppelde archived versies.
+  - `npm run test:unit -- ai-quality` — groen, 3 testfiles / 16 tests.
+  - `npm run typecheck` — groen.
+  - `npm run lint` — groen.
+  - `npm run supabase:functions:restart` — groen; functions runtime opnieuw gestart.
+  - `npm run verify:local-aiqs-smoke` — groen; bestaande AIQS admin login/overview-smoke blijft werken.
+  - One-shot UI-smoke met tijdelijke lokale AIQS task — draft delete, archived delete en cleanup via echte UI/actions bewezen; smoke-data cleanup bevestigd met `remaining_ui_smoke_tasks=0`.
+  - One-shot shared-call/mobile smoke — groen op `day_narrative`; live read-only viewer opent en mobile toont trailing `Acties`.
+  - Screenshots: `/tmp/aiqs-version-management-detail.png`, `/tmp/aiqs-version-management-mobile.png`.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: draft -> review -> live + rollback lifecycle compleet maken.
 - Expliciete user requirements: alle gevraagde lifecycle-, RPC-, service-, UI- en confirmatiepunten zijn gebouwd.
-- Toegevoegde verbeteringen: robuustere RPC-response parsing en web-hydration fix voor de versielijst.
-- Afgerond: implementatie, lokale migration, RPC-smoke, no-auth denial-smoke, unit/type/lint/taskflow en lokale function restart.
-- Open / blocked: volledige handmatige UI-klikreview van draft maken -> testen -> review opslaan -> live zetten -> rollback blijft nog user-review/runtime-smoke omdat de browserfallback in deze sessie onvoldoende interactie-API bood.
+- Toegevoegde verbeteringen: robuustere RPC-response parsing, web-hydration fix voor de versielijst, prompt-detail version-management cleanup, read-only viewer, draft delete, archived delete en archived cleanup.
+- Afgerond: implementatie, lokale migrations, RPC-smokes, no-auth denial-smoke, unit/type/lint/taskflow, lokale function restart, AIQS local smoke en gerichte UI-smokes voor destructive detailacties en shared-call/mobile viewer.
+- Open / blocked: geen technische blocker voor deze uitbreiding. Brede user-review van de nieuwe detail-ervaring blijft gewenst voordat de totale lifecycle-taak naar `done` gaat.
 
 ## Relevante links
 
@@ -232,3 +281,5 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

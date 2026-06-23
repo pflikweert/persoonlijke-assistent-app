@@ -10,8 +10,10 @@ summary: "De fullscreen momentfoto-viewer op mobiel slimmer laten snappen per sw
 tags: [moment-detail, photos, markdown, ui, mobile]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 67
 ---
+
+
 
 # Moment fotoviewer swipe/zoom verbeteren en markdownstructuur tonen
 
@@ -71,3 +73,8 @@ Dag- en momenttekst tonen markdownstructuur display-only via gedeelde componente
 - `components/journal/entry-photo-gallery.tsx`
 - `components/ui/zoomable-photo-slide.tsx`
 - `components/ui/markdown-display.tsx`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

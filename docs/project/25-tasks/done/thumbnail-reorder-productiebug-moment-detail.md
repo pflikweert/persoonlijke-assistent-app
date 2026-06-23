@@ -6,12 +6,14 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-04-23
-summary: "In productie blijft de gesleepte thumbnail in de galerij visueel steken of sprint terug; de reorder-interactie moet vanaf de thumb zelf stabiel werken en de visuele indicatie blijft icon-only."
+summary: In productie blijft de gesleepte thumbnail in de galerij visueel steken of sprint terug; de reorder-interactie moet vanaf de thumb zelf stabiel werken en de visuele indicatie blijft icon-only.
 tags: [bug, moment-detail, photos, thumbnail]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 68
 ---
+
+
 
 ## Probleem / context
 
@@ -77,3 +79,8 @@ De grote foto onder de samenvatting toont geen overbodige thumbnail-tag meer. In
 - `app/entry/[id].tsx`
 - `components/journal/entry-photo-gallery.tsx`
 - `docs/project/open-points.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

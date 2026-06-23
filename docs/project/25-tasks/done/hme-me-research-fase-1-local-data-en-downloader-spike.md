@@ -10,8 +10,10 @@ summary: "Zet een persoonlijk local-first HME-ME researchspoor veilig op buiten 
 tags: [personal-research, hme-me, local-first, downloader-spike, privacy]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 39
 ---
+
+
 
 
 
@@ -206,3 +208,5 @@ Het goedgekeurde plan:
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

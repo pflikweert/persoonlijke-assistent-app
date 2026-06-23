@@ -10,8 +10,10 @@ summary: "Leg expliciete task-classificatie vast in template/instructies en toon
 tags: [plugin, tasks, ui, workflow]
 workstream: plugin
 due_date: null
-sort_order: 4
+sort_order: 69
 ---
+
+
 
 ## Probleem / context
 
@@ -68,3 +70,8 @@ Taskfiles krijgen een expliciete classificatie in template en instructies. De pl
 - `tools/budio-workspace-vscode/src/tasks/parser.ts`
 - `tools/budio-workspace-vscode/src/tasks/writer.ts`
 - `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

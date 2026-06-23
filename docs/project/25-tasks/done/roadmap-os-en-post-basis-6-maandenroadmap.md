@@ -10,8 +10,10 @@ summary: "Maak een vaste roadmap-flow met templates, agent-uitvoerfasering, een 
 tags: [roadmap, workflow, planning]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 56
 ---
+
+
 
 ## Probleem / context
 
@@ -84,3 +86,8 @@ De eerste toepassing is een post-basis 6-maandenroadmap voor Budio, met duidelij
 - `docs/project/20-planning/30-now-next-later.md`
 - `docs/project/20-planning/10-roadmap-phases.md`
 - `docs/dev/cline-workflow.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

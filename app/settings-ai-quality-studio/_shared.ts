@@ -16,6 +16,13 @@ import type {
   AiTaskDraftPayload,
   AiTaskVersionDetail,
 } from '@/types';
+import {
+  AIQS_PROMPT_ASSIST_ACTIONS,
+  detectPromptAssistLayerWarnings,
+  getPromptAssistActionsForLayer,
+  getPromptAssistLayerRuleInfo,
+  resolvePromptAssistActionId,
+} from '@/src/lib/aiqs-prompt-assist-review';
 
 export default function SettingsAiQualityStudioSharedModule() {
   return null;
@@ -78,81 +85,7 @@ export function getEntryCleanupPromptAssistTargetLayerType(
   return ENTRY_CLEANUP_PROMPT_ASSIST_TARGETS.find((item) => item.key === target)?.layerType ?? 'field';
 }
 
-export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = [
-  {
-    id: 'verdeel_over_velden',
-    label: 'Verdelen over velden',
-    helper: 'Verdeel instructies over alle bewerkbare velden',
-    order: 1,
-    placement: 'primary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'compacter',
-    label: 'Compacter',
-    helper: 'Korter zonder betekenisverlies',
-    order: 2,
-    placement: 'primary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'ontdubbelen',
-    label: 'Ontdubbelen',
-    helper: 'Overlap verwijderen',
-    order: 3,
-    placement: 'primary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'verhelderen',
-    label: 'Verhelderen',
-    helper: 'Minder ambigu en specifieker',
-    order: 4,
-    placement: 'primary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'check_contract',
-    label: 'Check contract',
-    helper: 'Check met taakdoel en contract',
-    order: 5,
-    placement: 'primary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'check_overlap',
-    label: 'Check overlap',
-    helper: 'Zoek overlap tussen lagen',
-    order: 6,
-    placement: 'secondary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'verplaats_naar_juiste_laag',
-    label: 'Juiste laag',
-    helper: 'Signaleer betere laagplaatsing',
-    order: 7,
-    placement: 'secondary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'maak_strikter',
-    label: 'Strikter',
-    helper: 'Maak minder vrijblijvend',
-    order: 8,
-    placement: 'secondary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-  },
-  {
-    id: 'check_outputvorm',
-    label: 'Outputvorm',
-    helper: 'Check prompt vs outputschema',
-    order: 9,
-    placement: 'secondary',
-    allowedTargetLayerTypes: ['system', 'general', 'field'],
-    relevantOutputTypes: ['object', 'compound'],
-  },
-];
+export const AI_PROMPT_ASSIST_ACTIONS: AiPromptAssistActionDefinition[] = AIQS_PROMPT_ASSIST_ACTIONS;
 
 export function mapTaskOutputTypeToAssistOutputType(taskKey: string): AiPromptAssistActionOutputType {
   if (isEntryCleanupStructuredTask(taskKey)) return 'compound';
@@ -166,15 +99,15 @@ export function getPromptAssistActionsForTarget(args: {
   taskKey: string;
 }): AiPromptAssistActionDefinition[] {
   const outputType = mapTaskOutputTypeToAssistOutputType(args.taskKey);
-  return AI_PROMPT_ASSIST_ACTIONS.filter((item) => {
-    if (!item.allowedTargetLayerTypes.includes(args.targetLayerType)) return false;
+  return getPromptAssistActionsForLayer(args.targetLayerType).filter((item) => {
     if (item.relevantOutputTypes && !item.relevantOutputTypes.includes(outputType)) return false;
     return true;
-  }).sort((a, b) => a.order - b.order);
+  });
 }
 
 export function getPromptAssistActionById(id: AiPromptAssistActionId): AiPromptAssistActionDefinition {
-  return AI_PROMPT_ASSIST_ACTIONS.find((item) => item.id === id) ?? AI_PROMPT_ASSIST_ACTIONS[0];
+  const resolved = resolvePromptAssistActionId(id);
+  return AI_PROMPT_ASSIST_ACTIONS.find((item) => item.id === resolved) ?? AI_PROMPT_ASSIST_ACTIONS[0];
 }
 
 export type EntryCleanupTokenId = 'rawText' | 'title' | 'body' | 'summary_short';
@@ -1488,31 +1421,25 @@ export function buildAllowedChangeKinds(
   actionId: string,
   layerType: AiPromptAssistTargetLayerType
 ): AiPromptAssistAllowedChangeKind[] {
-  if (actionId === 'verdeel_over_velden') {
-    return ['redistribute_with_explicit_justification'];
-  }
-
   const base: AiPromptAssistAllowedChangeKind[] = ['rewrite_within_layer'];
 
-  if (actionId === 'compacter') {
+  if (actionId === 'maak_compacter') {
     return [...base, 'tighten_wording'];
   }
-  if (actionId === 'ontdubbelen') {
+  if (actionId === 'ontdubbel_lagen') {
     return [...base, 'dedupe_within_layer'];
   }
-  if (actionId === 'verhelderen' || actionId === 'maak_strikter') {
+  if (actionId === 'maak_concreter' || actionId === 'verbeter_taakdoel' || actionId === 'schrijf_voorstel') {
     return [...base, 'clarify_execution', 'tighten_wording'];
   }
-  if (actionId === 'check_contract' || actionId === 'check_overlap' || actionId === 'check_outputvorm') {
-    // Analyse-acties: geen directe rewrite op system-laag, alleen tighten
+  if (actionId === 'review_veld' || actionId === 'check_laagdiscipline' || actionId === 'leg_uit_wat_hoort') {
     if (layerType === 'system') {
       return ['tighten_wording'];
     }
     return [...base, 'clarify_execution'];
   }
-  if (actionId === 'verplaats_naar_juiste_laag') {
-    // Verplaats alleen target herschrijven (geen verplaatsen van high-precedence content)
-    return [...base, 'clarify_execution'];
+  if (actionId === 'verdeel_over_velden') {
+    return [...base, 'dedupe_within_layer', 'clarify_execution', 'redistribute_with_explicit_justification'];
   }
 
   return base;
@@ -1539,26 +1466,25 @@ export function getLayerNoticeInfo(
   layerType: AiPromptAssistTargetLayerType,
   label: string
 ): LayerNoticeInfo {
-  if (layerType === 'system') {
-    return {
-      badgeLabel: 'Systeemlaag',
-      hintText: 'Geldt boven alle andere instructies. Gebruik dit voor harde grenzen: contract, JSON-vorm en regels die altijd gelden.',
-      assistContextMessage: `Je bewerkt de systeemlaag (${label}). Harde regels blijven hier en verschuiven niet naar lagere lagen.`,
-      isHighPrecedence: true,
-    };
-  }
-  if (layerType === 'general') {
-    return {
-      badgeLabel: 'Algemene instructie',
-      hintText: 'Het overkoepelende taakdoel. Geldt voor alle outputvelden tezamen.',
-      assistContextMessage: `Je bewerkt de algemene instructie (${label}). Dit is het taakbrede doel; veldspecifieke regels horen in de veldlagen.`,
-      isHighPrecedence: false,
-    };
-  }
+  const info = getPromptAssistLayerRuleInfo(layerType, label);
   return {
-    badgeLabel: 'Veldlaag',
-    hintText: 'Alleen regels voor dit specifieke outputveld. Houd dit veldgericht en kort.',
-    assistContextMessage: `Je bewerkt de veldlaag (${label}). Regels hier gelden alleen voor dit veld; systeemregels en taakbrede regels horen in hogere lagen.`,
-    isHighPrecedence: false,
+    badgeLabel: info.badgeLabel,
+    hintText: info.hintText,
+    assistContextMessage: info.assistContextMessage,
+    isHighPrecedence: info.isHighPrecedence,
   };
+}
+
+export function getLayerAssistButtonLabel(layerType: AiPromptAssistTargetLayerType, label: string): string {
+  return getPromptAssistLayerRuleInfo(layerType, label).buttonLabel;
+}
+
+export function getPromptAssistLayerWarnings(args: {
+  layerType: AiPromptAssistTargetLayerType;
+  layerKey: string;
+  label: string;
+  text: string;
+  siblingTexts: Record<string, string>;
+}): string[] {
+  return detectPromptAssistLayerWarnings(args);
 }

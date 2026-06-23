@@ -10,8 +10,10 @@ summary: "Task overview list rail staat weer links naast titel/description; deta
 tags: [plugin, ui, bugfix]
 workstream: plugin
 due_date: null
-sort_order: null
+sort_order: 73
 ---
+
+
 
 ## Probleem / context
 
@@ -58,3 +60,8 @@ De list-rij toont de accentlijn stabiel links naast titel + description (niet er
 
 - `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
 - `tools/budio-workspace-vscode/webview-ui/src/styles.css`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

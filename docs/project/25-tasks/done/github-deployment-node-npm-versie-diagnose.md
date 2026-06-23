@@ -10,8 +10,10 @@ summary: "Zoek bron-first uit of de lokale Node/NPM-versie, GitHub Actions Node 
 tags: [github, deployment, node, npm, diagnostics]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 38
 ---
+
+
 
 ## Probleem / context
 
@@ -94,3 +96,8 @@ Conclusie: deployment wordt nu niet geblokkeerd door NPM/Node. Het echte restere
 - `.github/workflows/secret-scan.yml`
 - `.nvmrc`
 - `package.json`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

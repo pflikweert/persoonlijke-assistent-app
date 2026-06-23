@@ -59,7 +59,9 @@ import {
   getEntryCleanupInstructionWarnings,
   getEntryCleanupTechnicalContractFromConfig,
   getEntryCleanupTechnicalContractLines,
+  getLayerAssistButtonLabel,
   getLayerNoticeInfo,
+  getPromptAssistLayerWarnings,
   getPromptAssistActionsForTarget,
   getStructuredPromptEditorDefinition,
   getTaskConsistencyInfo,
@@ -107,6 +109,7 @@ export default function AiQualityStudioDraftScreen() {
   const [assistError, setAssistError] = useState<string | null>(null);
   const [assistPreview, setAssistPreview] = useState<AiPromptAssistPreviewResult | null>(null);
   const [assistPreviewSignature, setAssistPreviewSignature] = useState<string | null>(null);
+  const [assistCopyMessage, setAssistCopyMessage] = useState<string | null>(null);
 
   const selectedDraft = useMemo(() => {
     if (!detail) return null;
@@ -252,25 +255,20 @@ export default function AiQualityStudioDraftScreen() {
   }
 
   function updateInstructionSection(sectionKey: string, value: string) {
+    updateInstructionSections({ [sectionKey]: value });
+  }
+
+  function updateInstructionSections(updates: Record<string, string>) {
     setForm((prev) => {
       if (!prev || !detail) return prev;
       const currentSections = parseStructuredPromptInstructionSections(detail.key, prev.taskInstruction);
-      const nextSections = { ...currentSections, [sectionKey]: value };
-      return {
-        ...prev,
-        taskInstruction: formatStructuredPromptInstructionSections(detail.key, nextSections),
-        promptTemplateRaw: buildStructuredPromptTemplate({
-          taskKey: detail.key,
-          promptTemplateRaw: prev.promptTemplateRaw,
-          sectionValues: nextSections,
-        }),
-      };
-    });
-  }
-
-  function applyInstructionSections(nextSections: Record<string, string>) {
-    setForm((prev) => {
-      if (!prev || !detail) return prev;
+      const allowedKeys = new Set(structuredEditor.sections.map((section) => section.key));
+      const nextSections = { ...currentSections };
+      for (const [sectionKey, value] of Object.entries(updates)) {
+        if (allowedKeys.has(sectionKey)) {
+          nextSections[sectionKey] = value;
+        }
+      }
       return {
         ...prev,
         taskInstruction: formatStructuredPromptInstructionSections(detail.key, nextSections),
@@ -289,8 +287,23 @@ export default function AiQualityStudioDraftScreen() {
 
   function sectionWarnings(sectionKey: string): string[] {
     if (!detail) return [];
-    if (detail.key !== 'entry_cleanup') return [];
-    return getEntryCleanupInstructionWarnings(sectionValues[sectionKey] ?? '');
+    const section = structuredEditor.sections.find((item) => item.key === sectionKey);
+    const siblingTexts = Object.fromEntries(
+      Object.entries(sectionValues).filter(([key]) => key !== sectionKey)
+    );
+    const layerWarnings = section
+      ? getPromptAssistLayerWarnings({
+          layerType: section.layerType,
+          layerKey: section.key,
+          label: section.label,
+          text: sectionValues[sectionKey] ?? '',
+          siblingTexts,
+        })
+      : [];
+    const entryWarnings = detail.key === 'entry_cleanup'
+      ? getEntryCleanupInstructionWarnings(sectionValues[sectionKey] ?? '')
+      : [];
+    return [...layerWarnings, ...entryWarnings];
   }
 
   function unknownTokenWarnings(sectionKey: string): string[] {
@@ -306,6 +319,7 @@ export default function AiQualityStudioDraftScreen() {
     setAssistError(null);
     setAssistPreview(null);
     setAssistPreviewSignature(null);
+    setAssistCopyMessage(null);
   }
 
   function closeAssistPanel() {
@@ -316,10 +330,11 @@ export default function AiQualityStudioDraftScreen() {
     setAssistPreview(null);
     setAssistPreviewSignature(null);
     setAssistIntent('');
+    setAssistCopyMessage(null);
   }
 
   const assistHasTypedIntent = assistIntent.trim().length > 0;
-  const effectiveAssistActionId: AiPromptAssistActionId = selectedAssistActionId ?? (assistHasTypedIntent ? 'verhelderen' : 'compacter');
+  const effectiveAssistActionId: AiPromptAssistActionId = selectedAssistActionId ?? (assistHasTypedIntent ? 'maak_concreter' : 'review_veld');
   const assistSignature = `${activeAssistTarget?.key ?? ''}::${effectiveAssistActionId}::${assistIntent.trim()}`;
   const assistPreviewStale = Boolean(assistPreview && assistPreviewSignature !== assistSignature);
   const assistActions = useMemo<AiPromptAssistActionDefinition[]>(() => {
@@ -348,6 +363,7 @@ export default function AiQualityStudioDraftScreen() {
       });
       const invariants = buildInvariants(detail.key);
       const allowedChangeKinds = buildAllowedChangeKinds(effectiveAssistActionId, activeAssistTarget.layerType);
+      const activeSection = structuredEditor.sections.find((section) => section.key === activeAssistTarget.key);
 
       const preview = await runAdminAiQualityStudioPromptAssistPreview({
         taskKey: detail.key,
@@ -360,6 +376,12 @@ export default function AiQualityStudioDraftScreen() {
           systemRulesInstruction: sectionValues.systemRulesInstruction ?? '',
           generalInstruction: sectionValues.generalInstruction ?? '',
           fieldRules,
+          currentLayer: {
+            key: activeAssistTarget.key,
+            label: activeSection?.label ?? activeAssistTarget.key,
+            layerType: activeAssistTarget.layerType,
+            text: sectionValues[activeAssistTarget.key] ?? '',
+          },
           editableSections: structuredEditor.sections.map((section) => ({
             key: section.key,
             label: section.label,
@@ -372,12 +394,30 @@ export default function AiQualityStudioDraftScreen() {
             token: token.token,
           })),
           outputContract: { fields: taskResponseContractFields },
+          outputSchemaJson: selectedDraft.outputSchemaJson ?? {},
+          configJson: selectedDraft.configJson ?? {},
           taskMetadata: {
             taskKey: detail.key,
             taskLabel: detail.label,
+            promptFamily: structuredEditor.runtimeFamilyLabel,
+            promptType: detail.outputType,
+            runtimeGroup: detail.runtimeFamily ?? structuredEditor.runtimeFamilyLabel,
+            runtimeBindingKey: detail.runtimeBindingKey,
+            compositionRole: detail.compositionRole,
+            managedOutputField: detail.managedOutputField,
             versionId: selectedDraft.id,
             versionNumber: selectedDraft.versionNumber,
           },
+          liveBaseline: detail.liveVersion
+            ? {
+                versionId: detail.liveVersion.id,
+                versionNumber: detail.liveVersion.versionNumber,
+                status: detail.liveVersion.status,
+                model: detail.liveVersion.model,
+                updatedAt: detail.liveVersion.updatedAt,
+                becameLiveAt: detail.liveVersion.becameLiveAt,
+              }
+            : null,
           layerSemantics,
           readOnlyContext,
           invariants,
@@ -397,11 +437,8 @@ export default function AiQualityStudioDraftScreen() {
 
   function applyAssistSuggestion() {
     if (!activeAssistTarget || !assistPreview) return;
-    if (effectiveAssistActionId === 'verdeel_over_velden' && assistPreview.proposedSections) {
-      applyInstructionSections({
-        ...sectionValues,
-        ...assistPreview.proposedSections,
-      });
+    if (assistPreview.assistActionId === 'verdeel_over_velden' && assistPreview.proposedSections) {
+      updateInstructionSections(assistPreview.proposedSections);
       closeAssistPanel();
       return;
     }
@@ -409,21 +446,30 @@ export default function AiQualityStudioDraftScreen() {
     closeAssistPanel();
   }
 
-  const assistSectionDiffs = useMemo(() => {
-    if (!assistPreview?.proposedSections) return [] as { key: string; label: string; before: string; after: string }[];
-    return structuredEditor.sections
-      .map((section) => {
-        const before = sectionValues[section.key] ?? '';
-        const after = assistPreview.proposedSections?.[section.key] ?? before;
-        return {
-          key: section.key,
-          label: section.label,
-          before,
-          after,
-        };
-      })
-      .filter((item) => item.before !== item.after);
-  }, [assistPreview?.proposedSections, sectionValues, structuredEditor.sections]);
+  async function copyAssistSuggestion() {
+    if (!assistPreview) return;
+    const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : null;
+    if (!clipboard?.writeText) {
+      setAssistCopyMessage('Kopiëren is niet beschikbaar in deze omgeving.');
+      return;
+    }
+    try {
+      const copyText = assistPreview.assistActionId === 'verdeel_over_velden' && assistPreview.proposedSections
+        ? structuredEditor.sections
+            .map((section) => {
+              const proposed = assistPreview.proposedSections?.[section.key];
+              if (typeof proposed !== 'string') return null;
+              return `${section.label}:\n${proposed}`;
+            })
+            .filter((item): item is string => Boolean(item))
+            .join('\n\n')
+        : assistPreview.proposedText;
+      await clipboard.writeText(copyText);
+      setAssistCopyMessage('Voorstel gekopieerd.');
+    } catch {
+      setAssistCopyMessage('Kopiëren is niet gelukt.');
+    }
+  }
 
   return (
     <AdminConsoleShell
@@ -499,7 +545,7 @@ export default function AiQualityStudioDraftScreen() {
                     helper={`${getLayerNoticeInfo(section.layerType, section.label).badgeLabel} · ${section.helper}`}
                     action={
                       <AdminConsoleButton
-                        label="Assist"
+                        label={getLayerAssistButtonLabel(section.layerType, section.label)}
                         onPress={() => openAssistForSection(section.key, section.layerType)}
                         tone="ghost"
                         selected={assistOpen}
@@ -693,49 +739,87 @@ export default function AiQualityStudioDraftScreen() {
 
               {!selectedAssistActionId ? (
                 assistHasTypedIntent ? (
-                  <MetaText>Geen chip gekozen: je eigen instructie wordt gebruikt met neutrale actie Verhelderen.</MetaText>
+                  <MetaText>Geen chip gekozen: je eigen instructie wordt gebruikt met actie Maak concreter.</MetaText>
                 ) : (
-                  <MetaText>Geen chip gekozen: standaardactie Compacter wordt gebruikt.</MetaText>
+                  <MetaText>Geen chip gekozen: standaardactie Review dit veld wordt gebruikt.</MetaText>
                 )
               ) : null}
               {assistLoading ? <StateBlock tone="loading" message="Voorstel maken" /> : null}
               {assistError ? <StateBlock tone="error" message="Assist kon niet laden." detail={assistError} /> : null}
+              {assistCopyMessage ? <MetaText>{assistCopyMessage}</MetaText> : null}
 
               {assistPreview ? (
                 <>
                   {assistPreviewStale ? <MetaText>Voorstel is verouderd. Vernieuw eerst.</MetaText> : null}
                   <ThemedView style={styles.fieldGroup}>
-                    <MetaText>Analyse</MetaText>
-                    <ThemedText type="bodySecondary">{assistPreview.analysisSummary}</ThemedText>
+                    <MetaText>Diagnose</MetaText>
+                    <ThemedText type="bodySecondary">{assistPreview.diagnosis}</ThemedText>
                   </ThemedView>
-                  <ThemedView style={styles.fieldGroup}>
-                    <MetaText>Wijzigingssamenvatting</MetaText>
-                    <ThemedText type="bodySecondary">{assistPreview.changeSummary}</ThemedText>
-                  </ThemedView>
-                  {assistPreview.rationale ? (
+
+                  {assistPreview.issues.length > 0 ? (
                     <ThemedView style={styles.fieldGroup}>
-                      <MetaText>Rationale</MetaText>
-                      <ThemedText type="bodySecondary">{assistPreview.rationale}</ThemedText>
-                    </ThemedView>
-                  ) : null}
-                  {effectiveAssistActionId === 'verdeel_over_velden' && assistSectionDiffs.length > 0 ? (
-                    <ThemedView style={styles.fieldGroup}>
-                      <MetaText>Voorstel per veld</MetaText>
-                      {assistSectionDiffs.map((item) => (
-                        <ThemedView key={item.key} style={styles.fieldGroup}>
-                          <MetaText>{item.label}</MetaText>
-                          <TextAreaField value={item.after} editable={false} style={styles.textAreaSmall} />
-                        </ThemedView>
+                      <MetaText>Problemen</MetaText>
+                      {assistPreview.issues.map((issue, index) => (
+                        <ThemedText key={`${issue.type}-${index}`} type="bodySecondary">
+                          {issue.message}
+                        </ThemedText>
                       ))}
                     </ThemedView>
+                  ) : null}
+
+                  {assistPreview.assistActionId === 'verdeel_over_velden' && assistPreview.proposedSections ? (
+                    <ThemedView style={styles.fieldGroup}>
+                      <MetaText>Voorstel per laag</MetaText>
+                      {structuredEditor.sections.map((section) => {
+                        const proposed = assistPreview.proposedSections?.[section.key];
+                        if (typeof proposed !== 'string') return null;
+                        const risks = assistPreview.sectionRisks?.[section.key] ?? [];
+                        return (
+                          <ThemedView key={section.key} style={styles.fieldGroup}>
+                            <ThemedText type="defaultSemiBold">{section.label}</ThemedText>
+                            {assistPreview.sectionReasons?.[section.key] ? (
+                              <MetaText>{assistPreview.sectionReasons[section.key]}</MetaText>
+                            ) : null}
+                            <TextAreaField value={proposed} editable={false} style={styles.textAreaMedium} />
+                            {risks.length > 0 ? (
+                              <MetaText>Risico: {risks.join(' · ')}</MetaText>
+                            ) : null}
+                          </ThemedView>
+                        );
+                      })}
+                    </ThemedView>
                   ) : (
-                    <>
+                    <ThemedView style={styles.fieldGroup}>
+                      <MetaText>Voorstel</MetaText>
                       <TextAreaField value={assistPreview.proposedText} editable={false} style={styles.textAreaMedium} />
-                      <ThemedView style={styles.inlineDiffWrap}>
-                        <InlineWordDiffText beforeText={assistPreview.diff.before} afterText={assistPreview.diff.after} />
-                      </ThemedView>
-                    </>
+                    </ThemedView>
                   )}
+
+                  {assistPreview.why.length > 0 ? (
+                    <ThemedView style={styles.fieldGroup}>
+                      <MetaText>Waarom</MetaText>
+                      {assistPreview.why.map((item, index) => (
+                        <ThemedText key={`${item}-${index}`} type="bodySecondary">
+                          {item}
+                        </ThemedText>
+                      ))}
+                    </ThemedView>
+                  ) : null}
+
+                  <ThemedView style={styles.fieldGroup}>
+                    <MetaText>Laagfit / risico</MetaText>
+                    <ThemedText type="bodySecondary">
+                      {assistPreview.layerFit.fitsLayer
+                        ? `Past in ${assistPreview.layerFit.currentLayer}.`
+                        : `Past niet goed in ${assistPreview.layerFit.currentLayer}${assistPreview.layerFit.betterLayer ? `; beter in ${assistPreview.layerFit.betterLayer}` : ''}.`}
+                      {assistPreview.layerFit.reason ? ` ${assistPreview.layerFit.reason}` : ''}
+                    </ThemedText>
+                    <MetaText>Risico: {assistPreview.riskLevel}</MetaText>
+                  </ThemedView>
+
+                  <ThemedView style={styles.inlineDiffWrap}>
+                    <InlineWordDiffText beforeText={assistPreview.diff.before} afterText={assistPreview.diff.after} />
+                  </ThemedView>
                 </>
               ) : null}
             </ScrollView>
@@ -748,14 +832,28 @@ export default function AiQualityStudioDraftScreen() {
                 fullWidth
               />
               {assistPreview ? (
-                <AdminConsoleButton
-                  label="Toepassen"
-                  onPress={applyAssistSuggestion}
-                  disabled={assistPreviewStale}
-                  tone="primary"
-                  fullWidth
-                />
+                <>
+                  <AdminConsoleButton
+                    label="Kopiëren"
+                    onPress={() => void copyAssistSuggestion()}
+                    disabled={assistPreviewStale}
+                    fullWidth
+                  />
+                  <AdminConsoleButton
+                    label={assistPreview.assistActionId === 'verdeel_over_velden' ? 'Alle lagen toepassen' : 'Toepassen'}
+                    onPress={applyAssistSuggestion}
+                    disabled={assistPreviewStale}
+                    tone="primary"
+                    fullWidth
+                  />
+                </>
               ) : null}
+              <AdminConsoleButton
+                label="Sluiten"
+                onPress={closeAssistPanel}
+                tone="ghost"
+                fullWidth
+              />
             </ThemedView>
           </ThemedView>
         </ModalBackdrop>

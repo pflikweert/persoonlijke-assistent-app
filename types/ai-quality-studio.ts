@@ -13,14 +13,14 @@ export type AiPromptAssistTargetLayerType = 'system' | 'general' | 'field';
 export type AiPromptAssistTargetLayerKey = string;
 
 export type AiPromptAssistActionId =
-  | 'compacter'
-  | 'ontdubbelen'
-  | 'verhelderen'
-  | 'check_contract'
-  | 'check_overlap'
-  | 'verplaats_naar_juiste_laag'
-  | 'maak_strikter'
-  | 'check_outputvorm'
+  | 'review_veld'
+  | 'verbeter_taakdoel'
+  | 'ontdubbel_lagen'
+  | 'maak_compacter'
+  | 'maak_concreter'
+  | 'check_laagdiscipline'
+  | 'schrijf_voorstel'
+  | 'leg_uit_wat_hoort'
   | 'verdeel_over_velden';
 
 export type AiPromptAssistActionPlacement = 'primary' | 'secondary';
@@ -104,6 +104,12 @@ export type AiPromptAssistEditorContext = {
   systemRulesInstruction: string;
   generalInstruction: string;
   fieldRules: Record<string, string>;
+  currentLayer?: {
+    key: string;
+    label: string;
+    layerType: AiPromptAssistTargetLayerType;
+    text: string;
+  };
   editableSections?: Array<{
     key: string;
     label: string;
@@ -116,7 +122,10 @@ export type AiPromptAssistEditorContext = {
     token: string;
   }>;
   outputContract?: Record<string, unknown>;
+  outputSchemaJson?: Record<string, unknown>;
+  configJson?: Record<string, unknown>;
   taskMetadata?: Record<string, unknown>;
+  liveBaseline?: Record<string, unknown> | null;
   /** Semantiek per laag — geeft de assist expliciete rolomschrijving en guardrails */
   layerSemantics?: AiPromptAssistLayerSemantics[];
   /** Sibling-lagen als read-only context voor de assist */
@@ -144,10 +153,24 @@ export type AiPromptAssistSectionProposal = {
   detectedRisks: string[];
 };
 
+export type AiPromptAssistRiskLevel = 'low' | 'medium' | 'high';
+
+export type AiPromptAssistLayerFit = {
+  currentLayer: AiPromptAssistTargetLayerType;
+  fitsLayer: boolean;
+  betterLayer: AiPromptAssistTargetLayerType | null;
+  reason: string;
+};
+
 export type AiPromptAssistPreviewResult = {
   targetLayerType: AiPromptAssistTargetLayerType;
   targetLayerKey: AiPromptAssistTargetLayerKey;
   assistActionId: AiPromptAssistActionId;
+  diagnosis: string;
+  suggestedText: string;
+  why: string[];
+  layerFit: AiPromptAssistLayerFit;
+  riskLevel: AiPromptAssistRiskLevel;
   analysisSummary: string;
   issues: AiPromptAssistIssue[];
   proposedText: string;
@@ -329,7 +352,7 @@ export type AiTaskTestRun = {
 export type RunAiTaskTestPayload = {
   taskKey: string;
   taskVersionId: string;
-  sourceType: Extract<AiTestSourceType, 'entry' | 'day'>;
+  sourceType: AiTestSourceType;
   sourceRecordId: string;
 };
 
@@ -345,6 +368,12 @@ export type AiTaskVersionPromotionResult = {
   archivedVersionId: string | null;
   previousLiveVersionNumber: number | null;
   mode: AiTaskVersionPromotionMode;
+};
+
+export type AiTaskVersionCleanupResult = {
+  deletedVersionIds: string[];
+  skippedVersionIds: string[];
+  keptLatestCount: number;
 };
 
 export type AiRuntimeBaselineImportTaskStatus = 'created' | 'updated' | 'already_ok' | 'error';
@@ -408,7 +437,7 @@ export type AiQualityTaskCapabilities = {
   canCompare: boolean;
   canReview: boolean;
   canPromptAssist: boolean;
-  allowedSourceTypes: Extract<AiTestSourceType, 'entry' | 'day'>[];
+  allowedSourceTypes: AiTestSourceType[];
 };
 
 export type AiQualityTaskMetadata = {

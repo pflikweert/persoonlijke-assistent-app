@@ -1,7 +1,7 @@
 ---
 id: task-archief-import-actieve-voortgang-zonder-preview-duplicatie
 title: Archief-import actieve voortgang zonder preview-duplicatie
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
@@ -17,7 +17,17 @@ task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
+
+
+
 
 
 # Archief-import actieve voortgang zonder preview-duplicatie
@@ -150,7 +160,7 @@ De huidige dubbellaagse importweergave veroorzaakt directe UX-verwarring in een 
 - [x] Importscreen states scheiden zonder dubbele content.
 - [x] Actieve voortgang compact renderen.
 - [x] Voltooide status compact renderen.
-- [ ] Gerichte verify uitvoeren.
+- [x] Gerichte verify uitvoeren.
 
 ## Acceptance criteria
 
@@ -189,3 +199,5 @@ De huidige dubbellaagse importweergave veroorzaakt directe UX-verwarring in een 
 ## Commits
 
 - 2026-06-22T11:49:19+02:00 — fix: simplify active archive import ux
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

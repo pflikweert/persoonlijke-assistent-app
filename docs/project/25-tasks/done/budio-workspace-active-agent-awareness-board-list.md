@@ -16,8 +16,10 @@ follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 7
 ---
+
+
 
 
 ## Probleem / context
@@ -178,3 +180,5 @@ De agent-claim metadata is net toegevoegd aan task detail. De volgende logische 
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

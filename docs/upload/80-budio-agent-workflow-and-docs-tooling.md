@@ -2,8 +2,8 @@
 
 # Budio Agent Workflow and Docs Tooling
 
-Build Timestamp (UTC): 2026-06-22T12:08:56.921Z
-Source Commit: 6eeaf75
+Build Timestamp (UTC): 2026-06-22T16:10:27.541Z
+Source Commit: 320c3c0
 
 Doel: uploadklare bundel voor agentwerkwijze, docs-tooling, audience-metadata en developer setup.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -623,6 +623,9 @@ Gebruik Act mode voor:
   - taskstatus = workflowstatus van de taskfile
   - geselecteerde task = alleen UI-selectie in de plugin
   - actieve agent = runtime/WIP-metadata in `active_agent*`
+- Bij actieve Codex-uitvoering hoort `active_agent*` automatisch gevuld te zijn. Buiten de plugin gebruik je:
+  - `node scripts/taskflow-agent-state.mjs claim <taskfile>` bij start/hervatting.
+  - `node scripts/taskflow-agent-state.mjs clear <taskfile>` bij done, blocked of overdracht.
 - `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
 - Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
 
@@ -928,17 +931,18 @@ Een expliciete, goedkope en herhaalbare workflow voor fase-taken, zodat open wer
 28. `done` betekent ook dat `active_agent*` metadata is opgeschoond; een afgeronde task draagt geen actieve agentcontext meer.
 29. Houd drie toestanden expliciet gescheiden: taskstatus, geselecteerde task in de plugin-UI en echte actieve agentmetadata.
 30. `Actief` in de plugin-UI mag nooit alleen selectie betekenen.
-31. Bij onderbroken sessies of herstel na crash/laptop-uitval: lees eerst de actuele taskfile, folderlocatie (`open/` of `done/`) en `active_agent*` state opnieuw uit vóór verdere uitvoering.
-32. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
-33. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
-34. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
-35. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
-36. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
-37. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
-38. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
-39. Repo-managed hooks moeten convergent zijn: na een commit die taskfiles raakt mag geen normale dirty-worktree-loop achterblijven.
-40. `## Commits` in taskfiles is auto-managed en gebruikt een stabiele entry zonder commit-hash: `author date + subject`.
-41. `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet als standaard closeout-route.
+31. Bij start of hervatting van Codex-uitvoering hoort de taskfile actieve metadata te hebben. Buiten de plugin gebruik je `node scripts/taskflow-agent-state.mjs claim <taskfile>`; bij done/blocked/overdracht gebruik je `node scripts/taskflow-agent-state.mjs clear <taskfile>`.
+32. Bij onderbroken sessies of herstel na crash/laptop-uitval: lees eerst de actuele taskfile, folderlocatie (`open/` of `done/`) en `active_agent*` state opnieuw uit vóór verdere uitvoering.
+33. Samenvattingen vervangen nooit de detail-lijst van expliciete user-requirements als die details later nog nodig zijn voor bouwen, review of acceptatie.
+34. Als een gebruiker expliciet vraagt om een bestaand uitgebreid plan, genummerde lijst of blokstructuur in de taskfile op te nemen, blijft die bronstructuur bewaard als eigen sectie en mag die niet worden teruggebracht tot alleen een afgeleide samenvatting.
+35. Nieuwe of inhoudelijk geharde P1/P2 bouwtaken moeten **spec-ready** zijn voordat ze als bouwbaar gelden.
+36. Spec-ready betekent minimaal: `User outcome`, `Functional slice`, `Entry / exit`, `Happy flow`, `Non-happy flows`, `UX / copy`, `Data / IO`, `Acceptance criteria` en `Verify / bewijs`.
+37. Zet `spec_ready: true` alleen wanneer de taskfile zelfstandig uitvoerbaar is voor een developer of agent zonder chatcontext.
+38. Nieuwe epics moeten naast doel en linked tasks ook P1/P2-scheiding, UX/copy-contract, flow-contract, dependencies en acceptatie bevatten.
+39. Ideas/research/promotie-docs moeten promotiecriteria, open vragen en volgende stap bevatten; promoted/candidate ideas mogen niet als runtimewaarheid worden geschreven.
+40. Repo-managed hooks moeten convergent zijn: na een commit die taskfiles raakt mag geen normale dirty-worktree-loop achterblijven.
+41. `## Commits` in taskfiles is auto-managed en gebruikt een stabiele entry zonder commit-hash: `author date + subject`.
+42. `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet als standaard closeout-route.
 
 ## Korte voorbeelden
 
@@ -1261,6 +1265,7 @@ Voor AI-gedrag, prompting en evaluatie:
   - wanneer een taak automatisch wordt aangemaakt: plaats die direct bovenaan de doel-lane door `sort_order` van die lane te herschrijven en de nieuwe taak op positie `1` te zetten
   - wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: plaats die direct bovenaan de `in_progress` lane door `sort_order` van bron- en doellane opnieuw doorlopend op te slaan
   - zet status direct op `in_progress` zodra uitvoering start
+  - zorg bij start/hervatting van Codex-uitvoering dat `active_agent*` metadata is gevuld; buiten de plugin gebruik je `node scripts/taskflow-agent-state.mjs claim <taskfile>`
   - kies en benoem bij inhoudelijke uitvoering de compacte uitvoerblokken/fases; leg die bij voorkeur vast in de taskfile-sectie `Uitvoerblokken / fasering`
   - eerste inhoudelijke update bevat altijd:
     - `Task: <taaktitel>`
@@ -1322,6 +1327,7 @@ Voor AI-gedrag, prompting en evaluatie:
     - status `done`
     - verplaatsing naar `docs/project/25-tasks/done/`
     - geen `active_agent*` frontmattervelden meer gevuld
+    - gebruik buiten de plugin `node scripts/taskflow-agent-state.mjs clear <taskfile>` vóór of tegelijk met afronding, blocked of overdracht
     - expliciete reconciliation aanwezig
     - `npm run docs:bundle`
     - `npm run docs:bundle:verify`
@@ -1569,6 +1575,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
    - Wanneer je automatisch een nieuwe taak aanmaakt: zet die direct bovenaan de doel-lane met `sort_order: 1` en herschrijf de overige taakfiles in die lane doorlopend.
    - Wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: zet die direct bovenaan de `in_progress` lane en herschrijf `sort_order` voor bron- en doellane zodat de sortering opgeslagen blijft.
    - Zet status op `in_progress` zodra inhoudelijke uitvoering start (tenzij al correct).
+   - Zorg bij uitvoering dat `active_agent*` metadata automatisch of via `node scripts/taskflow-agent-state.mjs claim <taskfile>` gevuld is; Board/List/Jarvis gebruiken dit als enige echte agentactiviteit.
    - Kies en benoem compacte uitvoerblokken/fases voor de taak; leg die bij voorkeur vast in de taskfile-sectie `Uitvoerblokken / fasering`.
    - Communiceer in de eerste inhoudelijke update en daarna in elke volgende update:
      - `Task: ...`
@@ -1600,6 +1607,7 @@ Voorkom dat inhoudelijke repo-taken zonder taskfile starten en voorkom statusdri
    - Zet status op `done` zodra code + verify klaar zijn en commit/push gereed is.
    - Verplaats taak naar `docs/project/25-tasks/done/` als nog in `open/`.
    - Maak `active_agent*` metadata leeg; `done` draagt geen actieve agentcontext.
+   - Gebruik voor handmatige closeout buiten de plugin `node scripts/taskflow-agent-state.mjs clear <taskfile>` vóór of tegelijk met status `done`/`blocked`/overdracht.
    - Repo-managed hooks horen convergent te zijn: na een commit die taskfiles raakt blijft de repo schoon zonder extra handmatige cleanup.
    - `## Commits` is auto-managed met een stabiele entry zonder commit-hash (`author date + subject`).
    - `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet de normale closeout-route.

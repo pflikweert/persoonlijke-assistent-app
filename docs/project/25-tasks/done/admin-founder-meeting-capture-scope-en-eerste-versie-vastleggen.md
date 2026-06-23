@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 4
 ---
+
+
 
 
 
@@ -160,3 +162,5 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 - 8c8e11b — docs: record task commit evidence
 
 - 14ed6b1 — feat: add meeting capture route shells
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

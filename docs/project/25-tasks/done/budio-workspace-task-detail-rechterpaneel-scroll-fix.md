@@ -16,8 +16,10 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 26
 ---
+
+
 
 
 ## Probleem / context
@@ -161,3 +163,5 @@ De task detail is een kerninteractie van de workspace-plugin; als die niet recht
 ## Commits
 
 - 2026-06-22T11:44:37+02:00 — fix(plugin): keep task detail in right split pane
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

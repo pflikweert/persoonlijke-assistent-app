@@ -10,8 +10,10 @@ summary: "De nieuwe MacBook heeft een werkende lokale Budio developmentomgeving 
 tags: [local-dev, onboarding, setup]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 42
 ---
+
+
 
 ## Probleem / context
 
@@ -76,3 +78,8 @@ De lokale omgeving kan betrouwbaar worden gebruikt voor Budio app-ontwikkeling z
 - `docs/project/README.md`
 - `docs/dev/active-context.md`
 - `.codex/config.toml`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

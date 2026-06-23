@@ -10,8 +10,10 @@ summary: Het gedeelde moments-overzicht toont een primaire foto-thumb binnen de 
 tags: [moments-overzicht, photos, ui, viewer]
 workstream: app
 due_date: null
-sort_order: 2
+sort_order: 64
 ---
+
+
 
 
 
@@ -179,3 +181,5 @@ Eén slice: overview-fotodata batch laden, primaire thumbnail tonen in de bestaa
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-06-22T13:42:57+02:00 — test: verify moments photo viewer drag
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

@@ -10,8 +10,10 @@ summary: "De productie-reorderbug in moment detail is bronvast gereproduceerd, o
 tags: [moment-detail, photos, production, reorder, diagnostics]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 66
 ---
+
+
 
 
 ## Probleem / context
@@ -102,3 +104,8 @@ Daarnaast is de diagnoseflow voor dit soort productiebugs aangescherpt met vaste
 - `src/lib/entry-photo-gallery/flow.ts`
 - `docs/dev/production-bug-investigation-workflow.md`
 - `docs/project/25-tasks/open/moment-detail-foto-upload-productieflakiness-onderzoek.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

@@ -16,8 +16,10 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 27
 ---
+
+
 
 
 ## Probleem / context
@@ -152,3 +154,5 @@ De plugin-UI wordt actief aangepast en de vorige fix miste visueel bewijs door e
 ## Commits
 
 - 2026-06-22T12:38:07+02:00 — chore(plugin): add vscode screenshot capture helper
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

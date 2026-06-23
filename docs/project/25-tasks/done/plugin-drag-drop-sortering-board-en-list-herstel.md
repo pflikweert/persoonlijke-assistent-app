@@ -6,12 +6,14 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: ad-hoc user request
 updated_at: 2026-04-23
-summary: "Herstel een regressie waarbij slepen/sorteren van tasks met de muis niet meer werkt in board en list view."
+summary: Herstel een regressie waarbij slepen/sorteren van tasks met de muis niet meer werkt in board en list view.
 tags: [plugin, ui, bugfix]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 51
 ---
+
+
 
 ## Probleem / context
 
@@ -48,3 +50,8 @@ Taken moeten weer met de muis versleept kunnen worden in board én list view, in
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle:verify`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run taskflow:verify`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

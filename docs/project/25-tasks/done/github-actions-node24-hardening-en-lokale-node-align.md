@@ -10,8 +10,10 @@ summary: "Upgrade GitHub Actions naar Node-24-compatibele action-versies, verwij
 tags: [github, actions, node, npm, hardening]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 37
 ---
+
+
 
 ## Probleem / context
 
@@ -72,3 +74,8 @@ GitHub workflows gebruiken actuele Node-24-compatibele action-versies, zodat de 
 - `.github/workflows/secret-scan.yml`
 - `.nvmrc`
 - `package.json`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

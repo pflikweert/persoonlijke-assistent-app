@@ -16,8 +16,10 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 22
 ---
+
+
 
 
 # Budio Workspace Jarvis runtime fix chat en mic end-to-end
@@ -203,3 +205,5 @@ De Jarvis-view is pas bruikbaar als de eerste interactie betrouwbaar zichtbaar e
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

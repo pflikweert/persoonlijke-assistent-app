@@ -10,8 +10,10 @@ summary: Client-side prepare-step voor moment detail foto-upload is aangescherpt
 tags: [moment-detail, photos, production, upload, diagnostics]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 45
 ---
+
+
 
 
 
@@ -224,6 +226,8 @@ Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor
 - b64cb74 — fix: harden task closeout and plugin active state
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: bevestig faalfase, implementeer de kleinste robuuste fix, voeg gericht bewijs toe en herverifieer.

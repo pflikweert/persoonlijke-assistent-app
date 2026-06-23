@@ -10,8 +10,10 @@ summary: "We vertalen concrete inzichten uit OpenAI Privacy Filter naar een best
 tags: [idea, privacy, openai, security]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 48
 ---
+
+
 
 # OpenAI Privacy Filter-idee vertalen naar Budio privacyplan
 
@@ -60,3 +62,8 @@ Een bestaand privacy/security-idee in `docs/project/40-ideas/**` is bijgewerkt m
 
 - `docs/project/40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md`
 - `https://openai.com/index/introducing-openai-privacy-filter/`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

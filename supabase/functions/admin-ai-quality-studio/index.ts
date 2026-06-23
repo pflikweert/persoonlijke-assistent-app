@@ -10,6 +10,10 @@ import { hasCapabilityAccess, loadAdminAccessContext } from '../_shared/admin-ca
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildEntryCleanupTechnicalContract, buildRuntimeBaselineDefinitions } from '../_shared/ai-quality-runtime-baselines.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
+import { renderJsonPromptTemplate } from '../_shared/aiqs-runtime-helpers.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { buildAiqsPeriodCases, buildAiqsPeriodInputSnapshot, buildAiqsPeriodPromptContext, type AiqsPeriodCase, type AiqsPeriodDayJournal, type AiqsPeriodEntryCountRow, type AiqsPeriodType } from '../_shared/aiqs-period-cases.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettingsWithBackend, resolveOpenAiDebugStorageForFlow, updateOpenAiDebugStorageSettingsWithBackend, type OpenAiDebugFlowKey } from '../_shared/openai-debug-storage.ts';
 
 const FLOW = 'admin-ai-quality-studio' as const;
@@ -36,6 +40,7 @@ type RequestBody = {
   label?: unknown;
   notes?: unknown;
   payload?: unknown;
+  keepLatest?: unknown;
   masterEnabled?: unknown;
   masterTtlHours?: unknown;
   flowUpdates?: unknown;
@@ -45,14 +50,14 @@ type PromptAssistTargetLayerType = 'system' | 'general' | 'field';
 type PromptAssistTargetLayerKey = string;
 
 type PromptAssistActionId =
-  | 'compacter'
-  | 'ontdubbelen'
-  | 'verhelderen'
-  | 'check_contract'
-  | 'check_overlap'
-  | 'verplaats_naar_juiste_laag'
-  | 'maak_strikter'
-  | 'check_outputvorm'
+  | 'review_veld'
+  | 'verbeter_taakdoel'
+  | 'ontdubbel_lagen'
+  | 'maak_compacter'
+  | 'maak_concreter'
+  | 'check_laagdiscipline'
+  | 'schrijf_voorstel'
+  | 'leg_uit_wat_hoort'
   | 'verdeel_over_velden';
 
 type PromptAssistIssueSeverity = 'info' | 'warning' | 'risk';
@@ -103,6 +108,12 @@ type PromptAssistEditorContext = {
   systemRulesInstruction: string;
   generalInstruction: string;
   fieldRules: Record<string, string>;
+  currentLayer: {
+    key: string;
+    label: string;
+    layerType: PromptAssistTargetLayerType;
+    text: string;
+  } | null;
   editableSections: Array<{
     key: string;
     label: string;
@@ -115,7 +126,10 @@ type PromptAssistEditorContext = {
     token: string;
   }>;
   outputContract: Record<string, unknown>;
+  outputSchemaJson: Record<string, unknown>;
+  configJson: Record<string, unknown>;
   taskMetadata: Record<string, unknown>;
+  liveBaseline: Record<string, unknown> | null;
   /** Semantiek per laag: rolomschrijving, precedentie, guardrails */
   layerSemantics: PromptAssistLayerSemantics[];
   /** Sibling-lagen als read-only context */
@@ -124,6 +138,15 @@ type PromptAssistEditorContext = {
   invariants: PromptAssistInvariant[];
   /** Toegestane wijzigingstypes voor de huidige actie + laag */
   allowedChangeKinds: PromptAssistAllowedChangeKind[];
+};
+
+type PromptAssistRiskLevel = 'low' | 'medium' | 'high';
+
+type PromptAssistLayerFit = {
+  currentLayer: PromptAssistTargetLayerType;
+  fitsLayer: boolean;
+  betterLayer: PromptAssistTargetLayerType | null;
+  reason: string;
 };
 
 type TaskRow = {
@@ -243,7 +266,7 @@ type TestRunRow = {
   task?: { key: string; label: string } | null;
 };
 
-type SupportedTestSourceType = 'entry' | 'day';
+type SupportedTestSourceType = 'entry' | 'day' | 'week' | 'month';
 
 type DebugFlowUpdateInput = {
   flowKey: OpenAiDebugFlowKey;
@@ -262,6 +285,8 @@ const TEST_CAPABILITIES_BY_TASK_KEY: Record<string, { sourceTypes: SupportedTest
   entry_cleanup: { sourceTypes: ['entry'] },
   day_summary: { sourceTypes: ['day'] },
   day_narrative: { sourceTypes: ['day'] },
+  week_narrative: { sourceTypes: ['week'] },
+  month_narrative: { sourceTypes: ['month'] },
 };
 
 function getTaskTestCapabilities(taskKey: string): { sourceTypes: SupportedTestSourceType[] } | null {
@@ -327,6 +352,16 @@ function parseUuid(value: unknown): string | null {
 
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidPattern.test(raw) ? raw : null;
+}
+
+function parseNonNegativeInteger(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
+    return value;
+  }
+  if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+    return Number(value.trim());
+  }
+  return null;
 }
 
 function ensureJsonObject(value: unknown): Record<string, unknown> | null {
@@ -464,6 +499,106 @@ function pickBestDayRows(rows: DaySourceRow[]): DaySourceRow[] {
 
     return (b.updated_at ?? '').localeCompare(a.updated_at ?? '');
   });
+}
+
+function periodTypeFromSourceType(sourceType: SupportedTestSourceType): AiqsPeriodType | null {
+  if (sourceType === 'week' || sourceType === 'month') {
+    return sourceType;
+  }
+  return null;
+}
+
+function isPeriodValidationTask(taskKey: string): boolean {
+  return taskKey === 'week_narrative' || taskKey === 'month_narrative';
+}
+
+async function loadAiqsPeriodTestCases(args: {
+  adminClient: any;
+  periodType: AiqsPeriodType;
+  limit?: number;
+}): Promise<{ cases: AiqsPeriodCase[]; error: string | null }> {
+  const { data: dayData, error: dayError } = await args.adminClient
+    .from('day_journals')
+    .select('id, user_id, journal_date, summary, narrative_text, sections, updated_at')
+    .order('journal_date', { ascending: false })
+    .limit(args.limit ? Math.max(args.limit * 35, 420) : 2000);
+
+  if (dayError) {
+    return { cases: [], error: 'Failed to load period day journals.' };
+  }
+
+  const { data: entryData, error: entryError } = await args.adminClient
+    .from('entries_raw')
+    .select('user_id, journal_date, captured_at')
+    .order('captured_at', { ascending: false })
+    .limit(args.limit ? Math.max(args.limit * 150, 1500) : 8000);
+
+  if (entryError) {
+    return { cases: [], error: 'Failed to load period entry counts.' };
+  }
+
+  return {
+    cases: buildAiqsPeriodCases({
+      periodType: args.periodType,
+      dayJournals: (dayData ?? []) as AiqsPeriodDayJournal[],
+      entryRows: (entryData ?? []) as AiqsPeriodEntryCountRow[],
+      limit: args.limit,
+    }),
+    error: null,
+  };
+}
+
+async function resolveAiqsPeriodTestCase(args: {
+  adminClient: any;
+  periodType: AiqsPeriodType;
+  sourceRecordId: string;
+}): Promise<{ periodCase: AiqsPeriodCase | null; error: string | null }> {
+  const result = await loadAiqsPeriodTestCases({
+    adminClient: args.adminClient,
+    periodType: args.periodType,
+  });
+  if (result.error) {
+    return { periodCase: null, error: result.error };
+  }
+  return {
+    periodCase: result.cases.find((item) => item.sourceRecordId === args.sourceRecordId) ?? null,
+    error: null,
+  };
+}
+
+async function loadLiveVersionForTask(args: {
+  adminClient: any;
+  taskId: string;
+}): Promise<{ version: VersionRow | null; error: string | null }> {
+  const { data, error } = await args.adminClient
+    .from('ai_task_versions')
+    .select('id, task_id, version_number, status, model, prompt_template, system_instructions, output_schema_json, config_json, min_items, max_items, changelog, created_at, updated_at, became_live_at, locked_at')
+    .eq('task_id', args.taskId)
+    .eq('status', 'live')
+    .order('version_number', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return { version: null, error: 'Failed to load live task version.' };
+  }
+  return { version: data ? (data as VersionRow) : null, error: null };
+}
+
+function buildPromptSnapshotForSource(args: {
+  sourceType: SupportedTestSourceType;
+  version: VersionRow;
+  inputSnapshotJson: Record<string, unknown>;
+}): string {
+  const periodType = periodTypeFromSourceType(args.sourceType);
+  if (periodType) {
+    return renderJsonPromptTemplate({
+      promptTemplate: args.version.prompt_template,
+      context: buildAiqsPeriodPromptContext(args.inputSnapshotJson),
+    });
+  }
+
+  return `${args.version.prompt_template}\n\n[INPUT_SNAPSHOT_JSON]\n${JSON.stringify(args.inputSnapshotJson, null, 2)}`;
 }
 
 function normalizeDraftPayload(value: unknown): { payload: DraftPayload | null; error: string | null } {
@@ -737,6 +872,8 @@ function parseAction(value: unknown):
   | 'create_draft_version'
   | 'update_draft_version'
   | 'delete_draft_version'
+  | 'delete_archived_version'
+  | 'cleanup_archived_versions'
   | 'promote_version_live'
   | 'prompt_assist_preview'
   | 'list_test_sources'
@@ -756,6 +893,8 @@ function parseAction(value: unknown):
     value === 'create_draft_version' ||
     value === 'update_draft_version' ||
     value === 'delete_draft_version' ||
+    value === 'delete_archived_version' ||
+    value === 'cleanup_archived_versions' ||
     value === 'promote_version_live' ||
     value === 'prompt_assist_preview' ||
     value === 'list_test_sources' ||
@@ -773,6 +912,30 @@ function parseBoolean(value: unknown): boolean | null {
   if (value === true) return true;
   if (value === false) return false;
   return null;
+}
+
+function parseStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function parseVersionCleanupRpcResult(value: unknown): {
+  deletedVersionIds: string[];
+  skippedVersionIds: string[];
+  keptLatestCount: number;
+} {
+  const source = Array.isArray(value) ? value[0] : value;
+  if (!source || typeof source !== 'object') {
+    return { deletedVersionIds: [], skippedVersionIds: [], keptLatestCount: 0 };
+  }
+  const record = source as Record<string, unknown>;
+  return {
+    deletedVersionIds: parseStringArray(record.deletedVersionIds),
+    skippedVersionIds: parseStringArray(record.skippedVersionIds),
+    keptLatestCount:
+      typeof record.keptLatestCount === 'number' && Number.isFinite(record.keptLatestCount)
+        ? record.keptLatestCount
+        : 0,
+  };
 }
 
 function parseTtlHours(value: unknown): number | null {
@@ -851,19 +1014,12 @@ function parsePromptAssistTargetLayerKey(value: unknown): PromptAssistTargetLaye
 }
 
 function parsePromptAssistActionId(value: unknown): PromptAssistActionId | null {
-  if (
-    value === 'compacter' ||
-    value === 'ontdubbelen' ||
-    value === 'verhelderen' ||
-    value === 'check_contract' ||
-    value === 'check_overlap' ||
-    value === 'verplaats_naar_juiste_laag' ||
-    value === 'maak_strikter' ||
-    value === 'check_outputvorm' ||
-    value === 'verdeel_over_velden'
-  ) {
-    return value;
-  }
+  if (value === 'review_veld' || value === 'verbeter_taakdoel' || value === 'ontdubbel_lagen' || value === 'maak_compacter' || value === 'maak_concreter' || value === 'check_laagdiscipline' || value === 'schrijf_voorstel' || value === 'leg_uit_wat_hoort' || value === 'verdeel_over_velden') return value;
+  if (value === 'compacter') return 'maak_compacter';
+  if (value === 'ontdubbelen' || value === 'check_overlap') return 'ontdubbel_lagen';
+  if (value === 'verhelderen' || value === 'maak_strikter') return 'maak_concreter';
+  if (value === 'check_contract' || value === 'check_outputvorm') return 'review_veld';
+  if (value === 'verplaats_naar_juiste_laag') return 'check_laagdiscipline';
   return null;
 }
 
@@ -993,7 +1149,18 @@ function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorConte
   );
 
   const outputContract = ensureJsonObject(source.outputContract) ?? {};
+  const outputSchemaJson = ensureJsonObject(source.outputSchemaJson) ?? {};
+  const configJson = ensureJsonObject(source.configJson) ?? {};
   const taskMetadata = ensureJsonObject(source.taskMetadata) ?? {};
+  const liveBaseline = ensureJsonObject(source.liveBaseline);
+  const currentLayerSource = ensureJsonObject(source.currentLayer);
+  const currentLayerKey = currentLayerSource ? parseNonEmptyString(currentLayerSource.key) : null;
+  const currentLayerLabel = currentLayerSource ? parseNonEmptyString(currentLayerSource.label) : null;
+  const currentLayerType = currentLayerSource ? parsePromptAssistTargetLayerType(currentLayerSource.layerType) : null;
+  const currentLayerText = currentLayerSource && typeof currentLayerSource.text === 'string' ? currentLayerSource.text : '';
+  const currentLayer = currentLayerKey && currentLayerLabel && currentLayerType
+    ? { key: currentLayerKey, label: currentLayerLabel, layerType: currentLayerType, text: currentLayerText }
+    : null;
   const editableSections = parseEditableSections(source.editableSections);
   const tokenCatalog = parseTokenCatalog(source.tokenCatalog);
   const layerSemantics = parseLayerSemantics(source.layerSemantics);
@@ -1005,10 +1172,14 @@ function parsePromptAssistEditorContext(value: unknown): PromptAssistEditorConte
     systemRulesInstruction,
     generalInstruction,
     fieldRules: parsedFieldRules,
+    currentLayer,
     editableSections,
     tokenCatalog,
     outputContract,
+    outputSchemaJson,
+    configJson,
     taskMetadata,
+    liveBaseline,
     layerSemantics,
     readOnlyContext,
     invariants,
@@ -1028,32 +1199,6 @@ function normalizePromptTokens(text: string, tokenCatalog: PromptAssistEditorCon
     const normalized = inner.replace(/\s+/g, '').toLowerCase();
     return byInnerToken.get(normalized) ?? full;
   });
-}
-
-function normalizeProposedSections(args: {
-  proposedSections: Record<string, string>;
-  context: PromptAssistEditorContext;
-}): Record<string, string> {
-  const normalized: Record<string, string> = {};
-  const allowedKeys = new Set<string>([
-    'systemRulesInstruction',
-    'generalInstruction',
-    ...Object.keys(args.context.fieldRules),
-    ...args.context.editableSections.map((item) => item.key),
-  ]);
-
-  for (const key of allowedKeys) {
-    const value = typeof args.proposedSections[key] === 'string'
-      ? args.proposedSections[key]
-      : key === 'systemRulesInstruction'
-        ? args.context.systemRulesInstruction
-        : key === 'generalInstruction'
-          ? args.context.generalInstruction
-          : args.context.fieldRules[key] ?? '';
-    normalized[key] = normalizePromptTokens(value, args.context.tokenCatalog).trim();
-  }
-
-  return normalized;
 }
 
 function getPromptAssistTargetText(context: PromptAssistEditorContext, targetLayerKey: PromptAssistTargetLayerKey): string {
@@ -1111,6 +1256,125 @@ function buildPromptAssistIssues(args: {
   return issues.slice(0, 4);
 }
 
+function stringArrayFromUnknown(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter((item) => item.length > 0);
+}
+
+function parsePromptAssistRiskLevel(value: unknown): PromptAssistRiskLevel {
+  if (value === 'low' || value === 'medium' || value === 'high') {
+    return value;
+  }
+  return 'medium';
+}
+
+function parsePromptAssistLayerFit(
+  value: unknown,
+  currentLayer: PromptAssistTargetLayerType
+): PromptAssistLayerFit {
+  const source = ensureJsonObject(value);
+  const betterLayerRaw = source?.better_layer ?? source?.betterLayer;
+  const betterLayer =
+    betterLayerRaw === 'system' || betterLayerRaw === 'general' || betterLayerRaw === 'field'
+      ? betterLayerRaw
+      : null;
+  return {
+    currentLayer,
+    fitsLayer: typeof source?.fits_layer === 'boolean'
+      ? source.fits_layer
+      : typeof source?.fitsLayer === 'boolean'
+        ? source.fitsLayer
+        : true,
+    betterLayer,
+    reason:
+      typeof source?.reason === 'string' && source.reason.trim().length > 0
+        ? source.reason.trim()
+        : 'Geen laagafwijking gedetecteerd.',
+  };
+}
+
+function getPromptAssistLayerRules(layerType: PromptAssistTargetLayerType, label: string): {
+  belongsHere: string[];
+  doesNotBelongHere: string[];
+} {
+  if (layerType === 'system') {
+    return {
+      belongsHere: [
+        'Harde grenzen, JSON-/schema-contracten en runtime-invarianten.',
+        'Regels die boven alle promptvelden moeten gelden.',
+      ],
+      doesNotBelongHere: [
+        'Veldspecifieke stijlkeuzes of contenttips.',
+        'Taakdoel-copy die alleen uitlegt wat de output moet bereiken.',
+      ],
+    };
+  }
+  if (layerType === 'general') {
+    return {
+      belongsHere: [
+        'Het concrete taakdoel voor de hele prompt.',
+        'Algemene kwaliteitscriteria die alle velden raken.',
+      ],
+      doesNotBelongHere: [
+        'Technische output-/JSON-contractregels.',
+        'Regels die maar voor één outputveld gelden.',
+      ],
+    };
+  }
+  return {
+    belongsHere: [
+      `Regels die alleen voor "${label}" gelden.`,
+      'Concrete veldinhoud, toon, dekking en lengte voor dit outputveld.',
+    ],
+    doesNotBelongHere: [
+      'Globale runtime- of schema-contracten.',
+      'Regels voor andere outputvelden.',
+    ],
+  };
+}
+
+function parseStringRecord(value: unknown): Record<string, string> {
+  const source = ensureJsonObject(value);
+  if (!source) return {};
+  return Object.fromEntries(
+    Object.entries(source).map(([key, item]) => [key, typeof item === 'string' ? item : ''])
+  );
+}
+
+function parseStringArrayRecord(value: unknown): Record<string, string[]> {
+  const source = ensureJsonObject(value);
+  if (!source) return {};
+  return Object.fromEntries(
+    Object.entries(source).map(([key, item]) => [key, stringArrayFromUnknown(item)])
+  );
+}
+
+function normalizePromptAssistSections(args: {
+  proposedSections: Record<string, string>;
+  context: PromptAssistEditorContext;
+}): Record<string, string> {
+  const allowedSections =
+    args.context.editableSections.length > 0
+      ? args.context.editableSections
+      : [
+          { key: 'systemRulesInstruction', label: 'Systeemregels', layerType: 'system' as const },
+          { key: 'generalInstruction', label: 'Algemene instructie', layerType: 'general' as const },
+          ...Object.keys(args.context.fieldRules).map((key) => ({ key, label: key, layerType: 'field' as const })),
+        ];
+  return Object.fromEntries(
+    allowedSections.map((section) => {
+      const proposed = args.proposedSections[section.key];
+      const fallback = getPromptAssistTargetText(args.context, section.key);
+      return [
+        section.key,
+        normalizePromptTokens(typeof proposed === 'string' && proposed.trim().length > 0 ? proposed : fallback, args.context.tokenCatalog),
+      ];
+    })
+  );
+}
+
 async function runPromptAssistPreview(args: {
   apiKey: string;
   model: string;
@@ -1122,6 +1386,11 @@ async function runPromptAssistPreview(args: {
   context: PromptAssistEditorContext;
   debugRequest?: ReturnType<typeof buildChatCompletionsDebugRequest>;
 }): Promise<{
+  diagnosis: string;
+  suggestedText: string;
+  why: string[];
+  layerFit: PromptAssistLayerFit;
+  riskLevel: PromptAssistRiskLevel;
   analysisSummary: string;
   proposedText: string;
   proposedSections?: Record<string, string>;
@@ -1137,19 +1406,17 @@ async function runPromptAssistPreview(args: {
   const targetText = getPromptAssistTargetText(args.context, args.targetLayerKey);
 
   const actionHints: Record<PromptAssistActionId, string> = {
-    compacter: 'Maak de tekst compacter zonder betekenisverlies.',
-    ontdubbelen: 'Verwijder duplicaten en herhaling.',
-    verhelderen: 'Maak de instructie duidelijker en direct uitvoerbaar.',
-    check_contract: 'Check contract-match; herschrijf waar nodig om contractschending te voorkomen.',
-    check_overlap: 'Check overlap met andere lagen en voorkom doublures.',
-    verplaats_naar_juiste_laag: 'Verplaats verkeerd geplaatste regels naar juiste laag (alleen binnen target herschrijven).',
-    maak_strikter: 'Maak regels concreter en strikter.',
-    check_outputvorm: 'Verduidelijk outputvorm/format-verwachting binnen scope van de gekozen laag.',
-    verdeel_over_velden:
-      'Verdeel en herstructureer instructies over alle bewerkbare velden. Verminder overlap en zet chips op de juiste plek.',
+    review_veld: 'Review dit veld op laagdiscipline, overlap, taakdoel en risico.',
+    verbeter_taakdoel: 'Maak het taakdoel concreet en uitvoerbaar voor deze prompt.',
+    ontdubbel_lagen: 'Verwijder overlap met sibling-lagen zonder regels te verplaatsen.',
+    maak_compacter: 'Maak de tekst compacter zonder betekenisverlies.',
+    maak_concreter: 'Maak de instructie concreter en minder vaag.',
+    check_laagdiscipline: 'Controleer of deze tekst in deze laag thuishoort.',
+    schrijf_voorstel: 'Schrijf een nieuw voorstel voor alleen deze laag.',
+    leg_uit_wat_hoort: 'Leg uit wat deze laag hoort te bevatten en stel zo nodig conservatieve tekst voor.',
+    verdeel_over_velden: 'Controleer alle promptlagen en zet regels waar nodig goed per veld.',
   };
 
-  // ── verdeel_over_velden: guarded redistribute ──────────────────────────────
   if (args.assistActionId === 'verdeel_over_velden') {
     const sectionOrder =
       args.context.editableSections.length > 0
@@ -1159,75 +1426,90 @@ async function runPromptAssistPreview(args: {
             { key: 'generalInstruction', label: 'Algemene instructie', layerType: 'general' as const },
             ...Object.keys(args.context.fieldRules).map((key) => ({ key, label: key, layerType: 'field' as const })),
           ];
-
-    const currentSections = Object.fromEntries(
-      sectionOrder.map((section) => [section.key, getPromptAssistTargetText(args.context, section.key)])
-    );
-
-    // Build per-section semantics for the prompt (from context if available, else infer)
     const sectionSemantics = sectionOrder.map((section) => {
-      const sem = args.context.layerSemantics.find((s) => s.key === section.key);
-      if (sem) return sem;
-      // Fallback inferred semantics
-      const role: PromptAssistLayerRole = section.layerType === 'system'
-        ? 'high_precedence_instruction'
-        : section.layerType === 'general'
-          ? 'task_goal'
-          : 'field_rule';
+      const existing = args.context.layerSemantics.find((item) => item.key === section.key);
+      if (existing) return existing;
+      const runtimeRole: PromptAssistLayerRole =
+        section.layerType === 'system'
+          ? 'high_precedence_instruction'
+          : section.layerType === 'general'
+            ? 'task_goal'
+            : 'field_rule';
       return {
         key: section.key,
         label: section.label,
         layerType: section.layerType,
-        runtimeRole: role,
+        runtimeRole,
         precedence: section.layerType === 'system' ? 'high' as const : 'normal' as const,
-        purpose: section.layerType === 'system'
-          ? 'Harde grenzen die boven alle andere instructies gaan.'
-          : section.layerType === 'general'
-            ? 'Overkoepelend taakdoel voor alle velden tezamen.'
-            : `Veldspecifieke regels voor ${section.label}.`,
+        purpose:
+          section.layerType === 'system'
+            ? 'Harde grenzen, contractregels en outputvorm.'
+            : section.layerType === 'general'
+              ? 'Overkoepelend taakdoel voor de hele prompt.'
+              : `Veldspecifieke regels voor ${section.label}.`,
         preserveRules: [],
-        forbiddenMoves: section.layerType === 'system'
-          ? ['Verplaats nooit systeemregels of JSON/contract-constraints naar lagere lagen.']
-          : [],
+        forbiddenMoves: section.layerType === 'system' ? ['Houd systeem- en contractregels high-precedence.'] : [],
       };
     });
-
+    const currentSections = Object.fromEntries(
+      sectionOrder.map((section) => [section.key, getPromptAssistTargetText(args.context, section.key)])
+    );
     const highPrecedenceInvariants = args.context.invariants.filter((inv) => inv.mustRemainHighPrecedence);
-
     const systemPrompt = [
-      'Je bent een rolbewuste Prompt Assist voor een admin-only AI Quality Studio.',
+      'Je bent de AIQS Prompt Architect voor Budio.',
       '',
-      'TAAK: Herverdeel instructies over ALLE bewerkbare velden in één voorstel.',
+      'TAAK: controleer ALLE bewerkbare promptlagen en zet regels waar nodig goed per veld.',
+      'Deze actie mag meerdere bewerkbare velden herschrijven, maar alleen via proposedSections.',
       '',
-      'HARDE REGELS (niet onderhandelbaar):',
-      '1. Houd laagdiscipline: system=harde grenzen/contractregels, general=taakdoel, field=veldspecifiek.',
-      '2. Verplaats NOOIT high-precedence constraints (JSON-formaat, response_format, contractvelden, schema) naar field-lagen.',
-      '3. Verplaats NOOIT systeemregels naar de general-laag als ze technisch van aard zijn.',
-      '4. Per veld: geef proposedText EN placementReason (waarom staat dit hier?).',
-      '5. Signaleer detectedRisks per veld als verplaatsing risico geeft op invariant-verlies.',
-      '6. De volgende invariants MOETEN behouden blijven en blijven in een high-precedence laag:',
-      ...highPrecedenceInvariants.map((inv) => `   - ${inv.id}: ${inv.description}`),
-      '7. Normaliseer tokengebruik naar de meegegeven tokencatalogus.',
+      'LAAGDISCIPLINE:',
+      '- system: harde grenzen, JSON/schema/output-contract, brongebruik en runtime-invarianten.',
+      '- general: concreet taakdoel en globale kwaliteitscriteria voor de hele prompt.',
+      '- field: regels die alleen voor dat outputveld gelden.',
+      '',
+      'HARDE REGELS:',
+      '1. Bewerk alleen keys uit editableSections.',
+      '2. Verwijder geen runtime-contracten, outputvelden, tokens of schema-afspraken.',
+      '3. High-precedence/systemregels mogen niet verdwijnen naar lagere lagen.',
+      '4. Field-lagen mogen geen globale JSON-/schema-/systemregels krijgen.',
+      '5. Als tekst beter in een andere bewerkbare laag hoort, mag je die tekst daar voorstellen.',
+      '6. Voeg geen productfunctionaliteit of externe context toe.',
+      '7. Normaliseer tokens naar de meegegeven tokencatalogus.',
+      highPrecedenceInvariants.length > 0
+        ? `8. Deze invariants moeten behouden blijven:\n${highPrecedenceInvariants.map((inv) => `   - ${inv.id}: ${inv.description}`).join('\n')}`
+        : '8. Geen extra high-precedence invariants.',
+      '9. Geef per aangepast veld een korte reden en risico-inschatting.',
       '',
       'OUTPUT (JSON):',
-      '{ analysisSummary, proposedSections, sectionReasons, sectionRisks, changeSummary, rationale, preservedInvariants }',
-      'proposedSections: object met key per bewerkbaar veld.',
-      'sectionReasons: object met placementReason per key.',
-      'sectionRisks: object met array van risicomeldingen per key (leeg als geen risico).',
-      'preservedInvariants: array van invariant-ids die behouden zijn.',
+      '{ "diagnosis": string, "issues": string[], "suggested_text": string, "why": string[], "layer_fit": { "current_layer": "system|general|field", "fits_layer": boolean, "better_layer": "system|general|field|null", "reason": string }, "risk_level": "low|medium|high", "proposedSections": object, "sectionReasons": object, "sectionRisks": object, "preservedInvariants": string[] }',
+      'suggested_text is de voorgestelde tekst voor de actieve targetlaag.',
+      'proposedSections bevat een volledige voorgestelde tekst per bewerkbare section key.',
+      'sectionReasons bevat per key waarom de tekst daar hoort.',
+      'sectionRisks bevat per key een array met risico’s; leeg als geen risico.',
     ].join('\n');
 
     const userPayload = {
       taskKey: args.taskKey,
-      assistActionId: args.assistActionId,
-      assistIntent: args.assistIntent,
+      targetLayer: {
+        key: args.targetLayerKey,
+        type: args.targetLayerType,
+        currentText: targetText,
+      },
+      action: {
+        id: args.assistActionId,
+        hint: actionHints[args.assistActionId],
+        allowedChangeKinds: args.context.allowedChangeKinds,
+        customIntent: args.assistIntent,
+      },
+      editableSections: sectionOrder,
       sectionSemantics,
-      tokenCatalog: args.context.tokenCatalog,
       currentSections,
+      tokenCatalog: args.context.tokenCatalog,
       outputContract: args.context.outputContract,
+      outputSchemaJson: args.context.outputSchemaJson,
+      configJson: args.context.configJson,
       taskMetadata: args.context.taskMetadata,
+      liveBaseline: args.context.liveBaseline,
       invariants: args.context.invariants,
-      allowedChangeKinds: args.context.allowedChangeKinds,
     };
 
     const aiResult = await callOpenAi({
@@ -1253,52 +1535,31 @@ async function runPromptAssistPreview(args: {
       }
     }
 
-    const proposedSectionsRaw = ensureJsonObject(parsed.proposedSections) ?? {};
-    const normalizedSections = normalizeProposedSections({
-      proposedSections: Object.fromEntries(
-        Object.entries(proposedSectionsRaw).map(([key, value]) => [key, typeof value === 'string' ? value : ''])
-      ),
+    const proposedSections = normalizePromptAssistSections({
+      proposedSections: parseStringRecord(parsed.proposedSections),
       context: args.context,
     });
-
-    // Server-side layer leakage guard: detect if system-like patterns appear in field layers
-    const layerLeakageIssues: PromptAssistIssue[] = [];
-    const systemLikePattern = /response_format|geen tekst buiten json|json_object|output schema|technical_contract/i;
-    for (const section of sectionOrder) {
-      if (section.layerType === 'field') {
-        const proposedFieldText = normalizedSections[section.key] ?? '';
-        if (systemLikePattern.test(proposedFieldText)) {
-          layerLeakageIssues.push({
-            severity: 'risk',
-            type: 'misplaced',
-            message: `Veld "${section.label}" bevat system-contractregels in het voorstel. Controleer voor toepassing.`,
-          });
-        }
-      }
-    }
-
-    const proposedText = normalizedSections[args.targetLayerKey] ?? targetText;
-    const analysisSummaryRaw = typeof parsed.analysisSummary === 'string' ? parsed.analysisSummary.trim() : '';
-    const changeSummaryRaw = typeof parsed.changeSummary === 'string' ? parsed.changeSummary.trim() : '';
-    const rationaleRaw = typeof parsed.rationale === 'string' ? parsed.rationale.trim() : '';
-
-    const sectionReasonsRaw = ensureJsonObject(parsed.sectionReasons) ?? {};
-    const sectionRisksRaw = ensureJsonObject(parsed.sectionRisks) ?? {};
-    const sectionReasons = Object.fromEntries(
-      Object.entries(sectionReasonsRaw).map(([key, value]) => [key, typeof value === 'string' ? value : ''])
-    );
-    const sectionRisks = Object.fromEntries(
-      Object.entries(sectionRisksRaw).map(([key, value]) => [
-        key,
-        Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [],
-      ])
-    );
-
-    const preservedInvariantsRaw = Array.isArray(parsed.preservedInvariants)
-      ? parsed.preservedInvariants.filter((item): item is string => typeof item === 'string')
-      : [];
-
-    const baseIssues = buildPromptAssistIssues({
+    const proposedText = proposedSections[args.targetLayerKey] ?? targetText;
+    const diagnosisRaw =
+      typeof parsed.diagnosis === 'string'
+        ? parsed.diagnosis.trim()
+        : typeof parsed.analysisSummary === 'string'
+          ? parsed.analysisSummary.trim()
+          : '';
+    const diagnosis =
+      diagnosisRaw.length > 0
+        ? diagnosisRaw
+        : 'Alle promptlagen zijn gecontroleerd op laagdiscipline, overlap en taakdoel.';
+    const why = stringArrayFromUnknown(parsed.why);
+    const issueMessages = stringArrayFromUnknown(parsed.issues);
+    const layerFit = parsePromptAssistLayerFit(parsed.layer_fit ?? parsed.layerFit, args.targetLayerType);
+    const riskLevel = parsePromptAssistRiskLevel(parsed.risk_level ?? parsed.riskLevel);
+    const aiIssues: PromptAssistIssue[] = issueMessages.map((message) => ({
+      severity: riskLevel === 'high' ? 'risk' : riskLevel === 'medium' ? 'warning' : 'info',
+      type: layerFit.fitsLayer ? 'conflict' : 'misplaced',
+      message,
+    }));
+    const localIssues = buildPromptAssistIssues({
       context: args.context,
       targetLayerType: args.targetLayerType,
       targetLayerKey: args.targetLayerKey,
@@ -1306,27 +1567,25 @@ async function runPromptAssistPreview(args: {
     });
 
     return {
-      analysisSummary:
-        analysisSummaryRaw.length > 0
-          ? analysisSummaryRaw
-          : 'Instructies zijn opnieuw verdeeld over alle bewerkbare velden.',
+      diagnosis,
+      suggestedText: proposedText,
+      why,
+      layerFit,
+      riskLevel,
+      analysisSummary: diagnosis,
       proposedText,
-      proposedSections: normalizedSections,
-      sectionReasons,
-      sectionRisks,
-      preservedInvariants: preservedInvariantsRaw,
-      changeSummary:
-        changeSummaryRaw.length > 0
-          ? changeSummaryRaw
-          : 'Regels zijn herschikt per laag en overlap is verminderd.',
-      rationale: rationaleRaw.length > 0 ? rationaleRaw : null,
-      issues: [...baseIssues, ...layerLeakageIssues].slice(0, 6),
+      proposedSections,
+      sectionReasons: parseStringRecord(parsed.sectionReasons),
+      sectionRisks: parseStringArrayRecord(parsed.sectionRisks),
+      preservedInvariants: stringArrayFromUnknown(parsed.preservedInvariants),
+      detectedRisks: stringArrayFromUnknown(parsed.detectedRisks),
+      changeSummary: 'Voorstel controleert en kan meerdere promptlagen bijwerken.',
+      rationale: why.length > 0 ? why.join('\n') : null,
+      issues: [...aiIssues, ...localIssues].slice(0, 6),
       openAiObjectId: aiResult.openAiObjectId,
     };
   }
 
-  // ── Single-layer role-aware rewrite ────────────────────────────────────────
-  // Resolve semantics for the target layer
   const targetSemantics = args.context.layerSemantics.find((s) => s.key === args.targetLayerKey);
   const isHighPrecedence = targetSemantics?.precedence === 'high' || args.targetLayerType === 'system';
   const runtimeRoleLabel = targetSemantics?.runtimeRole ?? (isHighPrecedence ? 'high_precedence_instruction' : 'task_goal');
@@ -1335,23 +1594,21 @@ async function runPromptAssistPreview(args: {
   const allowedKinds = args.context.allowedChangeKinds.length > 0
     ? args.context.allowedChangeKinds
     : ['rewrite_within_layer'];
-
   const highPrecedenceInvariantsForSingle = args.context.invariants.filter((inv) => inv.mustRemainHighPrecedence);
+  const layerRules = getPromptAssistLayerRules(args.targetLayerType, targetSemantics?.label ?? args.context.currentLayer?.label ?? args.targetLayerKey);
 
   const systemPrompt = [
-    'Je bent een rolbewuste Prompt Assist voor een admin-only AI Quality Studio.',
+    'Je bent de AIQS Prompt Architect voor Budio.',
     '',
-    `TARGETLAAG: ${targetSemantics?.label ?? args.targetLayerKey}`,
-    `RUNTIMEROL: ${runtimeRoleLabel}`,
-    `PRIORITEIT: ${isHighPrecedence ? 'HIGH (boven general en field)' : 'NORMAL'}`,
-    targetSemantics?.purpose ? `DOEL: ${targetSemantics.purpose}` : '',
+    'Je beoordeelt en verbetert promptlagen in de admin-only AI Quality Studio.',
+    'Je bent reviewer én architect: eerst laagdiscipline beoordelen, daarna pas een veilig tekstvoorstel doen.',
     '',
     'HARDE REGELS (niet onderhandelbaar):',
-    '1. Analyseer alle sibling-lagen als read-only context; bewerk ALLEEN de targetlaag.',
-    '2. Bewaar harde contractregels die aanwezig zijn in de targetlaag.',
+    '1. Bewerk alleen de targetlaag. Sibling-lagen zijn read-only context.',
+    '2. Verplaats niets automatisch naar andere lagen. Adviseer alleen als tekst elders beter hoort.',
     isHighPrecedence
-      ? '3. Dit is een HIGH PRIORITY laag: verplaats NOOIT contractregels, JSON-formaat of schema-verplichtingen buiten deze laag.'
-      : '3. Zet GEEN systeemregels of JSON/contract-verplichtingen in deze laag.',
+      ? '3. Dit is een HIGH PRIORITY laag: contractregels, JSON-formaat en schema-verplichtingen mogen hier blijven.'
+      : '3. Zet GEEN systeemregels of JSON-/schema-contracten in deze laag.',
     preserveRules.length > 0
       ? `4. Regels die ALTIJD bewaard moeten blijven:\n${preserveRules.map((r) => `   - ${r}`).join('\n')}`
       : '4. Geen extra preserve-regels.',
@@ -1362,14 +1619,19 @@ async function runPromptAssistPreview(args: {
       ? `6. Invariants die BEHOUDEN moeten blijven:\n${highPrecedenceInvariantsForSingle.map((inv) => `   - ${inv.id}: ${inv.description}`).join('\n')}`
       : '6. Geen extra invariants.',
     `7. Toegestane wijzigingstypes: ${allowedKinds.join(', ')}.`,
-    '8. Als een veilige wijziging niet mogelijk is: geef een conservatief voorstel en signaleer het risico.',
-    '9. Geen chatstijl, geen extra velden, geen verborgen mutaties.',
+    '8. Gebruik geen externe context en voeg geen productfunctionaliteit toe.',
+    '9. Behoud runtime-contracten, schema, outputvelden en bestaande tokenbetekenis.',
+    '10. Als een veilige wijziging niet mogelijk is: laat suggested_text gelijk aan huidige tekst en leg het risico uit.',
+    '11. Geen chatstijl, geen Markdown buiten JSON, geen extra top-level velden.',
     '',
     'OUTPUT (JSON):',
-    '{ analysisSummary, proposedText, changeSummary, rationale, preservedInvariants, detectedRisks }',
-    'proposedText: alleen de tekst voor de gekozen targetlaag.',
-    'preservedInvariants: array van invariant-ids die behouden zijn.',
-    'detectedRisks: array van risicobeschrijvingen (leeg als geen risico).',
+    '{ "diagnosis": string, "issues": string[], "suggested_text": string, "why": string[], "layer_fit": { "current_layer": "system|general|field", "fits_layer": boolean, "better_layer": "system|general|field|null", "reason": string }, "risk_level": "low|medium|high" }',
+    'diagnosis: korte reviewer-diagnose.',
+    'issues: concrete problemen of waarschuwingen, niet normatief.',
+    'suggested_text: alleen de volledige tekst voor de targetlaag.',
+    'why: waarom dit voorstel past bij de laag en het contract.',
+    'layer_fit: of de huidige tekst in deze laag past.',
+    'risk_level: risico van toepassen.',
   ].filter(Boolean).join('\n');
 
   const userPayload = {
@@ -1382,6 +1644,7 @@ async function runPromptAssistPreview(args: {
       purpose: targetSemantics?.purpose ?? '',
       currentText: targetText,
     },
+    layerRules,
     action: {
       id: args.assistActionId,
       hint: actionHints[args.assistActionId],
@@ -1397,10 +1660,14 @@ async function runPromptAssistPreview(args: {
             key, label: key, layerType: 'field', runtimeRole: 'field_rule', text,
           })),
         ].filter((item) => item.key !== args.targetLayerKey),
+    editableSections: args.context.editableSections,
     invariants: args.context.invariants,
     tokenCatalog: args.context.tokenCatalog,
     outputContract: args.context.outputContract,
+    outputSchemaJson: args.context.outputSchemaJson,
+    configJson: args.context.configJson,
     taskMetadata: args.context.taskMetadata,
+    liveBaseline: args.context.liveBaseline,
   };
 
   const aiResult = await callOpenAi({
@@ -1426,42 +1693,67 @@ async function runPromptAssistPreview(args: {
     }
   }
 
-  const proposedTextRaw = typeof parsed.proposedText === 'string' ? parsed.proposedText.trim() : '';
+  const proposedTextRaw =
+    typeof parsed.suggested_text === 'string'
+      ? parsed.suggested_text.trim()
+      : typeof parsed.suggestedText === 'string'
+        ? parsed.suggestedText.trim()
+        : typeof parsed.proposedText === 'string'
+          ? parsed.proposedText.trim()
+          : '';
   const proposedText = normalizePromptTokens(
     proposedTextRaw.length > 0 ? proposedTextRaw : targetText,
     args.context.tokenCatalog
   );
-  const analysisSummaryRaw = typeof parsed.analysisSummary === 'string' ? parsed.analysisSummary.trim() : '';
-  const changeSummaryRaw = typeof parsed.changeSummary === 'string' ? parsed.changeSummary.trim() : '';
-  const rationaleRaw = typeof parsed.rationale === 'string' ? parsed.rationale.trim() : '';
-  const preservedInvariantsRaw = Array.isArray(parsed.preservedInvariants)
-    ? parsed.preservedInvariants.filter((item): item is string => typeof item === 'string')
-    : [];
-  const detectedRisksRaw = Array.isArray(parsed.detectedRisks)
-    ? parsed.detectedRisks.filter((item): item is string => typeof item === 'string')
-    : [];
+  const diagnosisRaw =
+    typeof parsed.diagnosis === 'string'
+      ? parsed.diagnosis.trim()
+      : typeof parsed.analysisSummary === 'string'
+        ? parsed.analysisSummary.trim()
+        : '';
+  const diagnosis =
+    diagnosisRaw.length > 0
+      ? diagnosisRaw
+      : 'Analyse op laagdiscipline gedaan; voorstel blijft beperkt tot de gekozen laag.';
+  const why = stringArrayFromUnknown(parsed.why);
+  const issueMessages = stringArrayFromUnknown(parsed.issues);
+  const detectedRisksRaw = stringArrayFromUnknown(parsed.detectedRisks);
+  const layerFit = parsePromptAssistLayerFit(parsed.layer_fit ?? parsed.layerFit, args.targetLayerType);
+  const riskLevel = parsePromptAssistRiskLevel(parsed.risk_level ?? parsed.riskLevel);
+  const aiIssues: PromptAssistIssue[] = issueMessages.map((message) => ({
+    severity: riskLevel === 'high' ? 'risk' : riskLevel === 'medium' ? 'warning' : 'info',
+    type: layerFit.fitsLayer ? 'conflict' : 'misplaced',
+    message,
+  }));
+  const localIssues = buildPromptAssistIssues({
+    context: args.context,
+    targetLayerType: args.targetLayerType,
+    targetLayerKey: args.targetLayerKey,
+    proposedText,
+  });
+  const changeSummary =
+    proposedText === targetText
+      ? 'Geen directe tekstwijziging voorgesteld.'
+      : 'Voorstel beperkt tot de huidige laag.';
+  const rationale =
+    why.length > 0
+      ? why.join('\n')
+      : typeof parsed.rationale === 'string' && parsed.rationale.trim().length > 0
+        ? parsed.rationale.trim()
+        : null;
 
   return {
-    analysisSummary:
-      analysisSummaryRaw.length > 0
-        ? analysisSummaryRaw
-        : 'Analyse op volledige context gedaan; voorstel beperkt tot de gekozen laag.',
+    diagnosis,
+    suggestedText: proposedText,
+    why,
+    layerFit,
+    riskLevel,
+    analysisSummary: diagnosis,
     proposedText,
-    preservedInvariants: preservedInvariantsRaw,
     detectedRisks: detectedRisksRaw,
-    changeSummary:
-      changeSummaryRaw.length > 0
-        ? changeSummaryRaw
-        : proposedText === targetText
-          ? 'Geen inhoudelijke wijziging voorgesteld.'
-          : 'Tekst compacter en scherper gemaakt voor deze laag.',
-    rationale: rationaleRaw.length > 0 ? rationaleRaw : null,
-    issues: buildPromptAssistIssues({
-      context: args.context,
-      targetLayerType: args.targetLayerType,
-      targetLayerKey: args.targetLayerKey,
-      proposedText,
-    }),
+    changeSummary,
+    rationale,
+    issues: [...aiIssues, ...localIssues].slice(0, 6),
     openAiObjectId: aiResult.openAiObjectId,
   };
 }
@@ -2174,6 +2466,96 @@ Deno.serve(async (request) => {
       });
     }
 
+    if (action === 'delete_archived_version') {
+      step = 'delete_archived_version';
+      const taskKey = parseNonEmptyString(body.taskKey);
+      const versionId = parseUuid(body.versionId);
+      if (!taskKey || !versionId) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'taskKey en versionId zijn verplicht.',
+        });
+      }
+
+      const { data: deleteResult, error: deleteError } = await adminClient.rpc(
+        'aiqs_delete_archived_version',
+        {
+          p_task_key: taskKey,
+          p_version_id: versionId,
+        }
+      );
+
+      if (deleteError) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: String(deleteError.message ?? 'Versie kon niet worden verwijderd.'),
+        });
+      }
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        ...parseVersionCleanupRpcResult(deleteResult),
+      });
+    }
+
+    if (action === 'cleanup_archived_versions') {
+      step = 'cleanup_archived_versions';
+      const taskKey = parseNonEmptyString(body.taskKey);
+      const keepLatest = parseNonNegativeInteger(body.keepLatest ?? 3);
+      if (!taskKey || keepLatest === null) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'taskKey en keepLatest zijn verplicht.',
+        });
+      }
+
+      const { data: cleanupResult, error: cleanupError } = await adminClient.rpc(
+        'aiqs_cleanup_archived_versions',
+        {
+          p_task_key: taskKey,
+          p_keep_latest: keepLatest,
+        }
+      );
+
+      if (cleanupError) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: String(cleanupError.message ?? 'Versies konden niet worden opgeschoond.'),
+        });
+      }
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        ...parseVersionCleanupRpcResult(cleanupResult),
+      });
+    }
+
     if (action === 'promote_version_live') {
       step = 'promote_version_live';
       const taskKey = parseNonEmptyString(body.taskKey);
@@ -2309,7 +2691,7 @@ Deno.serve(async (request) => {
       }
 
       const targetLayerType = parsedTargetLayerType ?? inferPromptAssistTargetLayerTypeFromKey(targetLayerKey);
-      const assistActionId = parsedAssistActionId ?? 'compacter';
+      const assistActionId = parsedAssistActionId ?? 'review_veld';
 
       if (!editorContext) {
         return errorResponse({
@@ -2386,6 +2768,11 @@ Deno.serve(async (request) => {
           targetLayerType,
           targetLayerKey,
           assistActionId,
+          diagnosis: result.diagnosis,
+          suggestedText: result.suggestedText,
+          why: result.why,
+          layerFit: result.layerFit,
+          riskLevel: result.riskLevel,
           analysisSummary: result.analysisSummary,
           issues: result.issues,
           proposedText: result.proposedText,
@@ -2451,6 +2838,28 @@ Deno.serve(async (request) => {
           label: `Dag ${row.journal_date}`,
           subtitle: `Datum ${row.journal_date}`,
           preview: buildDayPreview(row),
+        }));
+
+        return jsonResponse(request, 200, { status: 'ok', flow: FLOW, requestId, flowId, sources });
+      }
+
+      const periodType = testCapabilities.sourceTypes.find((sourceType) => sourceType === 'week' || sourceType === 'month') as AiqsPeriodType | undefined;
+      if (periodType) {
+        const result = await loadAiqsPeriodTestCases({
+          adminClient,
+          periodType,
+          limit: 30,
+        });
+        if (result.error) {
+          return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: result.error });
+        }
+
+        const sources = result.cases.map((periodCase) => ({
+          sourceType: periodCase.sourceType,
+          sourceRecordId: periodCase.sourceRecordId,
+          label: periodCase.label,
+          subtitle: periodCase.subtitle,
+          preview: periodCase.preview,
         }));
 
         return jsonResponse(request, 200, { status: 'ok', flow: FLOW, requestId, flowId, sources });
@@ -2595,6 +3004,68 @@ Deno.serve(async (request) => {
         liveOutputText = dayBaseline ? JSON.stringify(dayBaseline, null, 2) : null;
         baselineStatus = dayBaseline ? 'available' : 'missing';
         baselineReason = dayBaseline ? null : 'Dag baseline ontbreekt.';
+      } else if (isPeriodValidationTask(taskKey)) {
+        const periodType = periodTypeFromSourceType(sourceType);
+        if (!periodType) {
+          baselineStatus = 'unsupported';
+          baselineReason = 'Compare baseline source type past niet bij deze periode-task.';
+        } else {
+          const inputSnapshotJson = row.input_snapshot_json ?? {};
+          const liveVersionResult = await loadLiveVersionForTask({ adminClient, taskId: row.task_id });
+          if (liveVersionResult.error) {
+            return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: liveVersionResult.error });
+          }
+          if (!liveVersionResult.version) {
+            baselineStatus = 'missing';
+            baselineReason = 'Live versie ontbreekt voor deze periode-task.';
+          } else {
+            try {
+              const liveVersion = liveVersionResult.version;
+              const livePromptSnapshot = buildPromptSnapshotForSource({
+                sourceType,
+                version: liveVersion,
+                inputSnapshotJson,
+              });
+              const liveDebugResolution = resolveOpenAiDebugStorageForFlow({
+                settings: (await loadOpenAiDebugStorageSettingsWithBackend(adminClient)).settings,
+                flowKey: 'admin-ai-quality-studio.run_test',
+                endpointFamily: 'chat_completions',
+              });
+              const liveAiResponse = await callOpenAi({
+                apiKey: getOpenAiApiKey(),
+                model: liveVersion.model,
+                systemInstructions: liveVersion.system_instructions,
+                promptSnapshot: livePromptSnapshot,
+                config: liveVersion.config_json ?? {},
+                debugRequest: buildChatCompletionsDebugRequest({
+                  resolution: liveDebugResolution,
+                  metadata: buildOpenAiDebugMetadata({
+                    app: 'persoonlijke-assistent-app',
+                    env: Deno.env.get('APP_ENV')?.trim() || 'local',
+                    flow: FLOW,
+                    functionName: 'admin-ai-quality-studio',
+                    taskKey,
+                    runtimeFamily: 'ai_quality_studio',
+                    requestId,
+                    flowId,
+                    mode: 'admin_test_live_baseline',
+                    version: 'mvp-1.2.1',
+                    actor: userId ?? (isInternal ? 'internal' : 'admin'),
+                  }),
+                }),
+              });
+              liveOutputText = liveAiResponse.outputText;
+              liveOutputJson = liveAiResponse.outputJson;
+              baselineStatus = liveAiResponse.outputText ? 'available' : 'missing';
+              baselineReason = liveAiResponse.outputText ? null : 'Live baseline kon niet worden gegenereerd.';
+            } catch (periodBaselineError) {
+              baselineStatus = 'missing';
+              baselineReason = periodBaselineError instanceof Error
+                ? periodBaselineError.message
+                : 'Live baseline kon niet worden gegenereerd.';
+            }
+          }
+        }
       } else {
         baselineStatus = 'unsupported';
         baselineReason = 'Compare baseline voor deze task is nog niet ondersteund in stap 4.';
@@ -2724,7 +3195,7 @@ Deno.serve(async (request) => {
           createdAt: sourceRow.created_at,
         },
       };
-    } else {
+    } else if (sourceType === 'day') {
       const { data: sourceRow, error: sourceError } = await adminClient
         .from('day_journals')
         .select('id, journal_date, summary, narrative_text, sections, updated_at')
@@ -2745,9 +3216,34 @@ Deno.serve(async (request) => {
           updatedAt: sourceRow.updated_at,
         },
       };
+    } else {
+      const periodType = periodTypeFromSourceType(sourceType);
+      if (!periodType) {
+        return errorResponse({ request, httpStatus: 400, requestId, flowId, step, code: 'INPUT_INVALID', message: 'sourceType wordt niet ondersteund.' });
+      }
+      const periodResult = await resolveAiqsPeriodTestCase({
+        adminClient,
+        periodType,
+        sourceRecordId,
+      });
+      if (periodResult.error) {
+        return errorResponse({ request, httpStatus: 500, requestId, flowId, step, code: 'DB_READ_FAILED', message: periodResult.error });
+      }
+      if (!periodResult.periodCase) {
+        return errorResponse({ request, httpStatus: 404, requestId, flowId, step, code: 'INPUT_INVALID', message: 'Period source not found.' });
+      }
+      sourceLabel = periodResult.periodCase.label;
+      inputSnapshotJson = buildAiqsPeriodInputSnapshot({
+        taskKey: task.key,
+        periodCase: periodResult.periodCase,
+      });
     }
 
-    const promptSnapshot = `${version.prompt_template}\n\n[INPUT_SNAPSHOT_JSON]\n${JSON.stringify(inputSnapshotJson, null, 2)}`;
+    const promptSnapshot = buildPromptSnapshotForSource({
+      sourceType,
+      version,
+      inputSnapshotJson,
+    });
     const promptSnapshotSnippet = truncate(promptSnapshot, 200);
 
     const testExecutionDebug = {

@@ -10,8 +10,10 @@ summary: "Voeg in docs/upload een volledige tasks bundle toe (open + done) en ee
 tags: [docs, upload, tasks, bundle]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 58
 ---
+
+
 
 # Upload bundles uitbreiden met volledige tasks en apart full archive
 
@@ -66,3 +68,8 @@ Beide bundels zijn directory-gebaseerd, worden automatisch via `docs:bundle` geg
 
 - `scripts/docs/build-docs-bundles.mjs`
 - `docs/upload/00-budio-upload-manifest.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

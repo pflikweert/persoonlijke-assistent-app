@@ -10,8 +10,10 @@ summary: "Stabiliseer testadvies in audio-instellingen, laat advies staan na sto
 tags: [audio, settings, ux, web]
 workstream: app
 due_date: null
-sort_order: null
+sort_order: 71
 ---
+
+
 
 ## Probleem / context
 
@@ -67,3 +69,8 @@ De advieszone heeft een vaste hoogte zodat onderliggende UI niet verspringt. Sli
 - `app/settings-audio.tsx`
 - `services/web-audio-input.ts`
 - `docs/project/25-tasks/README.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

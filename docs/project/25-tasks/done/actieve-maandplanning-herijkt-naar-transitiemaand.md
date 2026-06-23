@@ -10,8 +10,10 @@ summary: "Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een
 tags: [planning, transitiemaand]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
+
 
 
 # Actieve maandplanning herijkt naar transitiemaand
@@ -61,3 +63,8 @@ Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een smalle br
 - `docs/project/20-planning/20-active-phase.md`
 - `docs/project/20-planning/30-now-next-later.md`
 - `docs/project/20-planning/40-deviations-and-decisions.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

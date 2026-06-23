@@ -16,8 +16,10 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 29
 ---
+
+
 
 
 ## Probleem / context
@@ -178,3 +180,5 @@ Een kleine UX-polish van de bestaande typing capture-state op `/capture/type`, i
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

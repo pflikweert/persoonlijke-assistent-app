@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 50
 ---
+
+
 
 
 
@@ -184,3 +186,5 @@ Workflowcopy in foutmeldingen blijft concreet en herstelbaar, bijvoorbeeld: `Tas
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

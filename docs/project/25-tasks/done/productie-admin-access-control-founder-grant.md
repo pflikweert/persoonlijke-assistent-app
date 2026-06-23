@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: null
+sort_order: 74
 ---
+
+
 
 
 
@@ -186,3 +188,5 @@ Het goedgekeurde plan:
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

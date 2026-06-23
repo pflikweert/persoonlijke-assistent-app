@@ -16,8 +16,10 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 43
 ---
+
+
 
 
 ## Probleem / context
@@ -165,3 +167,5 @@ Een kleine herstel-slice: diagnose van de lege lokale DB, kiezen van de kleinste
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

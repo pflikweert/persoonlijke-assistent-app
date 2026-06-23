@@ -16,8 +16,10 @@ follows_after: [task-moment-detail-foto-upload-android-chrome-prepare-regressie]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 32
 ---
+
+
 
 
 ## Probleem / context
@@ -159,6 +161,8 @@ Uitgevoerd op `2026-05-15`:
 ## Commits
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ## Relevante links
 
 - `AGENTS.md`

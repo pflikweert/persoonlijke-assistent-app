@@ -26,6 +26,8 @@ active_agent_settings: default
 ---
 
 
+
+
 ## Probleem / context
 
 AIQS Assist bestaat al in de draft editor, maar voelt nog te veel als algemene herschrijfhulp. Per promptveld moet Assist begrijpen welke laag wordt bewerkt, wat die laag wel/niet mag bevatten, welke sibling-lagen al regels bevatten en of de huidige tekst eigenlijk in een andere laag thuishoort.
@@ -250,3 +252,5 @@ Belangrijkste punten:
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

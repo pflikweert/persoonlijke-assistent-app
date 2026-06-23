@@ -38,7 +38,7 @@ export type AiQualityStaticTaskConfig = {
     canCompare: boolean;
     canReview: boolean;
     canPromptAssist: boolean;
-    allowedSourceTypes: ('entry' | 'day')[];
+    allowedSourceTypes: ('entry' | 'day' | 'week' | 'month')[];
   };
   affectedOutputFields: string[];
 };
@@ -216,11 +216,11 @@ export const AI_QUALITY_STATIC_TASK_CONFIGS: Record<string, AiQualityStaticTaskC
     editorTargetTaskKey: 'week_narrative',
     capabilities: {
       canDraft: true,
-      canTest: false,
-      canCompare: false,
-      canReview: false,
+      canTest: true,
+      canCompare: true,
+      canReview: true,
       canPromptAssist: false,
-      allowedSourceTypes: [],
+      allowedSourceTypes: ['week'],
     },
     affectedOutputFields: ['summary_text', 'narrative_text', 'highlights_json', 'reflection_points_json'],
   },
@@ -284,11 +284,11 @@ export const AI_QUALITY_STATIC_TASK_CONFIGS: Record<string, AiQualityStaticTaskC
     editorTargetTaskKey: 'month_narrative',
     capabilities: {
       canDraft: true,
-      canTest: false,
-      canCompare: false,
-      canReview: false,
+      canTest: true,
+      canCompare: true,
+      canReview: true,
       canPromptAssist: false,
-      allowedSourceTypes: [],
+      allowedSourceTypes: ['month'],
     },
     affectedOutputFields: ['summary_text', 'narrative_text', 'highlights_json', 'reflection_points_json'],
   },

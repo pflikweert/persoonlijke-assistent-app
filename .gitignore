@@ -62,6 +62,7 @@ download-log.jsonl
 local-data/**
 browser-profile/**
 playwright-profile/**
+.playwright-mcp/**
 medical-exports/**
 medical-downloads/**
 *.dcm

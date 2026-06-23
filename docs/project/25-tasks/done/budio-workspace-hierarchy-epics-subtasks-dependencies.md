@@ -15,8 +15,10 @@ depends_on: []
 follows_after: []
 task_kind: task
 due_date: null
-sort_order: 1
+sort_order: 10
 ---
+
+
 
 
 
@@ -138,3 +140,5 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

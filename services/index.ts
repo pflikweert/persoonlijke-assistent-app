@@ -17,6 +17,8 @@ export {
 } from "./admin-regeneration";
 export {
     createAdminAiQualityStudioDraftVersion,
+    cleanupAdminAiQualityStudioArchivedVersions,
+    deleteAdminAiQualityStudioArchivedVersion,
     deleteAdminAiQualityStudioDraftVersion,
     fetchAdminAiQualityStudioCompareView, fetchAdminAiQualityStudioTaskDetail,
     fetchAdminAiQualityStudioTasks, fetchAdminAiQualityStudioTestRun, fetchAdminOpenAiDebugStorageSettings, hasAdminAiQualityStudioAccess,

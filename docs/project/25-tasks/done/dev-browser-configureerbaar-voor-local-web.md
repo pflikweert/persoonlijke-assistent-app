@@ -10,8 +10,10 @@ summary: "Local web development kan optioneel een specifieke browser openen via 
 tags: [local-dev, tooling, expo]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 33
 ---
+
+
 
 ## Probleem / context
 
@@ -62,3 +64,8 @@ Op de nieuwe Mac opent Expo web nu via de standaardbrowser. De gebruiker wil Cha
 
 - `scripts/dev.sh`
 - `.env.local`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state

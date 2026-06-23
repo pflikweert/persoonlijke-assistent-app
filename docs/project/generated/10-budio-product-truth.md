@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-06-22T12:08:56.921Z
-Source Commit: 6eeaf75
+Build Timestamp (UTC): 2026-06-22T16:10:27.541Z
+Source Commit: 320c3c0
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -918,6 +918,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [Admin + AIQS Linear interface kit refresh](25-tasks/open/admin-aiqs-linear-interface-kit-refresh.md) | In Progress | p1 | transitiemaand-consumer-beta | Budio admin en AIQS gebruiken een gedeelde admin-console componentlaag die desktop/tablet/mobile beter ondersteunt, zonder routes, datafl... |
 | [Admin/founder meeting capture — web route en IA](25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md) | In Progress | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
 | [AIQS admin console UI/UX Linear-richting](25-tasks/open/aiqs-admin-console-uiux-linear-richting.md) | In Progress | p1 | transitiemaand-consumer-beta | De admin- en AIQS-interface krijgt een eigen look and feel die past bij admin tooling en visueel richting Linear beweegt: rustige toolbar... |
+| [AIQS Assist laagbewuste prompt review](25-tasks/open/aiqs-assist-laagbewuste-prompt-review.md) | In Progress | p1 | transitiemaand-consumer-beta | AIQS Assist functioneert als Prompt Reviewer + Prompt Architect. Elke Assist-click geeft een laagbewuste diagnose, problemen, voorstel, u... |
 | [AIQS draft-live promotie en rollback flow](25-tasks/open/aiqs-draft-live-promotie-en-rollback-flow.md) | In Progress | p1 | transitiemaand-consumer-beta | Een AIQS-admin kan vanuit de bestaande admin-console zien welke versie live is, welke draft nog bewijs mist, welke draft klaar is voor li... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
 | [AIQS runtime DB-binding voor live prompts](25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md) | In Progress | p1 | transitiemaand-consumer-beta | Voor alle huidige AIQS-managed families leest runtime zijn prompt/model/system/config uit live AIQS-versies in de database. De app gebrui... |
@@ -939,7 +940,6 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [niet vergeten](25-tasks/open/niet-vergeten.md) | Backlog | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
 | [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
 | [STITCH_API_KEY voor MCP activeren](25-tasks/open/stitch-api-key-voor-mcp-activeren.md) | Backlog | p2 | transitiemaand-consumer-beta | De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch MCP later zonder extra handelingen gebruikt kan worden.... |
-| [Archief-import actieve voortgang zonder preview-duplicatie](25-tasks/open/archief-import-actieve-voortgang-zonder-preview-duplicatie.md) | In Progress | p2 | transitiemaand-consumer-beta | Na het starten van een archief-import blijft het preview-scherm zichtbaar terwijl tegelijk een voortgangsblok verschijnt. Daardoor toont... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | In Progress | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
 <!-- TASK_OVERVIEW:END -->
 
@@ -2868,6 +2868,9 @@ Gebruik Act mode voor:
   - taskstatus = workflowstatus van de taskfile
   - geselecteerde task = alleen UI-selectie in de plugin
   - actieve agent = runtime/WIP-metadata in `active_agent*`
+- Bij actieve Codex-uitvoering hoort `active_agent*` automatisch gevuld te zijn. Buiten de plugin gebruik je:
+  - `node scripts/taskflow-agent-state.mjs claim <taskfile>` bij start/hervatting.
+  - `node scripts/taskflow-agent-state.mjs clear <taskfile>` bij done, blocked of overdracht.
 - `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
 - Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
 

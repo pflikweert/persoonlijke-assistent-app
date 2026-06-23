@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-22T12:08:56.921Z
-Source Commit: 6eeaf75
+Build Timestamp (UTC): 2026-06-22T16:10:27.541Z
+Source Commit: 320c3c0
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 70
+- Totaal tasks opgenomen: 75
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -42,8 +42,9 @@ summary: "Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een
 tags: [planning, transitiemaand]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 2
 ---
+
 
 
 # Actieve maandplanning herijkt naar transitiemaand
@@ -125,8 +126,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 3
 ---
+
 
 
 
@@ -310,8 +312,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 4
 ---
+
 
 
 
@@ -458,6 +461,237 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 
 ---
 
+## AIQS Week/Maand validatiecases uit day journals
+
+- Path: `docs/project/25-tasks/done/aiqs-week-maand-validatiecases-uit-day-journals.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: aiqs-week-maand-validatiecases-uit-day-journals
+title: AIQS Week/Maand validatiecases uit day journals
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: "Week- en maandvalidatie in AIQS gebruiken day_journals als broncases, zodat drafts getest, vergeleken en beoordeeld kunnen worden zonder bestaande period_reflections."
+tags: [aiqs, validation, week, month, day-journals, evidence]
+workstream: aiqs
+epic_id: null
+parent_task_id: null
+depends_on: [aiqs-runtime-db-binding-voor-live-prompts, aiqs-admin-console-uiux-linear-richting]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 2
+---
+
+
+## Probleem / context
+
+Dag-validatie werkt, maar week- en maandvalidatie tonen `Geen cases gevonden`. Daardoor kan een AIQS-admin geen week- of maanddraft testen, vergelijken of evidence opbouwen.
+
+De vermoedelijke oorzaak is dat week/maandvalidatie niet uit brondata wordt opgebouwd. Validatie mag niet afhankelijk zijn van al bestaande `period_reflections`; juist wanneer die ontbreken moet AIQS cases uit `day_journals` kunnen maken.
+
+## Gewenste uitkomst
+
+`week_narrative` en `month_narrative` tonen testcases die zijn opgebouwd uit `day_journals`. De validate-flow kan daarna een draft runnen, een live baseline on-demand genereren, diff tonen, observaties tonen en een reviewoordeel opslaan.
+
+## User outcome
+
+Een AIQS-admin kan week- en maandprompts net als dagprompts valideren op echte brondata, ook wanneer er nog geen week- of maandreflecties bestaan.
+
+## Functional slice
+
+Eén afgeronde slice voor AIQS validate/test source generation:
+
+1. week/maand capabilities aanzetten
+2. week/maand cases uit `day_journals` groeperen
+3. week/maand testinput exact als runtime bouwen
+4. live baseline voor compare on-demand genereren
+5. diff-first validate-flow laten werken voor week en maand
+
+## Entry / exit
+
+- Entry: admin opent AIQS validate voor `week_narrative` of `month_narrative`.
+- Exit: admin kiest een week- of maandcase, runt de draft, ziet diff en kan een oordeel opslaan.
+
+## Happy flow
+
+1. Admin opent `week_narrative` validate.
+2. Case picker toont weken op basis van `day_journals`.
+3. Admin kiest een weekcase en runt de test.
+4. AIQS bouwt input met `period_type`, `period_start`, `period_end` en `dayJournals`.
+5. Draft-output en live-output worden vergeleken in de bestaande diff-first UI.
+6. Admin slaat `Beter`, `Gelijk`, `Slechter` of `Fout` op.
+
+## Non-happy flows
+
+- Empty state: als er echt geen bruikbare `day_journals` zijn, blijft `Geen cases gevonden` eerlijk.
+- Permission denied / unavailable: bestaande AIQS admin/capability checks blijven leidend.
+- Validation / unsupported state: source type moet bij task capability passen.
+- Failure / retry / cancel: OpenAI-call of source-load fouten blijven als bestaande validate error zichtbaar.
+
+## UX / copy
+
+- Week label: `Week 2026-06-01 t/m 2026-06-07`.
+- Week subtitle: `7 dagen · 42 entries`.
+- Maand label: `Juni 2026`.
+- Maand subtitle: `21 dagen · 137 entries`.
+- Case preview blijft compact en brongebaseerd.
+- Bestaande validate UI en diff-first layout blijven leidend.
+
+## Data / IO
+
+- Input:
+  - `day_journals` per `user_id`, gegroepeerd per ISO-week of kalendermaand
+  - display-entry counts uit `entries_raw`
+- Output:
+  - `AiTaskTestSource[]` met `sourceType: 'week' | 'month'`
+  - `input_snapshot_json` met `period_type`, `period_start`, `period_end`, `dayJournals`
+  - draft test run + live compare output
+- Opslag/API/service/file-impact:
+  - geen schema-migratie
+  - bestaande `ai_test_cases.source_type` enum `week/month` gebruiken
+  - synthetische stabiele UUID voor periodecase
+- Statussen:
+  - bestaande queued/completed/failed test run statussen blijven hetzelfde
+
+## Waarom nu
+
+AIQS is evidence-first. Zonder week/maandcases kunnen week- en maandprompts niet gevalideerd of veilig live gezet worden.
+
+## In scope
+
+- AIQS validate/test source generation voor `week_narrative` en `month_narrative`.
+- Period-case helperlogica.
+- Edge Function `list_test_sources`, `run_test`, `get_compare_view`.
+- Type/UI-capability uitbreidingen.
+- Unit- en smoke-tests.
+
+## Buiten scope
+
+- Prompt runtime redesign.
+- Nieuwe schema-migratie.
+- Consumer Vandaag/Reflecties UI.
+- Bestaande productieperiodereflecties herschrijven.
+- Afhankelijkheid introduceren op `period_reflections` voor validatie.
+
+## Oorspronkelijk plan / afgesproken scope
+
+# AIQS Week/Maand Validatiecases uit Day Journals
+
+Week- en maandvalidatie moeten cases uit `day_journals` opbouwen, ook wanneer `period_reflections` ontbreken. Week volgt productie-bounds maandag-zondag; maand volgt kalendermaand. Testinput gebruikt dezelfde contextshape als `generate-reflection`: `period_type`, `period_start`, `period_end`, `dayJournals`. Live baseline wordt tijdens compare on-demand gegenereerd met de live AIQS-versie.
+
+## Expliciete user requirements / detailbehoud
+
+- Dag-validatie blijft werken.
+- Week toont minimaal één case wanneer day journals beschikbaar zijn.
+- Maand toont minimaal één case wanneer day journals beschikbaar zijn.
+- Weekcase gebruikt groep day journals binnen een week.
+- Maandcase gebruikt groep day journals binnen een maand.
+- Validator bouwt runtime-input zelf uit brondata.
+- Validatie hangt niet af van bestaande week- of maandoutput.
+- Bij case kiezen: run live versie, run draft versie, toon diff, toon observaties, gebruiker geeft oordeel.
+- Case picker toont dagen- en entries-count.
+- Controleer expliciet dat generation gebaseerd is op `day_journals` en niet `period_reflections`.
+
+## Status per requirement
+
+- [x] Dag-validatie blijft werken — status: gebouwd en runtime-smoke toont `day_narrative` sources.
+- [x] Weekcases uit `day_journals` zichtbaar — status: gebouwd; runtime-smoke toont 30 weekcases.
+- [x] Maandcases uit `day_journals` zichtbaar — status: gebouwd; runtime-smoke toont 25 maandcases.
+- [x] Week/month run_test bouwt productiecontext — status: gebouwd; `input_snapshot_json.dayJournals` is runtime-smoke bevestigd.
+- [x] Week/month compare genereert live baseline on-demand — status: gebouwd; runtime-smoke toont `compare=available` voor week en maand.
+- [x] UI/types accepteren `week | month` source types — status: gebouwd.
+- [x] Unit- en runtimebewijs vastgelegd — status: gebouwd; bewijs staat onder `Verify / bewijs`.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Pure helper `supabase/functions/_shared/aiqs-period-cases.ts` toegevoegd voor period bounds, grouping, synthetische UUID en input snapshot.
+- Validate compare-labels voor `week_narrative` en `month_narrative` toegevoegd zodat diff-secties dezelfde labels gebruiken als period output.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow, huidige validate/test broncode en dirty worktree bevestigen.
+- [x] Blok 2: period-case pure helper + unit-tests toevoegen.
+- [x] Blok 3: types/capabilities/UI source-type checks uitbreiden.
+- [x] Blok 4: Edge Function source listing, run_test en compare baseline uitbreiden.
+- [x] Blok 5: static/runtime verify, docs/taskflow afronden.
+
+## Concrete checklist
+
+- [x] Period-case helper toevoegen.
+- [x] Unit-tests voor bounds, grouping, synthetic UUID en input snapshot toevoegen.
+- [x] `week_narrative`/`month_narrative` capabilities aanzetten.
+- [x] `RunAiTaskTestPayload` en validate UI-checks uitbreiden.
+- [x] `list_test_sources` week/month bronnen laten teruggeven.
+- [x] `run_test` week/month input snapshot en prompt bouwen.
+- [x] `get_compare_view` week/month live baseline genereren.
+- [x] Verify en reconciliation bijwerken.
+
+## Acceptance criteria
+
+- [x] `day_narrative` validate toont cases en kan test/diff blijven draaien.
+- [x] `week_narrative` validate toont minimaal één case bij beschikbare day journals.
+- [x] `week_narrative` run test slaagt en compare toont diff.
+- [x] `month_narrative` validate toont minimaal één case bij beschikbare day journals.
+- [x] `month_narrative` run test slaagt en compare toont diff.
+- [x] `input_snapshot_json` voor week/month bevat `dayJournals` en geen `period_reflections`.
+- [x] Live baseline voor week/month komt uit live AIQS-versie, niet uit bestaande reflection rows.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+- Dirty worktree bevat bestaande AIQS/WIP; deze taak raakt alleen relevante AIQS period-validation paden.
+
+## Verify / bewijs
+
+- ✅ `npx vitest run tests/unit/aiqs-period-cases.test.ts` — 5 tests groen.
+- ✅ `npx vitest run tests/unit/ai-quality-validate-compare.test.ts` — 6 tests groen.
+- ✅ `npm run test:unit -- aiqs-period` — 5 tests groen.
+- ✅ `npm run test:unit -- ai-quality` — 4 files / 22 tests groen.
+- ✅ `npm run typecheck`
+- ✅ `npm run lint`
+- ✅ `npm run supabase:functions:restart` — functions runtime gestart met pid `8205`; daarna door smoke opnieuw gestart met pid `8342`.
+- ✅ `npm run verify:local-aiqs-smoke` — AIQS overview-smoke groen; target `http://localhost:8081/settings-ai-quality-studio`.
+- ✅ Gerichte API/runtime-smoke:
+  - `day_narrative: sources=30`
+  - `week_narrative: sources=30`, eerste case `Week 2026-06-08 t/m 2026-06-14`, `run=completed`, `dayJournals=1`, `compare=available`
+  - `month_narrative: sources=25`, eerste case `Juni 2026`, `run=completed`, `dayJournals=6`, `compare=available`
+  - smoke faalt expliciet als `input_snapshot_json` `period_reflections` bevat.
+- ✅ `npm run taskflow:verify`
+- ✅ `npm run docs:bundle`
+- ✅ `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: week/maand AIQS validatiecases uit `day_journals`, inclusief run en compare.
+- Toegevoegde verbeteringen: pure period-case helper en period-labels in validate compare-helper.
+- Afgerond:
+  - capabilities/types/UI-checks accepteren week/maand sources
+  - Edge Function `list_test_sources` bouwt week/month cases uit `day_journals`
+  - Edge Function `run_test` bouwt period runtime snapshot en prompt
+  - Edge Function `get_compare_view` genereert live baseline on-demand met live AIQS-versie
+  - unit-, static- en runtime-smoke bewijs is groen
+- Open / blocked:
+  - geen open punten voor deze slice.
+
+## Relevante links
+
+- `docs/project/ai-quality-studio.md`
+- `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
+- `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
+```
+
+---
+
 ## Always-on taskflow enforcement (agent-onafhankelijk)
 
 - Path: `docs/project/25-tasks/done/always-on-taskflow-enforcement-agent-onafhankelijk.md`
@@ -480,8 +714,9 @@ summary: "Alle inhoudelijke agentsessies volgen verplicht de taskflow in docs/pr
 tags: [workflow, tasks, governance]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 5
 ---
+
 
 ## Probleem / context
 
@@ -538,6 +773,220 @@ Elke inhoudelijke agentsessie (plan/research/bug/implementatie) loopt automatisc
 
 ---
 
+## Archief-import actieve voortgang zonder preview-duplicatie
+
+- Path: `docs/project/25-tasks/done/archief-import-actieve-voortgang-zonder-preview-duplicatie.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-archief-import-actieve-voortgang-zonder-preview-duplicatie
+title: Archief-import actieve voortgang zonder preview-duplicatie
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-06-22
+summary: Verberg de import-preview direct na start van een archief-import en toon alleen een voortgangsgerichte mobiele statusweergave.
+tags: [settings, import, ux, polish]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+
+
+
+# Archief-import actieve voortgang zonder preview-duplicatie
+
+## Probleem / context
+
+Na het starten van een archief-import blijft het preview-scherm zichtbaar terwijl tegelijk een voortgangsblok verschijnt. Daardoor toont het scherm twee primaire taken tegelijk: controle van de preview en actieve voortgang.
+
+## Gewenste uitkomst
+
+Zodra de gebruiker de import start, verdwijnt de preview direct volledig uit beeld. Tijdens actieve import ligt de focus volledig op voortgang, met alleen de bestandscontext, aantallen, voortgangsbalk, percentage, verwerkingsstap en de route terug naar `Vandaag`.
+
+Na afronding verdwijnt de voortgangsweergave en wordt een compacte voltooid-status getoond met de verwerkte aantallen en dezelfde route naar `Vandaag`.
+
+## User outcome
+
+De gebruiker ziet tijdens importeren nog maar één duidelijke taak: wachten op voortgang of doorgaan naar `Vandaag`.
+
+## Functional slice
+
+Een UI-only state-scheiding voor `idle`, `selected`, `importing`, `completed` en `error` in de bestaande archief-importflow.
+
+## Entry / exit
+
+- Entry: gebruiker opent `Instellingen` -> `Importeren` en kiest een geldig bestand.
+- Exit: gebruiker ziet ofwel alleen voortgang tijdens actieve import, of een voltooid-status met actie `Ga naar Vandaag`.
+
+## Happy flow
+
+1. Gebruiker kiest een bestand en ziet de preview.
+2. Gebruiker start de import en de preview verdwijnt direct.
+3. Scherm toont alleen importstatus, bestand, dagen, entries, voortgang en `Ga naar Vandaag`.
+4. Na afronding toont het scherm alleen `Import voltooid` met aantallen en `Ga naar Vandaag`.
+
+## Non-happy flows
+
+- Empty state: `idle` blijft ongewijzigd.
+- Permission denied / unavailable: bestaande disabled-state blijft ongewijzigd.
+- Validation / unsupported state: bestaande preview-parse fouten blijven error-state tonen.
+- Failure / retry / cancel: importfouten blijven een error-state tonen zonder preview en voortgang tegelijk zichtbaar te maken.
+
+## UX / copy
+
+- Tijdens actieve import verbergen:
+  - `Klaar voor import`
+  - `Controleer kort wat er wordt toegevoegd`
+  - bestand metadata preview
+  - voorbeeld content
+  - `Importeer bestanden`
+  - `Andere bestanden kiezen`
+- Tijdens actieve import tonen:
+  - `Importeren...`
+  - bestandsnaam
+  - aantal dagen
+  - aantal entries
+  - voortgangsbalk
+  - percentage
+  - `Dag X van Y`
+  - `Deze verwerking draait op de achtergrond. Je kunt de app blijven gebruiken.`
+  - `Ga naar Vandaag`
+- Voltooid tonen:
+  - `Import voltooid`
+  - aantal dagen verwerkt
+  - aantal entries verwerkt
+  - `Ga naar Vandaag`
+- Gebruik bestaande settings-scaffold en bestaande button/text primitives.
+
+## Data / IO
+
+- Input: bestaande import-preview en background task status.
+- Output: enkelvoudige zichtbare UI-state per importsituatie.
+- Opslag/API/service/file-impact: `app/settings-import.tsx`.
+- Statussen: `idle`, `selected`, `importing`, `completed`, `error`.
+
+## Waarom nu
+
+De huidige dubbellaagse importweergave veroorzaakt directe UX-verwarring in een bestaande flow.
+
+## In scope
+
+- Importscreen state-rendering opschonen.
+- Actieve voortgang compact en mobiel-first tonen.
+- Voltooide status laten aansluiten op actieve voortgangsflow.
+
+## Buiten scope
+
+- Achtergrond-importarchitectuur wijzigen.
+- Nieuwe retry-, cancel- of notificationsystemen bouwen.
+- Andere settings-flows herontwerpen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Verbeter UX van actieve archief-import.
+- Verberg preview volledig zodra import start.
+- Toon tijdens actieve import alleen de voortgangsweergave en `Ga naar Vandaag`.
+- Toon na afronding een compacte voltooid-status met aantallen en `Ga naar Vandaag`.
+
+## Expliciete user requirements / detailbehoud
+
+- `idle` toont het huidige preview-scherm.
+- `importing` verbergt alle preview-copy, metadata, voorbeeldcontent en niet-bruikbare acties.
+- `importing` toont alleen bestandsnaam, aantal dagen, aantal entries, voortgangsbalk, percentage, `Dag X van Y`, achtergrondnotice en `Ga naar Vandaag`.
+- `completed` vervangt voortgang door `Import voltooid`, aantallen verwerkt en `Ga naar Vandaag`.
+- UX-regels:
+  - geen dubbele informatie
+  - slechts één primaire taak tegelijk zichtbaar
+  - tijdens import ligt focus volledig op voortgang
+  - geen acties tonen die tijdens actieve import niet gebruikt kunnen worden
+  - mobiel eerst ontwerpen
+
+## Status per requirement
+
+- [x] Preview verdwijnt direct na importstart — status: gebouwd
+- [x] Alleen voortgang blijft zichtbaar tijdens actieve import — status: gebouwd
+- [x] `Ga naar Vandaag` blijft beschikbaar tijdens actieve import — status: gebouwd
+- [x] Voltooide status toont juiste compacte samenvatting — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Error-state versimpeld naar `Probeer opnieuw` en `Ga naar Vandaag`, zodat mislukte imports ook geen irrelevante settings-acties meer tonen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: kleinste bronwijziging of primair artefact uitvoeren.
+- [ ] Blok 3: gerichte verify en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Importscreen states scheiden zonder dubbele content.
+- [x] Actieve voortgang compact renderen.
+- [x] Voltooide status compact renderen.
+- [x] Gerichte verify uitvoeren.
+
+## Acceptance criteria
+
+- [ ] Na `Importeer bestanden` verdwijnt de preview direct volledig.
+- [ ] Tijdens actieve import is alleen de voortgangsweergave zichtbaar met `Ga naar Vandaag`.
+- [ ] Na succesvolle afronding toont het scherm alleen `Import voltooid` met aantallen en `Ga naar Vandaag`.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- `npm run lint` — geslaagd.
+- `npm run typecheck` — geslaagd.
+- `curl -I --max-time 5 http://localhost:8081` — geslaagd; lokale webtarget reageert met `200 OK`.
+- `npm run verify:local-auth-login -- --profile=default` — geslaagd; local auth magic-link flow geeft geldige session/user terug.
+- Runtime browser-smoke op `/settings-import` is nog niet volledig bewezen:
+  - `http://host.docker.internal:8081/settings-import` opent, maar redirect naar `/sign-in`
+  - Docker-browser kan de Supabase verify-link op poort `54321` niet bereiken, waardoor echte ingelogde import-smoke in deze sessie blocked blijft
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: actieve import alleen voortgang laten tonen, zonder preview-duplicatie.
+- Toegevoegde verbeteringen: error-state compacter gemaakt zodat ook failures geen dubbele of irrelevante acties tonen.
+- Afgerond: scherm rendert nu preview, actieve import en voltooid als drie gescheiden toestanden met telkens één primaire taak zichtbaar.
+- Open / blocked: interactieve runtime-smoke achter ingelogde browser blijft nog open door Docker-toegang tot lokale Supabase verify-link.
+
+## Relevante links
+
+- `app/settings-import.tsx`
+- `design_refs/1.2.1/importeren_bezig/code.html`
+- `design_refs/1.2.1/importeren_gelukt/code.html`
+
+
+## Commits
+
+- 2026-06-22T11:49:19+02:00 — fix: simplify active archive import ux
+```
+
+---
+
 ## Audio-instellingen testadvies stabiliseren en mic-selectie polish
 
 - Path: `docs/project/25-tasks/done/audio-instellingen-testadvies-stabiliseren-en-mic-selectie-polish.md`
@@ -560,8 +1009,9 @@ summary: "Stabiliseer testadvies in audio-instellingen, laat advies staan na sto
 tags: [audio, settings, ux, web]
 workstream: app
 due_date: null
-sort_order: null
+sort_order: 71
 ---
+
 
 ## Probleem / context
 
@@ -649,8 +1099,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 6
 ---
+
 
 
 # Budio Codex-modelkeuze vrijmaken met 5.5 default
@@ -813,6 +1264,578 @@ Tussenstand:
 
 ---
 
+## Budio Workspace active agent awareness in Board en List
+
+- Path: `docs/project/25-tasks/done/budio-workspace-active-agent-awareness-board-list.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-budio-workspace-active-agent-awareness-board-list
+title: Budio Workspace active agent awareness in Board en List
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: Toon echte actieve agentactiviteit duidelijk en near-realtime in de Budio Workspace Board en List views.
+tags: [plugin, vscode, board, list, agent-metadata]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: ""
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 7
+---
+
+
+
+## Probleem / context
+
+Board en List gebruiken al echte `active_agent*` taskmetadata, maar actieve agentactiviteit is in het overzicht nog te subtiel. Daardoor is niet direct zichtbaar welke taak nu door Codex of een andere agent wordt uitgevoerd.
+
+De gebruiker wil dit near-realtime kunnen zien, zonder fake states: alleen echte actieve metadata mag een taak als actief markeren, en de indicator moet verdwijnen zodra de agent klaar is of metadata wordt gewist.
+
+## Gewenste uitkomst
+
+Board en List tonen actieve agenttaken duidelijk met een rustige premium highlight, een live-chip en compacte context. Wanneer `active_agent*` wordt gewist, verdwijnt de highlight automatisch bij de volgende watcher/background refresh.
+
+## User outcome
+
+De gebruiker ziet in Board en List in één oogopslag welke taak momenteel door Codex/een agent wordt opgepakt en kan die taak direct openen vanuit een compacte live-agent strip.
+
+## Functional slice
+
+Een metadata-gedreven awareness slice in de bestaande Budio Workspace plugin: actieve agent UI-state helper, Board-card styling, List-row/mobile styling en compacte live-agent summary.
+
+## Entry / exit
+
+- Entry: gebruiker opent Board of List terwijl één of meer taskfiles echte actieve `active_agent*` metadata hebben.
+- Exit: actieve taken zijn visueel herkenbaar; na `Stop agent`, clear of done cleanup verdwijnt de visual state zonder handmatige UI-reset.
+
+## Happy flow
+
+1. Gebruiker claimt een taak als actief in task detail.
+2. De watcher hydrateert Board/List opnieuw.
+3. Board-card en List-row tonen een duidelijke live-agent highlight en chip.
+4. Gebruiker klikt de live-agent strip en opent/selecteert de actieve taak.
+5. Gebruiker stopt de agent of rondt de taak af; metadata wordt gewist en de highlight verdwijnt.
+
+## Non-happy flows
+
+- Empty state: zonder actieve agentmetadata toont Board/List geen live-agent strip en geen highlights.
+- Permission denied / unavailable: niet van toepassing; dit gebruikt lokale taskmetadata.
+- Validation / unsupported state: onbekende of niet-actieve `active_agent_status` toont geen actieve highlight.
+- Failure / retry / cancel: bestaande refresh/watch fallback blijft gelden; background refresh corrigeert gemiste watcher-events.
+
+## UX / copy
+
+- Chipcopy: `<Agent> actief`, bijvoorbeeld `Codex actief`.
+- Compacte stripcopy: `<Agent> werkt aan <taaktitel>`.
+- Visuele richting: zachte groen/cyaan live-gloed, subtiele pulse, geen waarschuwingkleur en geen fake progress.
+- Board/List workflows, filters, drag/drop en detailgedrag blijven functioneel gelijk.
+
+## Data / IO
+
+- Input: bestaande `TaskCardViewModel` met `activeAgent`, `activeAgentStatus`, `activeAgentSince`, `activeAgentRuntime` en `activeAgentModel`.
+- Output: alleen UI-state en CSS-klassen; geen markdown-schemawijziging.
+- Opslag/API/service/file-impact: geen nieuwe opslag; bestaande claim/clear/done flows blijven leidend.
+- Statussen: alleen actieve statuswaarden uit de bestaande helper markeren een taak als actief.
+
+## Waarom nu
+
+De agent-claim metadata is net toegevoegd aan task detail. De volgende logische stap is dat die echte metadata zichtbaar en bruikbaar wordt in de dagelijkse Board/List overzichten.
+
+## In scope
+
+- Active-agent UI-state helper.
+- Board-card active-agent highlight.
+- List desktop/mobile active-agent highlight.
+- Compacte live-agent summary boven Board/List.
+- Unit-tests voor helpergedrag.
+- Plugin verify en apply.
+
+## Buiten scope
+
+- Automatisch claimen bij selecteren of statuswijziging.
+- Nieuwe agent runtime, websocket of processtream.
+- Wijzigingen aan board/list workflows, filters, drag/drop of task detail.
+- Fake progress, fake activity of verzonnen agentstatus.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Board cards krijgen bij actieve agent een duidelijke maar rustige live-stijl.
+- List desktop rows en mobile list cards krijgen dezelfde actieve stijl.
+- Er komt een compacte live-agent strip wanneer actieve agents bestaan.
+- Near realtime blijft gebaseerd op echte taskfile watcher/background refresh.
+- Stop/afrondgedrag blijft metadata-gedreven.
+
+## Expliciete user requirements / detailbehoud
+
+- Actief aan gewerkt moet duidelijk zichtbaar zijn in Board en List.
+- Gebruik achtergrondkleur of een ander sterk visueel kenmerk.
+- Near realtime updates.
+- Wanneer agent klaar is, verdwijnt de actieve indicator.
+- Kom met slimme oplossingen, maar zonder nepdata.
+
+## Status per requirement
+
+- [x] Duidelijke Board-highlight — status: gebouwd; actieve metadata geeft card glow, accent rail en live-chip.
+- [x] Duidelijke List-highlight — status: gebouwd; desktop rows en mobile cards krijgen dezelfde actieve behandeling.
+- [x] Live-agent strip met directe selectie/opening — status: gebouwd; strip gebruikt echte actieve taskmetadata en selecteert via bestaande flow.
+- [x] Metadata-gedreven verdwijnen na clear/done — status: gebouwd in codepad; bestaande clear/done cleanup blijft bron en helper toont alleen actieve metadata.
+- [x] Tests en plugin apply — status: gebouwd; plugin typecheck/test/apply zijn groen.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- `activeAgentUiState` centraliseert chip-, runtime- en sinds-labels zodat Board/List geen eigen statusinterpretatie bevatten.
+- List inline agent chip wordt expliciet overridet zodat hij niet door generieke list-copy clamp styling wordt vervormd.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: active-agent helper + tests toevoegen.
+- [x] Blok 3: Board/List UI en CSS polish implementeren.
+- [x] Blok 4: gerichte verify, plugin apply en task/docs afronden.
+
+## Concrete checklist
+
+- [x] Helper voor actieve-agent UI-state toevoegen en testen.
+- [x] Board card active-agent class/chip/summary aansluiten.
+- [x] List desktop/mobile active-agent class/chip/summary aansluiten.
+- [x] CSS voor rustige live-agent highlight toevoegen.
+- [x] Typecheck/test/apply uitvoeren.
+- [x] Taskflow/docs bundle afronden en task naar done verplaatsen.
+
+## Acceptance criteria
+
+- [x] Een taak met echte actieve `active_agent*` metadata is in Board duidelijk herkenbaar.
+- [x] Dezelfde taak is in List desktop en mobile duidelijk herkenbaar.
+- [x] De live-agent strip verschijnt alleen wanneer actieve agentmetadata bestaat en opent/selecteert de taak.
+- [x] Na clear/done verdwijnt de indicator na snapshot refresh.
+- [x] Bestaande Board/List interacties blijven functioneel gelijk.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- [x] `npm --prefix tools/budio-workspace-vscode run typecheck`
+- [x] `npm --prefix tools/budio-workspace-vscode run test`
+- [x] `npm --prefix tools/budio-workspace-vscode run apply:workspace`
+- [x] `npm run taskflow:verify`
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] `npm run docs:bundle`
+- [x] `npm run docs:bundle:verify`
+- [x] Screenshot-helper smoke: `/tmp/budio-active-agent-board.png` bevestigd met foreground `Code — Budio Workspace: List — persoonlijke-assistent-app`; visuele strip stond niet bovenaan in beeld door behouden scrollpositie.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: actieve agenttaken duidelijk zichtbaar maken in Board en List via echte `active_agent*` metadata, inclusief compacte live-agent strip en near-realtime watcher/background refresh.
+- Toegevoegde verbeteringen: helper centraliseert live-labels en List inline-chip styling is gehard tegen generieke span-clamp.
+- Afgerond: helper + tests, Board-card highlight, List desktop/mobile highlight, live-agent strip, plugin apply en repo-verificaties zijn uitgevoerd.
+- Open / blocked: geen open functionele punten; screenshot-helper capture bevestigde plugin focus maar niet de bovenkant van de view door retained scrollpositie.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-task-detail-edit-polish-agent-claiming.md`
+- `tools/budio-workspace-vscode/src/tasks/task-ux.ts`
+- `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
+
+
+## Commits
+
+- 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+```
+
+---
+
+## Budio Workspace active agent claim herstel voor AIQS Assist
+
+- Path: `docs/project/25-tasks/done/budio-workspace-active-agent-claim-herstel-aiqs-assist.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-budio-workspace-active-agent-claim-herstel-aiqs-assist
+title: Budio Workspace active agent claim herstel voor AIQS Assist
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: Herstel ontbrekende active-agent metadata op de lopende AIQS Assist taak zodat Board/List de echte Codex-activiteit tonen.
+tags: [plugin, vscode, taskflow, agent-metadata]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: ""
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 8
+---
+
+
+
+## Probleem / context
+
+De gebruiker ziet de taak `AIQS Assist laagbewuste prompt review` niet als actieve agenttaak in Board/List, terwijl er wel een Codex-run aan werkt.
+
+Diagnose: de taakfile bestaat en staat op `in_progress`, maar bevat geen `active_agent*` frontmatter. De nieuwe plugin-awareness werkt bewust alleen metadata-gedreven en toont daarom correct geen fake activiteit.
+
+## Gewenste uitkomst
+
+De lopende AIQS Assist taak krijgt echte `active_agent*` metadata, zodat Board/List de taak near-realtime als actief kunnen tonen via de bestaande plugin-highlight en live-agent strip.
+
+## User outcome
+
+De gebruiker ziet de actieve Codex-run op `AIQS Assist laagbewuste prompt review` terug in het overzicht, zonder dat de plugin fake status hoeft te verzinnen.
+
+## Functional slice
+
+Kleine taskflow/data-fix: ontbrekende active-agent metadata herstellen op de lopende AIQS Assist taskfile en verifiëren dat taskflow geldig blijft.
+
+## Entry / exit
+
+- Entry: AIQS Assist taskfile staat op `in_progress` zonder actieve agentmetadata.
+- Exit: AIQS Assist taskfile bevat `active_agent*` metadata met status `running`; deze bugfix-taak is afgerond zonder actieve agentmetadata.
+
+## Happy flow
+
+1. Inspecteer de AIQS Assist taskfile.
+2. Bevestig dat `active_agent*` ontbreekt.
+3. Voeg echte Codex active-agent metadata toe.
+4. Verifieer taskflow.
+
+## Non-happy flows
+
+- Empty state: als geen actieve metadata bestaat, toont plugin niets; dat blijft correct.
+- Permission denied / unavailable: niet van toepassing.
+- Validation / unsupported state: onbekende `active_agent_status` blijft niet actief; deze fix gebruikt `running`.
+- Failure / retry / cancel: bij taskflow-fout eerst metadata/frontmatter herstellen.
+
+## UX / copy
+
+- Geen UI-copy wijziging.
+- De bestaande Board/List copy `Codex actief` en live-agent strip blijven leidend.
+
+## Data / IO
+
+- Input: `docs/project/25-tasks/open/aiqs-assist-laagbewuste-prompt-review.md`.
+- Output: toegevoegde `active_agent*` frontmatter.
+- Opslag/API/service/file-impact: alleen taskfilemetadata en taskflow/docs-bundles.
+- Statussen: AIQS-taak blijft `in_progress`; bugfix-taak gaat naar `done`.
+
+## Waarom nu
+
+De net gebouwde active-agent awareness lijkt kapot zolang actieve agentruns hun taskfile niet claimen. Deze concrete lopende taak moet direct zichtbaar worden.
+
+## In scope
+
+- AIQS Assist taskfile active-agent metadata herstellen.
+- Taskflow verifiëren.
+
+## Buiten scope
+
+- AIQS Assist implementatie wijzigen.
+- Nieuwe plugin UI of automatische fake fallback toevoegen.
+- Andere open tasks claimen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Los op dat `AIQS Assist laagbewuste prompt review` niet zichtbaar wordt als actieve Codex-taak in Board/List.
+
+## Expliciete user requirements / detailbehoud
+
+- De gebruiker meldt dat er nu een Codex-agent met deze taak bezig is.
+- Die actieve taak moet in het overzicht zichtbaar worden.
+- Geen fake interface; echte metadata blijft bron.
+
+## Status per requirement
+
+- [x] AIQS Assist taskfile bevat actieve Codex metadata — status: gebouwd; `active_agent: Codex` en `active_agent_status: running` staan in de taskfile.
+- [x] Taskflow blijft geldig — status: gebouwd; taskflow verify is groen.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Lokale read-check via de gebouwde plugin-datalayer bevestigt dat de taskkaart `activeAgentUiState(...).isActive === true` oplevert.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: task inspecteren en root-cause bevestigen.
+- [x] Blok 2: metadata herstellen.
+- [x] Blok 3: verify en task afronden.
+
+## Concrete checklist
+
+- [x] `active_agent*` toevoegen aan AIQS Assist taskfile.
+- [x] `npm run taskflow:verify` uitvoeren.
+- [x] Bugfix-task afronden en docs bundlen.
+
+## Acceptance criteria
+
+- [x] `AIQS Assist laagbewuste prompt review` bevat `active_agent: Codex`.
+- [x] `active_agent_status` staat op `running`.
+- [x] Bugfix-task eindigt zonder actieve agentmetadata.
+- [x] Taskflow verify is groen.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- [x] `npm run taskflow:verify`
+- [x] `npm run docs:bundle`
+- [x] `npm run docs:bundle:verify`
+- [x] Lokale plugin-datalayer read-check: AIQS Assist kaart geeft `isActive: true`, `chipLabel: Codex actief`.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: ontbrekende active-agent metadata voor de lopende AIQS Assist taak herstellen.
+- Toegevoegde verbeteringen: read-check toegevoegd om te bewijzen dat de plugin-datalayer de taak nu actief ziet.
+- Afgerond: AIQS Assist taskfile is geclaimd als actieve Codex-run en taskflow is groen.
+- Open / blocked: geen; zichtbaarheid in de webview volgt via bestaande watcher/refresh.
+
+## Relevante links
+
+- `docs/project/25-tasks/open/aiqs-assist-laagbewuste-prompt-review.md`
+- `docs/project/25-tasks/done/budio-workspace-active-agent-awareness-board-list.md`
+
+
+## Commits
+
+- 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+```
+
+---
+
+## Budio Workspace auto active-agent metadata voor Codex taken
+
+- Path: `docs/project/25-tasks/done/budio-workspace-auto-active-agent-metadata-voor-codex-taken.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-22
+
+```md
+---
+id: task-budio-workspace-auto-active-agent-metadata-voor-codex-taken
+title: Budio Workspace auto active-agent metadata voor Codex taken
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-22
+summary: Maak actieve agentmetadata automatisch bij in_progress statusovergangen en verwijder handmatige claim/stop acties uit task detail.
+tags: [plugin, vscode, taskflow, agent-metadata, codex]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: ""
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 9
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+
+## Probleem / context
+
+`active_agent*` metadata wordt nu niet betrouwbaar automatisch gezet wanneer Codex aan een taak werkt. De plugin kan actieve taken wel tonen, maar dat werkt alleen als de taak handmatig via `Claim als actief` of via directe frontmatter-mutatie is geclaimd.
+
+De gebruiker wil de handmatige opties uit de UI halen en de metadata automatisch laten volgen uit echte taakstatus en taskflow.
+
+## Gewenste uitkomst
+
+Wanneer een taak via de Budio Workspace plugin naar `in_progress` gaat, schrijft de plugin automatisch `active_agent*` metadata. Wanneer een taak `in_progress` verlaat, worden die velden automatisch gewist. Codex buiten de plugin krijgt een kleine CLI-helper om dezelfde metadata betrouwbaar te claimen/clearen.
+
+## User outcome
+
+De gebruiker ziet in Board/List/Jarvis automatisch welke Codex-taak actief is, zonder handmatig claimen of stoppen in de task detail UI.
+
+## Functional slice
+
+Een centrale repository/taskflow slice voor automatische active-agent metadata:
+
+1. plugin statusovergangen claimen/clearen automatisch;
+2. handmatige claim/stop knoppen verdwijnen uit task detail;
+3. CLI-helper claimt/cleart taskfiles voor Codex-runs buiten plugin;
+4. workflowdocs/skill leggen de automatische route vast.
+
+## Entry / exit
+
+- Entry: gebruiker/agent zet een taak naar `in_progress` via plugin of CLI-helper.
+- Exit: taskfile bevat echte `active_agent*` metadata; bij status weg van `in_progress` of closeout zijn de velden leeg/null.
+
+## Happy flow
+
+1. Gebruiker sleept een taak naar `In Progress` of wijzigt status in task detail.
+2. Repository schrijft status, sortering en active-agent metadata in één write.
+3. Board/List/Jarvis refreshen en tonen `Codex actief`.
+4. Gebruiker zet taak naar `Review` of `Done`.
+5. Repository wist active-agent metadata en de highlight verdwijnt.
+
+## Non-happy flows
+
+- Empty state: taak zonder active-agent metadata wordt niet als actieve agent getoond.
+- Permission denied / unavailable: lokale file-write fouten blijven via bestaande plugin save-fout zichtbaar.
+- Validation / unsupported state: onbekende status bestaat niet buiten bestaande taskstatus enum.
+- Failure / retry / cancel: stale expectedVersion blijft via bestaande repository-conflict flow lopen.
+
+## UX / copy
+
+- Verwijder task-detail knoppen `Claim als actief` en `Stop agent`.
+- Agent-blok blijft read-only en toont bestaande metadata.
+- Als geen agentmetadata bestaat, toon compact `Automatisch via in_progress`.
+- Board/List/Jarvis copy en highlights blijven ongewijzigd.
+
+## Data / IO
+
+- Input: bestaande taskstatusmutaties via repository en CLI-helper `claim|clear <taskfile>`.
+- Output: bestaande `active_agent*` frontmattervelden.
+- Opslag/API/service/file-impact: lokale markdown taskfiles; geen nieuwe schema’s of remote calls.
+- Statussen: `in_progress` claimt; status weg van `in_progress` cleart; `done` cleanup blijft verplicht.
+
+## Waarom nu
+
+De active-agent zichtbaarheid is gebouwd, maar valt om als agents de metadata niet consequent claimen. Automatiseren voorkomt handmatige stappen en voorkomt dat echte Codex-runs onzichtbaar blijven.
+
+## In scope
+
+- Repository auto claim/clear bij plugin statusovergangen.
+- Create-as-in-progress auto claim.
+- Task-detail UI knoppen verwijderen.
+- CLI-helper `scripts/taskflow-agent-state.mjs`.
+- Workflowdocs/skill updaten.
+- Tests en plugin apply.
+
+## Buiten scope
+
+- Process-level heartbeat of live agentstream.
+- Board/List/Jarvis redesign.
+- Nieuwe metadatavelden of markdown-schema.
+- AIQS Assist implementatie wijzigen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Active-agent metadata automatisch bij statusovergangen.
+- Handmatige claim/stop UI verwijderen.
+- Kleine taskflow CLI-helper voor Codex buiten plugin.
+- Workflowdocs/skill aanpassen.
+- Board/List/Jarvis blijven metadata-gedreven.
+
+## Expliciete user requirements / detailbehoud
+
+- Codex werkt aan taak moet automatisch metadata bijwerken.
+- Handmatige opties mogen eruit.
+- Geen fake heartbeat/progress in deze slice.
+- Bestaande `active_agent*` velden blijven leidend.
+
+## Status per requirement
+
+- [x] Plugin status naar `in_progress` claimt automatisch — status: gebouwd; repository statusovergang en drag/drop claimen via agent settings.
+- [x] Plugin status weg van `in_progress` cleart automatisch — status: gebouwd; repository statusovergang en done cleanup wissen metadata.
+- [x] Handmatige task-detail knoppen verwijderd — status: gebouwd; detail toont alleen read-only agentdiagnose.
+- [x] CLI-helper claim/clear toegevoegd — status: gebouwd; `scripts/taskflow-agent-state.mjs` met tests.
+- [x] Workflowdocs/skill bijgewerkt — status: gebouwd; skill, dev workflow en AGENTS verwijzen naar claim/clear route.
+- [x] Tests en plugin apply — status: gebouwd; plugin tests, CLI-helpertest, root verify en apply zijn groen.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Repository gebruikt agentdefaults wanneer hij buiten VS Code zonder workspace settings wordt aangeroepen.
+- New-task writer accepteert active-agent metadata zodat `createTask(... in_progress)` geen tweede write nodig heeft.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: repository auto claim/clear + tests.
+- [x] Blok 3: task-detail UI cleanup + CLI-helper.
+- [x] Blok 4: workflowdocs/skill, verify, apply en afronding.
+
+## Concrete checklist
+
+- [x] Repository constructor/settings uitbreiden voor agent defaults.
+- [x] Statusovergang naar `in_progress` claimt active-agent metadata.
+- [x] Statusovergang weg van `in_progress` cleart active-agent metadata.
+- [x] `createTask(... in_progress)` claimt active-agent metadata.
+- [x] Task-detail handmatige knoppen verwijderen.
+- [x] `scripts/taskflow-agent-state.mjs` toevoegen.
+- [x] Unit-tests toevoegen/aanpassen.
+- [x] Workflowdocs/skill aanpassen.
+- [x] Verify/apply/docs uitvoeren.
+
+## Acceptance criteria
+
+- [x] `ready -> in_progress` via detail save schrijft `active_agent: Codex`.
+- [x] Drag/drop naar `in_progress` schrijft `active_agent: Codex`.
+- [x] `in_progress -> review/done/blocked/ready/backlog` wist active-agent velden.
+- [x] Nieuw aangemaakte `in_progress` taak wordt automatisch geclaimd.
+- [x] Task detail toont geen `Claim als actief` of `Stop agent`.
+- [x] CLI-helper kan claimen en clearen zonder secrets.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- [x] `npm --prefix tools/budio-workspace-vscode run typecheck`
+- [x] `npm --prefix tools/budio-workspace-vscode run test`
+- [x] `npm --prefix tools/budio-workspace-vscode run apply:workspace`
+- [x] `node --test scripts/taskflow-agent-state.test.mjs`
+- [x] `npm run taskflow:verify`
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] `npm run docs:bundle`
+- [x] `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: automatische active-agent metadata bij plugin statusovergangen, handmatige claim/stop UI verwijderen, CLI-helper toevoegen en workflowdocs bijwerken.
+- Toegevoegde verbeteringen: repositorydefaults voor niet-VS Code gebruik en writer-support voor `createTask(... in_progress)` zonder tweede write.
+- Afgerond: alle planpunten zijn gebouwd en geverifieerd met plugin typecheck/test, CLI-helpertest, plugin apply, taskflow verify, lint en root typecheck.
+- Open / blocked: geen blockers; process-level heartbeat blijft bewust buiten scope.
+
+## Relevante links
+
+- `docs/project/25-tasks/done/budio-workspace-active-agent-awareness-board-list.md`
+- `tools/budio-workspace-vscode/src/tasks/repository.ts`
+- `tools/budio-workspace-vscode/src/tasks/agent-metadata.ts`
+- `.agents/skills/task-status-sync-workflow/SKILL.md`
+
+
+## Commits
+
+- 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+```
+
+---
+
 ## Budio Workspace hierarchy met epics, subtasks en dependencies
 
 - Path: `docs/project/25-tasks/done/budio-workspace-hierarchy-epics-subtasks-dependencies.md`
@@ -840,8 +1863,9 @@ depends_on: []
 follows_after: []
 task_kind: task
 due_date: null
-sort_order: 1
+sort_order: 10
 ---
+
 
 
 
@@ -995,8 +2019,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 11
 ---
+
 
 
 # Budio Workspace Jarvis assets mapping melding oplossen
@@ -1173,8 +2198,9 @@ follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 12
 ---
+
 
 
 # Budio Workspace Jarvis chat-first reset met ZIP assets
@@ -1397,8 +2423,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 13
 ---
+
 
 
 # Budio Workspace Jarvis echte chat en push-to-talk
@@ -1627,8 +2654,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 14
 ---
+
 
 
 # Budio Workspace Jarvis env en live agent awareness fix
@@ -1834,8 +2862,9 @@ follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 15
 ---
+
 
 
 # Budio Workspace Jarvis founder-overview command room redesign
@@ -2056,8 +3085,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 16
 ---
+
 
 
 # Budio Workspace Jarvis hardening echte command room
@@ -2294,8 +3324,9 @@ follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 17
 ---
+
 
 
 # Budio Workspace Jarvis height en borderless core polish
@@ -2480,8 +3511,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 18
 ---
+
 
 
 # Budio Workspace Jarvis mic settings en runtime test fix
@@ -2665,8 +3697,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 19
 ---
+
 
 
 # Budio Workspace Jarvis microfoon permission flow fix
@@ -2847,8 +3880,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 20
 ---
+
 
 
 # Budio Workspace Jarvis praatbare eigen view
@@ -3074,8 +4108,9 @@ follows_after: ""
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 21
 ---
+
 
 
 # Budio Workspace Jarvis responsive cinematic polish
@@ -3257,8 +4292,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 22
 ---
+
 
 
 # Budio Workspace Jarvis runtime fix chat en mic end-to-end
@@ -3476,8 +4512,9 @@ follows_after: ""
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 23
 ---
+
 
 
 ## Probleem / context
@@ -3690,7 +4727,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-06-22
-summary: "Fix de task-detail blank-screen regressie en maak VS Code plugin screenshots betrouwbaar bewijsbaar."
+summary: Fix de task-detail blank-screen regressie en maak VS Code plugin screenshots betrouwbaar bewijsbaar.
 tags: [plugin, vscode, task-detail, regression, screenshot]
 workstream: plugin
 epic_id: null
@@ -3700,8 +4737,10 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 24
 ---
+
+
 
 ## Probleem / context
 
@@ -3852,6 +4891,11 @@ Fix Plan: Task Detail Blank Screen + Reliable VS Code Plugin Screenshot Proof. S
 - `docs/project/25-tasks/done/budio-workspace-task-detail-edit-polish-agent-claiming.md`
 - `tools/budio-workspace-vscode/`
 - `scripts/capture-vscode-screenshot.mjs`
+
+
+## Commits
+
+- 2026-06-22T14:17:39+02:00 — Fix Budio workspace task detail stability
 ```
 
 ---
@@ -3874,7 +4918,7 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-06-22
-summary: "Verbeter de Budio Workspace task-detail edit UI en voeg expliciete agent-claim metadata toe."
+summary: Verbeter de Budio Workspace task-detail edit UI en voeg expliciete agent-claim metadata toe.
 tags: [plugin, vscode, task-detail, agent-metadata]
 workstream: plugin
 epic_id: null
@@ -3884,8 +4928,10 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 25
 ---
+
+
 
 ## Probleem / context
 
@@ -4036,6 +5082,11 @@ Implementeer het plan “Budio Workspace Task Detail Edit Polish + Agent Claimin
 ## Relevante links
 
 - `tools/budio-workspace-vscode/`
+
+
+## Commits
+
+- 2026-06-22T14:17:39+02:00 — Fix Budio workspace task detail stability
 ```
 
 ---
@@ -4068,8 +5119,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 26
 ---
+
 
 
 ## Probleem / context
@@ -4245,8 +5297,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 27
 ---
+
 
 
 ## Probleem / context
@@ -4413,8 +5466,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 28
 ---
+
 
 
 ## Probleem / context
@@ -4636,8 +5690,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 29
 ---
+
 
 
 ## Probleem / context
@@ -4830,8 +5885,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: null
+sort_order: 72
 ---
+
 
 
 ## Probleem / context
@@ -5012,8 +6068,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 30
 ---
+
 
 
 # Codex browser-testworkflow expliciteren
@@ -5185,8 +6242,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 31
 ---
+
 
 
 # Codex-config veilig aanscherpen voor Budio development
@@ -5404,8 +6462,9 @@ follows_after: [task-moment-detail-foto-upload-android-chrome-prepare-regressie]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 32
 ---
+
 
 
 ## Probleem / context
@@ -5585,8 +6644,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 2
+sort_order: 61
 ---
+
 
 
 
@@ -5772,8 +6832,9 @@ summary: "Local web development kan optioneel een specifieke browser openen via 
 tags: [local-dev, tooling, expo]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 33
 ---
+
 
 ## Probleem / context
 
@@ -5840,7 +6901,7 @@ Op de nieuwe Mac opent Expo web nu via de standaardbrowser. De gebruiker wil Cha
 ```md
 ---
 id: task-docs-bundle-en-verify-race-condition-voorkomen
-title: docs:bundle en docs:bundle:verify race condition structureel voorkomen
+title: "docs:bundle en docs:bundle:verify race condition structureel voorkomen"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p2
@@ -5850,8 +6911,9 @@ summary: "Voorkom structureel dat docs:bundle en docs:bundle:verify tegelijk kun
 tags: [workflow, docs, verify, locking]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 34
 ---
+
 
 # docs:bundle en docs:bundle:verify race condition structureel voorkomen
 
@@ -5933,8 +6995,10 @@ summary: "Herbeoordeling afgerond: metadata, source-of-truth matrix en maximaal 
 tags: [docs, structure, metadata, visual-language]
 workstream: idea
 due_date: null
-sort_order: 2
+sort_order: 62
 ---
+
+
 
 
 # Docs folderstructuur en visual language herbeoordelen na metadatafase
@@ -6033,6 +7097,8 @@ Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een ko
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-22T14:10:48+02:00 — docs: close docs structure review task
 ```
 
 ---
@@ -6049,7 +7115,7 @@ Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een ko
 ```md
 ---
 id: task-docs-ux-audience-taxonomie-uploadbundels
-title: Docs UX, audience-metadata en uploadbundels opschonen
+title: "Docs UX, audience-metadata en uploadbundels opschonen"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p2
@@ -6059,8 +7125,9 @@ summary: "Maak de docs menselijker en duidelijker met audience-metadata, een por
 tags: [docs, upload, tooling, obsidian, markdown]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 35
 ---
+
 
 # Docs UX, audience-metadata en uploadbundels opschonen
 
@@ -6155,7 +7222,7 @@ Human-facing docs krijgen waar zinvol een Budio Terminal-stijl met terminalpanel
 ```md
 ---
 id: task-entry-photo-gallery-qa-basis
-title: Entry photo gallery QA-basis: unit, smoke en end-user tests
+title: "Entry photo gallery QA-basis: unit, smoke en end-user tests"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -6165,8 +7232,9 @@ summary: "Zet een reproduceerbare QA-basis neer voor entry photo gallery: unit-t
 tags: [qa, tests, gallery, photos, smoke]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 36
 ---
+
 
 ## Probleem / context
 
@@ -6259,8 +7327,9 @@ summary: "Upgrade GitHub Actions naar Node-24-compatibele action-versies, verwij
 tags: [github, actions, node, npm, hardening]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 37
 ---
+
 
 ## Probleem / context
 
@@ -6347,8 +7416,9 @@ summary: "Zoek bron-first uit of de lokale Node/NPM-versie, GitHub Actions Node 
 tags: [github, deployment, node, npm, diagnostics]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 38
 ---
+
 
 ## Probleem / context
 
@@ -6457,8 +7527,9 @@ summary: "Zet een persoonlijk local-first HME-ME researchspoor veilig op buiten 
 tags: [personal-research, hme-me, local-first, downloader-spike, privacy]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 39
 ---
+
 
 
 
@@ -6685,8 +7756,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 40
 ---
+
 
 
 
@@ -6908,8 +7980,9 @@ summary: "Werk een nieuw standalone idee uit voor Budio Workspace op basis van a
 tags: [idea, plugin, workspace, linear, workflow]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 41
 ---
+
 
 ## Probleem / context
 
@@ -6995,8 +8068,9 @@ summary: "Lokale magic-link loginflow reproduceerbaar gemaakt met smoke-user pro
 tags: [auth, smoke-test, local, mailpit]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 65
 ---
+
 
 # Lokale auth smoke workflow hardenen (magic-link + Mailpit)
 
@@ -7082,8 +8156,9 @@ summary: "De nieuwe MacBook heeft een werkende lokale Budio developmentomgeving 
 tags: [local-dev, onboarding, setup]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 42
 ---
+
 
 ## Probleem / context
 
@@ -7180,8 +8255,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 43
 ---
+
 
 
 ## Probleem / context
@@ -7361,8 +8437,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 44
 ---
+
 
 
 ## Probleem / context
@@ -7525,8 +8602,9 @@ summary: "De productie-reorderbug in moment detail is bronvast gereproduceerd, o
 tags: [moment-detail, photos, production, reorder, diagnostics]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 66
 ---
+
 
 
 ## Probleem / context
@@ -7643,8 +8721,9 @@ summary: Client-side prepare-step voor moment detail foto-upload is aangescherpt
 tags: [moment-detail, photos, production, upload, diagnostics]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 45
 ---
+
 
 
 
@@ -7886,7 +8965,7 @@ Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor
 ```md
 ---
 id: task-moment-entry-fotos-galerij
-title: Moment detail foto's toevoegen met beveiligde galerij (max 5)
+title: "Moment detail foto's toevoegen met beveiligde galerij (max 5)"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p1
@@ -7896,8 +8975,9 @@ summary: "Op de moment detailpagina een rustige fotoflow toevoegen: camera/uploa
 tags: [moment-detail, photos, security, ui]
 workstream: app
 due_date: null
-sort_order: 2
+sort_order: 63
 ---
+
 
 # Moment detail foto's toevoegen met beveiligde galerij (max 5)
 
@@ -7984,8 +9064,9 @@ summary: "De fullscreen momentfoto-viewer op mobiel slimmer laten snappen per sw
 tags: [moment-detail, photos, markdown, ui, mobile]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 67
 ---
+
 
 # Moment fotoviewer swipe/zoom verbeteren en markdownstructuur tonen
 
@@ -8077,8 +9158,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 46
 ---
+
 
 
 ## Probleem / context
@@ -8290,8 +9372,9 @@ summary: Het gedeelde moments-overzicht toont een primaire foto-thumb binnen de 
 tags: [moments-overzicht, photos, ui, viewer]
 workstream: app
 due_date: null
-sort_order: 2
+sort_order: 64
 ---
+
 
 
 
@@ -8491,8 +9574,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 12
+sort_order: 70
 ---
+
 
 
 ## Probleem / context
@@ -8670,8 +9754,9 @@ summary: "Nieuwe OpenAI-bronnen over codex automations en use-case scaling verta
 tags: [idea, strategy, agents, openai]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 47
 ---
+
 
 # OpenAI Codex Automations en AI use-case scaling vertalen naar ideeën
 
@@ -8746,8 +9831,9 @@ summary: "We vertalen concrete inzichten uit OpenAI Privacy Filter naar een best
 tags: [idea, privacy, openai, security]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 48
 ---
+
 
 # OpenAI Privacy Filter-idee vertalen naar Budio privacyplan
 
@@ -8828,8 +9914,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 49
 ---
+
 
 
 ## Probleem / context
@@ -9170,8 +10257,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 50
 ---
+
 
 
 
@@ -9360,12 +10448,13 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: ad-hoc user request
 updated_at: 2026-04-23
-summary: "Herstel een regressie waarbij slepen/sorteren van tasks met de muis niet meer werkt in board en list view."
+summary: Herstel een regressie waarbij slepen/sorteren van tasks met de muis niet meer werkt in board en list view.
 tags: [plugin, ui, bugfix]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 51
 ---
+
 
 ## Probleem / context
 
@@ -9428,8 +10517,9 @@ summary: "Leg expliciete task-classificatie vast in template/instructies en toon
 tags: [plugin, tasks, ui, workflow]
 workstream: plugin
 due_date: null
-sort_order: 4
+sort_order: 69
 ---
+
 
 ## Probleem / context
 
@@ -9512,8 +10602,9 @@ summary: "Task overview list rail staat weer links naast titel/description; deta
 tags: [plugin, ui, bugfix]
 workstream: plugin
 due_date: null
-sort_order: null
+sort_order: 73
 ---
+
 
 ## Probleem / context
 
@@ -9592,8 +10683,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 52
 ---
+
 
 
 # Post-commit taskfile-loop voorkomen zonder commitlogging te verliezen
@@ -9813,8 +10905,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: null
+sort_order: 74
 ---
+
 
 
 
@@ -9999,7 +11092,7 @@ Het goedgekeurde plan:
 ```md
 ---
 id: task-programmeer-architectuur-guardrails-helper-extractie
-title: Programmeer-architectuur guardrails, helper-extractie en refactorbeleid
+title: "Programmeer-architectuur guardrails, helper-extractie en refactorbeleid"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p2
@@ -10009,8 +11102,9 @@ summary: "Leg een compacte programmeer-architectuur skill en workflow vast zodat
 tags: [architecture, skills, refactor, qa, gallery]
 workstream: app
 due_date: null
-sort_order: 1
+sort_order: 53
 ---
+
 
 ## Probleem / context
 
@@ -10101,8 +11195,9 @@ summary: "Leg de repo-local Codex MCP local/remote-ro workflow expliciet vast in
 tags: [codex, mcp, local-development, workflow, docs]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 54
 ---
+
 
 ## Probleem / context
 
@@ -10182,8 +11277,9 @@ summary: "Maak een repo-lokale Codex MCP-config met vaste servers voor context7/
 tags: [codex, mcp, supabase, tooling, workflow]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 55
 ---
+
 
 ## Probleem / context
 
@@ -10264,8 +11360,9 @@ summary: "Maak een vaste roadmap-flow met templates, agent-uitvoerfasering, een 
 tags: [roadmap, workflow, planning]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 56
 ---
+
 
 ## Probleem / context
 
@@ -10370,8 +11467,9 @@ follows_after: [task-hook-fix-publicatie-en-post-push-review]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 1
+sort_order: 57
 ---
+
 
 
 # Task commit hook rename-case fixen
@@ -10533,12 +11631,13 @@ phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
 updated_at: 2026-04-23
-summary: "In productie blijft de gesleepte thumbnail in de galerij visueel steken of sprint terug; de reorder-interactie moet vanaf de thumb zelf stabiel werken en de visuele indicatie blijft icon-only."
+summary: In productie blijft de gesleepte thumbnail in de galerij visueel steken of sprint terug; de reorder-interactie moet vanaf de thumb zelf stabiel werken en de visuele indicatie blijft icon-only.
 tags: [bug, moment-detail, photos, thumbnail]
 workstream: app
 due_date: null
-sort_order: 3
+sort_order: 68
 ---
+
 
 ## Probleem / context
 
@@ -10630,8 +11729,9 @@ summary: "Voeg in docs/upload een volledige tasks bundle toe (open + done) en ee
 tags: [docs, upload, tasks, bundle]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 58
 ---
+
 
 # Upload bundles uitbreiden met volledige tasks en apart full archive
 
@@ -10712,8 +11812,9 @@ summary: "VS Code heeft minimale Budio editor-support, Markdown/taskfile support
 tags: [local-dev, vscode, mcp, tooling]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 59
 ---
+
 
 ## Probleem / context
 
@@ -10803,8 +11904,9 @@ summary: "Alle bestaande taskfiles krijgen een expliciete workstream-classificat
 tags: [tasks, docs, workflow]
 workstream: plugin
 due_date: null
-sort_order: 1
+sort_order: 60
 ---
+
 
 ## Probleem / context
 

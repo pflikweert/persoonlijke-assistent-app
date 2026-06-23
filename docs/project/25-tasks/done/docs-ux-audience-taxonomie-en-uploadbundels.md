@@ -1,6 +1,6 @@
 ---
 id: task-docs-ux-audience-taxonomie-uploadbundels
-title: Docs UX, audience-metadata en uploadbundels opschonen
+title: "Docs UX, audience-metadata en uploadbundels opschonen"
 status: done
 phase: transitiemaand-consumer-beta
 priority: p2
@@ -10,8 +10,10 @@ summary: "Maak de docs menselijker en duidelijker met audience-metadata, een por
 tags: [docs, upload, tooling, obsidian, markdown]
 workstream: idea
 due_date: null
-sort_order: 1
+sort_order: 35
 ---
+
+
 
 # Docs UX, audience-metadata en uploadbundels opschonen
 
@@ -90,3 +92,8 @@ Human-facing docs krijgen waar zinvol een Budio Terminal-stijl met terminalpanel
 - `docs/README.md`
 - `docs/setup/step-0-readiness.md`
 - `scripts/docs/build-docs-bundles.mjs`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
