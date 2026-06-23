@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-22T16:10:27.541Z
-Source Commit: 320c3c0
+Build Timestamp (UTC): 2026-06-23T10:26:29.643Z
+Source Commit: 6a4b117
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -177,6 +177,7 @@ sort_order: 12
 
 
 
+
 # 1.2E beta-readiness expliciteren en afronden
 
 ## Probleem / context
@@ -255,6 +256,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -289,6 +292,7 @@ spec_ready: true
 due_date: null
 sort_order: 5
 ---
+
 
 
 
@@ -488,6 +492,8 @@ Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interfa
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -2439,6 +2445,7 @@ sort_order: 10
 
 
 
+
 # Admin/founder meeting capture — web route en IA
 
 ## Probleem / context
@@ -2606,6 +2613,8 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -2787,6 +2796,7 @@ spec_ready: true
 due_date: null
 sort_order: 7
 ---
+
 
 
 
@@ -3068,6 +3078,8 @@ Reviewbevindingen:
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-22T14:07:06+02:00 — fix: unify AIQS admin workspace controls
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3209,6 +3221,7 @@ active_agent_since: "2026-06-22T15:26:26Z"
 active_agent_status: running
 active_agent_settings: default
 ---
+
 
 
 
@@ -3436,6 +3449,8 @@ Belangrijkste punten:
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3470,6 +3485,7 @@ spec_ready: true
 due_date: null
 sort_order: 4
 ---
+
 
 
 
@@ -3732,6 +3748,8 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3760,6 +3778,7 @@ workstream: aiqs
 due_date: null
 sort_order: 15
 ---
+
 
 
 
@@ -3885,6 +3904,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -4030,6 +4051,7 @@ spec_ready: true
 due_date: null
 sort_order: 8
 ---
+
 
 
 
@@ -4319,6 +4341,8 @@ Live-readiness notes:
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -4830,6 +4854,7 @@ sort_order: 6
 
 
 
+
 ## Probleem / context
 
 Op `2026-04-28` trad opnieuw een productiebug op bij foto toevoegen aan een bestaand moment via Android Chrome en de Google Photos / Android photo picker. Desktop Chrome werkt in dezelfde flow wel.
@@ -5108,6 +5133,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5142,6 +5169,7 @@ spec_ready: true
 due_date: null
 sort_order: 11
 ---
+
 
 
 
@@ -5356,6 +5384,8 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5558,6 +5588,7 @@ sort_order: 9
 
 
 
+
 ## Probleem / context
 
 Tijdens agent-uitvoering ontstaat soms drift tussen het oorspronkelijke goedgekeurde plan en de actuele uitvoerfocus. Zodra er tijdens bouwen correcties, regressies of polish-rondes bijkomen, verschuift de aandacht naar het laatste subprobleem. Daardoor kan een agent ten onrechte denken dat het werk "klaar" is, terwijl onderdelen uit het oorspronkelijke plan nog open staan.
@@ -5658,6 +5689,8 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5686,6 +5719,7 @@ workstream: app
 due_date: null
 sort_order: 13
 ---
+
 
 
 
@@ -5802,6 +5836,8 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5830,6 +5866,7 @@ workstream: plugin
 due_date: null
 sort_order: 14
 ---
+
 
 
 
@@ -6245,6 +6282,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -6567,6 +6606,7 @@ sort_order: 3
 
 
 
+
 ## Probleem / context
 
 De hoofdmenu-link `Instellingen` voelt alsof hij naar de laatst geopende settings/admin pagina gaat. Bronoorzaak: settings- en adminsubroutes geven `currentRouteKey="settings"` aan `FullscreenMenuOverlay`, waarna de menu-handler klikken op dezelfde key negeert. Daardoor sluit het menu zonder navigatie.
@@ -6721,6 +6761,8 @@ De huidige navigatie blokkeert betrouwbaar admingebruik en voelt alsof menu/inst
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---

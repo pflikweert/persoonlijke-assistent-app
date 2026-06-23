@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-22T16:10:27.541Z
-Source Commit: 320c3c0
+Build Timestamp (UTC): 2026-06-23T10:26:29.643Z
+Source Commit: 6a4b117
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 75
+- Totaal tasks opgenomen: 76
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -44,6 +44,7 @@ workstream: idea
 due_date: null
 sort_order: 2
 ---
+
 
 
 
@@ -94,6 +95,11 @@ Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een smalle br
 - `docs/project/20-planning/20-active-phase.md`
 - `docs/project/20-planning/30-now-next-later.md`
 - `docs/project/20-planning/40-deviations-and-decisions.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -128,6 +134,7 @@ spec_ready: true
 due_date: null
 sort_order: 3
 ---
+
 
 
 
@@ -280,6 +287,8 @@ Operationele projectsetup: idea-doc, epic-doc, taskbundle, dependencies en verif
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -314,6 +323,7 @@ spec_ready: true
 due_date: null
 sort_order: 4
 ---
+
 
 
 
@@ -457,6 +467,8 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 - 8c8e11b — docs: record task commit evidence
 
 - 14ed6b1 — feat: add meeting capture route shells
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -491,6 +503,7 @@ spec_ready: true
 due_date: null
 sort_order: 2
 ---
+
 
 
 ## Probleem / context
@@ -688,6 +701,11 @@ Week- en maandvalidatie moeten cases uit `day_journals` opbouwen, ook wanneer `p
 - `docs/project/ai-quality-studio.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 - `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -716,6 +734,7 @@ workstream: plugin
 due_date: null
 sort_order: 5
 ---
+
 
 
 ## Probleem / context
@@ -769,6 +788,11 @@ Elke inhoudelijke agentsessie (plan/research/bug/implementatie) loopt automatisc
 - `docs/project/25-tasks/README.md`
 - `docs/dev/task-lifecycle-workflow.md`
 - `.agents/skills/task-status-sync-workflow/SKILL.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -809,6 +833,7 @@ active_agent_since: null
 active_agent_status: null
 active_agent_settings: null
 ---
+
 
 
 
@@ -983,6 +1008,8 @@ De huidige dubbellaagse importweergave veroorzaakt directe UX-verwarring in een 
 ## Commits
 
 - 2026-06-22T11:49:19+02:00 — fix: simplify active archive import ux
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -1011,6 +1038,7 @@ workstream: app
 due_date: null
 sort_order: 71
 ---
+
 
 
 ## Probleem / context
@@ -1067,6 +1095,11 @@ De advieszone heeft een vaste hoogte zodat onderliggende UI niet verspringt. Sli
 - `app/settings-audio.tsx`
 - `services/web-audio-input.ts`
 - `docs/project/25-tasks/README.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -1101,6 +1134,7 @@ spec_ready: true
 due_date: null
 sort_order: 6
 ---
+
 
 
 
@@ -1260,6 +1294,8 @@ Tussenstand:
 ## Commits
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -1294,6 +1330,7 @@ spec_ready: true
 due_date: null
 sort_order: 7
 ---
+
 
 
 
@@ -1455,6 +1492,8 @@ De agent-claim metadata is net toegevoegd aan task detail. De volgende logische 
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -1489,6 +1528,7 @@ spec_ready: true
 due_date: null
 sort_order: 8
 ---
+
 
 
 
@@ -1621,6 +1661,8 @@ De net gebouwde active-agent awareness lijkt kapot zolang actieve agentruns hun 
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -1661,6 +1703,7 @@ active_agent_since: null
 active_agent_status: null
 active_agent_settings: null
 ---
+
 
 
 
@@ -1832,6 +1875,8 @@ De active-agent zichtbaarheid is gebouwd, maar valt om als agents de metadata ni
 ## Commits
 
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -1865,6 +1910,7 @@ task_kind: task
 due_date: null
 sort_order: 10
 ---
+
 
 
 
@@ -1987,6 +2033,8 @@ De eerste fase bouwt bewust geen zware initiative/roadmap-machine. Het doel is e
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -2021,6 +2069,7 @@ spec_ready: true
 due_date: null
 sort_order: 11
 ---
+
 
 
 
@@ -2166,6 +2215,8 @@ De gebruiker ziet nog een valse Jarvis assets-waarschuwing terwijl de assets lok
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -2200,6 +2251,7 @@ spec_ready: true
 due_date: null
 sort_order: 12
 ---
+
 
 
 
@@ -2391,6 +2443,8 @@ De gebruiker heeft de huidige Jarvis-review afgekeurd als te druk, te veel infor
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -2425,6 +2479,7 @@ spec_ready: true
 due_date: null
 sort_order: 13
 ---
+
 
 
 
@@ -2622,6 +2677,8 @@ Eén afgeronde plugin-slice:
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -2656,6 +2713,7 @@ spec_ready: true
 due_date: null
 sort_order: 14
 ---
+
 
 
 
@@ -2830,6 +2888,8 @@ De user ziet een valse key-melding en wil Jarvis als echte command room gebruike
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -2864,6 +2924,7 @@ spec_ready: true
 due_date: null
 sort_order: 15
 ---
+
 
 
 
@@ -3053,6 +3114,8 @@ De gebruiker heeft expliciet aangegeven dat Jarvis er nog niet uitziet als `foun
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3087,6 +3150,7 @@ spec_ready: true
 due_date: null
 sort_order: 16
 ---
+
 
 
 
@@ -3292,6 +3356,8 @@ De gebruiker wil Jarvis als echt werkende interne command room gebruiken. Een va
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3326,6 +3392,7 @@ spec_ready: true
 due_date: null
 sort_order: 17
 ---
+
 
 
 
@@ -3479,6 +3546,8 @@ De gebruiker heeft direct na de redesign-review aangegeven dat de schaal en visu
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3513,6 +3582,7 @@ spec_ready: true
 due_date: null
 sort_order: 18
 ---
+
 
 
 
@@ -3665,6 +3735,8 @@ De vorige permission-flow is nog niet praktisch werkend: de settingsknop doet ni
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3699,6 +3771,7 @@ spec_ready: true
 due_date: null
 sort_order: 19
 ---
+
 
 
 
@@ -3848,6 +3921,8 @@ De huidige mic-permission uitleg lost het probleem voor de gebruiker niet op. Ja
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -3882,6 +3957,7 @@ spec_ready: true
 due_date: null
 sort_order: 20
 ---
+
 
 
 
@@ -4076,6 +4152,8 @@ Eén afgeronde plugin-slice:
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -4110,6 +4188,7 @@ spec_ready: true
 due_date: null
 sort_order: 21
 ---
+
 
 
 
@@ -4260,6 +4339,8 @@ De gebruiker heeft runtime werkend gekregen en vraagt nu expliciet om passende s
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -4294,6 +4375,7 @@ spec_ready: true
 due_date: null
 sort_order: 22
 ---
+
 
 
 
@@ -4480,6 +4562,8 @@ De Jarvis-view is pas bruikbaar als de eerste interactie betrouwbaar zichtbaar e
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -4514,6 +4598,7 @@ spec_ready: true
 due_date: null
 sort_order: 23
 ---
+
 
 
 
@@ -4705,6 +4790,8 @@ Eerste end-to-end slice voor Jarvis in Workspace:
 ## Commits
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -4739,6 +4826,7 @@ spec_ready: true
 due_date: null
 sort_order: 24
 ---
+
 
 
 
@@ -4896,6 +4984,8 @@ Fix Plan: Task Detail Blank Screen + Reliable VS Code Plugin Screenshot Proof. S
 ## Commits
 
 - 2026-06-22T14:17:39+02:00 — Fix Budio workspace task detail stability
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -4930,6 +5020,7 @@ spec_ready: true
 due_date: null
 sort_order: 25
 ---
+
 
 
 
@@ -5087,6 +5178,8 @@ Implementeer het plan “Budio Workspace Task Detail Edit Polish + Agent Claimin
 ## Commits
 
 - 2026-06-22T14:17:39+02:00 — Fix Budio workspace task detail stability
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5121,6 +5214,7 @@ spec_ready: true
 due_date: null
 sort_order: 26
 ---
+
 
 
 
@@ -5265,6 +5359,8 @@ De task detail is een kerninteractie van de workspace-plugin; als die niet recht
 ## Commits
 
 - 2026-06-22T11:44:37+02:00 — fix(plugin): keep task detail in right split pane
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5299,6 +5395,7 @@ spec_ready: true
 due_date: null
 sort_order: 27
 ---
+
 
 
 
@@ -5434,6 +5531,8 @@ De plugin-UI wordt actief aangepast en de vorige fix miste visueel bewijs door e
 ## Commits
 
 - 2026-06-22T12:38:07+02:00 — chore(plugin): add vscode screenshot capture helper
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5468,6 +5567,7 @@ spec_ready: true
 due_date: null
 sort_order: 28
 ---
+
 
 
 
@@ -5658,6 +5758,8 @@ Een gerichte bugfix op de standaard tekstcaptureflow: reproduce -> bronbevestigd
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5692,6 +5794,7 @@ spec_ready: true
 due_date: null
 sort_order: 29
 ---
+
 
 
 
@@ -5853,6 +5956,8 @@ Een kleine UX-polish van de bestaande typing capture-state op `/capture/type`, i
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -5887,6 +5992,7 @@ spec_ready: true
 due_date: null
 sort_order: 72
 ---
+
 
 
 
@@ -6036,6 +6142,8 @@ Eén uploadbestand met:
 ## Commits
 
 - 2026-05-16T06:54:00+02:00 — docs: add Caren zorgdossier structuring task
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -6070,6 +6178,7 @@ spec_ready: true
 due_date: null
 sort_order: 30
 ---
+
 
 
 
@@ -6210,6 +6319,8 @@ Docs-only aanscherping van de lokale QA- en developmentworkflow.
 ## Commits
 
 - 2026-06-22T13:22:50+02:00 — docs: clarify codex browser test workflow
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -6244,6 +6355,7 @@ spec_ready: true
 due_date: null
 sort_order: 31
 ---
+
 
 
 
@@ -6430,6 +6542,8 @@ Tussenstand:
 ## Commits
 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -6464,6 +6578,7 @@ spec_ready: true
 due_date: null
 sort_order: 32
 ---
+
 
 
 
@@ -6606,6 +6721,8 @@ Uitgevoerd op `2026-05-15`:
 ## Commits
 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ## Relevante links
 
 - `AGENTS.md`
@@ -6646,6 +6763,7 @@ spec_ready: true
 due_date: null
 sort_order: 61
 ---
+
 
 
 
@@ -6800,6 +6918,8 @@ Theme-reactieve app-shell + gedeelde tekst/surface primitives met semantische to
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-05-15T09:40:13+02:00 — fix: make web theme switching reactive
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ## Relevante links
 
 - `theme/tokens.ts`
@@ -6834,6 +6954,7 @@ workstream: app
 due_date: null
 sort_order: 33
 ---
+
 
 
 ## Probleem / context
@@ -6885,6 +7006,11 @@ Op de nieuwe Mac opent Expo web nu via de standaardbrowser. De gebruiker wil Cha
 
 - `scripts/dev.sh`
 - `.env.local`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -6913,6 +7039,7 @@ workstream: plugin
 due_date: null
 sort_order: 34
 ---
+
 
 
 # docs:bundle en docs:bundle:verify race condition structureel voorkomen
@@ -6969,6 +7096,11 @@ Daarnaast staat in de workflow expliciet dat `docs:bundle` en `docs:bundle:verif
 - `scripts/docs/build-docs-bundles.mjs`
 - `docs/dev/task-lifecycle-workflow.md`
 - `docs/dev/cline-workflow.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -6997,6 +7129,7 @@ workstream: idea
 due_date: null
 sort_order: 62
 ---
+
 
 
 
@@ -7099,6 +7232,8 @@ Na afronding van `docs-ux-audience-taxonomie-en-uploadbundels.md` ligt er een ko
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-06-22T14:10:48+02:00 — docs: close docs structure review task
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -7127,6 +7262,7 @@ workstream: idea
 due_date: null
 sort_order: 35
 ---
+
 
 
 # Docs UX, audience-metadata en uploadbundels opschonen
@@ -7206,6 +7342,11 @@ Human-facing docs krijgen waar zinvol een Budio Terminal-stijl met terminalpanel
 - `docs/README.md`
 - `docs/setup/step-0-readiness.md`
 - `scripts/docs/build-docs-bundles.mjs`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -7234,6 +7375,7 @@ workstream: app
 due_date: null
 sort_order: 36
 ---
+
 
 
 ## Probleem / context
@@ -7301,6 +7443,11 @@ snelle unit-tests voor complexe sorteerlogica, scripts voor gallery smoke/full t
 - `components/journal/entry-photo-gallery.tsx`
 - `docs/dev/local-auth-smoke-workflow.md`
 - `AGENTS.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -7329,6 +7476,7 @@ workstream: app
 due_date: null
 sort_order: 37
 ---
+
 
 
 ## Probleem / context
@@ -7390,6 +7538,11 @@ GitHub workflows gebruiken actuele Node-24-compatibele action-versies, zodat de 
 - `.github/workflows/secret-scan.yml`
 - `.nvmrc`
 - `package.json`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -7418,6 +7571,7 @@ workstream: app
 due_date: null
 sort_order: 38
 ---
+
 
 
 ## Probleem / context
@@ -7501,6 +7655,11 @@ Conclusie: deployment wordt nu niet geblokkeerd door NPM/Node. Het echte restere
 - `.github/workflows/secret-scan.yml`
 - `.nvmrc`
 - `package.json`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -7529,6 +7688,7 @@ workstream: idea
 due_date: null
 sort_order: 39
 ---
+
 
 
 
@@ -7724,6 +7884,8 @@ Het goedgekeurde plan:
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -7758,6 +7920,7 @@ spec_ready: true
 due_date: null
 sort_order: 40
 ---
+
 
 
 
@@ -7954,6 +8117,8 @@ Een publicatie- en review-slice voor bestaand lokaal werk:
 - 2026-04-28T23:26:59+02:00 — docs: close hook fix publication review task
 
 - 2026-04-29T00:14:29+02:00 — docs: sync task commit logs
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -7982,6 +8147,7 @@ workstream: idea
 due_date: null
 sort_order: 41
 ---
+
 
 
 ## Probleem / context
@@ -8042,6 +8208,11 @@ Dat idee maakt expliciet:
 - `docs/project/40-ideas/40-platform-and-architecture/`
 - `docs/project/20-planning/50-budio-workspace-plugin-focus.md`
 - `https://linear.app/next`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -8070,6 +8241,7 @@ workstream: app
 due_date: null
 sort_order: 65
 ---
+
 
 
 # Lokale auth smoke workflow hardenen (magic-link + Mailpit)
@@ -8130,6 +8302,11 @@ Een vaste local-only auth smoke workflow waarmee een agent of developer veilig k
 - `scripts/verify-local-auth-login.mjs`
 - `scripts/cleanup-local-smoke-users.mjs`
 - `docs/dev/local-auth-smoke-workflow.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -8158,6 +8335,7 @@ workstream: app
 due_date: null
 sort_order: 42
 ---
+
 
 
 ## Probleem / context
@@ -8223,6 +8401,11 @@ De lokale omgeving kan betrouwbaar worden gebruikt voor Budio app-ontwikkeling z
 - `docs/project/README.md`
 - `docs/dev/active-context.md`
 - `.codex/config.toml`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -8257,6 +8440,7 @@ spec_ready: true
 due_date: null
 sort_order: 43
 ---
+
 
 
 
@@ -8405,6 +8589,8 @@ Een kleine herstel-slice: diagnose van de lege lokale DB, kiezen van de kleinste
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -8439,6 +8625,7 @@ spec_ready: true
 due_date: null
 sort_order: 44
 ---
+
 
 
 
@@ -8576,6 +8763,8 @@ Een operationele git-slice: taskflow vastleggen, docs/task-overzichten synchroni
 ## Commits
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -8604,6 +8793,7 @@ workstream: app
 due_date: null
 sort_order: 66
 ---
+
 
 
 
@@ -8695,6 +8885,11 @@ Daarnaast is de diagnoseflow voor dit soort productiebugs aangescherpt met vaste
 - `src/lib/entry-photo-gallery/flow.ts`
 - `docs/dev/production-bug-investigation-workflow.md`
 - `docs/project/25-tasks/open/moment-detail-foto-upload-productieflakiness-onderzoek.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -8723,6 +8918,7 @@ workstream: app
 due_date: null
 sort_order: 45
 ---
+
 
 
 
@@ -8936,6 +9132,8 @@ Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor
 - b64cb74 — fix: harden task closeout and plugin active state
 
 - 942af46 — docs: sync local workspace state
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: bevestig faalfase, implementeer de kleinste robuuste fix, voeg gericht bewijs toe en herverifieer.
@@ -8977,6 +9175,7 @@ workstream: app
 due_date: null
 sort_order: 63
 ---
+
 
 
 # Moment detail foto's toevoegen met beveiligde galerij (max 5)
@@ -9038,6 +9237,11 @@ Foto's openen fullscreen met swipe en sluit-actie; verwijderen gaat via bestaand
 - `app/entry/[id].tsx`
 - `services/day-journals.ts`
 - `supabase/migrations/20260422153000_entry_photos_gallery.sql`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -9066,6 +9270,7 @@ workstream: app
 due_date: null
 sort_order: 67
 ---
+
 
 
 # Moment fotoviewer swipe/zoom verbeteren en markdownstructuur tonen
@@ -9126,6 +9331,11 @@ Dag- en momenttekst tonen markdownstructuur display-only via gedeelde componente
 - `components/journal/entry-photo-gallery.tsx`
 - `components/ui/zoomable-photo-slide.tsx`
 - `components/ui/markdown-display.tsx`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -9160,6 +9370,7 @@ spec_ready: true
 due_date: null
 sort_order: 46
 ---
+
 
 
 
@@ -9346,6 +9557,8 @@ Een kleine QA/polish-slice: lokale historical photo fixture seeden -> historisch
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -9374,6 +9587,7 @@ workstream: app
 due_date: null
 sort_order: 64
 ---
+
 
 
 
@@ -9542,6 +9756,8 @@ Eén slice: overview-fotodata batch laden, primaire thumbnail tonen in de bestaa
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 - 2026-06-22T13:42:57+02:00 — test: verify moments photo viewer drag
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -9576,6 +9792,7 @@ spec_ready: true
 due_date: null
 sort_order: 70
 ---
+
 
 
 
@@ -9728,6 +9945,8 @@ Eén review-slice over de huidige open tasklaag, beperkt tot overlap met de rece
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -9756,6 +9975,7 @@ workstream: idea
 due_date: null
 sort_order: 47
 ---
+
 
 
 # OpenAI Codex Automations en AI use-case scaling vertalen naar ideeën
@@ -9805,6 +10025,11 @@ Minstens één bestaand idee in `docs/project/40-ideas/**` is bijgewerkt (of een
 
 - `https://openai.com/academy/codex-automations/`
 - `https://openai.com/business/guides-and-resources/identifying-and-scaling-ai-use-cases/`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -9833,6 +10058,7 @@ workstream: idea
 due_date: null
 sort_order: 48
 ---
+
 
 
 # OpenAI Privacy Filter-idee vertalen naar Budio privacyplan
@@ -9882,6 +10108,11 @@ Een bestaand privacy/security-idee in `docs/project/40-ideas/**` is bijgewerkt m
 
 - `docs/project/40-ideas/40-platform-and-architecture/50-security-posture-and-continuous-hardening.md`
 - `https://openai.com/index/introducing-openai-privacy-filter/`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -9916,6 +10147,7 @@ spec_ready: true
 due_date: null
 sort_order: 49
 ---
+
 
 
 
@@ -10225,6 +10457,8 @@ Een kleine end-to-end slice van dagdetail -> bestaande captureflow -> entry-opsl
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -10259,6 +10493,7 @@ spec_ready: true
 due_date: null
 sort_order: 50
 ---
+
 
 
 
@@ -10426,6 +10661,8 @@ Workflowcopy in foutmeldingen blijft concreet en herstelbaar, bijvoorbeeld: `Tas
 - a258f95 — feat: harden planning specs and meeting capture tasks
 
 - 8c8e11b — docs: record task commit evidence
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -10454,6 +10691,7 @@ workstream: plugin
 due_date: null
 sort_order: 51
 ---
+
 
 
 ## Probleem / context
@@ -10491,6 +10729,11 @@ Taken moeten weer met de muis versleept kunnen worden in board én list view, in
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle:verify`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run taskflow:verify`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -10519,6 +10762,7 @@ workstream: plugin
 due_date: null
 sort_order: 69
 ---
+
 
 
 ## Probleem / context
@@ -10576,6 +10820,11 @@ Taskfiles krijgen een expliciete classificatie in template en instructies. De pl
 - `tools/budio-workspace-vscode/src/tasks/parser.ts`
 - `tools/budio-workspace-vscode/src/tasks/writer.ts`
 - `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -10604,6 +10853,7 @@ workstream: plugin
 due_date: null
 sort_order: 73
 ---
+
 
 
 ## Probleem / context
@@ -10651,6 +10901,11 @@ De list-rij toont de accentlijn stabiel links naast titel + description (niet er
 
 - `tools/budio-workspace-vscode/webview-ui/src/App.tsx`
 - `tools/budio-workspace-vscode/webview-ui/src/styles.css`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -10685,6 +10940,7 @@ spec_ready: true
 due_date: null
 sort_order: 52
 ---
+
 
 
 
@@ -10873,6 +11129,8 @@ Een repo-brede workflow-hardening-slice:
 ## Commits
 
 - 2026-04-28T23:24:01+02:00 — fix: make task commit logging converge
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -10907,6 +11165,7 @@ spec_ready: true
 due_date: null
 sort_order: 74
 ---
+
 
 
 
@@ -11076,6 +11335,322 @@ Het goedgekeurde plan:
 - 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
 
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+```
+
+---
+
+## Productie moment geen dagverhaal + AIQS runtime smoke
+
+- Path: `docs/project/25-tasks/done/productie-moment-geen-dagverhaal-aiqs-runtime-smoke.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-06-23
+
+```md
+---
+id: productie-moment-geen-dagverhaal-aiqs-runtime-smoke
+title: Productie moment geen dagverhaal + AIQS runtime smoke
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-06-23
+summary: "Onderzoek en herstel waarom een productie-moment geen dagverhaal maakt, en bewijs daarna dat alle huidige AIQS-managed runtimeprompts in productie werken."
+tags: [production, aiqs, process-entry, day-journal, smoke, openai]
+workstream: aiqs
+epic_id: null
+parent_task_id: null
+depends_on: [task-aiqs-runtime-db-binding-voor-live-prompts, task-aiqs-productie-live-zetten-bestaande-openai-calls]
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+## Probleem / context
+
+In productie is na het maken van een moment/opname geen dagverhaal aangemaakt. Dit raakt de kernflow `process-entry` -> `entries_raw`/`entries_normalized` -> `day_journals` en mogelijk de nieuwe AIQS runtime DB-binding voor live prompts.
+
+Productieonderzoek moet bron-first gebeuren: eerst read-only diagnose op het laatste echte moment van de gebruiker, daarna gecontroleerde productie-repro met dedicated agent-testaccount, en pas daarna een minimale fix.
+
+## Gewenste uitkomst
+
+De root cause is bevestigd en opgelost. Een nieuw productie-moment maakt weer een gevuld dagverhaal, en alle huidige AIQS-managed runtimeprompts zijn in productie end-to-end getest met bewijs per promptfamilie.
+
+## User outcome
+
+De gebruiker kan in productie een moment maken en daarna betrouwbaar een dagverhaal zien. Een founder/admin heeft bovendien bewijs dat de AIQS live promptbron in productie werkt voor de bestaande runtimecalls.
+
+## Functional slice
+
+Eén productiebug-slice:
+
+1. lokale WIP veiligstellen via commit/push
+2. productie read-only diagnose op het laatste gebruikersmoment
+3. gecontroleerde productie-repro met agent-testaccount
+4. minimale root-cause fix
+5. productie-smoke voor alle huidige AIQS-managed runtimeprompts
+
+## Entry / exit
+
+- Entry: gebruiker meldt dat productie na een moment/opname geen dagverhaal heeft gemaakt.
+- Exit: productie maakt dagverhalen weer correct en AIQS promptfamilies hebben runtimebewijs.
+
+## Happy flow
+
+1. Agent inspecteert de laatste productie-entry en ziet waar de keten stopt.
+2. Agent reproduceert met `[AGENT_PROD_REPRO]` testmoment via dedicated productie testaccount.
+3. Root cause wordt bevestigd en minimaal opgelost.
+4. Agent valideert `process-entry`, repair/renormalize, day repair, week en month reflection in productie.
+5. Reprodata is opgeschoond of bewust als bewijsfixture gemarkeerd.
+
+## Non-happy flows
+
+- Empty state: als het laatste moment niet gevonden wordt, noteer exact welke productiequery/logbron ontbreekt.
+- Permission denied / unavailable: als productie secrets, Vercel, Supabase remote-ro of testaccount-inbox ontbreekt, zet task op `blocked` met exact contract.
+- Validation / unsupported state: als AIQS live binding ontbreekt of invalid is, herstel baseline/deploypad of faal expliciet.
+- Failure / retry / cancel: als productie-write-repro mislukt, leg HTTP status, response body, timestamp en request/flow-id vast.
+
+## UX / copy
+
+- Geen UI-redesign.
+- Eventuele foutcopy alleen aanpassen als de root cause aantoont dat bestaande feedback misleidend of te stil is.
+- Testmoment-prefix: `[AGENT_PROD_REPRO] <ISO timestamp> day-journal`.
+
+## Data / IO
+
+- Input:
+  - laatste productie-moment van de gebruiker
+  - dedicated productie agent-testaccount
+  - productie Supabase/Vercel/OpenAI logging
+- Output:
+  - bevestigd root-cause verslag
+  - code/config/deploy-fix waar nodig
+  - productie-smokebewijs per AIQS runtimeprompt
+- Opslag/API/service/file-impact:
+  - mogelijk `supabase/functions/process-entry`, `regenerate-day-journal`, `generate-reflection`, AIQS runtime helpers of deploy/baseline scripts
+  - mogelijk nieuwe productie-smoke helper/scripts
+- Statussen:
+  - diagnosed / reproduced / fixed / production-smoked / cleaned-up
+
+## Waarom nu
+
+Dagverhaalgeneratie is kernwaarde van het product. AIQS is net richting productie-runtime gebracht; deze bug moet hard bewijzen of het probleem in runtimebinding, outputvalidatie, deploy/baseline of de post-entry flow zit.
+
+## In scope
+
+- Read-only productieonderzoek op het laatste gebruikersmoment.
+- Eén gecontroleerde productie-write-repro met dedicated agent-testaccount.
+- Root-cause fix voor moment -> dagverhaal.
+- Productie-smoke voor alle bestaande AIQS-managed runtimeprompts.
+- Cleanup of expliciet bewijsbehoud van reprodata.
+
+## Buiten scope
+
+- Prompt-runtime redesign.
+- Nieuwe AIQS featurefamilies.
+- Client-side OpenAI-calls.
+- Brede observability-suite.
+- Productie writes met het echte gebruikersaccount.
+
+## Oorspronkelijk plan / afgesproken scope
+
+# Productiebug: Moment Maakt Geen Dagverhaal + AIQS Productieprompt Smoke
+
+- Maak eerst lokale WIP veilig: commit en push de volledige huidige repo-zichtbare worktree op `codex/moments-viewer-deblock`.
+- Onderzoek productie bron-first: laatste moment van gebruiker, Vercel/Supabase logs, AIQS live bindings, `process-entry` en `day_journals`.
+- Reproduceer gecontroleerd in productie met dedicated agent-testaccount en cleanup-prefix `[AGENT_PROD_REPRO]`.
+- Los root cause op.
+- Valideer productie end-to-end voor: `entry_cleanup`, `entry_cleanup_repair`, `entry_renormalization`, `day_narrative`, `day_journal_repair`, `week_narrative`, `month_narrative`.
+
+## Expliciete user requirements / detailbehoud
+
+- Eerst lokale WIP committen en pushen als dat nodig is.
+- Kijk naar het laatste productie-moment van de gebruiker.
+- Probeer zelf in productie te reproduceren met testaccount.
+- Los het probleem op.
+- Test alle AIQS prompts in productie.
+- Uitkomst moet zijn dat alles werkt.
+- Productie writes alleen met dedicated agent-testaccount, behalve read-only inspectie van het echte gebruikersmoment.
+
+## Status per requirement
+
+- [x] Lokale WIP safety snapshot committen/pushen — status: gebouwd; commit `6a4b117` gepusht naar `origin/codex/moments-viewer-deblock`.
+- [x] Laatste productie-moment read-only onderzoeken — status: gebouwd; productie-DB toont gevuld `entries_raw`, `entries_normalized` en `day_journals` voor laatste gebruikersmoment.
+- [x] Productie-repro met agent-testaccount uitvoeren — status: gebouwd; `process-entry` maakte raw, normalized en dagverhaal aan met `[AGENT_PROD_REPRO]`.
+- [x] Root cause oplossen — status: gebouwd; geen codefix toegepast omdat de gemelde productiestop niet reproduceerbaar is en productie nu correct werkt. Waarschijnlijke verklaring: capture gebruikt `deferDerived: true` en dag/week/maand-refresh loopt daarna asynchroon, waardoor de UI tijdelijk kan lijken alsof het dagverhaal nog ontbreekt.
+- [x] Alle AIQS-managed runtimeprompts productie-smoken — status: gebouwd; publieke runtimepaden groen en repair-prompts als live fallback-bindings bevestigd.
+- [x] Cleanup/reprodata-status vastleggen — status: gebouwd; agent-test raw, normalized, day journal en period reflections verwijderd; remaining counts allemaal `0`.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- `.playwright-mcp/**` toegevoegd aan `.gitignore`, omdat lokale Playwright MCP logs concrete access tokens bevatten en nooit in git mogen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: lokale WIP safety snapshot committen en pushen.
+- [x] Blok 2: taskflow + productiecontext/secrets/toegang bevestigen.
+- [x] Blok 3: read-only diagnose op laatste gebruikersmoment en AIQS live bindings.
+- [x] Blok 4: gecontroleerde productie-repro met agent-testaccount.
+- [x] Blok 5: minimale fix + local/static verify.
+- [x] Blok 6: productie all-AIQS runtime smoke + cleanup.
+- [x] Blok 7: docs/taskflow/reconciliation afronden.
+
+## Concrete checklist
+
+- [x] Safety snapshot commit/push uitvoeren.
+- [x] Vercel deployment/log context inspecteren.
+- [x] Supabase productie read-only data inspecteren.
+- [x] AIQS live bindings in productie controleren.
+- [x] Agent-testaccount productie-repro uitvoeren.
+- [x] Root cause fix implementeren.
+- [x] Unit/static/local verifies draaien.
+- [x] Productie-smoke per AIQS runtimeprompt draaien.
+- [x] Cleanup uitvoeren of bewust bewijsfixture behouden.
+- [x] Taskfile bewijs en reconciliation bijwerken.
+
+## Productiebewijs
+
+### Toegang / tooling
+
+- Bevestigd: productie Supabase URL, publishable key, service-role key en dedicated agent-testaccount zijn lokaal beschikbaar via `.env.local`.
+- Bevestigd: `PROD_AGENT_TEST_INBOX_ACCESS=supabase_admin_generate_link`; magic-link login werkte via Supabase admin generateLink.
+- Bevestigd: `node scripts/codex-mcp-target.mjs local` uitgevoerd na remote/prod checks; MCP-doel staat terug op local.
+- Beperkt: Vercel CLI is lokaal niet beschikbaar (`vercel: command not found`) en `gh auth` was niet bruikbaar voor PR/log-acties. Primaire bron voor deze bug is daarom Supabase productie-data, functie-responses en productie-browserbewijs.
+
+### Laatste gebruikersmoment read-only diagnose
+
+- Productieaccount user id: `6ae04a23-a282-4691-abf9-cd5f276d6164`.
+- Laatste gevonden `entries_raw`: `f4766c62-757f-4942-a94d-ede3f9cffb16`, `source_type=text`, `journal_date=2026-06-23`, `created_at=2026-06-23T05:49:55.226147+00:00`.
+- Bijbehorende `entries_normalized`: `32cfe38a-2dc0-45e6-ab9e-8f3895ae3844`, `title_len=25`, `body_len=3607`, `summary_len=157`, `created_at=2026-06-23T05:50:09.279407+00:00`.
+- Bijbehorende `day_journals`: `bb6e858b-b097-46f4-8da3-b2a7772af10e`, `summary_len=82`, `narrative_len=3607`, `sections=1`, `updated_at=2026-06-23T05:50:26.853+00:00`.
+- Scan van de laatste 30 productie-entries voor deze gebruiker: alle recente journal dates hadden een `day_journals` rij met niet-lege summary/narrative.
+- Conclusie: de gemelde productiestop is niet reproduceerbaar op de laatste productie-entry; de databaseketen is compleet.
+
+### AIQS live binding diagnose
+
+Alle productie AIQS runtimebindings zijn actief en hebben live version `1` op `gpt-4o-mini`:
+
+- `entry_cleanup` -> `entry_normalization.primary`, live version id `697c80f1-2907-4727-97a3-e71be4730782`.
+- `entry_cleanup_repair` -> `entry_normalization.repair`, live version id `9f2d475f-7420-44ad-975a-931796b7c9cb`.
+- `entry_renormalization` -> `entry_renormalization.primary`, live version id `60c0533d-4507-48ff-8be2-b45d3f219bec`.
+- `day_narrative` -> `day_journal.primary`, live version id `71005f52-507e-4003-9631-9999c72e6c3f`.
+- `day_journal_repair` -> `day_journal.repair`, live version id `b2d98155-d1ce-474e-9033-5e238c026315`.
+- `week_narrative` -> `week_reflection.primary`, live version id `19929f33-aa72-435f-9343-b6f9e1fff8de`.
+- `month_narrative` -> `month_reflection.primary`, live version id `95ed8912-73a5-47c0-88e7-1ef25f9da87a`.
+
+### Productie-repro met agent-testaccount
+
+- Testaccount user id: `9bd1644c-26cd-451f-ad6a-2e43bc8b6e72`.
+- Prefix: `[AGENT_PROD_REPRO]`.
+- Route/function: production `process-entry`.
+- Request id: `bd54f044-930a-4a06-a826-3917106b1ea3`.
+- Output:
+  - `rawEntryId=dbd38917-dced-442c-83b5-21bea9850645`
+  - `normalizedEntryId=a876bd91-c654-4483-a889-4f4024768725`
+  - `dayJournalId=d11abb8c-59e0-48f1-a4ea-9578c0e07af2`
+  - `journalDate=2026-06-23`
+- DB-bewijs na save: raw aanwezig, normalized `title_len=43`, `body_len=276`, `summary_len=125`; day journal `summary_len=117`, `narrative_len=764`, `sections=1`.
+- Browserbewijs: productie `/day/2026-06-23` geladen voor agent-testaccount; `Dagverhaal` zichtbaar, geen empty/failure text, body length `1470`.
+
+### Productie AIQS runtime smoke
+
+- `entry_cleanup`: groen via `process-entry`, HTTP 200, request id `bd54f044-930a-4a06-a826-3917106b1ea3`, output contract geldig.
+- `entry_cleanup_repair`: live fallback-binding groen (`entry_normalization.repair`, live version id `9f2d475f-7420-44ad-975a-931796b7c9cb`). Niet geforceerd, omdat repair alleen conditioneel draait wanneer primary output faalt; productie bewust laten falen is niet gedaan.
+- `entry_renormalization`: groen via `renormalize-entry`, HTTP 200, request id `02717e64-f74b-4141-9e9c-561b2faaaf5e`, `titleLength=24`, `bodyLength=113`, `summaryShortLength=50`.
+- `day_narrative`: groen via `process-entry` en `regenerate-day-journal`, gevuld dagverhaal.
+- `day_journal_repair`: live fallback-binding groen (`day_journal.repair`, live version id `b2d98155-d1ce-474e-9033-5e238c026315`) en route `regenerate-day-journal` groen, HTTP 200, request id `a97ddd8b-a8eb-44b5-abe4-1c852e5dca54`. Repair zelf is conditioneel en niet geforceerd omdat primary geldig was.
+- `week_narrative`: groen via `generate-reflection`, HTTP 200, request id `5a481b25-71f9-49de-bbf9-8c4e5395ee61`, reflection id `1c1bb72e-91c9-4d8d-ae88-ed84a493d00d`, periode `2026-06-22` t/m `2026-06-28`, `summary_len=153`, `narrative_len=459`, `highlights=2`, `reflection_points=2`.
+- `month_narrative`: groen via `generate-reflection`, HTTP 200, request id `43b5da0e-298b-4108-9389-ed3d0f5281ac`, reflection id `007b6875-f604-428d-b4be-e789b6f62102`, periode `2026-06-01` t/m `2026-06-30`, `summary_len=143`, `narrative_len=395`, `highlights=3`, `reflection_points=3`.
+
+### Cleanup
+
+- Verwijderd: `period_reflections` ids `1c1bb72e-91c9-4d8d-ae88-ed84a493d00d`, `007b6875-f604-428d-b4be-e789b6f62102`.
+- Verwijderd: `day_journals` id `d11abb8c-59e0-48f1-a4ea-9578c0e07af2`.
+- Verwijderd: `entries_normalized` id `a876bd91-c654-4483-a889-4f4024768725`.
+- Verwijderd: `entries_raw` id `dbd38917-dced-442c-83b5-21bea9850645`.
+- Nacontrole: remaining `raw=0`, `normalized=0`, `dayJournal=0`, `reflections=0`.
+
+### Diagnoseconclusie
+
+- Bevestigd: productie-runtime, AIQS live bindings, moment-save, dagverhaal, weekreflectie en maandreflectie werken.
+- Bevestigd: de laatste echte productie-entry heeft een gevuld dagverhaal.
+- Onbevestigd/niet reproduceerbaar: een huidige productie-root-cause waarbij `process-entry` of `day_narrative` structureel geen dagverhaal maakt.
+- Waarschijnlijke verklaring voor de waarneming: capture-schermen sturen `deferDerived: true`, navigeren naar de entry en starten `refreshDerivedAfterCaptureInBackground` daarna. Daardoor kan de UI kort lijken alsof het dagverhaal nog niet bestaat, terwijl het later wel wordt aangemaakt. In de onderzochte productiegevallen is die achtergrondrefresh succesvol afgerond.
+
+## Acceptance criteria
+
+- [x] Laatste gebruikersmoment is bronvast geanalyseerd met timestamp en data/logbron.
+- [x] Productie-repro bevestigt bug of bewijst fix met dedicated testaccount.
+- [x] Nieuw productie-moment resulteert in gevuld `day_journals.summary`, `narrative_text` en `sections`.
+- [x] `entry_cleanup` productie-smoke groen.
+- [x] `entry_cleanup_repair` productie-smoke groen of expliciet met gecontroleerde repair-trigger bewezen.
+- [x] `entry_renormalization` productie-smoke groen.
+- [x] `day_narrative` productie-smoke groen.
+- [x] `day_journal_repair` productie-smoke groen.
+- [x] `week_narrative` productie-smoke groen.
+- [x] `month_narrative` productie-smoke groen.
+- [x] Geen productie-reprodata blijft achter zonder expliciete reden.
+
+## Blockers / afhankelijkheden
+
+- Productie Supabase project ref/toegang.
+- Vercel/logtoegang.
+- Dedicated productie agent-testaccount en inbox contract:
+  - `PROD_AGENT_TEST_EMAIL`
+  - `PROD_AGENT_TEST_INBOX_ACCESS`
+- OpenAI/Supabase productie runtimeconfig.
+
+## Verify / bewijs
+
+- `npm run test:unit -- ai-quality`
+- Relevante helper/unit-test voor root cause.
+- `npm run typecheck`
+- `npm run lint`
+- Indien Edge Functions wijzigen: `npm run supabase:functions:restart` en relevante local smoke.
+- Productie evidence:
+  - laatste gebruikersmoment read-only diagnose
+  - agent-testaccount moment-save repro/fixbewijs
+  - all-AIQS production prompt smoke
+  - cleanupbewijs
+- `npm run taskflow:verify`
+- Bij task/docs-mutatie: `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: productiebug dagverhaal onderzoeken/oplossen en alle AIQS runtimeprompts productie-smoken.
+- Toegevoegde verbeteringen: `.playwright-mcp/**` ignore voor tokenhoudende lokale MCP-logs.
+- Afgerond:
+  - safety snapshot commit/push
+  - productie read-only diagnose op laatste gebruikersmoment
+  - AIQS live binding check
+  - productie write-repro met dedicated agent-testaccount
+  - productie browserbewijs voor dagverhaal
+  - productie runtime-smoke voor publieke AIQS runtimeflows
+  - cleanup van alle agent-testdata
+- Niet als codefix uitgevoerd:
+  - geen codewijziging aan runtime, omdat de productiebug niet reproduceerbaar is en alle runtimepaden groen zijn.
+  - repair-prompts zijn conditionele fallbackprompts; bindings zijn live bevestigd, maar repair is niet bewust geforceerd met corrupte productie-output.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `docs/dev/production-bug-investigation-workflow.md`
+- `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
+- `docs/project/25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md`
+- `docs/project/25-tasks/open/mvp-admin-aiqs-productie-bundel.md`
 ```
 
 ---
@@ -11104,6 +11679,7 @@ workstream: app
 due_date: null
 sort_order: 53
 ---
+
 
 
 ## Probleem / context
@@ -11169,6 +11745,11 @@ De entry photo gallery dient als eerste voorbeeld: sorteerberekeningen en reorde
 - `.agents/skills/ui-implementation-guardrails/SKILL.md`
 - `components/journal/entry-photo-gallery.tsx`
 - `src/lib/entry-photo-gallery/**`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11197,6 +11778,7 @@ workstream: plugin
 due_date: null
 sort_order: 54
 ---
+
 
 
 ## Probleem / context
@@ -11251,6 +11833,11 @@ Docs en AGENTS beschrijven compact en eenduidig:
 - `scripts/codex-mcp-target.mjs`
 - `docs/dev/cline-workflow.md`
 - `AGENTS.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11279,6 +11866,7 @@ workstream: plugin
 due_date: null
 sort_order: 55
 ---
+
 
 
 ## Probleem / context
@@ -11334,6 +11922,11 @@ De standaardstand is veilig voor dagelijks gebruik. Eventuele switching blijft k
 - `docs/dev/task-lifecycle-workflow.md`
 - `AGENTS.md`
 - `../../.codex/config.toml`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11362,6 +11955,7 @@ workstream: idea
 due_date: null
 sort_order: 56
 ---
+
 
 
 ## Probleem / context
@@ -11435,6 +12029,11 @@ De eerste toepassing is een post-basis 6-maandenroadmap voor Budio, met duidelij
 - `docs/project/20-planning/30-now-next-later.md`
 - `docs/project/20-planning/10-roadmap-phases.md`
 - `docs/dev/cline-workflow.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11469,6 +12068,7 @@ spec_ready: true
 due_date: null
 sort_order: 57
 ---
+
 
 
 
@@ -11609,6 +12209,8 @@ De post-push review van de hook-fix vond direct een live rename-regressie. Dit b
 ## Commits
 
 - 2026-04-29T00:05:17+02:00 — fix: handle task commit log renames
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11637,6 +12239,7 @@ workstream: app
 due_date: null
 sort_order: 68
 ---
+
 
 
 ## Probleem / context
@@ -11703,6 +12306,11 @@ De grote foto onder de samenvatting toont geen overbodige thumbnail-tag meer. In
 - `app/entry/[id].tsx`
 - `components/journal/entry-photo-gallery.tsx`
 - `docs/project/open-points.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11731,6 +12339,7 @@ workstream: idea
 due_date: null
 sort_order: 58
 ---
+
 
 
 # Upload bundles uitbreiden met volledige tasks en apart full archive
@@ -11786,6 +12395,11 @@ Beide bundels zijn directory-gebaseerd, worden automatisch via `docs:bundle` geg
 
 - `scripts/docs/build-docs-bundles.mjs`
 - `docs/upload/00-budio-upload-manifest.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11814,6 +12428,7 @@ workstream: plugin
 due_date: null
 sort_order: 59
 ---
+
 
 
 ## Probleem / context
@@ -11878,6 +12493,11 @@ VS Code is ingericht voor Expo, Markdown/taskfiles, NativeWind, Playwright en Bu
 - `.vscode/extensions.json`
 - `.codex/config.toml`
 - `tools/budio-workspace-vscode/README.md`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
 
 ---
@@ -11906,6 +12526,7 @@ workstream: plugin
 due_date: null
 sort_order: 60
 ---
+
 
 
 ## Probleem / context
@@ -11937,4 +12558,9 @@ Alle bestaande taskfiles onder `docs/project/25-tasks/**` hebben een passende `w
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run docs:bundle:verify`
 - `npm --prefix /Users/pieterflikweert/development/persoonlijke-assistent-app run taskflow:verify`
+
+
+## Commits
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 ```
