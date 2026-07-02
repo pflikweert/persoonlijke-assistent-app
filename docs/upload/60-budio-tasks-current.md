@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-06-23T10:26:29.643Z
-Source Commit: 6a4b117
+Build Timestamp (UTC): 2026-07-02T10:01:16.897Z
+Source Commit: afc96a5
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3914,26 +3914,33 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 
 - Path: `docs/project/25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md`
 - Bucket: open
-- Status: backlog
+- Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-22
+- Updated_at: 2026-07-02
 
 ```md
 ---
 id: task-aiqs-productie-live-zetten-bestaande-openai-calls
 title: AIQS productie live zetten voor bestaande OpenAI-calls
-status: backlog
+status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-04-22
+updated_at: 2026-07-02
 summary: "Zet de huidige AIQS-variant snel en gecontroleerd live in productie voor alleen de bestaande OpenAI-calls, zonder nieuwe reviewflow of extra calls toe te voegen."
 tags: [aiqs, productie, openai, consumer-beta]
 workstream: aiqs
 due_date: null
-sort_order: 3
+sort_order: 1
+active_agent: Codex
+active_agent_model: GPT-5
+active_agent_runtime: codex
+active_agent_since: "2026-07-02T12:02:00Z"
+active_agent_status: running
+active_agent_settings: default
 ---
+
 
 
 
@@ -3985,11 +3992,20 @@ Deze taak is klaar wanneer de productieroute aantoonbaar werkt en de minimale op
 
 ## Concrete checklist
 
-- [ ] Productiepad van bestaande AIQS-calls checken op end-to-end werking.
+- [x] Productiepad van bestaande AIQS-calls checken op end-to-end werking.
 - [ ] Eventuele blockers in config/guardrails oplossen zonder scope-uitbreiding.
 - [ ] Bevestigen dat admin-only toegang in productie correct gehandhaafd blijft.
-- [ ] Bewijs vastleggen dat de huidige calls live werken zoals verwacht.
+- [x] Bewijs vastleggen dat de huidige calls live werken zoals verwacht.
 - [ ] Korte operationele go-live notitie vastleggen voor vervolgtesten.
+
+## Uitvoerblok 2026-07-02
+
+- [x] Bevestigd dat `origin/main` nog op `5482b81` stond en de AIQS-werkbranch op `c246e04`.
+- [x] Bevestigd dat de live `assistent.budio.nl` bundle de nieuwe AIQS overview-copy nog niet bevat.
+- [x] Bevestigd dat de enige niet-main branch `codex/moments-viewer-deblock` is.
+- [ ] Merge `codex/moments-viewer-deblock` naar `main`.
+- [ ] Push `main` zodat Vercel productie opnieuw deployt.
+- [ ] Post-push deploymentstatus controleren.
 
 ## Blockers / afhankelijkheden
 
@@ -4017,6 +4033,8 @@ Deze taak is klaar wanneer de productieroute aantoonbaar werkt en de minimale op
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-02T12:00:53+02:00 — docs: track AIQS production merge
 ```
 
 ---

@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-06-23T10:26:29.643Z
-Source Commit: 6a4b117
+Build Timestamp (UTC): 2026-07-02T10:01:16.897Z
+Source Commit: afc96a5
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -11378,6 +11378,7 @@ active_agent_status: null
 active_agent_settings: null
 ---
 
+
 ## Probleem / context
 
 In productie is na het maken van een moment/opname geen dagverhaal aangemaakt. Dit raakt de kernflow `process-entry` -> `entries_raw`/`entries_normalized` -> `day_journals` en mogelijk de nieuwe AIQS runtime DB-binding voor live prompts.
@@ -11651,6 +11652,11 @@ Alle productie AIQS runtimebindings zijn actief en hebben live version `1` op `g
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 - `docs/project/25-tasks/open/aiqs-productie-live-zetten-bestaande-openai-calls.md`
 - `docs/project/25-tasks/open/mvp-admin-aiqs-productie-bundel.md`
+
+
+## Commits
+
+- 2026-06-23T12:26:47+02:00 — docs: record production AIQS runtime smoke
 ```
 
 ---
