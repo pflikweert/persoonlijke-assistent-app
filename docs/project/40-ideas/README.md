@@ -62,6 +62,7 @@ Belangrijk:
 - [[10-product/50-structured-export-and-obsidian-archive]]
 - [[30-ai-and-aiqs/40-aiqs-modular-flow-control-plane]]
 - [[30-ai-and-aiqs/50-source-aware-routing-and-evaluation]]
+- [[30-ai-and-aiqs/70-reflectie-lengte-vertelstijl-periodereflecties]]
 - [[40-platform-and-architecture/50-security-posture-and-continuous-hardening]]
 - [[40-platform-and-architecture/60-budio-pro-markdown-workspace-and-obsidian-export]]
 
