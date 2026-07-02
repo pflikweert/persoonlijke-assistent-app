@@ -10,6 +10,10 @@ import {
   isTaskAgentActive,
 } from '../tasks/task-ux';
 
+const NOW = new Date('2026-06-22T15:00:00.000Z');
+const FRESH_SINCE = '2026-06-22T14:53:03Z';
+const STALE_SINCE = '2026-06-20T14:53:03Z';
+
 test('checklist progress helpers return compact labels and capped five-band tones', () => {
   assert.equal(compactChecklistProgressLabel(0, 0), 'Geen checklist');
   assert.equal(compactChecklistProgressLabel(2, 5), '2/5');
@@ -22,13 +26,16 @@ test('checklist progress helpers return compact labels and capped five-band tone
 });
 
 test('agent activity helpers only mark active-like statuses as active labels', () => {
-  assert.equal(isTaskAgentActive({ activeAgent: null, activeAgentStatus: null }), false);
-  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: null }), false);
-  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'active' }), true);
-  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'done' }), false);
-  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'running' }), 'Cline');
-  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'done' }), null);
-  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: null }), null);
+  assert.equal(isTaskAgentActive({ activeAgent: null, activeAgentStatus: null, activeAgentSince: null }, NOW), false);
+  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: null, activeAgentSince: FRESH_SINCE }, NOW), false);
+  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'active', activeAgentSince: FRESH_SINCE }, NOW), true);
+  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'active', activeAgentSince: STALE_SINCE }, NOW), false);
+  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'active', activeAgentSince: 'not-a-date' }, NOW), false);
+  assert.equal(isTaskAgentActive({ activeAgent: 'Cline', activeAgentStatus: 'done', activeAgentSince: FRESH_SINCE }, NOW), false);
+  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'running', activeAgentSince: FRESH_SINCE }, NOW), 'Cline');
+  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'running', activeAgentSince: STALE_SINCE }, NOW), null);
+  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: 'done', activeAgentSince: FRESH_SINCE }, NOW), null);
+  assert.equal(activeAgentLabel({ activeAgent: 'Cline', activeAgentStatus: null, activeAgentSince: FRESH_SINCE }, NOW), null);
 });
 
 test('agent activity UI state returns compact live labels only for active metadata', () => {
@@ -50,13 +57,16 @@ test('agent activity UI state returns compact live labels only for active metada
     },
   );
 
-  const active = activeAgentUiState({
-    activeAgent: 'Codex',
-    activeAgentStatus: 'running',
-    activeAgentModel: 'gpt-5',
-    activeAgentRuntime: 'codex',
-    activeAgentSince: '2026-06-22T14:53:03Z',
-  });
+  const active = activeAgentUiState(
+    {
+      activeAgent: 'Codex',
+      activeAgentStatus: 'running',
+      activeAgentModel: 'gpt-5',
+      activeAgentRuntime: 'codex',
+      activeAgentSince: FRESH_SINCE,
+    },
+    NOW,
+  );
 
   assert.equal(active.isActive, true);
   assert.equal(active.label, 'Codex');
@@ -73,7 +83,36 @@ test('active agent since formatter preserves malformed values', () => {
 });
 
 test('active agent comparison sorts active tasks before inactive tasks', () => {
-  assert.equal(compareActiveAgentsFirst({ activeAgent: 'Cline', activeAgentStatus: 'running' }, { activeAgent: null, activeAgentStatus: null }), -1);
-  assert.equal(compareActiveAgentsFirst({ activeAgent: null, activeAgentStatus: null }, { activeAgent: 'Cline', activeAgentStatus: 'running' }), 1);
-  assert.equal(compareActiveAgentsFirst({ activeAgent: 'Cline', activeAgentStatus: 'running' }, { activeAgent: 'Codex', activeAgentStatus: 'active' }), 0);
+  assert.equal(
+    compareActiveAgentsFirst(
+      { activeAgent: 'Cline', activeAgentStatus: 'running', activeAgentSince: FRESH_SINCE },
+      { activeAgent: null, activeAgentStatus: null, activeAgentSince: null },
+      NOW,
+    ),
+    -1,
+  );
+  assert.equal(
+    compareActiveAgentsFirst(
+      { activeAgent: null, activeAgentStatus: null, activeAgentSince: null },
+      { activeAgent: 'Cline', activeAgentStatus: 'running', activeAgentSince: FRESH_SINCE },
+      NOW,
+    ),
+    1,
+  );
+  assert.equal(
+    compareActiveAgentsFirst(
+      { activeAgent: 'Cline', activeAgentStatus: 'running', activeAgentSince: FRESH_SINCE },
+      { activeAgent: 'Codex', activeAgentStatus: 'active', activeAgentSince: FRESH_SINCE },
+      NOW,
+    ),
+    0,
+  );
+  assert.equal(
+    compareActiveAgentsFirst(
+      { activeAgent: 'Cline', activeAgentStatus: 'running', activeAgentSince: STALE_SINCE },
+      { activeAgent: null, activeAgentStatus: null, activeAgentSince: null },
+      NOW,
+    ),
+    0,
+  );
 });

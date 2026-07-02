@@ -1,11 +1,11 @@
 ---
 id: aiqs-assist-laagbewuste-prompt-review
 title: AIQS Assist laagbewuste prompt review
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-22
+updated_at: 2026-07-02
 summary: "AIQS Assist wordt een laagbewuste Prompt Reviewer + Prompt Architect voor draft promptvelden, met diagnose, laagdiscipline, veilige single-layer acties en een expliciete all-fields correctieactie."
 tags: [aiqs, prompt-assist, prompt-governance, admin, openai]
 workstream: aiqs
@@ -17,13 +17,14 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
-active_agent: Codex
-active_agent_model: GPT-5
-active_agent_runtime: codex
-active_agent_since: "2026-06-22T15:26:26Z"
-active_agent_status: running
-active_agent_settings: default
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -239,8 +240,9 @@ Belangrijkste punten:
 
 - Oorspronkelijk plan: laagbewuste Prompt Reviewer + Prompt Architect binnen AIQS draft Assist.
 - Toegevoegde verbeteringen: all-fields `verdeel_over_velden` behouden en generieker gemaakt.
-- Afgerond: helper/types, draft editor UI/apply, Edge Function prompt/parsing, unit/type/lint, local functions restart, AIQS smoke, gerichte draft UI-smoke, all-fields runtime-preview, taskflow/docs bundle.
-- Open / blocked: task blijft `in_progress` voor user-review/commitbesluit; brede `docs:lint` faalt door bestaande docs-schuld buiten deze scope.
+- Afgerond: helper/types, draft editor UI/apply, Edge Function prompt/parsing, unit/type/lint, local functions restart, AIQS smoke, gerichte draft UI-smoke, all-fields runtime-preview, taskflow/docs bundle en productie-merge.
+- Open / blocked: geen open scope; brede `docs:lint` faalde destijds door bestaande docs-schuld buiten deze taskfile-set en blokkeerde deze afronding niet.
+- Live-status: afgerond en live via productie-merge; de achtergebleven `active_agent*` metadata was stale workflowmetadata en is opgeschoond.
 
 ## Relevante links
 
@@ -254,3 +256,5 @@ Belangrijkste punten:
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-02T13:57:17+02:00 — fix: harden taskflow active agent cleanup

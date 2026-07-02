@@ -11,18 +11,28 @@ const ACTIVE_AGENT_FIELDS = [
   'active_agent_status',
   'active_agent_settings',
 ];
+const ACTIVE_AGENT_STATUS_VALUES = new Set(['active', 'running', 'busy', 'editing', 'working', 'in_progress']);
+const DEFAULT_STALE_MAX_HOURS = 24;
+const TASKFLOW_DIRS = ['docs/project/25-tasks/open', 'docs/project/25-tasks/done'];
 
 function usage(exitCode = 1) {
   const output = exitCode === 0 ? console.log : console.error;
   output(`Usage:
   node scripts/taskflow-agent-state.mjs claim <taskfile>
-  node scripts/taskflow-agent-state.mjs clear <taskfile>`);
+  node scripts/taskflow-agent-state.mjs clear <taskfile>
+  node scripts/taskflow-agent-state.mjs clear-stale [--dry-run] [--max-hours <hours>]`);
   process.exit(exitCode);
 }
 
-const [, , action, taskfileArg] = process.argv;
+const [, , action, taskfileArg, ...restArgs] = process.argv;
 if (action === '--help' || action === '-h') {
   usage(0);
+}
+
+if (action === 'clear-stale') {
+  const options = parseClearStaleOptions([taskfileArg, ...restArgs].filter(Boolean));
+  await clearStaleActiveAgentClaims(options);
+  process.exit(0);
 }
 
 if (!['claim', 'clear'].includes(action) || !taskfileArg) {
@@ -72,6 +82,159 @@ const nextContent = `---\n${nextFrontmatter.join('\n')}\n---\n${content.slice(ma
 
 await fs.writeFile(taskfilePath, nextContent, 'utf8');
 console.log(`${action === 'claim' ? 'Geclaimd' : 'Gewist'}: ${path.relative(process.cwd(), taskfilePath)}`);
+
+function parseClearStaleOptions(args) {
+  const options = {
+    dryRun: false,
+    maxHours: DEFAULT_STALE_MAX_HOURS,
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--dry-run') {
+      options.dryRun = true;
+      continue;
+    }
+
+    if (arg === '--max-hours') {
+      const value = Number(args[index + 1]);
+      if (!Number.isFinite(value) || value <= 0) {
+        console.error(`Ongeldige --max-hours waarde: ${String(args[index + 1] ?? '')}`);
+        process.exit(1);
+      }
+      options.maxHours = value;
+      index += 1;
+      continue;
+    }
+
+    console.error(`Onbekende optie voor clear-stale: ${arg}`);
+    usage(1);
+  }
+
+  return options;
+}
+
+async function clearStaleActiveAgentClaims({ dryRun, maxHours }) {
+  const now = new Date();
+  const staleTaskfiles = [];
+  const taskfiles = await collectTaskfiles(process.cwd());
+
+  for (const taskfilePath of taskfiles) {
+    const content = await fs.readFile(taskfilePath, 'utf8');
+    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n?/);
+    if (!frontmatterMatch) {
+      continue;
+    }
+
+    const values = parseFrontmatterValues(frontmatterMatch[1]);
+    if (!isStaleActiveAgentClaim(values, now, maxHours)) {
+      continue;
+    }
+
+    staleTaskfiles.push({ taskfilePath, content, frontmatterMatch });
+  }
+
+  if (staleTaskfiles.length === 0) {
+    console.log('Geen verlopen active-agent claims gevonden.');
+    return;
+  }
+
+  if (dryRun) {
+    console.log('Verlopen active-agent claims:');
+    for (const { taskfilePath } of staleTaskfiles) {
+      console.log(`- ${path.relative(process.cwd(), taskfilePath)}`);
+    }
+    return;
+  }
+
+  for (const { taskfilePath, content, frontmatterMatch } of staleTaskfiles) {
+    const patch = clearPatch(now);
+    const nextFrontmatter = upsertFrontmatter(frontmatterMatch[1].split('\n'), patch);
+    const nextContent = `---\n${nextFrontmatter.join('\n')}\n---\n${content.slice(frontmatterMatch[0].length)}`;
+    await fs.writeFile(taskfilePath, nextContent, 'utf8');
+    console.log(`Gewist: ${path.relative(process.cwd(), taskfilePath)}`);
+  }
+}
+
+async function collectTaskfiles(rootDir) {
+  const results = [];
+  for (const taskflowDir of TASKFLOW_DIRS) {
+    const fullDir = path.join(rootDir, taskflowDir);
+    await collectMarkdownFiles(fullDir, results);
+  }
+  return results;
+}
+
+async function collectMarkdownFiles(directory, results) {
+  let entries;
+  try {
+    entries = await fs.readdir(directory, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await collectMarkdownFiles(fullPath, results);
+      continue;
+    }
+
+    if (entry.isFile() && entry.name.endsWith('.md')) {
+      results.push(fullPath);
+    }
+  }
+}
+
+function parseFrontmatterValues(frontmatter) {
+  const values = {};
+  for (const line of frontmatter.split('\n')) {
+    const separatorIndex = line.indexOf(':');
+    if (separatorIndex < 0) {
+      continue;
+    }
+    values[line.slice(0, separatorIndex).trim()] = normalizeYamlScalar(line.slice(separatorIndex + 1));
+  }
+  return values;
+}
+
+function normalizeYamlScalar(value) {
+  const normalized = String(value ?? '').trim();
+  if (
+    (normalized.startsWith('"') && normalized.endsWith('"')) ||
+    (normalized.startsWith("'") && normalized.endsWith("'"))
+  ) {
+    return normalized.slice(1, -1);
+  }
+  return normalized;
+}
+
+function isStaleActiveAgentClaim(values, now, maxHours) {
+  const activeStatus = String(values.active_agent_status ?? '').trim().toLowerCase();
+  if (!ACTIVE_AGENT_STATUS_VALUES.has(activeStatus)) {
+    return false;
+  }
+
+  const since = values.active_agent_since;
+  const sinceMs = new Date(since).getTime();
+  if (!since || String(since).toLowerCase() === 'null' || Number.isNaN(sinceMs)) {
+    return true;
+  }
+
+  return now.getTime() - sinceMs > maxHours * 60 * 60 * 1000;
+}
+
+function clearPatch(now) {
+  return {
+    active_agent: 'null',
+    active_agent_model: 'null',
+    active_agent_runtime: 'null',
+    active_agent_since: 'null',
+    active_agent_status: 'null',
+    active_agent_settings: 'null',
+    updated_at: now.toISOString().slice(0, 10),
+  };
+}
 
 function upsertFrontmatter(lines, patch) {
   const next = [...lines];

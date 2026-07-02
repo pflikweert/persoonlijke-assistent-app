@@ -9,8 +9,9 @@ function taskfile(status = 'in_progress', updatedAt = '2026-04-23') {
 function taskfileWithAgentMetadata({
   status = 'in_progress',
   pathStatus = 'running',
+  since = '2026-04-23T10:00:00.000Z',
 } = {}) {
-  return `---\nid: task-test\ntitle: Test\nstatus: ${status}\nphase: transitiemaand-consumer-beta\npriority: p2\nsource: docs/project/open-points.md\nupdated_at: 2026-04-23\nsummary: \"\"\ntags: []\nactive_agent: Codex\nactive_agent_status: ${pathStatus}\ndue_date: null\nsort_order: null\n---\n`;
+  return `---\nid: task-test\ntitle: Test\nstatus: ${status}\nphase: transitiemaand-consumer-beta\npriority: p2\nsource: docs/project/open-points.md\nupdated_at: 2026-04-23\nsummary: \"\"\ntags: []\nactive_agent: Codex\nactive_agent_since: "${since}"\nactive_agent_status: ${pathStatus}\ndue_date: null\nsort_order: null\n---\n`;
 }
 
 function completeTaskfile({ taskKind = 'task', specReady = true } = {}) {
@@ -107,6 +108,84 @@ test('fails when an open task claims done and still carries agent metadata', () 
   assert.equal(result.ok, false);
   assert.match(result.issues.join('\n'), /mag niet in open\/ staan/);
   assert.match(result.issues.join('\n'), /mag geen active_agent-velden bevatten/);
+});
+
+test('fails for stale active-agent claims in repo-wide taskfile scan', () => {
+  const result = evaluateTaskflow({
+    changedPaths: ['docs/project/25-tasks/open/current.md', 'app/settings.tsx'],
+    taskfileContents: {
+      'docs/project/25-tasks/open/current.md': taskfile('in_progress', '2026-04-24'),
+    },
+    allTaskfileContents: {
+      'docs/project/25-tasks/open/current.md': taskfile('in_progress', '2026-04-24'),
+      'docs/project/25-tasks/open/stale.md': taskfileWithAgentMetadata({
+        since: '2026-04-22T10:00:00.000Z',
+      }),
+    },
+    now: '2026-04-23T12:30:00.000Z',
+    hasDoneTransition: false,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.issues.join('\n'), /verlopen active_agent-claim ouder dan 24 uur/);
+});
+
+test('passes for recent active-agent claims in repo-wide taskfile scan', () => {
+  const result = evaluateTaskflow({
+    changedPaths: ['docs/project/25-tasks/open/current.md', 'app/settings.tsx'],
+    taskfileContents: {
+      'docs/project/25-tasks/open/current.md': taskfile('in_progress', '2026-04-23'),
+    },
+    allTaskfileContents: {
+      'docs/project/25-tasks/open/current.md': taskfile('in_progress', '2026-04-23'),
+      'docs/project/25-tasks/open/recent.md': taskfileWithAgentMetadata({
+        since: '2026-04-23T10:00:00.000Z',
+      }),
+    },
+    now: '2026-04-23T12:30:00.000Z',
+    hasDoneTransition: false,
+  });
+
+  assert.equal(result.ok, true);
+});
+
+test('fails for active-agent metadata on non-in_progress tasks', () => {
+  const result = evaluateTaskflow({
+    changedPaths: ['docs/project/25-tasks/open/current.md'],
+    taskfileContents: {
+      'docs/project/25-tasks/open/current.md': taskfile('in_progress', '2026-04-23'),
+    },
+    allTaskfileContents: {
+      'docs/project/25-tasks/open/review.md': taskfileWithAgentMetadata({
+        status: 'review',
+        since: '2026-04-23T10:00:00.000Z',
+      }),
+    },
+    now: '2026-04-23T12:30:00.000Z',
+    hasDoneTransition: false,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.issues.join('\n'), /active_agent-metadata moet status in_progress hebben/);
+});
+
+test('fails for malformed active_agent_since on active-agent claims', () => {
+  const result = evaluateTaskflow({
+    changedPaths: ['docs/project/25-tasks/open/current.md'],
+    taskfileContents: {
+      'docs/project/25-tasks/open/current.md': taskfile('in_progress', '2026-04-23'),
+    },
+    allTaskfileContents: {
+      'docs/project/25-tasks/open/malformed.md': taskfileWithAgentMetadata({
+        since: 'not-a-date',
+      }),
+    },
+    now: '2026-04-23T12:30:00.000Z',
+    hasDoneTransition: false,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.issues.join('\n'), /ongeldige active_agent_since/);
 });
 
 test('fails for newly added build task without spec-readiness sections', () => {

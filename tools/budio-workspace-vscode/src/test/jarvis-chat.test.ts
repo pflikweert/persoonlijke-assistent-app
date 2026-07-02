@@ -154,7 +154,7 @@ test('jarvis workspace awareness exposes real active agents and focus tasks', ()
     activeAgent: 'Codex',
     activeAgentModel: 'gpt-5',
     activeAgentRuntime: 'codex',
-    activeAgentSince: '2026-06-13T10:12:00.000Z',
+    activeAgentSince: new Date().toISOString(),
     activeAgentStatus: 'running',
     activeAgentSettings: 'default',
   };

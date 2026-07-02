@@ -3,6 +3,9 @@ import type { TaskCardViewModel } from './types';
 export type ChecklistProgressTone = 'none' | 'band-0' | 'band-1' | 'band-2' | 'band-3' | 'band-4';
 export type ActiveAgentTone = 'active' | 'inactive';
 
+const ACTIVE_AGENT_STALE_MS = 24 * 60 * 60 * 1000;
+const ACTIVE_AGENT_STATUS_VALUES = ['active', 'running', 'busy', 'editing', 'working', 'in_progress'];
+
 type ActiveAgentTask = Pick<
   TaskCardViewModel,
   'activeAgent' | 'activeAgentModel' | 'activeAgentRuntime' | 'activeAgentSince' | 'activeAgentStatus'
@@ -76,7 +79,23 @@ export function formatActiveAgentSince(value: string | null): string | null {
   }).format(parsed)}`;
 }
 
-export function isTaskAgentActive(task: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus'>): boolean {
+function isActiveAgentClaimFresh(value: string | null, now = new Date()): boolean {
+  if (!value) {
+    return false;
+  }
+
+  const parsed = new Date(value).getTime();
+  if (Number.isNaN(parsed)) {
+    return false;
+  }
+
+  return now.getTime() - parsed <= ACTIVE_AGENT_STALE_MS;
+}
+
+export function isTaskAgentActive(
+  task: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus' | 'activeAgentSince'>,
+  now = new Date(),
+): boolean {
   if (!task.activeAgent) {
     return false;
   }
@@ -86,19 +105,22 @@ export function isTaskAgentActive(task: Pick<TaskCardViewModel, 'activeAgent' | 
     return false;
   }
 
-  return ['active', 'running', 'busy', 'editing', 'working', 'in_progress'].includes(normalizedStatus);
+  return ACTIVE_AGENT_STATUS_VALUES.includes(normalizedStatus) && isActiveAgentClaimFresh(task.activeAgentSince, now);
 }
 
-export function activeAgentLabel(task: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus'>): string | null {
-  if (!isTaskAgentActive(task)) {
+export function activeAgentLabel(
+  task: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus' | 'activeAgentSince'>,
+  now = new Date(),
+): string | null {
+  if (!isTaskAgentActive(task, now)) {
     return null;
   }
 
   return task.activeAgent;
 }
 
-export function activeAgentUiState(task: ActiveAgentTask): ActiveAgentUiState {
-  const label = activeAgentLabel(task);
+export function activeAgentUiState(task: ActiveAgentTask, now = new Date()): ActiveAgentUiState {
+  const label = activeAgentLabel(task, now);
   if (!label) {
     return {
       isActive: false,
@@ -125,11 +147,12 @@ export function activeAgentUiState(task: ActiveAgentTask): ActiveAgentUiState {
 }
 
 export function compareActiveAgentsFirst(
-  left: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus'>,
-  right: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus'>,
+  left: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus' | 'activeAgentSince'>,
+  right: Pick<TaskCardViewModel, 'activeAgent' | 'activeAgentStatus' | 'activeAgentSince'>,
+  now = new Date(),
 ): number {
-  const leftActive = isTaskAgentActive(left);
-  const rightActive = isTaskAgentActive(right);
+  const leftActive = isTaskAgentActive(left, now);
+  const rightActive = isTaskAgentActive(right, now);
 
   if (leftActive === rightActive) {
     return 0;

@@ -1,17 +1,24 @@
 ---
 id: task-origineel-plan-integriteit-borgen-tijdens-agent-uitvoering
 title: Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: AGENTS.md
-updated_at: 2026-04-27
-summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete user-requirement-details tijdens uitvoering niet stilzwijgend vervagen of vervangen worden, en dat aanvullingen expliciet worden gelogd totdat een reconciliation is gedaan. Deze hardening benoemt nu ook expliciet het verschil tussen taskstatus, pluginselectie en echte actieve agentmetadata, plus de closeout-regel dat `done` geen `active_agent*` context meer mag dragen."
+updated_at: 2026-07-02
+summary: "Borg repo-breed dat een goedgekeurd oorspronkelijk plan én expliciete user-requirement-details tijdens uitvoering niet stilzwijgend vervagen of vervangen worden, en dat aanvullingen expliciet worden gelogd totdat een reconciliation is gedaan. Deze hardening borgt ook het verschil tussen taskstatus, pluginselectie en echte actieve agentmetadata, inclusief repo-brede stale active-agent detectie met een 24-uurs grens."
 tags: [workflow, tasks, governance, planning, agents]
 workstream: plugin
 due_date: null
 sort_order: 9
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -43,6 +50,49 @@ De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk pla
 Tussentijdse verbeteringen, correcties of regressiefixes worden voortaan niet gezien als vervanging van het oorspronkelijke plan, maar als aanvullingen binnen dezelfde taak of als expliciete nieuwe subscope. Expliciete user-requirements met latere uitvoer- of reviewwaarde blijven zichtbaar in de taskfile als detail-lijst en verdwijnen niet in alleen een samenvatting.
 
 Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk plan, expliciete user-requirements, later toegevoegde verbeteringen en nog open werk.
+
+## User outcome
+
+Een agent of developer ziet betrouwbare taskstatus: `done` betekent afgerond zonder actieve agentclaim, en een oude claim blijft niet meer zichtbaar als live agentactiviteit.
+
+## Functional slice
+
+Deze slice sluit stale taskmetadata op en voegt guardrails toe in drie lagen: taskflow verifier, herstel-script en Budio Workspace plugin-weergave.
+
+## Entry / exit
+
+- Entry: een taskfile bevat `active_agent*` metadata of wordt naar `done/` verplaatst.
+- Exit: taskflow verify accepteert alleen geldige recente claims op `in_progress`, en plugin-UI toont stale claims niet als actief.
+
+## Happy flow
+
+1. Agent claimt een `in_progress` task.
+2. Claim is jonger dan 24 uur en heeft een geldige `active_agent_since`.
+3. Verifier accepteert de task en plugin toont de agent als actief.
+4. Bij afronding wordt de task naar `done/` verplaatst en worden `active_agent*` velden geleegd.
+
+## Non-happy flows
+
+- Stale claim ouder dan 24 uur: `taskflow:verify` faalt en `clear-stale` kan de claim opruimen.
+- Claim op niet-`in_progress`: `taskflow:verify` faalt.
+- Malformed `active_agent_since`: `taskflow:verify` faalt en plugin toont geen live active styling.
+
+## UX / copy
+
+De plugin blijft dezelfde actieve-agent copy gebruiken voor geldige claims. Stale of malformed claims krijgen geen live actieve styling.
+
+## Data / IO
+
+- Input: taskfile-frontmatter met `active_agent*` metadata.
+- Output: verifier issues, opgeschoonde frontmatter via `clear-stale`, en plugin-state zonder stale active highlight.
+
+## Acceptance criteria
+
+- AIQS Assist task staat in `done/` zonder actieve agentmetadata.
+- `taskflow:verify` faalt op stale claims ouder dan 24 uur.
+- `taskflow:verify` faalt op active-agent metadata buiten `in_progress`.
+- `clear-stale` ondersteunt `--dry-run` en `--max-hours`.
+- Plugin toont stale/malformed claims niet als live actief.
 
 ## Waarom nu
 
@@ -83,6 +133,10 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - [x] Closeout-regels aangescherpt: `done` = file in `done/`, reconciliation aanwezig, verify/bundling gedaan en geen `active_agent*` metadata meer.
 - [x] Anti-drift semantiek toegevoegd voor verschil tussen taskstatus, pluginselectie en echte actieve agentactiviteit.
 - [x] Verify uitgevoerd (`taskflow`, docs bundle, docs bundle verify).
+- [x] AIQS Assist stale active-agent claim corrigeren en task naar `done/` verplaatsen.
+- [x] Repo-brede stale active-agent detectie toevoegen aan `taskflow:verify` met 24-uurs grens.
+- [x] `scripts/taskflow-agent-state.mjs clear-stale` toevoegen met `--dry-run` en `--max-hours`.
+- [x] Budio Workspace plugin-weergave hardenen zodat stale claims geen live actieve styling krijgen.
 
 ## Blockers / afhankelijkheden
 
@@ -93,6 +147,18 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - `npm run taskflow:verify`
 - `npm run docs:bundle`
 - `npm run docs:bundle:verify`
+- `npm run test:unit -- taskflow-agent-state`
+- `node --test scripts/docs/verify-taskflow-enforcement.test.mjs`
+- Plugin tests voor stale active-agent UI-state.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: planintegriteit, requirement-retentie en closeoutsemantiek borgen zodat agentwerk niet stilzwijgend drift of stale agentmetadata achterlaat.
+- Toegevoegde verbetering: AIQS Assist stale claim is gecorrigeerd en verplaatst naar `done/`; `taskflow:verify` scant nu repo-breed op active-agent claims ouder dan 24 uur of claims op niet-`in_progress` tasks.
+- Toegevoegde verbetering: `scripts/taskflow-agent-state.mjs clear-stale` biedt een herstelpad met `--dry-run` en `--max-hours`.
+- Toegevoegde verbetering: Budio Workspace plugin toont stale/malformed active-agent claims niet meer als live actief.
+- Afgerond: docs/workflowregels, tasktemplate, plugin closeout, verifier-hardening, recovery-script, plugin-weergave, unit/static/plugin-verificatie en lokale plugin-apply.
+- Open / blocked: geen open scope.
 
 ## Relevante links
 
@@ -129,3 +195,5 @@ Voor afronding is een verplichte reconciliation nodig tussen: oorspronkelijk pla
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-02T13:57:17+02:00 — fix: harden taskflow active agent cleanup

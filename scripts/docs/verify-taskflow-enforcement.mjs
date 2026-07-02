@@ -39,6 +39,7 @@ const EPIC_SPEC_SECTIONS = [
   'Acceptatie',
 ];
 const ACTIVE_AGENT_STATUS_VALUES = new Set(['active', 'running', 'busy', 'editing', 'working', 'in_progress']);
+const DEFAULT_ACTIVE_AGENT_MAX_HOURS = 24;
 const ACTIVE_AGENT_FRONTMATTER_FIELDS = [
   'active_agent',
   'active_agent_model',
@@ -138,6 +139,18 @@ function frontmatterBoolean(value) {
   return String(value ?? '').trim().toLowerCase() === 'true';
 }
 
+function normalizeYamlScalar(value) {
+  const normalized = String(value ?? '').trim();
+  if (
+    (normalized.startsWith('"') && normalized.endsWith('"')) ||
+    (normalized.startsWith("'") && normalized.endsWith("'"))
+  ) {
+    return normalized.slice(1, -1);
+  }
+
+  return normalized;
+}
+
 function missingSections(content, requiredSections) {
   const headings = parseHeadings(content);
   return requiredSections.filter((section) => !headings.has(section));
@@ -163,14 +176,70 @@ function taskSpecRequiredSections(frontmatter) {
 
 function hasAgentMetadata(frontmatter) {
   return ACTIVE_AGENT_FRONTMATTER_FIELDS.some((field) => {
-    const value = String(frontmatter[field] ?? '').trim().toLowerCase();
+    const value = normalizeYamlScalar(frontmatter[field]).toLowerCase();
     return value && value !== 'null';
   });
 }
 
 function hasActiveAgentStatus(frontmatter) {
-  const normalizedStatus = String(frontmatter.active_agent_status ?? '').trim().toLowerCase();
+  const normalizedStatus = normalizeYamlScalar(frontmatter.active_agent_status).toLowerCase();
   return ACTIVE_AGENT_STATUS_VALUES.has(normalizedStatus);
+}
+
+function parseNowMs(value) {
+  if (value === undefined || value === null) {
+    return Date.now();
+  }
+
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? Date.now() : parsed;
+}
+
+function parseActiveAgentMaxHours(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_ACTIVE_AGENT_MAX_HOURS;
+}
+
+function activeAgentSinceState(frontmatter, nowMs, maxAgeMs) {
+  const rawSince = normalizeYamlScalar(frontmatter.active_agent_since);
+  if (!rawSince || rawSince.toLowerCase() === 'null') {
+    return { valid: false, stale: false };
+  }
+
+  const sinceMs = new Date(rawSince).getTime();
+  if (Number.isNaN(sinceMs)) {
+    return { valid: false, stale: false };
+  }
+
+  return { valid: true, stale: nowMs - sinceMs > maxAgeMs };
+}
+
+function addActiveAgentIntegrityIssues({ issues, taskfilePath, frontmatter, nowMs, maxAgeHours }) {
+  const status = normalizeYamlScalar(frontmatter.status);
+  const hasMetadata = hasAgentMetadata(frontmatter);
+  const hasActiveStatus = hasActiveAgentStatus(frontmatter);
+
+  if (hasMetadata && status !== 'in_progress') {
+    issues.push(`Taskfile met active_agent-metadata moet status in_progress hebben: ${taskfilePath}`);
+  }
+
+  if (!hasActiveStatus) {
+    return;
+  }
+
+  const sinceState = activeAgentSinceState(frontmatter, nowMs, maxAgeHours * 60 * 60 * 1000);
+  if (!sinceState.valid) {
+    issues.push(`Taskfile met actieve agentstatus heeft ongeldige active_agent_since: ${taskfilePath}`);
+    return;
+  }
+
+  if (sinceState.stale) {
+    issues.push(`Taskfile heeft verlopen active_agent-claim ouder dan ${maxAgeHours} uur: ${taskfilePath}`);
+  }
 }
 
 export function evaluateTaskflow(input) {
@@ -179,6 +248,8 @@ export function evaluateTaskflow(input) {
   const taskfilePaths = relevantPaths.filter((filePath) => isTaskfilePath(filePath));
   const epicPaths = relevantPaths.filter((filePath) => isEpicPath(filePath));
   const addedPaths = input.addedPaths ?? [];
+  const nowMs = parseNowMs(input.now);
+  const activeAgentMaxHours = parseActiveAgentMaxHours(input.activeAgentMaxHours);
 
   if (relevantPaths.length === 0) {
     return { ok: true, issues: [], relevantPaths: [], taskfilePaths: [] };
@@ -243,6 +314,26 @@ export function evaluateTaskflow(input) {
     }
   }
 
+  const activeAgentScanContents = input.allTaskfileContents ?? input.taskfileContents;
+  for (const [taskfilePath, taskfileContent] of Object.entries(activeAgentScanContents ?? {})) {
+    if (!isTaskfilePath(taskfilePath) || !taskfileContent) {
+      continue;
+    }
+
+    const frontmatter = parseFrontmatter(taskfileContent);
+    if (!frontmatter) {
+      continue;
+    }
+
+    addActiveAgentIntegrityIssues({
+      issues,
+      taskfilePath,
+      frontmatter,
+      nowMs,
+      maxAgeHours: activeAgentMaxHours,
+    });
+  }
+
   for (const epicPath of epicPaths) {
     const epicContent = input.epicContents?.[epicPath];
     if (!epicContent) {
@@ -279,6 +370,16 @@ export function evaluateTaskflow(input) {
     relevantPaths,
     taskfilePaths,
   };
+}
+
+function collectTrackedTaskfiles(changedPaths) {
+  const tracked = safeRun('git ls-files docs/project/25-tasks/open docs/project/25-tasks/done')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((filePath) => isTaskfilePath(filePath));
+
+  return [...new Set([...tracked, ...changedPaths.filter((filePath) => isTaskfilePath(filePath))])];
 }
 
 function collectRepoState() {
@@ -339,13 +440,16 @@ async function main() {
   const repoState = collectRepoState();
   const possibleTaskfiles = repoState.changedPaths.filter((filePath) => isTaskfilePath(filePath));
   const possibleEpics = repoState.changedPaths.filter((filePath) => isEpicPath(filePath));
+  const allTaskfiles = collectTrackedTaskfiles(repoState.changedPaths);
   const taskfileContents = await readFileContents(possibleTaskfiles);
+  const allTaskfileContents = await readFileContents(allTaskfiles);
   const epicContents = await readFileContents(possibleEpics);
 
   const result = evaluateTaskflow({
     changedPaths: repoState.changedPaths,
     addedPaths: repoState.addedPaths,
     taskfileContents,
+    allTaskfileContents,
     epicContents,
     hasDoneTransition: repoState.hasDoneTransition,
   });

@@ -48,7 +48,7 @@ export function buildJarvisWorkspaceAwareness(snapshot: BoardSnapshot | null): J
   }
 
   const activeAgents = snapshot.allCards
-    .filter(isTaskAgentActive)
+    .filter((task) => isTaskAgentActive(task))
     .map(toAgentActivity)
     .slice(0, 6);
 

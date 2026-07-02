@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-07-02T11:43:53.349Z
-Source Commit: e1a8e15
+Build Timestamp (UTC): 2026-07-02T11:55:30.650Z
+Source Commit: 2f3e0f1
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-07-02T11:43:53.349Z
-Source Commit: e1a8e15
+Build Timestamp (UTC): 2026-07-02T11:55:30.650Z
+Source Commit: 2f3e0f1
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -930,13 +930,11 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [Admin + AIQS Linear interface kit refresh](25-tasks/open/admin-aiqs-linear-interface-kit-refresh.md) | In Progress | p1 | transitiemaand-consumer-beta | Budio admin en AIQS gebruiken een gedeelde admin-console componentlaag die desktop/tablet/mobile beter ondersteunt, zonder routes, datafl... |
 | [Admin/founder meeting capture — web route en IA](25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md) | In Progress | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
 | [AIQS admin console UI/UX Linear-richting](25-tasks/open/aiqs-admin-console-uiux-linear-richting.md) | In Progress | p1 | transitiemaand-consumer-beta | De admin- en AIQS-interface krijgt een eigen look and feel die past bij admin tooling en visueel richting Linear beweegt: rustige toolbar... |
-| [AIQS Assist laagbewuste prompt review](25-tasks/open/aiqs-assist-laagbewuste-prompt-review.md) | In Progress | p1 | transitiemaand-consumer-beta | AIQS Assist functioneert als Prompt Reviewer + Prompt Architect. Elke Assist-click geeft een laagbewuste diagnose, problemen, voorstel, u... |
 | [AIQS draft-live promotie en rollback flow](25-tasks/open/aiqs-draft-live-promotie-en-rollback-flow.md) | In Progress | p1 | transitiemaand-consumer-beta | Een AIQS-admin kan vanuit de bestaande admin-console zien welke versie live is, welke draft nog bewijs mist, welke draft klaar is voor li... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
 | [AIQS runtime DB-binding voor live prompts](25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md) | In Progress | p1 | transitiemaand-consumer-beta | Voor alle huidige AIQS-managed families leest runtime zijn prompt/model/system/config uit live AIQS-versies in de database. De app gebrui... |
 | [Moment detail foto-upload Android Chrome prepare regressie](25-tasks/open/moment-detail-foto-upload-android-chrome-prepare-regressie.md) | In Progress | p1 | transitiemaand-consumer-beta | De moment detail foto-upload op Android Chrome faalt niet meer op fragiele web picker-assets. Web/browser prepare werkt primair op direct... |
 | [MVP admin + AIQS productie bundel](25-tasks/open/mvp-admin-aiqs-productie-bundel.md) | In Progress | p1 | transitiemaand-consumer-beta | De bestaande AIQS-flow is aantoonbaar traceerbaar en inzetbaar voor productiegebruik van de huidige OpenAI-calls, zonder featureverbredin... |
-| [Oorspronkelijk plan en planintegriteit borgen tijdens agent-uitvoering](25-tasks/open/origineel-plan-integriteit-borgen-tijdens-agent-uitvoering.md) | In Progress | p1 | transitiemaand-consumer-beta | De repo-taskflow borgt voortaan expliciet dat een goedgekeurd oorspronkelijk plan of afgesproken scope tijdens uitvoering stabiel blijft,... |
 | [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Settings/admin navigatie contract fix](25-tasks/open/settings-admin-navigatie-contract-fix.md) | In Progress | p1 | transitiemaand-consumer-beta | `Instellingen` in het hoofdmenu opent altijd het instellingenoverzicht met menu-keuzes. First-level settings/admin back gaat terug naar `... |
 | [Admin/founder meeting capture — admin processing controls](25-tasks/open/admin-founder-meeting-capture-admin-processing-controls.md) | Backlog | p2 | transitiemaand-consumer-beta | Admin kan upload/transcript/summary processing veilig retryen of rerunnen met duidelijke status en failure feedback. |

@@ -65,6 +65,46 @@ active_agent_settings: default`,
   assert.match(content, /active_agent_settings: null/);
 });
 
+test('taskflow-agent-state clear-stale dry-run reports stale claims without writing', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'taskflow-agent-'));
+  const taskfile = path.join(workspaceRoot, 'docs/project/25-tasks/open/stale.md');
+  await fs.mkdir(path.dirname(taskfile), { recursive: true });
+  await fs.writeFile(taskfile, taskfileWithActiveAgent('2026-06-20T15:00:00.000Z'), 'utf8');
+
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [scriptPath, 'clear-stale', '--dry-run', '--max-hours', '24'],
+    { cwd: workspaceRoot },
+  );
+
+  const content = await fs.readFile(taskfile, 'utf8');
+  assert.match(stdout, /Verlopen active-agent claims/);
+  assert.match(stdout, /docs\/project\/25-tasks\/open\/stale\.md/);
+  assert.match(content, /active_agent: Codex/);
+});
+
+test('taskflow-agent-state clear-stale clears stale claims and preserves recent claims', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'taskflow-agent-'));
+  const staleTaskfile = path.join(workspaceRoot, 'docs/project/25-tasks/open/stale.md');
+  const recentTaskfile = path.join(workspaceRoot, 'docs/project/25-tasks/open/recent.md');
+  await fs.mkdir(path.dirname(staleTaskfile), { recursive: true });
+  await fs.writeFile(staleTaskfile, taskfileWithActiveAgent('2026-06-20T15:00:00.000Z'), 'utf8');
+  await fs.writeFile(recentTaskfile, taskfileWithActiveAgent(new Date().toISOString()), 'utf8');
+
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [scriptPath, 'clear-stale', '--max-hours', '24'],
+    { cwd: workspaceRoot },
+  );
+
+  const staleContent = await fs.readFile(staleTaskfile, 'utf8');
+  const recentContent = await fs.readFile(recentTaskfile, 'utf8');
+  assert.match(stdout, /Gewist: docs\/project\/25-tasks\/open\/stale\.md/);
+  assert.match(staleContent, /active_agent: null/);
+  assert.match(staleContent, /active_agent_since: null/);
+  assert.match(recentContent, /active_agent: Codex/);
+});
+
 test('taskflow-agent-state fails clearly for missing files', async () => {
   await assert.rejects(
     () => execFileAsync(process.execPath, [scriptPath, 'claim', '/tmp/does-not-exist-task.md'], { cwd: repoRoot }),
@@ -94,4 +134,17 @@ sort_order: 1
 
 Context.
 `;
+}
+
+function taskfileWithActiveAgent(since) {
+  return baseTaskfile().replace(
+    'sort_order: 1',
+    `sort_order: 1
+active_agent: Codex
+active_agent_model: gpt-5
+active_agent_runtime: codex
+active_agent_since: "${since}"
+active_agent_status: running
+active_agent_settings: default`,
+  );
 }

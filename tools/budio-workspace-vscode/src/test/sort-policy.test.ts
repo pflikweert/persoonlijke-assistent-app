@@ -100,7 +100,15 @@ test('sortTaskCards supports due, priority, progress, updated and alphabetical m
 test('sortTaskCards promotes active-agent tasks to the top while preserving other sort behavior', () => {
   const cards = [
     card({ id: 'inactive-1', title: 'A', status: 'ready', sortOrder: 1 }),
-    card({ id: 'active-1', title: 'Z', status: 'ready', sortOrder: 3, activeAgent: 'Cline', activeAgentStatus: 'running' }),
+    card({
+      id: 'active-1',
+      title: 'Z',
+      status: 'ready',
+      sortOrder: 3,
+      activeAgent: 'Cline',
+      activeAgentStatus: 'running',
+      activeAgentSince: new Date().toISOString(),
+    }),
     card({ id: 'inactive-2', title: 'B', status: 'backlog', sortOrder: 1 }),
   ];
 
