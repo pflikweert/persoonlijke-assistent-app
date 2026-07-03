@@ -151,6 +151,7 @@ updated_at: 2026-04-20
   assert.match(claimedContent, /active_agent_since: "2026-06-22T09:30:00.000Z"/);
   assert.match(claimedContent, /active_agent_status: running/);
   assert.match(claimedContent, /active_agent_settings: local/);
+  assert.match(claimedContent, /- start 2026-06-22T09:30:00.000Z - Codex \/ gpt-5 \/ codex \/ local/);
 
   const [claimedTask] = await repository.scan();
   assert.ok(claimedTask);
@@ -167,6 +168,7 @@ updated_at: 2026-04-20
   assert.match(clearedContent, /active_agent_since: null/);
   assert.match(clearedContent, /active_agent_status: null/);
   assert.match(clearedContent, /active_agent_settings: null/);
+  assert.match(clearedContent, /- stop 2026-06-22T09:30:00.000Z -> [^ ]+ - Codex \/ gpt-5 \/ codex \/ local - reason: stopped/);
 });
 
 test('repository updateTaskFields automatically claims agent when moving task to in_progress', async () => {
@@ -203,11 +205,12 @@ sort_order: 1
   const content = await fs.readFile(filePath, 'utf8');
   assert.match(content, /status: in_progress/);
   assert.match(content, /active_agent: Codex/);
-  assert.match(content, /active_agent_model: unknown/);
+  assert.match(content, /active_agent_model: gpt-5/);
   assert.match(content, /active_agent_runtime: codex/);
   assert.match(content, /active_agent_since: "[^"]+"/);
   assert.match(content, /active_agent_status: running/);
   assert.match(content, /active_agent_settings: default/);
+  assert.match(content, /- start [^ ]+ - Codex \/ gpt-5 \/ codex \/ default/);
 });
 
 test('repository updateTaskFields automatically clears agent when leaving in_progress', async () => {
@@ -247,6 +250,7 @@ active_agent_status: running
   assert.match(content, /status: review/);
   assert.match(content, /active_agent: null/);
   assert.match(content, /active_agent_status: null/);
+  assert.match(content, /reason: stopped/);
 });
 
 test('repository moveTask rewrites sort_order for in-lane reordering', async () => {
@@ -646,6 +650,7 @@ active_agent_settings: default
   assert.match(doneContent, /status: done/);
   assert.match(doneContent, /active_agent: null/);
   assert.match(doneContent, /active_agent_status: null/);
+  assert.match(doneContent, /- stop 2026-04-27T10:00:00Z -> [^ ]+ - Codex \/ gpt-5.5 \/ codex \/ default - reason: done/);
 });
 
 test('repository moveTask clears active agent metadata when dropping task into done lane', async () => {
@@ -692,4 +697,5 @@ active_agent_status: running
   assert.match(doneContent, /status: done/);
   assert.match(doneContent, /active_agent: null/);
   assert.match(doneContent, /active_agent_status: null/);
+  assert.match(doneContent, /reason: done/);
 });

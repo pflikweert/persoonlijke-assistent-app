@@ -2,8 +2,8 @@
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-07-03T08:31:57.838Z
-Source Commit: 3636abc
+Build Timestamp (UTC): 2026-07-03T09:29:11.084Z
+Source Commit: b444d7a
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -939,7 +939,6 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
 | [STITCH_API_KEY voor MCP activeren](25-tasks/open/stitch-api-key-voor-mcp-activeren.md) | Backlog | p2 | transitiemaand-consumer-beta | De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch MCP later zonder extra handelingen gebruikt kan worden.... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | In Progress | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
-| [Momentdetail swipe navigatie](25-tasks/open/moment-detail-swipe-navigatie.md) | In Progress | p2 | transitiemaand-consumer-beta | De momentdetailpagina ondersteunt swipe links/rechts voor volgend/vorig moment. Als er geen moment in die richting bestaat, beweegt de pa... |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.
@@ -2854,6 +2853,8 @@ Gebruik Act mode voor:
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
+- Bij een expliciete user-opdracht `commit en push`: commit bewust, voer `git push` uit en stop daarna.
+- Maak geen GitHub PR en draai geen `gh auth status` bij gewone commit/push. GitHub CLI hoort alleen bij GitHub-diagnose of expliciete PR/issue-taken.
 
 ## Closeout-semantiek
 
@@ -2869,7 +2870,9 @@ Gebruik Act mode voor:
   - actieve agent = runtime/WIP-metadata in `active_agent*`
 - Bij actieve Codex-uitvoering hoort `active_agent*` automatisch gevuld te zijn. Buiten de plugin gebruik je:
   - `node scripts/taskflow-agent-state.mjs claim <taskfile>` bij start/hervatting.
-  - `node scripts/taskflow-agent-state.mjs clear <taskfile>` bij done, blocked of overdracht.
+  - `node scripts/taskflow-agent-state.mjs clear <taskfile> --reason <done|blocked|handoff|stopped>` bij done, blocked, overdracht of stoppen.
+- `active_agent*` frontmatter is uitsluitend live-status. Start/stop-historie blijft append-only onder `## Agent activity`.
+- De standaard Codex-modelwaarde is `gpt-5`, tenzij `BUDIO_WORKSPACE_AGENT_MODEL` of `CODEX_MODEL` expliciet anders is gezet.
 - `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
 - Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
 

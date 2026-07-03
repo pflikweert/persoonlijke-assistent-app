@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-07-03T08:31:57.838Z
-Source Commit: 3636abc
+Build Timestamp (UTC): 2026-07-03T09:29:11.084Z
+Source Commit: b444d7a
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 80
+- Totaal tasks opgenomen: 82
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -9637,6 +9637,197 @@ Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor
 
 ---
 
+## Momentdetail swipe navigatie
+
+- Path: `docs/project/25-tasks/done/moment-detail-swipe-navigatie.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-03
+
+```md
+---
+id: task-moment-detail-swipe-navigatie
+title: Momentdetail swipe navigatie
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-03
+summary: "Momentdetail ondersteunt horizontaal swipen naar vorig/volgend moment, inclusief overgang naar vorige/volgende dag met momenten, zonder permanente visuele redesigns. Task is afgerond op basis van commit Add moment detail swipe navigation."
+tags: [moment-detail, navigation, gestures, ui]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+## Probleem / context
+
+Op de momentdetailpagina kan de gebruiker nu alleen via terug naar de daglijst en daarna een ander moment openen. De gewenste interactie is direct door momenten heen swipen, zonder dat de momentpagina visueel wordt herontworpen.
+
+## Gewenste uitkomst
+
+De momentdetailpagina ondersteunt swipe links/rechts voor volgend/vorig moment. Als er geen moment in die richting bestaat, beweegt de pagina niet. De navigatie loopt door naar de dichtstbijzijnde vorige of volgende dag met momenten.
+
+## User outcome
+
+Een gebruiker kan op een momentdetailpagina blijven en met horizontale swipes rustig door de eigen momenten bladeren.
+
+## Functional slice
+
+Een afgebakende interactieslice op `app/entry/[id].tsx`: adjacent-moment lookup, swipe-detectie, tijdelijke swipe-beweging en routevervanging naar het gekozen moment.
+
+## Entry / exit
+
+- Entry: gebruiker staat op `/entry/[id]`.
+- Exit: gebruiker blijft op momentdetail en ziet na een geldige swipe het vorige of volgende moment, of de pagina blijft op zijn plek wanneer er geen target bestaat.
+
+## Happy flow
+
+1. Gebruiker opent een momentdetailpagina.
+2. Gebruiker swipet naar links.
+3. De pagina beweegt zichtbaar mee en opent het volgende moment, ook als dat op de volgende dag staat.
+4. Gebruiker swipet naar rechts.
+5. De pagina beweegt zichtbaar mee en opent het vorige moment, ook als dat op de vorige dag staat.
+
+## Non-happy flows
+
+- Empty state: als het huidige moment niet geladen is, staat swipe uit.
+- Permission denied / unavailable: bestaande error-state blijft leidend.
+- Validation / unsupported state: ontbrekende entry-id of ontbrekende adjacent target navigeert niet.
+- Failure / retry / cancel: bij service-fout blijft de bestaande momentpagina zichtbaar; swipe navigeert niet.
+
+## UX / copy
+
+- Geen permanente nieuwe copy, buttons, labels, cards, borders of redesign.
+- Alleen tijdelijke horizontale beweging tijdens swipe is zichtbaar.
+- Als er geen vorige of volgende target is, blijft de pagina op `translateX: 0`.
+- Swipe links = volgende moment; swipe rechts = vorige moment.
+
+## Data / IO
+
+- Input: huidige normalized entry id en bijbehorende `journal_date` / `captured_at`.
+- Output: optioneel vorige en volgende route target met `id` en `journalDate`.
+- Opslag/API/service/file-impact: alleen bestaande Supabase reads op `entries_raw` en `entries_normalized`; geen migratie.
+- Statussen: geen nieuwe productstatus.
+
+## Waarom nu
+
+Dit is een directe usability-verbetering voor terugzien van momenten en past bij de bestaande momentdetailervaring zonder nieuwe productscope.
+
+## In scope
+
+- Adjacent-moment lookup over dagen heen.
+- Gesture-wiring op momentdetail.
+- Pure helperlogica met unit-tests.
+- Gerichte verify.
+
+## Buiten scope
+
+- Nieuwe navigatieknoppen.
+- Redesign van momentdetail.
+- Wijzigingen aan foto-viewer swipe/zoom.
+- DB-migraties of nieuwe dependencies.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Horizontaal swipen op momentdetail toevoegen.
+- Geen visuele wijzigingen op de momentpagina behalve tijdelijke swipe-feedback.
+- Als er geen vorig/volgend moment is, moet dat zichtbaar zijn doordat de pagina niet beweegt.
+- Navigatie werkt ook naar vorige en volgende dag.
+
+## Expliciete user requirements / detailbehoud
+
+- "Ik wil kunnen swippen tussen momenten, volgende en vorige."
+- "geen visuele wijzigingen op de moment pagina"
+- "wel duidelijk visueel als ik op een moment pagina naar links of rechts swipe"
+- "als er geen volgende moment of vorige moment is dan visueel zichtbaar ook, door niet bewegen van de pagina"
+- "Werkt ook naar de volgende dag en vorige dag."
+
+## Status per requirement
+
+- [x] Swipe tussen volgende en vorige momenten — status: gebouwd
+- [x] Geen permanente visuele wijziging op momentpagina — status: gebouwd
+- [x] Tijdelijke zichtbare swipe-beweging bij beschikbare target — status: gebouwd
+- [x] Geen beweging bij ontbrekende target — status: gebouwd
+- [x] Navigatie over daggrenzen heen — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: adjacent lookup + swipe-helper + scherm-wiring bouwen.
+- [x] Blok 3: gerichte tests, verify en taskstatus afronden.
+
+## Concrete checklist
+
+- [x] Adjacent-moment service toevoegen.
+- [x] Pure swipe-helperlogica testen.
+- [x] Momentdetail met gesture en routevervanging uitbreiden.
+- [x] Verify draaien en taskfile reconciliëren.
+
+## Acceptance criteria
+
+- [x] Swipe links opent het volgende moment.
+- [x] Swipe rechts opent het vorige moment.
+- [x] Eerste/laatste moment beweegt niet in een ontbrekende richting.
+- [x] Volgende/vorige target mag op een andere dag liggen.
+- [x] Momentdetail krijgt geen permanente nieuwe UI-elementen.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- ✅ `npm run test:unit -- tests/unit/moment-navigation-presentation.test.ts`
+- ✅ `npm run lint`
+- ✅ `npx tsc --noEmit --allowImportingTsExtensions`
+- ✅ `npm run taskflow:verify`
+- Eerdere notitie: standaard `npm run typecheck` en light/dark runtime-smoke waren in de oorspronkelijke swipe-run niet als afsluitend bewijs beschikbaar door bestaande Supabase-WIP en ontbrekende lokale web target.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: swipe links/rechts tussen momenten, geen permanente visuele wijziging, geen beweging zonder target en navigatie over daggrenzen.
+- Toegevoegde verbeteringen: geen.
+- Afgerond: adjacent lookup, swipe-helper, gesture-wiring, routevervanging en unit-test.
+- Open / blocked: geen task-blockers voor afronding; resterende runtime-smoke was geen onderdeel van deze closeout-opdracht.
+
+## Relevante links
+
+- `app/entry/[id].tsx`
+- `services/day-journals.ts`
+
+
+## Commits
+
+- 2026-07-03T10:27:50+02:00 — Add moment detail swipe navigation
+
+
+## Agent activity
+
+- stop 2026-07-03T08:01:38.543Z -> 2026-07-03T09:26:42.347Z - Codex / gpt-5 / codex / default - reason: done
+```
+
+---
+
 ## Moment detail foto's toevoegen met beveiligde galerij (max 5)
 
 - Path: `docs/project/25-tasks/done/moment-entry-fotos-galerij-beveiligde-upload.md`
@@ -13098,6 +13289,203 @@ De post-push review van de hook-fix vond direct een live rename-regressie. Dit b
 - 2026-04-29T00:05:17+02:00 — fix: handle task commit log renames
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+```
+
+---
+
+## Taskflow closeout en agentmetadata hardening
+
+- Path: `docs/project/25-tasks/done/taskflow-closeout-agentmetadata-hardening.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-03
+
+```md
+---
+id: task-taskflow-closeout-agentmetadata-hardening
+title: Taskflow closeout en agentmetadata hardening
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-03
+summary: "Commit/push stopt voortaan bij push zonder PR-flow, task-closeout wist live active_agent metadata en agent-runs krijgen append-only historie in taskfiles."
+tags: [taskflow, workflow, agent-metadata, codex, plugin]
+workstream: plugin
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+## Probleem / context
+
+De vorige swipe-taak is wel gecommit en gepusht, maar bleef in `open/` met `status: in_progress` en live `active_agent*` metadata. Daarnaast probeerde de commit/push-flow GitHub PR-context mee te nemen terwijl de gewenste lokale flow alleen commit en push is.
+
+## Gewenste uitkomst
+
+Task-closeout wordt consequent: afgeronde taken staan in `done/`, hebben `status: done`, geen live `active_agent*` metadata, en behouden wel agent-run historie in de task body. De lokale commit/push-instructies stoppen bij `git push` tenzij expliciet om een PR wordt gevraagd.
+
+## User outcome
+
+Een developer of agent ziet na afronding direct de juiste taskstatus, geen valse actieve agent, en wel welke agentruns op een taak hebben plaatsgevonden.
+
+## Functional slice
+
+Eén workflow-hardening slice: taskflow-helper, VS Code plugin metadata defaults/history, lokale instructies en afronding van de bestaande swipe-task.
+
+## Entry / exit
+
+- Entry: agent start of hervat een taak via taskfile en `active_agent*` metadata.
+- Exit: agent stopt, blocked of rondt af; live metadata wordt gewist en `## Agent activity` bevat start/stop-regels.
+
+## Happy flow
+
+1. Agent claimt een taak.
+2. Taskfile krijgt live `active_agent*` metadata en een startregel in `## Agent activity`.
+3. Agent clear of sluit de taak af.
+4. Live metadata wordt `null` en een stopregel bewaart start/stop/model/runtime/settings/reason.
+5. Bij commit/push wordt alleen gepusht; er wordt geen PR gemaakt zonder expliciete vraag.
+
+## Non-happy flows
+
+- Empty state: ontbrekende `## Agent activity` wordt aangemaakt.
+- Permission denied / unavailable: file write errors blijven command failures.
+- Validation / unsupported state: onbekende clear-reason faalt met duidelijke usage.
+- Failure / retry / cancel: een stale live claim blijft via `taskflow:verify` en `clear-stale` zichtbaar.
+
+## UX / copy
+
+- Geen app-UI wijziging.
+- Plugin-labels voor actieve agent blijven gebaseerd op live frontmatter.
+- Taskfile history gebruikt sobere markdownregels onder `## Agent activity`.
+
+## Data / IO
+
+- Input: taskfile frontmatter, optionele env/settings voor agentnaam/model/runtime/settings.
+- Output: live frontmatter plus append-only markdownregels in `## Agent activity`.
+- Opslag/API/service/file-impact: markdown taskfiles, `scripts/taskflow-agent-state.mjs`, VS Code plugin task writer/metadata helpers, repo docs.
+- Statussen: live agentstatus blijft `running`; done/blocked/handoff/stopped worden history-reasons, niet live frontmatterstatus.
+
+## Waarom nu
+
+De vorige taak liet precies de fout zien die deze workflow moet voorkomen: valse actieve agentmetadata en een task die na commit/push niet naar `done` ging.
+
+## In scope
+
+- Swipe-task correct afronden en verplaatsen.
+- Commit/push-instructies aanpassen zonder PR-flow.
+- Agent default model naar `gpt-5`.
+- Agent activity start/stop historie toevoegen in CLI-helper en plugin-writer.
+- Gerichte tests en plugin apply.
+
+## Buiten scope
+
+- GitHub PR tooling verwijderen uit externe Codex skill-cache.
+- Nieuwe plugin UI voor agent history.
+- Brede taskfile schema-migratie buiten geraakte taken.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Sluit `docs/project/25-tasks/open/moment-detail-swipe-navigatie.md` af naar `done/`.
+- Geen PR aanmaken bij commit en push tenzij expliciet gevraagd.
+- Maak `active_agent*` alleen live-state.
+- Voeg append-only agenthistorie toe in de task body.
+- Gebruik `gpt-5` als fallback model.
+- Pas plugin defaults en workflowdocs aan.
+
+## Expliciete user requirements / detailbehoud
+
+- "ik wil geen pr aanmaken met github, haal dit uit de flow met commit en push"
+- "De taak staat nog in progress en niet op done, los dit op, dit moet ook in de toekomst altijd goed gaan."
+- "`active_agent_status: running` klopt niet wanneer agent stopt."
+- "model is niet ingevuld"
+- "een agent kan meerdere keren aan en uit zijn"
+- "denk diep na hoe dit permanent is locale agent instructies alles netjes op te lossen"
+
+## Status per requirement
+
+- [x] Commit/push zonder PR-flow — status: gebouwd in workflowdocs; push volgt in closeout
+- [x] Swipe-task naar `done/` zonder live agentmetadata — status: gebouwd
+- [x] Agent model fallback `gpt-5` — status: gebouwd en unit-tested
+- [x] Agent start/stop historie — status: gebouwd en unit-tested
+- [x] Plugin defaults/history gelijk aan CLI-helper — status: gebouwd en gericht getest
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Nog geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taak aanmaken en claimen.
+- [x] Blok 2: CLI-helper/plugin agentmetadata hardenen.
+- [x] Blok 3: swipe-task closeout + workflowdocs.
+- [x] Blok 4: verify, plugin apply, commit en push zonder PR.
+
+## Concrete checklist
+
+- [x] Nieuwe task claimen.
+- [x] `taskflow-agent-state` claim/clear history + model default bouwen.
+- [x] VS Code plugin metadata defaults/history bouwen.
+- [x] Workflowdocs en skill aanpassen.
+- [x] Swipe-task naar `done/` verplaatsen en metadata wissen.
+- [x] Docs bundle, tests, plugin apply, commit en push.
+
+## Acceptance criteria
+
+- [x] `claim` voegt live metadata en start history toe.
+- [x] `clear --reason done` wist live metadata en voegt stop history toe.
+- [x] Plugin claim/clear gebruikt `gpt-5` fallback en schrijft history.
+- [x] `commit en push` flow vereist geen GitHub CLI of PR.
+- [x] Swipe-task staat in `done/` met status `done` en geen live active_agent values.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- ✅ `node --test scripts/taskflow-agent-state.test.mjs`
+- ✅ `node --test scripts/docs/verify-taskflow-enforcement.test.mjs`
+- ✅ `npm run build:extension && node --test dist/test/agent-metadata.test.js dist/test/repository.test.js` in `tools/budio-workspace-vscode/`
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `npm run taskflow:verify`
+- ✅ `npm run docs:bundle`
+- ✅ `npm run docs:bundle:verify`
+- ✅ `npm run apply:workspace` in `tools/budio-workspace-vscode/`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: swipe-task naar `done/`, commit/push-flow zonder PR, `active_agent*` als live-status, agent-run historie, `gpt-5` fallback en plugin/workflowdocs hardening.
+- Toegevoegde verbeteringen: `taskflow:verify` faalt nu ook op live active-agent claims met ontbrekend of `unknown` model; een bestaande live claim is naar `gpt-5` gecorrigeerd.
+- Afgerond: CLI-helper, verifier, plugin defaults/history, workflowdocs, skill, plugin apply en swipe-task closeout zijn afgerond.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `scripts/taskflow-agent-state.mjs`
+- `tools/budio-workspace-vscode/src/tasks/agent-metadata.ts`
+- `docs/project/25-tasks/done/moment-detail-swipe-navigatie.md`
+
+
+## Agent activity
+
+- start 2026-07-03T09:26:30.991Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-03T09:26:30.991Z -> 2026-07-03T09:28:59.362Z - Codex / gpt-5 / codex / default - reason: done
 ```
 
 ---

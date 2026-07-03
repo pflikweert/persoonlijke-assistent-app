@@ -14,12 +14,13 @@ const ACTIVE_AGENT_FIELDS = [
 const ACTIVE_AGENT_STATUS_VALUES = new Set(['active', 'running', 'busy', 'editing', 'working', 'in_progress']);
 const DEFAULT_STALE_MAX_HOURS = 24;
 const TASKFLOW_DIRS = ['docs/project/25-tasks/open', 'docs/project/25-tasks/done'];
+const CLEAR_REASONS = new Set(['done', 'blocked', 'handoff', 'stopped', 'stale']);
 
 function usage(exitCode = 1) {
   const output = exitCode === 0 ? console.log : console.error;
   output(`Usage:
   node scripts/taskflow-agent-state.mjs claim <taskfile>
-  node scripts/taskflow-agent-state.mjs clear <taskfile>
+  node scripts/taskflow-agent-state.mjs clear <taskfile> [--reason <done|blocked|handoff|stopped>]
   node scripts/taskflow-agent-state.mjs clear-stale [--dry-run] [--max-hours <hours>]`);
   process.exit(exitCode);
 }
@@ -55,30 +56,17 @@ if (!match) {
 }
 
 const now = new Date();
-const patch =
-  action === 'claim'
-    ? {
-        active_agent: cleanEnv('BUDIO_WORKSPACE_AGENT_NAME', 'Codex'),
-        active_agent_model: cleanEnv('BUDIO_WORKSPACE_AGENT_MODEL', process.env.CODEX_MODEL ?? 'unknown'),
-        active_agent_runtime: cleanEnv('BUDIO_WORKSPACE_AGENT_RUNTIME', 'codex'),
-        active_agent_since: quoteYamlString(now.toISOString()),
-        active_agent_status: 'running',
-        active_agent_settings: cleanEnv('BUDIO_WORKSPACE_AGENT_SETTINGS', 'default'),
-        updated_at: now.toISOString().slice(0, 10),
-      }
-    : {
-        active_agent: 'null',
-        active_agent_model: 'null',
-        active_agent_runtime: 'null',
-        active_agent_since: 'null',
-        active_agent_status: 'null',
-        active_agent_settings: 'null',
-        updated_at: now.toISOString().slice(0, 10),
-      };
-
 const frontmatterLines = match[1].split('\n');
-const nextFrontmatter = upsertFrontmatter(frontmatterLines, patch);
-const nextContent = `---\n${nextFrontmatter.join('\n')}\n---\n${content.slice(match[0].length)}`;
+const frontmatterValues = parseFrontmatterValues(match[1]);
+const livePatch = action === 'claim' ? claimPatch(now) : clearPatch(now);
+const activityEntry =
+  action === 'claim'
+    ? buildStartEntry(livePatch)
+    : buildStopEntry(frontmatterValues, now, parseClearOptions(restArgs).reason);
+
+const nextFrontmatter = upsertFrontmatter(frontmatterLines, livePatch);
+const nextBody = appendAgentActivityEntry(content.slice(match[0].length), activityEntry);
+const nextContent = `---\n${nextFrontmatter.join('\n')}\n---\n${nextBody}`;
 
 await fs.writeFile(taskfilePath, nextContent, 'utf8');
 console.log(`${action === 'claim' ? 'Geclaimd' : 'Gewist'}: ${path.relative(process.cwd(), taskfilePath)}`);
@@ -114,6 +102,31 @@ function parseClearStaleOptions(args) {
   return options;
 }
 
+function parseClearOptions(args) {
+  const options = {
+    reason: 'stopped',
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--reason') {
+      const reason = String(args[index + 1] ?? '').trim();
+      if (!CLEAR_REASONS.has(reason) || reason === 'stale') {
+        console.error(`Ongeldige --reason waarde: ${reason}`);
+        usage(1);
+      }
+      options.reason = reason;
+      index += 1;
+      continue;
+    }
+
+    console.error(`Onbekende optie voor clear: ${arg}`);
+    usage(1);
+  }
+
+  return options;
+}
+
 async function clearStaleActiveAgentClaims({ dryRun, maxHours }) {
   const now = new Date();
   const staleTaskfiles = [];
@@ -131,7 +144,7 @@ async function clearStaleActiveAgentClaims({ dryRun, maxHours }) {
       continue;
     }
 
-    staleTaskfiles.push({ taskfilePath, content, frontmatterMatch });
+    staleTaskfiles.push({ taskfilePath, content, frontmatterMatch, values });
   }
 
   if (staleTaskfiles.length === 0) {
@@ -147,10 +160,11 @@ async function clearStaleActiveAgentClaims({ dryRun, maxHours }) {
     return;
   }
 
-  for (const { taskfilePath, content, frontmatterMatch } of staleTaskfiles) {
+  for (const { taskfilePath, content, frontmatterMatch, values } of staleTaskfiles) {
     const patch = clearPatch(now);
     const nextFrontmatter = upsertFrontmatter(frontmatterMatch[1].split('\n'), patch);
-    const nextContent = `---\n${nextFrontmatter.join('\n')}\n---\n${content.slice(frontmatterMatch[0].length)}`;
+    const nextBody = appendAgentActivityEntry(content.slice(frontmatterMatch[0].length), buildStopEntry(values, now, 'stale'));
+    const nextContent = `---\n${nextFrontmatter.join('\n')}\n---\n${nextBody}`;
     await fs.writeFile(taskfilePath, nextContent, 'utf8');
     console.log(`Gewist: ${path.relative(process.cwd(), taskfilePath)}`);
   }
@@ -234,6 +248,71 @@ function clearPatch(now) {
     active_agent_settings: 'null',
     updated_at: now.toISOString().slice(0, 10),
   };
+}
+
+function claimPatch(now) {
+  return {
+    active_agent: cleanEnv('BUDIO_WORKSPACE_AGENT_NAME', 'Codex'),
+    active_agent_model: cleanEnv('BUDIO_WORKSPACE_AGENT_MODEL', process.env.CODEX_MODEL ?? 'gpt-5'),
+    active_agent_runtime: cleanEnv('BUDIO_WORKSPACE_AGENT_RUNTIME', 'codex'),
+    active_agent_since: quoteYamlString(now.toISOString()),
+    active_agent_status: 'running',
+    active_agent_settings: cleanEnv('BUDIO_WORKSPACE_AGENT_SETTINGS', 'default'),
+    updated_at: now.toISOString().slice(0, 10),
+  };
+}
+
+function buildStartEntry(patch) {
+  return `- start ${normalizeYamlScalar(patch.active_agent_since)} - ${normalizeYamlScalar(patch.active_agent)} / ${normalizeYamlScalar(
+    patch.active_agent_model,
+  )} / ${normalizeYamlScalar(patch.active_agent_runtime)} / ${normalizeYamlScalar(patch.active_agent_settings)}`;
+}
+
+function buildStopEntry(values, now, reason) {
+  const startedAt = nonNullValue(values.active_agent_since) ?? 'unknown';
+  const stoppedAt = now.toISOString();
+  const agent = nonNullValue(values.active_agent) ?? 'unknown';
+  const model = nonNullValue(values.active_agent_model) ?? 'unknown';
+  const runtime = nonNullValue(values.active_agent_runtime) ?? 'unknown';
+  const settings = nonNullValue(values.active_agent_settings) ?? 'unknown';
+  return `- stop ${startedAt} -> ${stoppedAt} - ${agent} / ${model} / ${runtime} / ${settings} - reason: ${reason}`;
+}
+
+function nonNullValue(value) {
+  const normalized = normalizeYamlScalar(value);
+  if (!normalized || normalized.toLowerCase() === 'null') {
+    return null;
+  }
+  return normalized;
+}
+
+function appendAgentActivityEntry(body, entry) {
+  const lines = body.split('\n');
+  const headingIndex = lines.findIndex((line) => line.trim().toLowerCase() === '## agent activity');
+  if (headingIndex < 0) {
+    const prefix = lines.length > 0 && lines[lines.length - 1].trim() !== '' ? ['', ''] : [''];
+    return [...lines, ...prefix, '## Agent activity', '', entry].join('\n');
+  }
+
+  let endIndex = lines.length;
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    if (lines[index].startsWith('## ')) {
+      endIndex = index;
+      break;
+    }
+  }
+
+  const placeholderIndex = lines.findIndex(
+    (line, index) => index > headingIndex && index < endIndex && line.trim() === '- Geen actieve agent.',
+  );
+  if (placeholderIndex >= 0) {
+    lines.splice(placeholderIndex, 1, entry);
+    return lines.join('\n');
+  }
+
+  const needsLeadingBlank = endIndex > 0 && lines[endIndex - 1]?.trim() !== '';
+  lines.splice(endIndex, 0, ...(needsLeadingBlank ? ['', entry] : [entry]));
+  return lines.join('\n');
 }
 
 function upsertFrontmatter(lines, patch) {

@@ -120,6 +120,7 @@ Voor AI-gedrag, prompting en evaluatie:
   - wanneer een open taak actief wordt uitgevoerd en naar `in_progress` gaat: plaats die direct bovenaan de `in_progress` lane door `sort_order` van bron- en doellane opnieuw doorlopend op te slaan
   - zet status direct op `in_progress` zodra uitvoering start
   - zorg bij start/hervatting van Codex-uitvoering dat `active_agent*` metadata is gevuld; buiten de plugin gebruik je `node scripts/taskflow-agent-state.mjs claim <taskfile>`
+  - `active_agent*` frontmatter is alleen live-status; agent-run historie staat append-only onder `## Agent activity`
   - kies en benoem bij inhoudelijke uitvoering de compacte uitvoerblokken/fases; leg die bij voorkeur vast in de taskfile-sectie `Uitvoerblokken / fasering`
   - eerste inhoudelijke update bevat altijd:
     - `Task: <taaktitel>`
@@ -154,6 +155,7 @@ Voor AI-gedrag, prompting en evaluatie:
   - repo-managed hooks mogen geen normale dirty-worktree-loop veroorzaken na een commit die taskfiles raakt
   - `## Commits` in taskfiles is auto-managed en gebruikt een stabiele entry zonder commit-hash (`author date + subject`)
   - `git -c core.hooksPath=/dev/null ...` is alleen break-glass bij een bevestigd hook-defect, niet als standaard closeout-route
+  - bij een user-opdracht `commit en push`: commit bewust, voer `git push` uit en stop daarna; maak geen GitHub PR en draai geen `gh auth status` tenzij de gebruiker expliciet om een PR/GitHub-actie vraagt
 - planintegriteit is verplicht:
   - een goedgekeurd oorspronkelijk plan of expliciet afgestemde hoofdscope blijft tijdens uitvoering het vaste referentiepunt
   - vervang of verklein het oorspronkelijke plan nooit stilzwijgend tijdens bouwen, testen of polish-rondes
@@ -181,7 +183,7 @@ Voor AI-gedrag, prompting en evaluatie:
     - status `done`
     - verplaatsing naar `docs/project/25-tasks/done/`
     - geen `active_agent*` frontmattervelden meer gevuld
-    - gebruik buiten de plugin `node scripts/taskflow-agent-state.mjs clear <taskfile>` vóór of tegelijk met afronding, blocked of overdracht
+    - gebruik buiten de plugin `node scripts/taskflow-agent-state.mjs clear <taskfile> --reason <done|blocked|handoff|stopped>` vóór of tegelijk met afronding, blocked of overdracht
     - expliciete reconciliation aanwezig
     - `npm run docs:bundle`
     - `npm run docs:bundle:verify`

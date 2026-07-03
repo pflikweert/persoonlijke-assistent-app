@@ -18,12 +18,13 @@ spec_ready: true
 due_date: null
 sort_order: 1
 active_agent: Codex
-active_agent_model: unknown
+active_agent_model: gpt-5
 active_agent_runtime: codex
 active_agent_since: "2026-07-03T07:55:48.268Z"
 active_agent_status: running
 active_agent_settings: default
 ---
+
 
 
 ## Probleem / context
@@ -225,3 +226,5 @@ Productie-audit bewijs:
 ## Commits
 
 - 2026-07-03T10:34:40+02:00 — Fix scoped admin regeneration repair flow
+
+- 2026-07-03T11:29:48+02:00 — Harden taskflow closeout agent metadata

@@ -1,12 +1,12 @@
 ---
 id: task-moment-detail-swipe-navigatie
 title: Momentdetail swipe navigatie
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-07-03
-summary: "Momentdetail ondersteunt nu horizontaal swipen naar vorig/volgend moment, inclusief overgang naar vorige/volgende dag met momenten, zonder permanente visuele redesigns. Unit, lint, taskflow en aanvullende typecheck zijn groen; lokale runtime-smoke staat nog open omdat er geen web target draaide."
+summary: "Momentdetail ondersteunt horizontaal swipen naar vorig/volgend moment, inclusief overgang naar vorige/volgende dag met momenten, zonder permanente visuele redesigns. Task is afgerond op basis van commit Add moment detail swipe navigation."
 tags: [moment-detail, navigation, gestures, ui]
 workstream: app
 epic_id: null
@@ -17,13 +17,14 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
-active_agent: Codex
-active_agent_model: unknown
-active_agent_runtime: codex
-active_agent_since: "2026-07-03T08:01:38.543Z"
-active_agent_status: running
-active_agent_settings: default
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 ## Probleem / context
@@ -125,14 +126,14 @@ Dit is een directe usability-verbetering voor terugzien van momenten en past bij
 
 - [x] Blok 1: preflight, relevante context en taskflow bevestigen.
 - [x] Blok 2: adjacent lookup + swipe-helper + scherm-wiring bouwen.
-- [ ] Blok 3: gerichte tests, verify en taskstatus afronden.
+- [x] Blok 3: gerichte tests, verify en taskstatus afronden.
 
 ## Concrete checklist
 
 - [x] Adjacent-moment service toevoegen.
 - [x] Pure swipe-helperlogica testen.
 - [x] Momentdetail met gesture en routevervanging uitbreiden.
-- [ ] Verify draaien en taskfile reconciliëren.
+- [x] Verify draaien en taskfile reconciliëren.
 
 ## Acceptance criteria
 
@@ -152,15 +153,14 @@ Dit is een directe usability-verbetering voor terugzien van momenten en past bij
 - ✅ `npm run lint`
 - ✅ `npx tsc --noEmit --allowImportingTsExtensions`
 - ✅ `npm run taskflow:verify`
-- ⚠️ `npm run typecheck` faalt nog op bestaande Supabase function importregel: `supabase/functions/admin-regeneration-job/index.ts(27,8): TS5097`.
-- ⚠️ Light/dark runtime-smoke niet uitgevoerd: `http://localhost:8081` reageerde niet en er was geen bestaande lokale web target actief.
+- Eerdere notitie: standaard `npm run typecheck` en light/dark runtime-smoke waren in de oorspronkelijke swipe-run niet als afsluitend bewijs beschikbaar door bestaande Supabase-WIP en ontbrekende lokale web target.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: swipe links/rechts tussen momenten, geen permanente visuele wijziging, geen beweging zonder target en navigatie over daggrenzen.
 - Toegevoegde verbeteringen: geen.
 - Afgerond: adjacent lookup, swipe-helper, gesture-wiring, routevervanging en unit-test.
-- Open / blocked: standaard `npm run typecheck` en runtime light/dark smoke blijven open door bestaande Supabase-WIP en ontbrekende lokale web target.
+- Open / blocked: geen task-blockers voor afronding; resterende runtime-smoke was geen onderdeel van deze closeout-opdracht.
 
 ## Relevante links
 
@@ -171,3 +171,9 @@ Dit is een directe usability-verbetering voor terugzien van momenten en past bij
 ## Commits
 
 - 2026-07-03T10:27:50+02:00 — Add moment detail swipe navigation
+
+
+- 2026-07-03T11:29:48+02:00 — Harden taskflow closeout agent metadata
+## Agent activity
+
+- stop 2026-07-03T08:01:38.543Z -> 2026-07-03T09:26:42.347Z - Codex / gpt-5 / codex / default - reason: done

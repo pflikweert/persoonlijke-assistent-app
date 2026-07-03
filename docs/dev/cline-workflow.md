@@ -181,6 +181,8 @@ Gebruik Act mode voor:
 - Voor taskstatuswijzigingen of verplaatsing naar `done/`: ook `npm run docs:bundle` en `npm run docs:bundle:verify`.
 - Voor inhoudelijke agentuitvoering (plan/research/bug/implementatie): ook `npm run taskflow:verify`.
 - Commit alleen na geslaagde verify.
+- Bij een expliciete user-opdracht `commit en push`: commit bewust, voer `git push` uit en stop daarna.
+- Maak geen GitHub PR en draai geen `gh auth status` bij gewone commit/push. GitHub CLI hoort alleen bij GitHub-diagnose of expliciete PR/issue-taken.
 
 ## Closeout-semantiek
 
@@ -196,7 +198,9 @@ Gebruik Act mode voor:
   - actieve agent = runtime/WIP-metadata in `active_agent*`
 - Bij actieve Codex-uitvoering hoort `active_agent*` automatisch gevuld te zijn. Buiten de plugin gebruik je:
   - `node scripts/taskflow-agent-state.mjs claim <taskfile>` bij start/hervatting.
-  - `node scripts/taskflow-agent-state.mjs clear <taskfile>` bij done, blocked of overdracht.
+  - `node scripts/taskflow-agent-state.mjs clear <taskfile> --reason <done|blocked|handoff|stopped>` bij done, blocked, overdracht of stoppen.
+- `active_agent*` frontmatter is uitsluitend live-status. Start/stop-historie blijft append-only onder `## Agent activity`.
+- De standaard Codex-modelwaarde is `gpt-5`, tenzij `BUDIO_WORKSPACE_AGENT_MODEL` of `CODEX_MODEL` expliciet anders is gezet.
 - `Actief` in de plugin-UI mag nooit selectie alleen aanduiden.
 - Bij onderbroken sessies: lees eerst actuele taskfile-state, folderlocatie en eventuele `active_agent*` metadata opnieuw uit vóór nieuwe patches.
 

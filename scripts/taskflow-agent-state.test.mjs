@@ -34,6 +34,26 @@ test('taskflow-agent-state claim writes active-agent metadata', async () => {
   assert.match(content, /active_agent_since: "[^"]+"/);
   assert.match(content, /active_agent_status: running/);
   assert.match(content, /active_agent_settings: default/);
+  assert.match(content, /## Agent activity/);
+  assert.match(content, /- start [^ ]+ - Codex \/ gpt-5 \/ codex \/ default/);
+});
+
+test('taskflow-agent-state claim falls back to gpt-5 model', async () => {
+  const workspaceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'taskflow-agent-'));
+  const taskfile = path.join(workspaceRoot, 'task.md');
+  await fs.writeFile(taskfile, baseTaskfile(), 'utf8');
+
+  const env = { ...process.env };
+  delete env.BUDIO_WORKSPACE_AGENT_MODEL;
+  delete env.CODEX_MODEL;
+
+  await execFileAsync(process.execPath, [scriptPath, 'claim', taskfile], {
+    cwd: repoRoot,
+    env,
+  });
+
+  const content = await fs.readFile(taskfile, 'utf8');
+  assert.match(content, /active_agent_model: gpt-5/);
 });
 
 test('taskflow-agent-state clear removes active-agent metadata', async () => {
@@ -54,7 +74,7 @@ active_agent_settings: default`,
     'utf8',
   );
 
-  await execFileAsync(process.execPath, [scriptPath, 'clear', taskfile], { cwd: repoRoot });
+  await execFileAsync(process.execPath, [scriptPath, 'clear', taskfile, '--reason', 'done'], { cwd: repoRoot });
 
   const content = await fs.readFile(taskfile, 'utf8');
   assert.match(content, /active_agent: null/);
@@ -63,6 +83,7 @@ active_agent_settings: default`,
   assert.match(content, /active_agent_since: null/);
   assert.match(content, /active_agent_status: null/);
   assert.match(content, /active_agent_settings: null/);
+  assert.match(content, /- stop 2026-06-22T15:00:00.000Z -> [^ ]+ - Codex \/ gpt-5 \/ codex \/ default - reason: done/);
 });
 
 test('taskflow-agent-state clear-stale dry-run reports stale claims without writing', async () => {
@@ -102,6 +123,7 @@ test('taskflow-agent-state clear-stale clears stale claims and preserves recent 
   assert.match(stdout, /Gewist: docs\/project\/25-tasks\/open\/stale\.md/);
   assert.match(staleContent, /active_agent: null/);
   assert.match(staleContent, /active_agent_since: null/);
+  assert.match(staleContent, /reason: stale/);
   assert.match(recentContent, /active_agent: Codex/);
 });
 

@@ -9,6 +9,7 @@ import type {
   CreateTaskInput,
   FrontmatterValue,
   ParsedTaskFile,
+  TaskSectionRange,
   TaskFieldPatch,
   TaskStatus,
 } from './types';
@@ -96,6 +97,9 @@ export function applyTaskFieldPatch(task: ParsedTaskFile, patch: TaskFieldPatch)
       nextBodyLines.splice(0, nextBodyLines.length, `# ${patch.title.trim()}`, '', ...withoutLeadingBlanks);
     }
   }
+  if (patch.agentActivityEntry) {
+    appendSectionListEntryToLines(nextBodyLines, task.sections.get('agent activity'), 'Agent activity', patch.agentActivityEntry);
+  }
 
   return `${serializeFrontmatter(nextFrontmatter, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
 }
@@ -134,6 +138,7 @@ type NewTaskContentInput = CreateTaskInput &
     | 'activeAgentSince'
     | 'activeAgentStatus'
     | 'activeAgentSettings'
+    | 'agentActivityEntry'
   >;
 
 export function buildNewTaskContent(input: NewTaskContentInput): string {
@@ -205,7 +210,7 @@ Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 
 ## Agent activity
 
-- Geen actieve agent.
+${input.agentActivityEntry ?? '- Geen actieve agent.'}
 
 ## Commits
 
@@ -228,7 +233,16 @@ export function buildTargetPathForStatus(
 export function appendSectionListEntry(task: ParsedTaskFile, heading: string, entry: string): string {
   const nextBodyLines = [...task.bodyLines];
   const normalizedHeading = heading.toLowerCase();
-  const section = task.sections.get(normalizedHeading);
+  appendSectionListEntryToLines(nextBodyLines, task.sections.get(normalizedHeading), heading, entry);
+  return `${serializeFrontmatter(task.frontmatterValues, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
+}
+
+function appendSectionListEntryToLines(
+  nextBodyLines: string[],
+  section: TaskSectionRange | undefined,
+  heading: string,
+  entry: string,
+): void {
   const placeholder = SECTION_PLACEHOLDER_BY_HEADING[heading];
 
   if (section) {
@@ -243,18 +257,17 @@ export function appendSectionListEntry(task: ParsedTaskFile, heading: string, en
       if (placeholderLineIndex >= 0) {
         nextBodyLines.splice(placeholderLineIndex, 1, entry);
       }
-    } else {
-      const needsLeadingBlank = insertIndex > 0 && nextBodyLines[insertIndex - 1]?.trim() !== '';
-      const linesToInsert = needsLeadingBlank ? ['', entry] : [entry];
-      nextBodyLines.splice(insertIndex, 0, ...linesToInsert);
+      return;
     }
 
-    return `${serializeFrontmatter(task.frontmatterValues, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
+    const needsLeadingBlank = insertIndex > 0 && nextBodyLines[insertIndex - 1]?.trim() !== '';
+    const linesToInsert = needsLeadingBlank ? ['', entry] : [entry];
+    nextBodyLines.splice(insertIndex, 0, ...linesToInsert);
+    return;
   }
 
   const suffix = nextBodyLines.length > 0 && nextBodyLines[nextBodyLines.length - 1]?.trim() !== '' ? ['', ''] : [''];
   nextBodyLines.push(...suffix, `## ${heading}`, '', entry);
-  return `${serializeFrontmatter(task.frontmatterValues, task.frontmatterOrder)}${nextBodyLines.join('\n')}`;
 }
 
 function serializeFrontmatter(

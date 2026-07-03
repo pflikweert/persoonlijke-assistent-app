@@ -11,7 +11,7 @@ function taskfileWithAgentMetadata({
   pathStatus = 'running',
   since = '2026-04-23T10:00:00.000Z',
 } = {}) {
-  return `---\nid: task-test\ntitle: Test\nstatus: ${status}\nphase: transitiemaand-consumer-beta\npriority: p2\nsource: docs/project/open-points.md\nupdated_at: 2026-04-23\nsummary: \"\"\ntags: []\nactive_agent: Codex\nactive_agent_since: "${since}"\nactive_agent_status: ${pathStatus}\ndue_date: null\nsort_order: null\n---\n`;
+  return `---\nid: task-test\ntitle: Test\nstatus: ${status}\nphase: transitiemaand-consumer-beta\npriority: p2\nsource: docs/project/open-points.md\nupdated_at: 2026-04-23\nsummary: \"\"\ntags: []\nactive_agent: Codex\nactive_agent_model: gpt-5\nactive_agent_runtime: codex\nactive_agent_since: "${since}"\nactive_agent_status: ${pathStatus}\nactive_agent_settings: default\ndue_date: null\nsort_order: null\n---\n`;
 }
 
 function completeTaskfile({ taskKind = 'task', specReady = true } = {}) {
@@ -186,6 +186,26 @@ test('fails for malformed active_agent_since on active-agent claims', () => {
 
   assert.equal(result.ok, false);
   assert.match(result.issues.join('\n'), /ongeldige active_agent_since/);
+});
+
+test('fails for active-agent claims with unknown model', () => {
+  const result = evaluateTaskflow({
+    changedPaths: ['docs/project/25-tasks/open/current.md'],
+    taskfileContents: {
+      'docs/project/25-tasks/open/current.md': taskfile('in_progress', '2026-04-23'),
+    },
+    allTaskfileContents: {
+      'docs/project/25-tasks/open/unknown-model.md': taskfileWithAgentMetadata().replace(
+        'active_agent_model: gpt-5',
+        'active_agent_model: unknown',
+      ),
+    },
+    now: '2026-04-23T12:30:00.000Z',
+    hasDoneTransition: false,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.issues.join('\n'), /unknown active_agent_model/);
 });
 
 test('fails for newly added build task without spec-readiness sections', () => {

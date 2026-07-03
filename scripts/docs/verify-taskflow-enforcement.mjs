@@ -218,6 +218,11 @@ function activeAgentSinceState(frontmatter, nowMs, maxAgeMs) {
   return { valid: true, stale: nowMs - sinceMs > maxAgeMs };
 }
 
+function hasKnownActiveAgentModel(frontmatter) {
+  const model = normalizeYamlScalar(frontmatter.active_agent_model).toLowerCase();
+  return Boolean(model && model !== 'null' && model !== 'unknown');
+}
+
 function addActiveAgentIntegrityIssues({ issues, taskfilePath, frontmatter, nowMs, maxAgeHours }) {
   const status = normalizeYamlScalar(frontmatter.status);
   const hasMetadata = hasAgentMetadata(frontmatter);
@@ -229,6 +234,10 @@ function addActiveAgentIntegrityIssues({ issues, taskfilePath, frontmatter, nowM
 
   if (!hasActiveStatus) {
     return;
+  }
+
+  if (!hasKnownActiveAgentModel(frontmatter)) {
+    issues.push(`Taskfile met actieve agentstatus heeft ontbrekend of unknown active_agent_model: ${taskfilePath}`);
   }
 
   const sinceState = activeAgentSinceState(frontmatter, nowMs, maxAgeHours * 60 * 60 * 1000);

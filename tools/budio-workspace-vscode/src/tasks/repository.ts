@@ -26,6 +26,7 @@ type AgentMetadataPatch = Pick<
   | 'activeAgentSince'
   | 'activeAgentStatus'
   | 'activeAgentSettings'
+  | 'agentActivityEntry'
   | 'updatedAt'
 >;
 
@@ -46,6 +47,20 @@ function doneStatusCleanupPatch(): Pick<
     activeAgentStatus: null,
     activeAgentSettings: null,
   };
+}
+
+function agentActivitySnapshot(task: ParsedTaskFile) {
+  return {
+    activeAgent: task.activeAgent,
+    activeAgentModel: task.activeAgentModel,
+    activeAgentRuntime: task.activeAgentRuntime,
+    activeAgentSince: task.activeAgentSince,
+    activeAgentSettings: task.activeAgentSettings,
+  };
+}
+
+function hasLiveAgent(task: ParsedTaskFile): boolean {
+  return Boolean(task.activeAgentStatus && task.activeAgentStatus.toLowerCase() !== 'null');
 }
 
 export class TaskRepository {
@@ -72,7 +87,10 @@ export class TaskRepository {
     const tasks = await this.scan();
     const task = requireTask(tasks, taskId);
     assertVersion(task, expectedVersion);
-    const normalizedPatch = this.withAutomaticAgentTransition(task.status, patch);
+    const normalizedPatch = this.withExplicitAgentClearHistory(
+      task,
+      this.withAutomaticAgentTransition(task, patch),
+    );
 
     const statusChanged = normalizedPatch.status !== undefined && normalizedPatch.status !== task.status;
     if (statusChanged && normalizedPatch.status) {
@@ -223,7 +241,7 @@ export class TaskRepository {
             )
           : destinationTask.sourcePath;
 
-      const content = applyTaskFieldPatch(destinationTask, this.withAutomaticAgentTransition(destinationTask.status, patch));
+      const content = applyTaskFieldPatch(destinationTask, this.withAutomaticAgentTransition(destinationTask, patch));
       writes.set(id, {
         sourcePath: destinationTask.sourcePath,
         targetPath: nextPath,
@@ -333,22 +351,22 @@ export class TaskRepository {
     };
   }
 
-  private withAutomaticAgentTransition(currentStatus: ParsedTaskFile['status'], patch: TaskFieldPatch): TaskFieldPatch {
+  private withAutomaticAgentTransition(task: ParsedTaskFile, patch: TaskFieldPatch): TaskFieldPatch {
     if (!patch.status) {
       return patch;
     }
 
-    if (patch.status === 'in_progress' && currentStatus !== 'in_progress') {
+    if (patch.status === 'in_progress' && task.status !== 'in_progress') {
       return {
         ...patch,
         ...buildClaimTaskAgentPatch(this.agentSettings),
       };
     }
 
-    if (currentStatus === 'in_progress' && patch.status !== 'in_progress') {
+    if (task.status === 'in_progress' && patch.status !== 'in_progress') {
       return {
         ...patch,
-        ...buildClearTaskAgentPatch(),
+        ...buildClearTaskAgentPatch(new Date(), agentActivitySnapshot(task), patch.status === 'done' ? 'done' : 'stopped'),
       };
     }
 
@@ -356,10 +374,22 @@ export class TaskRepository {
       return {
         ...patch,
         ...doneStatusCleanupPatch(),
+        ...(hasLiveAgent(task) ? { agentActivityEntry: buildClearTaskAgentPatch(new Date(), agentActivitySnapshot(task), 'done').agentActivityEntry } : {}),
       };
     }
 
     return patch;
+  }
+
+  private withExplicitAgentClearHistory(task: ParsedTaskFile, patch: TaskFieldPatch): TaskFieldPatch {
+    if (patch.agentActivityEntry || patch.activeAgentStatus !== null) {
+      return patch;
+    }
+
+    return {
+      ...patch,
+      agentActivityEntry: buildClearTaskAgentPatch(new Date(), agentActivitySnapshot(task), 'stopped').agentActivityEntry,
+    };
   }
 }
 

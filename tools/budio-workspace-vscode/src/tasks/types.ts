@@ -226,6 +226,7 @@ export interface TaskFieldPatch {
   activeAgentSince?: string | null;
   activeAgentStatus?: string | null;
   activeAgentSettings?: string | null;
+  agentActivityEntry?: string | null;
 }
 
 export interface MoveTaskInput {

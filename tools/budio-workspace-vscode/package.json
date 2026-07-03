@@ -91,7 +91,7 @@
         },
         "budioWorkspace.agentModel": {
           "type": "string",
-          "default": "unknown",
+          "default": "gpt-5",
           "description": "Default agent model written when a task is claimed as active."
         },
         "budioWorkspace.agentRuntime": {
