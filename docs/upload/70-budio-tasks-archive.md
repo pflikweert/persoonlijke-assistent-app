@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-07-03T09:29:11.084Z
-Source Commit: b444d7a
+Build Timestamp (UTC): 2026-07-03T09:59:24.054Z
+Source Commit: 205b1e6
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -9675,6 +9675,7 @@ active_agent_settings: null
 ---
 
 
+
 ## Probleem / context
 
 Op de momentdetailpagina kan de gebruiker nu alleen via terug naar de daglijst en daarna een ander moment openen. De gewenste interactie is direct door momenten heen swipen, zonder dat de momentpagina visueel wordt herontworpen.
@@ -9821,6 +9822,7 @@ Dit is een directe usability-verbetering voor terugzien van momenten en past bij
 - 2026-07-03T10:27:50+02:00 — Add moment detail swipe navigation
 
 
+- 2026-07-03T11:29:48+02:00 — Harden taskflow closeout agent metadata
 ## Agent activity
 
 - stop 2026-07-03T08:01:38.543Z -> 2026-07-03T09:26:42.347Z - Codex / gpt-5 / codex / default - reason: done
@@ -13330,6 +13332,7 @@ active_agent_status: null
 active_agent_settings: null
 ---
 
+
 ## Probleem / context
 
 De vorige swipe-taak is wel gecommit en gepusht, maar bleef in `open/` met `status: in_progress` en live `active_agent*` metadata. Daarnaast probeerde de commit/push-flow GitHub PR-context mee te nemen terwijl de gewenste lokale flow alleen commit en push is.
@@ -13486,6 +13489,11 @@ De vorige taak liet precies de fout zien die deze workflow moet voorkomen: valse
 - start 2026-07-03T09:26:30.991Z - Codex / gpt-5 / codex / default
 
 - stop 2026-07-03T09:26:30.991Z -> 2026-07-03T09:28:59.362Z - Codex / gpt-5 / codex / default - reason: done
+
+
+## Commits
+
+- 2026-07-03T11:29:48+02:00 — Harden taskflow closeout agent metadata
 ```
 
 ---

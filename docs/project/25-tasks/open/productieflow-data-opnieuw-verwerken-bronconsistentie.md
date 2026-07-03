@@ -25,8 +25,6 @@ active_agent_status: running
 active_agent_settings: default
 ---
 
-
-
 ## Probleem / context
 
 De productieflow `Data opnieuw verwerken` levert inconsistenties op tussen zichtbare momenten, genormaliseerde entrydata en dag-/periode-output. Een dag kan in de UI meerdere individuele momenten tonen terwijl het dagjournaal zegt dat er geen entries zijn aangeleverd. Oudere momenten lijken soms raw input, normalized body en dagjournal-input niet meer consistent te koppelen.
@@ -226,5 +224,3 @@ Productie-audit bewijs:
 ## Commits
 
 - 2026-07-03T10:34:40+02:00 — Fix scoped admin regeneration repair flow
-
-- 2026-07-03T11:29:48+02:00 — Harden taskflow closeout agent metadata
