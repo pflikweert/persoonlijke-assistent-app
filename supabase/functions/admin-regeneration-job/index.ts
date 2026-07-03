@@ -713,6 +713,47 @@ type CandidateMapBuildResult = {
   summary: Record<string, unknown>;
 };
 
+const CANDIDATE_DISCOVERY_PAGE_SIZE = 500;
+
+async function selectPagedRows<T>(args: {
+  client: any;
+  table: string;
+  select: string;
+  order?: { column: string; ascending: boolean };
+  configure?: (query: any) => any;
+}): Promise<T[]> {
+  const rows: T[] = [];
+  let offset = 0;
+
+  while (true) {
+    let query = args.client
+      .from(args.table)
+      .select(args.select)
+      .range(offset, offset + CANDIDATE_DISCOVERY_PAGE_SIZE - 1);
+
+    if (args.order) {
+      query = query.order(args.order.column, { ascending: args.order.ascending });
+    }
+    if (args.configure) {
+      query = args.configure(query);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(`Failed to load ${args.table} page: ${String(error.message ?? error)}`);
+    }
+
+    const page = (data ?? []) as T[];
+    rows.push(...page);
+    if (page.length < CANDIDATE_DISCOVERY_PAGE_SIZE) {
+      break;
+    }
+    offset += CANDIDATE_DISCOVERY_PAGE_SIZE;
+  }
+
+  return rows;
+}
+
 function rawJournalDate(row: Pick<RawEntrySourceRow, 'captured_at' | 'journal_date'>): string | null {
   return row.journal_date ?? deriveJournalDateForLegacyRaw(row.captured_at);
 }
@@ -964,41 +1005,39 @@ async function buildCandidateMapForStart(args: {
     scopeAll: scopePlan.all,
   });
 
-  const [rawRowsRaw, normalizedRowsRaw, dayRowsRaw, reflectionRowsRaw] = await Promise.all([
-    args.adminClient
-      .from('entries_raw')
-      .select('id, user_id, source_type, raw_text, transcript_text, captured_at, journal_date')
-      .order('captured_at', { ascending: true }),
-    args.adminClient
-      .from('entries_normalized')
-      .select('id, raw_entry_id, user_id, title, body, summary_short, generation_meta, created_at, updated_at')
-      .order('created_at', { ascending: true }),
-    args.adminClient
-      .from('day_journals')
-      .select('id, user_id, journal_date, summary, narrative_text, generation_meta, updated_at')
-      .order('user_id', { ascending: true })
-      .order('journal_date', { ascending: true }),
-    args.adminClient
-      .from('period_reflections')
-      .select('id, user_id, period_type, period_start, period_end, generation_meta, generated_at')
-      .in('period_type', ['week', 'month'])
-      .order('user_id', { ascending: true })
-      .order('period_start', { ascending: true }),
+  const [rawRowsAll, normalizedRows, dayRows, reflectionRows] = await Promise.all([
+    selectPagedRows<RawEntrySourceRow>({
+      client: args.adminClient,
+      table: 'entries_raw',
+      select: 'id, user_id, source_type, raw_text, transcript_text, captured_at, journal_date',
+      order: { column: 'captured_at', ascending: true },
+    }),
+    selectPagedRows<NormalizedEntrySourceRow>({
+      client: args.adminClient,
+      table: 'entries_normalized',
+      select: 'id, raw_entry_id, user_id, title, body, summary_short, generation_meta, created_at, updated_at',
+      order: { column: 'created_at', ascending: true },
+    }),
+    selectPagedRows<DayJournalCandidateRow>({
+      client: args.adminClient,
+      table: 'day_journals',
+      select: 'id, user_id, journal_date, summary, narrative_text, generation_meta, updated_at',
+      order: { column: 'journal_date', ascending: true },
+    }),
+    selectPagedRows<ReflectionCandidateRow>({
+      client: args.adminClient,
+      table: 'period_reflections',
+      select: 'id, user_id, period_type, period_start, period_end, generation_meta, generated_at',
+      order: { column: 'period_start', ascending: true },
+      configure: (query) => query.in('period_type', ['week', 'month']),
+    }),
   ]);
 
-  if (rawRowsRaw.error) throw new Error(`Failed to load raw regeneration scope: ${String(rawRowsRaw.error.message ?? rawRowsRaw.error)}`);
-  if (normalizedRowsRaw.error) throw new Error(`Failed to load normalized regeneration scope: ${String(normalizedRowsRaw.error.message ?? normalizedRowsRaw.error)}`);
-  if (dayRowsRaw.error) throw new Error(`Failed to load day regeneration scope: ${String(dayRowsRaw.error.message ?? dayRowsRaw.error)}`);
-  if (reflectionRowsRaw.error) throw new Error(`Failed to load reflection regeneration scope: ${String(reflectionRowsRaw.error.message ?? reflectionRowsRaw.error)}`);
-
   const rawRows = filterRawRowsForScope({
-    rawRows: (rawRowsRaw.data ?? []) as RawEntrySourceRow[],
+    rawRows: rawRowsAll,
     selectedDaySet,
     targetUserSet,
   });
-  const normalizedRows = (normalizedRowsRaw.data ?? []) as NormalizedEntrySourceRow[];
-  const dayRows = (dayRowsRaw.data ?? []) as DayJournalCandidateRow[];
-  const reflectionRows = (reflectionRowsRaw.data ?? []) as ReflectionCandidateRow[];
 
   const allDayCandidates = filterDayCandidatesForScope({
     candidates: buildDayCandidatesFromSources({
@@ -1330,6 +1369,76 @@ function buildReflectionBatchRequest(args: {
     model: args.binding.model,
     body,
   };
+}
+
+type EntryBatchCandidate = {
+  rawEntryId: string | null;
+  normalizedEntryId: string | null;
+  reasonCodes: unknown[];
+};
+
+type EntryBatchNormalizedRow = {
+  id: string;
+  user_id: string;
+  raw_entry_id: string;
+  title: string;
+  body: string;
+  summary_short: string | null;
+};
+
+type EntryBatchRawRow = {
+  id: string;
+  user_id: string;
+  raw_text: string | null;
+  transcript_text: string | null;
+};
+
+async function loadNormalizedEntryForBatch(args: {
+  adminClient: any;
+  normalizedId: string;
+  cache: Map<string, EntryBatchNormalizedRow | null>;
+}): Promise<EntryBatchNormalizedRow | null> {
+  if (args.cache.has(args.normalizedId)) {
+    return args.cache.get(args.normalizedId) ?? null;
+  }
+
+  const { data, error } = await args.adminClient
+    .from('entries_normalized')
+    .select('id, user_id, raw_entry_id, title, body, summary_short')
+    .eq('id', args.normalizedId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load entry row for candidate ${args.normalizedId}: ${String(error.message ?? error)}`);
+  }
+
+  const row = (data ?? null) as EntryBatchNormalizedRow | null;
+  args.cache.set(args.normalizedId, row);
+  return row;
+}
+
+async function loadRawEntryForBatch(args: {
+  adminClient: any;
+  rawEntryId: string;
+  cache: Map<string, EntryBatchRawRow | null>;
+}): Promise<EntryBatchRawRow | null> {
+  if (args.cache.has(args.rawEntryId)) {
+    return args.cache.get(args.rawEntryId) ?? null;
+  }
+
+  const { data, error } = await args.adminClient
+    .from('entries_raw')
+    .select('id, user_id, raw_text, transcript_text')
+    .eq('id', args.rawEntryId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load raw entry row for candidate ${args.rawEntryId}: ${String(error.message ?? error)}`);
+  }
+
+  const row = (data ?? null) as EntryBatchRawRow | null;
+  args.cache.set(args.rawEntryId, row);
+  return row;
 }
 
 async function loadDayRequest(args: {
@@ -2025,7 +2134,7 @@ async function buildStepRequests(args: {
 
   if (args.step.step_type === 'entries_normalized') {
     const candidateSlice = candidates.slice(cursor, cursor + args.maxRequests * 3) as unknown[];
-    const validCandidates = candidateSlice
+    const validCandidates: EntryBatchCandidate[] = candidateSlice
       .map((candidate) => {
         if (typeof candidate === 'string') {
           return { rawEntryId: null, normalizedEntryId: candidate, reasonCodes: ['outdated_prompt_version'] };
@@ -2050,58 +2159,8 @@ async function buildStepRequests(args: {
       };
     }
 
-    const normalizedIds = validCandidates
-      .map((candidate) => candidate.normalizedEntryId)
-      .filter((id): id is string => Boolean(id));
-    const rawCandidateIds = validCandidates
-      .map((candidate) => candidate.rawEntryId)
-      .filter((id): id is string => Boolean(id));
-
-    let rows: Array<{
-      id: string;
-      user_id: string;
-      raw_entry_id: string;
-      title: string;
-      body: string;
-      summary_short: string | null;
-    }> = [];
-
-    if (normalizedIds.length > 0) {
-      const { data: normalizedRows, error: normalizedError } = await args.adminClient
-        .from('entries_normalized')
-        .select('id, user_id, raw_entry_id, title, body, summary_short')
-        .in('id', normalizedIds);
-
-      if (normalizedError) {
-        throw new Error(`Failed to load entry rows: ${String(normalizedError.message ?? normalizedError)}`);
-      }
-
-      rows = (normalizedRows ?? []) as typeof rows;
-    }
-
-    const rawIds = [...new Set([...rows.map((row) => row.raw_entry_id), ...rawCandidateIds])];
-    const { data: rawRows, error: rawError } = await args.adminClient
-      .from('entries_raw')
-      .select('id, user_id, raw_text, transcript_text')
-      .in('id', rawIds);
-
-    if (rawError) {
-      throw new Error(`Failed to load entry raw rows: ${String(rawError.message ?? rawError)}`);
-    }
-
-    const rawMap = new Map<string, { user_id: string; raw_text: string | null; transcript_text: string | null }>(
-      ((rawRows ?? []) as Array<{ id: string; user_id: string; raw_text: string | null; transcript_text: string | null }>).map((row) => [
-        row.id,
-        {
-          user_id: row.user_id,
-          raw_text: row.raw_text,
-          transcript_text: row.transcript_text,
-        },
-      ])
-    );
-
-    const rowMap = new Map<string, (typeof rows)[number]>(rows.map((row) => [row.id, row]));
-    const rowByRawId = new Map<string, (typeof rows)[number]>(rows.map((row) => [row.raw_entry_id, row]));
+    const normalizedCache = new Map<string, EntryBatchNormalizedRow | null>();
+    const rawCache = new Map<string, EntryBatchRawRow | null>();
 
     for (const candidate of validCandidates) {
       if (requests.length >= args.maxRequests) {
@@ -2110,12 +2169,20 @@ async function buildStepRequests(args: {
 
       consumed += 1;
       const row = candidate.normalizedEntryId
-        ? rowMap.get(candidate.normalizedEntryId)
-        : candidate.rawEntryId
-          ? rowByRawId.get(candidate.rawEntryId)
-          : undefined;
+        ? await loadNormalizedEntryForBatch({
+            adminClient: args.adminClient,
+            normalizedId: candidate.normalizedEntryId,
+            cache: normalizedCache,
+          })
+        : null;
       const rawId = row?.raw_entry_id ?? candidate.rawEntryId;
-      const raw = rawId ? rawMap.get(rawId) : undefined;
+      const raw = rawId
+        ? await loadRawEntryForBatch({
+            adminClient: args.adminClient,
+            rawEntryId: rawId,
+            cache: rawCache,
+          })
+        : null;
       if (!rawId || !raw) {
         immediateFailed += 1;
         continue;

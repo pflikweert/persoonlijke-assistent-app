@@ -214,4 +214,16 @@ describe('regeneration day entry source contract', () => {
 
     expect(violations).toEqual([]);
   });
+
+  it('does not build entry regeneration batches with bulk id IN query URLs', () => {
+    const source = readFileSync(
+      path.join(process.cwd(), 'supabase/functions/admin-regeneration-job/index.ts'),
+      'utf8'
+    );
+
+    expect(source).not.toMatch(/\.in\(["']id["'],\s*normalizedIds\)/);
+    expect(source).not.toMatch(/\.in\(["']id["'],\s*rawIds\)/);
+    expect(source).toContain('loadNormalizedEntryForBatch');
+    expect(source).toContain('loadRawEntryForBatch');
+  });
 });

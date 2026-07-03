@@ -93,6 +93,7 @@ export type RegenerationScopePlan = {
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DEFAULT_LEGACY_TIME_ZONE = 'Europe/Amsterdam';
+const NORMALIZED_ENTRY_LOOKUP_CHUNK_SIZE = 50;
 
 function parseString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
@@ -607,16 +608,19 @@ export async function loadDayEntrySource(args: {
   let normalizedEntries: NormalizedEntrySourceRow[] = [];
 
   if (rawIds.length > 0) {
-    const { data: normalizedRows, error: normalizedError } = await args.client
-      .from('entries_normalized')
-      .select('id, raw_entry_id, user_id, title, body, summary_short, generation_meta, created_at, updated_at')
-      .eq('user_id', args.userId)
-      .in('raw_entry_id', rawIds);
+    for (let index = 0; index < rawIds.length; index += NORMALIZED_ENTRY_LOOKUP_CHUNK_SIZE) {
+      const rawIdChunk = rawIds.slice(index, index + NORMALIZED_ENTRY_LOOKUP_CHUNK_SIZE);
+      const { data: normalizedRows, error: normalizedError } = await args.client
+        .from('entries_normalized')
+        .select('id, raw_entry_id, user_id, title, body, summary_short, generation_meta, created_at, updated_at')
+        .eq('user_id', args.userId)
+        .in('raw_entry_id', rawIdChunk);
 
-    if (normalizedError) {
-      throw new Error(`Failed to load normalized entries for day: ${String(normalizedError.message ?? normalizedError)}`);
+      if (normalizedError) {
+        throw new Error(`Failed to load normalized entries for day: ${String(normalizedError.message ?? normalizedError)}`);
+      }
+      normalizedEntries.push(...((normalizedRows ?? []) as NormalizedEntrySourceRow[]));
     }
-    normalizedEntries = (normalizedRows ?? []) as NormalizedEntrySourceRow[];
   }
 
   return buildDayEntrySourceResult({

@@ -25,6 +25,7 @@ active_agent_status: running
 active_agent_settings: default
 ---
 
+
 ## Probleem / context
 
 De productieflow `Data opnieuw verwerken` levert inconsistenties op tussen zichtbare momenten, genormaliseerde entrydata en dag-/periode-output. Een dag kan in de UI meerdere individuele momenten tonen terwijl het dagjournaal zegt dat er geen entries zijn aangeleverd. Oudere momenten lijken soms raw input, normalized body en dagjournal-input niet meer consistent te koppelen.
@@ -122,6 +123,8 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
   - dag: entries voor die dag -> dayjournal -> afhankelijke week/month.
   - week: entries + dagen binnen die week -> week -> geraakt maand.
   - maand: entries + dagen binnen maand -> relevante weken -> maand.
+- Preview/start mag geen grote entry-id arrays via querystring of `IN (...)` URL's laden; volledige scopes moeten schaalbaar blijven en backend-side uit JSON selectiecriteria worden bepaald.
+- `/settings-regeneration` moet een professionele admin-wizard zijn: gewone Nederlandse taakcopy, geen scope-textarea in de standaardflow, user-id veld alleen onder `Geavanceerd`, controle verplicht vóór start, technische jobvelden ingeklapt.
 
 ## Status per requirement
 
@@ -134,6 +137,8 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Admin inspectie gebouwd — status: gebouwd; `inspect_day` + Regeneration UI.
 - [x] Repair/backfill dry-run/apply gebouwd — status: gebouwd; script is dry-run default, apply start expliciete regeneration job.
 - [x] Repair/all + scope-selectie gebouwd — status: gebouwd; preview/start gebruiken dezelfde deduped dependency-candidates.
+- [x] URI-too-long in preview/start entry-batchpad opgelost — status: gebouwd; entry rows worden per candidate geladen en discovery gebruikt paged reads.
+- [x] Professionele admin-wizard voor `/settings-regeneration` gebouwd — status: gebouwd; actie, bereik, onderdelen, controle en status zijn taakgericht en technische details staan ingeklapt.
 - [x] Tests en verify uitgevoerd — status: groen na productie-auditrapportage.
 
 ## Toegevoegde verbeteringen tijdens uitvoering
@@ -142,6 +147,8 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - Auditrapportage aangescherpt: oude dayjournal metadata zonder `prompt_entry_count` telt als `null`/ontbrekend, niet automatisch als echte nul-input.
 - Admin-tool uitgebreid met `Reparatie` versus `Alles opnieuw`, preview zonder writes, optionele target user ids en compacte scope-regels voor dag/week/maand/range.
 - Backend start/preview gebruikt één candidate-builder die geselecteerde scopes naar unieke entries, dagen, weken en maanden expandt.
+- Productiefout `Failed to load entry rows: URI too long` onderzocht: de frontend gebruikt al POST JSON body naar de Edge Function; de lange URL ontstond backend-side door Supabase/PostgREST `.in('id', normalizedIds)` en `.in('id', rawIds)` bij entry-batchbouw. Dit is vervangen door point lookups per candidate met cache en paged candidate discovery.
+- `/settings-regeneration` herwerkt van technische console naar wizard: `Data opnieuw opbouwen`, stap 1 actie, stap 2 bereik, stap 3 onderdelen, stap 4 controle, start pas na actuele preview en inline bevestiging voor volledig opnieuw opbouwen.
 
 ## Uitvoerblokken / fasering
 
@@ -161,6 +168,8 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Admin inspectie en service toevoegen.
 - [x] Repair/backfill script toevoegen.
 - [x] Repair/all-modus, preview en scoped dependency-selectie toevoegen.
+- [x] Preview/start URI-too-long bug oplossen zonder querystring-id lijsten.
+- [x] `/settings-regeneration` UI/copy herwerken naar beheerderstaakflow zonder standaard UUID/scope-invoer.
 - [x] Verify uitvoeren.
 
 ## Acceptance criteria
@@ -172,6 +181,9 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Raw data wordt niet overschreven.
 - [x] Repair/backfill is dry-run-first en production-safe.
 - [x] Gekozen dag/week/maand wordt dependency-correct en zonder dubbele candidates gepland.
+- [x] Preview/start stuurt selectiecriteria in POST JSON en bouwt geen grote entry-id querystring voor batchconstructie.
+- [x] Start opnieuw opbouwen blijft disabled tot de selectie gecontroleerd is; wijzigingen maken de preview ongeldig.
+- [x] Technische velden zoals job-id, phase en batchstatus staan achter ingeklapte technische details.
 
 ## Blockers / afhankelijkheden
 
@@ -190,6 +202,11 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - Herhaald na productie-auditrapportage: `npm run test:unit`, `npm run typecheck`, `npm run lint`, `npm run taskflow:verify`, `npm run docs:bundle`, `npm run docs:bundle:verify` — groen.
 - Na repair/all scope-uitbreiding: `npx vitest run tests/unit/regeneration-source-contract.test.ts` — groen; 9 tests.
 - Na repair/all scope-uitbreiding en period-user dedupe: `npm run typecheck`, `npm run lint`, `npm run test:unit` — groen; 17 files, 102 tests.
+- Na URI-too-long fix: `npx vitest run tests/unit/regeneration-source-contract.test.ts` — groen; 10 tests.
+- Na URI-too-long fix: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 103 tests.
+- Na URI-too-long fix: `npm run docs:bundle:verify` — faalt alleen op `docs/upload/60-budio-tasks-current.md` omdat generated docs bewust niet zijn bijgewerkt binnen user-scope `Geen wijzigingen aan gegenereerde files`.
+- Na admin-wizard herwerking: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 103 tests.
+- Runtime-smoke: `curl -I http://localhost:8081/settings-regeneration` — HTTP 200; Playwright zonder adminsessie redirectt naar `/sign-in`, waardoor visuele admin-flow inspectie lokaal auth-blocked is zonder ingelogde admincontext.
 
 Productie-audit bewijs:
 
@@ -224,3 +241,5 @@ Productie-audit bewijs:
 ## Commits
 
 - 2026-07-03T10:34:40+02:00 — Fix scoped admin regeneration repair flow
+
+- 2026-07-03T14:19:42+02:00 — Fix admin regeneration flow
