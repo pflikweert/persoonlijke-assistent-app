@@ -556,7 +556,7 @@ export default function EntryCompletionScreen() {
     swipeTranslateX.value = 0;
   }, [entryId, swipeTranslateX]);
 
-  const momentSwipeGesture = useMemo(() => {
+  const createMomentSwipeGesture = useCallback(() => {
     const hasPrevious = Boolean(adjacentTargets.previous);
     const hasNext = Boolean(adjacentTargets.next);
 
@@ -613,6 +613,19 @@ export default function EntryCompletionScreen() {
     swipeTranslateX,
     viewportWidth,
   ]);
+
+  const headerSwipeGesture = useMemo(
+    () => createMomentSwipeGesture(),
+    [createMomentSwipeGesture],
+  );
+  const primaryContentSwipeGesture = useMemo(
+    () => createMomentSwipeGesture(),
+    [createMomentSwipeGesture],
+  );
+  const detailContentSwipeGesture = useMemo(
+    () => createMomentSwipeGesture(),
+    [createMomentSwipeGesture],
+  );
 
   const swipeAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: swipeTranslateX.value }],
@@ -736,29 +749,30 @@ export default function EntryCompletionScreen() {
 
   return (
     <>
-      <GestureDetector gesture={momentSwipeGesture}>
-        <Animated.View style={[styles.swipeHost, swipeAnimatedStyle]}>
-          <ScreenContainer
-            scrollable
-            fixedFooter={
-              <BottomTabBarStandalone
-                activeKey="today"
-                onSelect={(key) => {
-                  if (key === "capture") {
-                    router.push("/capture");
-                    return;
-                  }
-                  if (key === "reflections") {
-                    router.push("/(tabs)/reflections");
-                    return;
-                  }
-                  router.push("/(tabs)");
-                }}
-              />
-            }
-            backgroundTone="subtle"
-            fixedHeader={
-              isProcessing ? null : (
+      <Animated.View style={[styles.swipeHost, swipeAnimatedStyle]}>
+        <ScreenContainer
+          scrollable
+          fixedFooter={
+            <BottomTabBarStandalone
+              activeKey="today"
+              onSelect={(key) => {
+                if (key === "capture") {
+                  router.push("/capture");
+                  return;
+                }
+                if (key === "reflections") {
+                  router.push("/(tabs)/reflections");
+                  return;
+                }
+                router.push("/(tabs)");
+              }}
+            />
+          }
+          backgroundTone="subtle"
+          fixedHeader={
+            isProcessing ? null : (
+              <GestureDetector gesture={headerSwipeGesture}>
+                <ThemedView style={styles.swipeSurface}>
                 <ScreenHeader
                   leftAction={
                     <BrandHeaderLockup secondary="Moment" />
@@ -779,28 +793,32 @@ export default function EntryCompletionScreen() {
                   }
                   surface="transparent"
                 />
-              )
-            }
-            contentContainerStyle={styles.scrollContent}
-          >
-            <Stack.Screen options={{ headerShown: false }} />
+                </ThemedView>
+              </GestureDetector>
+            )
+          }
+          contentContainerStyle={styles.scrollContent}
+        >
+          <Stack.Screen options={{ headerShown: false }} />
 
-            {loading ? (
-              <InlineLoadingOverlay
-                message="Entry laden..."
-                detail="Even geduld, we halen je moment op."
-              />
-            ) : null}
-            {!loading && error ? (
-              <StateBlock
-                tone="error"
-                message="Entry kon niet geladen worden."
-                detail={error}
-              />
-            ) : null}
+          {loading ? (
+            <InlineLoadingOverlay
+              message="Entry laden..."
+              detail="Even geduld, we halen je moment op."
+            />
+          ) : null}
+          {!loading && error ? (
+            <StateBlock
+              tone="error"
+              message="Entry kon niet geladen worden."
+              detail={error}
+            />
+          ) : null}
 
-            {!isProcessing && !loading && !error && entry ? (
-              <>
+          {!isProcessing && !loading && !error && entry ? (
+            <>
+              <GestureDetector gesture={primaryContentSwipeGesture}>
+                <ThemedView style={styles.swipeContentGroup}>
                 <DetailScreenHero
                   title={title}
                   subtitle={detailSubtitle}
@@ -902,6 +920,8 @@ export default function EntryCompletionScreen() {
                     style={styles.narrativeBlock}
                   />
                 </ThemedView>
+                </ThemedView>
+              </GestureDetector>
 
                 <EntryPhotoGallery
                   rawEntryId={entry.raw_entry_id}
@@ -910,6 +930,8 @@ export default function EntryCompletionScreen() {
                   onPhotosSnapshotChange={setPhotoSnapshot}
                 />
 
+              <GestureDetector gesture={detailContentSwipeGesture}>
+                <ThemedView style={styles.swipeSurface}>
                 <ThemedView
                   style={[
                     styles.momentDetailsSection,
@@ -1012,24 +1034,25 @@ export default function EntryCompletionScreen() {
                     </ThemedView>
                   </Pressable>
                 </ThemedView>
-              </>
-            ) : null}
+                </ThemedView>
+              </GestureDetector>
+            </>
+          ) : null}
 
-            <TextEditorModal
-              visible={editVisible}
-              title="Moment aanpassen"
-              value={editBody}
-              placeholder="Wat houdt je bezig?"
-              submitLabel="Wijziging bewaren"
-              processingLabel="Wijziging bewaren..."
-              processing={isProcessing}
-              onCancel={() => setEditVisible(false)}
-              onChange={setEditBody}
-              onSubmit={() => void handleSaveEdit()}
-            />
-          </ScreenContainer>
-        </Animated.View>
-      </GestureDetector>
+          <TextEditorModal
+            visible={editVisible}
+            title="Moment aanpassen"
+            value={editBody}
+            placeholder="Wat houdt je bezig?"
+            submitLabel="Wijziging bewaren"
+            processingLabel="Wijziging bewaren..."
+            processing={isProcessing}
+            onCancel={() => setEditVisible(false)}
+            onChange={setEditBody}
+            onSubmit={() => void handleSaveEdit()}
+          />
+        </ScreenContainer>
+      </Animated.View>
       <ConfirmSheet
         visible={deleteConfirmVisible}
         title="Moment verwijderen?"
@@ -1061,6 +1084,13 @@ const styles = StyleSheet.create({
   swipeHost: {
     flex: 1,
     width: "100%",
+  },
+  swipeSurface: {
+    width: "100%",
+  },
+  swipeContentGroup: {
+    width: "100%",
+    gap: spacing.content,
   },
   scrollContent: {
     paddingBottom: spacing.xxxl,

@@ -95,6 +95,7 @@ async function seedMomentSwipeFixture({ context, email }) {
     firstId,
     secondId,
     firstTitle: "Eerste swipe smoke moment",
+    firstBody: "Eerste lokaal testmoment voor swipe navigatie.",
     secondTitle: "Tweede swipe smoke moment",
     entryUrl: `${context.appUrl.replace(/\/+$/, "")}/entry/${firstId}`,
   };
@@ -122,6 +123,7 @@ async function main() {
   console.log(formatEnv("SMOKE_TEST_EMAIL", result.email));
   console.log(formatEnv("MOMENT_SWIPE_E2E_ENTRY_URL", result.entryUrl));
   console.log(formatEnv("MOMENT_SWIPE_E2E_START_TITLE", result.firstTitle));
+  console.log(formatEnv("MOMENT_SWIPE_E2E_START_BODY", result.firstBody));
   console.log(formatEnv("MOMENT_SWIPE_E2E_NEXT_TITLE", result.secondTitle));
   console.log(formatEnv("MOMENT_SWIPE_E2E_NEXT_ENTRY_ID", result.secondId));
 }
