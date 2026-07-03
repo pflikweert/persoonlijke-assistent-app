@@ -2,8 +2,8 @@
 
 # Budio Build Truth
 
-Build Timestamp (UTC): 2026-07-03T08:27:36.625Z
-Source Commit: 2ed8115
+Build Timestamp (UTC): 2026-07-03T08:31:57.838Z
+Source Commit: 3636abc
 
 Doel: primaire buildbundle met routes, componentarchitectuur, services, runtime functions en contracts.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

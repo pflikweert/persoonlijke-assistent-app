@@ -13,6 +13,8 @@ export {
     fetchAdminRegenerationJobStatus,
     fetchLatestAdminRegenerationJob,
     hasAdminRegenerationAccess,
+    inspectAdminRegenerationDay,
+    previewAdminRegenerationJob,
     startAdminRegenerationJob
 } from "./admin-regeneration";
 export {

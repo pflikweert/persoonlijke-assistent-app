@@ -31,6 +31,15 @@ export type AdminRegenerationStepView = {
   last_update_at: string;
 };
 
+export type AdminRegenerationRunMode = 'repair' | 'all';
+
+export type AdminRegenerationScopeSelection =
+  | { kind: 'all' }
+  | { kind: 'day'; date: string }
+  | { kind: 'week'; startDate: string; endDate?: string | null }
+  | { kind: 'month'; startDate: string; endDate?: string | null }
+  | { kind: 'range'; startDate: string; endDate: string };
+
 export type AdminRegenerationJobView = {
   id: string;
   status: AdminRegenerationJobStatus;
@@ -45,12 +54,73 @@ export type AdminRegenerationJobView = {
   steps: AdminRegenerationStepView[];
 };
 
+export type AdminRegenerationPreview = {
+  selectedTypes: AdminRegenerationStepType[];
+  options: Record<string, unknown>;
+  summary: Record<string, unknown>;
+  steps: Array<{
+    step_type: AdminRegenerationStepType;
+    total: number;
+  }>;
+};
+
+export type AdminRegenerationDayInspection = {
+  userId: string;
+  journalDate: string;
+  binding: {
+    bindingKey: string;
+    taskKey: string;
+    versionId: string;
+    promptVersion: string;
+    model: string;
+  };
+  counts: {
+    uiEquivalentRawCount: number;
+    normalizedCount: number;
+    promptInputEntryCount: number;
+    entryIds: string[];
+    promptInputBodyLengths: number[];
+  };
+  issueReasons: string[];
+  entries: Array<{
+    rawEntryId: string;
+    normalizedEntryId: string | null;
+    capturedAt: string;
+    journalDate: string | null;
+    sourceType: string;
+    rawBodyLength: number;
+    normalizedTitle: string | null;
+    normalizedBody: string | null;
+    normalizedSummaryShort: string | null;
+    normalizedBodyLength: number;
+    issueReasons: string[];
+  }>;
+  promptEntries: Array<{
+    rawEntryId: string;
+    normalizedEntryId: string;
+    capturedAt: string;
+    title: string;
+    body: string;
+    summaryShort?: string;
+  }>;
+  dayJournal: Record<string, unknown> | null;
+  reflections: Array<Record<string, unknown>>;
+};
+
 type StartResponse = {
   status: 'ok';
   flow: 'admin-regeneration-job';
   requestId: string;
   flowId: string;
   job: AdminRegenerationJobView;
+};
+
+type PreviewResponse = {
+  status: 'ok';
+  flow: 'admin-regeneration-job';
+  requestId: string;
+  flowId: string;
+  preview: AdminRegenerationPreview;
 };
 
 type StatusResponse = {
@@ -67,6 +137,14 @@ type LatestResponse = {
   requestId: string;
   flowId: string;
   job: AdminRegenerationJobView | null;
+};
+
+type InspectDayResponse = {
+  status: 'ok';
+  flow: 'admin-regeneration-job';
+  requestId: string;
+  flowId: string;
+  inspection: AdminRegenerationDayInspection;
 };
 
 function parseFunctionMessage(parsed: unknown): string | null {
@@ -147,6 +225,9 @@ async function invokeAction<T>(input: {
 
 export async function startAdminRegenerationJob(input: {
   selectedTypes: AdminRegenerationStepType[];
+  mode?: AdminRegenerationRunMode;
+  scope?: AdminRegenerationScopeSelection[];
+  targetUserIds?: string[];
 }): Promise<AdminRegenerationJobView> {
   const normalizedTypes = [...new Set(input.selectedTypes)].filter(
     (value): value is AdminRegenerationStepType =>
@@ -168,6 +249,9 @@ export async function startAdminRegenerationJob(input: {
     body: {
       action: 'start',
       selectedTypes: normalizedTypes,
+      mode: input.mode ?? 'repair',
+      scope: input.scope ?? [{ kind: 'all' }],
+      targetUserIds: input.targetUserIds ?? [],
     },
   });
 
@@ -176,6 +260,45 @@ export async function startAdminRegenerationJob(input: {
   }
 
   return data.job;
+}
+
+export async function previewAdminRegenerationJob(input: {
+  selectedTypes: AdminRegenerationStepType[];
+  mode?: AdminRegenerationRunMode;
+  scope?: AdminRegenerationScopeSelection[];
+  targetUserIds?: string[];
+}): Promise<AdminRegenerationPreview> {
+  const normalizedTypes = [...new Set(input.selectedTypes)].filter(
+    (value): value is AdminRegenerationStepType =>
+      value === 'entries_normalized' ||
+      value === 'day_journals' ||
+      value === 'week_reflections' ||
+      value === 'month_reflections'
+  );
+
+  if (normalizedTypes.length === 0) {
+    throw new Error('Kies minimaal één datatype om opnieuw te verwerken.');
+  }
+
+  const flowId = createClientFlowId('admin-regeneration');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-regeneration-job' });
+
+  const data = await invokeAction<PreviewResponse>({
+    flowId,
+    body: {
+      action: 'preview',
+      selectedTypes: normalizedTypes,
+      mode: input.mode ?? 'repair',
+      scope: input.scope ?? [{ kind: 'all' }],
+      targetUserIds: input.targetUserIds ?? [],
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-regeneration-job' || !data.requestId || !data.preview) {
+    throw new Error('Ongeldige response van admin-regeneration-job preview.');
+  }
+
+  return data.preview;
 }
 
 export async function fetchAdminRegenerationJobStatus(input: {
@@ -239,4 +362,33 @@ export async function fetchLatestAdminRegenerationJob(): Promise<AdminRegenerati
   }
 
   return data.job ?? null;
+}
+
+export async function inspectAdminRegenerationDay(input: {
+  userId: string;
+  journalDate: string;
+}): Promise<AdminRegenerationDayInspection> {
+  const userId = input.userId.trim();
+  const journalDate = input.journalDate.trim();
+  if (!userId || !journalDate) {
+    throw new Error('userId en journalDate zijn verplicht.');
+  }
+
+  const flowId = createClientFlowId('admin-regeneration');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-regeneration-job' });
+
+  const data = await invokeAction<InspectDayResponse>({
+    flowId,
+    body: {
+      action: 'inspect_day',
+      userId,
+      journalDate,
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-regeneration-job' || !data.requestId || !data.inspection) {
+    throw new Error('Ongeldige response van admin-regeneration-job inspect_day.');
+  }
+
+  return data.inspection;
 }
