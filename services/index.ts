@@ -38,6 +38,7 @@ export {
 export {
     createEntryAudioSignedUrl,
     deleteNormalizedEntryById,
+    fetchAdjacentNormalizedEntryTargets,
     fetchDayJournalByDate, fetchNormalizedEntriesByDate, fetchNormalizedEntryById, fetchRecentDayJournals, fetchRecentNormalizedEntries, fetchTodayJournal,
     getUtcTodayDate,
     isValidJournalDate,

@@ -107,6 +107,7 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [Plan Mode task auto-create bij ontbrekende match](open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Settings/admin navigatie contract fix](open/settings-admin-navigatie-contract-fix.md) | p1 | transitiemaand-consumer-beta | `Instellingen` in het hoofdmenu opent altijd het instellingenoverzicht met menu-keuzes. First-level settings/admin back gaat terug naar `... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
+| [Momentdetail swipe navigatie](open/moment-detail-swipe-navigatie.md) | p2 | transitiemaand-consumer-beta | De momentdetailpagina ondersteunt swipe links/rechts voor volgend/vorig moment. Als er geen moment in die richting bestaat, beweegt de pa... |
 
 ### Review
 

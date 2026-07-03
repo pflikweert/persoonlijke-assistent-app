@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-07-02T11:55:30.650Z
-Source Commit: 2f3e0f1
+Build Timestamp (UTC): 2026-07-03T08:27:36.625Z
+Source Commit: 2ed8115
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -513,6 +513,7 @@ active_agent_settings: null
 
 
 
+
 ## Probleem / context
 
 AIQS Assist bestaat al in de draft editor, maar voelt nog te veel als algemene herschrijfhulp. Per promptveld moet Assist begrijpen welke laag wordt bewerkt, wat die laag wel/niet mag bevatten, welke sibling-lagen al regels bevatten en of de huidige tekst eigenlijk in een andere laag thuishoort.
@@ -740,6 +741,8 @@ Belangrijkste punten:
 - 2026-06-22T18:04:11+02:00 — Automate active agent metadata
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-02T13:57:17+02:00 — fix: harden taskflow active agent cleanup
 ```
 
 ---
@@ -10645,6 +10648,7 @@ active_agent_settings: null
 
 
 
+
 ## Probleem / context
 
 Tijdens agent-uitvoering ontstaat soms drift tussen het oorspronkelijke goedgekeurde plan en de actuele uitvoerfocus. Zodra er tijdens bouwen correcties, regressies of polish-rondes bijkomen, verschuift de aandacht naar het laatste subprobleem. Daardoor kan een agent ten onrechte denken dat het werk "klaar" is, terwijl onderdelen uit het oorspronkelijke plan nog open staan.
@@ -10806,6 +10810,8 @@ De plugin blijft dezelfde actieve-agent copy gebruiken voor geldige claims. Stal
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-02T13:57:17+02:00 — fix: harden taskflow active agent cleanup
 ```
 
 ---

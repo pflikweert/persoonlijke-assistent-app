@@ -49,6 +49,16 @@ export type NormalizedEntryDetail = Pick<
   audio_duration_ms: number | null;
 };
 
+export type AdjacentNormalizedEntryTarget = {
+  id: string;
+  journalDate: string;
+};
+
+export type AdjacentNormalizedEntryTargets = {
+  previous: AdjacentNormalizedEntryTarget | null;
+  next: AdjacentNormalizedEntryTarget | null;
+};
+
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 interface RegenerateDayJournalResult {
@@ -421,6 +431,118 @@ export async function fetchNormalizedEntriesByDate(journalDate: string): Promise
           meta?.journal_date ?? deriveJournalDateFromIsoLocal(meta?.captured_at ?? row.created_at),
       };
     });
+}
+
+async function resolveFirstNormalizedTargetForRawRows(
+  rawRows: Array<{
+    id: string;
+    captured_at: string;
+    journal_date: string | null;
+  }>,
+): Promise<AdjacentNormalizedEntryTarget | null> {
+  const rawIds = rawRows.map((row) => row.id);
+  if (rawIds.length === 0) {
+    return null;
+  }
+
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  const { data, error } = await supabase
+    .from('entries_normalized')
+    .select('id, raw_entry_id')
+    .in('raw_entry_id', rawIds);
+
+  if (error) {
+    throw error;
+  }
+
+  const normalizedByRawId = new Map((data ?? []).map((row) => [row.raw_entry_id, row.id]));
+  const rawTarget = rawRows.find((row) => normalizedByRawId.has(row.id));
+  if (!rawTarget) {
+    return null;
+  }
+
+  return {
+    id: normalizedByRawId.get(rawTarget.id) ?? '',
+    journalDate: rawTarget.journal_date ?? deriveJournalDateFromIsoLocal(rawTarget.captured_at),
+  };
+}
+
+async function fetchAdjacentDayTarget(input: {
+  journalDate: string;
+  direction: 'previous' | 'next';
+}): Promise<AdjacentNormalizedEntryTarget | null> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  if (!isValidJournalDate(input.journalDate)) {
+    throw new Error('Ongeldige datum. Gebruik formaat YYYY-MM-DD.');
+  }
+
+  const isPrevious = input.direction === 'previous';
+  const { data, error } = await supabase
+    .from('entries_raw')
+    .select('id, captured_at, journal_date')
+    .not('journal_date', 'is', null)
+    [isPrevious ? 'lt' : 'gt']('journal_date', input.journalDate)
+    .order('journal_date', { ascending: !isPrevious })
+    .order('captured_at', { ascending: !isPrevious })
+    .limit(24);
+
+  if (error) {
+    throw error;
+  }
+
+  return resolveFirstNormalizedTargetForRawRows(data ?? []);
+}
+
+export async function fetchAdjacentNormalizedEntryTargets(input: {
+  id: string;
+  journalDate: string;
+}): Promise<AdjacentNormalizedEntryTargets> {
+  const normalizedId = input.id.trim();
+  if (!normalizedId) {
+    throw new Error('Entry id ontbreekt.');
+  }
+
+  if (!isValidJournalDate(input.journalDate)) {
+    throw new Error('Ongeldige datum. Gebruik formaat YYYY-MM-DD.');
+  }
+
+  const dayEntries = await fetchNormalizedEntriesByDate(input.journalDate);
+  const currentIndex = dayEntries.findIndex((entry) => entry.id === normalizedId);
+  const previousInDay = currentIndex > 0 ? dayEntries[currentIndex - 1] : null;
+  const nextInDay =
+    currentIndex >= 0 && currentIndex < dayEntries.length - 1 ? dayEntries[currentIndex + 1] : null;
+
+  const [previousAcrossDays, nextAcrossDays] = await Promise.all([
+    previousInDay
+      ? Promise.resolve(null)
+      : fetchAdjacentDayTarget({ journalDate: input.journalDate, direction: 'previous' }),
+    nextInDay ? Promise.resolve(null) : fetchAdjacentDayTarget({ journalDate: input.journalDate, direction: 'next' }),
+  ]);
+
+  return {
+    previous: previousInDay
+      ? {
+          id: previousInDay.id,
+          journalDate: previousInDay.journal_date,
+        }
+      : previousAcrossDays,
+    next: nextInDay
+      ? {
+          id: nextInDay.id,
+          journalDate: nextInDay.journal_date,
+        }
+      : nextAcrossDays,
+  };
 }
 
 export async function fetchRecentNormalizedEntries(limit = 5): Promise<RecentNormalizedEntry[]> {
