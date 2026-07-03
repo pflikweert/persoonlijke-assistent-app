@@ -7,7 +7,13 @@ import {
   useLocalSearchParams,
 } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -563,7 +569,7 @@ export default function EntryCompletionScreen() {
     return Gesture.Pan()
       .enabled(!isProcessing && !loading && !error && Boolean(entry))
       .activeOffsetX([-24, 24])
-      .failOffsetY([-36, 36])
+      .failOffsetY([-12, 12])
       .onUpdate((event) => {
         swipeTranslateX.value = clampMomentSwipeTranslation({
           translationX: event.translationX,
@@ -1087,10 +1093,12 @@ const styles = StyleSheet.create({
   },
   swipeSurface: {
     width: "100%",
+    ...(Platform.OS === "web" ? { touchAction: "pan-y" } : null),
   },
   swipeContentGroup: {
     width: "100%",
     gap: spacing.content,
+    ...(Platform.OS === "web" ? { touchAction: "pan-y" } : null),
   },
   scrollContent: {
     paddingBottom: spacing.xxxl,

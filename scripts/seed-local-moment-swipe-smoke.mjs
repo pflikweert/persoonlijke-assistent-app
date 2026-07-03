@@ -9,6 +9,23 @@ import {
 
 const FIXTURE_SOURCE_TYPE = "local-moment-swipe-smoke";
 const FIXTURE_SOURCE_REF = "moment-detail-swipe";
+const FIRST_BODY_PREFIX = "Eerste lokaal testmoment voor swipe navigatie.";
+const FIRST_BODY = `${FIRST_BODY_PREFIX}
+
+Deze tekst maakt de momentdetailpagina bewust langer, zodat de lokale smoke zowel verticaal scrollen als horizontaal swipen op body-content kan testen.
+
+Regel 1 voor scrollbewijs.
+Regel 2 voor scrollbewijs.
+Regel 3 voor scrollbewijs.
+Regel 4 voor scrollbewijs.
+Regel 5 voor scrollbewijs.
+Regel 6 voor scrollbewijs.
+Regel 7 voor scrollbewijs.
+Regel 8 voor scrollbewijs.
+Regel 9 voor scrollbewijs.
+Regel 10 voor scrollbewijs.
+Regel 11 voor scrollbewijs.
+Regel 12 voor scrollbewijs.`;
 
 async function cleanupFixtureRows(supabase, userId) {
   const { error } = await supabase
@@ -77,7 +94,7 @@ async function seedMomentSwipeFixture({ context, email }) {
   const journalDate = "2026-07-03";
   const firstId = await insertMoment(supabase, userId, {
     title: "Eerste swipe smoke moment",
-    body: "Eerste lokaal testmoment voor swipe navigatie.",
+    body: FIRST_BODY,
     summary: "Eerste swipe smoke moment.",
     capturedAt: `${journalDate}T08:00:00.000Z`,
     journalDate,
@@ -95,7 +112,7 @@ async function seedMomentSwipeFixture({ context, email }) {
     firstId,
     secondId,
     firstTitle: "Eerste swipe smoke moment",
-    firstBody: "Eerste lokaal testmoment voor swipe navigatie.",
+    firstBody: FIRST_BODY_PREFIX,
     secondTitle: "Tweede swipe smoke moment",
     entryUrl: `${context.appUrl.replace(/\/+$/, "")}/entry/${firstId}`,
   };
