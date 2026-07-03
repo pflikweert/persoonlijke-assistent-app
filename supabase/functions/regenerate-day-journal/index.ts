@@ -10,6 +10,8 @@ import { buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBi
 // @ts-ignore -- Deno runtime supports .mjs imports from functions.
 import { finalizeDayJournalDraftStrict, isLowContentDayEntry, orderDayJournalEntries } from '../_shared/day-journal-contract.mjs';
 // @ts-ignore -- Deno runtime requires local import extensions.
+import { buildControlledEmptyDayJournal, loadDayEntrySource } from '../_shared/day-entry-source.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow } from '../_shared/openai-debug-storage.ts';
 
 type RegenerateDayJournalRequest = {
@@ -38,6 +40,7 @@ type DayJournalDraft = {
   summary: string;
   narrativeText: string;
   sections: string[];
+  generationMeta?: Record<string, unknown>;
 };
 
 type OpenAiJson = Record<string, unknown>;
@@ -751,14 +754,17 @@ Deno.serve(async (request: Request) => {
     });
 
     step = 'entries_loaded';
-    const { data: rawEntriesForJournalDate, error: rawEntriesForJournalDateError } = await supabase
-      .from('entries_raw')
-      .select('id, captured_at')
-      .eq('user_id', authData.user.id)
-      .eq('journal_date', journalDate)
-      .order('captured_at', { ascending: true });
-
-    if (rawEntriesForJournalDateError) {
+    let dayEntrySource: Awaited<ReturnType<typeof loadDayEntrySource>>;
+    try {
+      dayEntrySource = await loadDayEntrySource({
+        client: supabase,
+        userId: authData.user.id,
+        journalDate,
+        timezoneOffsetMinutes,
+        expectedPromptVersion: dayPrimaryBinding.promptVersion,
+        expectedModel: dayPrimaryBinding.model,
+      });
+    } catch (error) {
       return errorResponse({
         request,
         httpStatus: 500,
@@ -767,98 +773,72 @@ Deno.serve(async (request: Request) => {
         step,
         code: 'DB_READ_FAILED',
         message: 'Failed to load entries for day journal',
+        details: {
+          error: error instanceof Error ? error.message : String(error),
+        },
       });
     }
 
-    const bounds =
-      timezoneOffsetMinutes !== null
-        ? dateBoundsFromLocalDay(journalDate, timezoneOffsetMinutes)
-        : dateBoundsUtc(journalDate);
-    const { data: legacyRawEntriesForDay, error: legacyRawEntriesForDayError } = await supabase
-      .from('entries_raw')
-      .select('id, captured_at')
-      .eq('user_id', authData.user.id)
-      .is('journal_date', null)
-      .gte('captured_at', bounds.start)
-      .lt('captured_at', bounds.end)
-      .order('captured_at', { ascending: true });
-
-    if (legacyRawEntriesForDayError) {
-      return errorResponse({
-        request,
-        httpStatus: 500,
-        requestId,
-        flowId,
-        step,
-        code: 'DB_READ_FAILED',
-        message: 'Failed to load entries for day journal',
-      });
-    }
-
-    const rawEntriesForDay = [
-      ...(rawEntriesForJournalDate ?? []),
-      ...(legacyRawEntriesForDay ?? []),
-    ]
-      .filter((entry, index, all) => all.findIndex((candidate) => candidate.id === entry.id) === index)
-      .sort((left, right) => new Date(left.captured_at).getTime() - new Date(right.captured_at).getTime());
-
-    const rawIds = (rawEntriesForDay ?? []).map((entry: { id: string }) => entry.id);
-    const normalizedEntriesForDay: NormalizedEntry[] = [];
-
-    if (rawIds.length > 0) {
-      const { data: dayNormalizedRows, error: dayNormalizedError } = await supabase
-        .from('entries_normalized')
-        .select('raw_entry_id, title, body')
-        .eq('user_id', authData.user.id)
-        .in('raw_entry_id', rawIds);
-
-      if (dayNormalizedError) {
-        return errorResponse({
-          request,
-          httpStatus: 500,
-          requestId,
-          flowId,
-          step,
-          code: 'DB_READ_FAILED',
-          message: 'Failed to compose day journal',
-        });
-      }
-
-      const normalizedByRawId = new Map<string, NormalizedEntry>();
-      for (const row of dayNormalizedRows ?? []) {
-        normalizedByRawId.set(String(row.raw_entry_id), {
-          rawEntryId: String(row.raw_entry_id),
-          title: row.title,
-          body: row.body,
-        });
-      }
-
-      for (const rawEntry of rawEntriesForDay ?? []) {
-        const normalized = normalizedByRawId.get(String(rawEntry.id));
-        if (!normalized) {
-          continue;
-        }
-
-        normalizedEntriesForDay.push({
-          ...normalized,
-          capturedAt: rawEntry.captured_at,
-        });
-      }
-    }
-
-    step = 'day_journal_upserted';
-    const dayDraft = await composeDayJournal({
-      apiKey: runtimeEnv.openAiApiKey,
+    logFlow('info', {
+      flow: FLOW,
       requestId,
       flowId,
-      journalDate,
-      strictValidation: runtimeEnv.dayJournalStrictValidation,
-      softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
-      normalizedEntries: normalizedEntriesForDay,
-      primaryBinding: dayPrimaryBinding,
-      repairBinding: dayRepairBinding,
-      debugStore,
+      step,
+      event: 'day_entry_source_loaded',
+      details: {
+        userId: authData.user.id,
+        journalDate,
+        entry_count_ui_equivalent: dayEntrySource.debug.uiEquivalentRawCount,
+        entry_count_runtime: dayEntrySource.debug.normalizedCount,
+        prompt_input_entry_count: dayEntrySource.debug.promptInputEntryCount,
+        entry_ids: dayEntrySource.debug.entryIds,
+        prompt_input_body_lengths: dayEntrySource.debug.promptInputBodyLengths,
+        issue_reasons: dayEntrySource.issueReasons,
+      },
     });
+
+    if (dayEntrySource.debug.uiEquivalentRawCount > 0 && dayEntrySource.debug.promptInputEntryCount === 0) {
+      return errorResponse({
+        request,
+        httpStatus: 409,
+        requestId,
+        flowId,
+        step,
+        code: 'INTERNAL_UNEXPECTED',
+        message: 'Day journal source has raw entries but no normalized prompt entries.',
+        details: {
+          journalDate,
+          entry_count_ui_equivalent: dayEntrySource.debug.uiEquivalentRawCount,
+          entry_count_runtime: dayEntrySource.debug.normalizedCount,
+          entry_ids: dayEntrySource.debug.entryIds,
+          missing_normalized_raw_ids: dayEntrySource.missingNormalizedRawIds,
+          issue_reasons: dayEntrySource.issueReasons,
+        },
+      });
+    }
+
+    const normalizedEntriesForDay: NormalizedEntry[] = dayEntrySource.promptEntries.map((entry) => ({
+      rawEntryId: entry.rawEntryId,
+      capturedAt: entry.capturedAt,
+      title: entry.title,
+      body: entry.body,
+    }));
+
+    step = 'day_journal_upserted';
+    const dayDraft = dayEntrySource.debug.uiEquivalentRawCount === 0
+      ? buildControlledEmptyDayJournal(journalDate)
+      : await composeDayJournal({
+          apiKey: runtimeEnv.openAiApiKey,
+          requestId,
+          flowId,
+          journalDate,
+          strictValidation: runtimeEnv.dayJournalStrictValidation,
+          softQualityGuards: runtimeEnv.dayJournalSoftQualityGuards,
+          normalizedEntries: normalizedEntriesForDay,
+          primaryBinding: dayPrimaryBinding,
+          repairBinding: dayRepairBinding,
+          debugStore,
+        });
 
     const updatedAt = new Date().toISOString();
     const { data: dayJournal, error: dayJournalError } = await supabase
@@ -871,6 +851,19 @@ Deno.serve(async (request: Request) => {
           narrative_text: dayDraft.narrativeText,
           sections: dayDraft.sections,
           updated_at: updatedAt,
+          generation_meta: {
+            ...(dayDraft.generationMeta ?? {}),
+            flow: 'regenerate-day-journal',
+            runtime_version: 'day_entry_source_v1',
+            prompt_version: dayPrimaryBinding.promptVersion,
+            model: dayPrimaryBinding.model,
+            source_entry_count: dayEntrySource.debug.uiEquivalentRawCount,
+            runtime_entry_count: dayEntrySource.debug.normalizedCount,
+            prompt_entry_count: dayEntrySource.debug.promptInputEntryCount,
+            source_entry_ids: dayEntrySource.debug.entryIds,
+            prompt_input_body_lengths: dayEntrySource.debug.promptInputBodyLengths,
+            issue_reasons: dayEntrySource.issueReasons,
+          },
         },
         { onConflict: 'user_id,journal_date' }
       )

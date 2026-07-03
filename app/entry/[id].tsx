@@ -7,7 +7,14 @@ import {
   useLocalSearchParams,
 } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet } from "react-native";
+import { Alert, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
@@ -40,6 +47,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   createEntryAudioSignedUrl,
   deleteNormalizedEntryById,
+  fetchAdjacentNormalizedEntryTargets,
   type EntryPhotoAsset,
   fetchNormalizedEntryById,
   generateReflection,
@@ -48,11 +56,21 @@ import {
   updateNormalizedEntryById,
 } from "@/services";
 import { buildEntryCopyPayload } from "@/src/lib/copy-payloads";
+import {
+  clampMomentSwipeTranslation,
+  getMomentSwipeDecision,
+  type MomentSwipeDirection,
+} from "@/src/lib/moment-navigation/presentation";
 import { colorTokens, radius, spacing } from "@/theme";
 
 type RouteParams = {
   id?: string | string[];
   date?: string | string[];
+};
+
+type AdjacentMomentTarget = {
+  id: string;
+  journalDate: string;
 };
 
 function resolveRouteValue(value: string | string[] | undefined): string {
@@ -243,6 +261,7 @@ function formatAudioDownloadFileName(input: {
 export default function EntryCompletionScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const { width: viewportWidth } = useWindowDimensions();
   const { id, date } = useLocalSearchParams<RouteParams>();
   const entryId = useMemo(() => resolveRouteValue(id), [id]);
   const routeDate = useMemo(() => resolveRouteValue(date), [date]);
@@ -255,6 +274,10 @@ export default function EntryCompletionScreen() {
   const [error, setError] = useState<string | null>(null);
   const [entry, setEntry] =
     useState<Awaited<ReturnType<typeof fetchNormalizedEntryById>>>(null);
+  const [adjacentTargets, setAdjacentTargets] = useState<{
+    previous: AdjacentMomentTarget | null;
+    next: AdjacentMomentTarget | null;
+  }>({ previous: null, next: null });
   const [editVisible, setEditVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [editBody, setEditBody] = useState("");
@@ -264,12 +287,14 @@ export default function EntryCompletionScreen() {
   const [audioUrlError, setAudioUrlError] = useState<string | null>(null);
   const [audioReloadTick, setAudioReloadTick] = useState(0);
   const [audioRetrying, setAudioRetrying] = useState(false);
+  const swipeTranslateX = useSharedValue(0);
 
   const loadEntry = useCallback(async () => {
     if (!entryId) {
       setLoading(false);
       setError("Entry id ontbreekt.");
       setEntry(null);
+      setAdjacentTargets({ previous: null, next: null });
       return;
     }
 
@@ -280,6 +305,7 @@ export default function EntryCompletionScreen() {
       const nextEntry = await fetchNormalizedEntryById(entryId);
       if (!nextEntry) {
         setEntry(null);
+        setAdjacentTargets({ previous: null, next: null });
         setAudioPlaybackUrl(null);
         setAudioDownloadUrl(null);
         setError("De entry kon niet gevonden worden.");
@@ -288,6 +314,15 @@ export default function EntryCompletionScreen() {
 
       setEntry(nextEntry);
       setEditBody(nextEntry.body ?? "");
+      try {
+        const targets = await fetchAdjacentNormalizedEntryTargets({
+          id: nextEntry.id,
+          journalDate: nextEntry.journal_date,
+        });
+        setAdjacentTargets(targets);
+      } catch {
+        setAdjacentTargets({ previous: null, next: null });
+      }
     } catch (nextError) {
       const message =
         nextError instanceof Error
@@ -295,6 +330,7 @@ export default function EntryCompletionScreen() {
           : "Kon entry niet laden.";
       setError(message);
       setEntry(null);
+      setAdjacentTargets({ previous: null, next: null });
       setAudioPlaybackUrl(null);
       setAudioDownloadUrl(null);
     } finally {
@@ -498,6 +534,90 @@ export default function EntryCompletionScreen() {
     goToDayDetail({ includeEntryFocus: true });
   }
 
+  const navigateToAdjacentMoment = useCallback(
+    (direction: MomentSwipeDirection) => {
+      const target = adjacentTargets[direction];
+      if (!target) {
+        return;
+      }
+
+      router.replace({
+        pathname: "/entry/[id]",
+        params: {
+          id: target.id,
+          date: target.journalDate,
+        },
+      });
+    },
+    [adjacentTargets],
+  );
+
+  useEffect(() => {
+    swipeTranslateX.value = 0;
+  }, [entryId, swipeTranslateX]);
+
+  const momentSwipeGesture = useMemo(() => {
+    const hasPrevious = Boolean(adjacentTargets.previous);
+    const hasNext = Boolean(adjacentTargets.next);
+
+    return Gesture.Pan()
+      .enabled(!isProcessing && !loading && !error && Boolean(entry))
+      .activeOffsetX([-24, 24])
+      .failOffsetY([-36, 36])
+      .onUpdate((event) => {
+        swipeTranslateX.value = clampMomentSwipeTranslation({
+          translationX: event.translationX,
+          hasPrevious,
+          hasNext,
+        });
+      })
+      .onEnd((event) => {
+        const decision = getMomentSwipeDecision({
+          translationX: event.translationX,
+          translationY: event.translationY,
+          velocityX: event.velocityX,
+          hasPrevious,
+          hasNext,
+        });
+
+        if (decision === "previous" || decision === "next") {
+          const exitDistance = Math.max(viewportWidth, 1);
+          swipeTranslateX.value = withTiming(
+            decision === "next" ? -exitDistance : exitDistance,
+            { duration: 150 },
+            (finished) => {
+              if (finished) {
+                runOnJS(navigateToAdjacentMoment)(decision);
+                swipeTranslateX.value = 0;
+              }
+            },
+          );
+          return;
+        }
+
+        swipeTranslateX.value = withTiming(0, { duration: 140 });
+      })
+      .onFinalize(() => {
+        if (Math.abs(swipeTranslateX.value) < 1) {
+          swipeTranslateX.value = 0;
+        }
+      });
+  }, [
+    adjacentTargets.next,
+    adjacentTargets.previous,
+    entry,
+    error,
+    isProcessing,
+    loading,
+    navigateToAdjacentMoment,
+    swipeTranslateX,
+    viewportWidth,
+  ]);
+
+  const swipeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: swipeTranslateX.value }],
+  }));
+
   async function refreshDerivedAfterMutation(
     journalDate: string,
     options?: { refreshExistingReflectionsOnly?: boolean },
@@ -616,296 +736,300 @@ export default function EntryCompletionScreen() {
 
   return (
     <>
-      <ScreenContainer
-        scrollable
-        fixedFooter={
-          <BottomTabBarStandalone
-            activeKey="today"
-            onSelect={(key) => {
-              if (key === "capture") {
-                router.push("/capture");
-                return;
-              }
-              if (key === "reflections") {
-                router.push("/(tabs)/reflections");
-                return;
-              }
-              router.push("/(tabs)");
-            }}
-          />
-        }
-        backgroundTone="subtle"
-        fixedHeader={
-          isProcessing ? null : (
-            <ScreenHeader
-              leftAction={
-                <BrandHeaderLockup secondary="Moment" />
-              }
-              rightAction={
-                <HeaderIconButton
-                  accessibilityRole="button"
-                  accessibilityLabel="Terug naar deze dag"
-                  size={44}
-                  onPress={handleBack}
-                >
-                  <MaterialIcons
-                    name="arrow-back"
-                    size={18}
-                    color={palette.primary}
-                  />
-                </HeaderIconButton>
-              }
-              surface="transparent"
-            />
-          )
-        }
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Stack.Screen options={{ headerShown: false }} />
-
-        {loading ? (
-          <InlineLoadingOverlay
-            message="Entry laden..."
-            detail="Even geduld, we halen je moment op."
-          />
-        ) : null}
-        {!loading && error ? (
-          <StateBlock
-            tone="error"
-            message="Entry kon niet geladen worden."
-            detail={error}
-          />
-        ) : null}
-
-        {!isProcessing && !loading && !error && entry ? (
-          <>
-            <DetailScreenHero
-              title={title}
-              subtitle={detailSubtitle}
-              subtitleType="meta"
-              style={styles.titleBlock}
-              titleStyle={{ color: palette.text }}
-              subtitleStyle={styles.heroMeta}
-            />
-
-            {showAssistantCopy ? (
-              <ThemedView style={styles.summarySectionBlock}>
-                <DayJournalSummaryInset text={summaryShortText} />
-              </ThemedView>
-            ) : null}
-
-            {entry.source_type === "audio" && !audioPathMissing ? (
-              <ThemedView style={[styles.sectionBlock, styles.primarySectionSpacing]}>
-                <DetailSectionHeader
-                  icon="mic"
-                  title="Opname"
-                  tone="muted"
+      <GestureDetector gesture={momentSwipeGesture}>
+        <Animated.View style={[styles.swipeHost, swipeAnimatedStyle]}>
+          <ScreenContainer
+            scrollable
+            fixedFooter={
+              <BottomTabBarStandalone
+                activeKey="today"
+                onSelect={(key) => {
+                  if (key === "capture") {
+                    router.push("/capture");
+                    return;
+                  }
+                  if (key === "reflections") {
+                    router.push("/(tabs)/reflections");
+                    return;
+                  }
+                  router.push("/(tabs)");
+                }}
+              />
+            }
+            backgroundTone="subtle"
+            fixedHeader={
+              isProcessing ? null : (
+                <ScreenHeader
+                  leftAction={
+                    <BrandHeaderLockup secondary="Moment" />
+                  }
+                  rightAction={
+                    <HeaderIconButton
+                      accessibilityRole="button"
+                      accessibilityLabel="Terug naar deze dag"
+                      size={44}
+                      onPress={handleBack}
+                    >
+                      <MaterialIcons
+                        name="arrow-back"
+                        size={18}
+                        color={palette.primary}
+                      />
+                    </HeaderIconButton>
+                  }
+                  surface="transparent"
                 />
-                {audioPlaybackUrl ? (
-                  <EntryAudioPlayer
-                    sourceUrl={audioPlaybackUrl}
-                    durationMs={entry.audio_duration_ms}
-                    onRequestDownload={audioDownloadUrl ? handleDownloadAudio : undefined}
-                  />
-                ) : audioUrlStatus === "loading" ? (
-                  <StateBlock
-                    tone="loading"
-                    message="Opname laden..."
-                    detail="We halen je audio op."
-                  />
-                ) : (
-                  <StateBlock
-                    tone="error"
-                    message="Opname is nu niet beschikbaar"
-                    detail={audioUrlError ?? "Probeer opnieuw."}
-                  />
-                )}
+              )
+            }
+            contentContainerStyle={styles.scrollContent}
+          >
+            <Stack.Screen options={{ headerShown: false }} />
 
-                {!audioPlaybackUrl && audioUrlStatus === "error" ? (
-                  audioPathMissing ? (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Ga naar audio-instellingen"
-                      onPress={() => router.push("../../settings-audio")}
-                      style={styles.inlineEditAction}
-                    >
-                      <MaterialIcons name="settings" size={14} color={palette.mutedSoft} />
-                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                        Audio-instellingen
-                      </ThemedText>
-                    </Pressable>
-                  ) : (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Opname opnieuw laden"
-                      accessibilityState={{ disabled: audioRetrying }}
-                      disabled={audioRetrying}
-                      onPress={() => {
-                        void handleRetryAudio();
-                      }}
-                      style={[
-                        styles.inlineEditAction,
-                        audioRetrying ? { opacity: 0.6 } : null,
-                      ]}
-                    >
-                      <MaterialIcons name="refresh" size={14} color={palette.mutedSoft} />
-                      <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-                        {audioRetrying ? "Opname opnieuw laden..." : "Opnieuw laden"}
-                      </ThemedText>
-                    </Pressable>
-                  )
-                ) : null}
-              </ThemedView>
+            {loading ? (
+              <InlineLoadingOverlay
+                message="Entry laden..."
+                detail="Even geduld, we halen je moment op."
+              />
+            ) : null}
+            {!loading && error ? (
+              <StateBlock
+                tone="error"
+                message="Entry kon niet geladen worden."
+                detail={error}
+              />
             ) : null}
 
-            <ThemedView style={[styles.sectionBlock, styles.primarySectionSpacing]}>
-              <DetailSectionHeader
-                icon="subject"
-                title={
-                  entry.source_type === "audio"
-                    ? "Uitgeschreven opname"
-                    : "Geschreven moment"
-                }
-                tone="accent"
-                trailingAction={
-                  <CopyIconButton
-                    payload={entryCopyPayload}
-                    copyLabel="Kopieer moment"
-                    copiedLabel="Moment gekopieerd"
+            {!isProcessing && !loading && !error && entry ? (
+              <>
+                <DetailScreenHero
+                  title={title}
+                  subtitle={detailSubtitle}
+                  subtitleType="meta"
+                  style={styles.titleBlock}
+                  titleStyle={{ color: palette.text }}
+                  subtitleStyle={styles.heroMeta}
+                />
+
+                {showAssistantCopy ? (
+                  <ThemedView style={styles.summarySectionBlock}>
+                    <DayJournalSummaryInset text={summaryShortText} />
+                  </ThemedView>
+                ) : null}
+
+                {entry.source_type === "audio" && !audioPathMissing ? (
+                  <ThemedView style={[styles.sectionBlock, styles.primarySectionSpacing]}>
+                    <DetailSectionHeader
+                      icon="mic"
+                      title="Opname"
+                      tone="muted"
+                    />
+                    {audioPlaybackUrl ? (
+                      <EntryAudioPlayer
+                        sourceUrl={audioPlaybackUrl}
+                        durationMs={entry.audio_duration_ms}
+                        onRequestDownload={audioDownloadUrl ? handleDownloadAudio : undefined}
+                      />
+                    ) : audioUrlStatus === "loading" ? (
+                      <StateBlock
+                        tone="loading"
+                        message="Opname laden..."
+                        detail="We halen je audio op."
+                      />
+                    ) : (
+                      <StateBlock
+                        tone="error"
+                        message="Opname is nu niet beschikbaar"
+                        detail={audioUrlError ?? "Probeer opnieuw."}
+                      />
+                    )}
+
+                    {!audioPlaybackUrl && audioUrlStatus === "error" ? (
+                      audioPathMissing ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Ga naar audio-instellingen"
+                          onPress={() => router.push("../../settings-audio")}
+                          style={styles.inlineEditAction}
+                        >
+                          <MaterialIcons name="settings" size={14} color={palette.mutedSoft} />
+                          <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                            Audio-instellingen
+                          </ThemedText>
+                        </Pressable>
+                      ) : (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Opname opnieuw laden"
+                          accessibilityState={{ disabled: audioRetrying }}
+                          disabled={audioRetrying}
+                          onPress={() => {
+                            void handleRetryAudio();
+                          }}
+                          style={[
+                            styles.inlineEditAction,
+                            audioRetrying ? { opacity: 0.6 } : null,
+                          ]}
+                        >
+                          <MaterialIcons name="refresh" size={14} color={palette.mutedSoft} />
+                          <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                            {audioRetrying ? "Opname opnieuw laden..." : "Opnieuw laden"}
+                          </ThemedText>
+                        </Pressable>
+                      )
+                    ) : null}
+                  </ThemedView>
+                ) : null}
+
+                <ThemedView style={[styles.sectionBlock, styles.primarySectionSpacing]}>
+                  <DetailSectionHeader
+                    icon="subject"
+                    title={
+                      entry.source_type === "audio"
+                        ? "Uitgeschreven opname"
+                        : "Geschreven moment"
+                    }
+                    tone="accent"
+                    trailingAction={
+                      <CopyIconButton
+                        payload={entryCopyPayload}
+                        copyLabel="Kopieer moment"
+                        copiedLabel="Moment gekopieerd"
+                      />
+                    }
                   />
-                }
-              />
-              <EditorialNarrativeBlock
-                text={cleanedBody || "Deze entry bevat nog geen tekst."}
-                style={styles.narrativeBlock}
-              />
-            </ThemedView>
+                  <EditorialNarrativeBlock
+                    text={cleanedBody || "Deze entry bevat nog geen tekst."}
+                    style={styles.narrativeBlock}
+                  />
+                </ThemedView>
 
-            <EntryPhotoGallery
-              rawEntryId={entry.raw_entry_id}
-              refreshToken={photoRefreshTick}
-              onPhotosChanged={handlePhotosChanged}
-              onPhotosSnapshotChange={setPhotoSnapshot}
-            />
+                <EntryPhotoGallery
+                  rawEntryId={entry.raw_entry_id}
+                  refreshToken={photoRefreshTick}
+                  onPhotosChanged={handlePhotosChanged}
+                  onPhotosSnapshotChange={setPhotoSnapshot}
+                />
 
-            <ThemedView
-              style={[
-                styles.momentDetailsSection,
-                {
-                  backgroundColor: palette.surface,
-                },
-              ]}
-            >
-              <DetailSectionHeader
-                icon="info-outline"
-                title="Momentdetails"
-                tone="muted"
-              />
-
-              {addedAtAuditLabel || (hasEditedTimestamp && editedAuditLabel) ? (
                 <ThemedView
                   style={[
-                    styles.detailMetaStack,
-                    { borderBottomColor: palette.separator },
+                    styles.momentDetailsSection,
+                    {
+                      backgroundColor: palette.surface,
+                    },
                   ]}
                 >
-                  {addedAtAuditLabel ? (
-                    <ThemedText type="caption" style={[styles.detailMetaText, { color: palette.mutedSoft }]}>
-                      {addedAtAuditLabel}
-                    </ThemedText>
-                  ) : null}
-                  {hasEditedTimestamp && editedAuditLabel ? (
-                    <ThemedText type="caption" style={[styles.detailMetaText, { color: palette.mutedSoft }]}>
-                      {editedAuditLabel}
-                    </ThemedText>
-                  ) : null}
-                </ThemedView>
-              ) : null}
-
-              <ThemedView style={styles.detailActionsStack}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Moment bewerken"
-                  onPress={() => setEditVisible(true)}
-                  style={styles.detailActionRow}
-                >
-                  <ThemedView style={styles.detailActionLeading}>
-                    <MaterialIcons name="edit" size={16} color={palette.mutedSoft} />
-                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                      Bewerken
-                    </ThemedText>
-                  </ThemedView>
-                  <MaterialIcons name="chevron-right" size={14} color={palette.mutedSoft} />
-                </Pressable>
-
-                {hasResolvedPhotoState && !hasPhotos ? (
-                  <EntryPhotoGallery
-                    rawEntryId={entry.raw_entry_id}
-                    refreshToken={photoRefreshTick}
-                    onPhotosChanged={handlePhotosChanged}
-                    onPhotosSnapshotChange={setPhotoSnapshot}
-                    variant="trigger"
+                  <DetailSectionHeader
+                    icon="info-outline"
+                    title="Momentdetails"
+                    tone="muted"
                   />
-                ) : null}
 
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={dayActionLabel}
-                  onPress={() => goToDayDetail({ includeEntryFocus: true })}
-                  style={styles.detailActionRow}
-                >
-                  <ThemedView style={styles.detailActionLeading}>
-                    <MaterialIcons name="calendar-today" size={16} color={palette.mutedSoft} />
-                    <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                      {dayActionLabel}
-                    </ThemedText>
+                  {addedAtAuditLabel || (hasEditedTimestamp && editedAuditLabel) ? (
+                    <ThemedView
+                      style={[
+                        styles.detailMetaStack,
+                        { borderBottomColor: palette.separator },
+                      ]}
+                    >
+                      {addedAtAuditLabel ? (
+                        <ThemedText type="caption" style={[styles.detailMetaText, { color: palette.mutedSoft }]}>
+                          {addedAtAuditLabel}
+                        </ThemedText>
+                      ) : null}
+                      {hasEditedTimestamp && editedAuditLabel ? (
+                        <ThemedText type="caption" style={[styles.detailMetaText, { color: palette.mutedSoft }]}>
+                          {editedAuditLabel}
+                        </ThemedText>
+                      ) : null}
+                    </ThemedView>
+                  ) : null}
+
+                  <ThemedView style={styles.detailActionsStack}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Moment bewerken"
+                      onPress={() => setEditVisible(true)}
+                      style={styles.detailActionRow}
+                    >
+                      <ThemedView style={styles.detailActionLeading}>
+                        <MaterialIcons name="edit" size={16} color={palette.mutedSoft} />
+                        <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                          Bewerken
+                        </ThemedText>
+                      </ThemedView>
+                      <MaterialIcons name="chevron-right" size={14} color={palette.mutedSoft} />
+                    </Pressable>
+
+                    {hasResolvedPhotoState && !hasPhotos ? (
+                      <EntryPhotoGallery
+                        rawEntryId={entry.raw_entry_id}
+                        refreshToken={photoRefreshTick}
+                        onPhotosChanged={handlePhotosChanged}
+                        onPhotosSnapshotChange={setPhotoSnapshot}
+                        variant="trigger"
+                      />
+                    ) : null}
+
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={dayActionLabel}
+                      onPress={() => goToDayDetail({ includeEntryFocus: true })}
+                      style={styles.detailActionRow}
+                    >
+                      <ThemedView style={styles.detailActionLeading}>
+                        <MaterialIcons name="calendar-today" size={16} color={palette.mutedSoft} />
+                        <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
+                          {dayActionLabel}
+                        </ThemedText>
+                      </ThemedView>
+                      <MaterialIcons name="chevron-right" size={14} color={palette.mutedSoft} />
+                    </Pressable>
                   </ThemedView>
-                  <MaterialIcons name="chevron-right" size={14} color={palette.mutedSoft} />
-                </Pressable>
-              </ThemedView>
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={deleting ? "Moment verwijderen..." : "Moment verwijderen"}
-                accessibilityState={{ disabled: isProcessing }}
-                disabled={isProcessing}
-                onPress={handleDelete}
-                style={[
-                  styles.deleteActionRow,
-                  { borderTopColor: palette.separator },
-                ]}
-              >
-                <ThemedView style={styles.detailActionLeading}>
-                  <MaterialIcons
-                    name="delete-outline"
-                    size={16}
-                    color={palette.destructiveSoftText}
-                  />
-                  <ThemedText
-                    type="bodySecondary"
-                    style={{ color: palette.destructiveSoftText }}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={deleting ? "Moment verwijderen..." : "Moment verwijderen"}
+                    accessibilityState={{ disabled: isProcessing }}
+                    disabled={isProcessing}
+                    onPress={handleDelete}
+                    style={[
+                      styles.deleteActionRow,
+                      { borderTopColor: palette.separator },
+                    ]}
                   >
-                    {deleting ? "Verwijderen..." : "Verwijderen"}
-                  </ThemedText>
+                    <ThemedView style={styles.detailActionLeading}>
+                      <MaterialIcons
+                        name="delete-outline"
+                        size={16}
+                        color={palette.destructiveSoftText}
+                      />
+                      <ThemedText
+                        type="bodySecondary"
+                        style={{ color: palette.destructiveSoftText }}
+                      >
+                        {deleting ? "Verwijderen..." : "Verwijderen"}
+                      </ThemedText>
+                    </ThemedView>
+                  </Pressable>
                 </ThemedView>
-              </Pressable>
-            </ThemedView>
-          </>
-        ) : null}
+              </>
+            ) : null}
 
-        <TextEditorModal
-          visible={editVisible}
-          title="Moment aanpassen"
-          value={editBody}
-          placeholder="Wat houdt je bezig?"
-          submitLabel="Wijziging bewaren"
-          processingLabel="Wijziging bewaren..."
-          processing={isProcessing}
-          onCancel={() => setEditVisible(false)}
-          onChange={setEditBody}
-          onSubmit={() => void handleSaveEdit()}
-        />
-      </ScreenContainer>
+            <TextEditorModal
+              visible={editVisible}
+              title="Moment aanpassen"
+              value={editBody}
+              placeholder="Wat houdt je bezig?"
+              submitLabel="Wijziging bewaren"
+              processingLabel="Wijziging bewaren..."
+              processing={isProcessing}
+              onCancel={() => setEditVisible(false)}
+              onChange={setEditBody}
+              onSubmit={() => void handleSaveEdit()}
+            />
+          </ScreenContainer>
+        </Animated.View>
+      </GestureDetector>
       <ConfirmSheet
         visible={deleteConfirmVisible}
         title="Moment verwijderen?"
@@ -934,6 +1058,10 @@ export default function EntryCompletionScreen() {
 }
 
 const styles = StyleSheet.create({
+  swipeHost: {
+    flex: 1,
+    width: "100%",
+  },
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },

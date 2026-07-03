@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-07-02T11:55:30.650Z
-Source Commit: 2f3e0f1
+Build Timestamp (UTC): 2026-07-03T08:31:57.838Z
+Source Commit: 3636abc
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-07-02T11:55:30.650Z
-Source Commit: 2f3e0f1
+Build Timestamp (UTC): 2026-07-03T08:31:57.838Z
+Source Commit: 3636abc
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -936,6 +936,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [Moment detail foto-upload Android Chrome prepare regressie](25-tasks/open/moment-detail-foto-upload-android-chrome-prepare-regressie.md) | In Progress | p1 | transitiemaand-consumer-beta | De moment detail foto-upload op Android Chrome faalt niet meer op fragiele web picker-assets. Web/browser prepare werkt primair op direct... |
 | [MVP admin + AIQS productie bundel](25-tasks/open/mvp-admin-aiqs-productie-bundel.md) | In Progress | p1 | transitiemaand-consumer-beta | De bestaande AIQS-flow is aantoonbaar traceerbaar en inzetbaar voor productiegebruik van de huidige OpenAI-calls, zonder featureverbredin... |
 | [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
+| [Productieflow Data opnieuw verwerken bronconsistentie](25-tasks/open/productieflow-data-opnieuw-verwerken-bronconsistentie.md) | In Progress | p1 | transitiemaand-consumer-beta | Admins kunnen productie veilig read-only auditen, daarna entries, dagjournals, weekreflecties en maandreflecties in correcte volgorde her... |
 | [Settings/admin navigatie contract fix](25-tasks/open/settings-admin-navigatie-contract-fix.md) | In Progress | p1 | transitiemaand-consumer-beta | `Instellingen` in het hoofdmenu opent altijd het instellingenoverzicht met menu-keuzes. First-level settings/admin back gaat terug naar `... |
 | [Admin/founder meeting capture — admin processing controls](25-tasks/open/admin-founder-meeting-capture-admin-processing-controls.md) | Backlog | p2 | transitiemaand-consumer-beta | Admin kan upload/transcript/summary processing veilig retryen of rerunnen met duidelijke status en failure feedback. |
 | [Admin/founder meeting capture — audio upload/import flow](25-tasks/open/admin-founder-meeting-capture-audio-upload-import-flow.md) | Backlog | p2 | transitiemaand-consumer-beta | Een admin kan een bestaand audiobestand uploaden naar hetzelfde Meeting Capture archief, met dezelfde metadata, uploadstatus, detailweerg... |
@@ -951,6 +952,7 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [npm audit kwetsbaarheden beoordelen en saneren](25-tasks/open/npm-audit-kwetsbaarheden-beoordelen-en-saneren.md) | Backlog | p2 | transitiemaand-consumer-beta | Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief onderscheid tussen: - direct runtime-risico - dev-only/tool... |
 | [STITCH_API_KEY voor MCP activeren](25-tasks/open/stitch-api-key-voor-mcp-activeren.md) | Backlog | p2 | transitiemaand-consumer-beta | De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch MCP later zonder extra handelingen gebruikt kan worden.... |
 | [Budio Workspace activity-bar opent list view zonder workspace-menu](25-tasks/open/plugin-activitybar-opent-list-view-zonder-workspace-menu.md) | In Progress | p2 | transitiemaand-consumer-beta | Klikken op het Budio Workspace activity-bar icoon opent direct de bestaande pluginwindow in `list` view. De oude `Workspace`-launcher is... |
+| [Momentdetail swipe navigatie](25-tasks/open/moment-detail-swipe-navigatie.md) | In Progress | p2 | transitiemaand-consumer-beta | De momentdetailpagina ondersteunt swipe links/rechts voor volgend/vorig moment. Als er geen moment in die richting bestaat, beweegt de pa... |
 <!-- TASK_OVERVIEW:END -->
 
 Dit document bevat alleen resterende gaps, risico’s en onzekerheden op basis van code-realiteit.

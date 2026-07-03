@@ -48,6 +48,13 @@ const FORBIDDEN_BEHAVIOR_PHRASES = [
   'er zijn meerdere notities',
   'patronen laten zien',
 ];
+const FORBIDDEN_NON_EMPTY_DAY_PHRASES = [
+  'geen losse entries',
+  'geen entries',
+  'geen momenten',
+  'niets vastgelegd',
+  'geen notities',
+];
 const SENSITIVE_SOURCE_TERMS = [
   'therapie',
   'diagnose',
@@ -305,6 +312,11 @@ function containsForbiddenNarrativeBridge(value) {
 function containsForbiddenBehavior(value) {
   const normalized = normalizeForCompare(value);
   return FORBIDDEN_BEHAVIOR_PHRASES.some((phrase) => normalized.includes(phrase));
+}
+
+function claimsEmptyDay(value) {
+  const normalized = normalizeForCompare(value);
+  return FORBIDDEN_NON_EMPTY_DAY_PHRASES.some((phrase) => normalized.includes(phrase));
 }
 
 function sourceContainsTerm(entries, term) {
@@ -791,7 +803,11 @@ function cleanSections(value, fallbackSections, summary, options = {}) {
 }
 
 function collectNarrativeAssessment(narrativeText, entries, strictValidation) {
+  const hardReasons = [];
   const qualityReasons = [];
+  if (entries.length > 0 && claimsEmptyDay(narrativeText)) {
+    hardReasons.push('empty_day_claim_with_entries');
+  }
   if (containsForbiddenNarrativeCategory(narrativeText, entries, strictValidation)) {
     qualityReasons.push('forbidden_category');
   }
@@ -825,7 +841,7 @@ function collectNarrativeAssessment(narrativeText, entries, strictValidation) {
   }
 
   return {
-    hardReasons: [],
+    hardReasons: dedupeByNormalizedValue(hardReasons),
     qualityReasons: dedupeByNormalizedValue(qualityReasons),
   };
 }
@@ -900,6 +916,12 @@ export function finalizeDayJournalDraft(input) {
     ...input.options,
     softQualityGuards,
   });
+  if (orderedEntries.length > 0 && claimsEmptyDay(summaryResult.value)) {
+    narrativeAssessment.hardReasons.push('empty_day_claim_with_entries');
+  }
+  if (narrativeAssessment.hardReasons.length > 0) {
+    return hardFailure(dedupeByNormalizedValue(narrativeAssessment.hardReasons));
+  }
   const softQualitySignals = dedupeByNormalizedValue([
     ...narrativeAssessment.qualityReasons,
     ...summaryResult.reasons,

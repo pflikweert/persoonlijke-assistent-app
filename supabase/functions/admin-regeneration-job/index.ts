@@ -15,15 +15,29 @@ import {
   isLowContentDayEntry,
   orderDayJournalEntries,
 } from '../_shared/day-journal-contract.mjs';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { buildDayCandidatesFromSources, buildEntryRepairCandidates, buildRegenerationScopePlan, computeMonthBoundsForDate, computeWeekBoundsForDate, deriveJournalDateForLegacyRaw, loadDayEntrySource, type DayCandidate, type EntryRepairCandidate, type NormalizedEntrySourceRow, type PeriodCandidate, type RawEntrySourceRow, type RegenerationScopeSelection } from '../_shared/day-entry-source.ts';
 
 type StepType = 'entries_normalized' | 'day_journals' | 'week_reflections' | 'month_reflections';
 type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+type RegenerationRunMode = 'repair' | 'all';
 
-type Action = 'start' | 'status' | 'worker_tick' | 'access' | 'latest';
+type Action = 'start' | 'preview' | 'status' | 'worker_tick' | 'access' | 'latest' | 'inspect_day';
 
 type StartBody = {
   action: 'start';
   selectedTypes?: unknown;
+  mode?: unknown;
+  scope?: unknown;
+  targetUserIds?: unknown;
+};
+
+type PreviewBody = {
+  action: 'preview';
+  selectedTypes?: unknown;
+  mode?: unknown;
+  scope?: unknown;
+  targetUserIds?: unknown;
 };
 
 type StatusBody = {
@@ -44,7 +58,13 @@ type LatestBody = {
   action: 'latest';
 };
 
-type RequestBody = StartBody | StatusBody | WorkerBody | AccessBody | LatestBody;
+type InspectDayBody = {
+  action: 'inspect_day';
+  userId?: unknown;
+  journalDate?: unknown;
+};
+
+type RequestBody = StartBody | PreviewBody | StatusBody | WorkerBody | AccessBody | LatestBody | InspectDayBody;
 
 type OpenAiBatchStatus =
   | 'validating'
@@ -333,6 +353,51 @@ function parseSelectedTypes(value: unknown): StepType[] {
   }
 
   return [];
+}
+
+function parseRunMode(value: unknown): RegenerationRunMode {
+  return value === 'all' ? 'all' : 'repair';
+}
+
+function parseTargetUserIds(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return [...new Set(value.map((item) => ensureUuid(item)).filter((item): item is string => Boolean(item)))];
+}
+
+function parseScopeSelection(value: unknown): RegenerationScopeSelection {
+  if (!value || typeof value !== 'object') {
+    return { kind: 'all' };
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const kind = parseString(candidate.kind);
+  if (kind === 'day') {
+    const date = parseString(candidate.date);
+    return date ? { kind: 'day', date } : { kind: 'all' };
+  }
+  if (kind === 'week' || kind === 'month') {
+    const startDate = parseString(candidate.startDate);
+    const endDate = parseString(candidate.endDate);
+    return startDate ? { kind, startDate, endDate } : { kind: 'all' };
+  }
+  if (kind === 'range') {
+    const startDate = parseString(candidate.startDate);
+    const endDate = parseString(candidate.endDate);
+    return startDate && endDate ? { kind: 'range', startDate, endDate } : { kind: 'all' };
+  }
+
+  return { kind: 'all' };
+}
+
+function parseScopeSelections(value: unknown): RegenerationScopeSelection[] {
+  if (Array.isArray(value)) {
+    const parsed = value.map(parseScopeSelection).filter((selection) => selection.kind !== 'all');
+    return parsed.length > 0 ? parsed : [{ kind: 'all' }];
+  }
+
+  return [parseScopeSelection(value)];
 }
 
 function ensureUuid(value: unknown): string | null {
@@ -626,60 +691,418 @@ async function triggerWorkerTick(args: {
   });
 }
 
-async function loadEntriesOutdatedCandidateIds(args: {
-  adminClient: any;
-  binding: LiveAiRuntimeBinding;
-}): Promise<string[]> {
-  const { data, error } = await args.adminClient
-    .from('entries_normalized')
-    .select('id, generation_meta')
-    .order('id', { ascending: true });
+type DayJournalCandidateRow = DayCandidate & {
+  id?: string | null;
+  summary?: string | null;
+  narrative_text?: string | null;
+  generation_meta?: Record<string, unknown> | null;
+  updated_at?: string | null;
+};
 
-  if (error) {
-    throw new Error(`Failed to load entries candidates: ${String(error.message ?? error)}`);
-  }
+type ReflectionCandidateRow = PeriodCandidate & {
+  id?: string | null;
+  period_type: 'week' | 'month';
+  generation_meta?: Record<string, unknown> | null;
+  generated_at?: string | null;
+};
 
-  const rows = (data ?? []) as Array<{ id: string; generation_meta: Record<string, unknown> | null }>;
-  return rows
-    .filter((row) => {
-      const meta = row.generation_meta ?? {};
-      const promptVersion = parseString(meta.prompt_version);
-      const modelVersion = parseString(meta.model);
-      return promptVersion !== args.binding.promptVersion || modelVersion !== args.binding.model;
-    })
-    .map((row) => row.id);
+type CandidateMapBuildResult = {
+  selectedTypes: StepType[];
+  candidateMap: Map<StepType, unknown[]>;
+  options: Record<string, unknown>;
+  summary: Record<string, unknown>;
+};
+
+function rawJournalDate(row: Pick<RawEntrySourceRow, 'captured_at' | 'journal_date'>): string | null {
+  return row.journal_date ?? deriveJournalDateForLegacyRaw(row.captured_at);
 }
 
-async function loadDayCandidates(args: { adminClient: any }): Promise<Array<{ user_id: string; journal_date: string }>> {
-  const { data, error } = await args.adminClient
-    .from('day_journals')
-    .select('user_id, journal_date')
-    .order('user_id', { ascending: true })
-    .order('journal_date', { ascending: true });
-
-  if (error) {
-    throw new Error(`Failed to load day candidates: ${String(error.message ?? error)}`);
-  }
-
-  return (data ?? []) as Array<{ user_id: string; journal_date: string }>;
+function dayCandidateKey(candidate: DayCandidate): string {
+  return `${candidate.user_id}:${candidate.journal_date}`;
 }
 
-async function loadReflectionCandidates(args: {
-  adminClient: any;
+function periodCandidateKey(candidate: PeriodCandidate): string {
+  return `${candidate.user_id}:${candidate.period_start}:${candidate.period_end}`;
+}
+
+function metadataMatches(meta: Record<string, unknown> | null | undefined, binding: LiveAiRuntimeBinding): boolean {
+  return parseString(meta?.prompt_version) === binding.promptVersion && parseString(meta?.model) === binding.model;
+}
+
+function journalClaimsEmpty(row: Pick<DayJournalCandidateRow, 'summary' | 'narrative_text'>): boolean {
+  const text = `${row.summary ?? ''}\n${row.narrative_text ?? ''}`.toLowerCase();
+  return (
+    text.includes('geen losse entries') ||
+    text.includes('geen entries') ||
+    text.includes('geen momenten') ||
+    text.includes('geen notities')
+  );
+}
+
+function sortEntryCandidates(candidates: EntryRepairCandidate[]): EntryRepairCandidate[] {
+  return [...candidates].sort((left, right) => new Date(left.capturedAt).getTime() - new Date(right.capturedAt).getTime());
+}
+
+function buildAllEntryCandidates(input: {
+  rawRows: RawEntrySourceRow[];
+  normalizedRows: NormalizedEntrySourceRow[];
+}): EntryRepairCandidate[] {
+  const normalizedByRawId = new Map(input.normalizedRows.map((row) => [row.raw_entry_id, row]));
+  return sortEntryCandidates(input.rawRows.map((raw) => {
+    const normalized = normalizedByRawId.get(raw.id) ?? null;
+    return {
+      rawEntryId: raw.id,
+      normalizedEntryId: normalized?.id ?? null,
+      userId: raw.user_id,
+      capturedAt: raw.captured_at,
+      journalDate: raw.journal_date,
+      reasonCodes: ['force_regenerate'],
+    };
+  }));
+}
+
+function filterRawRowsForScope(input: {
+  rawRows: RawEntrySourceRow[];
+  selectedDaySet: Set<string> | null;
+  targetUserSet: Set<string> | null;
+}): RawEntrySourceRow[] {
+  return input.rawRows.filter((row) => {
+    if (input.targetUserSet && !input.targetUserSet.has(row.user_id)) {
+      return false;
+    }
+    if (!input.selectedDaySet) {
+      return true;
+    }
+    const journalDate = rawJournalDate(row);
+    return Boolean(journalDate && input.selectedDaySet.has(journalDate));
+  });
+}
+
+function filterDayCandidatesForScope(input: {
+  candidates: DayCandidate[];
+  selectedDaySet: Set<string> | null;
+  targetUserSet: Set<string> | null;
+}): DayCandidate[] {
+  return input.candidates.filter((candidate) => {
+    if (input.targetUserSet && !input.targetUserSet.has(candidate.user_id)) {
+      return false;
+    }
+    return !input.selectedDaySet || input.selectedDaySet.has(candidate.journal_date);
+  });
+}
+
+function filterPeriodCandidatesForScope(input: {
+  candidates: PeriodCandidate[];
+  selectedPeriodMap: Map<string, { startDate: string; endDate: string }> | null;
+  targetUserSet: Set<string> | null;
+  affectedUserSet?: Set<string> | null;
+}): PeriodCandidate[] {
+  return input.candidates.filter((candidate) => {
+    if (input.targetUserSet && !input.targetUserSet.has(candidate.user_id)) {
+      return false;
+    }
+    if (input.affectedUserSet && !input.affectedUserSet.has(candidate.user_id)) {
+      return false;
+    }
+    return !input.selectedPeriodMap || input.selectedPeriodMap.has(`${candidate.period_start}:${candidate.period_end}`);
+  });
+}
+
+function buildPeriodCandidatesFromDays(input: {
+  dayCandidates: DayCandidate[];
   periodType: 'week' | 'month';
-}): Promise<Array<{ user_id: string; period_start: string; period_end: string }>> {
-  const { data, error } = await args.adminClient
-    .from('period_reflections')
-    .select('user_id, period_start, period_end')
-    .eq('period_type', args.periodType)
-    .order('user_id', { ascending: true })
-    .order('period_start', { ascending: true });
+  existingReflections: ReflectionCandidateRow[];
+}): PeriodCandidate[] {
+  const byKey = new Map<string, PeriodCandidate>();
 
-  if (error) {
-    throw new Error(`Failed to load reflection candidates: ${String(error.message ?? error)}`);
+  for (const reflection of input.existingReflections) {
+    if (reflection.period_type !== input.periodType) {
+      continue;
+    }
+    byKey.set(periodCandidateKey(reflection), {
+      user_id: reflection.user_id,
+      period_start: reflection.period_start,
+      period_end: reflection.period_end,
+    });
   }
 
-  return (data ?? []) as Array<{ user_id: string; period_start: string; period_end: string }>;
+  for (const day of input.dayCandidates) {
+    const bounds = input.periodType === 'week'
+      ? computeWeekBoundsForDate(day.journal_date)
+      : computeMonthBoundsForDate(day.journal_date);
+    if (!bounds) {
+      continue;
+    }
+    const candidate = {
+      user_id: day.user_id,
+      period_start: bounds.startDate,
+      period_end: bounds.endDate,
+    };
+    byKey.set(periodCandidateKey(candidate), candidate);
+  }
+
+  return [...byKey.values()].sort((left, right) =>
+    left.user_id === right.user_id
+      ? left.period_start.localeCompare(right.period_start)
+      : left.user_id.localeCompare(right.user_id)
+  );
+}
+
+function filterDayCandidatesByMode(input: {
+  mode: RegenerationRunMode;
+  candidates: DayCandidate[];
+  dayRows: DayJournalCandidateRow[];
+  rawRows: RawEntrySourceRow[];
+  binding: LiveAiRuntimeBinding;
+  touchedByEntryRepair: Set<string>;
+}): DayCandidate[] {
+  if (input.mode === 'all') {
+    return input.candidates;
+  }
+
+  const journalByKey = new Map(input.dayRows.map((row) => [dayCandidateKey(row), row]));
+  const rawCountByKey = new Map<string, number>();
+  for (const raw of input.rawRows) {
+    const journalDate = rawJournalDate(raw);
+    if (!journalDate) {
+      continue;
+    }
+    const key = `${raw.user_id}:${journalDate}`;
+    rawCountByKey.set(key, (rawCountByKey.get(key) ?? 0) + 1);
+  }
+
+  return input.candidates.filter((candidate) => {
+    const key = dayCandidateKey(candidate);
+    const journal = journalByKey.get(key);
+    if (!journal) {
+      return true;
+    }
+    if (input.touchedByEntryRepair.has(key)) {
+      return true;
+    }
+    if (!metadataMatches(journal.generation_meta, input.binding)) {
+      return true;
+    }
+    return (rawCountByKey.get(key) ?? 0) > 0 && journalClaimsEmpty(journal);
+  });
+}
+
+function filterPeriodCandidatesByMode(input: {
+  mode: RegenerationRunMode;
+  periodType: 'week' | 'month';
+  candidates: PeriodCandidate[];
+  reflectionRows: ReflectionCandidateRow[];
+  dayRows: DayJournalCandidateRow[];
+  binding: LiveAiRuntimeBinding;
+  touchedDayKeys: Set<string>;
+}): PeriodCandidate[] {
+  if (input.mode === 'all') {
+    return input.candidates;
+  }
+
+  const reflectionByKey = new Map(
+    input.reflectionRows
+      .filter((row) => row.period_type === input.periodType)
+      .map((row) => [periodCandidateKey(row), row])
+  );
+
+  return input.candidates.filter((candidate) => {
+    const reflection = reflectionByKey.get(periodCandidateKey(candidate));
+    if (!reflection) {
+      return true;
+    }
+    if (!metadataMatches(reflection.generation_meta, input.binding)) {
+      return true;
+    }
+
+    const dependentDays = input.dayRows.filter((day) =>
+      day.user_id === candidate.user_id &&
+      day.journal_date >= candidate.period_start &&
+      day.journal_date <= candidate.period_end
+    );
+    if (dependentDays.some((day) => input.touchedDayKeys.has(dayCandidateKey(day)))) {
+      return true;
+    }
+
+    const newestDayUpdatedAt = dependentDays
+      .map((day) => parseString(day.updated_at))
+      .filter((value): value is string => Boolean(value))
+      .sort()
+      .at(-1);
+    return Boolean(newestDayUpdatedAt && reflection.generated_at && newestDayUpdatedAt > reflection.generated_at);
+  });
+}
+
+function expandSelectedTypesForScope(input: {
+  selectedTypes: StepType[];
+  scopeAll: boolean;
+}): StepType[] {
+  if (input.scopeAll) {
+    return input.selectedTypes;
+  }
+  return STEP_ORDER.filter((stepType) => input.selectedTypes.length === 0 || STEP_ORDER.includes(stepType));
+}
+
+async function buildCandidateMapForStart(args: {
+  adminClient: any;
+  selectedTypes: StepType[];
+  mode: RegenerationRunMode;
+  scopeSelections: RegenerationScopeSelection[];
+  targetUserIds: string[];
+  entryBinding: LiveAiRuntimeBinding | null;
+  dayBinding: LiveAiRuntimeBinding | null;
+  weekBinding: LiveAiRuntimeBinding | null;
+  monthBinding: LiveAiRuntimeBinding | null;
+}): Promise<CandidateMapBuildResult> {
+  const scopePlan = buildRegenerationScopePlan(args.scopeSelections);
+  const selectedDaySet = scopePlan.all ? null : new Set(scopePlan.selectedDays);
+  const selectedWeekMap = scopePlan.all ? null : new Map(scopePlan.selectedWeeks.map((range) => [rangeKeyFromBounds(range.startDate, range.endDate), range]));
+  const selectedMonthMap = scopePlan.all ? null : new Map(scopePlan.selectedMonths.map((range) => [rangeKeyFromBounds(range.startDate, range.endDate), range]));
+  const targetUserSet = args.targetUserIds.length > 0 ? new Set(args.targetUserIds) : null;
+  const selectedTypes = expandSelectedTypesForScope({
+    selectedTypes: args.selectedTypes,
+    scopeAll: scopePlan.all,
+  });
+
+  const [rawRowsRaw, normalizedRowsRaw, dayRowsRaw, reflectionRowsRaw] = await Promise.all([
+    args.adminClient
+      .from('entries_raw')
+      .select('id, user_id, source_type, raw_text, transcript_text, captured_at, journal_date')
+      .order('captured_at', { ascending: true }),
+    args.adminClient
+      .from('entries_normalized')
+      .select('id, raw_entry_id, user_id, title, body, summary_short, generation_meta, created_at, updated_at')
+      .order('created_at', { ascending: true }),
+    args.adminClient
+      .from('day_journals')
+      .select('id, user_id, journal_date, summary, narrative_text, generation_meta, updated_at')
+      .order('user_id', { ascending: true })
+      .order('journal_date', { ascending: true }),
+    args.adminClient
+      .from('period_reflections')
+      .select('id, user_id, period_type, period_start, period_end, generation_meta, generated_at')
+      .in('period_type', ['week', 'month'])
+      .order('user_id', { ascending: true })
+      .order('period_start', { ascending: true }),
+  ]);
+
+  if (rawRowsRaw.error) throw new Error(`Failed to load raw regeneration scope: ${String(rawRowsRaw.error.message ?? rawRowsRaw.error)}`);
+  if (normalizedRowsRaw.error) throw new Error(`Failed to load normalized regeneration scope: ${String(normalizedRowsRaw.error.message ?? normalizedRowsRaw.error)}`);
+  if (dayRowsRaw.error) throw new Error(`Failed to load day regeneration scope: ${String(dayRowsRaw.error.message ?? dayRowsRaw.error)}`);
+  if (reflectionRowsRaw.error) throw new Error(`Failed to load reflection regeneration scope: ${String(reflectionRowsRaw.error.message ?? reflectionRowsRaw.error)}`);
+
+  const rawRows = filterRawRowsForScope({
+    rawRows: (rawRowsRaw.data ?? []) as RawEntrySourceRow[],
+    selectedDaySet,
+    targetUserSet,
+  });
+  const normalizedRows = (normalizedRowsRaw.data ?? []) as NormalizedEntrySourceRow[];
+  const dayRows = (dayRowsRaw.data ?? []) as DayJournalCandidateRow[];
+  const reflectionRows = (reflectionRowsRaw.data ?? []) as ReflectionCandidateRow[];
+
+  const allDayCandidates = filterDayCandidatesForScope({
+    candidates: buildDayCandidatesFromSources({
+      rawEntries: rawRows.map((row) => ({ user_id: row.user_id, captured_at: row.captured_at, journal_date: row.journal_date })),
+      dayJournals: dayRows,
+    }),
+    selectedDaySet,
+    targetUserSet,
+  });
+  const affectedUserSet = scopePlan.all ? null : new Set(allDayCandidates.map((candidate) => candidate.user_id));
+
+  const rawForCandidateScope = rawRows;
+  const entryCandidates = args.mode === 'all'
+    ? buildAllEntryCandidates({ rawRows: rawForCandidateScope, normalizedRows })
+    : sortEntryCandidates(buildEntryRepairCandidates({
+        rawEntries: rawForCandidateScope,
+        normalizedEntries: normalizedRows,
+        expectedPromptVersion: args.entryBinding?.promptVersion,
+        expectedModel: args.entryBinding?.model,
+      }));
+  const touchedByEntryRepair = new Set(entryCandidates.map((candidate) => `${candidate.userId}:${candidate.journalDate ?? deriveJournalDateForLegacyRaw(candidate.capturedAt)}`));
+
+  const dayCandidates = filterDayCandidatesByMode({
+    mode: args.mode,
+    candidates: allDayCandidates,
+    dayRows,
+    rawRows: rawForCandidateScope,
+    binding: args.dayBinding!,
+    touchedByEntryRepair,
+  });
+  const touchedDayKeys = new Set(dayCandidates.map(dayCandidateKey));
+
+  const weekCandidates = filterPeriodCandidatesByMode({
+    mode: args.mode,
+    periodType: 'week',
+    candidates: filterPeriodCandidatesForScope({
+      candidates: buildPeriodCandidatesFromDays({
+        dayCandidates: allDayCandidates,
+        periodType: 'week',
+        existingReflections: reflectionRows,
+      }),
+      selectedPeriodMap: selectedWeekMap,
+      targetUserSet,
+      affectedUserSet,
+    }),
+    reflectionRows,
+    dayRows,
+    binding: args.weekBinding!,
+    touchedDayKeys,
+  });
+  const monthCandidates = filterPeriodCandidatesByMode({
+    mode: args.mode,
+    periodType: 'month',
+    candidates: filterPeriodCandidatesForScope({
+      candidates: buildPeriodCandidatesFromDays({
+        dayCandidates: allDayCandidates,
+        periodType: 'month',
+        existingReflections: reflectionRows,
+      }),
+      selectedPeriodMap: selectedMonthMap,
+      targetUserSet,
+      affectedUserSet,
+    }),
+    reflectionRows,
+    dayRows,
+    binding: args.monthBinding!,
+    touchedDayKeys,
+  });
+
+  const candidateMap = new Map<StepType, unknown[]>();
+  candidateMap.set('entries_normalized', entryCandidates);
+  candidateMap.set('day_journals', dayCandidates);
+  candidateMap.set('week_reflections', weekCandidates);
+  candidateMap.set('month_reflections', monthCandidates);
+
+  const filteredSelectedTypes = selectedTypes.filter((stepType) => {
+    const candidates = candidateMap.get(stepType) ?? [];
+    return candidates.length > 0 || args.selectedTypes.includes(stepType);
+  });
+
+  return {
+    selectedTypes: filteredSelectedTypes,
+    candidateMap,
+    options: {
+      mode: args.mode,
+      scope: scopePlan.all ? { kind: 'all' } : {
+        kind: 'selected',
+        days: scopePlan.selectedDays,
+        weeks: scopePlan.selectedWeeks,
+        months: scopePlan.selectedMonths,
+      },
+      target_user_ids: args.targetUserIds,
+    },
+    summary: {
+      preview: true,
+      mode: args.mode,
+      scope_all: scopePlan.all,
+      candidate_counts: Object.fromEntries(STEP_ORDER.map((stepType) => [stepType, candidateMap.get(stepType)?.length ?? 0])),
+    },
+  };
+}
+
+function rangeKeyFromBounds(startDate: string, endDate: string): string {
+  return `${startDate}:${endDate}`;
 }
 
 function stepLabelToPeriodType(stepType: StepType): 'week' | 'month' | null {
@@ -692,9 +1115,49 @@ function stepLabelToPeriodType(stepType: StepType): 'week' | 'month' | null {
   return null;
 }
 
+function dateFromDayString(day: string): Date {
+  return new Date(`${day}T00:00:00.000Z`);
+}
+
+function toDayStringUtc(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDaysUtc(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function computePeriodBounds(periodType: 'week' | 'month', anchorDate: string): {
+  periodStart: string;
+  periodEnd: string;
+} {
+  const anchor = dateFromDayString(anchorDate);
+
+  if (periodType === 'week') {
+    const day = anchor.getUTCDay();
+    const offsetToMonday = (day + 6) % 7;
+    const weekStart = addDaysUtc(anchor, -offsetToMonday);
+    const weekEnd = addDaysUtc(weekStart, 6);
+
+    return {
+      periodStart: toDayStringUtc(weekStart),
+      periodEnd: toDayStringUtc(weekEnd),
+    };
+  }
+
+  const monthStart = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1));
+  const nextMonthStart = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 1));
+  const monthEnd = addDaysUtc(nextMonthStart, -1);
+
+  return {
+    periodStart: toDayStringUtc(monthStart),
+    periodEnd: toDayStringUtc(monthEnd),
+  };
+}
+
 function buildEntriesBatchRequest(args: {
   normalizedRow: {
-    id: string;
+    id: string | null;
     user_id: string;
     title: string;
     body: string;
@@ -705,7 +1168,8 @@ function buildEntriesBatchRequest(args: {
   binding: LiveAiRuntimeBinding;
   stepType: StepType;
 }): StoredBatchRequest {
-  const systemPrompt = `${args.binding.systemInstructions}\nPromptVersion: ${args.binding.promptVersion}\nRequestId: ${args.normalizedRow.id}`;
+  const requestTargetId = args.normalizedRow.id ?? args.normalizedRow.raw_entry_id;
+  const systemPrompt = `${args.binding.systemInstructions}\nPromptVersion: ${args.binding.promptVersion}\nRequestId: ${requestTargetId}`;
   const userPrompt = buildAiqsEntryCleanupUserPrompt({
     binding: args.binding,
     rawText: args.sourceText,
@@ -730,13 +1194,14 @@ function buildEntriesBatchRequest(args: {
   }
 
   const estimate = estimatePromptTokens(systemPrompt) + estimatePromptTokens(userPrompt);
-  const customId = `entry|${args.normalizedRow.id}`;
+  const customId = `entry|${requestTargetId}`;
 
   return {
     custom_id: customId,
     step_type: args.stepType,
     target: {
       normalized_id: args.normalizedRow.id,
+      raw_entry_id: args.normalizedRow.raw_entry_id,
       user_id: args.normalizedRow.user_id,
     },
     estimated_prompt_tokens: estimate,
@@ -873,70 +1338,21 @@ async function loadDayRequest(args: {
   journalDate: string;
   binding: LiveAiRuntimeBinding;
 }): Promise<StoredBatchRequest | null> {
-  const { data: rawRows, error: rawError } = await args.adminClient
-    .from('entries_raw')
-    .select('id, captured_at')
-    .eq('user_id', args.userId)
-    .eq('journal_date', args.journalDate)
-    .order('captured_at', { ascending: true });
-
-  if (rawError) {
-    throw new Error(`Failed to load raw entries for day: ${String(rawError.message ?? rawError)}`);
-  }
-
-  const rawIds = ((rawRows ?? []) as Array<{ id: string; captured_at: string }>).map((row) => row.id);
-  const rawCapturedMap = new Map<string, string>(
-    ((rawRows ?? []) as Array<{ id: string; captured_at: string }>).map((row) => [row.id, row.captured_at])
-  );
-
-  if (rawIds.length === 0) {
-    return buildDayBatchRequest({
-      userId: args.userId,
-      journalDate: args.journalDate,
-      entries: [],
-      binding: args.binding,
-      stepType: 'day_journals',
-    });
-  }
-
-  const { data: normalizedRows, error: normalizedError } = await args.adminClient
-    .from('entries_normalized')
-    .select('raw_entry_id, title, body, summary_short')
-    .eq('user_id', args.userId)
-    .in('raw_entry_id', rawIds);
-
-  if (normalizedError) {
-    throw new Error(`Failed to load normalized entries for day: ${String(normalizedError.message ?? normalizedError)}`);
-  }
-
-  const normalizedMap = new Map<string, { title: string; body: string; summary_short: string | null }>(
-    ((normalizedRows ?? []) as Array<{ raw_entry_id: string; title: string; body: string; summary_short: string | null }>).map((row) => [
-      row.raw_entry_id,
-      {
-        title: row.title,
-        body: row.body,
-        summary_short: row.summary_short,
-      },
-    ])
-  );
-
-  const dayEntries = rawIds.map((rawId) => {
-    const normalized = normalizedMap.get(rawId);
-    if (!normalized) {
-      return null;
-    }
-
-    return {
-      rawEntryId: rawId,
-      capturedAt: rawCapturedMap.get(rawId),
-      title: normalized.title,
-      body: normalized.body,
-      summaryShort: parseString(normalized.summary_short) ?? undefined,
-    };
+  const source = await loadDayEntrySource({
+    client: args.adminClient,
+    userId: args.userId,
+    journalDate: args.journalDate,
+    timezoneOffsetMinutes: null,
+    expectedPromptVersion: args.binding.promptVersion,
+    expectedModel: args.binding.model,
   });
 
+  if (source.debug.uiEquivalentRawCount > 0 && source.debug.promptInputEntryCount === 0) {
+    throw new Error(`Day source has raw entries but no prompt entries: ${args.userId}:${args.journalDate}`);
+  }
+
   const entries = orderDayJournalEntries(
-    dayEntries.filter((item): item is NonNullable<(typeof dayEntries)[number]> => Boolean(item))
+    source.promptEntries
   ).filter((entry) =>
     !isLowContentDayEntry(entry, {
       noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
@@ -944,13 +1360,31 @@ async function loadDayRequest(args: {
     })
   );
 
-  return buildDayBatchRequest({
+  if (source.debug.uiEquivalentRawCount > 0 && entries.length === 0) {
+    throw new Error(`Day source has only low-content prompt entries: ${args.userId}:${args.journalDate}`);
+  }
+
+  if (source.debug.uiEquivalentRawCount === 0) {
+    return null;
+  }
+
+  const request = buildDayBatchRequest({
     userId: args.userId,
     journalDate: args.journalDate,
     entries,
     binding: args.binding,
     stepType: 'day_journals',
   });
+  request.context = {
+    ...(request.context ?? {}),
+    source_entry_count: source.debug.uiEquivalentRawCount,
+    runtime_entry_count: source.debug.normalizedCount,
+    prompt_entry_count: source.debug.promptInputEntryCount,
+    source_entry_ids: source.debug.entryIds,
+    prompt_input_body_lengths: source.debug.promptInputBodyLengths,
+    issue_reasons: source.issueReasons,
+  };
+  return request;
 }
 
 async function loadReflectionRequest(args: {
@@ -1024,25 +1458,47 @@ async function applyEntriesResult(args: {
   }
 
   const normalizedId = parseString(args.request.target.normalized_id);
-  if (!normalizedId) {
+  const rawEntryId = parseString(args.request.target.raw_entry_id);
+  const userId = parseString(args.request.target.user_id);
+  if (!normalizedId && (!rawEntryId || !userId)) {
     return false;
   }
 
-  const { error } = await args.adminClient
-    .from('entries_normalized')
-    .update({
-      title,
-      body,
-      summary_short: summaryShort,
-      generation_meta: buildGenerationMeta({
+  const generationMeta = buildGenerationMeta({
         flow: 'admin-regeneration-job',
         model: args.request.model,
         promptVersion: args.request.prompt_version,
         jobId: args.jobId,
         batchId: args.batchId,
-      }),
-    })
-    .eq('id', normalizedId);
+      });
+
+  if (normalizedId) {
+    const { error } = await args.adminClient
+      .from('entries_normalized')
+      .update({
+        title,
+        body,
+        summary_short: summaryShort,
+        generation_meta: generationMeta,
+      })
+      .eq('id', normalizedId);
+
+    return !error;
+  }
+
+  const { error } = await args.adminClient
+    .from('entries_normalized')
+    .insert({
+      raw_entry_id: rawEntryId,
+      user_id: userId,
+      title,
+      body,
+      summary_short: summaryShort,
+      generation_meta: {
+        ...generationMeta,
+        repair_reason: 'missing_normalized',
+      },
+    });
 
   return !error;
 }
@@ -1092,13 +1548,22 @@ async function applyDayResult(args: {
         narrative_text: finalized.narrativeText,
         sections: finalized.sections,
         updated_at: new Date().toISOString(),
-        generation_meta: buildGenerationMeta({
-          flow: 'admin-regeneration-job',
-          model: args.request.model,
-          promptVersion: args.request.prompt_version,
-          jobId: args.jobId,
-          batchId: args.batchId,
-        }),
+        generation_meta: {
+          ...buildGenerationMeta({
+            flow: 'admin-regeneration-job',
+            model: args.request.model,
+            promptVersion: args.request.prompt_version,
+            jobId: args.jobId,
+            batchId: args.batchId,
+          }),
+          runtime_version: 'day_entry_source_v1',
+          source_entry_count: args.request.context?.source_entry_count ?? entries.length,
+          runtime_entry_count: args.request.context?.runtime_entry_count ?? entries.length,
+          prompt_entry_count: args.request.context?.prompt_entry_count ?? entries.length,
+          source_entry_ids: args.request.context?.source_entry_ids ?? entries.map((entry) => entry.rawEntryId).filter(Boolean),
+          prompt_input_body_lengths: args.request.context?.prompt_input_body_lengths ?? entries.map((entry) => entry.body.length),
+          issue_reasons: args.request.context?.issue_reasons ?? [],
+        },
       },
       { onConflict: 'user_id,journal_date' }
     );
@@ -1559,10 +2024,25 @@ async function buildStepRequests(args: {
   const requests: StoredBatchRequest[] = [];
 
   if (args.step.step_type === 'entries_normalized') {
-    const ids = candidates.slice(cursor, cursor + args.maxRequests * 3) as string[];
-    const validIds = ids.filter((id) => typeof id === 'string' && id.trim().length > 0);
+    const candidateSlice = candidates.slice(cursor, cursor + args.maxRequests * 3) as unknown[];
+    const validCandidates = candidateSlice
+      .map((candidate) => {
+        if (typeof candidate === 'string') {
+          return { rawEntryId: null, normalizedEntryId: candidate, reasonCodes: ['outdated_prompt_version'] };
+        }
+        if (candidate && typeof candidate === 'object') {
+          const row = candidate as Record<string, unknown>;
+          return {
+            rawEntryId: parseString(row.rawEntryId) ?? parseString(row.raw_entry_id),
+            normalizedEntryId: parseString(row.normalizedEntryId) ?? parseString(row.normalized_id),
+            reasonCodes: Array.isArray(row.reasonCodes) ? row.reasonCodes : [],
+          };
+        }
+        return { rawEntryId: null, normalizedEntryId: null, reasonCodes: [] };
+      })
+      .filter((candidate) => candidate.rawEntryId || candidate.normalizedEntryId);
 
-    if (validIds.length === 0) {
+    if (validCandidates.length === 0) {
       return {
         requests: [],
         consumed: Math.min(args.maxRequests, Math.max(0, candidates.length - cursor)),
@@ -1570,38 +2050,50 @@ async function buildStepRequests(args: {
       };
     }
 
-    const { data: normalizedRows, error: normalizedError } = await args.adminClient
-      .from('entries_normalized')
-      .select('id, user_id, raw_entry_id, title, body, summary_short')
-      .in('id', validIds);
+    const normalizedIds = validCandidates
+      .map((candidate) => candidate.normalizedEntryId)
+      .filter((id): id is string => Boolean(id));
+    const rawCandidateIds = validCandidates
+      .map((candidate) => candidate.rawEntryId)
+      .filter((id): id is string => Boolean(id));
 
-    if (normalizedError) {
-      throw new Error(`Failed to load entry rows: ${String(normalizedError.message ?? normalizedError)}`);
-    }
-
-    const rows = (normalizedRows ?? []) as Array<{
+    let rows: Array<{
       id: string;
       user_id: string;
       raw_entry_id: string;
       title: string;
       body: string;
       summary_short: string | null;
-    }>;
+    }> = [];
 
-    const rawIds = rows.map((row) => row.raw_entry_id);
+    if (normalizedIds.length > 0) {
+      const { data: normalizedRows, error: normalizedError } = await args.adminClient
+        .from('entries_normalized')
+        .select('id, user_id, raw_entry_id, title, body, summary_short')
+        .in('id', normalizedIds);
+
+      if (normalizedError) {
+        throw new Error(`Failed to load entry rows: ${String(normalizedError.message ?? normalizedError)}`);
+      }
+
+      rows = (normalizedRows ?? []) as typeof rows;
+    }
+
+    const rawIds = [...new Set([...rows.map((row) => row.raw_entry_id), ...rawCandidateIds])];
     const { data: rawRows, error: rawError } = await args.adminClient
       .from('entries_raw')
-      .select('id, raw_text, transcript_text')
+      .select('id, user_id, raw_text, transcript_text')
       .in('id', rawIds);
 
     if (rawError) {
       throw new Error(`Failed to load entry raw rows: ${String(rawError.message ?? rawError)}`);
     }
 
-    const rawMap = new Map<string, { raw_text: string | null; transcript_text: string | null }>(
-      ((rawRows ?? []) as Array<{ id: string; raw_text: string | null; transcript_text: string | null }>).map((row) => [
+    const rawMap = new Map<string, { user_id: string; raw_text: string | null; transcript_text: string | null }>(
+      ((rawRows ?? []) as Array<{ id: string; user_id: string; raw_text: string | null; transcript_text: string | null }>).map((row) => [
         row.id,
         {
+          user_id: row.user_id,
           raw_text: row.raw_text,
           transcript_text: row.transcript_text,
         },
@@ -1609,23 +2101,40 @@ async function buildStepRequests(args: {
     );
 
     const rowMap = new Map<string, (typeof rows)[number]>(rows.map((row) => [row.id, row]));
+    const rowByRawId = new Map<string, (typeof rows)[number]>(rows.map((row) => [row.raw_entry_id, row]));
 
-    for (const candidateId of validIds) {
+    for (const candidate of validCandidates) {
       if (requests.length >= args.maxRequests) {
         break;
       }
 
       consumed += 1;
-      const row = rowMap.get(candidateId);
-      if (!row) {
+      const row = candidate.normalizedEntryId
+        ? rowMap.get(candidate.normalizedEntryId)
+        : candidate.rawEntryId
+          ? rowByRawId.get(candidate.rawEntryId)
+          : undefined;
+      const rawId = row?.raw_entry_id ?? candidate.rawEntryId;
+      const raw = rawId ? rawMap.get(rawId) : undefined;
+      if (!rawId || !raw) {
         immediateFailed += 1;
         continue;
       }
 
-      const raw = rawMap.get(row.raw_entry_id);
-      const sourceText = parseString(raw?.raw_text) ?? parseString(raw?.transcript_text) ?? row.body;
+      const sourceText = parseString(raw.raw_text) ?? parseString(raw.transcript_text) ?? row?.body ?? '';
+      if (!parseString(sourceText)) {
+        immediateFailed += 1;
+        continue;
+      }
       const request = buildEntriesBatchRequest({
-        normalizedRow: row,
+        normalizedRow: row ?? {
+          id: null,
+          user_id: raw.user_id,
+          raw_entry_id: rawId,
+          title: '',
+          body: '',
+          summary_short: null,
+        },
         sourceText,
         binding: entryBinding!,
         stepType: 'entries_normalized',
@@ -2019,7 +2528,7 @@ Deno.serve(async (request: Request) => {
     }
 
     const action = parseString((body as { action?: unknown }).action) as Action | null;
-    if (!action || (action !== 'start' && action !== 'status' && action !== 'worker_tick' && action !== 'access' && action !== 'latest')) {
+    if (!action || (action !== 'start' && action !== 'preview' && action !== 'status' && action !== 'worker_tick' && action !== 'access' && action !== 'latest' && action !== 'inspect_day')) {
       return errorResponse({
         request,
         httpStatus: 400,
@@ -2027,7 +2536,7 @@ Deno.serve(async (request: Request) => {
         flowId,
         step: 'validated',
         code: 'INPUT_INVALID',
-        message: 'Invalid action. Use start, status, worker_tick, access, latest.',
+        message: 'Invalid action. Use start, preview, status, worker_tick, access, latest, inspect_day.',
       });
     }
 
@@ -2035,7 +2544,7 @@ Deno.serve(async (request: Request) => {
     const isInternal = internalToken.length > 0 && internalHeaderToken === internalToken;
 
     let userId: string | null = null;
-    if (!isInternal || action === 'start' || action === 'status' || action === 'access' || action === 'latest') {
+    if (!isInternal || action === 'start' || action === 'preview' || action === 'status' || action === 'access' || action === 'latest' || action === 'inspect_day') {
       try {
         const access = await loadAdminAccessContext({
           request,
@@ -2079,6 +2588,88 @@ Deno.serve(async (request: Request) => {
         autoRefreshToken: false,
       },
     });
+
+    if (action === 'inspect_day') {
+      step = 'inspect_day';
+      const inspectedUserId = ensureUuid((body as InspectDayBody).userId);
+      const journalDate = parseString((body as InspectDayBody).journalDate);
+      if (!inspectedUserId || !journalDate) {
+        return errorResponse({
+          request,
+          httpStatus: 400,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'inspect_day requires userId and journalDate.',
+        });
+      }
+
+      const dayBinding = await loadLiveAiRuntimeBinding({
+        adminClient,
+        bindingKey: 'day_journal.primary',
+      });
+      const source = await loadDayEntrySource({
+        client: adminClient,
+        userId: inspectedUserId,
+        journalDate,
+        timezoneOffsetMinutes: null,
+        expectedPromptVersion: dayBinding.promptVersion,
+        expectedModel: dayBinding.model,
+      });
+
+      const { data: dayJournal } = await adminClient
+        .from('day_journals')
+        .select('id, journal_date, summary, narrative_text, sections, updated_at, generation_meta')
+        .eq('user_id', inspectedUserId)
+        .eq('journal_date', journalDate)
+        .maybeSingle();
+
+      const bounds = computePeriodBounds('week', journalDate);
+      const monthBounds = computePeriodBounds('month', journalDate);
+      const { data: reflections } = await adminClient
+        .from('period_reflections')
+        .select('id, period_type, period_start, period_end, summary_text, narrative_text, generated_at, generation_meta')
+        .eq('user_id', inspectedUserId)
+        .in('period_type', ['week', 'month'])
+        .in('period_start', [bounds.periodStart, monthBounds.periodStart]);
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        inspection: {
+          userId: inspectedUserId,
+          journalDate,
+          binding: {
+            bindingKey: dayBinding.runtimeBindingKey,
+            taskKey: dayBinding.taskKey,
+            versionId: dayBinding.versionId,
+            promptVersion: dayBinding.promptVersion,
+            model: dayBinding.model,
+          },
+          counts: source.debug,
+          issueReasons: source.issueReasons,
+          entries: source.items.map((item) => ({
+            rawEntryId: item.raw.id,
+            normalizedEntryId: item.normalized?.id ?? null,
+            capturedAt: item.raw.captured_at,
+            journalDate: item.raw.journal_date,
+            sourceType: item.raw.source_type,
+            rawBodyLength: item.sourceBodyLength,
+            normalizedTitle: item.normalized?.title ?? null,
+            normalizedBody: item.normalized?.body ?? null,
+            normalizedSummaryShort: item.normalized?.summary_short ?? null,
+            normalizedBodyLength: item.normalizedBodyLength,
+            issueReasons: item.issueReasons,
+          })),
+          promptEntries: source.promptEntries,
+          dayJournal: dayJournal ?? null,
+          reflections: reflections ?? [],
+        },
+      });
+    }
 
     if (action === 'latest') {
       step = 'latest';
@@ -2135,11 +2726,10 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    if (action === 'start') {
-      step = 'starting';
-      const runtimeEnv = getFunctionRuntimeEnv();
-
-      const selectedTypes = parseSelectedTypes((body as StartBody).selectedTypes);
+    if (action === 'preview' || action === 'start') {
+      step = action === 'preview' ? 'preview' : 'starting';
+      const startBody = body as StartBody | PreviewBody;
+      const selectedTypes = parseSelectedTypes(startBody.selectedTypes);
       if (selectedTypes.length === 0) {
         return errorResponse({
           request,
@@ -2151,32 +2741,49 @@ Deno.serve(async (request: Request) => {
           message: 'Select at least one step type.',
         });
       }
-      const entryBinding = selectedTypes.includes('entries_normalized')
-        ? await loadLiveAiRuntimeBinding({
-            adminClient,
-            bindingKey: 'entry_normalization.primary',
-          })
-        : null;
 
-      const candidateMap = new Map<StepType, unknown[]>();
-      for (const selectedType of selectedTypes) {
-        if (selectedType === 'entries_normalized') {
-          const candidateIds = await loadEntriesOutdatedCandidateIds({
-            adminClient,
-            binding: entryBinding!,
-          });
-          candidateMap.set(selectedType, candidateIds);
-        } else if (selectedType === 'day_journals') {
-          const candidates = await loadDayCandidates({ adminClient });
-          candidateMap.set(selectedType, candidates);
-        } else if (selectedType === 'week_reflections') {
-          const candidates = await loadReflectionCandidates({ adminClient, periodType: 'week' });
-          candidateMap.set(selectedType, candidates);
-        } else if (selectedType === 'month_reflections') {
-          const candidates = await loadReflectionCandidates({ adminClient, periodType: 'month' });
-          candidateMap.set(selectedType, candidates);
-        }
+      const mode = parseRunMode(startBody.mode);
+      const scopeSelections = parseScopeSelections(startBody.scope);
+      const targetUserIds = parseTargetUserIds(startBody.targetUserIds);
+      const [entryBinding, dayBinding, weekBinding, monthBinding] = await Promise.all([
+        loadLiveAiRuntimeBinding({ adminClient, bindingKey: 'entry_normalization.primary' }),
+        loadLiveAiRuntimeBinding({ adminClient, bindingKey: 'day_journal.primary' }),
+        loadLiveAiRuntimeBinding({ adminClient, bindingKey: 'week_reflection.primary' }),
+        loadLiveAiRuntimeBinding({ adminClient, bindingKey: 'month_reflection.primary' }),
+      ]);
+      const candidateBuild = await buildCandidateMapForStart({
+        adminClient,
+        selectedTypes,
+        mode,
+        scopeSelections,
+        targetUserIds,
+        entryBinding,
+        dayBinding,
+        weekBinding,
+        monthBinding,
+      });
+
+      if (action === 'preview') {
+        return jsonResponse(request, 200, {
+          status: 'ok',
+          flow: FLOW,
+          requestId,
+          flowId,
+          preview: {
+            selectedTypes: candidateBuild.selectedTypes,
+            options: candidateBuild.options,
+            summary: candidateBuild.summary,
+            steps: STEP_ORDER
+              .filter((stepType) => candidateBuild.selectedTypes.includes(stepType))
+              .map((stepType) => ({
+                step_type: stepType,
+                total: candidateBuild.candidateMap.get(stepType)?.length ?? 0,
+              })),
+          },
+        });
       }
+
+      const runtimeEnv = getFunctionRuntimeEnv();
 
       const now = new Date().toISOString();
       const { data: jobRow, error: jobInsertError } = await adminClient
@@ -2184,13 +2791,14 @@ Deno.serve(async (request: Request) => {
         .insert({
           created_by: userId,
           status: 'queued',
-          selected_types: selectedTypes,
+          selected_types: candidateBuild.selectedTypes,
           options: {
+            ...candidateBuild.options,
             submit_base_wait_ms: SUBMIT_BASE_WAIT_MS,
             submit_jitter_max_ms: SUBMIT_JITTER_MAX_MS,
             max_estimated_prompt_tokens_per_sub_batch: MAX_ESTIMATED_PROMPT_TOKENS_PER_SUB_BATCH,
           },
-          summary: {},
+          summary: candidateBuild.summary,
           created_at: now,
           updated_at: now,
         })
@@ -2209,8 +2817,8 @@ Deno.serve(async (request: Request) => {
         });
       }
 
-      const stepInserts = selectedTypes.map((stepType) => {
-        const candidates = candidateMap.get(stepType) ?? [];
+      const stepInserts = candidateBuild.selectedTypes.map((stepType) => {
+        const candidates = candidateBuild.candidateMap.get(stepType) ?? [];
         return {
           job_id: jobRow.id,
           step_type: stepType,
