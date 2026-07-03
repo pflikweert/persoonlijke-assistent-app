@@ -1,7 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, TextInput } from 'react-native';
 
 import { FullscreenMenuOverlay } from '@/components/navigation/fullscreen-menu-overlay';
 import { ThemedView } from '@/components/themed-view';
@@ -29,10 +29,16 @@ import {
   fetchAdminRegenerationJobStatus,
   fetchLatestAdminRegenerationJob,
   hasAdminRegenerationAccess,
+  inspectAdminRegenerationDay,
+  previewAdminRegenerationJob,
   startAdminRegenerationJob,
 } from '@/services';
 import type {
+  AdminRegenerationDayInspection,
   AdminRegenerationJobView,
+  AdminRegenerationPreview,
+  AdminRegenerationRunMode,
+  AdminRegenerationScopeSelection,
   AdminRegenerationStepType,
   AdminRegenerationStepView,
 } from '@/services/admin-regeneration';
@@ -66,6 +72,43 @@ const STEP_OPTIONS: StepOption[] = [
     description: 'Maandreflecties opnieuw genereren.',
   },
 ];
+
+function parseScopeInput(value: string): AdminRegenerationScopeSelection[] {
+  const lines = value
+    .split(/\r?\n|,/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  if (lines.length === 0) {
+    return [{ kind: 'all' }];
+  }
+
+  const scopes: AdminRegenerationScopeSelection[] = [];
+  for (const line of lines) {
+    const [kindRaw, ...rest] = line.includes(':') ? line.split(':') : ['day', line];
+    const kind = kindRaw.trim().toLowerCase();
+    const payload = rest.join(':').trim();
+    const [startDate, endDate] = payload.split('..').map((item) => item.trim());
+    if (kind === 'day' && startDate) {
+      scopes.push({ kind: 'day', date: startDate });
+    } else if (kind === 'week' && startDate) {
+      scopes.push({ kind: 'week', startDate, endDate: endDate || null });
+    } else if (kind === 'month' && startDate) {
+      scopes.push({ kind: 'month', startDate, endDate: endDate || null });
+    } else if (kind === 'range' && startDate && endDate) {
+      scopes.push({ kind: 'range', startDate, endDate });
+    }
+  }
+
+  return scopes.length > 0 ? scopes : [{ kind: 'all' }];
+}
+
+function parseTargetUserIdsInput(value: string): string[] {
+  return value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
 
 function statusLabel(status: AdminRegenerationJobView['status']): string {
   if (status === 'queued') {
@@ -126,6 +169,15 @@ export default function SettingsRegenerationScreen() {
   const [job, setJob] = useState<AdminRegenerationJobView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adminAccess, setAdminAccess] = useState<boolean | null>(null);
+  const [inspectUserId, setInspectUserId] = useState('');
+  const [inspectDate, setInspectDate] = useState('2026-03-21');
+  const [inspection, setInspection] = useState<AdminRegenerationDayInspection | null>(null);
+  const [inspectionBusy, setInspectionBusy] = useState(false);
+  const [runMode, setRunMode] = useState<AdminRegenerationRunMode>('repair');
+  const [scopeInput, setScopeInput] = useState('');
+  const [targetUserIdsInput, setTargetUserIdsInput] = useState('');
+  const [preview, setPreview] = useState<AdminRegenerationPreview | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
 
   const [selection, setSelection] = useState<Record<AdminRegenerationStepType, boolean>>({
     entries_normalized: true,
@@ -138,6 +190,8 @@ export default function SettingsRegenerationScreen() {
     () => STEP_OPTIONS.filter((option) => selection[option.type]).map((option) => option.type),
     [selection]
   );
+  const scopeSelections = useMemo(() => parseScopeInput(scopeInput), [scopeInput]);
+  const targetUserIds = useMemo(() => parseTargetUserIdsInput(targetUserIdsInput), [targetUserIdsInput]);
 
   const isRunning = job?.status === 'queued' || job?.status === 'running';
 
@@ -249,13 +303,43 @@ export default function SettingsRegenerationScreen() {
     setError(null);
 
     try {
-      const createdJob = await startAdminRegenerationJob({ selectedTypes });
+      const createdJob = await startAdminRegenerationJob({
+        selectedTypes,
+        mode: runMode,
+        scope: scopeSelections,
+        targetUserIds,
+      });
       setJob(createdJob);
+      setPreview(null);
     } catch (nextError) {
       const parsed = classifyUnknownError(nextError);
       setError(parsed.message);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handlePreview() {
+    if (adminAccess !== true || selectedTypes.length === 0 || previewBusy || isRunning) {
+      return;
+    }
+
+    setPreviewBusy(true);
+    setError(null);
+
+    try {
+      const nextPreview = await previewAdminRegenerationJob({
+        selectedTypes,
+        mode: runMode,
+        scope: scopeSelections,
+        targetUserIds,
+      });
+      setPreview(nextPreview);
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError(parsed.message);
+    } finally {
+      setPreviewBusy(false);
     }
   }
 
@@ -278,6 +362,28 @@ export default function SettingsRegenerationScreen() {
       setError(parsed.message);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleInspectDay() {
+    if (adminAccess !== true || inspectionBusy) {
+      return;
+    }
+
+    setInspectionBusy(true);
+    setError(null);
+
+    try {
+      const nextInspection = await inspectAdminRegenerationDay({
+        userId: inspectUserId,
+        journalDate: inspectDate,
+      });
+      setInspection(nextInspection);
+    } catch (nextError) {
+      const parsed = classifyUnknownError(nextError);
+      setError(parsed.message);
+    } finally {
+      setInspectionBusy(false);
     }
   }
 
@@ -322,8 +428,124 @@ export default function SettingsRegenerationScreen() {
 
         {adminAccess !== false ? (
           <AdminPanel
+            title="Modus en scope"
+            subtitle="Reparatie raakt alleen verdachte of oude output. Alles opnieuw regenereert de gekozen scope volledig.">
+            <AdminList>
+              {[
+                {
+                  mode: 'repair' as const,
+                  label: 'Reparatie',
+                  description: 'Alleen waar output ontbreekt, oud, onbekend of inhoudelijk verdacht is.',
+                },
+                {
+                  mode: 'all' as const,
+                  label: 'Alles opnieuw',
+                  description: 'Forceer nieuwe output voor alle gekozen records binnen de scope.',
+                },
+              ].map((option) => {
+                const selected = runMode === option.mode;
+                return (
+                  <Pressable
+                    key={option.mode}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.label}
+                    onPress={() => {
+                      setRunMode(option.mode);
+                      setPreview(null);
+                    }}
+                    style={styles.selectionPressable}>
+                    <AdminDenseRow
+                      title={option.label}
+                      subtitle={option.description}
+                      chips={<AdminStatusBadge label={selected ? "Actief" : "Uit"} tone={selected ? "success" : "neutral"} />}
+                      trailing={
+                        <MaterialIcons
+                          name={selected ? 'check-circle' : 'radio-button-unchecked'}
+                          size={20}
+                          color={selected ? palette.primary : palette.mutedSoft}
+                        />
+                      }
+                    />
+                  </Pressable>
+                );
+              })}
+            </AdminList>
+
+            <ThemedView style={styles.inspectForm}>
+              <TextInput
+                accessibilityLabel="Regeneration scope"
+                value={scopeInput}
+                onChangeText={(value) => {
+                  setScopeInput(value);
+                  setPreview(null);
+                }}
+                placeholder={'Leeg = alles\nVoorbeelden: day:2026-03-21, week:2026-03-16..2026-03-22, month:2026-03-01..2026-03-31'}
+                placeholderTextColor={palette.mutedSoft}
+                autoCapitalize="none"
+                autoCorrect={false}
+                multiline
+                style={[
+                  styles.inspectInput,
+                  styles.scopeInput,
+                  {
+                    color: palette.text,
+                    backgroundColor: palette.surfaceLow,
+                  },
+                ]}
+              />
+              <TextInput
+                accessibilityLabel="Target user ids"
+                value={targetUserIdsInput}
+                onChangeText={(value) => {
+                  setTargetUserIdsInput(value);
+                  setPreview(null);
+                }}
+                placeholder="Optioneel: user id(s), komma of nieuwe regel"
+                placeholderTextColor={palette.mutedSoft}
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={[
+                  styles.inspectInput,
+                  {
+                    color: palette.text,
+                    backgroundColor: palette.surfaceLow,
+                  },
+                ]}
+              />
+            </ThemedView>
+
+            <AdminActionBar
+              primary={{
+                label: previewBusy ? 'Preview maken...' : 'Preview selectie',
+                onPress: () => void handlePreview(),
+                disabled: adminAccess !== true || previewBusy || isRunning || selectedTypes.length === 0,
+                icon: 'visibility',
+              }}
+            />
+
+            {preview ? (
+              <>
+                <AdminMetricGrid>
+                  {preview.steps.map((step) => (
+                    <AdminMetricCard
+                      key={step.step_type}
+                      label={stepLabel(step.step_type)}
+                      value={step.total}
+                      tone={step.total > 0 ? "info" : "neutral"}
+                    />
+                  ))}
+                </AdminMetricGrid>
+                <AdminConsoleKeyValue label="Preview modus" value={runMode === 'repair' ? 'Reparatie' : 'Alles opnieuw'} />
+                <AdminConsoleKeyValue label="Scope" value={scopeInput.trim() ? 'Geselecteerde periode(s)' : 'Alles nalopen'} />
+              </>
+            ) : null}
+          </AdminPanel>
+        ) : null}
+
+        {adminAccess !== false ? (
+          <AdminPanel
             title="Selecteer datatypes"
-            subtitle="Kies één of meer onderdelen die voor alle gebruikers opnieuw verwerkt worden.">
+            subtitle="Bij een gekozen scope worden afhankelijke entries, dagen, weken en maanden automatisch in correcte volgorde meegenomen.">
             <AdminList>
               {STEP_OPTIONS.map((option) => {
                 const selected = selection[option.type];
@@ -375,11 +597,91 @@ export default function SettingsRegenerationScreen() {
               }
             />
 
-            <MetaText>Minimaal één datatype selecteren. Alleen admins met herverwerkingsrechten hebben toegang.</MetaText>
+            <MetaText>Start gebruikt dezelfde modus en scope als de preview. Alleen admins met herverwerkingsrechten hebben toegang.</MetaText>
           </AdminPanel>
         ) : null}
 
         {error ? <StateBlock tone="error" message="Actie mislukt" detail={error} /> : null}
+
+        {adminAccess === true ? (
+          <AdminPanel
+            title="Daginspectie"
+            subtitle="Controleer raw metadata, normalized tekst en runtime prompt-input voor één dag.">
+            <ThemedView style={styles.inspectForm}>
+              <TextInput
+                accessibilityLabel="User id"
+                value={inspectUserId}
+                onChangeText={setInspectUserId}
+                placeholder="User id"
+                placeholderTextColor={palette.mutedSoft}
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={[
+                  styles.inspectInput,
+                  {
+                    color: palette.text,
+                    backgroundColor: palette.surfaceLow,
+                  },
+                ]}
+              />
+              <TextInput
+                accessibilityLabel="Datum"
+                value={inspectDate}
+                onChangeText={setInspectDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={palette.mutedSoft}
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={[
+                  styles.inspectInput,
+                  {
+                    color: palette.text,
+                    backgroundColor: palette.surfaceLow,
+                  },
+                ]}
+              />
+            </ThemedView>
+            <AdminActionBar
+              primary={{
+                label: inspectionBusy ? 'Inspecteren...' : 'Inspecteer dag',
+                onPress: () => void handleInspectDay(),
+                disabled: inspectionBusy || !inspectUserId.trim() || !inspectDate.trim(),
+                icon: 'search',
+              }}
+            />
+            {inspection ? (
+              <>
+                <AdminMetricGrid>
+                  <AdminMetricCard label="Raw" value={inspection.counts.uiEquivalentRawCount} meta="UI-equivalent" />
+                  <AdminMetricCard label="Normalized" value={inspection.counts.normalizedCount} />
+                  <AdminMetricCard label="Prompt" value={inspection.counts.promptInputEntryCount} tone={inspection.counts.promptInputEntryCount > 0 ? "success" : "warning"} />
+                  <AdminMetricCard label="Issues" value={inspection.issueReasons.length} tone={inspection.issueReasons.length > 0 ? "warning" : "success"} />
+                </AdminMetricGrid>
+                <AdminConsoleKeyValue label="AIQS binding" value={`${inspection.binding.bindingKey} · ${inspection.binding.promptVersion}`} />
+                <AdminConsoleKeyValue label="Model" value={inspection.binding.model} />
+                {inspection.issueReasons.length > 0 ? (
+                  <StateBlock tone="info" message="Inspectie issues" detail={inspection.issueReasons.join(', ')} />
+                ) : null}
+                <AdminList>
+                  {inspection.entries.map((entry) => (
+                    <AdminDenseRow
+                      key={entry.rawEntryId}
+                      title={entry.normalizedTitle ?? entry.rawEntryId.slice(0, 8)}
+                      subtitle={`raw ${entry.rawBodyLength} chars · normalized ${entry.normalizedBodyLength} chars`}
+                      meta={entry.issueReasons.length > 0 ? entry.issueReasons.join(', ') : entry.normalizedBody ?? undefined}
+                      chips={<AdminStatusBadge label={entry.issueReasons.length > 0 ? "Issue" : "OK"} tone={entry.issueReasons.length > 0 ? "warning" : "success"} />}
+                    />
+                  ))}
+                </AdminList>
+                <AdminConsoleKeyValue
+                  label="Dayjournal"
+                  value={inspection.dayJournal ? String((inspection.dayJournal as { id?: unknown }).id ?? 'aanwezig') : 'Geen dayjournal'}
+                />
+                <AdminConsoleKeyValue label="Reflecties" value={`${inspection.reflections.length}`} />
+              </>
+            ) : null}
+          </AdminPanel>
+        ) : null}
 
         {job && adminAccess === true ? (
           <AdminPanel
@@ -463,6 +765,20 @@ const styles = StyleSheet.create({
   },
   selectionPressable: {
     borderRadius: radius.md,
+  },
+  inspectForm: {
+    gap: spacing.sm,
+  },
+  inspectInput: {
+    minHeight: 44,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 14,
+  },
+  scopeInput: {
+    minHeight: 96,
+    textAlignVertical: 'top',
   },
   iconButton: {
     width: 40,
