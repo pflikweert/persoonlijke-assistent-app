@@ -2,8 +2,8 @@
 
 # Budio Strategy Research and Ideas
 
-Build Timestamp (UTC): 2026-07-03T09:59:24.054Z
-Source Commit: 205b1e6
+Build Timestamp (UTC): 2026-07-03T12:15:48.841Z
+Source Commit: 38673fb
 
 Doel: primaire domeinbundle voor strategy/research/ideas.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -16,8 +16,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Strategy and Research
 
-Build Timestamp (UTC): 2026-07-03T09:59:24.054Z
-Source Commit: 205b1e6
+Build Timestamp (UTC): 2026-07-03T12:15:48.841Z
+Source Commit: 38673fb
 
 Doel: primaire strategiebundle met horizon en researchvolgorde voor planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -3774,8 +3774,8 @@ Na AIQS-live een timeboxed benchmark sprint starten (research-only), en per patr
 
 # Budio Ideas and Opportunity Map
 
-Build Timestamp (UTC): 2026-07-03T09:59:24.054Z
-Source Commit: 205b1e6
+Build Timestamp (UTC): 2026-07-03T12:15:48.841Z
+Source Commit: 38673fb
 
 Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
