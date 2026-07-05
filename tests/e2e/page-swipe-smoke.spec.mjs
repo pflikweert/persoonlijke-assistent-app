@@ -23,11 +23,21 @@ async function dragLeftOnText(page, text) {
   const startX = Math.round(box.x + box.width - 8);
   const endX = Math.round(box.x + 8);
 
-  await page.mouse.move(startX, y);
-  await page.mouse.down();
-  await page.waitForTimeout(120);
-  await page.mouse.move(endX, y, { steps: 12 });
-  await page.mouse.up();
+  const client = await page.context().newCDPSession(page);
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: startX, y }],
+  });
+  for (let step = 0; step <= 12; step += 1) {
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: startX + ((endX - startX) * step) / 12, y }],
+    });
+  }
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
 }
 
 async function scrollDownOnText(page, text) {
@@ -43,8 +53,23 @@ async function scrollDownOnText(page, text) {
 
   const box = await target.boundingBox();
   expect(box).not.toBeNull();
-  await page.mouse.move(Math.round(box.x + box.width / 2), Math.round(box.y + box.height / 2));
-  await page.mouse.wheel(0, 420);
+  const x = Math.round(box.x + box.width / 2);
+  const y = Math.round(box.y + box.height / 2);
+  const client = await page.context().newCDPSession(page);
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x, y: y + 120 }],
+  });
+  for (let step = 0; step <= 16; step += 1) {
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x, y: y + 120 - step * 18 }],
+    });
+  }
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
   await expect
     .poll(async () => page.evaluate(() => {
       const scrollElement = [...document.querySelectorAll("div")]

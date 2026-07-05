@@ -2,7 +2,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
-import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
@@ -568,14 +567,6 @@ export default function ReflectionsScreen() {
     resetKey: `${activePeriod}:${activeReflection?.id ?? "empty"}`,
     onNavigate: navigateToAdjacentReflection,
   });
-  const headerSwipeGesture = useMemo(
-    () => pageSwipe.createSwipeGesture(),
-    [pageSwipe],
-  );
-  const contentSwipeGesture = useMemo(
-    () => pageSwipe.createSwipeGesture(),
-    [pageSwipe],
-  );
 
   const selectorSections = useMemo<ArchiveGroupedListSection[]>(() => {
     const grouped = new Map<string, ArchiveGroupedListSection>();
@@ -687,50 +678,47 @@ export default function ReflectionsScreen() {
           backgroundTone="flat"
           fixedHeader={
             isProcessing ? null : (
-              <GestureDetector gesture={headerSwipeGesture}>
-                <ThemedView style={styles.swipeSurface}>
-                  <ScreenHeader
-                    leftAction={
-                      <BrandHeaderLockup secondary="Terugblik" />
-                    }
-                    rightAction={
-                      <HeaderActionGroup>
-                        <HeaderIconButton
-                          accessibilityRole="button"
-                          accessibilityLabel={headerActionLabel}
-                          onPress={() => openSelector(activePeriod)}
-                        >
-                          <MaterialIcons
-                            name="calendar-month"
-                            size={20}
-                            color={palette.primary}
-                          />
-                        </HeaderIconButton>
-                        <HeaderIconButton
-                          accessibilityRole="button"
-                          accessibilityLabel="Open menu"
-                          onPress={() => setMenuVisible(true)}
-                        >
-                          <MaterialIcons
-                            name="menu"
-                            size={20}
-                            color={palette.primary}
-                          />
-                        </HeaderIconButton>
-                      </HeaderActionGroup>
-                    }
-                    surface="transparent"
-                  />
-                </ThemedView>
-              </GestureDetector>
+              <ThemedView style={styles.swipeSurface} {...pageSwipe.panHandlers}>
+                <ScreenHeader
+                  leftAction={
+                    <BrandHeaderLockup secondary="Terugblik" />
+                  }
+                  rightAction={
+                    <HeaderActionGroup>
+                      <HeaderIconButton
+                        accessibilityRole="button"
+                        accessibilityLabel={headerActionLabel}
+                        onPress={() => openSelector(activePeriod)}
+                      >
+                        <MaterialIcons
+                          name="calendar-month"
+                          size={20}
+                          color={palette.primary}
+                        />
+                      </HeaderIconButton>
+                      <HeaderIconButton
+                        accessibilityRole="button"
+                        accessibilityLabel="Open menu"
+                        onPress={() => setMenuVisible(true)}
+                      >
+                        <MaterialIcons
+                          name="menu"
+                          size={20}
+                          color={palette.primary}
+                        />
+                      </HeaderIconButton>
+                    </HeaderActionGroup>
+                  }
+                  surface="transparent"
+                />
+              </ThemedView>
             )
           }
           contentContainerStyle={styles.scrollContent}
         >
         {!isProcessing ? (
           <>
-            <GestureDetector gesture={contentSwipeGesture}>
-              <ThemedView style={styles.swipeContentGroup}>
+            <ThemedView style={styles.swipeContentGroup} {...pageSwipe.panHandlers}>
                 <DetailScreenHero
                   title={heroHeading.title}
                   subtitle={heroHeading.subtitle}
@@ -949,8 +937,7 @@ export default function ReflectionsScreen() {
                 </ThemedView>
                   </ThemedView>
                 ) : null}
-              </ThemedView>
-            </GestureDetector>
+            </ThemedView>
           </>
         ) : null}
 

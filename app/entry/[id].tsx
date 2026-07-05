@@ -14,13 +14,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 
 import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
@@ -50,6 +44,7 @@ import {
 } from "@/components/ui/screen-primitives";
 import { BrandHeaderLockup } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { usePageSwipeNavigation } from "@/hooks/use-page-swipe-navigation";
 import {
   createEntryAudioSignedUrl,
   deleteNormalizedEntryById,
@@ -62,11 +57,7 @@ import {
   updateNormalizedEntryById,
 } from "@/services";
 import { buildEntryCopyPayload } from "@/src/lib/copy-payloads";
-import {
-  clampMomentSwipeTranslation,
-  getMomentSwipeDecision,
-  type MomentSwipeDirection,
-} from "@/src/lib/moment-navigation/presentation";
+import type { MomentSwipeDirection } from "@/src/lib/moment-navigation/presentation";
 import { colorTokens, radius, spacing } from "@/theme";
 
 type RouteParams = {
@@ -293,7 +284,6 @@ export default function EntryCompletionScreen() {
   const [audioUrlError, setAudioUrlError] = useState<string | null>(null);
   const [audioReloadTick, setAudioReloadTick] = useState(0);
   const [audioRetrying, setAudioRetrying] = useState(false);
-  const swipeTranslateX = useSharedValue(0);
 
   const loadEntry = useCallback(async () => {
     if (!entryId) {
@@ -558,84 +548,14 @@ export default function EntryCompletionScreen() {
     [adjacentTargets],
   );
 
-  useEffect(() => {
-    swipeTranslateX.value = 0;
-  }, [entryId, swipeTranslateX]);
-
-  const createMomentSwipeGesture = useCallback(() => {
-    const hasPrevious = Boolean(adjacentTargets.previous);
-    const hasNext = Boolean(adjacentTargets.next);
-
-    return Gesture.Pan()
-      .enabled(!isProcessing && !loading && !error && Boolean(entry))
-      .activeOffsetX([-24, 24])
-      .failOffsetY([-12, 12])
-      .onUpdate((event) => {
-        swipeTranslateX.value = clampMomentSwipeTranslation({
-          translationX: event.translationX,
-          hasPrevious,
-          hasNext,
-        });
-      })
-      .onEnd((event) => {
-        const decision = getMomentSwipeDecision({
-          translationX: event.translationX,
-          translationY: event.translationY,
-          velocityX: event.velocityX,
-          hasPrevious,
-          hasNext,
-        });
-
-        if (decision === "previous" || decision === "next") {
-          const exitDistance = Math.max(viewportWidth, 1);
-          swipeTranslateX.value = withTiming(
-            decision === "next" ? -exitDistance : exitDistance,
-            { duration: 150 },
-            (finished) => {
-              if (finished) {
-                runOnJS(navigateToAdjacentMoment)(decision);
-                swipeTranslateX.value = 0;
-              }
-            },
-          );
-          return;
-        }
-
-        swipeTranslateX.value = withTiming(0, { duration: 140 });
-      })
-      .onFinalize(() => {
-        if (Math.abs(swipeTranslateX.value) < 1) {
-          swipeTranslateX.value = 0;
-        }
-      });
-  }, [
-    adjacentTargets.next,
-    adjacentTargets.previous,
-    entry,
-    error,
-    isProcessing,
-    loading,
-    navigateToAdjacentMoment,
-    swipeTranslateX,
+  const pageSwipe = usePageSwipeNavigation({
+    enabled: !isProcessing && !loading && !error && Boolean(entry),
+    hasPrevious: Boolean(adjacentTargets.previous),
+    hasNext: Boolean(adjacentTargets.next),
     viewportWidth,
-  ]);
-
-  const headerSwipeGesture = useMemo(
-    () => createMomentSwipeGesture(),
-    [createMomentSwipeGesture],
-  );
-  const primaryContentSwipeGesture = useMemo(
-    () => createMomentSwipeGesture(),
-    [createMomentSwipeGesture],
-  );
-  const detailContentSwipeGesture = useMemo(
-    () => createMomentSwipeGesture(),
-    [createMomentSwipeGesture],
-  );
-
-  const swipeAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: swipeTranslateX.value }],
-  }));
+    resetKey: entryId,
+    onNavigate: navigateToAdjacentMoment,
+  });
 
   async function refreshDerivedAfterMutation(
     journalDate: string,
@@ -755,7 +675,7 @@ export default function EntryCompletionScreen() {
 
   return (
     <>
-      <Animated.View style={[styles.swipeHost, swipeAnimatedStyle]}>
+      <Animated.View style={[styles.swipeHost, pageSwipe.animatedStyle]}>
         <ScreenContainer
           scrollable
           fixedFooter={
@@ -777,8 +697,7 @@ export default function EntryCompletionScreen() {
           backgroundTone="subtle"
           fixedHeader={
             isProcessing ? null : (
-              <GestureDetector gesture={headerSwipeGesture}>
-                <ThemedView style={styles.swipeSurface}>
+              <ThemedView style={styles.swipeSurface} {...pageSwipe.panHandlers}>
                 <ScreenHeader
                   leftAction={
                     <BrandHeaderLockup secondary="Moment" />
@@ -799,8 +718,7 @@ export default function EntryCompletionScreen() {
                   }
                   surface="transparent"
                 />
-                </ThemedView>
-              </GestureDetector>
+              </ThemedView>
             )
           }
           contentContainerStyle={styles.scrollContent}
@@ -823,8 +741,7 @@ export default function EntryCompletionScreen() {
 
           {!isProcessing && !loading && !error && entry ? (
             <>
-              <GestureDetector gesture={primaryContentSwipeGesture}>
-                <ThemedView style={styles.swipeContentGroup}>
+              <ThemedView style={styles.swipeContentGroup} {...pageSwipe.panHandlers}>
                 <DetailScreenHero
                   title={title}
                   subtitle={detailSubtitle}
@@ -926,8 +843,7 @@ export default function EntryCompletionScreen() {
                     style={styles.narrativeBlock}
                   />
                 </ThemedView>
-                </ThemedView>
-              </GestureDetector>
+              </ThemedView>
 
                 <EntryPhotoGallery
                   rawEntryId={entry.raw_entry_id}
@@ -936,8 +852,7 @@ export default function EntryCompletionScreen() {
                   onPhotosSnapshotChange={setPhotoSnapshot}
                 />
 
-              <GestureDetector gesture={detailContentSwipeGesture}>
-                <ThemedView style={styles.swipeSurface}>
+              <ThemedView style={styles.swipeSurface} {...pageSwipe.panHandlers}>
                 <ThemedView
                   style={[
                     styles.momentDetailsSection,
@@ -1040,8 +955,7 @@ export default function EntryCompletionScreen() {
                     </ThemedView>
                   </Pressable>
                 </ThemedView>
-                </ThemedView>
-              </GestureDetector>
+              </ThemedView>
             </>
           ) : null}
 

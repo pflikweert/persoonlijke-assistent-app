@@ -15,7 +15,6 @@ import {
   type ScrollView,
   useWindowDimensions,
 } from "react-native";
-import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
@@ -539,14 +538,6 @@ export default function DayDetailScreen() {
     resetKey: journalDate,
     onNavigate: navigateToAdjacentDay,
   });
-  const headerSwipeGesture = useMemo(
-    () => pageSwipe.createSwipeGesture(),
-    [pageSwipe],
-  );
-  const readingSwipeGesture = useMemo(
-    () => pageSwipe.createSwipeGesture(),
-    [pageSwipe],
-  );
 
   useEffect(() => {
     if (!pendingFocusEntryId || loading || Boolean(error)) {
@@ -689,38 +680,36 @@ export default function DayDetailScreen() {
           fixedHeader={
             <>
               <Stack.Screen options={{ headerShown: false }} />
-              <GestureDetector gesture={headerSwipeGesture}>
-                <ThemedView style={styles.swipeSurface}>
-                  <ScreenHeader
-                    leftAction={
-                      <BrandHeaderLockup secondary={dayHeading} subtitle={readableDate} />
-                    }
-                    rightAction={
-                      <HeaderActionGroup>
-                        <HeaderIconButton
-                          accessibilityRole="button"
-                          accessibilityLabel="Kies dag"
-                          onPress={() => router.push("/days")}
-                        >
-                          <MaterialIcons
-                            name="calendar-today"
-                            size={18}
-                            color={palette.primary}
-                          />
-                        </HeaderIconButton>
-                        <HeaderIconButton
-                          accessibilityRole="button"
-                          accessibilityLabel="Open menu"
-                          onPress={() => setMenuVisible(true)}
-                        >
-                          <MaterialIcons name="menu" size={20} color={palette.primary} />
-                        </HeaderIconButton>
-                      </HeaderActionGroup>
-                    }
-                    surface="transparent"
-                  />
-                </ThemedView>
-              </GestureDetector>
+              <ThemedView style={styles.swipeSurface} {...pageSwipe.panHandlers}>
+                <ScreenHeader
+                  leftAction={
+                    <BrandHeaderLockup secondary={dayHeading} subtitle={readableDate} />
+                  }
+                  rightAction={
+                    <HeaderActionGroup>
+                      <HeaderIconButton
+                        accessibilityRole="button"
+                        accessibilityLabel="Kies dag"
+                        onPress={() => router.push("/days")}
+                      >
+                        <MaterialIcons
+                          name="calendar-today"
+                          size={18}
+                          color={palette.primary}
+                        />
+                      </HeaderIconButton>
+                      <HeaderIconButton
+                        accessibilityRole="button"
+                        accessibilityLabel="Open menu"
+                        onPress={() => setMenuVisible(true)}
+                      >
+                        <MaterialIcons name="menu" size={20} color={palette.primary} />
+                      </HeaderIconButton>
+                    </HeaderActionGroup>
+                  }
+                  surface="transparent"
+                />
+              </ThemedView>
             </>
           }
           fixedFooter={
@@ -750,8 +739,7 @@ export default function DayDetailScreen() {
           }
         >
           {hasSwipeReadingContent ? (
-            <GestureDetector gesture={readingSwipeGesture}>
-              <ThemedView style={styles.swipeContentGroup}>
+            <ThemedView style={styles.swipeContentGroup} {...pageSwipe.panHandlers}>
                 {showProcessedBanner ? (
                   <ThemedView style={styles.processedRow}>
                     <ThemedView
@@ -844,8 +832,7 @@ export default function DayDetailScreen() {
                     </ThemedView>
                   </DetailReadingSection>
                 ) : null}
-              </ThemedView>
-            </GestureDetector>
+            </ThemedView>
           ) : null}
 
         {!loading && !error && visibleEntries.length > 0 ? (

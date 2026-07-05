@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { Platform, type ViewStyle } from "react-native";
-import { Gesture } from "react-native-gesture-handler";
+import {
+  PanResponder,
+  Platform,
+  type GestureResponderEvent,
+  type PanResponderGestureState,
+  type ViewStyle,
+} from "react-native";
 import {
   runOnJS,
   useAnimatedStyle,
@@ -40,57 +45,86 @@ export function usePageSwipeNavigation({
     swipeTranslateX.value = 0;
   }, [resetKey, swipeTranslateX]);
 
-  const createSwipeGesture = useCallback(() => {
-    return Gesture.Pan()
-      .enabled(enabled)
-      .activeOffsetX([-24, 24])
-      .failOffsetY([-12, 12])
-      .onUpdate((event) => {
-        swipeTranslateX.value = clampPageSwipeTranslation({
-          translationX: event.translationX,
-          hasPrevious,
-          hasNext,
-        });
-      })
-      .onEnd((event) => {
-        const decision = getPageSwipeDecision({
-          translationX: event.translationX,
-          translationY: event.translationY,
-          velocityX: event.velocityX,
-          hasPrevious,
-          hasNext,
-        });
+  const shouldClaimSwipe = useCallback(
+    (_event: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+      if (!enabled) {
+        return false;
+      }
+      const absX = Math.abs(gestureState.dx);
+      const absY = Math.abs(gestureState.dy);
+      return absX >= 24 && absX > absY + 16;
+    },
+    [enabled],
+  );
 
-        if (decision === "previous" || decision === "next") {
-          const exitDistance = Math.max(viewportWidth, 1);
-          swipeTranslateX.value = withTiming(
-            decision === "next" ? -exitDistance : exitDistance,
-            { duration: 150 },
-            (finished) => {
-              if (finished) {
-                runOnJS(onNavigate)(decision);
-                swipeTranslateX.value = 0;
-              }
-            },
-          );
-          return;
-        }
-
-        swipeTranslateX.value = withTiming(0, { duration: 140 });
-      })
-      .onFinalize(() => {
-        if (Math.abs(swipeTranslateX.value) < 1) {
-          swipeTranslateX.value = 0;
-        }
+  const finishSwipe = useCallback(
+    (gestureState: PanResponderGestureState) => {
+      const decision = getPageSwipeDecision({
+        translationX: gestureState.dx,
+        translationY: gestureState.dy,
+        velocityX: gestureState.vx * 1000,
+        hasPrevious,
+        hasNext,
       });
-  }, [
-    enabled,
-    hasNext,
-    hasPrevious,
-    onNavigate,
-    swipeTranslateX,
-    viewportWidth,
-  ]);
+
+      if (decision === "previous" || decision === "next") {
+        const exitDistance = Math.max(viewportWidth, 1);
+        swipeTranslateX.value = withTiming(
+          decision === "next" ? -exitDistance : exitDistance,
+          { duration: 150 },
+          (finished) => {
+            if (finished) {
+              runOnJS(onNavigate)(decision);
+              swipeTranslateX.value = 0;
+            }
+          },
+        );
+        return;
+      }
+
+      swipeTranslateX.value = withTiming(0, { duration: 140 });
+    },
+    [
+      hasNext,
+      hasPrevious,
+      onNavigate,
+      swipeTranslateX,
+      viewportWidth,
+    ],
+  );
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onStartShouldSetPanResponderCapture: () => false,
+        onMoveShouldSetPanResponder: shouldClaimSwipe,
+        onMoveShouldSetPanResponderCapture: shouldClaimSwipe,
+        onPanResponderMove: (_event, gestureState) => {
+          swipeTranslateX.value = clampPageSwipeTranslation({
+            translationX: gestureState.dx,
+            hasPrevious,
+            hasNext,
+          });
+        },
+        onPanResponderRelease: (_event, gestureState) => {
+          finishSwipe(gestureState);
+        },
+        onPanResponderTerminate: () => {
+          swipeTranslateX.value = withTiming(0, { duration: 140 });
+        },
+        onPanResponderTerminationRequest: () => true,
+        onShouldBlockNativeResponder: () => false,
+      }),
+    [
+      finishSwipe,
+      enabled,
+      hasNext,
+      hasPrevious,
+      shouldClaimSwipe,
+      swipeTranslateX,
+    ],
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: swipeTranslateX.value }],
@@ -99,8 +133,8 @@ export function usePageSwipeNavigation({
   return useMemo(
     () => ({
       animatedStyle,
-      createSwipeGesture,
+      panHandlers: panResponder.panHandlers,
     }),
-    [animatedStyle, createSwipeGesture],
+    [animatedStyle, panResponder.panHandlers],
   );
 }
