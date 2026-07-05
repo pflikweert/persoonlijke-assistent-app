@@ -5,7 +5,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-07-03
+updated_at: 2026-07-04
 summary: "Maak Data opnieuw verwerken veilig en bronconsistent: raw data read-only, entries eerst herstellen, daarna dagjournals, weekreflecties en maandreflecties op actuele brondata regenereren."
 tags: ""
 workstream: aiqs
@@ -17,13 +17,14 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
-active_agent: Codex
-active_agent_model: gpt-5
-active_agent_runtime: codex
-active_agent_since: "2026-07-03T07:55:48.268Z"
-active_agent_status: running
-active_agent_settings: default
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 ## Probleem / context
@@ -125,6 +126,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
   - maand: entries + dagen binnen maand -> relevante weken -> maand.
 - Preview/start mag geen grote entry-id arrays via querystring of `IN (...)` URL's laden; volledige scopes moeten schaalbaar blijven en backend-side uit JSON selectiecriteria worden bepaald.
 - `/settings-regeneration` moet een professionele admin-wizard zijn: gewone Nederlandse taakcopy, geen scope-textarea in de standaardflow, user-id veld alleen onder `Geavanceerd`, controle verplicht vóór start, technische jobvelden ingeklapt.
+- Het losse blok `Veiligheid` moet weg; `/settings-regeneration` moet visueel aansluiten op de AIQS-adminstijl.
+- Periode kiezen in `/settings-regeneration` moet dezelfde gedeelde dag/week/maand-modal en opties gebruiken als `Instellingen -> Archief downloaden -> Een periode kiezen`; geen dubbele pickerlogica.
+- De knop `Controleer selectie` moet weg; selectiecontrole moet automatisch lopen zodra bereik en onderdelen geldig zijn.
+- Zolang er globaal een `queued` of `running` regeneration job bestaat, moet `/settings-regeneration` dominant tonen dat `Opnieuw opbouwen bezig` is en mag er geen nieuwe opdracht gestart worden.
+- Een lopende opdracht moet via `Stop na huidig werk` netjes kunnen stoppen: huidige OpenAI sub-batch afronden/toepassen, daarna geen nieuwe sub-batches/retries/steps meer starten en job op `cancelled` zetten.
+- Laatste UI-correctie: `/settings-regeneration` toont per moment maar één hoofdtaak. Actieve job = alleen compacte statuskaart + ingeklapte technische details; geen actieve job = rustige wizard. `Controleer selectie` komt terug als expliciete stap en `Alles opnieuw opbouwen` gebruikt één bevestigingsmodal.
 
 ## Status per requirement
 
@@ -139,6 +146,11 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Repair/all + scope-selectie gebouwd — status: gebouwd; preview/start gebruiken dezelfde deduped dependency-candidates.
 - [x] URI-too-long in preview/start entry-batchpad opgelost — status: gebouwd; entry rows worden per candidate geladen en discovery gebruikt paged reads.
 - [x] Professionele admin-wizard voor `/settings-regeneration` gebouwd — status: gebouwd; actie, bereik, onderdelen, controle en status zijn taakgericht en technische details staan ingeklapt.
+- [x] AIQS-stylingcorrectie voor `/settings-regeneration` gebouwd — status: gebouwd; veiligheids-inspector verwijderd en sections gebruiken dezelfde admin-console header/breedte/plain ritmiek als AIQS.
+- [x] Gedeelde periodekiezer gebouwd — status: gebouwd; export en regeneration gebruiken dezelfde shared hook/modal voor dag/week/maandselectie.
+- [x] Selectiecontrole gebouwd — status: aangepast op laatste UX-correctie; handmatige knop `Controleer selectie` is terug en automatische previewcopy is verwijderd.
+- [x] Single-active-job lock en graceful stop gebouwd — status: gebouwd; backend weigert nieuwe start bij globale actieve job, UI toont actieve job bovenaan en stop zet `options.stop_requested_at`.
+- [x] Vereenvoudigde regeneration UI gebouwd — status: gebouwd; actieve jobstatus en nieuwe opdrachtflow zijn conditioneel gescheiden, technische details staan standaard dicht en geavanceerde opties/daginspectie zitten in één accordion.
 - [x] Tests en verify uitgevoerd — status: groen na productie-auditrapportage.
 
 ## Toegevoegde verbeteringen tijdens uitvoering
@@ -149,6 +161,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - Backend start/preview gebruikt één candidate-builder die geselecteerde scopes naar unieke entries, dagen, weken en maanden expandt.
 - Productiefout `Failed to load entry rows: URI too long` onderzocht: de frontend gebruikt al POST JSON body naar de Edge Function; de lange URL ontstond backend-side door Supabase/PostgREST `.in('id', normalizedIds)` en `.in('id', rawIds)` bij entry-batchbouw. Dit is vervangen door point lookups per candidate met cache en paged candidate discovery.
 - `/settings-regeneration` herwerkt van technische console naar wizard: `Data opnieuw opbouwen`, stap 1 actie, stap 2 bereik, stap 3 onderdelen, stap 4 controle, start pas na actuele preview en inline bevestiging voor volledig opnieuw opbouwen.
+- Extra UI-correctie: het aparte inspectorblok `Veiligheid` is verwijderd en de pagina gebruikt dezelfde rustige AIQS-admincompositie met `AdminConsoleHeader`, centrale contentbreedte en plain sections.
+- Periodekeuze gedeeld gemaakt: `ExportPeriodSelectorModal` is een alias naar de shared `PeriodScopeSelectorModal`, export en regeneration gebruiken `usePeriodScopeSelectorOptions`, en regeneration vertaalt dag/week/maand direct naar de bestaande dependency-correcte scopes.
+- Eerdere automatische previewflow vervangen door handmatige selectiecontrole; `/settings-regeneration` houdt `Start opnieuw opbouwen` disabled tot `Controleer selectie` actueel is.
+- Actieve regeneration zichtbaar en blokkerend gemaakt: `latest` geeft eerst de globale actieve job terug, `start` weigert nieuwe jobs zolang een job `queued`/`running` is, en de UI toont bovenaan `Opnieuw opbouwen bezig` met `Stop na huidig werk`.
+- Graceful stop toegevoegd zonder schemawijziging: `stop` gebruikt bestaande `cancelled` status en `options.stop_requested_at/by`; de worker past een open batch nog toe, maar start daarna geen retries, nieuwe sub-batches of volgende steps meer.
+- `/settings-regeneration` opnieuw vereenvoudigd: actieve jobstatus, afgeronde job-samenvatting en nieuwe-opdrachtwizard zijn aparte toestanden geworden. Dubbele stop/statusblokken, losse daginspectiesectie, automatische previewcopy en herhaalde waarschuwingen zijn verwijderd.
 
 ## Uitvoerblokken / fasering
 
@@ -170,6 +188,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Repair/all-modus, preview en scoped dependency-selectie toevoegen.
 - [x] Preview/start URI-too-long bug oplossen zonder querystring-id lijsten.
 - [x] `/settings-regeneration` UI/copy herwerken naar beheerderstaakflow zonder standaard UUID/scope-invoer.
+- [x] `Veiligheid`-blok verwijderen en AIQS-adminstyling toepassen.
+- [x] Periodekiezer delen met Archief downloaden en regeneration Stap 2 daarop aansluiten.
+- [x] Handmatige `Controleer selectie` als expliciete controlestap gebruiken; automatische previewcopy verwijderen.
+- [x] Actieve job dominant tonen en startflow blokkeren bij `queued`/`running`.
+- [x] `Stop na huidig werk` toevoegen met graceful stop na huidige OpenAI sub-batch.
+- [x] Laatste UI-correctie uitvoeren: één hoofdtaak tegelijk, handmatige selectiecontrole, één geavanceerdblok en bevestigingsmodal voor alles opnieuw.
 - [x] Verify uitvoeren.
 
 ## Acceptance criteria
@@ -184,6 +208,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Preview/start stuurt selectiecriteria in POST JSON en bouwt geen grote entry-id querystring voor batchconstructie.
 - [x] Start opnieuw opbouwen blijft disabled tot de selectie gecontroleerd is; wijzigingen maken de preview ongeldig.
 - [x] Technische velden zoals job-id, phase en batchstatus staan achter ingeklapte technische details.
+- [x] `/settings-regeneration` toont geen aparte `Veiligheid` inspector meer en sluit visueel aan op AIQS.
+- [x] `Een periode kiezen` gebruikt dezelfde dag/week/maand-modalopties als Archief downloaden.
+- [x] Startknop wordt pas actief nadat handmatige `Controleer selectie` actueel is.
+- [x] Een globale actieve regeneration job blokkeert nieuwe starts en staat bovenaan de pagina.
+- [x] Stop-request markeert lopende jobs via `options.stop_requested_at` en stopt na afronden/toepassen van de huidige sub-batch.
+- [x] Actieve job en nieuwe-opdrachtwizard worden niet tegelijk prominent getoond; technische details zijn standaard dicht.
 
 ## Blockers / afhankelijkheden
 
@@ -203,6 +233,9 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - Na repair/all scope-uitbreiding: `npx vitest run tests/unit/regeneration-source-contract.test.ts` — groen; 9 tests.
 - Na repair/all scope-uitbreiding en period-user dedupe: `npm run typecheck`, `npm run lint`, `npm run test:unit` — groen; 17 files, 102 tests.
 - Na URI-too-long fix: `npx vitest run tests/unit/regeneration-source-contract.test.ts` — groen; 10 tests.
+- Na active-job lock en graceful stop: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 106 tests.
+- Route-smoke `/settings-regeneration`: `curl -I --max-time 5 http://localhost:8081/settings-regeneration` — HTTP 200. Playwright light/dark route-smoke — HTTP 200 zonder console/page errors, maar zonder ingelogde adminsessie eindigt de browser op het auth-scherm.
+- Na vereenvoudigde `/settings-regeneration` UI: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 106 tests. Statische copycheck: `Stop aangevraagd` staat één keer, oude automatische-previewcopy en losse `Geavanceerd: dag inspecteren` zijn weg. Route-smoke HTTP 200; Playwright light/dark route-smoke HTTP 200 zonder console/page errors, maar zonder ingelogde adminsessie eindigt de browser op het auth-scherm.
 - Na URI-too-long fix: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 103 tests.
 - Na URI-too-long fix: `npm run docs:bundle:verify` — faalt alleen op `docs/upload/60-budio-tasks-current.md` omdat generated docs bewust niet zijn bijgewerkt binnen user-scope `Geen wijzigingen aan gegenereerde files`.
 - Na admin-wizard herwerking: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 103 tests.
@@ -243,3 +276,9 @@ Productie-audit bewijs:
 - 2026-07-03T10:34:40+02:00 — Fix scoped admin regeneration repair flow
 
 - 2026-07-03T14:19:42+02:00 — Fix admin regeneration flow
+
+
+- 2026-07-05T09:20:15+02:00 — Add day week month swipe navigation
+## Agent activity
+
+- stop 2026-07-03T07:55:48.268Z -> 2026-07-04T09:29:37.625Z - Codex / gpt-5 / codex / default - reason: stopped

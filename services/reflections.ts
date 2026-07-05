@@ -29,6 +29,17 @@ export type ReflectionRow = Omit<
   period_type: PeriodType;
 };
 
+export type AdjacentReflectionTarget = {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+};
+
+export type AdjacentReflectionTargets = {
+  previous: AdjacentReflectionTarget | null;
+  next: AdjacentReflectionTarget | null;
+};
+
 export interface GenerateReflectionResult {
   status: 'ok';
   flow: 'generate-reflection';
@@ -326,6 +337,70 @@ export async function fetchRecentReflectionsByType(input: {
     ...row,
     period_type: ensurePeriodType(row.period_type),
   }));
+}
+
+async function fetchAdjacentReflectionTarget(input: {
+  periodType: PeriodType;
+  periodStart: string;
+  direction: 'previous' | 'next';
+}): Promise<AdjacentReflectionTarget | null> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  if (!JOURNAL_DATE_PATTERN.test(input.periodStart)) {
+    throw new Error('Ongeldige periode start. Gebruik formaat YYYY-MM-DD.');
+  }
+
+  const periodType = ensurePeriodType(input.periodType);
+  const isPrevious = input.direction === 'previous';
+  const { data, error } = await supabase
+    .from('period_reflections')
+    .select('id, period_start, period_end')
+    .eq('period_type', periodType)
+    [isPrevious ? 'lt' : 'gt']('period_start', input.periodStart)
+    .order('period_start', { ascending: !isPrevious })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data
+    ? {
+        id: data.id,
+        periodStart: data.period_start,
+        periodEnd: data.period_end,
+      }
+    : null;
+}
+
+export async function fetchAdjacentReflectionTargets(input: {
+  periodType: PeriodType;
+  periodStart: string;
+}): Promise<AdjacentReflectionTargets> {
+  const periodType = ensurePeriodType(input.periodType);
+  if (!JOURNAL_DATE_PATTERN.test(input.periodStart)) {
+    throw new Error('Ongeldige periode start. Gebruik formaat YYYY-MM-DD.');
+  }
+
+  const [previous, next] = await Promise.all([
+    fetchAdjacentReflectionTarget({
+      periodType,
+      periodStart: input.periodStart,
+      direction: 'previous',
+    }),
+    fetchAdjacentReflectionTarget({
+      periodType,
+      periodStart: input.periodStart,
+      direction: 'next',
+    }),
+  ]);
+
+  return { previous, next };
 }
 
 export async function hasReflectionForAnchorDate(input: {

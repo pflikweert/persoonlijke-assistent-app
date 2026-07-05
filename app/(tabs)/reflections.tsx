@@ -1,7 +1,9 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, useWindowDimensions } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
 import { SelectorModalShell } from "@/components/feedback/selector-modal-shell";
@@ -37,7 +39,12 @@ import {
 } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
+  pageSwipePanYStyle,
+  usePageSwipeNavigation,
+} from "@/hooks/use-page-swipe-navigation";
+import {
   classifyUnknownError,
+  fetchAdjacentReflectionTargets,
   fetchRecentReflectionsByType,
   generateReflection,
   getUtcTodayDate,
@@ -267,6 +274,7 @@ export default function ReflectionsScreen() {
   const PAGE_SIZE = 20;
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const { width: viewportWidth } = useWindowDimensions();
   const { period, anchorDate } = useLocalSearchParams<RouteParams>();
   const requestedPeriod = useMemo(() => parseRoutePeriod(period), [period]);
   const requestedAnchorDate = useMemo(
@@ -296,6 +304,19 @@ export default function ReflectionsScreen() {
   );
   const [selectedWeekId, setSelectedWeekId] = useState<string | null>(null);
   const [selectedMonthId, setSelectedMonthId] = useState<string | null>(null);
+  const [adjacentReflectionTargets, setAdjacentReflectionTargets] = useState<{
+    week: {
+      previous: { id: string; periodStart: string; periodEnd: string } | null;
+      next: { id: string; periodStart: string; periodEnd: string } | null;
+    };
+    month: {
+      previous: { id: string; periodStart: string; periodEnd: string } | null;
+      next: { id: string; periodStart: string; periodEnd: string } | null;
+    };
+  }>({
+    week: { previous: null, next: null },
+    month: { previous: null, next: null },
+  });
   const [selectorVisible, setSelectorVisible] = useState(false);
   const [selectorPeriod, setSelectorPeriod] = useState<PeriodType>("week");
   const isProcessing = generating !== null;
@@ -408,6 +429,45 @@ export default function ReflectionsScreen() {
       activeRows.find((row) => row.id === selectedId) ?? activeRows[0] ?? null,
     [activeRows, selectedId],
   );
+  const activeReflectionPeriodStart = activeReflection?.period_start ?? null;
+  useEffect(() => {
+    if (!activeReflectionPeriodStart) {
+      setAdjacentReflectionTargets((current) => ({
+        ...current,
+        [activePeriod]: { previous: null, next: null },
+      }));
+      return;
+    }
+
+    let cancelled = false;
+    async function loadAdjacentTargets() {
+      try {
+        const targets = await fetchAdjacentReflectionTargets({
+          periodType: activePeriod,
+          periodStart: activeReflectionPeriodStart,
+        });
+        if (!cancelled) {
+          setAdjacentReflectionTargets((current) => ({
+            ...current,
+            [activePeriod]: targets,
+          }));
+        }
+      } catch {
+        if (!cancelled) {
+          setAdjacentReflectionTargets((current) => ({
+            ...current,
+            [activePeriod]: { previous: null, next: null },
+          }));
+        }
+      }
+    }
+
+    void loadAdjacentTargets();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePeriod, activeReflectionPeriodStart]);
   const selectorRows =
     selectorPeriod === "week" ? weekReflections : monthReflections;
   const selectorSelectedId =
@@ -484,6 +544,38 @@ export default function ReflectionsScreen() {
     cleanHighlights,
     cleanReflectionPoints,
   ]);
+  const navigateToAdjacentReflection = useCallback(
+    (direction: "previous" | "next") => {
+      const target = adjacentReflectionTargets[activePeriod][direction];
+      if (!target) {
+        return;
+      }
+
+      if (activePeriod === "week") {
+        setSelectedWeekId(target.id);
+        return;
+      }
+      setSelectedMonthId(target.id);
+    },
+    [activePeriod, adjacentReflectionTargets],
+  );
+  const activeAdjacentTargets = adjacentReflectionTargets[activePeriod];
+  const pageSwipe = usePageSwipeNavigation({
+    enabled: !loading && !error && !isProcessing && Boolean(activeReflection),
+    hasPrevious: Boolean(activeAdjacentTargets.previous),
+    hasNext: Boolean(activeAdjacentTargets.next),
+    viewportWidth,
+    resetKey: `${activePeriod}:${activeReflection?.id ?? "empty"}`,
+    onNavigate: navigateToAdjacentReflection,
+  });
+  const headerSwipeGesture = useMemo(
+    () => pageSwipe.createSwipeGesture(),
+    [pageSwipe],
+  );
+  const contentSwipeGesture = useMemo(
+    () => pageSwipe.createSwipeGesture(),
+    [pageSwipe],
+  );
 
   const selectorSections = useMemo<ArchiveGroupedListSection[]>(() => {
     const grouped = new Map<string, ArchiveGroupedListSection>();
@@ -589,106 +681,113 @@ export default function ReflectionsScreen() {
           tabBarStyle: isProcessing ? { display: "none" } : undefined,
         }}
       />
-      <ScreenContainer
-        scrollable
-        backgroundTone="flat"
-        fixedHeader={
-          isProcessing ? null : (
-            <ScreenHeader
-              leftAction={
-                <BrandHeaderLockup secondary="Terugblik" />
-              }
-              rightAction={
-                <HeaderActionGroup>
-                  <HeaderIconButton
-                    accessibilityRole="button"
-                    accessibilityLabel={headerActionLabel}
-                    onPress={() => openSelector(activePeriod)}
-                  >
-                    <MaterialIcons
-                      name="calendar-month"
-                      size={20}
-                      color={palette.primary}
-                    />
-                  </HeaderIconButton>
-                  <HeaderIconButton
-                    accessibilityRole="button"
-                    accessibilityLabel="Open menu"
-                    onPress={() => setMenuVisible(true)}
-                  >
-                    <MaterialIcons
-                      name="menu"
-                      size={20}
-                      color={palette.primary}
-                    />
-                  </HeaderIconButton>
-                </HeaderActionGroup>
-              }
-              surface="transparent"
-            />
-          )
-        }
-        contentContainerStyle={styles.scrollContent}
-      >
+      <Animated.View style={[styles.swipeHost, pageSwipe.animatedStyle]}>
+        <ScreenContainer
+          scrollable
+          backgroundTone="flat"
+          fixedHeader={
+            isProcessing ? null : (
+              <GestureDetector gesture={headerSwipeGesture}>
+                <ThemedView style={styles.swipeSurface}>
+                  <ScreenHeader
+                    leftAction={
+                      <BrandHeaderLockup secondary="Terugblik" />
+                    }
+                    rightAction={
+                      <HeaderActionGroup>
+                        <HeaderIconButton
+                          accessibilityRole="button"
+                          accessibilityLabel={headerActionLabel}
+                          onPress={() => openSelector(activePeriod)}
+                        >
+                          <MaterialIcons
+                            name="calendar-month"
+                            size={20}
+                            color={palette.primary}
+                          />
+                        </HeaderIconButton>
+                        <HeaderIconButton
+                          accessibilityRole="button"
+                          accessibilityLabel="Open menu"
+                          onPress={() => setMenuVisible(true)}
+                        >
+                          <MaterialIcons
+                            name="menu"
+                            size={20}
+                            color={palette.primary}
+                          />
+                        </HeaderIconButton>
+                      </HeaderActionGroup>
+                    }
+                    surface="transparent"
+                  />
+                </ThemedView>
+              </GestureDetector>
+            )
+          }
+          contentContainerStyle={styles.scrollContent}
+        >
         {!isProcessing ? (
           <>
-            <DetailScreenHero
-              title={heroHeading.title}
-              subtitle={heroHeading.subtitle}
-            />
+            <GestureDetector gesture={contentSwipeGesture}>
+              <ThemedView style={styles.swipeContentGroup}>
+                <DetailScreenHero
+                  title={heroHeading.title}
+                  subtitle={heroHeading.subtitle}
+                />
 
-            <PeriodSegmentedControl
-              style={styles.periodSwitch}
-              options={[
-                {
-                  key: "week",
-                  label: "Week",
-                  active: activePeriod === "week",
-                  onPress: () => {
-                    setActivePeriod("week");
-                    if (!selectedWeekId) {
-                      setSelectedWeekId(selectCurrentPeriodId(weekReflections));
+                <PeriodSegmentedControl
+                  style={styles.periodSwitch}
+                  options={[
+                    {
+                      key: "week",
+                      label: "Week",
+                      active: activePeriod === "week",
+                      onPress: () => {
+                        setActivePeriod("week");
+                        if (!selectedWeekId) {
+                          setSelectedWeekId(selectCurrentPeriodId(weekReflections));
+                        }
+                      },
+                    },
+                    {
+                      key: "month",
+                      label: "Maand",
+                      active: activePeriod === "month",
+                      onPress: () => {
+                        setActivePeriod("month");
+                        if (!selectedMonthId) {
+                          setSelectedMonthId(
+                            selectCurrentPeriodId(monthReflections),
+                          );
+                        }
+                      },
+                    },
+                  ]}
+                />
+
+                {loading ? (
+                  <InlineLoadingOverlay
+                    message="Reflecties laden..."
+                    detail="We halen je laatste week- en maandreflecties op."
+                  />
+                ) : null}
+                {!loading && error ? (
+                  <StateBlock
+                    tone="error"
+                    message={error.message}
+                    detail={
+                      error.retryable
+                        ? "Tijdelijke fout. Probeer het zo opnieuw."
+                        : "Controleer je invoer of login en probeer daarna opnieuw."
                     }
-                  },
-                },
-                {
-                  key: "month",
-                  label: "Maand",
-                  active: activePeriod === "month",
-                  onPress: () => {
-                    setActivePeriod("month");
-                    if (!selectedMonthId) {
-                      setSelectedMonthId(
-                        selectCurrentPeriodId(monthReflections),
-                      );
-                    }
-                  },
-                },
-              ]}
-            />
+                    meta={error.requestId ? `Referentie: ${error.requestId}` : null}
+                  />
+                ) : null}
+                {status ? <StateBlock tone="success" message={status} /> : null}
 
-            {loading ? (
-              <InlineLoadingOverlay
-                message="Reflecties laden..."
-                detail="We halen je laatste week- en maandreflecties op."
-              />
-            ) : null}
-            {!loading && error ? (
-              <StateBlock
-                tone="error"
-                message={error.message}
-                detail={
-                  error.retryable
-                    ? "Tijdelijke fout. Probeer het zo opnieuw."
-                    : "Controleer je invoer of login en probeer daarna opnieuw."
-                }
-                meta={error.requestId ? `Referentie: ${error.requestId}` : null}
-              />
-            ) : null}
-            {status ? <StateBlock tone="success" message={status} /> : null}
-
-            {!loading ? (
-              <ThemedView style={styles.readingCanvas}>
+                {!loading ? (
+                  <ThemedView style={styles.readingCanvas}>
                 {activeReflection ? (
                   degradedReflection ? (
                     <StateBlock
@@ -848,8 +947,10 @@ export default function ReflectionsScreen() {
                     disabled={isProcessing}
                   />
                 </ThemedView>
+                  </ThemedView>
+                ) : null}
               </ThemedView>
-            ) : null}
+            </GestureDetector>
           </>
         ) : null}
 
@@ -891,13 +992,26 @@ export default function ReflectionsScreen() {
             />
           )}
         </SelectorModalShell>
-      </ScreenContainer>
+        </ScreenContainer>
+      </Animated.View>
       <ProcessingScreen visible={isProcessing} variant="reflection-generate" />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  swipeHost: {
+    flex: 1,
+    width: "100%",
+  },
+  swipeSurface: {
+    width: "100%",
+    ...(pageSwipePanYStyle ?? {}),
+  },
+  swipeContentGroup: {
+    width: "100%",
+    ...(pageSwipePanYStyle ?? {}),
+  },
   scrollContent: {
     paddingBottom: spacing.xxxl,
   },

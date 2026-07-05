@@ -1,5 +1,7 @@
 export type MomentSwipeDirection = "previous" | "next";
 export type MomentSwipeDecision = MomentSwipeDirection | "none" | "cancel";
+export type PageSwipeDirection = MomentSwipeDirection;
+export type PageSwipeDecision = MomentSwipeDecision;
 
 export function clampMomentSwipeTranslation(input: {
   translationX: number;
@@ -63,3 +65,6 @@ export function getMomentSwipeDecision(input: {
 
   return input.hasPrevious ? "previous" : "none";
 }
+
+export const clampPageSwipeTranslation = clampMomentSwipeTranslation;
+export const getPageSwipeDecision = getMomentSwipeDecision;

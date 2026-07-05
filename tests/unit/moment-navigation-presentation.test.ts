@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  clampPageSwipeTranslation,
   clampMomentSwipeTranslation,
+  getPageSwipeDecision,
   getMomentSwipeDecision,
 } from "@/src/lib/moment-navigation/presentation";
 
@@ -102,6 +104,67 @@ describe("getMomentSwipeDecision", () => {
   it("accepts a fast short horizontal swipe", () => {
     expect(
       getMomentSwipeDecision({
+        translationX: -36,
+        translationY: 2,
+        velocityX: -900,
+        hasPrevious: false,
+        hasNext: true,
+      }),
+    ).toBe("next");
+  });
+});
+
+describe("page swipe presentation aliases", () => {
+  it("keeps the page fixed when no adjacent page exists", () => {
+    expect(
+      clampPageSwipeTranslation({
+        translationX: -120,
+        hasPrevious: true,
+        hasNext: false,
+      }),
+    ).toBe(0);
+    expect(
+      clampPageSwipeTranslation({
+        translationX: 120,
+        hasPrevious: false,
+        hasNext: true,
+      }),
+    ).toBe(0);
+  });
+
+  it("uses the same navigation decision semantics for page swipes", () => {
+    expect(
+      getPageSwipeDecision({
+        translationX: -90,
+        translationY: 4,
+        hasPrevious: false,
+        hasNext: true,
+      }),
+    ).toBe("next");
+    expect(
+      getPageSwipeDecision({
+        translationX: 90,
+        translationY: 4,
+        hasPrevious: true,
+        hasNext: false,
+      }),
+    ).toBe("previous");
+  });
+
+  it("cancels vertical page scroll gestures", () => {
+    expect(
+      getPageSwipeDecision({
+        translationX: 24,
+        translationY: 88,
+        hasPrevious: true,
+        hasNext: true,
+      }),
+    ).toBe("cancel");
+  });
+
+  it("accepts a fast short horizontal page swipe", () => {
+    expect(
+      getPageSwipeDecision({
         translationX: -36,
         translationY: 2,
         velocityX: -900,

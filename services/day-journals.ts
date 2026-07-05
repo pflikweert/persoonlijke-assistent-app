@@ -59,6 +59,15 @@ export type AdjacentNormalizedEntryTargets = {
   next: AdjacentNormalizedEntryTarget | null;
 };
 
+export type AdjacentDayJournalTarget = {
+  journalDate: string;
+};
+
+export type AdjacentDayJournalTargets = {
+  previous: AdjacentDayJournalTarget | null;
+  next: AdjacentDayJournalTarget | null;
+};
+
 const JOURNAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 interface RegenerateDayJournalResult {
@@ -343,6 +352,51 @@ export async function fetchDayJournalByDate(journalDate: string): Promise<DayJou
   }
 
   return data;
+}
+
+async function fetchAdjacentDayJournalTarget(input: {
+  journalDate: string;
+  direction: 'previous' | 'next';
+}): Promise<AdjacentDayJournalTarget | null> {
+  const supabase = getSupabaseBrowserClient();
+
+  if (!supabase) {
+    throw new Error('Supabase client niet beschikbaar. Controleer je env variabelen.');
+  }
+
+  if (!isValidJournalDate(input.journalDate)) {
+    throw new Error('Ongeldige datum. Gebruik formaat YYYY-MM-DD.');
+  }
+
+  const isPrevious = input.direction === 'previous';
+  const { data, error } = await supabase
+    .from('day_journals')
+    .select('journal_date')
+    [isPrevious ? 'lt' : 'gt']('journal_date', input.journalDate)
+    .order('journal_date', { ascending: !isPrevious })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.journal_date ? { journalDate: data.journal_date } : null;
+}
+
+export async function fetchAdjacentDayJournalTargets(
+  journalDate: string
+): Promise<AdjacentDayJournalTargets> {
+  if (!isValidJournalDate(journalDate)) {
+    throw new Error('Ongeldige datum. Gebruik formaat YYYY-MM-DD.');
+  }
+
+  const [previous, next] = await Promise.all([
+    fetchAdjacentDayJournalTarget({ journalDate, direction: 'previous' }),
+    fetchAdjacentDayJournalTarget({ journalDate, direction: 'next' }),
+  ]);
+
+  return { previous, next };
 }
 
 export async function fetchNormalizedEntriesByDate(journalDate: string): Promise<NormalizedDayEntry[]> {

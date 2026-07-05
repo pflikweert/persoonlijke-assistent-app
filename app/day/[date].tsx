@@ -13,7 +13,10 @@ import {
   Pressable,
   StyleSheet,
   type ScrollView,
+  useWindowDimensions,
 } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 
 import { InlineLoadingOverlay } from "@/components/feedback/inline-loading-overlay";
 import { ProcessingScreen } from "@/components/feedback/processing-screen";
@@ -46,6 +49,11 @@ import {
 } from "@/components/ui/screen-scaffolds";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
+  pageSwipePanYStyle,
+  usePageSwipeNavigation,
+} from "@/hooks/use-page-swipe-navigation";
+import {
+  fetchAdjacentDayJournalTargets,
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
   fetchReflectionForAnchorDate,
@@ -260,6 +268,7 @@ function MomentSectionActionButton({
 export default function DayDetailScreen() {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
+  const { width: viewportWidth } = useWindowDimensions();
   const navigationState = useRootNavigationState();
   const { date, processed, entryId } = useLocalSearchParams<RouteParams>();
   const journalDate = useMemo(() => resolveRouteDate(date), [date]);
@@ -289,6 +298,10 @@ export default function DayDetailScreen() {
     useState<Awaited<ReturnType<typeof fetchReflectionForAnchorDate>>>(null);
   const [monthReflection, setMonthReflection] =
     useState<Awaited<ReturnType<typeof fetchReflectionForAnchorDate>>>(null);
+  const [adjacentDayTargets, setAdjacentDayTargets] = useState<{
+    previous: { journalDate: string } | null;
+    next: { journalDate: string } | null;
+  }>({ previous: null, next: null });
   const [entryOffsets, setEntryOffsets] = useState<Record<string, number>>({});
   const [focusedEntryId, setFocusedEntryId] = useState<string | null>(null);
   const [pendingFocusEntryId, setPendingFocusEntryId] = useState<string | null>(
@@ -313,6 +326,7 @@ export default function DayDetailScreen() {
       setEntries([]);
       setWeekReflection(null);
       setMonthReflection(null);
+      setAdjacentDayTargets({ previous: null, next: null });
       return;
     }
 
@@ -334,6 +348,12 @@ export default function DayDetailScreen() {
       setSections(journal ? parseJournalSections(journal.sections) : []);
       setEntryOffsets({});
       setEntries(normalizedEntries);
+      try {
+        const targets = await fetchAdjacentDayJournalTargets(journalDate);
+        setAdjacentDayTargets(targets);
+      } catch {
+        setAdjacentDayTargets({ previous: null, next: null });
+      }
 
       const [weekResult, monthResult] = await Promise.allSettled([
         fetchReflectionForAnchorDate({
@@ -364,6 +384,7 @@ export default function DayDetailScreen() {
       setEntries([]);
       setWeekReflection(null);
       setMonthReflection(null);
+      setAdjacentDayTargets({ previous: null, next: null });
     } finally {
       setLoading(false);
     }
@@ -486,6 +507,45 @@ export default function DayDetailScreen() {
   const captureParams = useMemo(
     () => buildCaptureParams(journalDate, buildDayReturnToPath(journalDate)),
     [journalDate],
+  );
+  const hasSwipeReadingContent =
+    showProcessedBanner ||
+    loading ||
+    Boolean(!loading && error) ||
+    Boolean(!loading && !error && summary) ||
+    Boolean(!loading && !error && narrativeText) ||
+    Boolean(!loading && !error && insightText) ||
+    Boolean(!loading && !error && previewSections.length > 0);
+
+  const navigateToAdjacentDay = useCallback(
+    (direction: "previous" | "next") => {
+      const target = adjacentDayTargets[direction];
+      if (!target) {
+        return;
+      }
+
+      router.replace({
+        pathname: "/day/[date]",
+        params: { date: target.journalDate },
+      });
+    },
+    [adjacentDayTargets],
+  );
+  const pageSwipe = usePageSwipeNavigation({
+    enabled: !loading && !error && isValidJournalDate(journalDate),
+    hasPrevious: Boolean(adjacentDayTargets.previous),
+    hasNext: Boolean(adjacentDayTargets.next),
+    viewportWidth,
+    resetKey: journalDate,
+    onNavigate: navigateToAdjacentDay,
+  });
+  const headerSwipeGesture = useMemo(
+    () => pageSwipe.createSwipeGesture(),
+    [pageSwipe],
+  );
+  const readingSwipeGesture = useMemo(
+    () => pageSwipe.createSwipeGesture(),
+    [pageSwipe],
   );
 
   useEffect(() => {
@@ -620,162 +680,173 @@ export default function DayDetailScreen() {
 
   return (
     <>
-      <ScreenContainer
-        scrollable
-        scrollRef={scrollRef}
-        backgroundTone="flat"
-        contentContainerStyle={styles.scrollContent}
-        fixedHeader={
-          <>
-            <Stack.Screen options={{ headerShown: false }} />
-            <ScreenHeader
-              leftAction={
-                <BrandHeaderLockup secondary={dayHeading} subtitle={readableDate} />
+      <Animated.View style={[styles.swipeHost, pageSwipe.animatedStyle]}>
+        <ScreenContainer
+          scrollable
+          scrollRef={scrollRef}
+          backgroundTone="flat"
+          contentContainerStyle={styles.scrollContent}
+          fixedHeader={
+            <>
+              <Stack.Screen options={{ headerShown: false }} />
+              <GestureDetector gesture={headerSwipeGesture}>
+                <ThemedView style={styles.swipeSurface}>
+                  <ScreenHeader
+                    leftAction={
+                      <BrandHeaderLockup secondary={dayHeading} subtitle={readableDate} />
+                    }
+                    rightAction={
+                      <HeaderActionGroup>
+                        <HeaderIconButton
+                          accessibilityRole="button"
+                          accessibilityLabel="Kies dag"
+                          onPress={() => router.push("/days")}
+                        >
+                          <MaterialIcons
+                            name="calendar-today"
+                            size={18}
+                            color={palette.primary}
+                          />
+                        </HeaderIconButton>
+                        <HeaderIconButton
+                          accessibilityRole="button"
+                          accessibilityLabel="Open menu"
+                          onPress={() => setMenuVisible(true)}
+                        >
+                          <MaterialIcons name="menu" size={20} color={palette.primary} />
+                        </HeaderIconButton>
+                      </HeaderActionGroup>
+                    }
+                    surface="transparent"
+                  />
+                </ThemedView>
+              </GestureDetector>
+            </>
+          }
+          fixedFooter={
+            <BottomTabBarStandalone
+              activeKey={
+                menuRouteKey === "capture"
+                  ? "capture"
+                  : menuRouteKey === "reflections"
+                    ? "reflections"
+                    : "today"
               }
-              rightAction={
-                <HeaderActionGroup>
-                  <HeaderIconButton
-                    accessibilityRole="button"
-                    accessibilityLabel="Kies dag"
-                    onPress={() => router.push("/days")}
-                  >
-                    <MaterialIcons
-                      name="calendar-today"
-                      size={18}
-                      color={palette.primary}
-                    />
-                  </HeaderIconButton>
-                  <HeaderIconButton
-                    accessibilityRole="button"
-                    accessibilityLabel="Open menu"
-                    onPress={() => setMenuVisible(true)}
-                  >
-                    <MaterialIcons name="menu" size={20} color={palette.primary} />
-                  </HeaderIconButton>
-                </HeaderActionGroup>
-              }
-              surface="transparent"
+              onSelect={(key) => {
+                if (key === "capture") {
+                  router.push("/capture");
+                  return;
+                }
+                if (key === "reflections") {
+                  router.replace({
+                    pathname: "/reflections",
+                    params: { period: "week", anchorDate: journalDate },
+                  });
+                  return;
+                }
+                router.replace("/(tabs)");
+              }}
             />
-          </>
-        }
-        fixedFooter={
-          <BottomTabBarStandalone
-            activeKey={
-              menuRouteKey === "capture"
-                ? "capture"
-                : menuRouteKey === "reflections"
-                  ? "reflections"
-                  : "today"
-            }
-            onSelect={(key) => {
-              if (key === "capture") {
-                router.push("/capture");
-                return;
-              }
-              if (key === "reflections") {
-                router.replace({
-                  pathname: "/reflections",
-                  params: { period: "week", anchorDate: journalDate },
-                });
-                return;
-              }
-              router.replace("/(tabs)");
-            }}
-          />
-        }
-      >
-        {showProcessedBanner ? (
-          <ThemedView style={styles.processedRow}>
-            <ThemedView
-              style={[
-                styles.processedDot,
-                { backgroundColor: palette.success },
-              ]}
-            />
-            <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
-              Entry verwerkt
-            </ThemedText>
-          </ThemedView>
-        ) : null}
-
-        {loading ? (
-          <InlineLoadingOverlay
-            message="Dagdetail laden..."
-            detail="Even geduld, we halen de dag op."
-          />
-        ) : null}
-        {!loading && error ? (
-          <StateBlock
-            tone="error"
-            message="Dagdetail kon niet geladen worden."
-            detail={error}
-          />
-        ) : null}
-
-        {!loading && !error && summary ? (
-          <DayJournalSummaryInset text={summary} />
-        ) : null}
-
-        {!loading && !error && narrativeText ? (
-          <DetailReadingSection
-            title="Dagverhaal"
-            trailingAction={
-              <CopyIconButton
-                payload={dayJournalCopyPayload}
-                copyLabel="Kopieer dagjournaal"
-                copiedLabel="Dagjournaal gekopieerd"
-              />
-            }
-          >
-            <EditorialNarrativeBlock text={narrativeText} />
-          </DetailReadingSection>
-        ) : null}
-
-        {!loading && !error && insightText ? (
-          <DetailReadingSection title="Inzicht">
-            <ThemedView
-              lightColor="transparent"
-              darkColor="transparent"
-              style={[styles.insightBlock, { borderLeftColor: palette.primary }]}
-            >
-              <ThemedText
-                type="bodySecondary"
-                style={[styles.insightText, { color: palette.muted }]}
-              >
-                {insightText}
-              </ThemedText>
-            </ThemedView>
-          </DetailReadingSection>
-        ) : null}
-
-        {!loading && !error && previewSections.length > 0 ? (
-          <DetailReadingSection title="Kernpunten">
-            <ThemedView
-              lightColor="transparent"
-              darkColor="transparent"
-              style={styles.keyPointsBlock}
-            >
-              <ThemedView style={styles.keyPointsList}>
-                {previewSections.map((section, index) => (
-                  <ThemedView
-                    key={`${section}-${index}`}
-                    style={styles.keyPointRow}
-                  >
+          }
+        >
+          {hasSwipeReadingContent ? (
+            <GestureDetector gesture={readingSwipeGesture}>
+              <ThemedView style={styles.swipeContentGroup}>
+                {showProcessedBanner ? (
+                  <ThemedView style={styles.processedRow}>
                     <ThemedView
                       style={[
-                        styles.dot,
-                        { backgroundColor: palette.primaryStrong },
+                        styles.processedDot,
+                        { backgroundColor: palette.success },
                       ]}
                     />
-                    <ThemedText type="bodySecondary" style={styles.keyPointText}>
-                      {section}
+                    <ThemedText type="caption" style={{ color: palette.mutedSoft }}>
+                      Entry verwerkt
                     </ThemedText>
                   </ThemedView>
-                ))}
+                ) : null}
+
+                {loading ? (
+                  <InlineLoadingOverlay
+                    message="Dagdetail laden..."
+                    detail="Even geduld, we halen de dag op."
+                  />
+                ) : null}
+                {!loading && error ? (
+                  <StateBlock
+                    tone="error"
+                    message="Dagdetail kon niet geladen worden."
+                    detail={error}
+                  />
+                ) : null}
+
+                {!loading && !error && summary ? (
+                  <DayJournalSummaryInset text={summary} />
+                ) : null}
+
+                {!loading && !error && narrativeText ? (
+                  <DetailReadingSection
+                    title="Dagverhaal"
+                    trailingAction={
+                      <CopyIconButton
+                        payload={dayJournalCopyPayload}
+                        copyLabel="Kopieer dagjournaal"
+                        copiedLabel="Dagjournaal gekopieerd"
+                      />
+                    }
+                  >
+                    <EditorialNarrativeBlock text={narrativeText} />
+                  </DetailReadingSection>
+                ) : null}
+
+                {!loading && !error && insightText ? (
+                  <DetailReadingSection title="Inzicht">
+                    <ThemedView
+                      lightColor="transparent"
+                      darkColor="transparent"
+                      style={[styles.insightBlock, { borderLeftColor: palette.primary }]}
+                    >
+                      <ThemedText
+                        type="bodySecondary"
+                        style={[styles.insightText, { color: palette.muted }]}
+                      >
+                        {insightText}
+                      </ThemedText>
+                    </ThemedView>
+                  </DetailReadingSection>
+                ) : null}
+
+                {!loading && !error && previewSections.length > 0 ? (
+                  <DetailReadingSection title="Kernpunten">
+                    <ThemedView
+                      lightColor="transparent"
+                      darkColor="transparent"
+                      style={styles.keyPointsBlock}
+                    >
+                      <ThemedView style={styles.keyPointsList}>
+                        {previewSections.map((section, index) => (
+                          <ThemedView
+                            key={`${section}-${index}`}
+                            style={styles.keyPointRow}
+                          >
+                            <ThemedView
+                              style={[
+                                styles.dot,
+                                { backgroundColor: palette.primaryStrong },
+                              ]}
+                            />
+                            <ThemedText type="bodySecondary" style={styles.keyPointText}>
+                              {section}
+                            </ThemedText>
+                          </ThemedView>
+                        ))}
+                      </ThemedView>
+                    </ThemedView>
+                  </DetailReadingSection>
+                ) : null}
               </ThemedView>
-            </ThemedView>
-          </DetailReadingSection>
-        ) : null}
+            </GestureDetector>
+          ) : null}
 
         {!loading && !error && visibleEntries.length > 0 ? (
           <ThemedView style={styles.momentsSection}>
@@ -867,7 +938,8 @@ export default function DayDetailScreen() {
             ) : null}
           </ThemedView>
         ) : null}
-      </ScreenContainer>
+        </ScreenContainer>
+      </Animated.View>
       <FullscreenMenuOverlay
         visible={menuVisible}
         currentRouteKey={menuRouteKey}
@@ -881,6 +953,19 @@ export default function DayDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  swipeHost: {
+    flex: 1,
+    width: "100%",
+  },
+  swipeSurface: {
+    width: "100%",
+    ...(pageSwipePanYStyle ?? {}),
+  },
+  swipeContentGroup: {
+    width: "100%",
+    gap: spacing.section,
+    ...(pageSwipePanYStyle ?? {}),
+  },
   scrollContent: {
     paddingHorizontal: spacing.page,
     paddingTop: spacing.page,

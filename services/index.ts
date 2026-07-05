@@ -15,7 +15,8 @@ export {
     hasAdminRegenerationAccess,
     inspectAdminRegenerationDay,
     previewAdminRegenerationJob,
-    startAdminRegenerationJob
+    startAdminRegenerationJob,
+    stopAdminRegenerationJob
 } from "./admin-regeneration";
 export {
     createAdminAiQualityStudioDraftVersion,
@@ -40,6 +41,7 @@ export {
 export {
     createEntryAudioSignedUrl,
     deleteNormalizedEntryById,
+    fetchAdjacentDayJournalTargets,
     fetchAdjacentNormalizedEntryTargets,
     fetchDayJournalByDate, fetchNormalizedEntriesByDate, fetchNormalizedEntryById, fetchRecentDayJournals, fetchRecentNormalizedEntries, fetchTodayJournal,
     getUtcTodayDate,
@@ -114,7 +116,7 @@ export {
     type CaptureProcessingSession
 } from "./processing-recovery";
 export {
-    fetchLatestReflection, fetchRecentReflections,
+    fetchAdjacentReflectionTargets, fetchLatestReflection, fetchRecentReflections,
     fetchRecentReflectionsByType, fetchReflectionForAnchorDate, generateReflection, hasReflectionForAnchorDate, parseJsonStringArray
 } from "./reflections";
 export { resetAllUserData } from "./reset";
