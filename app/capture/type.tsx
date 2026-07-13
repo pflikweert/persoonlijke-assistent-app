@@ -19,7 +19,6 @@ import { NoticeCard } from "@/components/ui/notice-card";
 import {
   CaptureBackHeader,
   CaptureErrorStack,
-  CaptureIntro,
 } from "@/components/ui/capture-screen-primitives";
 import {
   PrimaryButton,
@@ -461,13 +460,6 @@ export default function CaptureTypeScreen() {
         ]}
       >
         <View style={styles.content}>
-          <CaptureIntro
-            title="Wat wil je vastleggen?"
-            subtitle="Schrijf op wat je wilt onthouden, verwerken of bewaren."
-            style={styles.copyBlock}
-            subtitleStyle={styles.subtitle}
-          />
-
           {showTargetDateNotice && targetDateLabel ? (
             <NoticeCard
               compact
@@ -539,6 +531,8 @@ export default function CaptureTypeScreen() {
         <View style={styles.footer}>
           <PrimaryButton
             label="Leg vast"
+            accessibilityLabel="Tekstmoment vastleggen"
+            testID="capture-type-submit-button"
             onPress={() => void handleSubmit()}
             disabled={
               submitting ||
@@ -616,17 +610,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: spacing.xl,
-  },
-  copyBlock: {
-    alignItems: "flex-start",
-  },
-  subtitle: {
-    maxWidth: 360,
+    paddingTop: 0,
   },
   notice: {
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    marginTop: 0,
+    marginBottom: 0,
   },
   derivedActions: {
     gap: spacing.sm,

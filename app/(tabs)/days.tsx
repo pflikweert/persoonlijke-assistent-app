@@ -21,12 +21,18 @@ import {
   parseJournalSections,
   setSessionSelectedDayDate,
 } from "@/services";
+import {
+  buildDaysOverviewRows,
+  type DaysOverviewRow,
+} from "@/src/lib/days-overview-view-model";
 import { colorTokens, spacing } from "@/theme";
+
+type DayJournal = Awaited<ReturnType<typeof fetchRecentDayJournals>>[number];
 
 type MonthGroup = {
   key: string;
   label: string;
-  journals: Awaited<ReturnType<typeof fetchRecentDayJournals>>;
+  rows: DaysOverviewRow<DayJournal>[];
 };
 
 function parseJournalDate(dateValue: string): Date | null {
@@ -170,17 +176,18 @@ export default function DaysScreen() {
 
   const sections = useMemo<ArchiveGroupedListSection[]>(() => {
     const monthMap = new Map<string, MonthGroup>();
+    const rows = buildDaysOverviewRows(journals, getUtcTodayDate());
 
-    for (const journal of journals) {
-      const key = journal.journal_date.slice(0, 7);
+    for (const row of rows) {
+      const key = row.date.slice(0, 7);
       const existing = monthMap.get(key);
       if (existing) {
-        existing.journals.push(journal);
+        existing.rows.push(row);
       } else {
         monthMap.set(key, {
           key,
-          label: formatMonthLabel(journal.journal_date),
-          journals: [journal],
+          label: formatMonthLabel(row.date),
+          rows: [row],
         });
       }
     }
@@ -188,21 +195,24 @@ export default function DaysScreen() {
     return Array.from(monthMap.values()).map((group) => ({
       key: group.key,
       title: group.label,
-      items: group.journals.map((journal) => {
-        const sections = parseJournalSections(journal.sections);
-        const snippet = buildSnippet(journal.summary, sections);
+      items: group.rows.map((row) => {
+        const journal = row.journal;
+        const snippet = journal
+          ? buildSnippet(journal.summary, parseJournalSections(journal.sections))
+          : "Nog geen moment vastgelegd";
         return {
-          key: journal.id,
-          leftTop: formatWeekdayShort(journal.journal_date),
-          leftBottom: formatDayNumber(journal.journal_date),
+          key: row.date,
+          leftTop: formatWeekdayShort(row.date),
+          leftBottom: formatDayNumber(row.date),
           snippet,
-          selected: journal.journal_date === selectedDayDate,
+          selected: row.date === selectedDayDate,
+          tone: row.hasContent ? "default" as const : "muted" as const,
           onPress: () => {
-            setSessionSelectedDayDate(journal.journal_date);
-            setSessionSelectedDayDateState(journal.journal_date);
+            setSessionSelectedDayDate(row.date);
+            setSessionSelectedDayDateState(row.date);
             router.push({
               pathname: "/day/[date]",
-              params: { date: journal.journal_date },
+              params: { date: row.date },
             });
           },
         };

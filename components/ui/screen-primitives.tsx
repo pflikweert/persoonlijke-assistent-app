@@ -266,6 +266,8 @@ export function PrimaryButton({
   style,
   labelStyle,
   icon,
+  accessibilityLabel,
+  testID,
 }: {
   label: string;
   onPress: () => void;
@@ -274,12 +276,17 @@ export function PrimaryButton({
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
   icon?: keyof typeof MaterialIcons.glyphMap;
+  accessibilityLabel?: string;
+  testID?: string;
 }) {
   const scheme = useColorScheme() ?? "light";
   const palette = colorTokens[scheme];
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      testID={testID}
       onPress={onPress}
       disabled={disabled}
       className={className}

@@ -23,7 +23,6 @@ import { TextEditorModal } from "@/components/feedback/text-editor-modal";
 import { DayJournalSummaryInset } from "@/components/journal/day-journal-summary-inset";
 import { EditorialNarrativeBlock } from "@/components/journal/editorial-narrative-block";
 import { MomentsTimelineSection } from "@/components/journal/moments-timeline-section";
-import { ReflectionTeaserCard } from "@/components/journal/reflection-teaser-card";
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { BottomTabBarStandalone } from "@/components/navigation/BottomTabBar";
 import {
@@ -55,7 +54,6 @@ import {
   fetchAdjacentDayJournalTargets,
   fetchDayJournalByDate,
   fetchNormalizedEntriesByDate,
-  fetchReflectionForAnchorDate,
   generateReflection,
   getUtcTodayDate,
   isValidJournalDate,
@@ -293,10 +291,6 @@ export default function DayDetailScreen() {
   const [narrativeText, setNarrativeText] = useState<string | null>(null);
   const [sections, setSections] = useState<string[]>([]);
   const [entries, setEntries] = useState<DayEntry[]>([]);
-  const [weekReflection, setWeekReflection] =
-    useState<Awaited<ReturnType<typeof fetchReflectionForAnchorDate>>>(null);
-  const [monthReflection, setMonthReflection] =
-    useState<Awaited<ReturnType<typeof fetchReflectionForAnchorDate>>>(null);
   const [adjacentDayTargets, setAdjacentDayTargets] = useState<{
     previous: { journalDate: string } | null;
     next: { journalDate: string } | null;
@@ -323,8 +317,6 @@ export default function DayDetailScreen() {
       setNarrativeText(null);
       setSections([]);
       setEntries([]);
-      setWeekReflection(null);
-      setMonthReflection(null);
       setAdjacentDayTargets({ previous: null, next: null });
       return;
     }
@@ -354,23 +346,6 @@ export default function DayDetailScreen() {
         setAdjacentDayTargets({ previous: null, next: null });
       }
 
-      const [weekResult, monthResult] = await Promise.allSettled([
-        fetchReflectionForAnchorDate({
-          periodType: "week",
-          anchorDate: journalDate,
-        }),
-        fetchReflectionForAnchorDate({
-          periodType: "month",
-          anchorDate: journalDate,
-        }),
-      ]);
-
-      setWeekReflection(
-        weekResult.status === "fulfilled" ? weekResult.value : null,
-      );
-      setMonthReflection(
-        monthResult.status === "fulfilled" ? monthResult.value : null,
-      );
     } catch (nextError) {
       const message =
         nextError instanceof Error
@@ -381,8 +356,6 @@ export default function DayDetailScreen() {
       setNarrativeText(null);
       setSections([]);
       setEntries([]);
-      setWeekReflection(null);
-      setMonthReflection(null);
       setAdjacentDayTargets({ previous: null, next: null });
     } finally {
       setLoading(false);
@@ -839,7 +812,7 @@ export default function DayDetailScreen() {
           <ThemedView style={styles.momentsSection}>
             <DetailSectionHeader
               icon="auto-awesome"
-              title="Individuele momenten"
+              title="Momenten"
               trailingAction={
                 <MomentSectionActionButton
                   label="Moment toevoegen"
@@ -868,14 +841,14 @@ export default function DayDetailScreen() {
           <ThemedView style={styles.momentsSection}>
             <DetailSectionHeader
               icon="auto-awesome"
-              title="Individuele momenten"
+              title="Nog geen momenten"
             />
             <ThemedView style={styles.emptyMomentsState}>
               <ThemedText type="bodySecondary" style={{ color: palette.muted }}>
-                Nog geen momenten voor deze dag.
+                Er is voor deze dag nog niets vastgelegd.
               </ThemedText>
               <MomentSectionActionButton
-                label="Moment toevoegen aan deze dag"
+                label="Moment toevoegen"
                 accessibilityLabel={addMomentAccessibilityLabel}
                 onPress={handleAddMoment}
               />
@@ -896,35 +869,6 @@ export default function DayDetailScreen() {
           onSubmit={() => void handleSaveEdit()}
         />
         <ProcessingScreen visible={showEditProcessing} variant="entry-edit" />
-
-        {!loading && !error && (weekReflection || monthReflection) ? (
-          <ThemedView style={styles.reflectionCardsBlock}>
-            {weekReflection ? (
-              <ReflectionTeaserCard
-                periodType="week"
-                reflection={weekReflection}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/reflections",
-                    params: { period: "week", anchorDate: journalDate },
-                  })
-                }
-              />
-            ) : null}
-            {monthReflection ? (
-              <ReflectionTeaserCard
-                periodType="month"
-                reflection={monthReflection}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/reflections",
-                    params: { period: "month", anchorDate: journalDate },
-                  })
-                }
-              />
-            ) : null}
-          </ThemedView>
-        ) : null}
         </ScreenContainer>
       </Animated.View>
       <FullscreenMenuOverlay
@@ -1030,10 +974,5 @@ const styles = StyleSheet.create({
   momentActionButtonLabel: {
     flexShrink: 1,
     lineHeight: 16,
-  },
-  reflectionCardsBlock: {
-    gap: spacing.lg,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xl,
   },
 });

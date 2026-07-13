@@ -16,6 +16,7 @@ export type ArchiveGroupedListItem = {
   snippet: string;
   onPress: () => void;
   selected?: boolean;
+  tone?: 'default' | 'muted';
 };
 
 export type ArchiveGroupedListSection = {
@@ -76,7 +77,11 @@ export function ArchiveGroupedList({
                     style={[
                       styles.dayNumber,
                       {
-                        color: item.selected ? selectedAccent : palette.text,
+                        color: item.selected
+                          ? selectedAccent
+                          : item.tone === 'muted'
+                            ? palette.mutedSoft
+                            : palette.text,
                       },
                     ]}
                   >
@@ -96,14 +101,26 @@ export function ArchiveGroupedList({
                     style={[
                       styles.snippet,
                       {
-                        color: item.selected ? palette.text : palette.muted,
+                        color: item.selected
+                          ? palette.text
+                          : item.tone === 'muted'
+                            ? palette.mutedSoft
+                            : palette.muted,
                       },
                     ]}>
                     {item.snippet}
                   </ThemedText>
                 </ThemedView>
 
-                <MaterialIcons name="chevron-right" size={18} color={palette.mutedSoft} style={styles.chevron} />
+                <MaterialIcons
+                  name="chevron-right"
+                  size={18}
+                  color={palette.mutedSoft}
+                  style={[
+                    styles.chevron,
+                    item.tone === 'muted' ? styles.chevronMuted : null,
+                  ]}
+                />
               </Pressable>
             ))}
           </ThemedView>
@@ -169,6 +186,9 @@ const styles = StyleSheet.create({
   snippet: {},
   chevron: {
     opacity: 0.65,
+  },
+  chevronMuted: {
+    opacity: 0.4,
   },
   loadMoreWrap: {
     paddingTop: spacing.sm,
