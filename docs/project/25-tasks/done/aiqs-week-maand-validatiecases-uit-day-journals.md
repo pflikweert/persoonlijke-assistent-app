@@ -21,6 +21,7 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
 Dag-validatie werkt, maar week- en maandvalidatie tonen `Geen cases gevonden`. Daardoor kan een AIQS-admin geen week- of maanddraft testen, vergelijken of evidence opbouwen.
@@ -215,9 +216,11 @@ Week- en maandvalidatie moeten cases uit `day_journals` opbouwen, ook wanneer `p
 
 - `docs/project/ai-quality-studio.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
-- `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
+- `docs/project/25-tasks/done/aiqs-admin-console-uiux-linear-richting.md`
 
 
 ## Commits
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks

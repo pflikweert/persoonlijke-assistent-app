@@ -29,6 +29,7 @@ active_agent_settings: null
 
 
 
+
 ## Probleem / context
 
 AIQS Assist bestaat al in de draft editor, maar voelt nog te veel als algemene herschrijfhulp. Per promptveld moet Assist begrijpen welke laag wordt bewerkt, wat die laag wel/niet mag bevatten, welke sibling-lagen al regels bevatten en of de huidige tekst eigenlijk in een andere laag thuishoort.
@@ -247,7 +248,7 @@ Belangrijkste punten:
 ## Relevante links
 
 - `docs/project/ai-quality-studio.md`
-- `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
+- `docs/project/25-tasks/done/aiqs-admin-console-uiux-linear-richting.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 
 
@@ -258,3 +259,5 @@ Belangrijkste punten:
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 
 - 2026-07-02T13:57:17+02:00 — fix: harden taskflow active agent cleanup
+
+- 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks

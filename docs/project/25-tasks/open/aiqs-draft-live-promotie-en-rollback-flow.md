@@ -27,6 +27,7 @@ sort_order: 4
 
 
 
+
 ## Probleem / context
 
 AIQS kan drafts maken, bewerken, testen, vergelijken en reviews opslaan, maar de lifecycle stopt nog vóór productiebeheer: er is geen gecontroleerde promotie van draft naar live en geen rollback naar een oudere live-versie. Runtime DB-binding gebruikt precies één live versie per task, dus deze statuswissel moet veilig en transactioneel zijn.
@@ -264,7 +265,7 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 ## Relevante links
 
 - `docs/project/ai-quality-studio.md`
-- `docs/project/25-tasks/open/admin-aiqs-linear-interface-kit-refresh.md`
+- `docs/project/25-tasks/done/admin-aiqs-linear-interface-kit-refresh.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 
 
@@ -283,3 +284,5 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks

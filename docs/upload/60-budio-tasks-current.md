@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-07-03T12:15:48.841Z
-Source Commit: 38673fb
+Build Timestamp (UTC): 2026-07-15T09:25:16.149Z
+Source Commit: efb36fe
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/open/**
 
 ## Telling
-- Totaal tasks opgenomen: 36
+- Totaal tasks opgenomen: 32
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -244,242 +244,6 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-05-21T17:24:05+02:00 — chore: sync local workspace changes
 
 - 2026-06-01T11:08:03+02:00 — feat: add admin capability access control
-
-- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
-
-- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
-
-- 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
-
-- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
-
-- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
-
-- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
-
-- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
-```
-
----
-
-## Admin + AIQS Linear interface kit refresh
-
-- Path: `docs/project/25-tasks/open/admin-aiqs-linear-interface-kit-refresh.md`
-- Bucket: open
-- Status: in_progress
-- Priority: p1
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-02
-
-```md
----
-id: admin-aiqs-linear-interface-kit-refresh
-title: Admin + AIQS Linear interface kit refresh
-status: in_progress
-phase: transitiemaand-consumer-beta
-priority: p1
-source: user-request
-updated_at: 2026-06-02
-summary: "Budio admin en AIQS krijgen een gedeelde mode-aware admin-console laag op basis van de Linear-geinspireerde interface kit, zonder consumer-, backend- of datamodelwijzigingen."
-tags: [admin, aiqs, ui, ux, linear-kit]
-workstream: aiqs
-epic_id: null
-parent_task_id: null
-depends_on: [aiqs-admin-console-uiux-linear-richting]
-follows_after: []
-task_kind: polish
-spec_ready: true
-due_date: null
-sort_order: 5
----
-
-
-
-
-
-
-
-
-
-## Probleem / context
-
-AIQS heeft al een eerste admin-console laag, maar de bredere adminroutes zoals adminrechten, regeneration en meeting capture gebruiken nog oude settings/surface-primitives en voelen daardoor niet als dezelfde tooling-omgeving. De geuploade Linear-geinspireerde interface kit beschrijft een compacte, mode-aware admin workspace met statuschips, metrics, inspectorpanelen, timelines en dense lists.
-
-## Gewenste uitkomst
-
-Budio admin en AIQS gebruiken een gedeelde admin-console componentlaag die desktop/tablet/mobile beter ondersteunt, zonder routes, dataflows, backendcontracten of consumer-schermen aan te passen.
-
-## User outcome
-
-Een founder/admin ervaart adminrechten, regeneration, meeting capture en AIQS als een samenhangende admin-console: compact, scanbaar, status-first en bruikbaar op desktop, tablet en mobiel.
-
-## Functional slice
-
-UI/UX-only migratie naar gedeelde admin-console primitives en route-specifieke admin shell-breedte voor bestaande admin/AIQS schermen.
-
-## Entry / exit
-
-- Entry: admin opent bestaande routes via settings/admin-menu of directe adminroute.
-- Exit: bestaande routes en acties werken hetzelfde, maar delen dezelfde admin-console visual layer en responsive structuur.
-
-## Happy flow
-
-1. Admin opent AIQS overview en ziet metrics, families en utilities in console-layout.
-2. Founder opent adminrechten en beheert capabilities in dense admin lists.
-3. Admin opent regeneration en ziet status, metrics, selected steps en jobprogress als console panels.
-4. Admin opent meeting capture placeholders en ziet admin-only shell zonder nieuwe recorderfunctionaliteit te suggereren.
-
-## Non-happy flows
-
-- Empty state: blijft zichtbaar via admin empty/error state wrappers.
-- Permission denied / unavailable: denial states blijven expliciet en actiegericht.
-- Validation / unsupported state: bestaande disabled states en foutmeldingen blijven behouden.
-- Failure / retry / cancel: bestaande retry/refresh/delete/back acties blijven functioneel hetzelfde.
-
-## UX / copy
-
-- Mode-aware admin-console: dark mode krijgt de sterkste tooling-uitstraling; light mode blijft coherent.
-- Geen exacte Linear-copy/assets.
-- Copy blijft compact en operationeel.
-- Geen nieuwe productclaims of feature-uitbreiding.
-- Consumer-schermen blijven ongemoeid.
-
-## Data / IO
-
-- Input: bestaande admin/AIQS service responses, readmodels en route params.
-- Output: dezelfde UI-acties en servicecalls als voorheen.
-- Opslag/API/service/file-impact: geen backend, Supabase, services, types of datamodelwijzigingen.
-- Statussen: bestaande live/draft/running/failed/completed/founder/capability states.
-
-## Waarom nu
-
-AIQS en adminrechten worden productie-relevant voor MVP-livegang. Een consistente admin-console vermindert beheerfrictie zonder productscope uit te breiden.
-
-## In scope
-
-- Shared admin console primitives uitbreiden.
-- Route-specifieke web-shell verbreden voor adminroutes.
-- Adminrechten, regeneration, meeting capture en AIQS bestaande UI migreren naar shared admin patterns.
-- Responsive polish voor mobiel/tablet/desktop/wide.
-- Static en runtime UI-verify.
-
-## Buiten scope
-
-- Consumer screens.
-- Backend/API/schema/datamodel/services.
-- Nieuwe dependencies.
-- Nieuwe features, filters, command menu, boards, analytics of grafieken.
-- Generated docs aanpassen binnen deze slice.
-
-## Oorspronkelijk plan / afgesproken scope
-
-Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interface Kit Refresh`: gedeelde mode-aware admin-console laag op basis van de Linear-geinspireerde kit, alleen admin/AIQS en shared admin componenten, geen consumer screens, geen datamodel, geen nieuwe dependencies, geen flow-redesign en geen generated files.
-
-## Expliciete user requirements / detailbehoud
-
-- Alleen admin/AIQS interface en shared admin componenten.
-- Geen consumentenschermen aanpassen.
-- Geen datamodel-wijzigingen.
-- Geen nieuwe dependencies.
-- Geen redesign van flows; alleen bestaande pagina's beter structureren en stylen.
-- Geen generated files aanpassen.
-- Geen backend/API wijzigen.
-- Geen feature-uitbreiding.
-- Toekomstbestendige implementatie.
-- Fase 1: shared componenten + tokens.
-- Fase 2: admin pagina's toepassen.
-- Fase 3: AIQS pagina's toepassen.
-- Fase 4: responsive polish.
-
-## Status per requirement
-
-- [x] Alleen admin/AIQS interface en shared admin componenten — status: gebouwd
-- [x] Geen consumentenschermen aanpassen — status: gebouwd; route-breedte alleen uitgebreid voor admin/AIQS route-prefixes.
-- [x] Geen datamodel/backend/API/dependency wijzigingen — status: gebouwd; geen service-, Supabase-, schema- of package-wijziging binnen deze slice.
-- [x] Shared admin componenten + tokens — status: gebouwd
-- [x] Admin pagina's toepassen — status: gebouwd voor adminrechten, regeneration en meeting capture.
-- [x] AIQS pagina's toepassen — status: gebouwd voor overview, group, detail, draft, test en validate binnen bestaande flowcontracten.
-- [x] Responsive polish — status: gebouwd en gecontroleerd op mobile/tablet/desktop/wide.
-- [x] Verify en runtime UI-smoke — status: gebouwd en bewezen.
-
-## Toegevoegde verbeteringen tijdens uitvoering
-
-- `AdminConsoleShell` ondersteunt nu optionele sidebar/inspector slots zodat toekomstige adminroutes dezelfde workspace-structuur kunnen gebruiken zonder nieuwe routecontracten.
-- `AdminMetricCard`, `AdminInspectorPanel`, `AdminTimeline`, `AdminList`, `AdminActionBar`, `AdminEmptyState` en admin form wrappers zijn toegevoegd als gedeelde primitives.
-- Browser-smoke is gecorrigeerd naar de canonieke AIQS family route keys `moments`, `today`, `week`, `month`; runtime-family keys zoals `day_journal` zijn geen group-route keys.
-- Review/polishronde: de resterende AIQS-only `AdminStickyFooterActions`-duplicatie is vervangen door de gedeelde `AdminActionBar`.
-- Review/polishronde: `AdminActionBar` heeft een optionele `floating` variant gekregen voor fixed footers met console-surface en safe-area padding; inline action bars blijven compact.
-- Reviewbevinding: oude generieke admin layout-primitives (`AdminShell`, `SettingsTopNav`, `AdminPageHero`, `AdminMetaStrip`, `AdminSection`, `SurfaceSection`, `AdminStickyFooterActions`) komen niet meer voor in admin/AIQS routes. Alleen editor-specifieke settings-primitives blijven in AIQS waar ze inhoudelijk kloppen, zoals accordion/read-only/token editor helpers.
-
-## Uitvoerblokken / fasering
-
-- [x] Blok 1: preflight, taskflow, huidige file-state en kit-context bevestigen.
-- [x] Blok 2: shared admin-console primitives en admin tokens uitbreiden.
-- [x] Blok 3: adminrechten, regeneration en meeting capture migreren naar shared admin patterns.
-- [x] Blok 4: AIQS schermen aanscherpen met metric/inspector/list/actionbar patterns.
-- [x] Blok 5: responsive polish, static verify, runtime UI-smoke en taskflow afronden.
-
-## Concrete checklist
-
-- [x] Nieuwe taskfile aanmaken en plan vastleggen.
-- [x] `admin-console-primitives` uitbreiden.
-- [x] `theme/tokens.ts` admin subset toevoegen.
-- [x] `app/_layout.tsx` adminroutes breder maken zonder consumer routes.
-- [x] Adminrechten route + manager migreren.
-- [x] Regeneration route migreren.
-- [x] Meeting capture shell/routes migreren.
-- [x] AIQS overview/detail/draft/test/validate polish toepassen.
-- [x] Typecheck/lint/unit/smoke draaien.
-
-## Acceptance criteria
-
-- [x] Alle bestaande routes en acties blijven beschikbaar.
-- [x] Geen nieuwe dependencies.
-- [x] Geen backend/API/schema/datamodel wijziging.
-- [x] Geen consumer UI regressie door root shell of shared primitive changes.
-- [x] Adminroutes delen dezelfde console visual language.
-- [x] Light en dark mode zijn beide bruikbaar.
-
-## Blockers / afhankelijkheden
-
-- Bestaande AIQS console WIP uit `aiqs-admin-console-uiux-linear-richting` is linked context.
-
-## Verify / bewijs
-
-- `npm run test:unit -- ai-quality-readmodel` — geslaagd, 1 testfile / 3 tests.
-- `npm run typecheck` — geslaagd.
-- `npm run lint` — geslaagd.
-- `npm run taskflow:verify` — geslaagd.
-- Review/polish verify:
-  - `npm run typecheck` — geslaagd na actionbar-deduplicatie.
-  - `npm run lint` — geslaagd na actionbar-deduplicatie.
-  - Legacy primitive audit: geen hits meer voor oude generieke admin primitives in admin/AIQS routes.
-  - Runtime footer-smoke via Playwright fallback: 16 checks geslaagd voor AIQS detail/draft/test/validate op mobile/desktop en light/dark; draft zonder lokale draft blijft bestaande non-happy state zonder actionbar.
-- Runtime UI-smoke via Playwright fallback op `http://localhost:8081`:
-  - 52 route/viewport checks geslaagd, geen hard errors.
-  - Routes: AIQS overview, family `today/week/month`, task detail, draft, test, validate, adminrechten, regeneration, meeting capture overview/new/detail.
-  - Viewports: 390px, 820px, 1280px, 1536px.
-  - Dark-mode smoke: 10 route/viewport checks geslaagd voor AIQS, adminrechten, regeneration en meeting capture.
-  - Screenshots opgeslagen onder `tmp/admin-ui-smoke/` voor lokale visuele inspectie.
-- Visuele inspectie:
-  - Light desktop/mobile: workspace + inspector op desktop, stacked op mobile, denial states zichtbaar.
-  - Dark desktop/mobile: sterkere tooling-uitstraling zonder extra consumer-surface impact.
-- `npm run docs:bundle` en `npm run docs:bundle:verify` bewust niet gedraaid binnen deze slice, omdat de user-scope expliciet zegt geen generated files aan te passen.
-
-## Reconciliation voor afronding
-
-- Oorspronkelijk plan: volledige admin/AIQS Linear kit refresh, UI-only.
-- Toegevoegde verbeteringen: shared inspector/sidebar-ready shell, admin timeline/list/actionbar/form wrappers, en gecorrigeerde route-smoke voor canonieke AIQS family keys.
-- Afgerond: shared primitives/tokens, adminroutes, AIQS overview/group/detail/draft/test/validate, responsive smoke, static verify en review/polishronde op resterende duplicatie.
-- Open / blocked: geen technische blocker. Task blijft `in_progress` voor user-review van de visuele richting voordat deze naar `done/` wordt verplaatst; generated docs zijn bewust niet bijgewerkt binnen deze scope.
-
-## Relevante links
-
-- `docs/project/ai-quality-studio.md`
-- `/Users/pieterflikweert/Downloads/budio-linear-admin-interface-kit.zip`
-
-
-## Commits
 
 - 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
 
@@ -2766,425 +2530,6 @@ Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
 
 ---
 
-## AIQS admin console UI/UX Linear-richting
-
-- Path: `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
-- Bucket: open
-- Status: in_progress
-- Priority: p1
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-22
-
-```md
----
-id: aiqs-admin-console-uiux-linear-richting
-title: AIQS admin console UI/UX Linear-richting
-status: in_progress
-phase: transitiemaand-consumer-beta
-priority: p1
-source: user-request
-updated_at: 2026-06-22
-summary: "AIQS en admin-interface krijgen een eigen compacte tooling-look in Linear-richting, zonder runtime-, route- of functionaliteitswijzigingen."
-tags: [aiqs, admin, ui, ux, polish]
-workstream: aiqs
-epic_id: null
-parent_task_id: null
-depends_on: [aiqs-runtime-db-binding-voor-live-prompts]
-follows_after: []
-task_kind: polish
-spec_ready: true
-due_date: null
-sort_order: 7
----
-
-
-
-
-
-
-
-
-
-
-## Probleem / context
-
-AI Quality Studio werkt functioneel, maar voelt nog te veel als een mobiele settings-flow met gestapelde warme Budio-cards. Voor productie-admins moet AIQS aanvoelen als een compacte tooling-console: sneller scanbaar, neutraler, dichter, duidelijker en los van de gewone Budio gebruikersflow.
-
-## Gewenste uitkomst
-
-De admin- en AIQS-interface krijgt een eigen look and feel die past bij admin tooling en visueel richting Linear beweegt: rustige toolbar, dense lijsten, duidelijke statuschips, split views op desktop, minder uitlegcopy en minder zware surfaces.
-
-Functionaliteit, routes, runtime-binding, promptbeheer, test/validate en adminrechten blijven intact. De gewone Budio gebruikersflow blijft ongemoeid.
-
-## User outcome
-
-Een founder/admin kan AIQS sneller scannen en bedienen als admin-console: families openen, promptstatus beoordelen, drafts bewerken, testen en valideren zonder door lange settings-cards te moeten scrollen.
-
-## Functional slice
-
-UI/UX-only herstructurering van AIQS admin-schermen naar een gedeelde admin-console presentatielaag, zonder backend-, schema-, route- of contractwijzigingen.
-
-## Entry / exit
-
-- Entry: founder/admin opent AI Quality Studio via het admin/settings-menu.
-- Exit: founder/admin kan overview, group, task detail, draft, test en validate flows gebruiken met dezelfde functionaliteit maar compactere tooling-layout.
-
-## Happy flow
-
-1. Admin opent AIQS-overzicht en ziet runtime-status, families en utilities compact.
-2. Admin opent een family en ziet driver, varianten en read-only compound members als dense rows met badges.
-3. Admin opent task detail, draft, test of validate en behoudt alle bestaande acties in een console/workbench-layout.
-
-## Non-happy flows
-
-- Empty state: AIQS toont compact dat baseline ontbreekt en biedt importactie.
-- Permission denied / unavailable: denial blijft zichtbaar en actiegericht.
-- Validation / unsupported state: bestaande foutmeldingen blijven beschikbaar, maar worden scanbaar gepresenteerd.
-- Failure / retry / cancel: bestaande retry-/save-/cancelroutes blijven intact.
-
-## UX / copy
-
-- Admin interface krijgt eigen look and feel.
-- Gewone Budio flow blijft ongemoeid.
-- Linear is visuele richting: compact, rustig, dense, keyboard/workbench-achtig; geen exacte kopie.
-- Simpel en duidelijk, met minder uitlegcopy.
-- Geen functionaliteit verwijderen of wijzigen.
-- UI gebruikt een aparte admin-console primitive-laag; gewone settings/scaffold-primitives blijven leidend voor niet-admin schermen.
-- Adminlabels blijven kort: `Runtime actief`, `Draft aanwezig`, `Baseline ontbreekt`, `Driver`, `Variant`, `Read-only`, `Repair`.
-
-## Data / IO
-
-- Input: bestaande AIQS admin readmodels, task metadata, version data, test/validate cases en debug settings.
-- Output: dezelfde routes, servicecalls en save/test/validate resultaten als voorheen.
-- Opslag/API/service/file-impact: geen schema-, backend- of API-contractwijzigingen.
-- Statussen: bestaande live/draft/runtime/read-only/variant metadata blijft leidend.
-
-## Waarom nu
-
-AIQS wordt productie-relevant als runtime-bron voor prompts. Admins moeten dit beheersbaar en betrouwbaar kunnen bedienen voordat MVP-productie livegang prettig en veilig voelt.
-
-## In scope
-
-- Nieuwe gedeelde admin-console UI-primitives.
-- AIQS overview, group, task detail, draft, test en validate visueel/IA-matig verbeteren.
-- Compacte statuschips, dense rows, panels, toolbar/contextbar en desktop split/workbench layouts.
-- Copy inkorten waar dit geen contract of betekenis wijzigt.
-- Gerichte static en runtime UI-verificatie.
-
-## Buiten scope
-
-- Backend/runtime/prompt/schema/permissiewijzigingen.
-- Routes verwijderen, hernoemen of contractueel wijzigen.
-- Gewone Budio end-user flow restylen.
-- Exacte Linear-kopie of nieuwe productfeatures.
-
-## Oorspronkelijk plan / afgesproken scope
-
-We geven alleen de admin- en AIQS-interface een eigen tooling-look, los van de gewone Budio gebruikersflow. Functionaliteit, routes, dataflows, runtime-binding, promptbeheer, test/validate en adminrechten blijven intact; we verbeteren alleen informatiearchitectuur, layout, density, hiërarchie, states en copy.
-
-Reviewbevindingen:
-
-- `AdminShell` gebruikt nu nog gewone settings-primitives en warm Budio surfaces; daardoor voelt AIQS als settings, niet als tooling-console.
-- Overzicht, groep en task-detail zijn te card-stacked; op desktop wordt beschikbare breedte nauwelijks benut.
-- Draft/test/validate hebben goede functionaliteit, maar missen een sterke werkstructuur: context, editor, output, checks en acties staan te veel in één lange verticale stroom.
-- Statusmetadata is zichtbaar, maar nog niet scanbaar genoeg als badges/chips zoals `Live`, `Draft`, `Runtime driver`, `Repair`, `Read-only`, `Baseline missing`.
-- Debug logging en baseline import staan op het AIQS-overzicht als grote blokken; ze horen visueel secundair te zijn in een tooling admin console.
-- Copy is soms technisch of uitleggerig; voor admin tooling mag de taal compacter en operationeler zijn, zonder gewone Budio end-user tone te veranderen.
-
-## Expliciete user requirements / detailbehoud
-
-- Admin interface krijgt eigen look and feel.
-- Gewone Budio gebruikersflow blijft zijn eigen interface behouden.
-- Linear is visuele richting.
-- Interface moet simpel en duidelijk worden.
-- Geen functionaliteit verwijderen of wijzigen.
-- Review en test de nieuwe wijzigingen en verbeter waar nodig.
-- Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen.
-- Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System.
-- AIQS validatiepagina herontwerpen naar diff-first vergelijken en beoordelen: default `Diff`, tabs `Diff/Huidig/Nieuw`, AI-observaties, oordeel onderaan en shortcuts `1/2/3/4`.
-
-## Status per requirement
-
-- [x] Admin interface krijgt eigen look and feel — status: gebouwd
-- [x] Gewone Budio gebruikersflow blijft ongemoeid — status: gebouwd
-- [x] Linear-richting wordt vertaald naar compacte admin tooling — status: gebouwd
-- [x] Interface wordt simpeler en duidelijker — status: gebouwd
-- [x] Geen functionaliteit verwijderen of wijzigen — status: in code aanwezig maar nog user-review nodig
-- [x] Nieuwe wijzigingen zijn gereviewd en getest — status: gebouwd
-- [x] Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen — status: gebouwd
-- [x] Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System — status: gebouwd
-- [x] AIQS validatiepagina diff-first maken voor lange outputvergelijkingen — status: gebouwd
-
-## Toegevoegde verbeteringen tijdens uitvoering
-
-- Gedeelde `admin-console-primitives` toegevoegd, zodat AIQS-schermen dezelfde compacte console-taal gebruiken zonder gewone Budio settings-flow te restylen.
-- AIQS sticky footer compacter en neutraler gemaakt; deze primitive wordt momenteel alleen door AIQS-schermen gebruikt.
-- Web app-shell route-specifiek verbreed voor `settings-ai-quality-studio*`, zodat AIQS desktopbreedte benut terwijl gewone Budio routes mobile-first blijven.
-- Tijdens runtime-smoke een foutieve `Baseline`-chip op live families gevonden en gecorrigeerd naar `Runtime actief`.
-- AIQS overview volgt nu expliciet de admin-workspace standaard: exact één globale statusbron, promptfamilies als primaire lijst en `Systeem` als secundaire utility-sectie.
-- Gedeelde admin-primitives zijn uitgebreid met `AdminStatusNotice`, `AdminSectionList`, `AdminToggleRow` en rustigere panel/meta-varianten, zodat toekomstige admin-overviews minder dashboard-achtig hoeven op te bouwen.
-- Debug logging is teruggebracht van groot utilityblok naar een compacte toggle-rij met optionele detailuitklap; flow-level toggles en TTL-beheer blijven intact.
-- Dedicated AIQS/admin smoke-user `smoke.aiqs.local@example.com` toegevoegd aan de lokale auth smoke-flow, zodat admin-validatie los blijft van gallery/consumer smoke-users.
-- Gedeelde Playwright helper voor local magic-link browser-login toegevoegd en hergebruikt door zowel AIQS- als gallery-smokes.
-- AIQS local smoke kan nu zelf lokale dev starten, een ontbrekende AIQS internal token tijdelijk injecteren via functions env-restart, baseline importeren en daarna de geauthenticeerde browser-overview controleren.
-- Lokale docs en env-templates verduidelijken nu het verschil tussen token/login-proof en echte browser-sessie, plus het fallbackpad wanneer `localhost:8081` of een internal token ontbreekt.
-- AIQS startpagina verder opgeschoond naar een cleaner Linear-achtige admin workspace: header zonder governance-eyebrow, healthy status als inline chip, promptfamilies als rustige list/table en debug logging als single-action settings row.
-- Shared admin-primitives uitgebreid met plain sections, inline status, list/table rows en single-action togglegedrag zodat toekomstige admin-overviews dezelfde rustige compositie kunnen hergebruiken.
-- `docs/design/admin-ui-principles.md` toegevoegd als handmatige designrichtlijn voor Budio Admin UI Principles.
-- De cleaner list-first/workspace-stijl is doorgetrokken naar AIQS group, task detail, draft editor, test en validate: minder header-badges/eyebrows, geen detail-inspector op task detail, plain secties voor metadata/context en minder runtime-duplicatie in rows.
-- `AdminConsolePanel` heeft nu ook `variant="plain"` als gedeelde primitive voor onderliggende admin-workbenchschermen waar een functionele sectie nodig is zonder card-fill/border.
-- AIQS admin actions zijn gehard naar één button-contract: `AdminConsoleButton` ondersteunt nu primary/secondary/danger/ghost, selected/full-width states en subtiele pressed/hover/focus states zonder zwarte primary-fill.
-- Screen-local AIQS action-Pressables in draft en validate zijn vervangen door gedeelde admin button/text-action primitives; klikbare source/case rows blijven bewust rows.
-- De raw HTML token-remove button in de prompt editor heeft nu expliciete browser-appearance reset, size, radius en hover/focus styling zodat native/default button styling niet kan lekken.
-- `docs/design/admin-ui-principles.md` documenteert nu het gedeelde Admin Button System.
-- AIQS validate is diff-first gemaakt: `Diff` is default, `Huidig` en `Nieuw` zijn tabs, per-veld `Toon diff` is verwijderd, lange output wordt per sectie vergeleken en mobile toont een stacked diffblok in plaats van twee volledige tekstkolommen onder elkaar.
-- Validate toont nu lokale niet-normatieve AI-observaties zoals `uitgebreider`, `concreter` en `meer/minder brondekking`; deze zetten nooit automatisch een oordeel.
-- Validate ondersteunt shortcuts `1/2/3/4` voor `beter/gelijk/slechter/fout`, met input/textarea/contenteditable guard.
-
-## Uitvoerblokken / fasering
-
-- [x] Blok 1: preflight, relevante docs/taskflow/context bevestigen.
-- [x] Blok 2: gedeelde admin-console primitive-laag toevoegen zonder gewone settings-primitives te breken.
-- [x] Blok 3: AIQS overview en group flow omzetten naar compacte console IA.
-- [x] Blok 4: task detail, draft, test en validate omzetten naar console/workbench-layout.
-- [x] Blok 5: static verify, runtime UI-smoke, taskflow en docs-bundel afronden.
-
-## Concrete checklist
-
-- [x] Taskflow en linked runtime-context vastleggen.
-- [x] Admin-console primitives toevoegen.
-- [x] Overview compact maken met toolbar, statuschips, dense family rows en utility logging.
-- [x] Group screen compact maken met contextbar, badges en dense task rows.
-- [x] Task detail compact maken met contextbar, version list en admin actions.
-- [x] Draft editor desktop split-layout geven.
-- [x] Test en validate workbench-density verbeteren.
-- [x] Goedgekeurde cleaner AIQS-startstijl doorvoeren naar onderliggende AIQS-schermen.
-- [x] AIQS action buttons migreren naar één consistent Admin Button System zonder zwarte/default buttons.
-- [x] Validate diff-first vergelijking, observaties en shortcuts toevoegen.
-- [x] Light/dark en desktop/mobile visueel controleren waar praktisch.
-- [x] Relevante verifies draaien.
-
-## Acceptance criteria
-
-- [x] AIQS gebruikt een eigen admin-console visual layer, niet alleen gewone settings-cards.
-- [x] Overview, group, detail, draft, test en validate behouden bestaande functionaliteit.
-- [x] Runtime drivers, technische varianten en read-only compound members zijn scanbaar als badges/states.
-- [x] Desktop gebruikt breedte beter via dense rows/split/workbench-layout; mobile blijft bruikbaar stacked.
-- [x] Debug logging en baseline import zijn visueel secundair/operationeel gepresenteerd.
-- [x] Gewone Budio gebruikersflow is niet aangepast.
-- [x] AIQS toont geen zwarte/default/native action buttons meer; button states komen uit gedeelde admin primitives.
-- [x] AIQS validate toont standaard diff, heeft tabs `Diff/Huidig/Nieuw`, toont observaties zonder automatische beslissing en plaatst oordeel na vergelijking.
-
-## Blockers / afhankelijkheden
-
-- Linked context: `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
-
-## Verify / bewijs
-
-- `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
-- `npm run typecheck` — groen.
-- `npm run lint` — groen.
-- `npm run taskflow:verify` — groen.
-- 2026-06-22 redesign verify:
-  - `npm run typecheck` — groen na AIQS overview-herstructurering.
-  - `npm run lint` — groen na AIQS overview-herstructurering.
-  - `npm run taskflow:verify` — groen na taskfile-update.
-  - Browser-smoke op `http://localhost:8081/settings-ai-quality-studio` blokkeerde eerst op `ERR_CONNECTION_REFUSED`; daarna is `npm run dev` gestart en laadde de webtarget weer op `http://localhost:8081`.
-  - Playwright-navigatie naar AIQS redirectte daarna anoniem naar `/sign-in`, waardoor de nieuwe overviewstructuur niet volledig visueel bevestigd kon worden zonder extra lokale auth/bootstrap.
-  - `npm run verify:local-aiqs-bootstrap` — faalde verwacht op ontbrekende shell-env `ADMIN_AI_QUALITY_INTERNAL_TOKEN` of `ADMIN_REGEN_INTERNAL_TOKEN`; bestaande verify-script zelf bevestigt daarmee de resterende lokale bootstrapvoorwaarde.
-- Runtime UI-smoke op `http://localhost:8081`:
-  - overview laad als admin/founder met `14 live`, `Prompt families`, `Runtime actief`.
-  - group routes `today`, `week`, `month` laden met `Driver`, `Read-only` en `Live` badges.
-  - task detail `day_narrative` laadt met `Driver`, `Primary`, `Runtime actief`.
-  - draft flow via bestaande detailactie maakte lokaal draft v3 en laadde editor, `Runtime contract`, `Geavanceerd` en `Assist`.
-  - validate route voor dezelfde draft laadde `Case kiezen`, compare panes, `Snelle controle`, `Beslissing` en `Run test` zonder run te starten.
-  - lokaal aangemaakte testdraft v3 is na smoke via UI-delete flow weer verwijderd.
-  - desktop light/dark en mobile light/dark screenshots gecontroleerd op overlap, tekstfit en scanbaarheid.
-- `npm run verify:local-flow` — groen, text-flow PASS.
-- `npm run verify:local-reflection-flow` — groen, week/month reflection-flow PASS.
-- 2026-06-22 local smoke hardening:
-  - `npm run verify:local-aiqs-login` — groen; dedicated `smoke.aiqs.local@example.com`, founder + `ai_quality_studio` access bevestigd, runtime-baseline import groen en tijdelijke local-only AIQS internal token injectie/herstart bewezen.
-  - `npm run verify:local-aiqs-smoke` — groen; script startte zelf `npm run dev`, logde browser echt in via Mailpit magic link, opende `/settings-ai-quality-studio`, valideerde de nieuwe workspace-first overview en navigeerde door naar `group/today`.
-  - `npm run test:e2e:gallery:seed` — groen; lokale gallery fixture opnieuw gezaaid voor regressiecheck van gedeelde login-helper.
-  - `npm run test:e2e:gallery:smoke` met verse `GALLERY_E2E_ENTRY_URL` en `GALLERY_E2E_PHOTO_IDS` uit de seed-run — groen; gedeelde local magic-link browser-login helper blijft compatibel met bestaande gallery smoke.
-  - `npm run typecheck` — groen na AIQS smoke-hardening.
-  - `npm run lint` — groen na AIQS smoke-hardening.
-  - `npm run taskflow:verify` — groen na taskfile- en docs-aanvulling.
-  - `npm run docs:bundle` — groen; bundles en uploadcontext opnieuw opgebouwd.
-  - `npm run docs:bundle:verify` — groen.
-- 2026-06-22 cleaner Linear-achtige AIQS workspace:
-  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
-  - `npm run typecheck` — groen na shared primitive- en AIQS-startpaginawijzigingen.
-  - `npm run lint` — groen na shared primitive- en AIQS-startpaginawijzigingen.
-  - `npm run verify:local-aiqs-smoke` — groen; AIQS overview opent geauthenticeerd, toont `Alle runtimes actief`, promptfamilies en systeemsectie, en navigeert naar `group/today`.
-  - Playwright viewport-check desktop light/dark en mobile light/dark — groen; desktopkolommen `Naam`, `Omschrijving`, `Prompts`, `Draft`, `Actie` zichtbaar, mobile rows stacked, `Runtime actief` niet meer zichtbaar per healthy family.
-  - Mobiele debug-row single-action check — groen; `Schakel in` zichtbaar en geen exacte `Aan`/`Uit` actieknoppen tegelijk.
-  - Screenshotcheck `/tmp/aiqs-cleaner-desktop-light.png` en `/tmp/aiqs-cleaner-mobile-light.png` — gecontroleerd op rustige max-width, dividers, minder cardgevoel en leesbare mobile stacking.
-  - `npm run taskflow:verify` — groen na cleaner workspace taskfile-update.
-  - `npm run docs:bundle` — groen na admin UI principles doc en taskfile-update.
-  - `npm run docs:bundle:verify` — groen.
-- 2026-06-22 onderliggende AIQS-schermen cleaner doorgetrokken:
-  - `npm run typecheck` — groen na group/detail/draft/test/validate en `AdminConsolePanel variant="plain"`.
-  - `npm run lint` — groen na group/detail/draft/test/validate en shared primitive update.
-  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
-  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde overview-smoke blijft werken en navigeert naar `group/today`.
-  - One-shot Playwright subroute-smoke — groen; `group/today`, draft editor, test route, validate route en mobile group renderen; oude `Runtime metadata`, `Prompt editor`, `Runtime test` en `Compare workbench` labels zijn niet meer zichtbaar.
-  - One-shot Playwright loaded-state check — groen; draft wacht op `Runtime contract`/`Geavanceerd`, test wacht op `Bron kiezen`.
-  - One-shot Playwright dark-mode smoke — groen; `group/today` en validate renderen in dark mode.
-  - Screenshotcheck: `/tmp/aiqs-subroute-group-desktop.png`, `/tmp/aiqs-subroute-group-mobile.png`, `/tmp/aiqs-subroute-draft-desktop-loaded.png`, `/tmp/aiqs-subroute-test-desktop-loaded.png`, `/tmp/aiqs-subroute-validate-desktop.png`, `/tmp/aiqs-subroute-group-dark.png`, `/tmp/aiqs-subroute-validate-dark.png`.
-- 2026-06-22 AIQS Admin Button System cleanup:
-  - `npm run typecheck` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
-  - `npm run lint` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
-  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
-  - `npm run verify:local-aiqs-smoke` — groen; overview-smoke blijft geauthenticeerd werken en navigeert naar `group/today`.
-  - Projectbrede audit op AIQS action-plekken — alleen toegestane source/case row-Pressables en prompt-editor token-remove `<button>` blijven over; token-remove heeft expliciete appearance reset.
-  - One-shot Playwright computed-style routecheck — groen; overview, group, detail, draft, test, validate, mobile group, dark group en dark validate hebben geen zichtbare zwarte/default button backgrounds.
-  - Screenshotcheck: `/tmp/aiqs-buttons-overview-light.png`, `/tmp/aiqs-buttons-group-light.png`, `/tmp/aiqs-buttons-detail-light.png`, `/tmp/aiqs-buttons-draft-light.png`, `/tmp/aiqs-buttons-test-light.png`, `/tmp/aiqs-buttons-validate-light.png`, `/tmp/aiqs-buttons-group-mobile.png`, `/tmp/aiqs-buttons-group-dark.png`, `/tmp/aiqs-buttons-validate-dark.png`.
-- 2026-06-22 AIQS validate diff-first redesign:
-  - `npx vitest run tests/unit/ai-quality-validate-compare.test.ts` — groen, 1 testfile / 5 tests.
-  - `npm run test:unit -- ai-quality` — groen, 4 testfiles / 21 tests.
-  - `npm run typecheck` — groen na validate compare-helper en routewijziging.
-  - `npm run lint` — groen na validate compare-helper en routewijziging.
-  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde AIQS overview-smoke blijft werken.
-  - One-shot Playwright validate-route diff-smoke — groen; `day_narrative` draft v16 test run gestart, `Diff` standaard zichtbaar, tabs `Diff/Huidig/Nieuw` zichtbaar, `AI observaties` en `Beslissing` zichtbaar, `Toon diff` afwezig, shortcut `1` selecteerbaar en mobile viewport blijft diff-first.
-  - Screenshotcheck: `/tmp/aiqs-validate-diff-light.png`, `/tmp/aiqs-validate-diff-dark.png`, `/tmp/aiqs-validate-diff-mobile-dark.png`.
-
-## Reconciliation voor afronding
-
-- Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
-- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate, één consistent Admin Button System en een diff-first validatepagina voor lange outputvergelijkingen.
-- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. De startpagina is daarna verder versimpeld naar plain sections, inline status, list/table rows en single-action debug logging. Onderliggende AIQS-schermen gebruiken nu dezelfde rustige admin-workspace taal: minder header-badges/eyebrows, minder card-fill, metadata als plain secties en bestaande acties/functionele editors behouden. Alle AIQS action buttons lopen via gedeelde admin button/text-action primitives, primary gebruikt geen zwarte fill meer en de raw prompt-editor token button is browser-default-proof gemaakt.
-- Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat de gebruiker de cleaner AIQS referentie-implementatie inclusief onderliggende schermen inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
-
-## Relevante links
-
-- `docs/project/ai-quality-studio.md`
-- `docs/design/admin-ui-principles.md`
-- `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
-
-
-## Commits
-
-- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
-
-- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
-
-- 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
-
-- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
-
-- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
-
-- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
-
-- 2026-06-22T14:07:06+02:00 — fix: unify AIQS admin workspace controls
-
-- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
-```
-
----
-
-## AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)
-
-- Path: `docs/project/25-tasks/open/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md`
-- Bucket: open
-- Status: backlog
-- Priority: p2
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-04-20
-
-```md
----
-id: task-aiqs-admin-interface-thema-herontwerp
-title: AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)
-status: backlog
-phase: transitiemaand-consumer-beta
-priority: p2
-source: docs/project/open-points.md
-updated_at: 2026-04-20
-summary: "Geef AIQS admin een helderder en strakker eigen thema, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools, met goede bruikbaarheid op telefoon en desktop."
-tags: [aiqs, admin-ui, thema, design]
-workstream: aiqs
-due_date: null
-sort_order: 7
----
-
-
-
-
-
-
-
-
-
-
-
-
-
-# AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)
-
-## Probleem / context
-
-De huidige AIQS admin-interface werkt functioneel, maar voelt nog te complex en mist een heldere, strakke admin-uitstraling.
-Voor dagelijkse tuning op mobiel en desktop is een duidelijker en consistenter admin-thema gewenst.
-
-## Gewenste uitkomst
-
-AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.
-De interface ondersteunt prettig gebruik op telefoon én desktop/fullscreen, zonder de bestaande AIQS-governance of datastromen functioneel te verbreden.
-
-## Waarom nu
-
-- Deze stap maakt de tool sneller en prettiger inzetbaar na livegang van de huidige AIQS-variant.
-- Het verlaagt frictie bij testen, beoordelen en tunen van prompts/calls.
-
-## In scope
-
-- Visuele/thematische herwerking van AIQS admin-gedeelte.
-- Strakkere informatiehiërarchie en duidelijkere states/controls in adminschermen.
-- Goede mode-aware uitwerking voor mobiel en desktop/fullscreen.
-- Doorvertaling via bestaande shared UI-primitives waar passend.
-
-## Buiten scope
-
-- Nieuwe OpenAI-calls of uitbreiding van AIQS functionele scope.
-- Nieuwe review- of evaluatieprocessen buiten bestaande flows.
-- End-user themawijzigingen buiten admin-context.
-
-## Concrete checklist
-
-- [ ] Designrichting en referentieprincipes concretiseren voor AIQS admin.
-- [ ] Belangrijkste AIQS adminschermen herstijlen met duidelijke hiërarchie.
-- [ ] Mobiel + desktop/fullscreen gebruik valideren in light en dark mode.
-- [ ] Regressiecheck op bestaande AIQS functionaliteit en admin-guardrails.
-- [ ] Final polish + bewijs vastleggen tegen designrefs/acceptatie.
-
-## Blockers / afhankelijkheden
-
-- Bij voorkeur pas uitvoeren nadat loggingvalidatie + productie-livepad stabiel zijn.
-- Afstemming met bestaande UI-guardrails en AIQS admin-only principes.
-
-## Verify / bewijs
-
-- Runtime/smoke-check AIQS admin in light en dark mode.
-- Desktop/fullscreen + mobiel gebruikscheck met screenshots/bewijs.
-- `npm run lint`
-- `npm run typecheck`
-
-## Relevante links
-
-- `docs/project/ai-quality-studio.md`
-- `docs/design/mvp-design-spec-1.2.1.md`
-- `design_refs/1.2.1/ethos_ivory/DESIGN.md`
-
-
-## Commits
-
-- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
-```
-
----
-
 ## AIQS draft-live promotie en rollback flow
 
 - Path: `docs/project/25-tasks/open/aiqs-draft-live-promotie-en-rollback-flow.md`
@@ -3461,7 +2806,7 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 ## Relevante links
 
 - `docs/project/ai-quality-studio.md`
-- `docs/project/25-tasks/open/admin-aiqs-linear-interface-kit-refresh.md`
+- `docs/project/25-tasks/done/admin-aiqs-linear-interface-kit-refresh.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 
 
@@ -3630,332 +2975,6 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
 
 - 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
-
-- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
-
-- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
-
-- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
-```
-
----
-
-## AIQS runtime DB-binding voor live prompts
-
-- Path: `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
-- Bucket: open
-- Status: in_progress
-- Priority: p1
-- Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-04
-
-```md
----
-id: task-aiqs-runtime-db-binding-voor-live-prompts
-title: AIQS runtime DB-binding voor live prompts
-status: in_progress
-phase: transitiemaand-consumer-beta
-priority: p1
-source: docs/project/open-points.md
-updated_at: 2026-06-04
-summary: "Maak AIQS de runtime-bron voor alle huidige promptfamilies, zodat prompt/model/system/config niet langer hardcoded uit codehelpers komen maar uit live AIQS-versies in de database."
-tags: [aiqs, runtime, prompts, supabase, openai]
-workstream: aiqs
-epic_id: null
-parent_task_id: null
-depends_on: []
-follows_after: []
-task_kind: task
-spec_ready: true
-due_date: null
-sort_order: 8
----
-
-
-
-
-
-
-
-
-
-# AIQS runtime DB-binding voor live prompts
-
-## Probleem / context
-
-AIQS kan vandaag live promptversies beheren en testen, maar productieflows lezen nog niet uit die live AIQS-versies. `process-entry`, `renormalize-entry`, `generate-reflection` en `admin-regeneration-job` bouwen prompt/model/system prompt nog direct uit codehelpers zoals `prompt-specs.ts` en `day-journal-contract.mjs`.
-
-Daardoor blijft AIQS deels een editor- en evaluatielaag naast de runtime, in plaats van de bron van waarheid voor de huidige AI-taken.
-
-## Gewenste uitkomst
-
-Voor alle huidige AIQS-managed families leest runtime zijn prompt/model/system/config uit live AIQS-versies in de database. De app gebruikt geen hardcoded prompttekst meer voor deze families.
-
-De eerste slice draait fail-closed: als een vereiste live AIQS-binding ontbreekt of ongeldig is, stopt de betreffende AI-call expliciet met een duidelijke serverfout en logspoor.
-
-## User outcome
-
-Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productieflows dezelfde live AIQS-versies gebruiken als de studio. Er is geen verborgen tweede promptwaarheid in code meer voor deze families.
-
-## Functional slice
-
-Één afgeronde AIQS-runtime slice die:
-
-1. runtime-binding metadata toevoegt aan AIQS-taken
-2. alle huidige promptfamilies runtime uit live AIQS-versies laat lezen
-3. technische variantprompts (`repair`, `renormalization`) ook beheersbaar maakt via AIQS
-4. AIQS admin duidelijk laat zien welke taken runtime-driver zijn en welke compound-member of technische variant
-
-## Entry / exit
-
-- Entry: een productie- of adminflow wil een AIQS-managed OpenAI-call doen voor entry normalization, day journal of reflection.
-- Exit: de flow laadt de vereiste live AIQS-binding uit DB en gebruikt die voor prompt/model/system/config, of faalt expliciet als die binding ontbreekt of ongeldig is.
-
-## Happy flow
-
-1. Founder importeert of beheert runtime-baselines in AIQS, inclusief technische varianttasks.
-2. Runtimeflow vraagt een binding op via een gedeelde resolver, bijvoorbeeld `entry_normalization.primary`.
-3. Resolver vindt exact één geldige live AIQS-versie en levert `model`, `systemInstructions`, `promptTemplate`, `configJson`, `taskKey` en `versionId`.
-4. De betreffende edge function assembleert de input payload zoals nu, maar gebruikt prompt/model/system/config uit de live AIQS-binding.
-5. AIQS admin toont eerlijk welke taak runtime-driver is en welke taak een technische variant of compound-member is.
-
-## Non-happy flows
-
-- Empty state: geen live versie voor een vereiste runtime binding geeft expliciete serverfout.
-- Permission denied / unavailable: niet-admin blijft geblokkeerd voor AIQS admin, zonder runtimeverbreding naar end-user beheer.
-- Validation / unsupported state: live versie met ontbrekende prompt, model of ongeldige runtime metadata wordt geweigerd.
-- Failure / retry / cancel: DB-resolve of binding-load failure geeft duidelijk logspoor met `runtime_binding_key`, task key en foutreden; geen code fallback.
-
-## UX / copy
-
-- AIQS admin gebruikt bestaande admin-shell en taskdetailpatronen.
-- Runtime-bewuste labels moeten expliciet maken:
-  - welke taak `runtime-driver` is
-  - welke taak `compound-member` is
-  - welke variant `primary`, `repair` of `renormalization` is
-- Technische varianttasks mogen zichtbaar zijn als advanced/runtime-varianten, niet als gewone end-user taken.
-
-## Data / IO
-
-- Input:
-  - runtime binding key zoals `entry_normalization.primary`
-  - bestaande flow-inputs zoals `rawText`, `dayJournals`, `entries`
-- Output:
-  - live AIQS runtime binding met `model`, `systemInstructions`, `promptTemplate`, `configJson`, `taskKey`, `versionId`
-  - expliciete runtimefout bij ontbrekende of ongeldige binding
-- Opslag/API/service/file-impact:
-  - schema-uitbreiding voor runtime metadata op AIQS-taken
-  - nieuwe technische AIQS task keys:
-    - `entry_cleanup_repair`
-    - `entry_renormalization`
-    - `day_journal_repair`
-  - gedeelde runtime resolver voor live AIQS-bindingen
-  - updates aan `admin-ai-quality-studio`, `process-entry`, `renormalize-entry`, `generate-reflection`, `admin-regeneration-job`
-  - client/admin types uitbreiden met runtime metadata
-- Statussen:
-  - live binding found / missing / invalid
-  - runtime driver / compound member / technical variant
-  - primary / repair / renormalization
-
-## Waarom nu
-
-- AIQS is pas een echte runtime-governance laag wanneer productie dezelfde live promptbron gebruikt.
-- Dit verkleint promptdrift tussen testresultaten in AIQS en productiegedrag.
-- Het houdt de scope productief: alleen prompt/model/system/config migreren naar DB, zonder direct alle parsing en guardrails te herbouwen.
-
-## In scope
-
-- Runtime metadata toevoegen voor alle huidige families.
-- Live AIQS-binding resolver bouwen.
-- Runtime-calls migreren voor:
-  - `process-entry`
-  - `renormalize-entry`
-  - `generate-reflection`
-  - `admin-regeneration-job`
-- Baseline import uitbreiden voor technische varianttasks.
-- AIQS admin readmodel/types uitbreiden voor runtime-bewuste taakrepresentatie.
-- Hardcoded promptwaarheid voor deze families uit runtimepad verwijderen.
-
-## Buiten scope
-
-- Nieuwe AI-task families buiten de huidige entry/day/reflection set.
-- Grote editor-redesigns of AIQS-themawerk.
-- Migratie van output cleanup, validators of heuristische guardrails naar DB.
-- End-user featurewerk buiten de bestaande AI-flows.
-
-## Oorspronkelijk plan / afgesproken scope
-
-- Maak AIQS de runtime-bron voor alle huidige promptfamilies.
-- Eerste slice bindt alle huidige families aan live AIQS-versies.
-- Runtime draait fail-closed zonder code fallback.
-- Alleen `model`, `system_instructions`, `prompt_template` en toegestane runtime config gaan DB-driven.
-- Input assembly, output parsing, cleanup en guardrails blijven voorlopig code-side.
-
-## Expliciete user requirements / detailbehoud
-
-- Prompts moeten van code-driven naar database-driven gaan.
-- Alle requests van AIQS moeten die DB-bron gaan gebruiken en niet meer hardcoded in de codebase zitten.
-- Migratie geldt voor alle huidige families, niet alleen entry.
-- Geen code fallback als live AIQS-binding ontbreekt.
-- Technische promptvarianten moeten ook via AIQS beheersbaar zijn.
-
-## Status per requirement
-
-- [x] AIQS wordt runtime-bron voor alle huidige families — status: gebouwd
-- [x] Runtime gebruikt geen hardcoded prompttekst meer voor deze families — status: gebouwd
-- [x] Fail-closed gedrag zonder code fallback — status: gebouwd
-- [x] Technische varianttasks zijn via AIQS beheersbaar — status: gebouwd
-- [x] AIQS admin toont runtime-driver en variantmetadata — status: gebouwd
-
-## Toegevoegde verbeteringen tijdens uitvoering
-
-- Lokale reflection/day/entry runtime-template rendering is als pure helper toegevoegd voor app-readmodel en als edge-safe helper binnen `supabase/functions/_shared/**`.
-- Nieuwe lokale unit-tests toegevoegd voor prompt-template rendering, prompt-version fallback, AIQS readmodel-routing en Supabase Edge Function import boundaries.
-- Baseline-import is gehard tot een idempotent importresultaat per task/binding met `created`, `updated`, `live_created`, `already_ok` en `error`.
-- Clean bootstrap is bewezen via internal-token pad en founder-auth pad; handmatige lokale SQL/tsx repair is niet meer nodig voor de vereiste live bindings.
-- Reflection-baseline en reflection-fixture zijn aangescherpt zodat week/maand reflecties weer expliciete patroon-/verschuivingssignalen halen.
-- AIQS group screen toont weer alle onderdelen van een gedeelde runtime-family, inclusief read-only compound members; read-only onderdelen routeren naar de gedeelde prompt.
-- Live-readiness hardening toegevoegd: AIQS-managed runtime mag geen productinhoud meer reconstrueren via hardcoded fallbacks. Runtime gebruikt live AIQS/OpenAI-output of faalt expliciet met reason-code; retries, cleanup en validators blijven toegestaan.
-- Production push hardening toegevoegd: GitHub production deploy configureert `ADMIN_AI_QUALITY_INTERNAL_TOKEN`, deployt `admin-ai-quality-studio` mee en draait daarna een harde `import_runtime_baseline` gate zodat alle AIQS runtime-baselines production-ready en live staan of de deploy faalt.
-- Nieuwe verify/deploy helper `npm run aiqs:runtime-baseline:ensure` toegevoegd voor lokaal en CI-gebruik; vereist in production `SUPABASE_PUBLISHABLE_KEY` en `ADMIN_AI_QUALITY_INTERNAL_TOKEN`.
-- GitHub secret alias-fix toegevoegd: production deploy accepteert ook bestaande `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` en `ADMIN_REGEN_INTERNAL_TOKEN`, zonder secretwaarden in git te zetten.
-- Production deploy hoeft geen GitHub AIQS internal-token secret meer te hebben: de workflow genereert per deploy een gemaskeerde tijdelijke token, zet die als Supabase function secret en gebruikt die direct voor de baseline gate.
-- Production deploy hoeft ook geen GitHub publishable-key secret meer te hebben: als `SUPABASE_PUBLISHABLE_KEY`/`EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` ontbreekt, haalt de workflow de anon/publishable key op via `supabase projects api-keys`.
-- Reviewbevindingen voor deze hardening:
-  - `process-entry` en `renormalize-entry` gebruiken live AIQS bindings, maar bevatten nog zelfgemaakte entry title/body/summary fallbacks.
-  - `process-entry` en `regenerate-day-journal` kunnen nog een zelfgemaakt dagjournal teruggeven via `createFallbackDayJournal`.
-  - `admin-regeneration-job` gebruikt bij entry-resultaten nog bestaande row/context fallbackvelden als OpenAI JSON incompleet is.
-  - `generate-reflection` faalt al hard bij invalid output, maar gebruikt nog fallback-copy in logging.
-  - `prompt-specs.ts` blijft alleen baseline/import-bron en mag niet als runtime fallback dienen.
-  - `src/server/ai/**` bevat stub-services en moet legacy/test-only blijven, niet live runtime.
-
-## Uitvoerblokken / fasering
-
-- [x] Blok 1: schema en AIQS runtime metadata toevoegen.
-- [x] Blok 2: live binding resolver en baseline import uitbreiden.
-- [x] Blok 3: runtime-calls migreren naar live AIQS-bindingen.
-- [x] Blok 4: admin readmodel/types aanscherpen en gerichte verify uitvoeren.
-- [x] Blok 5: hardening-review uitvoeren voor reflectionkwaliteit, clean bootstrap en deploy-import boundaries.
-- [x] Blok 6: live-readiness hardening uitvoeren voor no-hardcoded-output-fallback runtimegedrag.
-- [x] Blok 7: production push gate toevoegen zodat AIQS runtime-baselines automatisch live en clean zijn na deploy.
-
-## Concrete checklist
-
-- [x] Nieuwe taskfile en taskflow sync vastleggen.
-- [x] Runtime metadata en technische taskkeys aan schema/baseline toevoegen.
-- [x] Shared runtime resolver bouwen.
-- [x] `process-entry`, `renormalize-entry`, `generate-reflection` en `admin-regeneration-job` op resolver aansluiten.
-- [x] AIQS admin types/readmodel uitbreiden voor runtime metadata.
-- [x] Baseline-import idempotent en clean-bootstrap safe maken.
-- [x] Edge runtime losmaken van imports buiten `supabase/functions/**`.
-- [x] Reflection smoke weer groen krijgen op patroon-/verschuivingssignalen.
-- [x] Contentgenererende fallbacks uit AIQS-managed runtimeflows verwijderen of isoleren.
-- [x] Guard-test toevoegen tegen verboden runtime-output fallbacks.
-- [x] Production deploy workflow importeert en verifieert AIQS runtime-baselines na function deploy.
-- [x] Production deploy workflow accepteert bestaande GitHub secret aliases voor publishable key en internal token.
-- [x] Production deploy workflow genereert zelf een tijdelijke AIQS internal token als deploy-secret voor de baseline gate.
-- [x] Production deploy workflow kan de Supabase publishable key afleiden via Supabase CLI/API wanneer er geen GitHub secret alias bestaat.
-- [~] Docs sync en closeout uitvoeren.
-
-## Acceptance criteria
-
-- [x] `process-entry` gebruikt live `entry_cleanup` voor primary normalization.
-- [x] `process-entry` gebruikt live `entry_cleanup_repair` voor repair normalization.
-- [x] `renormalize-entry` gebruikt live `entry_renormalization`.
-- [x] day journal compose gebruikt live `day_narrative` en repair gebruikt live `day_journal_repair`.
-- [x] week reflectie gebruikt live `week_narrative`; maand reflectie gebruikt live `month_narrative`.
-- [x] `admin-regeneration-job` gebruikt dezelfde runtime resolver als productieflows.
-- [x] Ontbrekende of ongeldige live binding geeft expliciete fout en geen code fallback.
-- [x] AIQS admin kan runtime-driver en technische variantstatus tonen.
-- [x] Baseline-import werkt via internal-token en founder-auth zonder handmatige repair.
-- [x] Reflection smoke haalt de bestaande kwaliteitspoort voor patroon-/verschuivingssignalen.
-- [x] Supabase Edge Functions importeren geen lokale runtimehelpers meer buiten `supabase/functions/**`.
-- [x] AIQS-managed runtime genereert geen hardcoded fallback title/body/summary/day-journal output meer.
-- [x] No-speech/empty transcript geeft expliciete empty/error status en geen fake normalized entry-content.
-- [x] Admin regeneration telt incomplete OpenAI-output als failed item en hergebruikt geen oude content.
-- [x] Productiepush faalt als AIQS runtime-baselines niet foutloos live gezet of geverifieerd kunnen worden.
-
-## Blockers / afhankelijkheden
-
-- Baseline-import en huidige AI task seeds moeten uitbreidbaar blijven zonder dat bestaande AIQS-data corrupt raakt.
-- Runtime-family/composition metadata moet klein blijven en niet uitgroeien tot brede nieuwe control-plane scope.
-
-## Verify / bewijs
-
-- `npx supabase db push --local`
-- gerichte unit-tests op runtime resolver
-- gerichte unit-tests op AIQS readmodel-routing
-- import-boundary unit-test voor Supabase Edge Functions
-- `npm run verify:local-aiqs-bootstrap`
-- gerichte smoke voor minstens entry + reflection
-- `npm run verify:local-flow`
-- `npm run verify:local-reflection-flow`
-- `npm run lint`
-- `npm run typecheck`
-- `npm run taskflow:verify`
-- `npm run docs:bundle`
-- `npm run docs:bundle:verify`
-
-Laatste hardeningbewijs:
-
-- `npm run test:unit -- ai-quality` — groen, 3 files / 13 tests.
-- `npm run test:unit -- ai-quality-runtime aiqs-no-hardcoded-output-fallbacks day-journal-contract-strict` — groen, 3 files / 8 tests.
-- `npm run lint` — groen.
-- `npm run typecheck` — groen.
-- `npm run supabase:functions:restart` — uitgevoerd; lokale runtime pid `3310`.
-- `npm run verify:local-flow` — groen; entry + day journal runtime via lokale Supabase/OpenAI.
-- `npm run verify:local-reflection-flow` — groen; week + month reflection runtime via lokale Supabase/OpenAI.
-- `npm run aiqs:runtime-baseline:ensure` — groen met tijdelijke lokale internal token; import summary `{"created":0,"updated":0,"live_created":0,"already_ok":14,"error":0}`.
-- `npm run lint` — groen na production push gate.
-- `npm run typecheck` — groen na production push gate.
-- `npm run taskflow:verify` — groen na production push gate.
-- GitHub secret alias-fix: lokaal statisch gevalideerd met `sh -n scripts/ensure-aiqs-runtime-baseline.sh`, `npm run lint`, `npm run typecheck` en `npm run taskflow:verify`.
-- GitHub deploy-token fix: AIQS internal token wordt in Actions gegenereerd met `openssl rand -hex 32`, gemaskeerd en via `supabase secrets set` naar production gezet.
-- GitHub publishable-key fix: publishable key wordt optioneel uit GitHub Secrets gelezen en anders via `npx supabase projects api-keys --output json` afgeleid en gemaskeerd.
-
-Live-readiness notes:
-
-- Entry-normalisatie gebruikt live AIQS output voor `title`, `body` en `summary_short`; geen body-derived summary of generieke titel meer.
-- `summary_short` mag alleen leeg blijven wanneer het veld door OpenAI aanwezig is en de live AIQS `technical_contract.allowEmptySummaryShort` dat toestaat.
-- Day journal en reflection runtime-drivers gebruiken compound output-schema's voor hun volledige OpenAI JSON-contract.
-- Structured Outputs worden alleen gebruikt voor object-schema's; legacy/non-object member-schema's blijven JSON-transport met runtimevalidatie.
-- Productie heeft dezelfde baselinefix nodig via AIQS baseline import of live-versie-update voordat productieclaims worden gemaakt.
-- GitHub production deploy voert die baselinefix automatisch uit via `scripts/ensure-aiqs-runtime-baseline.sh`.
-- Production secrets voor publishable key zijn optioneel:
-  - preferred: `SUPABASE_PUBLISHABLE_KEY` of `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY`
-  - fallback: workflow haalt anon/publishable key op via Supabase CLI met `SUPABASE_ACCESS_TOKEN`
-- Er is geen GitHub secret meer nodig voor `ADMIN_AI_QUALITY_INTERNAL_TOKEN`; de workflow genereert die per deploy en zet hem als Supabase function secret.
-- De gate overschrijft alleen baseline-managed live versies via de bestaande idempotente import; afwijkende custom live versies geven `error` en blokkeren de deploy in plaats van stil overschrijven.
-
-## Reconciliation voor afronding
-
-- Oorspronkelijk plan: AIQS runtime DB-driven maken voor alle huidige promptfamilies, inclusief fail-closed gedrag en technische variantpromptbeheer.
-- Toegevoegde verbeteringen: edge-safe runtime-render helper, idempotente baseline-import, clean-bootstrap verify, reflectionkwaliteit-hardening, import-boundary test en runtime-bewuste adminlabels.
-- Afgerond:
-  - schema + nieuwe technische tasks
-  - live binding resolver
-  - runtime-call migratie voor entry/day/reflection/admin regeneration
-  - admin readmodel/type-uitbreiding
-  - unit-tests + entry/day smoke + reflection smoke + clean bootstrap
-- Open / blocked:
-  - docs bundle + verify nog afronden
-
-## Relevante links
-
-- `docs/project/ai-quality-studio.md`
-- `docs/project/open-points.md`
-- `docs/project/25-tasks/open/mvp-admin-aiqs-productie-bundel.md`
-
-
-## Commits
-
-- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
-
-- 2026-06-04T20:47:24+02:00 — fix: support existing deploy secret aliases
-
-- 2026-06-04T20:49:20+02:00 — fix: generate AIQS deploy token
-
-- 2026-06-04T20:51:08+02:00 — fix: resolve deploy publishable key
 
 - 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
 
@@ -5769,7 +4788,7 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-07-03
+- Updated_at: 2026-07-04
 
 ```md
 ---
@@ -5779,7 +4798,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-07-03
+updated_at: 2026-07-04
 summary: "Maak Data opnieuw verwerken veilig en bronconsistent: raw data read-only, entries eerst herstellen, daarna dagjournals, weekreflecties en maandreflecties op actuele brondata regenereren."
 tags: ""
 workstream: aiqs
@@ -5791,13 +4810,15 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 1
-active_agent: Codex
-active_agent_model: gpt-5
-active_agent_runtime: codex
-active_agent_since: "2026-07-03T07:55:48.268Z"
-active_agent_status: running
-active_agent_settings: default
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
+
 
 ## Probleem / context
 
@@ -5898,6 +4919,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
   - maand: entries + dagen binnen maand -> relevante weken -> maand.
 - Preview/start mag geen grote entry-id arrays via querystring of `IN (...)` URL's laden; volledige scopes moeten schaalbaar blijven en backend-side uit JSON selectiecriteria worden bepaald.
 - `/settings-regeneration` moet een professionele admin-wizard zijn: gewone Nederlandse taakcopy, geen scope-textarea in de standaardflow, user-id veld alleen onder `Geavanceerd`, controle verplicht vóór start, technische jobvelden ingeklapt.
+- Het losse blok `Veiligheid` moet weg; `/settings-regeneration` moet visueel aansluiten op de AIQS-adminstijl.
+- Periode kiezen in `/settings-regeneration` moet dezelfde gedeelde dag/week/maand-modal en opties gebruiken als `Instellingen -> Archief downloaden -> Een periode kiezen`; geen dubbele pickerlogica.
+- De knop `Controleer selectie` moet weg; selectiecontrole moet automatisch lopen zodra bereik en onderdelen geldig zijn.
+- Zolang er globaal een `queued` of `running` regeneration job bestaat, moet `/settings-regeneration` dominant tonen dat `Opnieuw opbouwen bezig` is en mag er geen nieuwe opdracht gestart worden.
+- Een lopende opdracht moet via `Stop na huidig werk` netjes kunnen stoppen: huidige OpenAI sub-batch afronden/toepassen, daarna geen nieuwe sub-batches/retries/steps meer starten en job op `cancelled` zetten.
+- Laatste UI-correctie: `/settings-regeneration` toont per moment maar één hoofdtaak. Actieve job = alleen compacte statuskaart + ingeklapte technische details; geen actieve job = rustige wizard. `Controleer selectie` komt terug als expliciete stap en `Alles opnieuw opbouwen` gebruikt één bevestigingsmodal.
 
 ## Status per requirement
 
@@ -5912,6 +4939,11 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Repair/all + scope-selectie gebouwd — status: gebouwd; preview/start gebruiken dezelfde deduped dependency-candidates.
 - [x] URI-too-long in preview/start entry-batchpad opgelost — status: gebouwd; entry rows worden per candidate geladen en discovery gebruikt paged reads.
 - [x] Professionele admin-wizard voor `/settings-regeneration` gebouwd — status: gebouwd; actie, bereik, onderdelen, controle en status zijn taakgericht en technische details staan ingeklapt.
+- [x] AIQS-stylingcorrectie voor `/settings-regeneration` gebouwd — status: gebouwd; veiligheids-inspector verwijderd en sections gebruiken dezelfde admin-console header/breedte/plain ritmiek als AIQS.
+- [x] Gedeelde periodekiezer gebouwd — status: gebouwd; export en regeneration gebruiken dezelfde shared hook/modal voor dag/week/maandselectie.
+- [x] Selectiecontrole gebouwd — status: aangepast op laatste UX-correctie; handmatige knop `Controleer selectie` is terug en automatische previewcopy is verwijderd.
+- [x] Single-active-job lock en graceful stop gebouwd — status: gebouwd; backend weigert nieuwe start bij globale actieve job, UI toont actieve job bovenaan en stop zet `options.stop_requested_at`.
+- [x] Vereenvoudigde regeneration UI gebouwd — status: gebouwd; actieve jobstatus en nieuwe opdrachtflow zijn conditioneel gescheiden, technische details staan standaard dicht en geavanceerde opties/daginspectie zitten in één accordion.
 - [x] Tests en verify uitgevoerd — status: groen na productie-auditrapportage.
 
 ## Toegevoegde verbeteringen tijdens uitvoering
@@ -5922,6 +4954,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - Backend start/preview gebruikt één candidate-builder die geselecteerde scopes naar unieke entries, dagen, weken en maanden expandt.
 - Productiefout `Failed to load entry rows: URI too long` onderzocht: de frontend gebruikt al POST JSON body naar de Edge Function; de lange URL ontstond backend-side door Supabase/PostgREST `.in('id', normalizedIds)` en `.in('id', rawIds)` bij entry-batchbouw. Dit is vervangen door point lookups per candidate met cache en paged candidate discovery.
 - `/settings-regeneration` herwerkt van technische console naar wizard: `Data opnieuw opbouwen`, stap 1 actie, stap 2 bereik, stap 3 onderdelen, stap 4 controle, start pas na actuele preview en inline bevestiging voor volledig opnieuw opbouwen.
+- Extra UI-correctie: het aparte inspectorblok `Veiligheid` is verwijderd en de pagina gebruikt dezelfde rustige AIQS-admincompositie met `AdminConsoleHeader`, centrale contentbreedte en plain sections.
+- Periodekeuze gedeeld gemaakt: `ExportPeriodSelectorModal` is een alias naar de shared `PeriodScopeSelectorModal`, export en regeneration gebruiken `usePeriodScopeSelectorOptions`, en regeneration vertaalt dag/week/maand direct naar de bestaande dependency-correcte scopes.
+- Eerdere automatische previewflow vervangen door handmatige selectiecontrole; `/settings-regeneration` houdt `Start opnieuw opbouwen` disabled tot `Controleer selectie` actueel is.
+- Actieve regeneration zichtbaar en blokkerend gemaakt: `latest` geeft eerst de globale actieve job terug, `start` weigert nieuwe jobs zolang een job `queued`/`running` is, en de UI toont bovenaan `Opnieuw opbouwen bezig` met `Stop na huidig werk`.
+- Graceful stop toegevoegd zonder schemawijziging: `stop` gebruikt bestaande `cancelled` status en `options.stop_requested_at/by`; de worker past een open batch nog toe, maar start daarna geen retries, nieuwe sub-batches of volgende steps meer.
+- `/settings-regeneration` opnieuw vereenvoudigd: actieve jobstatus, afgeronde job-samenvatting en nieuwe-opdrachtwizard zijn aparte toestanden geworden. Dubbele stop/statusblokken, losse daginspectiesectie, automatische previewcopy en herhaalde waarschuwingen zijn verwijderd.
 
 ## Uitvoerblokken / fasering
 
@@ -5943,6 +4981,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Repair/all-modus, preview en scoped dependency-selectie toevoegen.
 - [x] Preview/start URI-too-long bug oplossen zonder querystring-id lijsten.
 - [x] `/settings-regeneration` UI/copy herwerken naar beheerderstaakflow zonder standaard UUID/scope-invoer.
+- [x] `Veiligheid`-blok verwijderen en AIQS-adminstyling toepassen.
+- [x] Periodekiezer delen met Archief downloaden en regeneration Stap 2 daarop aansluiten.
+- [x] Handmatige `Controleer selectie` als expliciete controlestap gebruiken; automatische previewcopy verwijderen.
+- [x] Actieve job dominant tonen en startflow blokkeren bij `queued`/`running`.
+- [x] `Stop na huidig werk` toevoegen met graceful stop na huidige OpenAI sub-batch.
+- [x] Laatste UI-correctie uitvoeren: één hoofdtaak tegelijk, handmatige selectiecontrole, één geavanceerdblok en bevestigingsmodal voor alles opnieuw.
 - [x] Verify uitvoeren.
 
 ## Acceptance criteria
@@ -5957,6 +5001,12 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - [x] Preview/start stuurt selectiecriteria in POST JSON en bouwt geen grote entry-id querystring voor batchconstructie.
 - [x] Start opnieuw opbouwen blijft disabled tot de selectie gecontroleerd is; wijzigingen maken de preview ongeldig.
 - [x] Technische velden zoals job-id, phase en batchstatus staan achter ingeklapte technische details.
+- [x] `/settings-regeneration` toont geen aparte `Veiligheid` inspector meer en sluit visueel aan op AIQS.
+- [x] `Een periode kiezen` gebruikt dezelfde dag/week/maand-modalopties als Archief downloaden.
+- [x] Startknop wordt pas actief nadat handmatige `Controleer selectie` actueel is.
+- [x] Een globale actieve regeneration job blokkeert nieuwe starts en staat bovenaan de pagina.
+- [x] Stop-request markeert lopende jobs via `options.stop_requested_at` en stopt na afronden/toepassen van de huidige sub-batch.
+- [x] Actieve job en nieuwe-opdrachtwizard worden niet tegelijk prominent getoond; technische details zijn standaard dicht.
 
 ## Blockers / afhankelijkheden
 
@@ -5976,6 +5026,9 @@ De kernlus capture -> dagboeklaag -> reflecties moet productiebetrouwbaar zijn v
 - Na repair/all scope-uitbreiding: `npx vitest run tests/unit/regeneration-source-contract.test.ts` — groen; 9 tests.
 - Na repair/all scope-uitbreiding en period-user dedupe: `npm run typecheck`, `npm run lint`, `npm run test:unit` — groen; 17 files, 102 tests.
 - Na URI-too-long fix: `npx vitest run tests/unit/regeneration-source-contract.test.ts` — groen; 10 tests.
+- Na active-job lock en graceful stop: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 106 tests.
+- Route-smoke `/settings-regeneration`: `curl -I --max-time 5 http://localhost:8081/settings-regeneration` — HTTP 200. Playwright light/dark route-smoke — HTTP 200 zonder console/page errors, maar zonder ingelogde adminsessie eindigt de browser op het auth-scherm.
+- Na vereenvoudigde `/settings-regeneration` UI: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 106 tests. Statische copycheck: `Stop aangevraagd` staat één keer, oude automatische-previewcopy en losse `Geavanceerd: dag inspecteren` zijn weg. Route-smoke HTTP 200; Playwright light/dark route-smoke HTTP 200 zonder console/page errors, maar zonder ingelogde adminsessie eindigt de browser op het auth-scherm.
 - Na URI-too-long fix: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 103 tests.
 - Na URI-too-long fix: `npm run docs:bundle:verify` — faalt alleen op `docs/upload/60-budio-tasks-current.md` omdat generated docs bewust niet zijn bijgewerkt binnen user-scope `Geen wijzigingen aan gegenereerde files`.
 - Na admin-wizard herwerking: `npm run typecheck`, `npm run lint`, `npm run test:unit`, `npm run taskflow:verify` — groen; 17 files, 103 tests.
@@ -6014,6 +5067,14 @@ Productie-audit bewijs:
 ## Commits
 
 - 2026-07-03T10:34:40+02:00 — Fix scoped admin regeneration repair flow
+
+- 2026-07-03T14:19:42+02:00 — Fix admin regeneration flow
+
+
+- 2026-07-05T09:20:15+02:00 — Add day week month swipe navigation
+## Agent activity
+
+- stop 2026-07-03T07:55:48.268Z -> 2026-07-04T09:29:37.625Z - Codex / gpt-5 / codex / default - reason: stopped
 ```
 
 ---

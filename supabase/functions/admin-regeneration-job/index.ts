@@ -8,7 +8,7 @@ import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { hasCapabilityAccess, loadAdminAccessContext } from '../_shared/admin-capabilities.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildAiqsEntryCleanupUserPrompt, buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
+import { AiRuntimeBindingError, buildAiqsEntryCleanupUserPrompt, buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import {
   finalizeDayJournalDraftStrict,
@@ -22,7 +22,7 @@ type StepType = 'entries_normalized' | 'day_journals' | 'week_reflections' | 'mo
 type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 type RegenerationRunMode = 'repair' | 'all';
 
-type Action = 'start' | 'preview' | 'status' | 'worker_tick' | 'access' | 'latest' | 'inspect_day';
+type Action = 'start' | 'preview' | 'status' | 'worker_tick' | 'access' | 'latest' | 'inspect_day' | 'stop';
 
 type StartBody = {
   action: 'start';
@@ -45,6 +45,11 @@ type StatusBody = {
   jobId?: unknown;
 };
 
+type StopBody = {
+  action: 'stop';
+  jobId?: unknown;
+};
+
 type WorkerBody = {
   action: 'worker_tick';
   jobId?: unknown;
@@ -64,7 +69,7 @@ type InspectDayBody = {
   journalDate?: unknown;
 };
 
-type RequestBody = StartBody | PreviewBody | StatusBody | WorkerBody | AccessBody | LatestBody | InspectDayBody;
+type RequestBody = StartBody | PreviewBody | StatusBody | StopBody | WorkerBody | AccessBody | LatestBody | InspectDayBody;
 
 type OpenAiBatchStatus =
   | 'validating'
@@ -196,6 +201,44 @@ function parseFlowId(request: Request, requestId: string): string {
 
 function parseString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function parseObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function hasStopRequested(job: { options?: unknown }): boolean {
+  return typeof parseObject(job.options).stop_requested_at === 'string';
+}
+
+function withStopRequest(options: unknown, userId: string | null, now: string): Record<string, unknown> {
+  const current = parseObject(options);
+  return {
+    ...current,
+    stop_requested_at: typeof current.stop_requested_at === 'string' ? current.stop_requested_at : now,
+    stop_requested_by: typeof current.stop_requested_by === 'string' ? current.stop_requested_by : userId,
+  };
+}
+
+function summarizeStepRows(steps: Array<Record<string, unknown>>): Record<string, number | boolean> {
+  return steps.reduce<Record<string, number | boolean>>(
+    (acc, step) => {
+      acc.total = Number(acc.total ?? 0) + Number(step.total ?? 0);
+      acc.queued = Number(acc.queued ?? 0) + Number(step.queued ?? 0);
+      acc.openai_completed = Number(acc.openai_completed ?? 0) + Number(step.openai_completed ?? 0);
+      acc.applied = Number(acc.applied ?? 0) + Number(step.applied ?? 0);
+      acc.failed = Number(acc.failed ?? 0) + Number(step.failed ?? 0);
+      return acc;
+    },
+    {
+      total: 0,
+      queued: 0,
+      openai_completed: 0,
+      applied: 0,
+      failed: 0,
+      cancelled: true,
+    }
+  );
 }
 
 function parseFirstString(values: unknown[]): string | null {
@@ -1952,6 +1995,7 @@ async function processOpenBatch(args: {
   step: any;
   strictValidation: boolean;
   softQualityGuards: boolean;
+  stopRequested?: boolean;
 }): Promise<boolean> {
   const { data, error } = await args.adminClient
     .from('admin_regeneration_step_batches')
@@ -2001,7 +2045,7 @@ async function processOpenBatch(args: {
     const currentFailed = Number(args.step.failed ?? 0);
     const currentOpenAiCompleted = Number(args.step.openai_completed ?? 0);
     const requests = Array.isArray(data.requests_json) ? (data.requests_json as StoredBatchRequest[]) : [];
-    const canRetry = Number(data.attempt ?? 0) < 1 && requests.length > 0;
+    const canRetry = !args.stopRequested && Number(data.attempt ?? 0) < 1 && requests.length > 0;
 
     if (canRetry) {
       await createBatchFromRequests({
@@ -2056,7 +2100,7 @@ async function processOpenBatch(args: {
   const currentFailed = Number(args.step.failed ?? 0);
 
   let retriedFailedItems = false;
-  if (appliedResult.failedCustomIds.length > 0 && Number(data.attempt ?? 0) < 1) {
+  if (!args.stopRequested && appliedResult.failedCustomIds.length > 0 && Number(data.attempt ?? 0) < 1) {
     const requests = Array.isArray(data.requests_json) ? (data.requests_json as StoredBatchRequest[]) : [];
     const filtered = requests.filter((request) => appliedResult.failedCustomIds.includes(request.custom_id));
     if (filtered.length > 0) {
@@ -2294,12 +2338,14 @@ async function processStep(args: {
   model: string;
   strictValidation: boolean;
   softQualityGuards: boolean;
+  stopRequested?: boolean;
+  stopOptions?: unknown;
 }): Promise<WorkerOutcome> {
   await args.adminClient
     .from('admin_regeneration_job_steps')
     .update({
       status: 'running',
-      phase: 'running',
+      phase: args.stopRequested ? 'stop_requested' : 'running',
       last_update_at: new Date().toISOString(),
     })
     .eq('id', args.step.id);
@@ -2311,13 +2357,40 @@ async function processStep(args: {
     step: args.step,
     strictValidation: args.strictValidation,
     softQualityGuards: args.softQualityGuards,
+    stopRequested: args.stopRequested,
   });
 
   if (hadOpenBatch) {
+    if (args.stopRequested && !(await hasOpenBatchForJob({ adminClient: args.adminClient, jobId: args.jobId }))) {
+      await cancelJobAfterStopRequest({
+        adminClient: args.adminClient,
+        jobId: args.jobId,
+        options: args.stopOptions,
+      });
+      return {
+        progressed: true,
+        needsFollowup: false,
+        done: true,
+      };
+    }
+
     return {
       progressed: true,
       needsFollowup: true,
       done: false,
+    };
+  }
+
+  if (args.stopRequested) {
+    await cancelJobAfterStopRequest({
+      adminClient: args.adminClient,
+      jobId: args.jobId,
+      options: args.stopOptions,
+    });
+    return {
+      progressed: true,
+      needsFollowup: false,
+      done: true,
     };
   }
 
@@ -2423,6 +2496,17 @@ async function processJobTick(args: {
     return { progressed: false, needsFollowup: false, done: true };
   }
 
+  const stopRequested = hasStopRequested(job);
+  if (job.status === 'queued' && stopRequested) {
+    await cancelJobAfterStopRequest({
+      adminClient: args.adminClient,
+      jobId: args.jobId,
+      options: job.options,
+    });
+
+    return { progressed: true, needsFollowup: false, done: true };
+  }
+
   if (job.status === 'queued') {
     await args.adminClient
       .from('admin_regeneration_jobs')
@@ -2450,6 +2534,20 @@ async function processJobTick(args: {
   const nextStep = ordered.find((step) => step.status !== 'completed');
 
   if (!nextStep) {
+    if (stopRequested) {
+      await cancelJobAfterStopRequest({
+        adminClient: args.adminClient,
+        jobId: args.jobId,
+        options: job.options,
+      });
+
+      return {
+        progressed: true,
+        needsFollowup: false,
+        done: true,
+      };
+    }
+
     const summary = ordered.reduce(
       (acc, step) => {
         acc.total += Number(step.total ?? 0);
@@ -2493,9 +2591,69 @@ async function processJobTick(args: {
     model: args.model,
     strictValidation: args.strictValidation,
     softQualityGuards: args.softQualityGuards,
+    stopRequested,
+    stopOptions: job.options,
   });
 
   return stepOutcome;
+}
+
+async function loadActiveRegenerationJob(args: { adminClient: any }): Promise<{ id: string } | null> {
+  const { data, error } = await args.adminClient
+    .from('admin_regeneration_jobs')
+    .select('id')
+    .in('status', ['queued', 'running'])
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load active regeneration job: ${String(error.message ?? error)}`);
+  }
+
+  return data?.id ? { id: data.id } : null;
+}
+
+async function hasOpenBatchForJob(args: { adminClient: any; jobId: string }): Promise<boolean> {
+  const { data, error } = await args.adminClient
+    .from('admin_regeneration_step_batches')
+    .select('id')
+    .eq('job_id', args.jobId)
+    .in('status', ['submitted', 'validating', 'in_progress', 'finalizing'])
+    .limit(1);
+
+  if (error) {
+    throw new Error(`Failed to load open regeneration batches: ${String(error.message ?? error)}`);
+  }
+
+  return Array.isArray(data) && data.length > 0;
+}
+
+async function cancelJobAfterStopRequest(args: { adminClient: any; jobId: string; options?: unknown }) {
+  const { data: steps, error: stepsError } = await args.adminClient
+    .from('admin_regeneration_job_steps')
+    .select('total, queued, openai_completed, applied, failed')
+    .eq('job_id', args.jobId);
+
+  if (stepsError) {
+    throw new Error(`Failed to load steps for cancellation summary: ${String(stepsError.message ?? stepsError)}`);
+  }
+
+  const now = new Date().toISOString();
+  await args.adminClient
+    .from('admin_regeneration_jobs')
+    .update({
+      status: 'cancelled',
+      completed_at: now,
+      updated_at: now,
+      options: {
+        ...parseObject(args.options),
+        stop_completed_at: now,
+      },
+      summary: summarizeStepRows((steps ?? []) as Array<Record<string, unknown>>),
+    })
+    .eq('id', args.jobId)
+    .in('status', ['queued', 'running']);
 }
 
 async function loadJobView(args: { adminClient: any; jobId: string }) {
@@ -2595,7 +2753,7 @@ Deno.serve(async (request: Request) => {
     }
 
     const action = parseString((body as { action?: unknown }).action) as Action | null;
-    if (!action || (action !== 'start' && action !== 'preview' && action !== 'status' && action !== 'worker_tick' && action !== 'access' && action !== 'latest' && action !== 'inspect_day')) {
+    if (!action || (action !== 'start' && action !== 'preview' && action !== 'status' && action !== 'worker_tick' && action !== 'access' && action !== 'latest' && action !== 'inspect_day' && action !== 'stop')) {
       return errorResponse({
         request,
         httpStatus: 400,
@@ -2603,7 +2761,7 @@ Deno.serve(async (request: Request) => {
         flowId,
         step: 'validated',
         code: 'INPUT_INVALID',
-        message: 'Invalid action. Use start, preview, status, worker_tick, access, latest, inspect_day.',
+        message: 'Invalid action. Use start, preview, status, worker_tick, access, latest, inspect_day, stop.',
       });
     }
 
@@ -2611,7 +2769,7 @@ Deno.serve(async (request: Request) => {
     const isInternal = internalToken.length > 0 && internalHeaderToken === internalToken;
 
     let userId: string | null = null;
-    if (!isInternal || action === 'start' || action === 'preview' || action === 'status' || action === 'access' || action === 'latest' || action === 'inspect_day') {
+    if (!isInternal || action === 'start' || action === 'preview' || action === 'status' || action === 'access' || action === 'latest' || action === 'inspect_day' || action === 'stop') {
       try {
         const access = await loadAdminAccessContext({
           request,
@@ -2741,6 +2899,18 @@ Deno.serve(async (request: Request) => {
     if (action === 'latest') {
       step = 'latest';
 
+      const activeJob = await loadActiveRegenerationJob({ adminClient });
+      if (activeJob?.id) {
+        const view = await loadJobView({ adminClient, jobId: activeJob.id });
+        return jsonResponse(request, 200, {
+          status: 'ok',
+          flow: FLOW,
+          requestId,
+          flowId,
+          job: view,
+        });
+      }
+
       const { data: latestJob, error: latestJobError } = await adminClient
         .from('admin_regeneration_jobs')
         .select('id')
@@ -2772,17 +2942,6 @@ Deno.serve(async (request: Request) => {
       }
 
       const view = await loadJobView({ adminClient, jobId: latestJob.id });
-      if (view.created_by !== userId) {
-        return errorResponse({
-          request,
-          httpStatus: 403,
-          requestId,
-          flowId,
-          step,
-          code: 'AUTH_UNAUTHORIZED',
-          message: 'Not allowed to view this job.',
-        });
-      }
 
       return jsonResponse(request, 200, {
         status: 'ok',
@@ -2807,6 +2966,28 @@ Deno.serve(async (request: Request) => {
           code: 'INPUT_INVALID',
           message: 'Select at least one step type.',
         });
+      }
+
+      if (action === 'start') {
+        const activeJob = await loadActiveRegenerationJob({ adminClient });
+        if (activeJob?.id) {
+          const activeView = await loadJobView({ adminClient, jobId: activeJob.id });
+          return errorResponse({
+            request,
+            httpStatus: 409,
+            requestId,
+            flowId,
+            step,
+            code: 'INPUT_INVALID',
+            message: 'Er loopt al een Data opnieuw opbouwen-opdracht. Start een nieuwe opdracht pas als deze klaar of gestopt is.',
+            details: {
+              activeJobId: activeView.id,
+              activeStatus: activeView.status,
+              activeCreatedAt: activeView.created_at,
+              activeStartedAt: activeView.started_at,
+            },
+          });
+        }
       }
 
       const mode = parseRunMode(startBody.mode);
@@ -2964,17 +3145,88 @@ Deno.serve(async (request: Request) => {
       }
 
       const view = await loadJobView({ adminClient, jobId });
-      if (view.created_by !== userId) {
+
+      return jsonResponse(request, 200, {
+        status: 'ok',
+        flow: FLOW,
+        requestId,
+        flowId,
+        job: view,
+      });
+    }
+
+    if (action === 'stop') {
+      step = 'stop';
+
+      const jobId = ensureUuid((body as StopBody).jobId);
+      if (!jobId) {
         return errorResponse({
           request,
-          httpStatus: 403,
+          httpStatus: 400,
           requestId,
           flowId,
           step,
-          code: 'AUTH_UNAUTHORIZED',
-          message: 'Not allowed to view this job.',
+          code: 'INPUT_INVALID',
+          message: 'jobId ontbreekt of is ongeldig.',
         });
       }
+
+      const { data: jobRow, error: jobError } = await adminClient
+        .from('admin_regeneration_jobs')
+        .select('id, status, options')
+        .eq('id', jobId)
+        .maybeSingle();
+
+      if (jobError || !jobRow) {
+        return errorResponse({
+          request,
+          httpStatus: 404,
+          requestId,
+          flowId,
+          step,
+          code: 'DB_READ_FAILED',
+          message: 'Regeneration job niet gevonden.',
+        });
+      }
+
+      if (jobRow.status === 'queued') {
+        await cancelJobAfterStopRequest({
+          adminClient,
+          jobId,
+          options: withStopRequest(jobRow.options, userId, new Date().toISOString()),
+        });
+      } else if (jobRow.status === 'running') {
+        const now = new Date().toISOString();
+        const nextOptions = withStopRequest(jobRow.options, userId, now);
+        const hasOpenBatch = await hasOpenBatchForJob({ adminClient, jobId });
+
+        if (hasOpenBatch) {
+          await adminClient
+            .from('admin_regeneration_jobs')
+            .update({
+              options: nextOptions,
+              updated_at: now,
+            })
+            .eq('id', jobId);
+
+          await adminClient
+            .from('admin_regeneration_job_steps')
+            .update({
+              phase: 'stop_requested',
+              last_update_at: now,
+            })
+            .eq('job_id', jobId)
+            .eq('status', 'running');
+        } else {
+          await cancelJobAfterStopRequest({
+            adminClient,
+            jobId,
+            options: nextOptions,
+          });
+        }
+      }
+
+      const view = await loadJobView({ adminClient, jobId });
 
       return jsonResponse(request, 200, {
         status: 'ok',
@@ -3042,6 +3294,21 @@ Deno.serve(async (request: Request) => {
       job: view,
     });
   } catch (error) {
+    if (error instanceof AiRuntimeBindingError) {
+      const details = error.toSafeDetails();
+      logFlow('error', { flow: FLOW, requestId, flowId, step, event: 'aiqs_runtime_binding_rejected', details });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'INTERNAL_UNEXPECTED',
+        message: error.message,
+        details,
+      });
+    }
+
     logFlow('error', {
       flow: FLOW,
       requestId,

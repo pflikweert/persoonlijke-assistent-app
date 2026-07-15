@@ -1,11 +1,11 @@
 ---
 id: task-aiqs-runtime-db-binding-voor-live-prompts
 title: AIQS runtime DB-binding voor live prompts
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-06-04
+updated_at: 2026-07-15
 summary: "Maak AIQS de runtime-bron voor alle huidige promptfamilies, zodat prompt/model/system/config niet langer hardcoded uit codehelpers komen maar uit live AIQS-versies in de database."
 tags: [aiqs, runtime, prompts, supabase, openai]
 workstream: aiqs
@@ -17,7 +17,14 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 8
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -154,6 +161,10 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - [x] Fail-closed gedrag zonder code fallback — status: gebouwd
 - [x] Technische varianttasks zijn via AIQS beheersbaar — status: gebouwd
 - [x] AIQS admin toont runtime-driver en variantmetadata — status: gebouwd
+- [x] Centrale live-bindingvalidatie met expliciete reason-codes — status: gebouwd
+- [x] Directe resolvertests voor geldig, ontbrekend en ongeldig — status: gebouwd
+- [x] Deterministisch bewijs voor entry- en day-journal-repair — status: gebouwd
+- [x] Docs/taskflow-closeout en reconciliation — status: afgerond
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -169,6 +180,10 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - GitHub secret alias-fix toegevoegd: production deploy accepteert ook bestaande `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` en `ADMIN_REGEN_INTERNAL_TOKEN`, zonder secretwaarden in git te zetten.
 - Production deploy hoeft geen GitHub AIQS internal-token secret meer te hebben: de workflow genereert per deploy een gemaskeerde tijdelijke token, zet die als Supabase function secret en gebruikt die direct voor de baseline gate.
 - Production deploy hoeft ook geen GitHub publishable-key secret meer te hebben: als `SUPABASE_PUBLISHABLE_KEY`/`EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` ontbreekt, haalt de workflow de anon/publishable key op via `supabase projects api-keys`.
+- Senior-review afrondingsronde gestart voor centrale bindingvalidatie, directe resolvertests, deterministisch repairbewijs en taskflow-closeout.
+- Centrale Edge-validator toegevoegd voor alle zeven bindings, inclusief veilige `AiRuntimeBindingError` reason-codes en validatie bij draft/live-promotie.
+- Runtimeprompt-rendering faalt nu expliciet wanneer een `{{placeholder}}` na input-assembly onopgelost blijft.
+- Gedeelde injecteerbare repair-branchhelper toegevoegd en gebruikt door entry-normalisatie en dagjournaalcompositie, zonder wijzigingen aan parsing/cleanup/quality-guards.
 - Reviewbevindingen voor deze hardening:
   - `process-entry` en `renormalize-entry` gebruiken live AIQS bindings, maar bevatten nog zelfgemaakte entry title/body/summary fallbacks.
   - `process-entry` en `regenerate-day-journal` kunnen nog een zelfgemaakt dagjournal teruggeven via `createFallbackDayJournal`.
@@ -186,6 +201,9 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - [x] Blok 5: hardening-review uitvoeren voor reflectionkwaliteit, clean bootstrap en deploy-import boundaries.
 - [x] Blok 6: live-readiness hardening uitvoeren voor no-hardcoded-output-fallback runtimegedrag.
 - [x] Blok 7: production push gate toevoegen zodat AIQS runtime-baselines automatisch live en clean zijn na deploy.
+- [x] Blok 8: centrale live-bindingvalidatie en veilig reason-codecontract toevoegen.
+- [x] Blok 9: resolver en beide repairpaden deterministisch testen.
+- [x] Blok 10: volledige verify, reconciliation en taskflow-closeout uitvoeren.
 
 ## Concrete checklist
 
@@ -203,7 +221,10 @@ Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productie
 - [x] Production deploy workflow accepteert bestaande GitHub secret aliases voor publishable key en internal token.
 - [x] Production deploy workflow genereert zelf een tijdelijke AIQS internal token als deploy-secret voor de baseline gate.
 - [x] Production deploy workflow kan de Supabase publishable key afleiden via Supabase CLI/API wanneer er geen GitHub secret alias bestaat.
-- [~] Docs sync en closeout uitvoeren.
+- [x] Centrale live-bindingvalidatie weigert ontbrekende/ongeldige task-, versie-, prompt-, model-, system-, schema- en configdata met expliciete reason-code.
+- [x] Directe Edge-resolvertests dekken geldige, ontbrekende, dubbele/query-fout en ongeldige bindings.
+- [x] Entry- en day-journal-repair zijn deterministisch bewezen met injecteerbare OpenAI-calls.
+- [x] Docs sync en closeout uitvoeren.
 
 ## Acceptance criteria
 
@@ -260,6 +281,19 @@ Laatste hardeningbewijs:
 - GitHub secret alias-fix: lokaal statisch gevalideerd met `sh -n scripts/ensure-aiqs-runtime-baseline.sh`, `npm run lint`, `npm run typecheck` en `npm run taskflow:verify`.
 - GitHub deploy-token fix: AIQS internal token wordt in Actions gegenereerd met `openssl rand -hex 32`, gemaskeerd en via `supabase secrets set` naar production gezet.
 - GitHub publishable-key fix: publishable key wordt optioneel uit GitHub Secrets gelezen en anders via `npx supabase projects api-keys --output json` afgeleid en gemaskeerd.
+- `npm run test:unit -- aiqs-runtime-binding aiqs-repair-flow ai-quality-runtime ai-quality-readmodel ai-quality-lifecycle aiqs-no-hardcoded-output-fallbacks day-journal-contract-strict supabase-function-import-boundaries regeneration-source-contract` — groen, 9 files / 51 tests.
+- `npm run typecheck` — groen na bindingvalidatie en repair-extractie.
+- `npm run lint` — groen na bindingvalidatie en repair-extractie.
+- `npm run verify:local-flow` — groen; request `baecaff9-010e-4a13-9989-b78ccd7d7df6`, entry + day journal via gevalideerde live bindings.
+- `npm run verify:local-reflection-flow` — groen; week request `1595600f-0c08-4705-b23c-32063a29a7c5`, month request `5cd30141-6c22-4cbd-905d-784a9e96482f`.
+- `npm run verify:local-aiqs-bootstrap` — groen; internal-token/founder bootstrap zonder handmatige repair.
+- Finale gerichte suite — groen, 9 files / 58 tests.
+- Finale `npm run lint` — groen.
+- Finale `npm run typecheck` — groen.
+- Finale `npm run taskflow:verify` vóór done-transitie — groen, 10 taskfile-mutaties / 29 relevante wijzigingen.
+- `npm run taskflow:verify` na done-transitie — groen, 11 taskfile-mutaties / 30 relevante wijzigingen.
+- `npm run docs:bundle` — groen; taskoverzichten en uploadbundels opnieuw opgebouwd.
+- `npm run docs:bundle:verify` — groen.
 
 Live-readiness notes:
 
@@ -278,15 +312,20 @@ Live-readiness notes:
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: AIQS runtime DB-driven maken voor alle huidige promptfamilies, inclusief fail-closed gedrag en technische variantpromptbeheer.
-- Toegevoegde verbeteringen: edge-safe runtime-render helper, idempotente baseline-import, clean-bootstrap verify, reflectionkwaliteit-hardening, import-boundary test en runtime-bewuste adminlabels.
+- Expliciete user requirements: alle zeven bindings blijven DB-driven; ontbrekende of ongeldige bindings falen met veilige reason-codes; beide conditionele repairpaden hebben deterministisch bewijs; parsing, cleanup en quality-guards blijven code-side.
+- Toegevoegde verbeteringen: edge-safe runtime-render helper, idempotente baseline-import, clean-bootstrap verify, reflectionkwaliteit-hardening, import-boundary test, runtime-bewuste adminlabels, centrale bindingvalidator, promotievalidatie en gedeelde repair-branchhelper.
 - Afgerond:
   - schema + nieuwe technische tasks
   - live binding resolver
   - runtime-call migratie voor entry/day/reflection/admin regeneration
   - admin readmodel/type-uitbreiding
   - unit-tests + entry/day smoke + reflection smoke + clean bootstrap
-- Open / blocked:
-  - docs bundle + verify nog afronden
+  - alle zeven runtimebinding-contracten fail-closed gevalideerd
+  - veilige reason-code logging/response-details zonder promptinhoud
+  - directe resolvertests voor happy path, missing/query/duplicate en invalid states
+  - deterministische entry- en day-journal-repairtests met injecteerbare OpenAI-call
+  - finale lint, typecheck, runtime-smokes en taskflow-verify groen
+- Open / blocked: geen.
 
 ## Relevante links
 
@@ -310,3 +349,11 @@ Live-readiness notes:
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+- 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks
+## Agent activity
+
+- start 2026-07-15T08:43:52.570Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T08:43:52.570Z -> 2026-07-15T08:55:19.922Z - Codex / gpt-5 / codex / default - reason: done

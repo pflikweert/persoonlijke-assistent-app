@@ -6,7 +6,9 @@ import { createFlowError, type FlowErrorCode } from "../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from "../_shared/flow-logger.ts";
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildAiqsEntryCleanupUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from "../_shared/aiqs-runtime.ts";
+import { AiRuntimeBindingError, buildAiqsEntryCleanupUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from "../_shared/aiqs-runtime.ts";
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { runAiqsRepairFlow } from "../_shared/aiqs-repair-flow.ts";
 
 type RenormalizeEntryRequest = {
   rawText?: unknown;
@@ -598,74 +600,73 @@ async function normalizeEntry(args: {
         reason: "primary_noop_body",
       },
     });
-    const repairedAiResult = await callOpenAiJson({
-      apiKey: args.apiKey,
-      model: args.repairBinding.model,
-      temperature: args.repairBinding.temperature,
-      responseFormat: args.repairBinding.responseFormat,
-      requestId: args.requestId,
-      flowId: args.flowId,
-      step: "normalized_generated",
-      operation: "openai_normalize_entry_repair",
-      promptVersion: args.repairBinding.promptVersion,
-      systemPrompt: args.repairBinding.systemInstructions,
-      userPrompt: buildAiqsEntryCleanupUserPrompt({
-        binding: args.repairBinding,
-        rawText: args.rawText,
-        currentBody: body,
-      }),
-    });
+    const repairFlow = await runAiqsRepairFlow<NormalizedEntry>({
+      primaryValue: { title: nextTitle, body, summaryShort },
+      primaryFailureReasons: ["primary_noop_body"],
+      expectedRepairBindingKey: "entry_normalization.repair",
+      repairBinding: args.repairBinding,
+      callRepair: async (repairBinding) => {
+        const repairedAiResult = await callOpenAiJson({
+          apiKey: args.apiKey,
+          model: repairBinding.model,
+          temperature: repairBinding.temperature,
+          responseFormat: repairBinding.responseFormat,
+          requestId: args.requestId,
+          flowId: args.flowId,
+          step: "normalized_generated",
+          operation: "openai_normalize_entry_repair",
+          promptVersion: repairBinding.promptVersion,
+          systemPrompt: repairBinding.systemInstructions,
+          userPrompt: buildAiqsEntryCleanupUserPrompt({ binding: repairBinding, rawText: args.rawText, currentBody: body }),
+        });
+        if (!repairedAiResult) return null;
 
-    if (repairedAiResult) {
-      const repairedTitle = cleanNormalizedTitle(
-        requireAiOutputString(repairedAiResult.title, "title", {
-          runtimeBindingKey: args.repairBinding.runtimeBindingKey,
-          taskKey: args.repairBinding.taskKey,
-          versionId: args.repairBinding.versionId,
-        }),
-        "",
-      );
-      const repairedBodyRaw = cleanNormalizedBody(
-        requireAiOutputString(repairedAiResult.body, "body", {
-          runtimeBindingKey: args.repairBinding.runtimeBindingKey,
-          taskKey: args.repairBinding.taskKey,
-          versionId: args.repairBinding.versionId,
-        }),
-        "",
-      );
-      const repairedBody = isSuspiciouslyCompressedNormalization(
-        args.rawText,
-        repairedBodyRaw,
-      )
-        ? failAiRuntimeOutput("OpenAI repair body faalde de compressie-guard.", "quality_gate_failed", {
-            runtimeBindingKey: args.repairBinding.runtimeBindingKey,
-            taskKey: args.repairBinding.taskKey,
-            versionId: args.repairBinding.versionId,
-            reason: "compressed_repair_body",
-          })
-        : repairedBodyRaw;
-      if (normalizeForCompare(repairedBody) !== normalizeForCompare(sourceBody)) {
+        const repairedTitle = cleanNormalizedTitle(requireAiOutputString(repairedAiResult.title, "title", {
+          runtimeBindingKey: repairBinding.runtimeBindingKey,
+          taskKey: repairBinding.taskKey,
+          versionId: repairBinding.versionId,
+        }), "");
+        const repairedBodyRaw = cleanNormalizedBody(requireAiOutputString(repairedAiResult.body, "body", {
+          runtimeBindingKey: repairBinding.runtimeBindingKey,
+          taskKey: repairBinding.taskKey,
+          versionId: repairBinding.versionId,
+        }), "");
+        const repairedBody = isSuspiciouslyCompressedNormalization(args.rawText, repairedBodyRaw)
+          ? failAiRuntimeOutput("OpenAI repair body faalde de compressie-guard.", "quality_gate_failed", {
+              runtimeBindingKey: repairBinding.runtimeBindingKey,
+              taskKey: repairBinding.taskKey,
+              versionId: repairBinding.versionId,
+              reason: "compressed_repair_body",
+            })
+          : repairedBodyRaw;
         return {
           title: repairedTitle,
           body: repairedBody,
           summaryShort: cleanNormalizedSummaryShort(
             requireAiOutputObjectString(repairedAiResult, ["summary_short", "summaryShort"], "summary_short", {
-              runtimeBindingKey: args.repairBinding.runtimeBindingKey,
-              taskKey: args.repairBinding.taskKey,
-              versionId: args.repairBinding.versionId,
-            }, { allowEmpty: allowsEmptySummaryShort(args.repairBinding) }),
+              runtimeBindingKey: repairBinding.runtimeBindingKey,
+              taskKey: repairBinding.taskKey,
+              versionId: repairBinding.versionId,
+            }, { allowEmpty: allowsEmptySummaryShort(repairBinding) }),
             repairedBody,
             {
-              allowEmpty: allowsEmptySummaryShort(args.repairBinding),
+              allowEmpty: allowsEmptySummaryShort(repairBinding),
               details: {
-                runtimeBindingKey: args.repairBinding.runtimeBindingKey,
-                taskKey: args.repairBinding.taskKey,
-                versionId: args.repairBinding.versionId,
+                runtimeBindingKey: repairBinding.runtimeBindingKey,
+                taskKey: repairBinding.taskKey,
+                versionId: repairBinding.versionId,
               },
             },
           ),
         };
-      }
+      },
+      getRepairFailureReasons: (value) =>
+        normalizeForCompare(value.body) === normalizeForCompare(sourceBody) ? ["primary_noop_body"] : [],
+      missingRepairResultReason: "repair_model_output_missing",
+    });
+
+    if (repairFlow.status === "repaired") {
+      return repairFlow.value;
     }
 
     logFlow("info", {
@@ -675,7 +676,7 @@ async function normalizeEntry(args: {
       step: "normalized_generated",
       event: "normalized_repair_no_change",
       details: {
-        reason: "primary_noop_body",
+        reason: repairFlow.status === "failed" ? repairFlow.failureReasons[0] : "primary_noop_body",
       },
     });
   }
@@ -859,6 +860,21 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
+    if (error instanceof AiRuntimeBindingError) {
+      const details = error.toSafeDetails();
+      logFlow("error", { flow: FLOW, requestId, flowId, step, event: "aiqs_runtime_binding_rejected", details });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: "INTERNAL_UNEXPECTED",
+        message: error.message,
+        details,
+      });
+    }
+
     if (isAiRuntimeOutputError(error)) {
       logFlow("warn", {
         flow: FLOW,

@@ -6,7 +6,9 @@ import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
+import { AiRuntimeBindingError, buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
+import { runAiqsRepairFlow } from '../_shared/aiqs-repair-flow.ts';
 // @ts-ignore -- Deno runtime supports .mjs imports from functions.
 import { finalizeDayJournalDraftStrict, isLowContentDayEntry, orderDayJournalEntries } from '../_shared/day-journal-contract.mjs';
 // @ts-ignore -- Deno runtime requires local import extensions.
@@ -459,47 +461,56 @@ async function composeDayJournal(args: {
       },
     });
 
-    const repairedAiResult = await callOpenAiJson({
-      apiKey: args.apiKey,
-      model: args.repairBinding.model,
-      temperature: args.repairBinding.temperature,
-      responseFormat: args.repairBinding.responseFormat,
-      requestId: args.requestId,
-      flowId: args.flowId,
-      step: 'day_journal_upserted',
-      operation: 'openai_compose_day_journal_repair',
-      promptVersion: args.repairBinding.promptVersion,
-      systemPrompt: args.repairBinding.systemInstructions,
-      userPrompt: buildAiqsJsonUserPrompt({
-        binding: args.repairBinding,
-        context: {
-          journal_date: args.journalDate,
-          entries: contentEntries.map((entry) => ({
-            entry_title: entry.title,
-            entry_body: entry.body,
-          })),
-        },
-      }),
-    });
-
-    const repairedFinalizedResult = finalizeDayJournalDraftStrict({
-      aiResult: repairedAiResult,
-      entries: contentEntries,
-      options: {
-        noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
-        lowContentTitle: LOW_CONTENT_TITLE,
-        strictValidation: args.strictValidation,
-        softQualityGuards: args.softQualityGuards,
+    const repairFlow = await runAiqsRepairFlow({
+      primaryValue: { finalized, strictFailureReasons: [] as string[] },
+      primaryFailureReasons: narrativeRepairReasons,
+      expectedRepairBindingKey: 'day_journal.repair',
+      repairBinding: args.repairBinding,
+      callRepair: async (repairBinding) => {
+        const repairedAiResult = await callOpenAiJson({
+          apiKey: args.apiKey,
+          model: repairBinding.model,
+          temperature: repairBinding.temperature,
+          responseFormat: repairBinding.responseFormat,
+          requestId: args.requestId,
+          flowId: args.flowId,
+          step: 'day_journal_upserted',
+          operation: 'openai_compose_day_journal_repair',
+          promptVersion: repairBinding.promptVersion,
+          systemPrompt: repairBinding.systemInstructions,
+          userPrompt: buildAiqsJsonUserPrompt({
+            binding: repairBinding,
+            context: {
+              journal_date: args.journalDate,
+              entries: contentEntries.map((entry) => ({ entry_title: entry.title, entry_body: entry.body })),
+            },
+          }),
+        });
+        if (!repairedAiResult) return null;
+        const repairedResult = finalizeDayJournalDraftStrict({
+          aiResult: repairedAiResult,
+          entries: contentEntries,
+          options: {
+            noSpeechTranscript: NO_SPEECH_TRANSCRIPT,
+            lowContentTitle: LOW_CONTENT_TITLE,
+            strictValidation: args.strictValidation,
+            softQualityGuards: args.softQualityGuards,
+          },
+        });
+        return {
+          finalized: repairedResult.finalized,
+          strictFailureReasons: repairedResult.ok ? [] : repairedResult.reasons,
+        };
       },
+      getRepairFailureReasons: (value) => value.strictFailureReasons.length > 0
+        ? value.strictFailureReasons
+        : value.finalized.narrativeQualityReasons.filter((reason) =>
+          ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
+        ),
+      missingRepairResultReason: 'repair_model_output_missing',
     });
-    const repairedFinalized = repairedFinalizedResult.finalized;
 
-    const remainingNarrativeRepairReasons = repairedFinalized.narrativeQualityReasons.filter((reason) =>
-      ['compressed_narrative', 'stitched_narrative', 'truncated_narrative'].includes(reason)
-    );
-    const retrySucceeded = repairedFinalizedResult.ok && remainingNarrativeRepairReasons.length === 0;
-
-    if (retrySucceeded) {
+    if (repairFlow.status === 'repaired') {
       logFlow('info', {
         flow: FLOW,
         requestId: args.requestId,
@@ -509,15 +520,15 @@ async function composeDayJournal(args: {
       });
 
       return {
-        summary: repairedFinalized.summary,
-        narrativeText: repairedFinalized.narrativeText,
-        sections: repairedFinalized.sections,
+        summary: repairFlow.value.finalized.summary,
+        narrativeText: repairFlow.value.finalized.narrativeText,
+        sections: repairFlow.value.finalized.sections,
       };
     }
 
-    const retryFailureReasons = !repairedFinalizedResult.ok
-      ? repairedFinalizedResult.reasons
-      : remainingNarrativeRepairReasons;
+    const retryFailureReasons = repairFlow.status === 'failed'
+      ? repairFlow.failureReasons
+      : narrativeRepairReasons;
 
     logFlow('warn', {
       flow: FLOW,
@@ -908,6 +919,21 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
+    if (error instanceof AiRuntimeBindingError) {
+      const details = error.toSafeDetails();
+      logFlow('error', { flow: FLOW, requestId, flowId, step, event: 'aiqs_runtime_binding_rejected', details });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'INTERNAL_UNEXPECTED',
+        message: error.message,
+        details,
+      });
+    }
+
     if (isAiRuntimeOutputError(error)) {
       logFlow('warn', {
         flow: FLOW,

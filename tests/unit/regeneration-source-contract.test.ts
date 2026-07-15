@@ -226,4 +226,52 @@ describe('regeneration day entry source contract', () => {
     expect(source).toContain('loadNormalizedEntryForBatch');
     expect(source).toContain('loadRawEntryForBatch');
   });
+
+  it('exposes a stop action and blocks starting while another regeneration job is active', () => {
+    const functionSource = readFileSync(
+      path.join(process.cwd(), 'supabase/functions/admin-regeneration-job/index.ts'),
+      'utf8'
+    );
+    const serviceSource = readFileSync(
+      path.join(process.cwd(), 'services/admin-regeneration.ts'),
+      'utf8'
+    );
+
+    expect(functionSource).toContain("'stop'");
+    expect(functionSource).toContain('loadActiveRegenerationJob');
+    expect(functionSource).toContain(".in('status', ['queued', 'running'])");
+    expect(functionSource).toContain('Er loopt al een Data opnieuw opbouwen-opdracht');
+    expect(serviceSource).toContain('stopAdminRegenerationJob');
+    expect(serviceSource).toContain("action: 'stop'");
+  });
+
+  it('keeps graceful stop from starting retries or new work after stop is requested', () => {
+    const source = readFileSync(
+      path.join(process.cwd(), 'supabase/functions/admin-regeneration-job/index.ts'),
+      'utf8'
+    );
+
+    expect(source).toContain('stop_requested_at');
+    expect(source).toContain('phase: args.stopRequested ?');
+    expect(source).toContain('!args.stopRequested && Number(data.attempt ?? 0) < 1');
+    expect(source).toContain('!args.stopRequested && appliedResult.failedCustomIds.length > 0');
+    expect(source).toMatch(/applyCompletedBatch\([\s\S]+cancelJobAfterStopRequest/);
+  });
+
+  it('separates active regeneration status from the new-job wizard in the admin UI', () => {
+    const source = readFileSync(
+      path.join(process.cwd(), 'app/settings-regeneration.tsx'),
+      'utf8'
+    );
+
+    expect(source).toContain('Nieuwe opdracht starten kan zodra deze klaar of gestopt is.');
+    expect(source).toContain('Stop na huidig werk');
+    expect(source).toContain('Stop aangevraagd');
+    expect(source).toContain('Controleer selectie');
+    expect(source).toContain('Alles opnieuw opbouwen?');
+    expect(source).toContain('!isRunning');
+    expect(source).toContain('stopAdminRegenerationJob');
+    expect(source).not.toContain('De selectie wordt automatisch opgehaald');
+    expect(source).not.toContain('Geavanceerd: dag inspecteren');
+  });
 });

@@ -6,7 +6,6 @@ import * as Linking from "expo-linking";
 
 import {
   ExportPeriodSelectorModal,
-  type ExportPeriodSelectorTab,
 } from "@/components/feedback/export-period-selector-modal";
 import { BackgroundTaskStatusCard } from "@/components/feedback/background-task-status-card";
 import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
@@ -36,18 +35,14 @@ import {
   fetchArchiveExportTaskById,
   fetchLatestArchiveExportTask,
   getArchiveExportDownloadUrl,
-  listSelectableDays,
-  listSelectableMonths,
-  listSelectableWeeks,
   previewArchiveScope,
   startStructuredArchiveExport,
   type ArchiveExportTask,
   type ArchiveExportPreview,
   type DateScope,
-  type SelectableDay,
-  type SelectablePeriod,
 } from "@/services";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { usePeriodScopeSelectorOptions } from "@/hooks/use-period-scope-selector-options";
 import { colorTokens, radius, spacing } from "@/theme";
 
 type ExportState = "choose" | "review" | "loading" | "success" | "error";
@@ -73,9 +68,7 @@ export default function SettingsExportScreen() {
   const [includeWeeks, setIncludeWeeks] = useState(true);
   const [includeMonths, setIncludeMonths] = useState(true);
   const [includeAudio, setIncludeAudio] = useState(false);
-  const [periodSelectorVisible, setPeriodSelectorVisible] = useState(false);
-  const [periodSelectorTab, setPeriodSelectorTab] =
-    useState<ExportPeriodSelectorTab>("day");
+  const periodSelector = usePeriodScopeSelectorOptions("day");
   const [scope, setScope] = useState<DateScope>(ALL_DATE_SCOPE);
   const [preview, setPreview] = useState<ArchiveExportPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -86,18 +79,6 @@ export default function SettingsExportScreen() {
   const [replaceStructuredExportVisible, setReplaceStructuredExportVisible] = useState(false);
   const [replaceStructuredExportBusy, setReplaceStructuredExportBusy] = useState(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const [days, setDays] = useState<SelectableDay[]>([]);
-  const [dayLoading, setDayLoading] = useState(false);
-  const [dayError, setDayError] = useState<string | null>(null);
-
-  const [weeks, setWeeks] = useState<SelectablePeriod[]>([]);
-  const [weekLoading, setWeekLoading] = useState(false);
-  const [weekError, setWeekError] = useState<string | null>(null);
-
-  const [months, setMonths] = useState<SelectablePeriod[]>([]);
-  const [monthLoading, setMonthLoading] = useState(false);
-  const [monthError, setMonthError] = useState<string | null>(null);
 
   async function openNativeShare(fileUri?: string): Promise<void> {
     if (!fileUri) {
@@ -204,92 +185,14 @@ export default function SettingsExportScreen() {
     setState("choose");
   }
 
-  async function ensureDaysLoaded() {
-    if (dayLoading || days.length > 0) {
-      return;
-    }
-    setDayLoading(true);
-    setDayError(null);
-    try {
-      const result = await listSelectableDays();
-      setDays(result);
-    } catch (error) {
-      const parsed = classifyUnknownError(error);
-      setDayError(parsed.message);
-    } finally {
-      setDayLoading(false);
-    }
-  }
-
-  async function ensureWeeksLoaded() {
-    if (weekLoading || weeks.length > 0) {
-      return;
-    }
-    setWeekLoading(true);
-    setWeekError(null);
-    try {
-      const result = await listSelectableWeeks();
-      setWeeks(result);
-    } catch (error) {
-      const parsed = classifyUnknownError(error);
-      setWeekError(parsed.message);
-    } finally {
-      setWeekLoading(false);
-    }
-  }
-
-  async function ensureMonthsLoaded() {
-    if (monthLoading || months.length > 0) {
-      return;
-    }
-    setMonthLoading(true);
-    setMonthError(null);
-    try {
-      const result = await listSelectableMonths();
-      setMonths(result);
-    } catch (error) {
-      const parsed = classifyUnknownError(error);
-      setMonthError(parsed.message);
-    } finally {
-      setMonthLoading(false);
-    }
-  }
-
-  async function openPeriodSelector(initialTab: ExportPeriodSelectorTab = "day") {
-    setPeriodSelectorTab(initialTab);
-    if (initialTab === "day") {
-      await ensureDaysLoaded();
-    } else if (initialTab === "week") {
-      await ensureWeeksLoaded();
-    } else {
-      await ensureMonthsLoaded();
-    }
-    setPeriodSelectorVisible(true);
-  }
-
-  function handlePeriodTabChange(nextTab: ExportPeriodSelectorTab) {
-    setPeriodSelectorTab(nextTab);
-    if (nextTab === "day") {
-      void ensureDaysLoaded();
-      return;
-    }
-    if (nextTab === "week") {
-      void ensureWeeksLoaded();
-      return;
-    }
-    void ensureMonthsLoaded();
-  }
-
   async function handleSelectMode(nextMode: ExportMode) {
     setMode(nextMode);
     if (nextMode === "all") {
       applyScope(ALL_DATE_SCOPE);
-      setPeriodSelectorVisible(false);
+      periodSelector.close();
       return;
     }
-    await ensureDaysLoaded();
-    setPeriodSelectorTab("day");
-    setPeriodSelectorVisible(true);
+    await periodSelector.open("day");
   }
 
   async function handlePrepareReview() {
@@ -510,10 +413,10 @@ export default function SettingsExportScreen() {
                   />
 
                   {mode === "period" ? (
-                    <SecondaryButton
-                      label="Periode aanpassen"
-                      onPress={() => void openPeriodSelector(periodSelectorTab)}
-                    />
+                      <SecondaryButton
+                        label="Periode aanpassen"
+                        onPress={() => void periodSelector.open(periodSelector.activeTab)}
+                      />
                   ) : null}
 
                 </ThemedView>
@@ -851,23 +754,12 @@ export default function SettingsExportScreen() {
       </ScreenContainer>
 
       <ExportPeriodSelectorModal
-        visible={periodSelectorVisible}
-        activeTab={periodSelectorTab}
-        onClose={() => setPeriodSelectorVisible(false)}
-        onChangeTab={handlePeriodTabChange}
-        dayLoading={dayLoading}
-        dayError={dayError}
-        days={days}
-        weekLoading={weekLoading}
-        weekError={weekError}
-        weeks={weeks}
-        monthLoading={monthLoading}
-        monthError={monthError}
-        months={months}
+        {...periodSelector.modalProps}
+        subtitle="Selecteer dag, week of maand om te bewaren."
         onSelectDay={(day) => {
           applyScope({ kind: "day", date: day.date });
           setMode("period");
-          setPeriodSelectorVisible(false);
+          periodSelector.close();
         }}
         onSelectWeek={(period) => {
           applyScope({
@@ -877,7 +769,7 @@ export default function SettingsExportScreen() {
             label: period.label,
           });
           setMode("period");
-          setPeriodSelectorVisible(false);
+          periodSelector.close();
         }}
         onSelectMonth={(period) => {
           applyScope({
@@ -887,7 +779,7 @@ export default function SettingsExportScreen() {
             label: period.label,
           });
           setMode("period");
-          setPeriodSelectorVisible(false);
+          periodSelector.close();
         }}
       />
 

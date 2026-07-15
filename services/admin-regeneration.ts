@@ -131,6 +131,14 @@ type StatusResponse = {
   job: AdminRegenerationJobView;
 };
 
+type StopResponse = {
+  status: 'ok';
+  flow: 'admin-regeneration-job';
+  requestId: string;
+  flowId: string;
+  job: AdminRegenerationJobView;
+};
+
 type LatestResponse = {
   status: 'ok';
   flow: 'admin-regeneration-job';
@@ -337,6 +345,32 @@ export async function fetchAdminRegenerationJobStatus(input: {
 
   if (data.status !== 'ok' || data.flow !== 'admin-regeneration-job' || !data.requestId || !data.job) {
     throw new Error('Ongeldige response van admin-regeneration-job status.');
+  }
+
+  return data.job;
+}
+
+export async function stopAdminRegenerationJob(input: {
+  jobId: string;
+}): Promise<AdminRegenerationJobView> {
+  const jobId = input.jobId.trim();
+  if (!jobId) {
+    throw new Error('jobId ontbreekt.');
+  }
+
+  const flowId = createClientFlowId('admin-regeneration');
+  await ensureAuthenticatedUserSession({ flowId, source: 'admin-regeneration-job' });
+
+  const data = await invokeAction<StopResponse>({
+    flowId,
+    body: {
+      action: 'stop',
+      jobId,
+    },
+  });
+
+  if (data.status !== 'ok' || data.flow !== 'admin-regeneration-job' || !data.requestId || !data.job) {
+    throw new Error('Ongeldige response van admin-regeneration-job stop.');
   }
 
   return data.job;

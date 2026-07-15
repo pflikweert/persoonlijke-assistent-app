@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-07-03T12:15:48.841Z
-Source Commit: 38673fb
+Build Timestamp (UTC): 2026-07-15T09:25:16.149Z
+Source Commit: efb36fe
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -12,7 +12,7 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 - docs/project/25-tasks/done/**
 
 ## Telling
-- Totaal tasks opgenomen: 83
+- Totaal tasks opgenomen: 95
 
 ## Leesregel
 - Dit is een uploadartefact en geen canonieke bron voor repo-uitvoering.
@@ -100,6 +100,255 @@ Een compacte maandfocus waarin consumer beta bewijs, 1.2B, 1.2E en een smalle br
 ## Commits
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+```
+
+---
+
+## Admin + AIQS Linear interface kit refresh
+
+- Path: `docs/project/25-tasks/done/admin-aiqs-linear-interface-kit-refresh.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-15
+
+```md
+---
+id: admin-aiqs-linear-interface-kit-refresh
+title: Admin + AIQS Linear interface kit refresh
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-07-15
+summary: "Budio admin en AIQS krijgen een gedeelde mode-aware admin-console laag op basis van de Linear-geinspireerde interface kit, zonder consumer-, backend- of datamodelwijzigingen."
+tags: [admin, aiqs, ui, ux, linear-kit]
+workstream: aiqs
+epic_id: null
+parent_task_id: null
+depends_on: [aiqs-admin-console-uiux-linear-richting]
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 5
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+
+
+
+
+
+
+
+## Probleem / context
+
+AIQS heeft al een eerste admin-console laag, maar de bredere adminroutes zoals adminrechten, regeneration en meeting capture gebruiken nog oude settings/surface-primitives en voelen daardoor niet als dezelfde tooling-omgeving. De geuploade Linear-geinspireerde interface kit beschrijft een compacte, mode-aware admin workspace met statuschips, metrics, inspectorpanelen, timelines en dense lists.
+
+## Gewenste uitkomst
+
+Budio admin en AIQS gebruiken een gedeelde admin-console componentlaag die desktop/tablet/mobile beter ondersteunt, zonder routes, dataflows, backendcontracten of consumer-schermen aan te passen.
+
+## User outcome
+
+Een founder/admin ervaart adminrechten, regeneration, meeting capture en AIQS als een samenhangende admin-console: compact, scanbaar, status-first en bruikbaar op desktop, tablet en mobiel.
+
+## Functional slice
+
+UI/UX-only migratie naar gedeelde admin-console primitives en route-specifieke admin shell-breedte voor bestaande admin/AIQS schermen.
+
+## Entry / exit
+
+- Entry: admin opent bestaande routes via settings/admin-menu of directe adminroute.
+- Exit: bestaande routes en acties werken hetzelfde, maar delen dezelfde admin-console visual layer en responsive structuur.
+
+## Happy flow
+
+1. Admin opent AIQS overview en ziet metrics, families en utilities in console-layout.
+2. Founder opent adminrechten en beheert capabilities in dense admin lists.
+3. Admin opent regeneration en ziet status, metrics, selected steps en jobprogress als console panels.
+4. Admin opent meeting capture placeholders en ziet admin-only shell zonder nieuwe recorderfunctionaliteit te suggereren.
+
+## Non-happy flows
+
+- Empty state: blijft zichtbaar via admin empty/error state wrappers.
+- Permission denied / unavailable: denial states blijven expliciet en actiegericht.
+- Validation / unsupported state: bestaande disabled states en foutmeldingen blijven behouden.
+- Failure / retry / cancel: bestaande retry/refresh/delete/back acties blijven functioneel hetzelfde.
+
+## UX / copy
+
+- Mode-aware admin-console: dark mode krijgt de sterkste tooling-uitstraling; light mode blijft coherent.
+- Geen exacte Linear-copy/assets.
+- Copy blijft compact en operationeel.
+- Geen nieuwe productclaims of feature-uitbreiding.
+- Consumer-schermen blijven ongemoeid.
+
+## Data / IO
+
+- Input: bestaande admin/AIQS service responses, readmodels en route params.
+- Output: dezelfde UI-acties en servicecalls als voorheen.
+- Opslag/API/service/file-impact: geen backend, Supabase, services, types of datamodelwijzigingen.
+- Statussen: bestaande live/draft/running/failed/completed/founder/capability states.
+
+## Waarom nu
+
+AIQS en adminrechten worden productie-relevant voor MVP-livegang. Een consistente admin-console vermindert beheerfrictie zonder productscope uit te breiden.
+
+## In scope
+
+- Shared admin console primitives uitbreiden.
+- Route-specifieke web-shell verbreden voor adminroutes.
+- Adminrechten, regeneration, meeting capture en AIQS bestaande UI migreren naar shared admin patterns.
+- Responsive polish voor mobiel/tablet/desktop/wide.
+- Static en runtime UI-verify.
+
+## Buiten scope
+
+- Consumer screens.
+- Backend/API/schema/datamodel/services.
+- Nieuwe dependencies.
+- Nieuwe features, filters, command menu, boards, analytics of grafieken.
+- Generated docs aanpassen binnen deze slice.
+
+## Oorspronkelijk plan / afgesproken scope
+
+Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interface Kit Refresh`: gedeelde mode-aware admin-console laag op basis van de Linear-geinspireerde kit, alleen admin/AIQS en shared admin componenten, geen consumer screens, geen datamodel, geen nieuwe dependencies, geen flow-redesign en geen generated files.
+
+## Expliciete user requirements / detailbehoud
+
+- Alleen admin/AIQS interface en shared admin componenten.
+- Geen consumentenschermen aanpassen.
+- Geen datamodel-wijzigingen.
+- Geen nieuwe dependencies.
+- Geen redesign van flows; alleen bestaande pagina's beter structureren en stylen.
+- Geen generated files aanpassen.
+- Geen backend/API wijzigen.
+- Geen feature-uitbreiding.
+- Toekomstbestendige implementatie.
+- Fase 1: shared componenten + tokens.
+- Fase 2: admin pagina's toepassen.
+- Fase 3: AIQS pagina's toepassen.
+- Fase 4: responsive polish.
+
+## Status per requirement
+
+- [x] Alleen admin/AIQS interface en shared admin componenten — status: gebouwd
+- [x] Geen consumentenschermen aanpassen — status: gebouwd; route-breedte alleen uitgebreid voor admin/AIQS route-prefixes.
+- [x] Geen datamodel/backend/API/dependency wijzigingen — status: gebouwd; geen service-, Supabase-, schema- of package-wijziging binnen deze slice.
+- [x] Shared admin componenten + tokens — status: gebouwd
+- [x] Admin pagina's toepassen — status: gebouwd voor adminrechten, regeneration en meeting capture.
+- [x] AIQS pagina's toepassen — status: gebouwd voor overview, group, detail, draft, test en validate binnen bestaande flowcontracten.
+- [x] Responsive polish — status: gebouwd en gecontroleerd op mobile/tablet/desktop/wide.
+- [x] Verify en runtime UI-smoke — status: gebouwd en bewezen.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- `AdminConsoleShell` ondersteunt nu optionele sidebar/inspector slots zodat toekomstige adminroutes dezelfde workspace-structuur kunnen gebruiken zonder nieuwe routecontracten.
+- `AdminMetricCard`, `AdminInspectorPanel`, `AdminTimeline`, `AdminList`, `AdminActionBar`, `AdminEmptyState` en admin form wrappers zijn toegevoegd als gedeelde primitives.
+- Browser-smoke is gecorrigeerd naar de canonieke AIQS family route keys `moments`, `today`, `week`, `month`; runtime-family keys zoals `day_journal` zijn geen group-route keys.
+- Review/polishronde: de resterende AIQS-only `AdminStickyFooterActions`-duplicatie is vervangen door de gedeelde `AdminActionBar`.
+- Review/polishronde: `AdminActionBar` heeft een optionele `floating` variant gekregen voor fixed footers met console-surface en safe-area padding; inline action bars blijven compact.
+- Reviewbevinding: oude generieke admin layout-primitives (`AdminShell`, `SettingsTopNav`, `AdminPageHero`, `AdminMetaStrip`, `AdminSection`, `SurfaceSection`, `AdminStickyFooterActions`) komen niet meer voor in admin/AIQS routes. Alleen editor-specifieke settings-primitives blijven in AIQS waar ze inhoudelijk kloppen, zoals accordion/read-only/token editor helpers.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow, huidige file-state en kit-context bevestigen.
+- [x] Blok 2: shared admin-console primitives en admin tokens uitbreiden.
+- [x] Blok 3: adminrechten, regeneration en meeting capture migreren naar shared admin patterns.
+- [x] Blok 4: AIQS schermen aanscherpen met metric/inspector/list/actionbar patterns.
+- [x] Blok 5: responsive polish, static verify, runtime UI-smoke en taskflow afronden.
+
+## Concrete checklist
+
+- [x] Nieuwe taskfile aanmaken en plan vastleggen.
+- [x] `admin-console-primitives` uitbreiden.
+- [x] `theme/tokens.ts` admin subset toevoegen.
+- [x] `app/_layout.tsx` adminroutes breder maken zonder consumer routes.
+- [x] Adminrechten route + manager migreren.
+- [x] Regeneration route migreren.
+- [x] Meeting capture shell/routes migreren.
+- [x] AIQS overview/detail/draft/test/validate polish toepassen.
+- [x] Typecheck/lint/unit/smoke draaien.
+
+## Acceptance criteria
+
+- [x] Alle bestaande routes en acties blijven beschikbaar.
+- [x] Geen nieuwe dependencies.
+- [x] Geen backend/API/schema/datamodel wijziging.
+- [x] Geen consumer UI regressie door root shell of shared primitive changes.
+- [x] Adminroutes delen dezelfde console visual language.
+- [x] Light en dark mode zijn beide bruikbaar.
+
+## Blockers / afhankelijkheden
+
+- Bestaande AIQS console WIP uit `aiqs-admin-console-uiux-linear-richting` is linked context.
+
+## Verify / bewijs
+
+- `npm run test:unit -- ai-quality-readmodel` — geslaagd, 1 testfile / 3 tests.
+- `npm run typecheck` — geslaagd.
+- `npm run lint` — geslaagd.
+- `npm run taskflow:verify` — geslaagd.
+- Review/polish verify:
+  - `npm run typecheck` — geslaagd na actionbar-deduplicatie.
+  - `npm run lint` — geslaagd na actionbar-deduplicatie.
+  - Legacy primitive audit: geen hits meer voor oude generieke admin primitives in admin/AIQS routes.
+  - Runtime footer-smoke via Playwright fallback: 16 checks geslaagd voor AIQS detail/draft/test/validate op mobile/desktop en light/dark; draft zonder lokale draft blijft bestaande non-happy state zonder actionbar.
+- Runtime UI-smoke via Playwright fallback op `http://localhost:8081`:
+  - 52 route/viewport checks geslaagd, geen hard errors.
+  - Routes: AIQS overview, family `today/week/month`, task detail, draft, test, validate, adminrechten, regeneration, meeting capture overview/new/detail.
+  - Viewports: 390px, 820px, 1280px, 1536px.
+  - Dark-mode smoke: 10 route/viewport checks geslaagd voor AIQS, adminrechten, regeneration en meeting capture.
+  - Screenshots opgeslagen onder `tmp/admin-ui-smoke/` voor lokale visuele inspectie.
+- Visuele inspectie:
+  - Light desktop/mobile: workspace + inspector op desktop, stacked op mobile, denial states zichtbaar.
+  - Dark desktop/mobile: sterkere tooling-uitstraling zonder extra consumer-surface impact.
+- `npm run docs:bundle` en `npm run docs:bundle:verify` bewust niet gedraaid binnen deze slice, omdat de user-scope expliciet zegt geen generated files aan te passen.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: volledige admin/AIQS Linear kit refresh, UI-only.
+- Toegevoegde verbeteringen: shared inspector/sidebar-ready shell, admin timeline/list/actionbar/form wrappers, en gecorrigeerde route-smoke voor canonieke AIQS family keys.
+- Afgerond: shared primitives/tokens, adminroutes, AIQS overview/group/detail/draft/test/validate, responsive smoke, static verify en review/polishronde op resterende duplicatie.
+- Open / blocked: geen technische blocker of resterend werk binnen deze iteratie. De gebruiker sluit de huidige visuele richting op 2026-07-15 bewust af, ondanks resterende ontevredenheid; eventuele verdere polish krijgt later alleen op expliciet verzoek een nieuwe taak.
+
+## Relevante links
+
+- `docs/project/ai-quality-studio.md`
+- `/Users/pieterflikweert/Downloads/budio-linear-admin-interface-kit.zip`
+
+
+## Commits
+
+- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
+
+- 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+## Agent activity
+
+- start 2026-07-15T08:42:46.489Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T08:42:46.489Z -> 2026-07-15T08:43:42.207Z - Codex / gpt-5 / codex / default - reason: done
 ```
 
 ---
@@ -473,6 +722,523 @@ Een uitvoerbaar scopecontract voor audio-safe v1, inclusief flowcontract en niet
 
 ---
 
+## AIQS admin console UI/UX Linear-richting
+
+- Path: `docs/project/25-tasks/done/aiqs-admin-console-uiux-linear-richting.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-15
+
+```md
+---
+id: aiqs-admin-console-uiux-linear-richting
+title: AIQS admin console UI/UX Linear-richting
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: user-request
+updated_at: 2026-07-15
+summary: "AIQS en admin-interface krijgen een eigen compacte tooling-look in Linear-richting, zonder runtime-, route- of functionaliteitswijzigingen."
+tags: [aiqs, admin, ui, ux, polish]
+workstream: aiqs
+epic_id: null
+parent_task_id: null
+depends_on: [aiqs-runtime-db-binding-voor-live-prompts]
+follows_after: []
+task_kind: polish
+spec_ready: true
+due_date: null
+sort_order: 7
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+
+
+
+
+
+
+
+
+## Probleem / context
+
+AI Quality Studio werkt functioneel, maar voelt nog te veel als een mobiele settings-flow met gestapelde warme Budio-cards. Voor productie-admins moet AIQS aanvoelen als een compacte tooling-console: sneller scanbaar, neutraler, dichter, duidelijker en los van de gewone Budio gebruikersflow.
+
+## Gewenste uitkomst
+
+De admin- en AIQS-interface krijgt een eigen look and feel die past bij admin tooling en visueel richting Linear beweegt: rustige toolbar, dense lijsten, duidelijke statuschips, split views op desktop, minder uitlegcopy en minder zware surfaces.
+
+Functionaliteit, routes, runtime-binding, promptbeheer, test/validate en adminrechten blijven intact. De gewone Budio gebruikersflow blijft ongemoeid.
+
+## User outcome
+
+Een founder/admin kan AIQS sneller scannen en bedienen als admin-console: families openen, promptstatus beoordelen, drafts bewerken, testen en valideren zonder door lange settings-cards te moeten scrollen.
+
+## Functional slice
+
+UI/UX-only herstructurering van AIQS admin-schermen naar een gedeelde admin-console presentatielaag, zonder backend-, schema-, route- of contractwijzigingen.
+
+## Entry / exit
+
+- Entry: founder/admin opent AI Quality Studio via het admin/settings-menu.
+- Exit: founder/admin kan overview, group, task detail, draft, test en validate flows gebruiken met dezelfde functionaliteit maar compactere tooling-layout.
+
+## Happy flow
+
+1. Admin opent AIQS-overzicht en ziet runtime-status, families en utilities compact.
+2. Admin opent een family en ziet driver, varianten en read-only compound members als dense rows met badges.
+3. Admin opent task detail, draft, test of validate en behoudt alle bestaande acties in een console/workbench-layout.
+
+## Non-happy flows
+
+- Empty state: AIQS toont compact dat baseline ontbreekt en biedt importactie.
+- Permission denied / unavailable: denial blijft zichtbaar en actiegericht.
+- Validation / unsupported state: bestaande foutmeldingen blijven beschikbaar, maar worden scanbaar gepresenteerd.
+- Failure / retry / cancel: bestaande retry-/save-/cancelroutes blijven intact.
+
+## UX / copy
+
+- Admin interface krijgt eigen look and feel.
+- Gewone Budio flow blijft ongemoeid.
+- Linear is visuele richting: compact, rustig, dense, keyboard/workbench-achtig; geen exacte kopie.
+- Simpel en duidelijk, met minder uitlegcopy.
+- Geen functionaliteit verwijderen of wijzigen.
+- UI gebruikt een aparte admin-console primitive-laag; gewone settings/scaffold-primitives blijven leidend voor niet-admin schermen.
+- Adminlabels blijven kort: `Runtime actief`, `Draft aanwezig`, `Baseline ontbreekt`, `Driver`, `Variant`, `Read-only`, `Repair`.
+
+## Data / IO
+
+- Input: bestaande AIQS admin readmodels, task metadata, version data, test/validate cases en debug settings.
+- Output: dezelfde routes, servicecalls en save/test/validate resultaten als voorheen.
+- Opslag/API/service/file-impact: geen schema-, backend- of API-contractwijzigingen.
+- Statussen: bestaande live/draft/runtime/read-only/variant metadata blijft leidend.
+
+## Waarom nu
+
+AIQS wordt productie-relevant als runtime-bron voor prompts. Admins moeten dit beheersbaar en betrouwbaar kunnen bedienen voordat MVP-productie livegang prettig en veilig voelt.
+
+## In scope
+
+- Nieuwe gedeelde admin-console UI-primitives.
+- AIQS overview, group, task detail, draft, test en validate visueel/IA-matig verbeteren.
+- Compacte statuschips, dense rows, panels, toolbar/contextbar en desktop split/workbench layouts.
+- Copy inkorten waar dit geen contract of betekenis wijzigt.
+- Gerichte static en runtime UI-verificatie.
+
+## Buiten scope
+
+- Backend/runtime/prompt/schema/permissiewijzigingen.
+- Routes verwijderen, hernoemen of contractueel wijzigen.
+- Gewone Budio end-user flow restylen.
+- Exacte Linear-kopie of nieuwe productfeatures.
+
+## Oorspronkelijk plan / afgesproken scope
+
+We geven alleen de admin- en AIQS-interface een eigen tooling-look, los van de gewone Budio gebruikersflow. Functionaliteit, routes, dataflows, runtime-binding, promptbeheer, test/validate en adminrechten blijven intact; we verbeteren alleen informatiearchitectuur, layout, density, hiërarchie, states en copy.
+
+Reviewbevindingen:
+
+- `AdminShell` gebruikt nu nog gewone settings-primitives en warm Budio surfaces; daardoor voelt AIQS als settings, niet als tooling-console.
+- Overzicht, groep en task-detail zijn te card-stacked; op desktop wordt beschikbare breedte nauwelijks benut.
+- Draft/test/validate hebben goede functionaliteit, maar missen een sterke werkstructuur: context, editor, output, checks en acties staan te veel in één lange verticale stroom.
+- Statusmetadata is zichtbaar, maar nog niet scanbaar genoeg als badges/chips zoals `Live`, `Draft`, `Runtime driver`, `Repair`, `Read-only`, `Baseline missing`.
+- Debug logging en baseline import staan op het AIQS-overzicht als grote blokken; ze horen visueel secundair te zijn in een tooling admin console.
+- Copy is soms technisch of uitleggerig; voor admin tooling mag de taal compacter en operationeler zijn, zonder gewone Budio end-user tone te veranderen.
+
+## Expliciete user requirements / detailbehoud
+
+- Admin interface krijgt eigen look and feel.
+- Gewone Budio gebruikersflow blijft zijn eigen interface behouden.
+- Linear is visuele richting.
+- Interface moet simpel en duidelijk worden.
+- Geen functionaliteit verwijderen of wijzigen.
+- Review en test de nieuwe wijzigingen en verbeter waar nodig.
+- Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen.
+- Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System.
+- AIQS validatiepagina herontwerpen naar diff-first vergelijken en beoordelen: default `Diff`, tabs `Diff/Huidig/Nieuw`, AI-observaties, oordeel onderaan en shortcuts `1/2/3/4`.
+
+## Status per requirement
+
+- [x] Admin interface krijgt eigen look and feel — status: gebouwd
+- [x] Gewone Budio gebruikersflow blijft ongemoeid — status: gebouwd
+- [x] Linear-richting wordt vertaald naar compacte admin tooling — status: gebouwd
+- [x] Interface wordt simpeler en duidelijker — status: gebouwd
+- [x] Geen functionaliteit verwijderen of wijzigen — status: gebouwd en technisch geverifieerd; de gebruiker sluit de huidige visuele iteratie bewust af
+- [x] Nieuwe wijzigingen zijn gereviewd en getest — status: gebouwd
+- [x] Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen — status: gebouwd
+- [x] Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System — status: gebouwd
+- [x] AIQS validatiepagina diff-first maken voor lange outputvergelijkingen — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Gedeelde `admin-console-primitives` toegevoegd, zodat AIQS-schermen dezelfde compacte console-taal gebruiken zonder gewone Budio settings-flow te restylen.
+- AIQS sticky footer compacter en neutraler gemaakt; deze primitive wordt momenteel alleen door AIQS-schermen gebruikt.
+- Web app-shell route-specifiek verbreed voor `settings-ai-quality-studio*`, zodat AIQS desktopbreedte benut terwijl gewone Budio routes mobile-first blijven.
+- Tijdens runtime-smoke een foutieve `Baseline`-chip op live families gevonden en gecorrigeerd naar `Runtime actief`.
+- AIQS overview volgt nu expliciet de admin-workspace standaard: exact één globale statusbron, promptfamilies als primaire lijst en `Systeem` als secundaire utility-sectie.
+- Gedeelde admin-primitives zijn uitgebreid met `AdminStatusNotice`, `AdminSectionList`, `AdminToggleRow` en rustigere panel/meta-varianten, zodat toekomstige admin-overviews minder dashboard-achtig hoeven op te bouwen.
+- Debug logging is teruggebracht van groot utilityblok naar een compacte toggle-rij met optionele detailuitklap; flow-level toggles en TTL-beheer blijven intact.
+- Dedicated AIQS/admin smoke-user `smoke.aiqs.local@example.com` toegevoegd aan de lokale auth smoke-flow, zodat admin-validatie los blijft van gallery/consumer smoke-users.
+- Gedeelde Playwright helper voor local magic-link browser-login toegevoegd en hergebruikt door zowel AIQS- als gallery-smokes.
+- AIQS local smoke kan nu zelf lokale dev starten, een ontbrekende AIQS internal token tijdelijk injecteren via functions env-restart, baseline importeren en daarna de geauthenticeerde browser-overview controleren.
+- Lokale docs en env-templates verduidelijken nu het verschil tussen token/login-proof en echte browser-sessie, plus het fallbackpad wanneer `localhost:8081` of een internal token ontbreekt.
+- AIQS startpagina verder opgeschoond naar een cleaner Linear-achtige admin workspace: header zonder governance-eyebrow, healthy status als inline chip, promptfamilies als rustige list/table en debug logging als single-action settings row.
+- Shared admin-primitives uitgebreid met plain sections, inline status, list/table rows en single-action togglegedrag zodat toekomstige admin-overviews dezelfde rustige compositie kunnen hergebruiken.
+- `docs/design/admin-ui-principles.md` toegevoegd als handmatige designrichtlijn voor Budio Admin UI Principles.
+- De cleaner list-first/workspace-stijl is doorgetrokken naar AIQS group, task detail, draft editor, test en validate: minder header-badges/eyebrows, geen detail-inspector op task detail, plain secties voor metadata/context en minder runtime-duplicatie in rows.
+- `AdminConsolePanel` heeft nu ook `variant="plain"` als gedeelde primitive voor onderliggende admin-workbenchschermen waar een functionele sectie nodig is zonder card-fill/border.
+- AIQS admin actions zijn gehard naar één button-contract: `AdminConsoleButton` ondersteunt nu primary/secondary/danger/ghost, selected/full-width states en subtiele pressed/hover/focus states zonder zwarte primary-fill.
+- Screen-local AIQS action-Pressables in draft en validate zijn vervangen door gedeelde admin button/text-action primitives; klikbare source/case rows blijven bewust rows.
+- De raw HTML token-remove button in de prompt editor heeft nu expliciete browser-appearance reset, size, radius en hover/focus styling zodat native/default button styling niet kan lekken.
+- `docs/design/admin-ui-principles.md` documenteert nu het gedeelde Admin Button System.
+- AIQS validate is diff-first gemaakt: `Diff` is default, `Huidig` en `Nieuw` zijn tabs, per-veld `Toon diff` is verwijderd, lange output wordt per sectie vergeleken en mobile toont een stacked diffblok in plaats van twee volledige tekstkolommen onder elkaar.
+- Validate toont nu lokale niet-normatieve AI-observaties zoals `uitgebreider`, `concreter` en `meer/minder brondekking`; deze zetten nooit automatisch een oordeel.
+- Validate ondersteunt shortcuts `1/2/3/4` voor `beter/gelijk/slechter/fout`, met input/textarea/contenteditable guard.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante docs/taskflow/context bevestigen.
+- [x] Blok 2: gedeelde admin-console primitive-laag toevoegen zonder gewone settings-primitives te breken.
+- [x] Blok 3: AIQS overview en group flow omzetten naar compacte console IA.
+- [x] Blok 4: task detail, draft, test en validate omzetten naar console/workbench-layout.
+- [x] Blok 5: static verify, runtime UI-smoke, taskflow en docs-bundel afronden.
+
+## Concrete checklist
+
+- [x] Taskflow en linked runtime-context vastleggen.
+- [x] Admin-console primitives toevoegen.
+- [x] Overview compact maken met toolbar, statuschips, dense family rows en utility logging.
+- [x] Group screen compact maken met contextbar, badges en dense task rows.
+- [x] Task detail compact maken met contextbar, version list en admin actions.
+- [x] Draft editor desktop split-layout geven.
+- [x] Test en validate workbench-density verbeteren.
+- [x] Goedgekeurde cleaner AIQS-startstijl doorvoeren naar onderliggende AIQS-schermen.
+- [x] AIQS action buttons migreren naar één consistent Admin Button System zonder zwarte/default buttons.
+- [x] Validate diff-first vergelijking, observaties en shortcuts toevoegen.
+- [x] Light/dark en desktop/mobile visueel controleren waar praktisch.
+- [x] Relevante verifies draaien.
+
+## Acceptance criteria
+
+- [x] AIQS gebruikt een eigen admin-console visual layer, niet alleen gewone settings-cards.
+- [x] Overview, group, detail, draft, test en validate behouden bestaande functionaliteit.
+- [x] Runtime drivers, technische varianten en read-only compound members zijn scanbaar als badges/states.
+- [x] Desktop gebruikt breedte beter via dense rows/split/workbench-layout; mobile blijft bruikbaar stacked.
+- [x] Debug logging en baseline import zijn visueel secundair/operationeel gepresenteerd.
+- [x] Gewone Budio gebruikersflow is niet aangepast.
+- [x] AIQS toont geen zwarte/default/native action buttons meer; button states komen uit gedeelde admin primitives.
+- [x] AIQS validate toont standaard diff, heeft tabs `Diff/Huidig/Nieuw`, toont observaties zonder automatische beslissing en plaatst oordeel na vergelijking.
+
+## Blockers / afhankelijkheden
+
+- Linked context: `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
+
+## Verify / bewijs
+
+- `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+- `npm run typecheck` — groen.
+- `npm run lint` — groen.
+- `npm run taskflow:verify` — groen.
+- 2026-06-22 redesign verify:
+  - `npm run typecheck` — groen na AIQS overview-herstructurering.
+  - `npm run lint` — groen na AIQS overview-herstructurering.
+  - `npm run taskflow:verify` — groen na taskfile-update.
+  - Browser-smoke op `http://localhost:8081/settings-ai-quality-studio` blokkeerde eerst op `ERR_CONNECTION_REFUSED`; daarna is `npm run dev` gestart en laadde de webtarget weer op `http://localhost:8081`.
+  - Playwright-navigatie naar AIQS redirectte daarna anoniem naar `/sign-in`, waardoor de nieuwe overviewstructuur niet volledig visueel bevestigd kon worden zonder extra lokale auth/bootstrap.
+  - `npm run verify:local-aiqs-bootstrap` — faalde verwacht op ontbrekende shell-env `ADMIN_AI_QUALITY_INTERNAL_TOKEN` of `ADMIN_REGEN_INTERNAL_TOKEN`; bestaande verify-script zelf bevestigt daarmee de resterende lokale bootstrapvoorwaarde.
+- Runtime UI-smoke op `http://localhost:8081`:
+  - overview laad als admin/founder met `14 live`, `Prompt families`, `Runtime actief`.
+  - group routes `today`, `week`, `month` laden met `Driver`, `Read-only` en `Live` badges.
+  - task detail `day_narrative` laadt met `Driver`, `Primary`, `Runtime actief`.
+  - draft flow via bestaande detailactie maakte lokaal draft v3 en laadde editor, `Runtime contract`, `Geavanceerd` en `Assist`.
+  - validate route voor dezelfde draft laadde `Case kiezen`, compare panes, `Snelle controle`, `Beslissing` en `Run test` zonder run te starten.
+  - lokaal aangemaakte testdraft v3 is na smoke via UI-delete flow weer verwijderd.
+  - desktop light/dark en mobile light/dark screenshots gecontroleerd op overlap, tekstfit en scanbaarheid.
+- `npm run verify:local-flow` — groen, text-flow PASS.
+- `npm run verify:local-reflection-flow` — groen, week/month reflection-flow PASS.
+- 2026-06-22 local smoke hardening:
+  - `npm run verify:local-aiqs-login` — groen; dedicated `smoke.aiqs.local@example.com`, founder + `ai_quality_studio` access bevestigd, runtime-baseline import groen en tijdelijke local-only AIQS internal token injectie/herstart bewezen.
+  - `npm run verify:local-aiqs-smoke` — groen; script startte zelf `npm run dev`, logde browser echt in via Mailpit magic link, opende `/settings-ai-quality-studio`, valideerde de nieuwe workspace-first overview en navigeerde door naar `group/today`.
+  - `npm run test:e2e:gallery:seed` — groen; lokale gallery fixture opnieuw gezaaid voor regressiecheck van gedeelde login-helper.
+  - `npm run test:e2e:gallery:smoke` met verse `GALLERY_E2E_ENTRY_URL` en `GALLERY_E2E_PHOTO_IDS` uit de seed-run — groen; gedeelde local magic-link browser-login helper blijft compatibel met bestaande gallery smoke.
+  - `npm run typecheck` — groen na AIQS smoke-hardening.
+  - `npm run lint` — groen na AIQS smoke-hardening.
+  - `npm run taskflow:verify` — groen na taskfile- en docs-aanvulling.
+  - `npm run docs:bundle` — groen; bundles en uploadcontext opnieuw opgebouwd.
+  - `npm run docs:bundle:verify` — groen.
+- 2026-06-22 cleaner Linear-achtige AIQS workspace:
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run typecheck` — groen na shared primitive- en AIQS-startpaginawijzigingen.
+  - `npm run lint` — groen na shared primitive- en AIQS-startpaginawijzigingen.
+  - `npm run verify:local-aiqs-smoke` — groen; AIQS overview opent geauthenticeerd, toont `Alle runtimes actief`, promptfamilies en systeemsectie, en navigeert naar `group/today`.
+  - Playwright viewport-check desktop light/dark en mobile light/dark — groen; desktopkolommen `Naam`, `Omschrijving`, `Prompts`, `Draft`, `Actie` zichtbaar, mobile rows stacked, `Runtime actief` niet meer zichtbaar per healthy family.
+  - Mobiele debug-row single-action check — groen; `Schakel in` zichtbaar en geen exacte `Aan`/`Uit` actieknoppen tegelijk.
+  - Screenshotcheck `/tmp/aiqs-cleaner-desktop-light.png` en `/tmp/aiqs-cleaner-mobile-light.png` — gecontroleerd op rustige max-width, dividers, minder cardgevoel en leesbare mobile stacking.
+  - `npm run taskflow:verify` — groen na cleaner workspace taskfile-update.
+  - `npm run docs:bundle` — groen na admin UI principles doc en taskfile-update.
+  - `npm run docs:bundle:verify` — groen.
+- 2026-06-22 onderliggende AIQS-schermen cleaner doorgetrokken:
+  - `npm run typecheck` — groen na group/detail/draft/test/validate en `AdminConsolePanel variant="plain"`.
+  - `npm run lint` — groen na group/detail/draft/test/validate en shared primitive update.
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde overview-smoke blijft werken en navigeert naar `group/today`.
+  - One-shot Playwright subroute-smoke — groen; `group/today`, draft editor, test route, validate route en mobile group renderen; oude `Runtime metadata`, `Prompt editor`, `Runtime test` en `Compare workbench` labels zijn niet meer zichtbaar.
+  - One-shot Playwright loaded-state check — groen; draft wacht op `Runtime contract`/`Geavanceerd`, test wacht op `Bron kiezen`.
+  - One-shot Playwright dark-mode smoke — groen; `group/today` en validate renderen in dark mode.
+  - Screenshotcheck: `/tmp/aiqs-subroute-group-desktop.png`, `/tmp/aiqs-subroute-group-mobile.png`, `/tmp/aiqs-subroute-draft-desktop-loaded.png`, `/tmp/aiqs-subroute-test-desktop-loaded.png`, `/tmp/aiqs-subroute-validate-desktop.png`, `/tmp/aiqs-subroute-group-dark.png`, `/tmp/aiqs-subroute-validate-dark.png`.
+- 2026-06-22 AIQS Admin Button System cleanup:
+  - `npm run typecheck` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
+  - `npm run lint` — groen na shared admin button API, AIQS action-migratie en prompt-editor button reset.
+  - `npm run test:unit -- ai-quality-readmodel` — groen, 1 testfile / 3 tests.
+  - `npm run verify:local-aiqs-smoke` — groen; overview-smoke blijft geauthenticeerd werken en navigeert naar `group/today`.
+  - Projectbrede audit op AIQS action-plekken — alleen toegestane source/case row-Pressables en prompt-editor token-remove `<button>` blijven over; token-remove heeft expliciete appearance reset.
+  - One-shot Playwright computed-style routecheck — groen; overview, group, detail, draft, test, validate, mobile group, dark group en dark validate hebben geen zichtbare zwarte/default button backgrounds.
+  - Screenshotcheck: `/tmp/aiqs-buttons-overview-light.png`, `/tmp/aiqs-buttons-group-light.png`, `/tmp/aiqs-buttons-detail-light.png`, `/tmp/aiqs-buttons-draft-light.png`, `/tmp/aiqs-buttons-test-light.png`, `/tmp/aiqs-buttons-validate-light.png`, `/tmp/aiqs-buttons-group-mobile.png`, `/tmp/aiqs-buttons-group-dark.png`, `/tmp/aiqs-buttons-validate-dark.png`.
+- 2026-06-22 AIQS validate diff-first redesign:
+  - `npx vitest run tests/unit/ai-quality-validate-compare.test.ts` — groen, 1 testfile / 5 tests.
+  - `npm run test:unit -- ai-quality` — groen, 4 testfiles / 21 tests.
+  - `npm run typecheck` — groen na validate compare-helper en routewijziging.
+  - `npm run lint` — groen na validate compare-helper en routewijziging.
+  - `npm run verify:local-aiqs-smoke` — groen; geauthenticeerde AIQS overview-smoke blijft werken.
+  - One-shot Playwright validate-route diff-smoke — groen; `day_narrative` draft v16 test run gestart, `Diff` standaard zichtbaar, tabs `Diff/Huidig/Nieuw` zichtbaar, `AI observaties` en `Beslissing` zichtbaar, `Toon diff` afwezig, shortcut `1` selecteerbaar en mobile viewport blijft diff-first.
+  - Screenshotcheck: `/tmp/aiqs-validate-diff-light.png`, `/tmp/aiqs-validate-diff-dark.png`, `/tmp/aiqs-validate-diff-mobile-dark.png`.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
+- Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate, één consistent Admin Button System en een diff-first validatepagina voor lange outputvergelijkingen.
+- Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. De startpagina is daarna verder versimpeld naar plain sections, inline status, list/table rows en single-action debug logging. Onderliggende AIQS-schermen gebruiken nu dezelfde rustige admin-workspace taal: minder header-badges/eyebrows, minder card-fill, metadata als plain secties en bestaande acties/functionele editors behouden. Alle AIQS action buttons lopen via gedeelde admin button/text-action primitives, primary gebruikt geen zwarte fill meer en de raw prompt-editor token button is browser-default-proof gemaakt.
+- Open / blocked: geen technische blockers of resterend werk binnen deze iteratie. De gebruiker sluit de huidige visuele richting op 2026-07-15 bewust af, ondanks resterende ontevredenheid; eventuele verdere redesign- of polishwensen krijgen later alleen op expliciet verzoek een nieuwe taak.
+
+## Relevante links
+
+- `docs/project/ai-quality-studio.md`
+- `docs/design/admin-ui-principles.md`
+- `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
+
+
+## Commits
+
+- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-05T07:59:45+02:00 — fix: deploy admin access control function
+
+- 2026-06-05T08:03:27+02:00 — docs: close production admin access incident
+
+- 2026-06-08T11:32:51+02:00 — fix: stabilize settings admin navigation
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-22T14:07:06+02:00 — fix: unify AIQS admin workspace controls
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+## Agent activity
+
+- start 2026-07-15T08:42:46.546Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T08:42:46.546Z -> 2026-07-15T08:43:42.266Z - Codex / gpt-5 / codex / default - reason: done
+```
+
+---
+
+## AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)
+
+- Path: `docs/project/25-tasks/done/aiqs-admin-interface-thema-herontwerp-spotify-openai-stijl.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-15
+
+```md
+---
+id: task-aiqs-admin-interface-thema-herontwerp
+title: AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: docs/project/open-points.md
+updated_at: 2026-07-15
+summary: "Geef AIQS admin een helderder en strakker eigen thema, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools, met goede bruikbaarheid op telefoon en desktop."
+tags: [aiqs, admin-ui, thema, design]
+workstream: aiqs
+due_date: null
+sort_order: 7
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+# AIQS admin-interface thema herontwerp (Spotify/OpenAI stijl)
+
+## Probleem / context
+
+De huidige AIQS admin-interface werkt functioneel, maar voelt nog te complex en mist een heldere, strakke admin-uitstraling.
+Voor dagelijkse tuning op mobiel en desktop is een duidelijker en consistenter admin-thema gewenst.
+
+## Gewenste uitkomst
+
+AIQS admin krijgt een eigen, heldere en strakke visuele stijl binnen Budio, geïnspireerd door Spotify Creator Tool en OpenAI admin-tools.
+De interface ondersteunt prettig gebruik op telefoon én desktop/fullscreen, zonder de bestaande AIQS-governance of datastromen functioneel te verbreden.
+
+## User outcome
+
+Een admin kan AIQS op mobiel en desktop sneller scannen en bedienen via een consistente, compacte tooling-interface.
+
+## Functional slice
+
+Alleen de visuele hiërarchie, responsive presentatie en gedeelde admin-primitives van bestaande AIQS-schermen; geen nieuwe functies, routes of datastromen.
+
+## Entry / exit
+
+- Entry: admin opent een bestaand AIQS-scherm.
+- Exit: dezelfde bestaande actie is beschikbaar in een duidelijkere admin-interface.
+
+## Happy flow
+
+1. Admin opent AIQS op mobiel of desktop.
+2. Admin herkent status, inhoud en acties in een consistente tooling-hiërarchie.
+3. Admin gebruikt de bestaande flow zonder functionele wijziging.
+
+## Non-happy flows
+
+- Empty, fout-, loading- en permission states blijven functioneel gelijk en zichtbaar.
+- Responsive beperkingen mogen geen bestaande actie onbereikbaar maken.
+
+## UX / copy
+
+- Compacte, heldere admin-tooling; de latere Linear-richting is de gerealiseerde vertaling.
+- Bestaande AIQS-copy en gewone Budio end-user UI blijven buiten functionele wijziging.
+
+## Data / IO
+
+- Input en output blijven de bestaande AIQS readmodels, routes en acties.
+- Geen wijzigingen aan backend, schema, API, promptgovernance of opslag.
+
+## Waarom nu
+
+- Deze stap maakt de tool sneller en prettiger inzetbaar na livegang van de huidige AIQS-variant.
+- Het verlaagt frictie bij testen, beoordelen en tunen van prompts/calls.
+
+## In scope
+
+- Visuele/thematische herwerking van AIQS admin-gedeelte.
+- Strakkere informatiehiërarchie en duidelijkere states/controls in adminschermen.
+- Goede mode-aware uitwerking voor mobiel en desktop/fullscreen.
+- Doorvertaling via bestaande shared UI-primitives waar passend.
+
+## Buiten scope
+
+- Nieuwe OpenAI-calls of uitbreiding van AIQS functionele scope.
+- Nieuwe review- of evaluatieprocessen buiten bestaande flows.
+- End-user themawijzigingen buiten admin-context.
+
+## Concrete checklist
+
+- [x] Designrichting en referentieprincipes concretiseren voor AIQS admin — afgedekt door de latere Linear-richting en gedeelde admin UI-principes.
+- [x] Belangrijkste AIQS adminschermen herstijlen met duidelijke hiërarchie — afgedekt door de twee uitgevoerde Linear-interface-taken.
+- [x] Mobiel + desktop/fullscreen gebruik valideren in light en dark mode — afgedekt door de vastgelegde responsive runtime-smokes.
+- [x] Regressiecheck op bestaande AIQS functionaliteit en admin-guardrails — afgedekt door de vastgelegde lint-, typecheck-, unit- en AIQS-smokes.
+- [x] Final polish + bewijs vastleggen tegen designrefs/acceptatie — deze oudere richting is administratief afgesloten als ingehaald; verdere polish wordt niet binnen deze taak voortgezet.
+
+## Acceptance criteria
+
+- [x] De relevante AIQS-schermen gebruiken een consistente admin-console hiërarchie.
+- [x] Mobiel, desktop, light en dark zijn in de latere Linear-taken gecontroleerd.
+- [x] Bestaande functionaliteit, governance en datastromen blijven intact.
+- [x] De oudere Spotify/OpenAI-richting staat niet langer als afzonderlijk open werk geregistreerd.
+
+## Oorspronkelijk plan / afgesproken scope
+
+Een zelfstandig Spotify/OpenAI-geïnspireerd AIQS-thema uitwerken voor mobiel en desktop, zonder functionele AIQS-uitbreiding of end-user themawijzigingen.
+
+## Expliciete user requirements / detailbehoud
+
+- Sluit alle bestaande admin-/AIQS-interfaceverbeteringstaken af.
+- Leg vast dat de huidige interface-iteratie bewust eindigt, ook al is de gebruiker nog niet tevreden.
+- Maak nu geen nieuwe redesign- of polish-taak; die volgt alleen wanneer de gebruiker daar later klaar voor is.
+
+## Status per requirement
+
+- [x] Eigen, heldere AIQS-adminstijl — status: functioneel afgedekt door de latere Linear-interface-implementaties; deze oudere designrichting wordt niet afzonderlijk uitgevoerd.
+- [x] Mobiel en desktop/fullscreen — status: afgedekt door responsive checks in de latere interface-taken.
+- [x] Bestaande governance en datastromen behouden — status: afgedekt door de UI-only scope en verificatie van de latere interface-taken.
+- [x] Huidige iteratie afsluiten zonder nieuwe vervolgtaak — status: op expliciet gebruikersverzoek afgerond op 2026-07-15.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De oorspronkelijk losse Spotify/OpenAI-richting is ingehaald door `AIQS admin console UI/UX Linear-richting` en `Admin + AIQS Linear interface kit refresh`, die de beoogde admin-hiërarchie, responsive werking en gedeelde primitives concreet hebben gerealiseerd.
+
+## Blockers / afhankelijkheden
+
+- Bij voorkeur pas uitvoeren nadat loggingvalidatie + productie-livepad stabiel zijn.
+- Afstemming met bestaande UI-guardrails en AIQS admin-only principes.
+
+## Verify / bewijs
+
+- Runtime/smoke-check AIQS admin in light en dark mode.
+- Desktop/fullscreen + mobiel gebruikscheck met screenshots/bewijs.
+- `npm run lint`
+- `npm run typecheck`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: een aparte Spotify/OpenAI-geïnspireerde AIQS-themaronde uitvoeren.
+- Expliciete user requirements: alle bestaande interfaceverbeteringstaken nu afsluiten, geen nieuwe taak aanmaken en resterende ontevredenheid bewaren voor een eventueel later verzoek.
+- Toegevoegde verbeteringen: de latere Linear-taken hebben de relevante admin-console primitives, AIQS-schermen, responsive states en verificatie aantoonbaar geleverd.
+- Afgerond: deze backlogtaak is als ingehaald en functioneel afgedekt afgesloten; zij wordt niet meer als zelfstandige designrichting uitgevoerd.
+- Open / blocked: niets binnen deze taak. Eventuele nieuwe visuele richting of polish valt expliciet buiten deze closeout en krijgt pas later op gebruikersverzoek een eigen taak.
+
+## Relevante links
+
+- `docs/project/ai-quality-studio.md`
+- `docs/design/mvp-design-spec-1.2.1.md`
+- `design_refs/1.2.1/ethos_ivory/DESIGN.md`
+- `docs/project/25-tasks/done/aiqs-admin-console-uiux-linear-richting.md`
+- `docs/project/25-tasks/done/admin-aiqs-linear-interface-kit-refresh.md`
+
+
+## Commits
+
+- 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+
+## Agent activity
+
+- start 2026-07-15T08:42:46.602Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T08:42:46.602Z -> 2026-07-15T08:43:42.322Z - Codex / gpt-5 / codex / default - reason: done
+```
+
+---
+
 ## AIQS Assist laagbewuste prompt review
 
 - Path: `docs/project/25-tasks/done/aiqs-assist-laagbewuste-prompt-review.md`
@@ -732,7 +1498,7 @@ Belangrijkste punten:
 ## Relevante links
 
 - `docs/project/ai-quality-studio.md`
-- `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
+- `docs/project/25-tasks/done/aiqs-admin-console-uiux-linear-richting.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
 
 
@@ -955,6 +1721,377 @@ Geen nieuwe UX-scope. De productiecheck bevestigt alleen dat de eerder gebouwde 
 - 2026-07-02T12:00:53+02:00 — docs: track AIQS production merge
 
 - 2026-07-02T12:06:34+02:00 — docs: close AIQS production go-live task
+```
+
+---
+
+## AIQS runtime DB-binding voor live prompts
+
+- Path: `docs/project/25-tasks/done/aiqs-runtime-db-binding-voor-live-prompts.md`
+- Bucket: done
+- Status: done
+- Priority: p1
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-15
+
+```md
+---
+id: task-aiqs-runtime-db-binding-voor-live-prompts
+title: AIQS runtime DB-binding voor live prompts
+status: done
+phase: transitiemaand-consumer-beta
+priority: p1
+source: docs/project/open-points.md
+updated_at: 2026-07-15
+summary: "Maak AIQS de runtime-bron voor alle huidige promptfamilies, zodat prompt/model/system/config niet langer hardcoded uit codehelpers komen maar uit live AIQS-versies in de database."
+tags: [aiqs, runtime, prompts, supabase, openai]
+workstream: aiqs
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 8
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+
+
+
+
+
+
+
+# AIQS runtime DB-binding voor live prompts
+
+## Probleem / context
+
+AIQS kan vandaag live promptversies beheren en testen, maar productieflows lezen nog niet uit die live AIQS-versies. `process-entry`, `renormalize-entry`, `generate-reflection` en `admin-regeneration-job` bouwen prompt/model/system prompt nog direct uit codehelpers zoals `prompt-specs.ts` en `day-journal-contract.mjs`.
+
+Daardoor blijft AIQS deels een editor- en evaluatielaag naast de runtime, in plaats van de bron van waarheid voor de huidige AI-taken.
+
+## Gewenste uitkomst
+
+Voor alle huidige AIQS-managed families leest runtime zijn prompt/model/system/config uit live AIQS-versies in de database. De app gebruikt geen hardcoded prompttekst meer voor deze families.
+
+De eerste slice draait fail-closed: als een vereiste live AIQS-binding ontbreekt of ongeldig is, stopt de betreffende AI-call expliciet met een duidelijke serverfout en logspoor.
+
+## User outcome
+
+Een founder of admin kan promptwijzigingen in AIQS beheren en weet dat productieflows dezelfde live AIQS-versies gebruiken als de studio. Er is geen verborgen tweede promptwaarheid in code meer voor deze families.
+
+## Functional slice
+
+Één afgeronde AIQS-runtime slice die:
+
+1. runtime-binding metadata toevoegt aan AIQS-taken
+2. alle huidige promptfamilies runtime uit live AIQS-versies laat lezen
+3. technische variantprompts (`repair`, `renormalization`) ook beheersbaar maakt via AIQS
+4. AIQS admin duidelijk laat zien welke taken runtime-driver zijn en welke compound-member of technische variant
+
+## Entry / exit
+
+- Entry: een productie- of adminflow wil een AIQS-managed OpenAI-call doen voor entry normalization, day journal of reflection.
+- Exit: de flow laadt de vereiste live AIQS-binding uit DB en gebruikt die voor prompt/model/system/config, of faalt expliciet als die binding ontbreekt of ongeldig is.
+
+## Happy flow
+
+1. Founder importeert of beheert runtime-baselines in AIQS, inclusief technische varianttasks.
+2. Runtimeflow vraagt een binding op via een gedeelde resolver, bijvoorbeeld `entry_normalization.primary`.
+3. Resolver vindt exact één geldige live AIQS-versie en levert `model`, `systemInstructions`, `promptTemplate`, `configJson`, `taskKey` en `versionId`.
+4. De betreffende edge function assembleert de input payload zoals nu, maar gebruikt prompt/model/system/config uit de live AIQS-binding.
+5. AIQS admin toont eerlijk welke taak runtime-driver is en welke taak een technische variant of compound-member is.
+
+## Non-happy flows
+
+- Empty state: geen live versie voor een vereiste runtime binding geeft expliciete serverfout.
+- Permission denied / unavailable: niet-admin blijft geblokkeerd voor AIQS admin, zonder runtimeverbreding naar end-user beheer.
+- Validation / unsupported state: live versie met ontbrekende prompt, model of ongeldige runtime metadata wordt geweigerd.
+- Failure / retry / cancel: DB-resolve of binding-load failure geeft duidelijk logspoor met `runtime_binding_key`, task key en foutreden; geen code fallback.
+
+## UX / copy
+
+- AIQS admin gebruikt bestaande admin-shell en taskdetailpatronen.
+- Runtime-bewuste labels moeten expliciet maken:
+  - welke taak `runtime-driver` is
+  - welke taak `compound-member` is
+  - welke variant `primary`, `repair` of `renormalization` is
+- Technische varianttasks mogen zichtbaar zijn als advanced/runtime-varianten, niet als gewone end-user taken.
+
+## Data / IO
+
+- Input:
+  - runtime binding key zoals `entry_normalization.primary`
+  - bestaande flow-inputs zoals `rawText`, `dayJournals`, `entries`
+- Output:
+  - live AIQS runtime binding met `model`, `systemInstructions`, `promptTemplate`, `configJson`, `taskKey`, `versionId`
+  - expliciete runtimefout bij ontbrekende of ongeldige binding
+- Opslag/API/service/file-impact:
+  - schema-uitbreiding voor runtime metadata op AIQS-taken
+  - nieuwe technische AIQS task keys:
+    - `entry_cleanup_repair`
+    - `entry_renormalization`
+    - `day_journal_repair`
+  - gedeelde runtime resolver voor live AIQS-bindingen
+  - updates aan `admin-ai-quality-studio`, `process-entry`, `renormalize-entry`, `generate-reflection`, `admin-regeneration-job`
+  - client/admin types uitbreiden met runtime metadata
+- Statussen:
+  - live binding found / missing / invalid
+  - runtime driver / compound member / technical variant
+  - primary / repair / renormalization
+
+## Waarom nu
+
+- AIQS is pas een echte runtime-governance laag wanneer productie dezelfde live promptbron gebruikt.
+- Dit verkleint promptdrift tussen testresultaten in AIQS en productiegedrag.
+- Het houdt de scope productief: alleen prompt/model/system/config migreren naar DB, zonder direct alle parsing en guardrails te herbouwen.
+
+## In scope
+
+- Runtime metadata toevoegen voor alle huidige families.
+- Live AIQS-binding resolver bouwen.
+- Runtime-calls migreren voor:
+  - `process-entry`
+  - `renormalize-entry`
+  - `generate-reflection`
+  - `admin-regeneration-job`
+- Baseline import uitbreiden voor technische varianttasks.
+- AIQS admin readmodel/types uitbreiden voor runtime-bewuste taakrepresentatie.
+- Hardcoded promptwaarheid voor deze families uit runtimepad verwijderen.
+
+## Buiten scope
+
+- Nieuwe AI-task families buiten de huidige entry/day/reflection set.
+- Grote editor-redesigns of AIQS-themawerk.
+- Migratie van output cleanup, validators of heuristische guardrails naar DB.
+- End-user featurewerk buiten de bestaande AI-flows.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak AIQS de runtime-bron voor alle huidige promptfamilies.
+- Eerste slice bindt alle huidige families aan live AIQS-versies.
+- Runtime draait fail-closed zonder code fallback.
+- Alleen `model`, `system_instructions`, `prompt_template` en toegestane runtime config gaan DB-driven.
+- Input assembly, output parsing, cleanup en guardrails blijven voorlopig code-side.
+
+## Expliciete user requirements / detailbehoud
+
+- Prompts moeten van code-driven naar database-driven gaan.
+- Alle requests van AIQS moeten die DB-bron gaan gebruiken en niet meer hardcoded in de codebase zitten.
+- Migratie geldt voor alle huidige families, niet alleen entry.
+- Geen code fallback als live AIQS-binding ontbreekt.
+- Technische promptvarianten moeten ook via AIQS beheersbaar zijn.
+
+## Status per requirement
+
+- [x] AIQS wordt runtime-bron voor alle huidige families — status: gebouwd
+- [x] Runtime gebruikt geen hardcoded prompttekst meer voor deze families — status: gebouwd
+- [x] Fail-closed gedrag zonder code fallback — status: gebouwd
+- [x] Technische varianttasks zijn via AIQS beheersbaar — status: gebouwd
+- [x] AIQS admin toont runtime-driver en variantmetadata — status: gebouwd
+- [x] Centrale live-bindingvalidatie met expliciete reason-codes — status: gebouwd
+- [x] Directe resolvertests voor geldig, ontbrekend en ongeldig — status: gebouwd
+- [x] Deterministisch bewijs voor entry- en day-journal-repair — status: gebouwd
+- [x] Docs/taskflow-closeout en reconciliation — status: afgerond
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Lokale reflection/day/entry runtime-template rendering is als pure helper toegevoegd voor app-readmodel en als edge-safe helper binnen `supabase/functions/_shared/**`.
+- Nieuwe lokale unit-tests toegevoegd voor prompt-template rendering, prompt-version fallback, AIQS readmodel-routing en Supabase Edge Function import boundaries.
+- Baseline-import is gehard tot een idempotent importresultaat per task/binding met `created`, `updated`, `live_created`, `already_ok` en `error`.
+- Clean bootstrap is bewezen via internal-token pad en founder-auth pad; handmatige lokale SQL/tsx repair is niet meer nodig voor de vereiste live bindings.
+- Reflection-baseline en reflection-fixture zijn aangescherpt zodat week/maand reflecties weer expliciete patroon-/verschuivingssignalen halen.
+- AIQS group screen toont weer alle onderdelen van een gedeelde runtime-family, inclusief read-only compound members; read-only onderdelen routeren naar de gedeelde prompt.
+- Live-readiness hardening toegevoegd: AIQS-managed runtime mag geen productinhoud meer reconstrueren via hardcoded fallbacks. Runtime gebruikt live AIQS/OpenAI-output of faalt expliciet met reason-code; retries, cleanup en validators blijven toegestaan.
+- Production push hardening toegevoegd: GitHub production deploy configureert `ADMIN_AI_QUALITY_INTERNAL_TOKEN`, deployt `admin-ai-quality-studio` mee en draait daarna een harde `import_runtime_baseline` gate zodat alle AIQS runtime-baselines production-ready en live staan of de deploy faalt.
+- Nieuwe verify/deploy helper `npm run aiqs:runtime-baseline:ensure` toegevoegd voor lokaal en CI-gebruik; vereist in production `SUPABASE_PUBLISHABLE_KEY` en `ADMIN_AI_QUALITY_INTERNAL_TOKEN`.
+- GitHub secret alias-fix toegevoegd: production deploy accepteert ook bestaande `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` en `ADMIN_REGEN_INTERNAL_TOKEN`, zonder secretwaarden in git te zetten.
+- Production deploy hoeft geen GitHub AIQS internal-token secret meer te hebben: de workflow genereert per deploy een gemaskeerde tijdelijke token, zet die als Supabase function secret en gebruikt die direct voor de baseline gate.
+- Production deploy hoeft ook geen GitHub publishable-key secret meer te hebben: als `SUPABASE_PUBLISHABLE_KEY`/`EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY` ontbreekt, haalt de workflow de anon/publishable key op via `supabase projects api-keys`.
+- Senior-review afrondingsronde gestart voor centrale bindingvalidatie, directe resolvertests, deterministisch repairbewijs en taskflow-closeout.
+- Centrale Edge-validator toegevoegd voor alle zeven bindings, inclusief veilige `AiRuntimeBindingError` reason-codes en validatie bij draft/live-promotie.
+- Runtimeprompt-rendering faalt nu expliciet wanneer een `{{placeholder}}` na input-assembly onopgelost blijft.
+- Gedeelde injecteerbare repair-branchhelper toegevoegd en gebruikt door entry-normalisatie en dagjournaalcompositie, zonder wijzigingen aan parsing/cleanup/quality-guards.
+- Reviewbevindingen voor deze hardening:
+  - `process-entry` en `renormalize-entry` gebruiken live AIQS bindings, maar bevatten nog zelfgemaakte entry title/body/summary fallbacks.
+  - `process-entry` en `regenerate-day-journal` kunnen nog een zelfgemaakt dagjournal teruggeven via `createFallbackDayJournal`.
+  - `admin-regeneration-job` gebruikt bij entry-resultaten nog bestaande row/context fallbackvelden als OpenAI JSON incompleet is.
+  - `generate-reflection` faalt al hard bij invalid output, maar gebruikt nog fallback-copy in logging.
+  - `prompt-specs.ts` blijft alleen baseline/import-bron en mag niet als runtime fallback dienen.
+  - `src/server/ai/**` bevat stub-services en moet legacy/test-only blijven, niet live runtime.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: schema en AIQS runtime metadata toevoegen.
+- [x] Blok 2: live binding resolver en baseline import uitbreiden.
+- [x] Blok 3: runtime-calls migreren naar live AIQS-bindingen.
+- [x] Blok 4: admin readmodel/types aanscherpen en gerichte verify uitvoeren.
+- [x] Blok 5: hardening-review uitvoeren voor reflectionkwaliteit, clean bootstrap en deploy-import boundaries.
+- [x] Blok 6: live-readiness hardening uitvoeren voor no-hardcoded-output-fallback runtimegedrag.
+- [x] Blok 7: production push gate toevoegen zodat AIQS runtime-baselines automatisch live en clean zijn na deploy.
+- [x] Blok 8: centrale live-bindingvalidatie en veilig reason-codecontract toevoegen.
+- [x] Blok 9: resolver en beide repairpaden deterministisch testen.
+- [x] Blok 10: volledige verify, reconciliation en taskflow-closeout uitvoeren.
+
+## Concrete checklist
+
+- [x] Nieuwe taskfile en taskflow sync vastleggen.
+- [x] Runtime metadata en technische taskkeys aan schema/baseline toevoegen.
+- [x] Shared runtime resolver bouwen.
+- [x] `process-entry`, `renormalize-entry`, `generate-reflection` en `admin-regeneration-job` op resolver aansluiten.
+- [x] AIQS admin types/readmodel uitbreiden voor runtime metadata.
+- [x] Baseline-import idempotent en clean-bootstrap safe maken.
+- [x] Edge runtime losmaken van imports buiten `supabase/functions/**`.
+- [x] Reflection smoke weer groen krijgen op patroon-/verschuivingssignalen.
+- [x] Contentgenererende fallbacks uit AIQS-managed runtimeflows verwijderen of isoleren.
+- [x] Guard-test toevoegen tegen verboden runtime-output fallbacks.
+- [x] Production deploy workflow importeert en verifieert AIQS runtime-baselines na function deploy.
+- [x] Production deploy workflow accepteert bestaande GitHub secret aliases voor publishable key en internal token.
+- [x] Production deploy workflow genereert zelf een tijdelijke AIQS internal token als deploy-secret voor de baseline gate.
+- [x] Production deploy workflow kan de Supabase publishable key afleiden via Supabase CLI/API wanneer er geen GitHub secret alias bestaat.
+- [x] Centrale live-bindingvalidatie weigert ontbrekende/ongeldige task-, versie-, prompt-, model-, system-, schema- en configdata met expliciete reason-code.
+- [x] Directe Edge-resolvertests dekken geldige, ontbrekende, dubbele/query-fout en ongeldige bindings.
+- [x] Entry- en day-journal-repair zijn deterministisch bewezen met injecteerbare OpenAI-calls.
+- [x] Docs sync en closeout uitvoeren.
+
+## Acceptance criteria
+
+- [x] `process-entry` gebruikt live `entry_cleanup` voor primary normalization.
+- [x] `process-entry` gebruikt live `entry_cleanup_repair` voor repair normalization.
+- [x] `renormalize-entry` gebruikt live `entry_renormalization`.
+- [x] day journal compose gebruikt live `day_narrative` en repair gebruikt live `day_journal_repair`.
+- [x] week reflectie gebruikt live `week_narrative`; maand reflectie gebruikt live `month_narrative`.
+- [x] `admin-regeneration-job` gebruikt dezelfde runtime resolver als productieflows.
+- [x] Ontbrekende of ongeldige live binding geeft expliciete fout en geen code fallback.
+- [x] AIQS admin kan runtime-driver en technische variantstatus tonen.
+- [x] Baseline-import werkt via internal-token en founder-auth zonder handmatige repair.
+- [x] Reflection smoke haalt de bestaande kwaliteitspoort voor patroon-/verschuivingssignalen.
+- [x] Supabase Edge Functions importeren geen lokale runtimehelpers meer buiten `supabase/functions/**`.
+- [x] AIQS-managed runtime genereert geen hardcoded fallback title/body/summary/day-journal output meer.
+- [x] No-speech/empty transcript geeft expliciete empty/error status en geen fake normalized entry-content.
+- [x] Admin regeneration telt incomplete OpenAI-output als failed item en hergebruikt geen oude content.
+- [x] Productiepush faalt als AIQS runtime-baselines niet foutloos live gezet of geverifieerd kunnen worden.
+
+## Blockers / afhankelijkheden
+
+- Baseline-import en huidige AI task seeds moeten uitbreidbaar blijven zonder dat bestaande AIQS-data corrupt raakt.
+- Runtime-family/composition metadata moet klein blijven en niet uitgroeien tot brede nieuwe control-plane scope.
+
+## Verify / bewijs
+
+- `npx supabase db push --local`
+- gerichte unit-tests op runtime resolver
+- gerichte unit-tests op AIQS readmodel-routing
+- import-boundary unit-test voor Supabase Edge Functions
+- `npm run verify:local-aiqs-bootstrap`
+- gerichte smoke voor minstens entry + reflection
+- `npm run verify:local-flow`
+- `npm run verify:local-reflection-flow`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run taskflow:verify`
+- `npm run docs:bundle`
+- `npm run docs:bundle:verify`
+
+Laatste hardeningbewijs:
+
+- `npm run test:unit -- ai-quality` — groen, 3 files / 13 tests.
+- `npm run test:unit -- ai-quality-runtime aiqs-no-hardcoded-output-fallbacks day-journal-contract-strict` — groen, 3 files / 8 tests.
+- `npm run lint` — groen.
+- `npm run typecheck` — groen.
+- `npm run supabase:functions:restart` — uitgevoerd; lokale runtime pid `3310`.
+- `npm run verify:local-flow` — groen; entry + day journal runtime via lokale Supabase/OpenAI.
+- `npm run verify:local-reflection-flow` — groen; week + month reflection runtime via lokale Supabase/OpenAI.
+- `npm run aiqs:runtime-baseline:ensure` — groen met tijdelijke lokale internal token; import summary `{"created":0,"updated":0,"live_created":0,"already_ok":14,"error":0}`.
+- `npm run lint` — groen na production push gate.
+- `npm run typecheck` — groen na production push gate.
+- `npm run taskflow:verify` — groen na production push gate.
+- GitHub secret alias-fix: lokaal statisch gevalideerd met `sh -n scripts/ensure-aiqs-runtime-baseline.sh`, `npm run lint`, `npm run typecheck` en `npm run taskflow:verify`.
+- GitHub deploy-token fix: AIQS internal token wordt in Actions gegenereerd met `openssl rand -hex 32`, gemaskeerd en via `supabase secrets set` naar production gezet.
+- GitHub publishable-key fix: publishable key wordt optioneel uit GitHub Secrets gelezen en anders via `npx supabase projects api-keys --output json` afgeleid en gemaskeerd.
+- `npm run test:unit -- aiqs-runtime-binding aiqs-repair-flow ai-quality-runtime ai-quality-readmodel ai-quality-lifecycle aiqs-no-hardcoded-output-fallbacks day-journal-contract-strict supabase-function-import-boundaries regeneration-source-contract` — groen, 9 files / 51 tests.
+- `npm run typecheck` — groen na bindingvalidatie en repair-extractie.
+- `npm run lint` — groen na bindingvalidatie en repair-extractie.
+- `npm run verify:local-flow` — groen; request `baecaff9-010e-4a13-9989-b78ccd7d7df6`, entry + day journal via gevalideerde live bindings.
+- `npm run verify:local-reflection-flow` — groen; week request `1595600f-0c08-4705-b23c-32063a29a7c5`, month request `5cd30141-6c22-4cbd-905d-784a9e96482f`.
+- `npm run verify:local-aiqs-bootstrap` — groen; internal-token/founder bootstrap zonder handmatige repair.
+- Finale gerichte suite — groen, 9 files / 58 tests.
+- Finale `npm run lint` — groen.
+- Finale `npm run typecheck` — groen.
+- Finale `npm run taskflow:verify` vóór done-transitie — groen, 10 taskfile-mutaties / 29 relevante wijzigingen.
+- `npm run taskflow:verify` na done-transitie — groen, 11 taskfile-mutaties / 30 relevante wijzigingen.
+- `npm run docs:bundle` — groen; taskoverzichten en uploadbundels opnieuw opgebouwd.
+- `npm run docs:bundle:verify` — groen.
+
+Live-readiness notes:
+
+- Entry-normalisatie gebruikt live AIQS output voor `title`, `body` en `summary_short`; geen body-derived summary of generieke titel meer.
+- `summary_short` mag alleen leeg blijven wanneer het veld door OpenAI aanwezig is en de live AIQS `technical_contract.allowEmptySummaryShort` dat toestaat.
+- Day journal en reflection runtime-drivers gebruiken compound output-schema's voor hun volledige OpenAI JSON-contract.
+- Structured Outputs worden alleen gebruikt voor object-schema's; legacy/non-object member-schema's blijven JSON-transport met runtimevalidatie.
+- Productie heeft dezelfde baselinefix nodig via AIQS baseline import of live-versie-update voordat productieclaims worden gemaakt.
+- GitHub production deploy voert die baselinefix automatisch uit via `scripts/ensure-aiqs-runtime-baseline.sh`.
+- Production secrets voor publishable key zijn optioneel:
+  - preferred: `SUPABASE_PUBLISHABLE_KEY` of `EXPO_PUBLIC_SUPABASE_CLOUD_PUBLISHABLE_KEY`
+  - fallback: workflow haalt anon/publishable key op via Supabase CLI met `SUPABASE_ACCESS_TOKEN`
+- Er is geen GitHub secret meer nodig voor `ADMIN_AI_QUALITY_INTERNAL_TOKEN`; de workflow genereert die per deploy en zet hem als Supabase function secret.
+- De gate overschrijft alleen baseline-managed live versies via de bestaande idempotente import; afwijkende custom live versies geven `error` en blokkeren de deploy in plaats van stil overschrijven.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: AIQS runtime DB-driven maken voor alle huidige promptfamilies, inclusief fail-closed gedrag en technische variantpromptbeheer.
+- Expliciete user requirements: alle zeven bindings blijven DB-driven; ontbrekende of ongeldige bindings falen met veilige reason-codes; beide conditionele repairpaden hebben deterministisch bewijs; parsing, cleanup en quality-guards blijven code-side.
+- Toegevoegde verbeteringen: edge-safe runtime-render helper, idempotente baseline-import, clean-bootstrap verify, reflectionkwaliteit-hardening, import-boundary test, runtime-bewuste adminlabels, centrale bindingvalidator, promotievalidatie en gedeelde repair-branchhelper.
+- Afgerond:
+  - schema + nieuwe technische tasks
+  - live binding resolver
+  - runtime-call migratie voor entry/day/reflection/admin regeneration
+  - admin readmodel/type-uitbreiding
+  - unit-tests + entry/day smoke + reflection smoke + clean bootstrap
+  - alle zeven runtimebinding-contracten fail-closed gevalideerd
+  - veilige reason-code logging/response-details zonder promptinhoud
+  - directe resolvertests voor happy path, missing/query/duplicate en invalid states
+  - deterministische entry- en day-journal-repairtests met injecteerbare OpenAI-call
+  - finale lint, typecheck, runtime-smokes en taskflow-verify groen
+- Open / blocked: geen.
+
+## Relevante links
+
+- `docs/project/ai-quality-studio.md`
+- `docs/project/open-points.md`
+- `docs/project/25-tasks/open/mvp-admin-aiqs-productie-bundel.md`
+
+
+## Commits
+
+- 2026-06-04T17:06:53+02:00 — feat: harden AIQS runtime production readiness
+
+- 2026-06-04T20:47:24+02:00 — fix: support existing deploy secret aliases
+
+- 2026-06-04T20:49:20+02:00 — fix: generate AIQS deploy token
+
+- 2026-06-04T20:51:08+02:00 — fix: resolve deploy publishable key
+
+- 2026-06-22T11:07:20+02:00 — feat(jarvis): add chat-first workspace command room
+
+- 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
+
+- 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+## Agent activity
+
+- start 2026-07-15T08:43:52.570Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T08:43:52.570Z -> 2026-07-15T08:55:19.922Z - Codex / gpt-5 / codex / default - reason: done
 ```
 
 ---
@@ -1186,7 +2323,7 @@ Week- en maandvalidatie moeten cases uit `day_journals` opbouwen, ook wanneer `p
 
 - `docs/project/ai-quality-studio.md`
 - `docs/project/25-tasks/open/aiqs-runtime-db-binding-voor-live-prompts.md`
-- `docs/project/25-tasks/open/aiqs-admin-console-uiux-linear-richting.md`
+- `docs/project/25-tasks/done/aiqs-admin-console-uiux-linear-richting.md`
 
 
 ## Commits
@@ -6250,6 +7387,234 @@ Een gerichte bugfix op de standaard tekstcaptureflow: reproduce -> bronbevestigd
 
 ---
 
+## Capture tekstinvoer copy en spacing polish
+
+- Path: `docs/project/25-tasks/done/capture-tekstinvoer-copy-en-spacing-polish.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-10
+
+```md
+---
+id: task-capture-tekstinvoer-copy-en-spacing-polish
+title: Capture tekstinvoer copy en spacing polish
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-10
+summary: Verwijder overbodige titel en uitleg boven de tekstinvoer in de capture type-flow en geef de editor meer ruimte zonder functionele wijzigingen.
+tags: [capture, ui, polish]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+## Probleem / context
+
+De tekstinvoerweergave in de capture-flow bevat te veel vaste copy boven het tekstveld. Daardoor begint het schrijfveld te laag en krijgt de gebruiker minder effectieve schrijfruimte.
+
+## Gewenste uitkomst
+
+De tekstinvoerweergave toont direct onder de bestaande header alleen de functionele datumcontext, daarna het tekstveld, tekenteller en `Leg vast`. Titel en subtitel verdwijnen volledig zonder lege restspacing.
+
+## User outcome
+
+De gebruiker kan sneller beginnen met schrijven, vooral bij historische capture, terwijl targetDate, returnTo, teller, validatie en opslag ongewijzigd blijven.
+
+## Functional slice
+
+Een kleine UI-polish op de bestaande `/capture/type` tekstinvoerweergave.
+
+## Entry / exit
+
+- Entry: gebruiker opent `/capture/type?targetDate=YYYY-MM-DD&returnTo=/day/YYYY-MM-DD`.
+- Exit: tekstmoment kan zoals voorheen worden geschreven en opgeslagen, met meer editorruimte.
+
+## Happy flow
+
+1. Tekstinvoer opent met bestaande header/terugknop.
+2. Titel `Wat wil je vastleggen?` en subtitel verdwijnen.
+3. Datumcontext blijft zichtbaar en dynamisch.
+4. Textarea begint hoger, teller blijft werken en `Leg vast` bewaart zoals voorheen.
+
+## Non-happy flows
+
+- Geen targetDate: bestaande today/capture fallback blijft.
+- Te korte/lege tekst: bestaande validatie blijft.
+- Opslaan mislukt: bestaande foutafhandeling blijft.
+- Loading/disabled state: bestaande gedrag blijft.
+
+## UX / copy
+
+- Verwijderen:
+  - `Wat wil je vastleggen?`
+  - `Schrijf op wat je wilt onthouden, verwerken of bewaren.`
+- Behouden:
+  - `Je voegt dit toe aan [datum].`
+  - placeholder of korte fallback `Begin met schrijven…`
+  - teller `0 / 20000`
+  - actie `Leg vast`
+
+## Data / IO
+
+- Input: bestaande routeparams `targetDate`, `returnTo`.
+- Output: bestaande entry-save flow.
+- Opslag/API/service/file-impact: geen service-, API-, database- of dependencywijzigingen.
+- Statussen: bestaande form/loading/validation states blijven.
+
+## Waarom nu
+
+Dit is een kleine capture-first UX-verbetering die minder uitleg en meer schrijfruimte geeft.
+
+## In scope
+
+- Werkelijke tekstinvoercomponent/route inspecteren.
+- Titel/subtitel verwijderen.
+- Spacing/editorhoogte aanpassen met bestaande layouttokens/flex.
+- Gerichte verify en ingelogde smoke waar mogelijk.
+
+## Buiten scope
+
+- Capture-typekeuze, opnameflow, audio, targetDate/returnTo, opslag, validatie, dagdetail, dagenkiezer, navigatie, design system, database en dependencies.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Gerichte micro-UX-polish op tekstinvoer in capture-flow.
+- Geen redesign en geen functionele wijzigingen.
+
+## Expliciete user requirements / detailbehoud
+
+1. `Wat wil je vastleggen?` volledig verwijderen.
+2. `Schrijf op wat je wilt onthouden, verwerken of bewaren.` volledig verwijderen.
+3. Datumcontext dynamisch behouden.
+4. Datumcontext direct onder header met normale spacing.
+5. Textarea begint hoger en krijgt meer bruikbare hoogte.
+6. Teller en validatie blijven ongewijzigd.
+7. `Leg vast` blijft functioneel identiek.
+8. `targetDate` en `returnTo` blijven correct.
+
+## Status per requirement
+
+- [x] Titel/subtitel verwijderd — status: gebouwd
+- [x] Datumcontext behouden — status: gebouwd
+- [x] Textarea/layout hoger en ruimer — status: gebouwd
+- [x] Teller/actie/validatie ongewijzigd — status: gebouwd
+- [x] Ingelogde smoke waar mogelijk — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Nog geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, context en taskflow bevestigen.
+- [x] Blok 2: werkelijke component inspecteren en minimale UI-wijziging uitvoeren.
+- [x] Blok 3: checks en smoke, task/docs afronden.
+
+## Concrete checklist
+
+- [x] Vind de daadwerkelijke tekstinvoerweergave.
+- [x] Verwijder vaste titel/subtitel zonder restspacing.
+- [x] Pas spacing/editor flex aan.
+- [x] Draai lint/typecheck/taskflow.
+- [x] Draai relevante authenticated smoke.
+
+## Acceptance criteria
+
+- [x] Titel en subtitel zijn volledig weg.
+- [x] Datumcontext blijft dynamisch zichtbaar.
+- [x] Textarea begint hoger en krijgt meer ruimte.
+- [x] Teller en `Leg vast` blijven werken.
+- [x] Geen targetDate/returnTo-regressie.
+
+## Blockers / afhankelijkheden
+
+- Geen externe blockers bekend.
+
+## Verify / bewijs
+
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `rg "Wat wil je vastleggen|Schrijf op wat je wilt onthouden|Je voegt dit toe aan|Begin met schrijven|Leg vast" app/capture/type.tsx app/capture/index.tsx app/capture/record.tsx components -S`
+- ✅ Authenticated desktop smoke via bestaande `loginWithLocalMagicLink` op `/capture/type?targetDate=2026-05-31&returnTo=%2Fday%2F2026-05-31`
+  - verwijderde titel/subtitel afwezig
+  - datumcontext zichtbaar
+  - editor zichtbaar, invulbaar en 596px hoog
+  - teller update zichtbaar
+- ✅ Authenticated mobile dark smoke via bestaande `loginWithLocalMagicLink` op `/capture/type?targetDate=2026-06-02&returnTo=%2Fday%2F2026-06-02`
+  - verwijderde titel/subtitel afwezig
+  - datumcontext zichtbaar
+  - editor zichtbaar, invulbaar en 540px hoog
+  - geen horizontale overflow
+- ✅ `npm run taskflow:verify`
+- User-follow-up: submitknop krijgt een unieke accessibility/test hook zodat smoke-tests niet hoeven te matchen op het ambigue zichtbare label `Leg vast`.
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ Authenticated selector-smoke via bestaande `loginWithLocalMagicLink`:
+  - `getByRole('button', { name: 'Tekstmoment vastleggen' })` vindt exact één submitknop
+  - `getByTestId('capture-type-submit-button')` is zichtbaar en enabled na tekstinvoer
+- User-follow-up: top-spacing tussen capture-header en datumcontext moet gelijklopen met dagdetail.
+- ✅ Desktop spacing compare:
+  - `/day/2026-05-31`: header/content gap 38px
+  - `/capture/type?targetDate=2026-05-31&returnTo=%2Fday%2F2026-05-31`: header/content gap 40px
+  - verschil 2px
+- ✅ Mobile spacing compare:
+  - `/day/2026-05-31`: header/content gap 38px
+  - `/capture/type?targetDate=2026-05-31&returnTo=%2Fday%2F2026-05-31`: header/content gap 40px
+  - verschil 2px, geen horizontale overflow
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: titel en subtitel verwijderen, datumcontext behouden, content omhoog brengen en editor meer ruimte geven zonder functionele wijziging.
+- Toegevoegde verbeteringen: geen.
+- Afgerond: `app/capture/type.tsx` gebruikt geen `CaptureIntro` meer in de tekstinvoerroute, datumcontext heeft geen extra topmargin, de capture-content heeft geen extra top-padding meer bovenop de compacte notice, de bestaande flex-editor benut de vrijgekomen ruimte en de submitknop heeft een unieke accessibility/test hook.
+- Open / blocked: opslaan naar backend is niet opnieuw uitgevoerd in de smoke; routing, input, teller en actie-aanwezigheid zijn ingelogd gecontroleerd en submitcode is ongemoeid gebleven.
+
+## Relevante links
+
+- `app/capture/type.tsx`
+
+
+## Agent activity
+
+- start 2026-07-10T08:35:54.366Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-10T08:35:54.366Z -> 2026-07-10T08:39:15.173Z - Codex / gpt-5 / codex / default - reason: done
+
+- start 2026-07-10T08:40:22.045Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-10T08:40:22.045Z -> 2026-07-10T08:41:26.128Z - Codex / gpt-5 / codex / default - reason: done
+
+- start 2026-07-10T08:43:13.050Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-10T08:43:13.050Z -> 2026-07-10T08:45:23.942Z - Codex / gpt-5 / codex / default - reason: done
+
+
+## Commits
+
+- 2026-07-13T20:20:34+02:00 — feat: improve day detail and historical capture flow
+```
+
+---
+
 ## Capture typing UX polish voor vandaag-flow
 
 - Path: `docs/project/25-tasks/done/capture-typing-ux-polish-vandaag-flow.md`
@@ -7215,6 +8580,777 @@ Uitgevoerd op `2026-05-15`:
 - `docs/dev/qa-test-strategy.md`
 - `docs/dev/local-auth-smoke-workflow.md`
 - `.agents/skills/ui-implementation-guardrails/SKILL.md`
+```
+
+---
+
+## Dag/week/maand swipe navigatie
+
+- Path: `docs/project/25-tasks/done/dag-week-maand-swipe-navigatie.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-04
+
+```md
+---
+id: task-dag-week-maand-swipe-navigatie
+title: Dag/week/maand swipe navigatie
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-04
+summary: "Dagdetail, weekreflectie en maandreflectie ondersteunen horizontale swipe-navigatie naar bestaande aangrenzende content zonder visuele redesigns."
+tags: [navigation, gestures, day-detail, reflections, swipe]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: [task-moment-detail-swipe-scroll-regressie-fix]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+# Dag/week/maand swipe navigatie
+
+## Probleem / context
+
+Momentdetail ondersteunt horizontale swipe-navigatie met scrollvriendelijke gesture-afhandeling. Dagdetail, weekreflecties en maandreflecties hebben nog geen vergelijkbare swipe-navigatie.
+
+## Gewenste uitkomst
+
+Dagdetail, weekreflectie en maandreflectie ondersteunen dezelfde swipe-interactie als momentdetail: links naar de volgende bestaande pagina/content en rechts naar de vorige bestaande pagina/content. Als er geen target bestaat, beweegt de pagina niet. Verticale scroll blijft werken.
+
+## User outcome
+
+Een gebruiker kan al lezend door bestaande dagen, weken en maanden bladeren met swipes zonder extra knoppen of visuele wijzigingen.
+
+## Functional slice
+
+Voeg page-level swipe-navigatie toe aan dagdetail en het bestaande gecombineerde week/maand-reflectiescherm.
+
+## Entry / exit
+
+- Entry: gebruiker staat op dagdetail, weekreflectie of maandreflectie.
+- Exit: horizontale swipe navigeert/selecteert de aangrenzende bestaande dag/week/maand; verticale beweging scrolt de pagina.
+
+## Happy flow
+
+1. Open dagdetail met een bestaande aangrenzende dag.
+2. Swipe links op gewone content.
+3. App toont de volgende bestaande dag.
+4. Open week- of maandreflectie met een bestaande aangrenzende reflectie.
+5. Swipe links op gewone content.
+6. App toont de volgende bestaande week- of maandreflectie binnen dezelfde actieve tab.
+
+## Non-happy flows
+
+- Geen target: pagina beweegt niet en navigeert niet.
+- Verticale scroll: ScrollView blijft leidend.
+- Foto of fotopopup: foto-interactie blijft leidend; geen nieuwe page-swipe wrapper rond fotoviewer-interactie.
+- Loading/error/processing: swipe is uitgeschakeld.
+
+## UX / copy
+
+- Geen nieuwe zichtbare UI, labels of copy.
+- Hergebruik dezelfde tijdelijke horizontale beweging als momentdetail.
+- Geen redesign van dagdetail, reflecties, selector, menu, modals of timeline.
+
+## Data / IO
+
+- Input: actieve `journalDate`, actieve reflectie `period_type` en `period_start`.
+- Output: vorige/volgende bestaande `day_journal` of `period_reflection`.
+- Opslag/API/service/file-impact: read-only Supabase queries in bestaande service-laag.
+- Statussen: bestaande loading/error/processing states blijven leidend.
+
+## Waarom nu
+
+De gebruiker heeft expliciet gevraagd om de moment-swipe functie ook op dag-, week- en maandpagina's toe te voegen.
+
+## In scope
+
+- Gedeelde swipe-presentatiehelper/hook voor page-swipe.
+- Dagdetail swipe naar bestaande aangrenzende `day_journals`.
+- Week/maand reflectie swipe naar bestaande aangrenzende `period_reflections`.
+- Unit-tests en lokale smoke voor scroll + swipe.
+
+## Buiten scope
+
+- Kalender-swipen naar lege dagen/weken/maanden.
+- Nieuwe selector-UX of knoppen.
+- Nieuwe fotoviewerfunctionaliteit.
+- Commit/push, tenzij de gebruiker dat later expliciet vraagt.
+
+## Oorspronkelijk plan / afgesproken scope
+
+Swipe links/rechts toevoegen aan dagdetail, weekreflectie en maandreflectie op basis van bestaande content. Geen target betekent niet bewegen. Verticale scroll blijft werken. Geen visuele wijzigingen. Foto-/viewer-interactie blijft buiten page-swipe.
+
+## Expliciete user requirements / detailbehoud
+
+- "doe nu ook de swipe functie maken voor de dag, week en maand. pagina's"
+- Zelfde gedrag als momentdetail-swipe.
+- Alleen bestaande content als aangrenzend target.
+- Geen zichtbare redesigns.
+- Scroll moet blijven werken.
+
+## Status per requirement
+
+- [x] Dagdetail swipe — status: gebouwd en lokaal bewezen
+- [x] Weekreflectie swipe — status: gebouwd en lokaal bewezen
+- [x] Maandreflectie swipe — status: gebouwd en lokaal bewezen
+- [x] Geen target beweegt niet — status: gebouwd via gedeelde clamp-helper en unit-test
+- [x] Verticale scroll blijft werken — status: gebouwd en lokaal bewezen
+- [x] Geen visuele wijzigingen — status: gebouwd; geen nieuwe zichtbare UI/copy
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Nog geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, taskflow en bestaande gesture/servicepatronen bevestigen.
+- [x] Blok 2: gedeelde page-swipe helper/hook en service-targets bouwen.
+- [x] Blok 3: dagdetail en reflectiescherm aansluiten zonder redesign.
+- [x] Blok 4: unit/e2e verify, docs bundle en taskflow afronden.
+
+## Concrete checklist
+
+- [x] Adjacent day service toevoegen en exporteren.
+- [x] Adjacent reflection service toevoegen en exporteren.
+- [x] Gedeelde page-swipe helper/hook toevoegen met unit-tests.
+- [x] Dagdetail aansluiten op page-swipe.
+- [x] Reflectiescherm aansluiten op page-swipe.
+- [x] Lokale smoke seed/spec/cleanup toevoegen of uitbreiden.
+- [x] Verify draaien en taak reconciliëren.
+
+## Acceptance criteria
+
+- [x] Swipe links op dagdetail opent de volgende bestaande dag.
+- [x] Swipe rechts op dagdetail gebruikt dezelfde aangrenzende target-logica voor de vorige bestaande dag.
+- [x] Swipe links/rechts op weekreflecties selecteert aangrenzende bestaande weekreflectie.
+- [x] Swipe links/rechts op maandreflecties selecteert aangrenzende bestaande maandreflectie.
+- [x] Zonder aangrenzende target blijft de pagina op zijn plek.
+- [x] Verticale scroll werkt op alle drie pagina's.
+- [x] Er is geen permanente visuele wijziging.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- Pass: `npm run test:unit -- tests/unit/moment-navigation-presentation.test.ts`
+- Pass: `npm run typecheck`
+- Pass: `npm run lint`
+- Pass: `npm run test:e2e:page-swipe -- --project=chromium`
+- Pass: `npm run test:e2e:page-swipe:cleanup`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: dagdetail, weekreflectie en maandreflectie krijgen momentdetail-achtig swipen naar bestaande aangrenzende content, zonder visuele wijzigingen en zonder scrollregressie.
+- Toegevoegde verbeteringen: lokale page-swipe smoke toegevoegd voor dag/week/maand met scrollbewijs en cleanup.
+- Afgerond: service-targets, gedeelde page-swipe hook, dagdetail-wiring, reflectie-wiring, unit-tests en e2e smoke.
+- Open / blocked: geen open punten voor deze taak.
+
+## Relevante links
+
+- `app/day/[date].tsx`
+- `app/(tabs)/reflections.tsx`
+- `app/entry/[id].tsx`
+- `src/lib/moment-navigation/presentation.ts`
+- `services/day-journals.ts`
+- `services/reflections.ts`
+
+
+## Agent activity
+
+- start 2026-07-04T09:21:41.073Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-04T09:21:41.073Z -> 2026-07-04T09:29:04.483Z - Codex / gpt-5 / codex / default - reason: done
+
+
+## Commits
+
+- 2026-07-05T09:20:15+02:00 — Add day week month swipe navigation
+```
+
+---
+
+## Dagdetail empty state en reflectieblokken verwijderen
+
+- Path: `docs/project/25-tasks/done/dagdetail-empty-state-en-reflectieblokken-verwijderen.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-10
+
+```md
+---
+id: task-dagdetail-empty-state-en-reflectieblokken-verwijderen
+title: Dagdetail empty state en reflectieblokken verwijderen
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-10
+summary: Verbeter de lege dagdetail-empty-state en verwijder week- en maandreflectieblokken plus bijbehorende fetches van dagdetail.
+tags: [day-detail, ui, reflections]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+## Probleem / context
+
+Lege dagdetailpagina's tonen nu een te technische empty state onder `Individuele momenten`. Daarnaast haalt en rendert dagdetail week- en maandreflecties, terwijl die op eigen reflectieplekken thuishoren.
+
+## Gewenste uitkomst
+
+Een lege dag toont compact `Nog geen momenten`, `Er is voor deze dag nog niets vastgelegd.` en de knop `Moment toevoegen`. Dagdetail toont nergens meer week- of maandreflecties en haalt die data ook niet meer op.
+
+## User outcome
+
+De gebruiker ziet op een lege dag een rustige, natuurlijke actie om een moment toe te voegen, zonder reflectieblokken die de dagpagina verlengen.
+
+## Functional slice
+
+Een gerichte dagdetailwijziging: empty state copy/section-title aanpassen en reflectie-data/renderpad verwijderen uit `app/day/[date].tsx`.
+
+## Entry / exit
+
+- Entry: gebruiker opent `/day/YYYY-MM-DD`.
+- Exit: lege dagen tonen de nieuwe empty state; gevulde dagen eindigen na de relevante dagsecties zonder week/maandreflectiekaarten.
+
+## Happy flow
+
+1. Lege dag opent met ongewijzigde header.
+2. Empty state toont `Nog geen momenten`, `Er is voor deze dag nog niets vastgelegd.` en `Moment toevoegen`.
+3. De knop opent bestaande capture voor de gekozen datum.
+4. Gevulde dagen tonen bestaande dagverhaal/inzicht/kernpunten/momenten, zonder reflectieblokken.
+
+## Non-happy flows
+
+- Loading: bestaande loading-state blijft.
+- Error: bestaande error-state blijft.
+- Ongeldige datum: bestaande route-validatie blijft.
+- Capture-fout: bestaande capture-flow blijft verantwoordelijk.
+
+## UX / copy
+
+- Header blijft ongewijzigd.
+- Geen grote illustratie, kaart, extra uitleg of secundaire actie.
+- Empty copy exact:
+  - `Nog geen momenten`
+  - `Er is voor deze dag nog niets vastgelegd.`
+  - `Moment toevoegen`
+
+## Data / IO
+
+- Input: bestaande dagjournal en momentdata.
+- Output: geen week/maandreflectie-fetches of reflectieprops op dagdetail.
+- Opslag/API/service/file-impact: geen database-, service- of edge-functionwijzigingen.
+- Statussen: bestaande load/error/mutation-states blijven.
+
+## Waarom nu
+
+Dit houdt dagdetail scherper op de dag zelf en voorkomt onnodige reflectiequeries op deze route.
+
+## In scope
+
+- `app/day/[date].tsx` empty state aanpassen.
+- Week/maandreflectie imports, state, fetches en rendering uit dagdetail verwijderen.
+- Verify en taskflow afronden.
+
+## Buiten scope
+
+- Header, dagverhaal, inzicht, kernpunten en gevulde momenten redesignen.
+- Vandaag, Terugblik, weekdetail, maanddetail, admin, database of reflectiegeneratie aanpassen.
+- Nieuwe dependencies, settings of brede component-rewrite.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Verbeter lege dagdetail-empty-state.
+- Verwijder week- en maandreflecties volledig van dagdetailpagina's.
+- Laat reflecties elders bestaan.
+- Houd historische capture ongewijzigd.
+
+## Expliciete user requirements / detailbehoud
+
+1. Header exact behouden.
+2. Lege dagtitel wordt `Nog geen momenten`.
+3. Lege dagtekst wordt `Er is voor deze dag nog niets vastgelegd.`
+4. Knop wordt `Moment toevoegen`.
+5. Geen weekreflectie op dagdetail.
+6. Geen maandreflectie op dagdetail.
+7. Geen onnodige reflectiequeries op dagdetail.
+8. Geen lege ruimte of container achterlaten.
+
+## Status per requirement
+
+- [x] Header ongewijzigd — status: gebouwd
+- [x] Empty state copy/actie aangepast — status: gebouwd
+- [x] Weekreflectie-rendering en fetch verwijderd — status: gebouwd
+- [x] Maandreflectie-rendering en fetch verwijderd — status: gebouwd
+- [x] Capture blijft bestaande datumroute gebruiken — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Bestaande reflectieregeneratie na momentbewerking is bewust behouden, omdat deze taak alleen dagdetail-fetch/rendering verwijdert en reflectiedata/-generatie buiten scope laat.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, context en taskflow bevestigen.
+- [x] Blok 2: dagdetail empty state en reflectiepad aanpassen.
+- [x] Blok 3: verify, smoke waar mogelijk, task/docs afronden.
+
+## Concrete checklist
+
+- [x] Inspecteer actuele day-detail reflectiepad.
+- [x] Pas lege moments-section aan.
+- [x] Verwijder reflectie-import/state/fetch/rendering.
+- [x] Draai checks.
+- [x] Rond taskflow af.
+
+## Acceptance criteria
+
+- [x] Lege dag toont `Nog geen momenten`, `Er is voor deze dag nog niets vastgelegd.` en `Moment toevoegen`.
+- [x] Bestaande header blijft ongewijzigd.
+- [x] Dagdetail toont geen week- of maandreflectieblokken.
+- [x] Dagdetail haalt geen week- of maandreflecties meer op.
+- [x] Gevulde momentenweergave blijft bestaand.
+
+## Blockers / afhankelijkheden
+
+- Geen externe blockers bekend.
+
+## Verify / bewijs
+
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `rg "ReflectionTeaserCard|weekReflection|monthReflection|fetchReflectionForAnchorDate|reflectionCardsBlock|WEEKELIJKSE|MAANDELIJKSE" app/day/[date].tsx` gaf geen matches.
+- ✅ `npm run taskflow:verify`
+- ✅ `curl -I --max-time 5 http://localhost:8081/day/2026-05-31` gaf HTTP 200.
+- ✅ `node scripts/seed-local-page-swipe-smoke.mjs`
+- ✅ Authenticated Playwright smoke via bestaande `loginWithLocalMagicLink`:
+  - lege dag `http://localhost:8081/day/2026-07-03` toont `Nog geen momenten`, `Er is voor deze dag nog niets vastgelegd.` en de moment-toevoegactie
+  - gevulde dagjournal-fixture `http://localhost:8081/day/2026-07-01` toont dagcontent
+  - seeded week- en maandreflectietekst renderen niet op dagdetail
+- ⚠️ De eerste no-write smoke zonder login redirectte naar `/sign-in`; daarna is de smoke herhaald met bestaande magic-link loginlogica.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: lege dagdetail-empty-state verbeteren en week/maandreflecties volledig van dagdetail verwijderen.
+- Expliciete user requirements: header, dagverhaal, inzicht, kernpunten en gevulde momentenweergave zijn niet aangepast; reflectie-fetch/rendering is uit dagdetail verwijderd.
+- Toegevoegde verbeteringen: bestaande reflectieregeneratie na momentbewerking is bewust behouden om reflectiedata-gedrag buiten scope niet te wijzigen.
+- Afgerond: empty state copy/actie, reflectie-imports, state, fetches, rendering en dode styles zijn aangepast/verwijderd.
+- Open / blocked: volledige light/dark visuele vergelijking is niet uitgevoerd; authenticated functional smoke is wel groen.
+
+## Relevante links
+
+- `app/day/[date].tsx`
+
+
+## Agent activity
+
+- start 2026-07-10T08:17:09.227Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-10T08:17:09.227Z -> 2026-07-10T08:19:04.175Z - Codex / gpt-5 / codex / default - reason: done
+
+
+## Commits
+
+- 2026-07-13T20:20:34+02:00 — feat: improve day detail and historical capture flow
+```
+
+---
+
+## Dagdetail momenten sectietitel verkorten
+
+- Path: `docs/project/25-tasks/done/dagdetail-momenten-sectietitel-verkorten.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-10
+
+```md
+---
+id: task-dagdetail-momenten-sectietitel-verkorten
+title: Dagdetail momenten sectietitel verkorten
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-10
+summary: Hernoem de gevulde dagdetailsectie `Individuele momenten` naar `Momenten` zonder verdere UI- of flowwijzigingen.
+tags: [day-detail, copy, ui]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+## Probleem / context
+
+De sectietitel `Individuele momenten` op een gevulde dagpagina is langer dan nodig.
+
+## Gewenste uitkomst
+
+Op dagdetail heet de gevulde momenten-sectie `Momenten`.
+
+## User outcome
+
+De dagpagina leest rustiger en compacter.
+
+## Functional slice
+
+Alleen copywijziging in de bestaande dagdetail-rendering.
+
+## Entry / exit
+
+- Entry: gebruiker opent een gevulde dagdetailpagina.
+- Exit: dezelfde sectie staat op dezelfde plek met titel `Momenten`.
+
+## Happy flow
+
+1. Gebruiker opent een dag met momenten.
+2. De momentenlijst staat onder titel `Momenten`.
+3. Alle interacties blijven ongewijzigd.
+
+## Non-happy flows
+
+- Lege dag: bestaande lege titel `Nog geen momenten` blijft.
+- Loading/error: bestaande states blijven.
+
+## UX / copy
+
+- Vervang `Individuele momenten` door `Momenten`.
+- Geen layout-, styling- of interactiewijziging.
+
+## Data / IO
+
+- Geen data- of service-impact.
+
+## Waarom nu
+
+Kleine copy-polish op bestaande dagdetailpagina.
+
+## In scope
+
+- `app/day/[date].tsx` sectietitel aanpassen.
+- Minimale verify.
+
+## Buiten scope
+
+- Empty state, capture, momentdetail, services, database, styling of navigatie aanpassen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Hernoem de titel individuele momenten op een dagpagina naar `Momenten`.
+
+## Expliciete user requirements / detailbehoud
+
+1. `Individuele momenten` wordt `Momenten`.
+
+## Status per requirement
+
+- [x] Sectietitel aangepast — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Nog geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: taskflow vastleggen.
+- [x] Blok 2: copywijziging uitvoeren.
+- [x] Blok 3: verify en afronden.
+
+## Concrete checklist
+
+- [x] Copy aanpassen.
+- [x] Typecheck/taskflow draaien.
+- [x] Task afronden.
+
+## Acceptance criteria
+
+- [x] Gevulde dagdetailsectie heet `Momenten`.
+- [x] Lege dagcopy blijft ongewijzigd.
+
+## Blockers / afhankelijkheden
+
+- Geen.
+
+## Verify / bewijs
+
+- ✅ `npm run typecheck`
+- ✅ `npm run taskflow:verify`
+- ✅ `rg "Individuele momenten|title=\"Momenten\"|Nog geen momenten" app/day/[date].tsx`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: hernoem de titel individuele momenten op een dagpagina naar `Momenten`.
+- Toegevoegde verbeteringen: geen.
+- Afgerond: gevulde dagdetailsectie gebruikt `Momenten`; lege dagtitel `Nog geen momenten` blijft ongewijzigd.
+- Open / blocked: geen.
+
+## Relevante links
+
+- `app/day/[date].tsx`
+
+
+## Agent activity
+
+- start 2026-07-10T08:51:45.130Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-10T08:51:45.130Z -> 2026-07-10T08:52:28.720Z - Codex / gpt-5 / codex / default - reason: done
+
+
+## Commits
+
+- 2026-07-13T20:20:34+02:00 — feat: improve day detail and historical capture flow
+```
+
+---
+
+## Dagenoverzicht lege dagen openen en moment toevoegen
+
+- Path: `docs/project/25-tasks/done/dagenoverzicht-lege-dagen-openen-en-moment-toevoegen.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-10
+
+```md
+---
+id: task-dagenoverzicht-lege-dagen-openen-en-moment-toevoegen
+title: Dagenoverzicht lege dagen openen en moment toevoegen
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-10
+summary: "Maak lege kalenderdagen uitsluitend zichtbaar in Kies een dag, zodat een gebruiker achteraf een moment aan een lege dag kan toevoegen zonder andere gevulde-dagenflows te verbreden."
+tags: [days, capture, journal]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: []
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+## Probleem / context
+
+De huidige `/days` dagkiezer toont alleen dagen met een bestaand dagjournal. Daardoor kan een gebruiker een lege historische dag niet ontdekken en openen om daar alsnog een moment vast te leggen.
+
+De uitbreiding mag alleen gelden voor `Kies een dag` op `/days`. Andere flows die bewust gevulde dagen nodig hebben, zoals swipen tussen dagen, periode-selectors, export, reflecties, Today en admin, moeten journal/entry-gebaseerd blijven.
+
+## Gewenste uitkomst
+
+`/days` toont tussen de geladen echte dagjournals ook subtiele lege kalenderdagen. Een lege rij is klikbaar, opent `/day/YYYY-MM-DD`, toont daar de bestaande rustige lege staat en gebruikt de bestaande historical capture-flow om een moment voor die datum toe te voegen.
+
+Er worden geen lege records aangemaakt en er komt geen brede kalenderfeature of gedeelde servicewijziging.
+
+## User outcome
+
+De gebruiker kan via `Kies een dag` een gemiste datum, bijvoorbeeld afgelopen zondag, openen en daar alsnog een moment aan toevoegen.
+
+## Functional slice
+
+Een `/days`-specifieke view-model uitbreiding die geladen echte dagjournals aanvult met virtuele lege dagen, plus minimale row-presentatie en dagdetail-empty-copy.
+
+## Entry / exit
+
+- Entry: gebruiker opent `/days`.
+- Exit: gebruiker opent een lege dag, kiest `Moment toevoegen`, en de bestaande capture-flow kan terugkeren naar die dag.
+
+## Happy flow
+
+1. Gebruiker opent `/days` en ziet gevulde en lege dagen tussen de geladen datumgrenzen.
+2. Lege dagen tonen `Nog geen moment vastgelegd` en zijn subtiel maar klikbaar.
+3. Klik op een lege dag opent `/day/YYYY-MM-DD` zonder error en met een rustige lege staat.
+4. `Moment toevoegen` opent de bestaande capture-flow met `targetDate` en `returnTo`.
+
+## Non-happy flows
+
+- Empty state: als er geen echte dagjournals zijn, blijft de bestaande archief-empty-state zichtbaar.
+- Validation / unsupported state: ongeldige route-datums blijven de bestaande error tonen.
+- Failure / retry / cancel: laadfouten in `/days` blijven de bestaande archief-error tonen; capture-fouten blijven in de bestaande capture-flow.
+
+## UX / copy
+
+- `/days` blijft list-first en gegroepeerd per maand.
+- Lege dagrij: `Nog geen moment vastgelegd`.
+- Lege dagdetailcopy: `Deze dag is nog leeg. Voeg een moment toe wanneer je wilt.`
+- Geen kalendergrid, dashboard, extra rij-CTA of redesign.
+
+## Data / IO
+
+- Input: bestaande `fetchRecentDayJournals` output voor `/days`.
+- Output: virtuele rows met `date`, `hasContent` en optionele journal-data.
+- Opslag/API/service/file-impact: geen databasewrites voor lege dagen; geen service-contractwijziging.
+- Statussen: alleen UI-rowstatus `hasContent`.
+
+## Waarom nu
+
+Dit lost een concrete capture-first kloof op: achteraf iets kunnen vastleggen op een gemiste dag zonder de app zwaarder of dashboardachtig te maken.
+
+## In scope
+
+- `/days`-specifieke pure helper voor virtuele lege dagen.
+- Minimale wijziging in `app/(tabs)/days.tsx`.
+- Minimale optionele presentation-prop in `ArchiveGroupedListItem`.
+- Kleine unit-test voor de helper.
+- Empty-copy op dagdetail waar nodig.
+
+## Buiten scope
+
+- Lege dagen in swipen tussen dagen.
+- Lege dagen in period selectors, export/import, reflections, Today of admin.
+- Service-index exports voor de nieuwe helper.
+- Database-migraties, seeds, lege `day_journals`, nieuwe dependencies of AI/regeneratie-aanpassingen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Maak lege kalenderdagen uitsluitend zichtbaar en openbaar via `/days` (`Kies een dag`).
+- Alle andere flows die gevulde dagen verwachten blijven journal/entry-gebaseerd.
+- Gebruik een `/days`-specifieke helper, niet een brede servicewijziging.
+- Houd dagdetail op de bestaande historical capture-flow.
+
+## Expliciete user requirements / detailbehoud
+
+1. Nieuwe wijziging werkt alleen via `Kies een dag` op `/days`.
+2. Swipen tussen dagen toont geen lege dagen.
+3. Andere plekken waar alleen gevulde dagen nodig zijn blijven ongewijzigd.
+4. Lege dagen zijn subtiel zichtbaar en klikbaar.
+5. Geen lege records in de database.
+6. Geen nieuwe dependencies of kalendergrid.
+
+## Status per requirement
+
+- [x] Alleen `/days` gebruikt virtuele lege dagen — status: gebouwd
+- [x] Swipen/selectors/export/reflections blijven gevuld-dagen-gebaseerd — status: gebouwd
+- [x] Lege rij toont `Nog geen moment vastgelegd` — status: gebouwd
+- [x] Lege dagdetailcopy is rustig en capture-flow blijft bestaand — status: gebouwd
+- [x] Helper heeft unit-tests voor expansion/dedupe/toekomst-cap — status: gebouwd
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De view-model helper is bewust niet via `services/index.ts` of andere brede barrels geëxporteerd; alleen `/days` en de unit-test importeren hem.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: preflight, relevante context en taskflow bevestigen.
+- [x] Blok 2: `/days`-helper, row-presentatie en dagdetailcopy implementeren.
+- [x] Blok 3: unit-test, lint, typecheck, taskflow verify en waar mogelijk smoke uitvoeren.
+
+## Concrete checklist
+
+- [x] Voeg `/days`-specifieke view-model helper toe.
+- [x] Pas `app/(tabs)/days.tsx` aan om alleen daar virtuele dagen te tonen.
+- [x] Voeg optionele muted row-presentatie toe zonder bestaande callers te wijzigen.
+- [x] Update lege dagdetailcopy.
+- [x] Voeg unit-test toe.
+- [x] Draai relevante checks.
+
+## Acceptance criteria
+
+- [x] `/days` toont lege kalenderdagen tussen geladen gevulde dagen.
+- [x] Lege dagen verschijnen niet in swipe-navigation of andere gevulde-dagenflows.
+- [x] Lege dagen openen `/day/YYYY-MM-DD` zonder error.
+- [x] Vanuit een lege dag kan een moment voor die datum worden toegevoegd via bestaande capture.
+- [x] Er worden geen lege records aangemaakt.
+- [x] Geen toekomstige dagen worden getoond.
+
+## Blockers / afhankelijkheden
+
+- Geen externe blockers bekend.
+
+## Verify / bewijs
+
+- ✅ `npm run test:unit -- tests/unit/days-overview-view-model.test.ts`
+- ✅ `npx tsc --noEmit --pretty false`
+- ✅ `npm run lint`
+- ✅ `npm run typecheck`
+- ✅ `npm run taskflow:verify`
+- ✅ `curl -I --max-time 5 http://localhost:8081/days` gaf HTTP 200.
+- ⚠️ No-write Playwright smoke op `http://localhost:8081/days` redirectte naar `/sign-in`; visuele light/dark lijstcontrole was daardoor niet mogelijk zonder ingelogde sessie.
+- ✅ Statische guard-check: `rg "days-overview-view-model|buildDaysOverviewRows|DaysOverviewRow" app components services hooks src tests -S` toont alleen productiegebruik in `app/(tabs)/days.tsx` en testgebruik in `tests/unit/days-overview-view-model.test.ts`.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: lege dagen alleen in `/days`, met bestaande dagdetail/capture-flow.
+- Expliciete user requirements: `/days` is de enige productiecaller van de virtuele lege-dagenhelper; swipe/selectors/export/reflections blijven op bestaande journal/entry-services.
+- Toegevoegde verbeteringen: helper niet via brede barrels geëxporteerd en statisch gecontroleerd.
+- Afgerond: helper, `/days` integratie, muted row-presentatie, dagdetailcopy en unit-tests zijn klaar.
+- Open / blocked: visuele light/dark smoke van de ingelogde daglijst is niet uitgevoerd door redirect naar `/sign-in`.
+
+## Relevante links
+
+- `app/(tabs)/days.tsx`
+- `app/day/[date].tsx`
+- `components/journal/archive-grouped-list.tsx`
+
+
+## Agent activity
+
+- start 2026-07-10T08:05:06.110Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-10T08:05:06.110Z -> 2026-07-10T08:08:09.197Z - Codex / gpt-5 / codex / default - reason: done
+
+
+## Commits
+
+- 2026-07-13T20:20:34+02:00 — feat: improve day detail and historical capture flow
 ```
 
 ---
@@ -9637,6 +11773,162 @@ Eén afgebakende slice: diagnose van de prepare-fase, kleinste robuuste fix voor
 
 ---
 
+## Momentdetail swipe body gesture fix
+
+- Path: `docs/project/25-tasks/done/moment-detail-swipe-body-gesture-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-03
+
+```md
+---
+id: task-moment-detail-swipe-body-gesture-fix
+title: Momentdetail swipe body gesture fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-03
+summary: Momentdetail swipe werkt nu ook op normale body-content; foto-galerij en fotopopup blijven buiten de moment-swipe detectorlaag.
+tags: [moment-detail, navigation, gestures, regression]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: [task-moment-detail-swipe-runtime-fix]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+# Momentdetail swipe body gesture fix
+
+## Probleem / context
+
+Swipen tussen momenten werkt nu alleen in de top header. De rest van de momentdetailpagina hoort ook swipebaar te zijn, maar foto’s en fotopopups mogen niet door momentnavigatie worden gekaapt.
+
+## Gewenste uitkomst
+
+Horizontale swipe-navigatie werkt op de inhoud van de momentdetailpagina en blijft uitgeschakeld op foto-interactiegebieden.
+
+## User outcome
+
+Een gebruiker kan op vrijwel de hele momentpagina naar vorig/volgend moment swipen zonder precies de header te hoeven raken.
+
+## Functional slice
+
+Alleen de touch/gesture-laag van momentdetail aanpassen en lokaal testen op body-swipe.
+
+## Entry / exit
+
+- Entry: gebruiker staat op `/entry/[id]` met een adjacent moment.
+- Exit: swipe op gewone body-content navigeert; foto’s/fotopopups behouden hun eigen interactie.
+
+## Happy flow
+
+1. Open momentdetail.
+2. Swipe horizontaal op normale content onder de header.
+3. App navigeert naar het volgende of vorige moment.
+
+## Non-happy flows
+
+- Swipe op foto of fotopopup: geen momentnavigatie.
+- Geen adjacent target: geen navigatie.
+
+## UX / copy
+
+- Geen nieuwe permanente UI of copy.
+- Bestaande tijdelijke swipe-feedback blijft leidend.
+
+## Data / IO
+
+- Geen datawijziging.
+- Alleen lokale UI/gesture-code en smoke-test.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Body-swipe werkend maken.
+- Foto’s en fotopopups uitsluiten.
+- Lokaal zelf testen.
+
+## Expliciete user requirements / detailbehoud
+
+- "werkt alleen nog maar in de top header het swippen"
+- "dit moet ook op de rest van de pagina werken"
+- "behalve op fotos of in de foto popups"
+
+## Status per requirement
+
+- [x] Body-swipe werkt — status: gebouwd en lokaal getest
+- [x] Foto’s/fotopopups kapen moment-swipe niet — status: gebouwd; `EntryPhotoGallery` blijft buiten de nieuwe body-detectors
+- [x] Lokale test uitgevoerd — status: gebouwd
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: eventlaag en lokale smoke aanscherpen.
+- [x] Blok 2: gesture fix implementeren.
+- [x] Blok 3: lokaal smoke/verify draaien.
+
+## Concrete checklist
+
+- [x] Body-swipe lokaal reproduceren/testen.
+- [x] Touchlaag fixen zonder foto-interactie te kapen.
+- [x] Smoke-test updaten voor body-zone.
+- [x] Verify draaien.
+
+## Acceptance criteria
+
+- [x] Swipe op normale content onder de header navigeert.
+- [x] Foto-interactiegebied blijft uitgesloten.
+- [x] Geen permanente visuele wijziging.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- ✅ `npm run test:e2e:moment-swipe -- --project=chromium`
+- ✅ `npm run test:unit -- tests/unit/moment-navigation-presentation.test.ts`
+- ✅ `npm run lint`
+- ⚠️ `npm run typecheck` faalt op bestaande unrelated WIP in `app/settings-regeneration.tsx` (`label` property op regeneration scope type), niet op de momentdetail-wijziging.
+- ✅ `npm run test:e2e:moment-swipe:cleanup`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: body-swipe werkend maken, foto’s/fotopopups uitsluiten en lokaal zelf testen.
+- Toegevoegde verbeteringen: de lokale moment-swipe smoke sleept nu expliciet op bodytekst in plaats van op een algemene viewportpositie.
+- Afgerond: header, primaire body-content en detailkaart hebben eigen moment-swipe detectors; `EntryPhotoGallery` blijft buiten de body-swipe detectors.
+- Open / blocked: geen voor deze task; volledige typecheck wordt geblokkeerd door bestaande unrelated regeneration-WIP.
+
+## Relevante links
+
+- `app/entry/[id].tsx`
+- `components/ui/screen-primitives.tsx`
+- `tests/e2e/moment-swipe-smoke.spec.mjs`
+
+## Agent activity
+
+- start 2026-07-03T12:30:20.966Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-03T12:30:20.966Z -> 2026-07-03T12:33:48.332Z - Codex / gpt-5 / codex / default - reason: done
+## Commits
+
+- 2026-07-03T14:39:01+02:00 — Fix moment detail body swipe
+```
+
+---
+
 ## Momentdetail swipe navigatie
 
 - Path: `docs/project/25-tasks/done/moment-detail-swipe-navigatie.md`
@@ -9848,7 +12140,7 @@ phase: transitiemaand-consumer-beta
 priority: p2
 source: user-request
 updated_at: 2026-07-03
-summary: "Momentdetail swipe is lokaal getest met herhaalbare Playwright smoke-test; app-root initialiseert nu GestureHandlerRootView voor native/Expo gesture runtime."
+summary: Momentdetail swipe is lokaal getest met herhaalbare Playwright smoke-test; app-root initialiseert nu GestureHandlerRootView voor native/Expo gesture runtime.
 tags: [moment-detail, navigation, gestures, regression]
 workstream: app
 epic_id: null
@@ -9866,6 +12158,7 @@ active_agent_since: null
 active_agent_status: null
 active_agent_settings: null
 ---
+
 
 # Momentdetail swipe runtime fix
 
@@ -9987,7 +12280,160 @@ Alleen de runtime-regressie in de bestaande momentdetail-swipeflow oplossen, inc
 - stop 2026-07-03T12:06:03.656Z -> 2026-07-03T12:13:37.915Z - Codex / gpt-5 / codex / default - reason: done
 ## Commits
 
-- Nog geen commit-registraties.
+- 2026-07-03T14:20:44+02:00 — Fix moment detail swipe runtime
+```
+
+---
+
+## Momentdetail swipe scroll regressie fix
+
+- Path: `docs/project/25-tasks/done/moment-detail-swipe-scroll-regressie-fix.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-03
+
+```md
+---
+id: task-moment-detail-swipe-scroll-regressie-fix
+title: Momentdetail swipe scroll regressie fix
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-03
+summary: Verticale scroll op momentdetail is hersteld terwijl horizontale swipe op body-content blijft werken en foto-interactie uitgesloten blijft.
+tags: [moment-detail, navigation, gestures, scroll, regression]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: [task-moment-detail-swipe-body-gesture-fix]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+# Momentdetail swipe scroll regressie fix
+
+## Probleem / context
+
+Na het uitbreiden van swipe naar body-content werkt horizontaal swipen goed, maar verticaal scrollen op de momentdetailpagina niet meer.
+
+## Gewenste uitkomst
+
+De pagina scrolt weer normaal verticaal. Horizontale swipe blijft werken op gewone content, en foto’s/fotopopups blijven uitgesloten.
+
+## User outcome
+
+Een gebruiker kan door lange momenten scrollen en op dezelfde pagina horizontaal naar vorige/volgende momenten swipen.
+
+## Functional slice
+
+Alleen de responder/gesture-laag van `app/entry/[id].tsx` aanpassen.
+
+## Entry / exit
+
+- Entry: gebruiker sleept verticaal op normale content.
+- Exit: de ScrollView scrolt; alleen duidelijke horizontale beweging claimt moment-swipe.
+
+## Happy flow
+
+1. Open momentdetail.
+2. Sleep verticaal op body-content.
+3. Pagina scrolt.
+4. Sleep horizontaal op body-content.
+5. App navigeert naar adjacent moment.
+
+## Non-happy flows
+
+- Foto of fotopopup: eigen foto-interactie blijft leidend.
+- Geen adjacent moment: geen momentnavigatie.
+
+## UX / copy
+
+- Geen visuele wijziging of nieuwe copy.
+
+## Data / IO
+
+- Geen datawijziging.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Scrollen herstellen.
+- Swipe behouden.
+- Foto’s/fotopopups blijven buiten scope van moment-swipe.
+
+## Expliciete user requirements / detailbehoud
+
+- "swipen werkt goed"
+- "scrollen op de pagina werkt niet meer"
+
+## Status per requirement
+
+- [x] Verticaal scrollen hersteld — status: gebouwd en lokaal bewezen met Playwright smoke
+- [x] Horizontale swipe blijft werken — status: gebouwd en lokaal bewezen met Playwright smoke
+- [x] Foto-interactie blijft uitgesloten — status: gebouwd; gallery/fotopopup blijven buiten de body gesture-wrappers
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: gesture/responder-laag inspecteren.
+- [x] Blok 2: scrollvriendelijke responder-fix bouwen.
+- [x] Blok 3: lokale swipe/scroll verify draaien.
+
+## Concrete checklist
+
+- [x] Body gesture-laag aanpassen zodat verticale beweging niet gecaptured wordt.
+- [x] Swipe-smoke uitbreiden of draaien.
+- [x] Lint/typecheck/taskflow uitvoeren waar mogelijk.
+
+## Acceptance criteria
+
+- [x] Verticale scroll wordt niet geblokkeerd door moment-swipe.
+- [x] Body-swipe naar adjacent moment blijft werken.
+- [x] Geen permanente visuele wijziging.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- Pass: `npm run lint`
+- Pass: `npm run test:unit -- tests/unit/moment-navigation-presentation.test.ts`
+- Pass: `npm run test:e2e:moment-swipe -- --project=chromium`
+- Pass: `npm run test:e2e:moment-swipe:cleanup`
+- Blocked unrelated WIP: `npm run typecheck` faalt op `supabase/functions/admin-regeneration-job/index.ts` met `acc.total`, `acc.queued`, `acc.openai_completed`, `acc.applied` en `acc.failed` als `unknown`.
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: scrollen herstellen, body-swipe behouden en foto’s/fotopopups buiten moment-swipe houden.
+- Toegevoegde verbeteringen: Playwright smoke uitgebreid zodat dezelfde fixture eerst verticale scroll en daarna body-swipe naar het volgende moment bewijst.
+- Afgerond: gesture pan faalt nu sneller bij verticale beweging en web krijgt `touchAction: "pan-y"` op de swipe-surfaces; body-swipe blijft groen in de smoke.
+- Open / blocked: geen open punten voor deze taak; repo-brede typecheck wordt geblokkeerd door bestaande unrelated admin-regeneration WIP.
+
+## Relevante links
+
+- `app/entry/[id].tsx`
+- `tests/e2e/moment-swipe-smoke.spec.mjs`
+
+## Agent activity
+
+- start 2026-07-03T12:51:15.026Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-03T12:51:15.026Z -> 2026-07-03T12:57:01.404Z - Codex / gpt-5 / codex / default - reason: done
+## Commits
+
+- 2026-07-03T15:10:16+02:00 — Fix moment detail swipe scroll
 ```
 
 ---
@@ -13276,6 +15722,178 @@ De eerste toepassing is een post-basis 6-maandenroadmap voor Budio, met duidelij
 ## Commits
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+```
+
+---
+
+## Swipe scroll regressie tekst/content
+
+- Path: `docs/project/25-tasks/done/swipe-scroll-regressie-tekst-content.md`
+- Bucket: done
+- Status: done
+- Priority: p2
+- Phase: transitiemaand-consumer-beta
+- Updated_at: 2026-07-05
+
+```md
+---
+id: task-swipe-scroll-regressie-tekst-content
+title: Swipe scroll regressie tekst/content
+status: done
+phase: transitiemaand-consumer-beta
+priority: p2
+source: user-request
+updated_at: 2026-07-05
+summary: "Verticale scroll op tekst en middencontent werkt weer voor moment, dag, week en maand terwijl horizontale swipe blijft werken."
+tags: [navigation, gestures, scroll, regression]
+workstream: app
+epic_id: null
+parent_task_id: null
+depends_on: []
+follows_after: [task-dag-week-maand-swipe-navigatie]
+task_kind: task
+spec_ready: true
+due_date: null
+sort_order: 1
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
+---
+
+
+# Swipe scroll regressie tekst/content
+
+## Probleem / context
+
+Na uitbreiding van swipe naar moment, dag, week en maand werkt verticale scroll op tekstvlakken en middencontent nog niet betrouwbaar.
+
+## Gewenste uitkomst
+
+Gebruikers kunnen vanaf tekst en midden van de pagina normaal verticaal scrollen op momentdetail, dagdetail, weekreflectie en maandreflectie. Horizontale swipe blijft werken.
+
+## User outcome
+
+Een gebruiker kan lange teksten lezen door gewoon te scrollen en kan daarnaast horizontaal swipen tussen aangrenzende content.
+
+## Functional slice
+
+Alleen de gesture/responder-laag voor bestaande swipe-navigatie aanpassen.
+
+## Entry / exit
+
+- Entry: gebruiker sleept verticaal op tekst of middencontent.
+- Exit: de pagina scrolt; alleen duidelijke horizontale intentie activeert swipe.
+
+## Happy flow
+
+1. Open een lange moment-, dag-, week- of maandpagina.
+2. Sleep verticaal op tekst/middencontent.
+3. De pagina scrolt.
+4. Sleep duidelijk horizontaal.
+5. De pagina navigeert naar aangrenzende bestaande content.
+
+## Non-happy flows
+
+- Geen aangrenzende target: pagina beweegt niet.
+- Foto/fotoviewer: eigen interactie blijft leidend.
+- Loading/error/processing: swipe blijft uit.
+
+## UX / copy
+
+- Geen visuele wijziging of nieuwe copy.
+
+## Data / IO
+
+- Geen datawijziging.
+
+## Oorspronkelijk plan / afgesproken scope
+
+- Verticale scroll op tekst/middencontent herstellen voor moment, dag, week en maand.
+- Swipe links/rechts behouden.
+- Geen visuele wijzigingen.
+
+## Expliciete user requirements / detailbehoud
+
+- "Verticaal scrollen werkt nog niet goed"
+- "wanneer ik op een tekst vlak of midden van de pagina naar beneden wil scrollen werkt dit nog niet"
+- "zowel moment, dag, week en maand"
+
+## Status per requirement
+
+- [x] Moment scroll op tekst/middencontent — status: gebouwd en lokaal bewezen
+- [x] Dag scroll op tekst/middencontent — status: gebouwd en lokaal bewezen
+- [x] Week scroll op tekst/middencontent — status: gebouwd en lokaal bewezen
+- [x] Maand scroll op tekst/middencontent — status: gebouwd en lokaal bewezen
+- [x] Horizontale swipe behouden — status: gebouwd en lokaal bewezen
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- Nog geen.
+
+## Uitvoerblokken / fasering
+
+- [x] Blok 1: huidige gesture wrappers inspecteren.
+- [x] Blok 2: scrollvriendelijke swipe-activatie bouwen.
+- [x] Blok 3: unit/e2e verify en taskflow afronden.
+
+## Concrete checklist
+
+- [x] Momentdetail gesture aanpassen.
+- [x] Page-swipe hook voor dag/week/maand aanpassen.
+- [x] Smoke-tests scrollen vanaf tekst/middencontent laten bewijzen.
+- [x] Verify draaien.
+
+## Acceptance criteria
+
+- [x] Verticaal scrollen werkt op tekst/middencontent voor moment.
+- [x] Verticaal scrollen werkt op tekst/middencontent voor dag.
+- [x] Verticaal scrollen werkt op tekst/middencontent voor week.
+- [x] Verticaal scrollen werkt op tekst/middencontent voor maand.
+- [x] Horizontale swipe blijft werken.
+- [x] Geen permanente visuele wijziging.
+
+## Blockers / afhankelijkheden
+
+- Geen bekende blockers.
+
+## Verify / bewijs
+
+- Pass: `npm run test:unit -- tests/unit/moment-navigation-presentation.test.ts`
+- Pass: `npm run typecheck`
+- Pass: `npm run lint`
+- Pass: `npm run test:e2e:moment-swipe -- --project=chromium`
+- Pass: `npm run test:e2e:page-swipe -- --project=chromium`
+- Pass: `npm run test:e2e:moment-swipe:cleanup`
+- Pass: `npm run test:e2e:page-swipe:cleanup`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: verticale scroll op tekst/middencontent herstellen voor moment, dag, week en maand, met behoud van horizontale swipe.
+- Toegevoegde verbeteringen: smokes gebruiken nu echte Chromium touch events voor verticale drag en horizontale swipe, zodat deze regressie niet door alleen wheel-scroll gemist wordt.
+- Afgerond: content-level RNGH gesture-claim vervangen door scrollvriendelijke responder-activatie; moment gebruikt dezelfde page-swipe hook als dag/week/maand.
+- Open / blocked: geen open punten voor deze taak.
+
+## Relevante links
+
+- `app/entry/[id].tsx`
+- `app/day/[date].tsx`
+- `app/(tabs)/reflections.tsx`
+- `hooks/use-page-swipe-navigation.ts`
+
+
+## Agent activity
+
+- start 2026-07-05T07:28:01.822Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-05T07:28:01.822Z -> 2026-07-05T07:33:43.404Z - Codex / gpt-5 / codex / default - reason: done
+
+
+## Commits
+
+- 2026-07-05T09:49:46+02:00 — Fix swipe text scroll regression
 ```
 
 ---

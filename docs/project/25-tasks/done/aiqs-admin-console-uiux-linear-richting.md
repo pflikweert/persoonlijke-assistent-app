@@ -1,11 +1,11 @@
 ---
 id: aiqs-admin-console-uiux-linear-richting
 title: AIQS admin console UI/UX Linear-richting
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-22
+updated_at: 2026-07-15
 summary: "AIQS en admin-interface krijgen een eigen compacte tooling-look in Linear-richting, zonder runtime-, route- of functionaliteitswijzigingen."
 tags: [aiqs, admin, ui, ux, polish]
 workstream: aiqs
@@ -17,7 +17,14 @@ task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 7
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -131,7 +138,7 @@ Reviewbevindingen:
 - [x] Gewone Budio gebruikersflow blijft ongemoeid — status: gebouwd
 - [x] Linear-richting wordt vertaald naar compacte admin tooling — status: gebouwd
 - [x] Interface wordt simpeler en duidelijker — status: gebouwd
-- [x] Geen functionaliteit verwijderen of wijzigen — status: in code aanwezig maar nog user-review nodig
+- [x] Geen functionaliteit verwijderen of wijzigen — status: gebouwd en technisch geverifieerd; de gebruiker sluit de huidige visuele iteratie bewust af
 - [x] Nieuwe wijzigingen zijn gereviewd en getest — status: gebouwd
 - [x] Goedgekeurde cleaner AIQS-startdesign doorvoeren op alle onderliggende AI Quality Studio schermen — status: gebouwd
 - [x] Alle zwarte/default/native buttons uit AIQS verwijderen en migreren naar één consistent Admin Button System — status: gebouwd
@@ -276,7 +283,7 @@ Reviewbevindingen:
 - Oorspronkelijk plan: AIQS/admin UI-only Linear-richting, zonder functionaliteit of gewone Budio-flow te wijzigen.
 - Toegevoegde verbeteringen: gedeelde console primitives, AIQS-only footerdensity, AIQS-only web-shell verbreding, runtime-active chipfix, workspace-first overviewstructuur met gedeelde status/toggle/list primitives, de doorvertaling van dezelfde cleaner designrichting naar group/detail/draft/test/validate, één consistent Admin Button System en een diff-first validatepagina voor lange outputvergelijkingen.
 - Afgerond: AIQS overview gebruikt geen KPI-grid, geen AIQS-context inspector en geen runtime-governance dubbellaag meer; status, promptfamilies en systeemtools hebben nu een expliciete list-first hiërarchie. De startpagina is daarna verder versimpeld naar plain sections, inline status, list/table rows en single-action debug logging. Onderliggende AIQS-schermen gebruiken nu dezelfde rustige admin-workspace taal: minder header-badges/eyebrows, minder card-fill, metadata als plain secties en bestaande acties/functionele editors behouden. Alle AIQS action buttons lopen via gedeelde admin button/text-action primitives, primary gebruikt geen zwarte fill meer en de raw prompt-editor token button is browser-default-proof gemaakt.
-- Open / blocked: geen technische blockers meer. Taak blijft `in_progress` totdat de gebruiker de cleaner AIQS referentie-implementatie inclusief onderliggende schermen inhoudelijk afvinkt of laat doorlopen naar bredere admin-standaardisatie.
+- Open / blocked: geen technische blockers of resterend werk binnen deze iteratie. De gebruiker sluit de huidige visuele richting op 2026-07-15 bewust af, ondanks resterende ontevredenheid; eventuele verdere redesign- of polishwensen krijgen later alleen op expliciet verzoek een nieuwe taak.
 
 ## Relevante links
 
@@ -302,3 +309,11 @@ Reviewbevindingen:
 - 2026-06-22T14:07:06+02:00 — fix: unify AIQS admin workspace controls
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+- 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks
+## Agent activity
+
+- start 2026-07-15T08:42:46.546Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T08:42:46.546Z -> 2026-07-15T08:43:42.266Z - Codex / gpt-5 / codex / default - reason: done

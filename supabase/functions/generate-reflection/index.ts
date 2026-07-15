@@ -6,7 +6,7 @@ import { createFlowError, type FlowErrorCode } from '../_shared/error-contract.t
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { logFlow } from '../_shared/flow-logger.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
-import { buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
+import { AiRuntimeBindingError, buildAiqsJsonUserPrompt, loadLiveAiRuntimeBinding, type LiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettings, resolveOpenAiDebugStorageForFlow } from '../_shared/openai-debug-storage.ts';
 
@@ -1005,6 +1005,21 @@ Deno.serve(async (request: Request) => {
 
     return jsonResponse(request, 200, response);
   } catch (error) {
+    if (error instanceof AiRuntimeBindingError) {
+      const details = error.toSafeDetails();
+      logFlow('error', { flow: FLOW, requestId, flowId, step, event: 'aiqs_runtime_binding_rejected', details });
+      return errorResponse({
+        request,
+        httpStatus: 500,
+        requestId,
+        flowId,
+        step,
+        code: 'INTERNAL_UNEXPECTED',
+        message: error.message,
+        details,
+      });
+    }
+
     logFlow('error', {
       flow: FLOW,
       requestId,

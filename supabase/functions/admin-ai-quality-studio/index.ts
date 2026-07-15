@@ -12,6 +12,8 @@ import { buildEntryCleanupTechnicalContract, buildRuntimeBaselineDefinitions } f
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { renderJsonPromptTemplate } from '../_shared/aiqs-runtime-helpers.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
+import { AiRuntimeBindingError, isAiQualityRuntimeBindingKey, validateLiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
 import { buildAiqsPeriodCases, buildAiqsPeriodInputSnapshot, buildAiqsPeriodPromptContext, type AiqsPeriodCase, type AiqsPeriodDayJournal, type AiqsPeriodEntryCountRow, type AiqsPeriodType } from '../_shared/aiqs-period-cases.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettingsWithBackend, resolveOpenAiDebugStorageForFlow, updateOpenAiDebugStorageSettingsWithBackend, type OpenAiDebugFlowKey } from '../_shared/openai-debug-storage.ts';
@@ -320,6 +322,7 @@ function errorResponse(input: {
   step: string;
   code: FlowErrorCode;
   message: string;
+  details?: Record<string, unknown>;
 }) {
   return jsonResponse(
     input.request,
@@ -331,6 +334,7 @@ function errorResponse(input: {
       step: input.step,
       code: input.code,
       message: input.message,
+      details: input.details,
     })
   );
 }
@@ -2570,6 +2574,91 @@ Deno.serve(async (request) => {
           code: 'INPUT_INVALID',
           message: 'taskKey en versionId zijn verplicht.',
         });
+      }
+
+      const promotionTask = await loadTaskByKey({ adminClient, taskKey });
+      if (!promotionTask) {
+        return errorResponse({
+          request,
+          httpStatus: 404,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'Task not found.',
+        });
+      }
+
+      const { data: promotionVersion, error: promotionVersionError } = await adminClient
+        .from('ai_task_versions')
+        .select('id, version_number, status, model, prompt_template, system_instructions, output_schema_json, config_json')
+        .eq('id', versionId)
+        .eq('task_id', promotionTask.id)
+        .maybeSingle();
+      if (promotionVersionError) {
+        return errorResponse({
+          request,
+          httpStatus: 500,
+          requestId,
+          flowId,
+          step,
+          code: 'DB_READ_FAILED',
+          message: 'Versie kon niet voor promotie worden gevalideerd.',
+        });
+      }
+      if (!promotionVersion) {
+        return errorResponse({
+          request,
+          httpStatus: 404,
+          requestId,
+          flowId,
+          step,
+          code: 'INPUT_INVALID',
+          message: 'Version not found for task.',
+        });
+      }
+
+      if (promotionTask.runtime_binding_key) {
+        if (!isAiQualityRuntimeBindingKey(promotionTask.runtime_binding_key)) {
+          return errorResponse({
+            request,
+            httpStatus: 400,
+            requestId,
+            flowId,
+            step,
+            code: 'INPUT_INVALID',
+            message: 'AIQS runtime binding metadata is ongeldig.',
+            details: {
+              reasonCode: 'task_metadata_invalid',
+              bindingKey: promotionTask.runtime_binding_key,
+              taskKey: promotionTask.key,
+              versionId,
+              field: 'runtime_binding_key',
+            },
+          });
+        }
+
+        try {
+          validateLiveAiRuntimeBinding({
+            bindingKey: promotionTask.runtime_binding_key,
+            task: promotionTask,
+            version: promotionVersion,
+          });
+        } catch (error) {
+          if (error instanceof AiRuntimeBindingError) {
+            return errorResponse({
+              request,
+              httpStatus: 400,
+              requestId,
+              flowId,
+              step,
+              code: 'INPUT_INVALID',
+              message: error.message,
+              details: error.toSafeDetails(),
+            });
+          }
+          throw error;
+        }
       }
 
       const { data: promotionRows, error: promotionError } = await adminClient.rpc(

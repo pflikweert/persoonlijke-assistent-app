@@ -1,11 +1,11 @@
 ---
 id: admin-aiqs-linear-interface-kit-refresh
 title: Admin + AIQS Linear interface kit refresh
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-02
+updated_at: 2026-07-15
 summary: "Budio admin en AIQS krijgen een gedeelde mode-aware admin-console laag op basis van de Linear-geinspireerde interface kit, zonder consumer-, backend- of datamodelwijzigingen."
 tags: [admin, aiqs, ui, ux, linear-kit]
 workstream: aiqs
@@ -17,7 +17,14 @@ task_kind: polish
 spec_ready: true
 due_date: null
 sort_order: 5
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -197,7 +204,7 @@ Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interfa
 - Oorspronkelijk plan: volledige admin/AIQS Linear kit refresh, UI-only.
 - Toegevoegde verbeteringen: shared inspector/sidebar-ready shell, admin timeline/list/actionbar/form wrappers, en gecorrigeerde route-smoke voor canonieke AIQS family keys.
 - Afgerond: shared primitives/tokens, adminroutes, AIQS overview/group/detail/draft/test/validate, responsive smoke, static verify en review/polishronde op resterende duplicatie.
-- Open / blocked: geen technische blocker. Task blijft `in_progress` voor user-review van de visuele richting voordat deze naar `done/` wordt verplaatst; generated docs zijn bewust niet bijgewerkt binnen deze scope.
+- Open / blocked: geen technische blocker of resterend werk binnen deze iteratie. De gebruiker sluit de huidige visuele richting op 2026-07-15 bewust af, ondanks resterende ontevredenheid; eventuele verdere polish krijgt later alleen op expliciet verzoek een nieuwe taak.
 
 ## Relevante links
 
@@ -220,3 +227,11 @@ Gebruiker vroeg om implementatie van het plan `Budio Admin + AIQS Linear Interfa
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+- 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks
+## Agent activity
+
+- start 2026-07-15T08:42:46.489Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T08:42:46.489Z -> 2026-07-15T08:43:42.207Z - Codex / gpt-5 / codex / default - reason: done
