@@ -14,6 +14,7 @@ sort_order: 3
 ---
 
 
+
 ## Probleem / context
 
 Na `npm install` onder Node 24 rapporteert npm nog steeds `14 vulnerabilities (13 moderate, 1 high)`. Deze zijn in deze ronde bewust niet inhoudelijk opgelost, omdat de actieve taak alleen GitHub Actions/Node-align en workflow-hardening betrof.
@@ -69,3 +70,5 @@ Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief on
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

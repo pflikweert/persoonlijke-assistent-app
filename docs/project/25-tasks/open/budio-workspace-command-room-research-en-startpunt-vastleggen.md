@@ -15,8 +15,9 @@ depends_on: []
 follows_after: []
 task_kind: research
 due_date: null
-sort_order: 2
+sort_order: 1
 ---
+
 
 
 
@@ -133,3 +134,5 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

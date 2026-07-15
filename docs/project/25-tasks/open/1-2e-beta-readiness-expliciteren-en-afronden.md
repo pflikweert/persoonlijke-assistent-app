@@ -10,8 +10,9 @@ summary: "Een heldere beta-readiness set voor de huidige consumer beta, met expl
 tags: [consumer-beta, beta-readiness]
 workstream: app
 due_date: null
-sort_order: 12
+sort_order: 5
 ---
+
 
 
 
@@ -120,3 +121,5 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

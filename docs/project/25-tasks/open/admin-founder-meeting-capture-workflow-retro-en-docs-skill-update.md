@@ -16,8 +16,9 @@ follows_after: []
 task_kind: polish
 spec_ready: true
 due_date: null
-sort_order: 10
+sort_order: 11
 ---
+
 
 
 
@@ -131,3 +132,5 @@ Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

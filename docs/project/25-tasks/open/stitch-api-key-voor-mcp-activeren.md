@@ -10,8 +10,9 @@ summary: "De lokale `.env.local` krijgt de ontbrekende `STITCH_API_KEY`, zodat d
 tags: [mcp, stitch, local-dev, env]
 workstream: plugin
 due_date: null
-sort_order: 3
+sort_order: 4
 ---
+
 
 
 
@@ -75,3 +76,5 @@ De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

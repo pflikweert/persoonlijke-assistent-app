@@ -16,8 +16,9 @@ follows_after: [task-admin-founder-meeting-capture-fase-1-tests-en-smokebewijs]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 11
+sort_order: 12
 ---
+
 
 
 
@@ -153,3 +154,5 @@ Bestand-upload/import naar hetzelfde recording model als live audio.
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

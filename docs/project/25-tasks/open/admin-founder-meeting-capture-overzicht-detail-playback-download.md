@@ -16,8 +16,9 @@ follows_after: [task-admin-founder-meeting-capture-lokale-failsafe-en-recovery]
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 8
+sort_order: 9
 ---
+
 
 
 
@@ -163,3 +164,5 @@ Meeting Capture archive overview en detail met playback/download en statusblokke
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

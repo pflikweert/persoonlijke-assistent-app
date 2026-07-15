@@ -2,11 +2,12 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import type { ComponentProps } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 import { AsyncStatusSheet } from "@/components/feedback/async-status-sheet";
 import { ConfirmSheet } from "@/components/feedback/destructive-confirm-sheet";
 import { FullscreenMenuOverlay } from "@/components/navigation/fullscreen-menu-overlay";
+import { usePwaInstall } from "@/components/pwa/pwa-install-provider";
 import { ThemedView } from "@/components/themed-view";
 import { SettingsScaffold } from "@/components/ui/screen-scaffolds";
 import { StateBlock } from "@/components/ui/screen-primitives";
@@ -130,6 +131,7 @@ const DELETE_ROW: RowItem = {
 
 export default function SettingsScreen() {
   const obsidianEnabled = isObsidianSettingsEnabled();
+  const { isSettingsEntryVisible, openInstallOptions } = usePwaInstall();
   const [menuVisible, setMenuVisible] = useState(false);
   const [adminAccess, setAdminAccess] = useState<AdminAccessState | null>(null);
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -248,6 +250,18 @@ export default function SettingsScreen() {
             ))}
           </ThemedView>
         </ThemedView>
+
+        {Platform.OS === "web" && isSettingsEntryVisible ? (
+          <ThemedView style={styles.sectionGroup}>
+            <SettingsSectionLabel label="App" />
+            <SettingsNavRow
+              label="Budio installeren"
+              description="Open Budio Vandaag als app op dit apparaat."
+              icon="install-desktop"
+              onPress={openInstallOptions}
+            />
+          </ThemedView>
+        ) : null}
 
         <ThemedView style={styles.sectionGroup}>
           <SettingsSectionLabel label="Gegevens verwijderen" />

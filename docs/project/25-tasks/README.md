@@ -76,7 +76,6 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 | [Admin/founder meeting capture — retentie en export hardening](open/admin-founder-meeting-capture-retentie-export-hardening.md) | p2 | transitiemaand-consumer-beta | Meeting Capture heeft een heldere keep-audio/retentievoorbereiding en robuuste download/export flow, zonder de eerste audio-safe v1 te ve... |
 | [Admin/founder meeting capture — speaker labels en mapping](open/admin-founder-meeting-capture-speaker-labels-en-mapping.md) | p2 | transitiemaand-consumer-beta | Transcriptdetail ondersteunt eenvoudige speakerlabels en hernoemen/mappen van sprekers zonder transcriptverlies. |
 | [Admin/founder meeting capture — transcript pipeline](open/admin-founder-meeting-capture-transcript-pipeline.md) | p2 | transitiemaand-consumer-beta | Een opgeslagen recording kan queued/background worden getranscribeerd. Status, retry en failure zijn zichtbaar op detail. Audio blijft be... |
-| [Budio webapp compatible maken](open/budio-webapp-compatible-maken.md) | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 | [Budio Workspace Command Room research en startpunt vastleggen](open/budio-workspace-command-room-research-en-startpunt-vastleggen.md) | p2 | transitiemaand-consumer-beta | Er staat één nieuw idea/research-document in `docs/project/40-ideas/40-platform-and-architecture/` dat de richting vastlegt voor een Line... |
 | [Docs scheiden naar private repo (strategie + migratieplan)](open/docs-private-repo-scheiding-en-migratieplan.md) | p2 | transitiemaand-consumer-beta | Een concreet en uitvoerbaar migratieplan voor optie 2: docs onderbrengen in een aparte private repo binnen dezelfde workspace, inclusief... |
 | [niet vergeten](open/niet-vergeten.md) | p2 | transitiemaand-consumer-beta | Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is. |
@@ -104,7 +103,9 @@ _Deze index wordt automatisch bijgewerkt door `npm run docs:bundle`._
 
 ### Review
 
-_Geen taken._
+| Taak | Prioriteit | Fase | Korte omschrijving |
+| --- | --- | --- | --- |
+| [Budio webapp compatible maken](open/budio-webapp-compatible-maken.md) | p2 | transitiemaand-consumer-beta | Wanneer een gebruiker is ingelogd en de webvariant gebruikt, en PWA-installatie beschikbaar is maar nog niet geïnstalleerd, toon dan een... |
 
 ### Blocked
 

@@ -16,8 +16,9 @@ follows_after: []
 task_kind: task
 spec_ready: true
 due_date: null
-sort_order: 3
+sort_order: 2
 ---
+
 
 
 
@@ -180,3 +181,5 @@ De huidige navigatie blokkeert betrouwbaar admingebruik en voelt alsof menu/inst
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

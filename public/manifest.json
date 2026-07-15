@@ -1,0 +1,31 @@
+{
+  "name": "Budio Vandaag",
+  "short_name": "Budio",
+  "description": "Je dag, rustig vastgelegd.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAF9F4",
+  "theme_color": "#FAF9F4",
+  "icons": [
+    {
+      "src": "/icons/budio-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/budio-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/budio-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

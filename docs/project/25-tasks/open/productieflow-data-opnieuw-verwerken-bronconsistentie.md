@@ -27,6 +27,7 @@ active_agent_settings: null
 
 
 
+
 ## Probleem / context
 
 De productieflow `Data opnieuw verwerken` levert inconsistenties op tussen zichtbare momenten, genormaliseerde entrydata en dag-/periode-output. Een dag kan in de UI meerdere individuele momenten tonen terwijl het dagjournaal zegt dat er geen entries zijn aangeleverd. Oudere momenten lijken soms raw input, normalized body en dagjournal-input niet meer consistent te koppelen.
@@ -279,6 +280,8 @@ Productie-audit bewijs:
 
 
 - 2026-07-05T09:20:15+02:00 — Add day week month swipe navigation
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ## Agent activity
 
 - stop 2026-07-03T07:55:48.268Z -> 2026-07-04T09:29:37.625Z - Codex / gpt-5 / codex / default - reason: stopped

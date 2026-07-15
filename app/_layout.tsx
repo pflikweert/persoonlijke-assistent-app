@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
 
+import { PwaInstallProvider } from "@/components/pwa/pwa-install-provider";
 import { AppBackground } from "@/components/ui/app-background";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCurrentSession, onAuthStateChange } from "@/services";
@@ -224,98 +225,102 @@ a:focus-visible,
 
   if (!authReady) {
     return (
-      <GestureHandlerRootView style={styles.rootShell}>
-        <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
-          <View style={[styles.rootShell, styles.webAppShell, isAdminConsoleRoute ? styles.webAdminShell : null, { backgroundColor: palette.background }]}>
-            <AppBackground tone="ambient" />
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator color={palette.primary} />
+      <PwaInstallProvider userId={null}>
+        <GestureHandlerRootView style={styles.rootShell}>
+          <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
+            <View style={[styles.rootShell, styles.webAppShell, isAdminConsoleRoute ? styles.webAdminShell : null, { backgroundColor: palette.background }]}>
+              <AppBackground tone="ambient" />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color={palette.primary} />
+              </View>
             </View>
           </View>
-        </View>
-      </GestureHandlerRootView>
+        </GestureHandlerRootView>
+      </PwaInstallProvider>
     );
   }
 
   return (
-    <GestureHandlerRootView style={styles.rootShell}>
-      <ThemeProvider value={appTheme}>
-        <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
-          <View style={[styles.rootShell, styles.webAppShell, isAdminConsoleRoute ? styles.webAdminShell : null, { backgroundColor: palette.background }]}>
-            <AppBackground tone="flat" />
-            <Stack
-              // Use in-app headers consistently and avoid accidental native double top-nav
-              // on newly added routes (e.g. settings detail screens).
-              screenOptions={{ headerShown: false }}
-            >
-              <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="capture" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="meeting-capture"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="entry/[id]" options={{ headerShown: false }} />
-              <Stack.Screen name="settings" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="settings-audio"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-obsidian"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-export"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-import"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-regeneration"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-admin-access"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-ai-quality-studio"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-ai-quality-studio/[taskKey]"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-ai-quality-studio/group/[groupKey]"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-ai-quality-studio/[taskKey]/draft/[version]"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-ai-quality-studio/[taskKey]/test/[version]"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="settings-ai-quality-studio/[taskKey]/validate/[version]"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="modal"
-                options={{ presentation: "modal", title: "Modal", headerShown: true }}
-              />
-            </Stack>
+    <PwaInstallProvider userId={session?.user.id ?? null}>
+      <GestureHandlerRootView style={styles.rootShell}>
+        <ThemeProvider value={appTheme}>
+          <View style={[styles.rootShell, styles.webBackdrop, { backgroundColor: palette.appShell }]}>
+            <View style={[styles.rootShell, styles.webAppShell, isAdminConsoleRoute ? styles.webAdminShell : null, { backgroundColor: palette.background }]}>
+              <AppBackground tone="flat" />
+              <Stack
+                // Use in-app headers consistently and avoid accidental native double top-nav
+                // on newly added routes (e.g. settings detail screens).
+                screenOptions={{ headerShown: false }}
+              >
+                <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="capture" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="meeting-capture"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen name="entry/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="settings" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="settings-audio"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-obsidian"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-export"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-import"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-regeneration"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-admin-access"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-ai-quality-studio"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-ai-quality-studio/[taskKey]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-ai-quality-studio/group/[groupKey]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-ai-quality-studio/[taskKey]/draft/[version]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-ai-quality-studio/[taskKey]/test/[version]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="settings-ai-quality-studio/[taskKey]/validate/[version]"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="modal"
+                  options={{ presentation: "modal", title: "Modal", headerShown: true }}
+                />
+              </Stack>
+            </View>
           </View>
-        </View>
-        <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-        {Platform.OS === "web" ? <Analytics /> : null}
-      </ThemeProvider>
-    </GestureHandlerRootView>
+          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+          {Platform.OS === "web" ? <Analytics /> : null}
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    </PwaInstallProvider>
   );
 }
 

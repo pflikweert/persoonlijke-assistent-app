@@ -10,8 +10,9 @@ summary: "screenshots van Flow verwerken tot ideeen. todo, ideeen etc taggen in 
 tags: []
 workstream: idea
 due_date: null
-sort_order: 11
+sort_order: 13
 ---
+
 
 
 
@@ -59,3 +60,5 @@ Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable

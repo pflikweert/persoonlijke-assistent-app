@@ -2,8 +2,8 @@
 
 # Budio Tasks Archive
 
-Build Timestamp (UTC): 2026-07-15T09:33:16.288Z
-Source Commit: 5a93b51
+Build Timestamp (UTC): 2026-07-15T10:00:33.147Z
+Source Commit: 28f7d9b
 
 Doel: uploadbundle met gearchiveerde done-tasks uit `docs/project/25-tasks/done/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -778,6 +778,7 @@ active_agent_settings: null
 
 
 
+
 # Admin/founder meeting capture — web route en IA
 
 ## Probleem / context
@@ -950,6 +951,7 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 
 
+- 2026-07-15T11:36:41+02:00 — docs: close completed in-progress tasks
 ## Agent activity
 
 - start 2026-07-15T09:31:59.032Z - Codex / gpt-5 / codex / default
@@ -1803,6 +1805,7 @@ active_agent_settings: null
 
 
 
+
 ## Probleem / context
 
 AIQS kan drafts maken, bewerken, testen, vergelijken en reviews opslaan, maar de lifecycle stopt nog vóór productiebeheer: er is geen gecontroleerde promotie van draft naar live en geen rollback naar een oudere live-versie. Runtime DB-binding gebruikt precies één live versie per task, dus deze statuswissel moet veilig en transactioneel zijn.
@@ -2063,6 +2066,7 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks
 
 
+- 2026-07-15T11:36:41+02:00 — docs: close completed in-progress tasks
 ## Agent activity
 
 - start 2026-07-15T09:31:58.911Z - Codex / gpt-5 / codex / default
@@ -14575,6 +14579,7 @@ active_agent_settings: null
 
 
 
+
 ## Probleem / context
 
 De huidige repo-regel blokkeert inhoudelijk werk in Plan Mode wanneer er geen passende bestaande taskfile is. Daardoor moet de gebruiker alsnog expliciet buiten Plan Mode een task laten aanmaken, ook als de nieuwe scope al duidelijk is.
@@ -14748,6 +14753,7 @@ De repo-brede Plan Mode-regel omzetten van blokkeren bij ontbrekende task naar a
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 
 
+- 2026-07-15T11:36:41+02:00 — docs: close completed in-progress tasks
 ## Agent activity
 
 - start 2026-07-15T09:31:58.973Z - Codex / gpt-5 / codex / default
