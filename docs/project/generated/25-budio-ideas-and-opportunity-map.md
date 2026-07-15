@@ -2,8 +2,8 @@
 
 # Budio Ideas and Opportunity Map
 
-Build Timestamp (UTC): 2026-07-15T09:25:16.149Z
-Source Commit: efb36fe
+Build Timestamp (UTC): 2026-07-15T09:33:16.288Z
+Source Commit: 5a93b51
 
 Doel: primaire ideebundle met opportunity-map voor triage, sequencing en planherijking.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.

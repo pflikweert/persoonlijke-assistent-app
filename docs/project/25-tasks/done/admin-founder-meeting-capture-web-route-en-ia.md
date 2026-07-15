@@ -1,11 +1,11 @@
 ---
 id: task-admin-founder-meeting-capture-web-route-en-ia
 title: Admin/founder meeting capture — web route en IA
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-04-27
+updated_at: 2026-07-15
 summary: "Bouw de admin-only Meeting Capture ingang, routes en basis-IA zonder de bestaande dagboekcapture te verbreden."
 tags: [meeting-capture, ui, navigation, admin]
 workstream: app
@@ -17,7 +17,14 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 10
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -117,9 +124,9 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 
 ## Status per requirement
 
-- [ ] Admin-only ingang — status: niet gebouwd
-- [ ] Overzicht/nieuw/detail routes — status: niet gebouwd
-- [ ] UI volgt bestaande patronen — status: niet gebouwd
+- [x] Admin-only ingang — status: gebouwd en via lokale admin-smoke bereikbaar
+- [x] Overzicht/nieuw/detail routes — status: gebouwd en in light/dark gerenderd
+- [x] UI volgt bestaande patronen — status: gebouwd met bestaande Meeting Capture/admin-shells
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -129,7 +136,7 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 
 - [x] Blok 1: bestaande admin/settings/capture routepatronen lezen.
 - [x] Blok 2: kleinste route + schermskelet bouwen.
-- [ ] Blok 3: lint/typecheck en light/dark smoke. Lint/typecheck/docs zijn groen; runtime smoke is blocked omdat `http://localhost:8081` geen verbinding accepteert.
+- [x] Blok 3: lint/typecheck en light/dark smoke. Static checks waren groen; runtime smoke is op 2026-07-15 geslaagd op de lokale webtarget.
 
 ## Concrete checklist
 
@@ -137,7 +144,7 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - [x] Admin-only ingang toevoegen.
 - [x] Overzicht empty state bouwen.
 - [x] Nieuwe-opname en detailroute shell toevoegen.
-- [ ] Runtime check in light/dark — blocked: lokale web devserver draait niet of accepteert geen verbinding op `http://localhost:8081`.
+- [x] Runtime check in light/dark — overview, new en detail/non-happy route renderen geauthenticeerd zonder redirect of browserfout.
 
 ## Acceptance criteria
 
@@ -159,13 +166,14 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - `npm run docs:bundle:verify` — geslaagd
 - Gerichte web smoke in light/dark — nog open
 - Browser smoke poging: `http://localhost:8081/meeting-capture` gaf `net::ERR_CONNECTION_REFUSED`.
+- Browser smoke 2026-07-15 op de inmiddels draaiende lokale webtarget — geslaagd voor `/meeting-capture`, `/meeting-capture/new` en `/meeting-capture/smoke-missing` in light en dark, met de AIQS/founder-smokegebruiker en zonder console/page errors.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: web route en IA toevoegen.
 - Toegevoegde verbeteringen: nog geen.
-- Afgerond: routegroep, overview, new shell, detail shell, settings-ingang en access gate zijn gebouwd.
-- Open / blocked: runtime smoke in light/dark zodra de lokale web devserver draait.
+- Afgerond: routegroep, overview, new shell, detail shell, settings-ingang, access gate en geauthenticeerde light/dark runtime-smoke.
+- Open / blocked: niets binnen deze route/IA-slice; recording, storage, playback en processing blijven bewust in de afzonderlijke Meeting Capture-taken.
 
 ## Relevante links
 
@@ -205,3 +213,11 @@ Admin-only route- en schermskelet voor overview, new recording en detail, zonder
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+- 2026-07-15T11:36:41+02:00 — docs: close completed in-progress tasks
+## Agent activity
+
+- start 2026-07-15T09:31:59.032Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T09:31:59.032Z -> 2026-07-15T09:32:43.048Z - Codex / gpt-5 / codex / default - reason: done

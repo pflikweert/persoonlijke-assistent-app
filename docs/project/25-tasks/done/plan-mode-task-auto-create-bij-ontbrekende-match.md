@@ -1,17 +1,24 @@
 ---
 id: task-plan-mode-task-auto-create-bij-ontbrekende-match
 title: Plan Mode task auto-create bij ontbrekende match
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: AGENTS.md
-updated_at: 2026-04-24
+updated_at: 2026-07-15
 summary: "Draai de repo-brede Plan Mode taskflowregel om zodat agents bij een duidelijke nieuwe scope automatisch een task aanmaken, en alleen bij echte classificatie- of scope-twijfel nog vragen."
 tags: [workflow, tasks, plan-mode, docs]
 workstream: app
 due_date: null
 sort_order: 13
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -47,6 +54,41 @@ Plan Mode werkt voortaan met een goedkope en consistente preflight:
 
 Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zodat alle agents dezelfde verwachting volgen.
 
+## User outcome
+
+De gebruiker hoeft bij een duidelijke nieuwe scope niet eerst handmatig buiten Plan Mode een taskfile te laten aanmaken.
+
+## Functional slice
+
+De bestaande repo-instructies en taskflow-skill gebruiken overal dezelfde beslisregel: match hergebruiken, duidelijke nieuwe scope automatisch aanmaken en alleen bij echte routeringstwijfel vragen.
+
+## Entry / exit
+
+- Entry: een agent start Plan Mode voor inhoudelijk repo-werk.
+- Exit: een passende bestaande of automatisch aangemaakte taskfile is gekoppeld voordat het inhoudelijke plan wordt afgerond.
+
+## Happy flow
+
+1. Agent zoekt naar een passende taskfile.
+2. Agent gebruikt de match of maakt bij duidelijke nieuwe scope automatisch een task aan.
+3. Agent vermeldt de taskfile en taskflow-summary in het plan.
+
+## Non-happy flows
+
+- Bij meerdere plausibele tasks of onduidelijke task/idea/epic-routering vraagt de agent kort om richting.
+- Een mislukte taskaanmaak blokkeert inhoudelijke uitvoering totdat de taskflow geldig is.
+
+## UX / copy
+
+- Workflowcopy blijft compact en gebruikt dezelfde termen in AGENTS, skill en workflowdocs.
+- Geen product-UI of end-user copy gewijzigd.
+
+## Data / IO
+
+- Input: repo-context, bestaande taskfiles en duidelijke gebruikersscope.
+- Output: hergebruikte of nieuw aangemaakte Markdown-taskfile met geldige frontmatter en lane-sortering.
+- Geen runtime-, schema- of API-impact.
+
 ## Waarom nu
 
 - De huidige Plan Mode-regel blokkeerde direct een nieuwe, heldere overview-feature.
@@ -79,6 +121,33 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - [x] `npm run docs:bundle` uitgevoerd.
 - [x] `npm run docs:bundle:verify` uitgevoerd.
 
+## Acceptance criteria
+
+- [x] AGENTS, taskflow-skill en workflowdocs bevatten dezelfde auto-createbeslisregel.
+- [x] Alleen echte classificatie- of scope-twijfel vereist nog gebruikersinput.
+- [x] Bestaande taskflow- en docs-verificatie blijft groen.
+
+## Oorspronkelijk plan / afgesproken scope
+
+De repo-brede Plan Mode-regel omzetten van blokkeren bij ontbrekende task naar automatisch aanmaken bij een duidelijke nieuwe scope, zonder statusmodel of productcode te wijzigen.
+
+## Expliciete user requirements / detailbehoud
+
+- Bestaande duidelijke taskmatch altijd eerst hergebruiken.
+- Duidelijke nieuwe scope automatisch als task vastleggen.
+- Alleen vragen bij echte scope-, lane- of classificatietwijfel.
+
+## Status per requirement
+
+- [x] Bestaande match hergebruiken — status: vastgelegd.
+- [x] Duidelijke nieuwe scope automatisch aanmaken — status: vastgelegd.
+- [x] Alleen bij echte twijfel vragen — status: vastgelegd.
+- [x] Taskflow summary blijft verplicht — status: vastgelegd.
+
+## Toegevoegde verbeteringen tijdens uitvoering
+
+- De regel is ook in de task-status-sync-workflow en beide relevante workflowdocs gelijkgetrokken om instructiedrift te voorkomen.
+
 ## Blockers / afhankelijkheden
 
 - Geen functionele blockers; wijziging zit in workflowdocs en tasklaag.
@@ -88,6 +157,14 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - ✅ `npm run taskflow:verify`
 - ✅ `npm run docs:bundle`
 - ✅ `npm run docs:bundle:verify`
+
+## Reconciliation voor afronding
+
+- Oorspronkelijk plan: Plan Mode automatisch een task laten aanmaken wanneer geen match bestaat en de nieuwe scope duidelijk is.
+- Expliciete user requirements: match-first, auto-create bij duidelijke scope en alleen vragen bij echte twijfel.
+- Toegevoegde verbeteringen: repo-instructies, skill en workflowdocs zijn gelijkgetrokken.
+- Afgerond: alle checklist- en acceptatiepunten plus taskflow/docs-verificatie.
+- Open / blocked: niets; de workflowregel is actief en wordt in de huidige repo-instructies toegepast.
 
 ## Relevante links
 
@@ -131,3 +208,11 @@ Deze regel staat daarna repo-breed gelijk in AGENTS, skills en workflowdocs, zod
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+
+- 2026-07-15T11:36:41+02:00 — docs: close completed in-progress tasks
+## Agent activity
+
+- start 2026-07-15T09:31:58.973Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T09:31:58.973Z -> 2026-07-15T09:32:42.986Z - Codex / gpt-5 / codex / default - reason: done

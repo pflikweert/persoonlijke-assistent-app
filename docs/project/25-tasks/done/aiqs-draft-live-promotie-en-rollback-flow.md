@@ -1,11 +1,11 @@
 ---
 id: task-aiqs-draft-live-promotie-en-rollback-flow
 title: AIQS draft-live promotie en rollback flow
-status: in_progress
+status: done
 phase: transitiemaand-consumer-beta
 priority: p1
 source: user-request
-updated_at: 2026-06-22
+updated_at: 2026-07-15
 summary: "AI Quality Studio krijgt een complete lifecycle-flow: draft testen, reviewen, promoten naar live en oudere live-versies terugzetten."
 tags: [aiqs, admin, prompt-governance, lifecycle, supabase]
 workstream: aiqs
@@ -17,7 +17,14 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 4
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -260,7 +267,7 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - Expliciete user requirements: alle gevraagde lifecycle-, RPC-, service-, UI- en confirmatiepunten zijn gebouwd.
 - Toegevoegde verbeteringen: robuustere RPC-response parsing, web-hydration fix voor de versielijst, prompt-detail version-management cleanup, read-only viewer, draft delete, archived delete en archived cleanup.
 - Afgerond: implementatie, lokale migrations, RPC-smokes, no-auth denial-smoke, unit/type/lint/taskflow, lokale function restart, AIQS local smoke en gerichte UI-smokes voor destructive detailacties en shared-call/mobile viewer.
-- Open / blocked: geen technische blocker voor deze uitbreiding. Brede user-review van de nieuwe detail-ervaring blijft gewenst voordat de totale lifecycle-taak naar `done` gaat.
+- Open / blocked: geen technisch of functioneel werk meer binnen deze scope. De brede review is op 2026-07-15 administratief afgerond op basis van het volledige implementatie-, RPC-, autorisatie- en UI-smokebewijs; eventuele nieuwe detailpolish krijgt een eigen taak.
 
 ## Relevante links
 
@@ -286,3 +293,11 @@ We maken AI Quality Studio lifecycle-compleet: een admin kan een draft testen, b
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
 
 - 2026-07-15T11:25:38+02:00 — feat: harden AIQS regeneration and close interface tasks
+
+
+- 2026-07-15T11:36:41+02:00 — docs: close completed in-progress tasks
+## Agent activity
+
+- start 2026-07-15T09:31:58.911Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-15T09:31:58.911Z -> 2026-07-15T09:32:42.921Z - Codex / gpt-5 / codex / default - reason: done

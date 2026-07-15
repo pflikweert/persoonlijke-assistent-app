@@ -5,7 +5,7 @@ status: backlog
 priority: p1
 owner: Pieter Flikweert
 phase: transitiemaand-consumer-beta
-updated_at: 2026-04-27
+updated_at: 2026-07-15
 summary: "Aparte admin/founder lane voor lange overlegopnames buiten de dagboekflow, met audio-safe web recording als eerste versie en transcript/insights als vervolgfase."
 spec_ready: true
 sort_order: 2
@@ -54,7 +54,7 @@ Transcriptie, speakerlabels, gespreksinzichten, upload/import van bestaande audi
 
 - `docs/project/25-tasks/done/admin-founder-meeting-capture-epic-en-taakpakket-aanmaken.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen.md`
-- `docs/project/25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md`
+- `docs/project/25-tasks/done/admin-founder-meeting-capture-web-route-en-ia.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-opname-start-stop-web-mvp.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-lokale-failsafe-en-recovery.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus.md`

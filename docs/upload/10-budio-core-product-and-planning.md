@@ -2,8 +2,8 @@
 
 # Budio Core Product and Planning
 
-Build Timestamp (UTC): 2026-07-15T09:25:16.149Z
-Source Commit: efb36fe
+Build Timestamp (UTC): 2026-07-15T09:33:16.288Z
+Source Commit: 5a93b51
 
 Doel: primaire domeinbundle voor core productwaarheid en actieve planning.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -15,8 +15,8 @@ Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leid
 
 # Budio Product Truth
 
-Build Timestamp (UTC): 2026-07-15T09:25:16.149Z
-Source Commit: efb36fe
+Build Timestamp (UTC): 2026-07-15T09:33:16.288Z
+Source Commit: 5a93b51
 
 Doel: primaire uploadbundle met productkaders, statusrealiteit en actieve planningsfocus.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -927,12 +927,9 @@ _Open taken voor de huidige fase; de detailbeschrijving leeft in `docs/project/2
 | [Entry photo gallery volledige end-user E2E flows](25-tasks/open/entry-photo-gallery-volledige-end-user-e2e-flows.md) | Ready | p1 | transitiemaand-consumer-beta | Er is een volledige Playwright end-user suite voor entry photo gallery flows. De suite gebruikt reproduceerbare local-only seed/cleanup h... |
 | [Web runtime warnings styling accessibility hardening](25-tasks/open/web-runtime-warnings-styling-accessibility-hardening.md) | Ready | p1 | transitiemaand-consumer-beta | De relevante web/runtime warnings zijn opgelost zonder zichtbare redesigns of nieuwe dependencies. Shared overlay- en surface-primitives... |
 | [1.2E beta-readiness expliciteren en afronden](25-tasks/open/1-2e-beta-readiness-expliciteren-en-afronden.md) | In Progress | p1 | transitiemaand-consumer-beta | Een heldere beta-readiness set voor de huidige consumer beta, met expliciete checklist, bewijsregel en definitie van wat nog open blijft.... |
-| [Admin/founder meeting capture — web route en IA](25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md) | In Progress | p1 | transitiemaand-consumer-beta | Er is een admin-only ingang naar een Meeting Capture overzicht, een nieuwe-opname route en een detailroute. Niet-admin gebruikers zien de... |
-| [AIQS draft-live promotie en rollback flow](25-tasks/open/aiqs-draft-live-promotie-en-rollback-flow.md) | In Progress | p1 | transitiemaand-consumer-beta | Een AIQS-admin kan vanuit de bestaande admin-console zien welke versie live is, welke draft nog bewijs mist, welke draft klaar is voor li... |
 | [AIQS logging valideren in OpenAI dashboard en fallback-logpad](25-tasks/open/aiqs-logging-valideren-openai-dashboard-en-fallback.md) | In Progress | p1 | transitiemaand-consumer-beta | Logging voor de bestaande AIQS OpenAI-calls is aantoonbaar zichtbaar in het OpenAI API-dashboard (bij ingeschakelde logging), zodat tests... |
 | [Moment detail foto-upload Android Chrome prepare regressie](25-tasks/open/moment-detail-foto-upload-android-chrome-prepare-regressie.md) | In Progress | p1 | transitiemaand-consumer-beta | De moment detail foto-upload op Android Chrome faalt niet meer op fragiele web picker-assets. Web/browser prepare werkt primair op direct... |
 | [MVP admin + AIQS productie bundel](25-tasks/open/mvp-admin-aiqs-productie-bundel.md) | In Progress | p1 | transitiemaand-consumer-beta | De bestaande AIQS-flow is aantoonbaar traceerbaar en inzetbaar voor productiegebruik van de huidige OpenAI-calls, zonder featureverbredin... |
-| [Plan Mode task auto-create bij ontbrekende match](25-tasks/open/plan-mode-task-auto-create-bij-ontbrekende-match.md) | In Progress | p1 | transitiemaand-consumer-beta | Plan Mode werkt voortaan met een goedkope en consistente preflight: - eerst zoeken naar een passende bestaande task - bij duidelijke matc... |
 | [Productieflow Data opnieuw verwerken bronconsistentie](25-tasks/open/productieflow-data-opnieuw-verwerken-bronconsistentie.md) | In Progress | p1 | transitiemaand-consumer-beta | Admins kunnen productie veilig read-only auditen, daarna entries, dagjournals, weekreflecties en maandreflecties in correcte volgorde her... |
 | [Settings/admin navigatie contract fix](25-tasks/open/settings-admin-navigatie-contract-fix.md) | In Progress | p1 | transitiemaand-consumer-beta | `Instellingen` in het hoofdmenu opent altijd het instellingenoverzicht met menu-keuzes. First-level settings/admin back gaat terug naar `... |
 | [Admin/founder meeting capture — admin processing controls](25-tasks/open/admin-founder-meeting-capture-admin-processing-controls.md) | Backlog | p2 | transitiemaand-consumer-beta | Admin kan upload/transcript/summary processing veilig retryen of rerunnen met duidelijke status en failure feedback. |
@@ -3115,7 +3112,7 @@ status: backlog
 priority: p1
 owner: Pieter Flikweert
 phase: transitiemaand-consumer-beta
-updated_at: 2026-04-27
+updated_at: 2026-07-15
 summary: "Aparte admin/founder lane voor lange overlegopnames buiten de dagboekflow, met audio-safe web recording als eerste versie en transcript/insights als vervolgfase."
 spec_ready: true
 sort_order: 2
@@ -3164,7 +3161,7 @@ Transcriptie, speakerlabels, gespreksinzichten, upload/import van bestaande audi
 
 - `docs/project/25-tasks/done/admin-founder-meeting-capture-epic-en-taakpakket-aanmaken.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-scope-en-eerste-versie-vastleggen.md`
-- `docs/project/25-tasks/open/admin-founder-meeting-capture-web-route-en-ia.md`
+- `docs/project/25-tasks/done/admin-founder-meeting-capture-web-route-en-ia.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-opname-start-stop-web-mvp.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-lokale-failsafe-en-recovery.md`
 - `docs/project/25-tasks/open/admin-founder-meeting-capture-metadata-private-storage-en-uploadstatus.md`
