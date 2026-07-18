@@ -2,8 +2,8 @@
 
 # Budio Current Tasks
 
-Build Timestamp (UTC): 2026-07-15T10:00:33.147Z
-Source Commit: 28f7d9b
+Build Timestamp (UTC): 2026-07-18T10:37:57.773Z
+Source Commit: 9ed1e8a
 
 Doel: uploadbundle met huidige niet-done tasks uit `docs/project/25-tasks/open/**`.
 Dit bestand is niet leidend; de handmatig onderhouden bronbestanden blijven leidend.
@@ -44,6 +44,7 @@ workstream: app
 due_date: null
 sort_order: 5
 ---
+
 
 
 
@@ -122,6 +123,8 @@ De taak is klaar wanneer de criteria, verificatiestappen en bewijsregel helder g
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -150,6 +153,7 @@ workstream: app
 due_date: null
 sort_order: 5
 ---
+
 
 
 
@@ -258,6 +262,8 @@ De taak is klaar wanneer het team in één oogopslag ziet wat nog nodig is voor 
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -292,6 +298,7 @@ spec_ready: true
 due_date: null
 sort_order: 18
 ---
+
 
 
 
@@ -421,6 +428,8 @@ Minimale admin retry/rerun controls voor Meeting Capture processing.
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -455,6 +464,7 @@ spec_ready: true
 due_date: null
 sort_order: 12
 ---
+
 
 
 
@@ -590,6 +600,8 @@ Bestand-upload/import naar hetzelfde recording model als live audio.
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -624,6 +636,7 @@ spec_ready: true
 due_date: null
 sort_order: 10
 ---
+
 
 
 
@@ -771,6 +784,8 @@ Afsluitende test- en smoke-slice voor de volledige audio-safe v1.
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -805,6 +820,7 @@ spec_ready: true
 due_date: null
 sort_order: 17
 ---
+
 
 
 
@@ -940,6 +956,8 @@ Brongetrouwe insights processing en detailweergave bovenop transcript.
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -974,6 +992,7 @@ spec_ready: true
 due_date: null
 sort_order: 7
 ---
+
 
 
 
@@ -1121,6 +1140,8 @@ Local-first chunkopslag en recovery UI voor onafgemaakte Meeting Capture opnames
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -1155,6 +1176,7 @@ spec_ready: true
 due_date: null
 sort_order: 8
 ---
+
 
 
 
@@ -1300,6 +1322,8 @@ Minimale Supabase metadata/storage/uploadstatus voor Meeting Capture recordings.
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -1334,6 +1358,7 @@ spec_ready: true
 due_date: null
 sort_order: 6
 ---
+
 
 
 
@@ -1482,6 +1507,8 @@ Minimale `MediaRecorder` start/stop flow met UI-state, zonder IndexedDB recovery
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -1516,6 +1543,7 @@ spec_ready: true
 due_date: null
 sort_order: 9
 ---
+
 
 
 
@@ -1661,6 +1689,8 @@ Meeting Capture archive overview en detail met playback/download en statusblokke
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -1695,6 +1725,7 @@ spec_ready: true
 due_date: null
 sort_order: 19
 ---
+
 
 
 
@@ -1824,6 +1855,8 @@ Retentievoorbereiding en export/download hardening voor opgeslagen recordings.
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -1858,6 +1891,7 @@ spec_ready: true
 due_date: null
 sort_order: 16
 ---
+
 
 
 
@@ -1988,6 +2022,8 @@ Eenvoudige speakerlabel mapping op transcriptdetail.
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -2022,6 +2058,7 @@ spec_ready: true
 due_date: null
 sort_order: 14
 ---
+
 
 
 
@@ -2158,6 +2195,8 @@ Queued transcript processing met status, retry en transcriptweergave.
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -2192,6 +2231,7 @@ spec_ready: true
 due_date: null
 sort_order: 11
 ---
+
 
 
 
@@ -2305,6 +2345,8 @@ Een kleine retro en gerichte workflowupdate of aparte vervolgtaak.
 - 942af46 — docs: sync local workspace state
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -2333,6 +2375,7 @@ workstream: aiqs
 due_date: null
 sort_order: 7
 ---
+
 
 
 
@@ -2461,6 +2504,8 @@ De logging-bediening in AIQS is helder en laagdrempelig: een duidelijke aan/uit-
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -2497,6 +2542,7 @@ active_agent_since: null
 active_agent_status: null
 active_agent_settings: null
 ---
+
 
 
 ## Probleem / context
@@ -2672,6 +2718,7 @@ Een complete installatieslice voor de bestaande Expo-webapp: manifest en iconset
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
 
 
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ## Agent activity
 
 - start 2026-07-15T09:40:36.762Z - Codex / gpt-5 / codex / default
@@ -2710,6 +2757,7 @@ task_kind: research
 due_date: null
 sort_order: 1
 ---
+
 
 
 
@@ -2826,6 +2874,8 @@ Daarnaast bestaat er één backlog-task die dit startpunt traceerbaar maakt en e
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -2854,6 +2904,7 @@ workstream: idea
 due_date: null
 sort_order: 15
 ---
+
 
 
 
@@ -2920,6 +2971,8 @@ Het resultaat van deze taak is een besluit- en uitvoeringskader; geen directe te
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -3084,6 +3137,7 @@ spec_ready: true
 due_date: null
 sort_order: 3
 ---
+
 
 
 
@@ -3376,6 +3430,8 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -3387,7 +3443,7 @@ Eén afgebakende regressieslice: web/Android picker-input structureel materialis
 - Status: in_progress
 - Priority: p1
 - Phase: transitiemaand-consumer-beta
-- Updated_at: 2026-06-02
+- Updated_at: 2026-07-18
 
 ```md
 ---
@@ -3397,7 +3453,7 @@ status: in_progress
 phase: transitiemaand-consumer-beta
 priority: p1
 source: docs/project/open-points.md
-updated_at: 2026-06-02
+updated_at: 2026-07-18
 summary: "Bundelt AIQS logging-validatie, AIQS productie-livegang en een nieuwe DB-gedreven adminrechtenlaag per admingebied, zodat de bestaande admin-AI-flow snel en veilig naar productie kan."
 tags: [aiqs, admin, productie, permissions, supabase]
 workstream: aiqs
@@ -3409,7 +3465,14 @@ task_kind: task
 spec_ready: true
 due_date: null
 sort_order: 4
+active_agent: null
+active_agent_model: null
+active_agent_runtime: null
+active_agent_since: null
+active_agent_status: null
+active_agent_settings: null
 ---
+
 
 
 
@@ -3532,6 +3595,19 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - Founder/super-admin mag rechten toekennen of intrekken; gewone admins niet.
 - Niet-admin ziet geen beheerroute.
 - Backend denial moet ook werken zonder UI, bij directe function calls.
+- Nieuwe code-deploys mogen bestaande AIQS-tasks, live versies en promptinhoud nooit wijzigen.
+- De deploy-ensure mag uitsluitend ontbrekende tasks of ontbrekende live baselines aanmaken.
+- Handmatig gemaakte drafts en live versies mogen geen `baseline_import`-ownership erven.
+- Reeds live promptinhoud moet op databaseniveau immutable zijn; wijzigingen lopen via een nieuwe versie en expliciete promotie.
+- Reeds overschreven productieprompts worden binnen deze uitvoerronde niet automatisch onderzocht of hersteld.
+
+## Bronplan — AIQS-liveprompts permanent beschermen tegen deploys (2026-07-18)
+
+1. Maak `import_runtime_baseline` create-only: ontbrekende records aanmaken, bestaande taskmetadata en live versies bewaren en bestaande inhoud als `preserved` rapporteren.
+2. Verwijder `baseline_import` server-side uit iedere handmatig gemaakte of bijgewerkte draft en nogmaals vóór promotie.
+3. Voeg een Supabase-trigger toe die inhoudelijke updates aan reeds live `ai_task_versions` blokkeert, terwijl lifecycle-overgangen toegestaan blijven.
+4. Houd de deploy-ensure actief, maar laat conflicterende of ongeldige bestaande bindings zonder mutatie falen.
+5. Bewijs met unit-, database- en lokale AIQS-smoketests dat bestaande live inhoud byte-for-byte behouden blijft en ontbrekende baselines idempotent worden aangemaakt.
 
 ## Status per requirement
 
@@ -3541,6 +3617,10 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - [x] DB-gedreven capabilities voor drie admingebieden toegevoegd — status: gebouwd
 - [x] Founder-only adminrechtenbeheer in adminmenu toegevoegd — status: gebouwd
 - [x] Backend authorisatie centraal en capability-based gemaakt — status: gebouwd
+- [x] Deploy-baseline create-only en bestaande live prompts preserved — status: gebouwd
+- [x] Baseline-ownership uit handmatige drafts/promoties verwijderd — status: gebouwd
+- [x] Live versie-inhoud database-immutable gemaakt — status: gebouwd
+- [x] AIQS promptbescherming met unit/database/smoke bewezen — status: gebouwd
 
 ## Toegevoegde verbeteringen tijdens uitvoering
 
@@ -3549,6 +3629,7 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - Lokale OpenAI debug-opslag gebruikt weer persistente private storage; een Postgres RPC-conflict op `id` is opgelost via follow-up migratie.
 - Lokale edge-functions restart is gehard; detached startup van `supabase functions serve` wordt nu gevalideerd zodat adminroutes niet stil uitvallen na een lokale restart.
 - Admin capability-RPC is collision-proof gemaakt; een Postgres ambiguity op `capability` in `admin_replace_user_capabilities` is lokaal opgelost via follow-up migraties.
+- Productieprompt-hardening voorkomt dat de automatische deploy-baseline ooit nog bestaande AIQS live promptinhoud overschrijft: ensure is create-only, handmatige drafts verliezen baseline-ownership en ooit-live versies zijn inhoudelijk immutable op DB-niveau.
 
 ## Uitvoerblokken / fasering
 
@@ -3556,6 +3637,7 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - [x] Blok 2: logging- en productiepad voor AIQS aanscherpen.
 - [x] Blok 3: capability-model, backend authorisatie en adminrechten-UI bouwen.
 - [ ] Blok 4: verify, task/docs-sync en afronding.
+- [x] Blok 5: AIQS live prompt create-only deploypolicy, DB-immutability en regressiebewijs.
 
 ## Concrete checklist
 
@@ -3565,6 +3647,10 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - [x] Adminrechtenbeheerroute in settings bouwen.
 - [x] Access-checks en adminroutes migreren naar capability-based gedrag.
 - [x] Verifies en task/docs-sync uitvoeren.
+- [x] Deploy-ensure create-only maken en bestaande records als preserved behandelen.
+- [x] Baseline-ownership server-side verwijderen bij draft create/update/promotie.
+- [x] Ooit-live versie-inhoud via DB-trigger immutable maken.
+- [x] Unit-, pgTAP-, lokale AIQS- en deploy-wrapperchecks uitvoeren.
 
 ## Acceptance criteria
 
@@ -3593,12 +3679,19 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - `npm run taskflow:verify`
 - `npm run docs:bundle`
 - `npm run docs:bundle:verify`
+- `npx vitest run tests/unit/aiqs-baseline-policy.test.ts tests/unit/aiqs-runtime-binding.test.ts` — 25 tests passed.
+- `npx supabase test db` — 1 file, 6 tests passed voor live/archived immutability en lifecycle-overgangen.
+- `npm run verify:local-aiqs-bootstrap` — passed met custom-live byte-for-byte preservation en invalid-binding fail-without-mutation.
+- `npm run aiqs:runtime-baseline:ensure` (local) — `created: 0`, `live_created: 0`, `preserved: 0`, `already_ok: 14`, `error: 0`.
+- `npm run test:unit` — 22 files, 151 tests passed.
+- `npm run lint` — passed.
+- `npm run typecheck` — passed.
 
 ## Reconciliation voor afronding
 
 - Oorspronkelijk plan: logging valideren, AIQS productie live zetten en founder-only capabilitybeheer bouwen.
-- Toegevoegde verbeteringen: éénmalige founder-bootstrap vanuit legacy allowlists, aparte capability voor Meeting Capture, lokale debug-opslagfix voor persistente AIQS logging-settings, geharde lokale edge-functions restart voor adminroutes en een expliciete capability-RPC ambiguity-fix voor adminrechtenmutaties.
-- Afgerond: DB-capabilitymodel, founder-only rightsbeheer, centrale authorisatie, settings-menu migratie, logging-UX aanscherping, lint/typecheck/unit-test/taskflow/docs-verifies, lokale fix voor persistente debug-opslag-RPC, lokale restart-hardening voor edge functions en lokale fix voor capability-RPC ambiguities.
+- Toegevoegde verbeteringen: éénmalige founder-bootstrap vanuit legacy allowlists, aparte capability voor Meeting Capture, lokale debug-opslagfix voor persistente AIQS logging-settings, geharde lokale edge-functions restart, capability-RPC ambiguity-fix en permanente deploy-/DB-bescherming voor AIQS live prompts.
+- Afgerond: DB-capabilitymodel, founder-only rightsbeheer, centrale authorisatie, settings-menu migratie, logging-UX aanscherping, lokale debug-/restart-/RPC-hardening en AIQS promptbescherming via create-only ensure, provenance-sanitizing en immutable ooit-live versies met unit-, database- en lokale smokebewijs.
 - Open / blocked: productiebewijs in OpenAI dashboard en echte productie-liveflow van bestaande AIQS-calls zijn nog niet lokaal bewezen in deze ronde.
 
 ## Relevante links
@@ -3627,6 +3720,15 @@ Eén afgeronde admin-slice die drie direct gekoppelde uitkomsten levert:
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
+
+
+## Agent activity
+
+- start 2026-07-18T10:29:15.760Z - Codex / gpt-5 / codex / default
+
+- stop 2026-07-18T10:29:15.760Z -> 2026-07-18T10:37:45.284Z - Codex / gpt-5 / codex / default - reason: handoff
 ```
 
 ---
@@ -3655,6 +3757,7 @@ workstream: idea
 due_date: null
 sort_order: 13
 ---
+
 
 
 
@@ -3702,6 +3805,8 @@ Beschrijf in 1-3 korte alinea's wat klaar moet zijn wanneer deze taak done is.
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -3730,6 +3835,7 @@ workstream: app
 due_date: null
 sort_order: 3
 ---
+
 
 
 ## Probleem / context
@@ -3787,6 +3893,8 @@ Er ligt een bron-gebaseerde beoordeling van de npm audit meldingen, inclusief on
 ## Commits
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -3815,6 +3923,7 @@ workstream: plugin
 due_date: null
 sort_order: 6
 ---
+
 
 
 
@@ -4233,6 +4342,8 @@ Daarin kunnen we per nieuwe activiteit vastleggen:
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -4273,6 +4384,7 @@ active_agent_since: null
 active_agent_status: null
 active_agent_settings: null
 ---
+
 
 
 
@@ -4528,6 +4640,8 @@ Productie-audit bewijs:
 
 
 - 2026-07-05T09:20:15+02:00 — Add day week month swipe navigation
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ## Agent activity
 
 - stop 2026-07-03T07:55:48.268Z -> 2026-07-04T09:29:37.625Z - Codex / gpt-5 / codex / default - reason: stopped
@@ -4854,6 +4968,7 @@ sort_order: 2
 
 
 
+
 ## Probleem / context
 
 De hoofdmenu-link `Instellingen` voelt alsof hij naar de laatst geopende settings/admin pagina gaat. Bronoorzaak: settings- en adminsubroutes geven `currentRouteKey="settings"` aan `FullscreenMenuOverlay`, waarna de menu-handler klikken op dezelfde key negeert. Daardoor sluit het menu zonder navigatie.
@@ -5010,6 +5125,8 @@ De huidige navigatie blokkeert betrouwbaar admingebruik en voelt alsof menu/inst
 - 2026-06-22T11:41:43+02:00 — Adjust Codex model defaults for Budio
 
 - 2026-06-23T12:13:19+02:00 — chore: snapshot local AIQS workspace state
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---
@@ -5038,6 +5155,7 @@ workstream: plugin
 due_date: null
 sort_order: 4
 ---
+
 
 
 
@@ -5101,6 +5219,8 @@ De lokale setup bevat een actieve `STITCH_API_KEY` in `.env.local`, zodat Stitch
 - 8c8e11b — docs: record task commit evidence
 
 - 2026-05-15T08:59:28+02:00 — feat: ship historical moment capture polish
+
+- 2026-07-15T19:15:41+02:00 — feat: make Budio web app installable
 ```
 
 ---

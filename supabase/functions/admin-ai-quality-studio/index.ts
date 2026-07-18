@@ -14,6 +14,8 @@ import { renderJsonPromptTemplate } from '../_shared/aiqs-runtime-helpers.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { AiRuntimeBindingError, isAiQualityRuntimeBindingKey, validateLiveAiRuntimeBinding } from '../_shared/aiqs-runtime.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
+import { classifyAiqsBaselineEnsureDisposition, removeAiqsRuntimeBaselineOwnership } from '../_shared/aiqs-baseline-policy.ts';
+// @ts-ignore -- Deno runtime requires local import extensions.
 import { buildAiqsPeriodCases, buildAiqsPeriodInputSnapshot, buildAiqsPeriodPromptContext, type AiqsPeriodCase, type AiqsPeriodDayJournal, type AiqsPeriodEntryCountRow, type AiqsPeriodType } from '../_shared/aiqs-period-cases.ts';
 // @ts-ignore -- Deno runtime requires local import extensions.
 import { buildChatCompletionsDebugRequest, buildOpenAiDebugMetadata, loadOpenAiDebugStorageSettingsWithBackend, resolveOpenAiDebugStorageForFlow, updateOpenAiDebugStorageSettingsWithBackend, type OpenAiDebugFlowKey } from '../_shared/openai-debug-storage.ts';
@@ -1825,19 +1827,6 @@ function buildTaskMetadataFingerprint(input: {
   });
 }
 
-function isRuntimeCodeBaselineVersion(configJson: Record<string, unknown> | null | undefined): boolean {
-  if (!configJson || typeof configJson !== 'object' || Array.isArray(configJson)) {
-    return false;
-  }
-
-  const baselineImport = configJson.baseline_import;
-  if (!baselineImport || typeof baselineImport !== 'object' || Array.isArray(baselineImport)) {
-    return false;
-  }
-
-  return (baselineImport as Record<string, unknown>).baseline_source === 'runtime_code';
-}
-
 async function importRuntimeBaselines(args: {
   adminClient: any;
   userId: string | null;
@@ -1845,14 +1834,14 @@ async function importRuntimeBaselines(args: {
   items: Array<{
     taskKey: string;
     runtimeBindingKey: string | null;
-    taskStatus: 'created' | 'updated' | 'already_ok' | 'error';
-    liveStatus: 'live_created' | 'updated' | 'already_ok' | 'error';
+    taskStatus: 'created' | 'preserved' | 'already_ok' | 'error';
+    liveStatus: 'live_created' | 'preserved' | 'already_ok' | 'error';
     message: string | null;
   }>;
   summary: {
     created: number;
-    updated: number;
     live_created: number;
+    preserved: number;
     already_ok: number;
     error: number;
   };
@@ -1877,21 +1866,21 @@ async function importRuntimeBaselines(args: {
   const items: Array<{
     taskKey: string;
     runtimeBindingKey: string | null;
-    taskStatus: 'created' | 'updated' | 'already_ok' | 'error';
-    liveStatus: 'live_created' | 'updated' | 'already_ok' | 'error';
+    taskStatus: 'created' | 'preserved' | 'already_ok' | 'error';
+    liveStatus: 'live_created' | 'preserved' | 'already_ok' | 'error';
     message: string | null;
   }> = [];
   const summary = {
     created: 0,
-    updated: 0,
     live_created: 0,
+    preserved: 0,
     already_ok: 0,
     error: 0,
   };
 
   for (const definition of definitions) {
-    let taskStatus: 'created' | 'updated' | 'already_ok' | 'error' = 'already_ok';
-    let liveStatus: 'live_created' | 'updated' | 'already_ok' | 'error' = 'already_ok';
+    let taskStatus: 'created' | 'preserved' | 'already_ok' | 'error' = 'already_ok';
+    let liveStatus: 'live_created' | 'preserved' | 'already_ok' | 'error' = 'already_ok';
     let message: string | null = null;
     let task = tasksByKey.get(definition.taskKey) ?? null;
     if (!task) {
@@ -1949,30 +1938,10 @@ async function importRuntimeBaselines(args: {
         variantRole: definition.variantRole,
       });
 
-      if (existingTaskFingerprint !== incomingTaskFingerprint) {
-        const { error: taskUpdateError } = await args.adminClient
-          .from('ai_tasks')
-          .update({
-            label: definition.label,
-            input_type: definition.inputType,
-            output_type: definition.outputType,
-            description: definition.description,
-            is_active: definition.isActive,
-            runtime_binding_key: definition.runtimeBindingKey,
-            runtime_family: definition.runtimeFamily,
-            composition_role: definition.compositionRole,
-            managed_output_field: definition.managedOutputField,
-            is_runtime_driver: definition.isRuntimeDriver,
-            variant_role: definition.variantRole,
-          })
-          .eq('id', task.id);
-
-        if (taskUpdateError) {
-          throw new Error(`Failed to update AIQS task metadata for ${definition.taskKey}.`);
-        }
-
-        taskStatus = 'updated';
-      }
+      taskStatus = classifyAiqsBaselineEnsureDisposition({
+        exists: true,
+        matchesBaseline: existingTaskFingerprint === incomingTaskFingerprint,
+      });
     }
 
     const versions = await loadVersionsByTaskId({ adminClient: args.adminClient, taskId: task.id });
@@ -1986,7 +1955,46 @@ async function importRuntimeBaselines(args: {
       configJson: definition.configJson,
     });
 
-    if (!liveVersion) {
+    if (definition.runtimeBindingKey) {
+      if (!isAiQualityRuntimeBindingKey(definition.runtimeBindingKey)) {
+        taskStatus = 'error';
+        liveStatus = 'error';
+        message = `Ongeldige runtime binding voor ${definition.taskKey}.`;
+      } else {
+        const versionToValidate = liveVersion ?? {
+          id: `baseline-candidate:${task.id}`,
+          task_id: task.id,
+          version_number: 0,
+          status: 'draft' as const,
+          model: definition.model,
+          prompt_template: definition.promptTemplate,
+          system_instructions: definition.systemInstructions,
+          output_schema_json: definition.outputSchemaJson,
+          config_json: definition.configJson,
+          min_items: null,
+          max_items: null,
+          changelog: definition.changelog,
+          created_at: '',
+          updated_at: '',
+          became_live_at: null,
+          locked_at: null,
+        };
+
+        try {
+          validateLiveAiRuntimeBinding({
+            bindingKey: definition.runtimeBindingKey,
+            task,
+            version: versionToValidate,
+          });
+        } catch (error) {
+          taskStatus = taskStatus === 'created' ? 'created' : 'error';
+          liveStatus = 'error';
+          message = error instanceof Error ? error.message : String(error);
+        }
+      }
+    }
+
+    if (liveStatus !== 'error' && !liveVersion) {
       const { data: insertedRow, error: insertError } = await args.adminClient
         .from('ai_task_versions')
         .insert({
@@ -2010,7 +2018,7 @@ async function importRuntimeBaselines(args: {
       }
 
       liveStatus = 'live_created';
-    } else {
+    } else if (liveStatus !== 'error' && liveVersion) {
       const existingFingerprint = buildVersionBaselineFingerprint({
         model: liveVersion.model,
         systemInstructions: liveVersion.system_instructions,
@@ -2019,30 +2027,12 @@ async function importRuntimeBaselines(args: {
         configJson: liveVersion.config_json ?? {},
       });
 
-      if (existingFingerprint === incomingFingerprint) {
-        liveStatus = 'already_ok';
-      } else if (isRuntimeCodeBaselineVersion(liveVersion.config_json ?? {})) {
-        const { error: liveUpdateError } = await args.adminClient
-          .from('ai_task_versions')
-          .update({
-            model: definition.model,
-            prompt_template: definition.promptTemplate,
-            system_instructions: definition.systemInstructions,
-            output_schema_json: definition.outputSchemaJson,
-            config_json: definition.configJson,
-            changelog: definition.changelog,
-          })
-          .eq('id', liveVersion.id);
-
-        if (liveUpdateError) {
-          throw new Error(`Failed to update runtime baseline for task ${definition.taskKey}.`);
-        }
-
-        liveStatus = 'updated';
-      } else {
-        liveStatus = 'error';
-        message =
-          'Bestaande live versie wijkt af van de runtime-baseline en is niet baseline-managed.';
+      liveStatus = classifyAiqsBaselineEnsureDisposition({
+        exists: true,
+        matchesBaseline: existingFingerprint === incomingFingerprint,
+      });
+      if (liveStatus === 'preserved') {
+        message = 'Bestaande live versie wijkt af van de codebaseline en is ongewijzigd behouden.';
       }
     }
 
@@ -2056,14 +2046,14 @@ async function importRuntimeBaselines(args: {
 
     if (taskStatus === 'created') {
       summary.created += 1;
-    } else if (taskStatus === 'updated') {
-      summary.updated += 1;
+    } else if (taskStatus === 'preserved') {
+      summary.preserved += 1;
     }
 
     if (liveStatus === 'live_created') {
       summary.live_created += 1;
-    } else if (liveStatus === 'updated') {
-      summary.updated += 1;
+    } else if (liveStatus === 'preserved') {
+      summary.preserved += 1;
     } else if (liveStatus === 'error') {
       summary.error += 1;
     }
@@ -2336,7 +2326,7 @@ Deno.serve(async (request) => {
           prompt_template: baseVersion?.prompt_template ?? '',
           system_instructions: baseVersion?.system_instructions ?? '',
           output_schema_json: baseVersion?.output_schema_json ?? {},
-          config_json: baseVersion?.config_json ?? {},
+          config_json: removeAiqsRuntimeBaselineOwnership(baseVersion?.config_json),
           min_items: baseVersion?.min_items ?? null,
           max_items: baseVersion?.max_items ?? null,
           changelog: 'Nieuwe draft versie',
@@ -2396,7 +2386,7 @@ Deno.serve(async (request) => {
           prompt_template: payload.promptTemplate,
           system_instructions: payload.systemInstructions ?? (existing as VersionRow).system_instructions,
           output_schema_json: payload.outputSchemaJson,
-          config_json: payload.configJson,
+          config_json: removeAiqsRuntimeBaselineOwnership(payload.configJson),
           min_items: payload.minItems,
           max_items: payload.maxItems,
           changelog: payload.changelog,
@@ -2618,6 +2608,32 @@ Deno.serve(async (request) => {
         });
       }
 
+      const promotionConfigJson = removeAiqsRuntimeBaselineOwnership(
+        promotionVersion.config_json,
+      );
+      if (
+        promotionVersion.status === 'draft' &&
+        Object.prototype.hasOwnProperty.call(promotionVersion.config_json ?? {}, 'baseline_import')
+      ) {
+        const { error: provenanceUpdateError } = await adminClient
+          .from('ai_task_versions')
+          .update({ config_json: promotionConfigJson })
+          .eq('id', versionId)
+          .eq('task_id', promotionTask.id)
+          .eq('status', 'draft');
+        if (provenanceUpdateError) {
+          return errorResponse({
+            request,
+            httpStatus: 500,
+            requestId,
+            flowId,
+            step,
+            code: 'DB_WRITE_FAILED',
+            message: 'Baseline-ownership kon niet veilig voor promotie worden verwijderd.',
+          });
+        }
+      }
+
       if (promotionTask.runtime_binding_key) {
         if (!isAiQualityRuntimeBindingKey(promotionTask.runtime_binding_key)) {
           return errorResponse({
@@ -2642,7 +2658,7 @@ Deno.serve(async (request) => {
           validateLiveAiRuntimeBinding({
             bindingKey: promotionTask.runtime_binding_key,
             task: promotionTask,
-            version: promotionVersion,
+            version: { ...promotionVersion, config_json: promotionConfigJson },
           });
         } catch (error) {
           if (error instanceof AiRuntimeBindingError) {

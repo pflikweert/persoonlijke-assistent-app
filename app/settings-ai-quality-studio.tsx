@@ -137,9 +137,9 @@ export default function SettingsAiQualityStudioScreen() {
 
     try {
       const result = await importAdminAiQualityRuntimeBaseline();
-      const { created, updated, live_created, already_ok, error } = result.summary;
+      const { created, live_created, preserved, already_ok, error } = result.summary;
       setImportMessage(
-        `Taken aangemaakt: ${created} · live gemaakt: ${live_created} · bijgewerkt: ${updated} · al goed: ${already_ok} · errors: ${error}`
+        `Taken aangemaakt: ${created} · live gemaakt: ${live_created} · bestaand behouden: ${preserved} · al goed: ${already_ok} · errors: ${error}`
       );
       await load();
     } catch (nextError) {

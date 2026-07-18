@@ -376,11 +376,15 @@ export type AiTaskVersionCleanupResult = {
   keptLatestCount: number;
 };
 
-export type AiRuntimeBaselineImportTaskStatus = 'created' | 'updated' | 'already_ok' | 'error';
+export type AiRuntimeBaselineImportTaskStatus =
+  | 'created'
+  | 'preserved'
+  | 'already_ok'
+  | 'error';
 
 export type AiRuntimeBaselineImportLiveStatus =
   | 'live_created'
-  | 'updated'
+  | 'preserved'
   | 'already_ok'
   | 'error';
 
@@ -396,8 +400,8 @@ export type AiRuntimeBaselineImportResult = {
   items: AiRuntimeBaselineImportItem[];
   summary: {
     created: number;
-    updated: number;
     live_created: number;
+    preserved: number;
     already_ok: number;
     error: number;
   };

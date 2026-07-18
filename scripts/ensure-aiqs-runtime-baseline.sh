@@ -172,8 +172,8 @@ MISSING_BINDINGS="$(jq -r --argjson required "$REQUIRED_BINDINGS" '
     | select(
         [ .importResult.items[]
           | select(.runtimeBindingKey == $binding)
-          | select((.taskStatus == "created" or .taskStatus == "updated" or .taskStatus == "already_ok")
-              and (.liveStatus == "live_created" or .liveStatus == "updated" or .liveStatus == "already_ok"))
+          | select((.taskStatus == "created" or .taskStatus == "preserved" or .taskStatus == "already_ok")
+              and (.liveStatus == "live_created" or .liveStatus == "preserved" or .liveStatus == "already_ok"))
         ] | length == 0
       )
   ] | .[]

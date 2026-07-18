@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 import {
+  assertAiqsCustomLivePreserved,
+  assertAiqsInvalidBindingPreserved,
   archiveAiqsRuntimeManagedLiveVersions,
   ensureAiqsInternalTokenRuntime,
   ensureAiqsSmokeAdminSession,
   importAiqsRuntimeBaselineWithAccessToken,
   importAiqsRuntimeBaselineWithInternalToken,
+  installAiqsCustomLivePreservationFixture,
+  installAiqsInvalidBindingFixture,
+  restoreAiqsCustomLivePreservationFixture,
+  restoreAiqsInvalidBindingFixture,
   verifyAiqsRuntimeBindings,
 } from "./_shared/local-aiqs-smoke-utils.mjs";
 import {
@@ -46,12 +52,31 @@ async function main() {
   }
 
   const adminSession = await ensureAiqsSmokeAdminSession(context, { email, profile });
-  const founderResult = await importAiqsRuntimeBaselineWithAccessToken(context, adminSession.accessToken);
-  const founderSummary = founderResult?.importResult?.summary;
-  if (!founderSummary || founderSummary.error !== 0) {
-    throw new Error("Founder import did not finish cleanly.");
+  const preservationFixture = await installAiqsCustomLivePreservationFixture(context);
+  try {
+    const founderResult = await importAiqsRuntimeBaselineWithAccessToken(context, adminSession.accessToken);
+    const founderSummary = founderResult?.importResult?.summary;
+    if (!founderSummary || founderSummary.error !== 0) {
+      throw new Error("Founder import did not finish cleanly.");
+    }
+
+    await assertAiqsCustomLivePreserved(context, preservationFixture, founderResult);
+  } finally {
+    await restoreAiqsCustomLivePreservationFixture(context, preservationFixture);
   }
 
+  const invalidBindingFixture = await installAiqsInvalidBindingFixture(context);
+  try {
+    const invalidResult = await importAiqsRuntimeBaselineWithInternalToken(context, internalToken);
+    await assertAiqsInvalidBindingPreserved(context, invalidBindingFixture, invalidResult);
+  } finally {
+    await restoreAiqsInvalidBindingFixture(context, invalidBindingFixture);
+  }
+
+  const finalResult = await importAiqsRuntimeBaselineWithInternalToken(context, internalToken);
+  if (finalResult?.importResult?.summary?.error !== 0) {
+    throw new Error("Final baseline ensure did not finish cleanly after fixture restoration.");
+  }
   await verifyAiqsRuntimeBindings(context);
 
   console.log("PASS aiqs-runtime-bootstrap");
